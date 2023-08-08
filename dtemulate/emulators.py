@@ -1,47 +1,58 @@
 from abc import ABC, abstractmethod
+from sklearn.svm import SVR   
 import mogp_emulator
 
 class Emulator(ABC):
       """An abstract base class for emulators.
 
-      :param ABC: An abstract base class.
       """
-      def __init__(self, sim_in, sim_out):
+      @abstractmethod
+      def __init__(self, *args, **kwargs):
             """Initializes an Emulator object.
-
-            :param sim_in: A numpy array of shape (n, dim) containing the input
-                            parameters of the simulator.
-            :type sim_in: numpy.ndarray
-            :param sim_out: A numpy array of shape (n, dim) containing the output
-                            of the simulator.
-            :type sim_out: numpy.ndarray
             """
             pass
       
-      def fit(self):
-            """Fits the emulator to the data."""
+      @abstractmethod
+      def fit(self, X, y):
+            """Fits the emulator to the data.
+            
+            :param X: Input data (simulation input).
+            :param y: Target data (simulation output). 
+            """
             pass
       
-      def predict(self):
+      @abstractmethod
+      def predict(self, X):
             """Predicts the output of the simulator for a given input."""
             pass
       
 class GaussianProcess(Emulator):
       """Gaussian process Emulator.
       
+      Implements GaussianProcsses from the mogp_emulator package. 
       """
-      def __init__(self, sim_in, sim_out):
-            """Initializes a GaussianProcess object.
-            """
-            self.gp = mogp_emulator.GaussianProcess(sim_in, sim_out, nugget='fit')
+      def __init__(self, *args, **kwargs):
+            """Initializes a GaussianProcess object."""
+            self.args = args
+            self.kwargs = kwargs
+            self.model = None
+           
+      def fit(self, X, y):
+            """Fits the emulator to the data.
             
-      def fit(self):
-            """Fits the emulator to the data."""
-            return self.gp.fit_GP_MAP()
+            :param X: Input data (simulation input).
+            :param y: Target data (simulation output). 
+            """
+            self.model = mogp_emulator.GaussianProcess(X, y, nugget='fit', 
+                                                       *self.args, **self.kwargs)
+            self.model = mogp_emulator.fit_GP_MAP(self.model)
       
-      def predict(self):
+      def predict(self, X):
             """Predicts the output of the simulator for a given input.
+            
+            :param X: Input data (simulation input).
             """
-            return self.gp.predict()
-            
-            
+            if self.model is not None:
+                  return self.model.predict(X)
+            else:
+                  raise ValueError("Emulator not fitted yet.")
