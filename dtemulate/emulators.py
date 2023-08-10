@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sklearn.svm import SVR   
+from sklearn.ensemble import RandomForestRegressor
 import mogp_emulator
 
 class Emulator(ABC):
@@ -29,12 +29,12 @@ class Emulator(ABC):
 class GaussianProcess(Emulator):
       """Gaussian process Emulator.
       
-      Implements GaussianProcsses from the mogp_emulator package. 
+      Implements GaussianProcess regression from the mogp_emulator package. 
       """
-      def __init__(self, *args, **kwargs):
+      def __init__(self, nugget='fit', *args, **kwargs):
             """Initializes a GaussianProcess object."""
             self.args = args
-            self.kwargs = kwargs
+            self.kwargs = {'nugget': nugget, **kwargs}
             self.model = None
            
       def fit(self, X, y):
@@ -56,3 +56,29 @@ class GaussianProcess(Emulator):
                   return self.model.predict(X)
             else:
                   raise ValueError("Emulator not fitted yet.")
+
+class RandomForest(Emulator):
+      """Random forest Emulator.
+      
+      Implements Random Forests regression from scikit-learn.
+      """
+      def __init__(self, n_estimators=100, *args, **kwargs):
+            """Initializes a RandomForest object."""
+            self.args = args
+            self.kwargs = {'n_estimators': n_estimators, **kwargs}
+            self.model = RandomForestRegressor(*self.args, **self.kwargs)
+            
+      def fit(self, X, y):
+            """Fits the emulator to the data.
+            
+            :param X: Input data (simulation input).
+            :param y: Target data (simulation output). 
+            """
+            self.model.fit(X, y)
+            
+      def predict(self, X):
+            """Predicts the output of the simulator for a given input.
+            
+            :param X: Input data (simulation input).
+            """
+            return self.model.predict(X)
