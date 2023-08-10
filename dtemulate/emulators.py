@@ -43,8 +43,7 @@ class GaussianProcess(Emulator):
             :param X: Input data (simulation input).
             :param y: Target data (simulation output). 
             """
-            self.model = mogp_emulator.GaussianProcess(X, y, nugget='fit', 
-                                                       *self.args, **self.kwargs)
+            self.model = mogp_emulator.GaussianProcess(X, y, *self.args, **self.kwargs)
             self.model = mogp_emulator.fit_GP_MAP(self.model)
       
       def predict(self, X):
