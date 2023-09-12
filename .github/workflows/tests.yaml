@@ -25,6 +25,15 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    # Cache Poetry dependencies
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+          
     - name: Install poetry
       run: |
         curl -sSL https://install.python-poetry.org | python -

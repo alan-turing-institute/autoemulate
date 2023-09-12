@@ -1,2 +1,3 @@
 notebooks/
 __pycache__/
+dist/
