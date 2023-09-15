@@ -6,13 +6,23 @@ import numpy as np
 
 def compare(X, y, cv=5, models=None):
     """
-    Compare a list of emulators using K-fold cross-validation.
+    Compare emulator models using K-fold cross-validation.
 
-    :param X: Input data (simulation input).
-    :param y: Target data (simulation output).
-    :param cv: Number of folds for cross-validation.
-    :param model: List of emulators to compare.
-    :return: Scores
+    Parameters
+    ----------
+    X : numpy.ndarray
+        Input data (simulation input).
+    y : numpy.ndarray
+        Target data (simulation output).
+    cv : int
+        Number of folds for cross-validation.
+    models : list
+        List of emulators to compare.
+
+    Returns
+    -------
+    scores : dict
+        Dictionary of scores for each model.
     """
 
     X = np.array(X)
