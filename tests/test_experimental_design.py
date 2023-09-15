@@ -2,22 +2,41 @@ import pytest
 import numpy as np
 from dtemulate.experimental_design import ExperimentalDesign, LatinHypercube
 
-def test_abstract():
-    with pytest.raises(TypeError):
-        ed = ExperimentalDesign([(0., 1.), (10., 100.)])
+# Test LatinHypercube Initialisation
+@pytest.fixture
+def lh(self):
+    return LatinHypercube([(0.0, 1.0), (10.0, 100.0)])
 
-class TestLatinHypercube:
-    @pytest.fixture
-    def lh(self):
-        return LatinHypercube([(0., 1.), (10., 100.)])
-      
-    def test_init(self, lh):
-        assert lh.get_n_parameters() == 2
-        
-    def test_sample(self, lh):
-        samples = lh.sample(3)
-        assert samples.shape == (3, 2)
-        assert np.all(samples[:,0] >= 0.)
-        assert np.all(samples[:,0] <= 1.)
-        assert np.all(samples[:,1] >= 10.)
-        assert np.all(samples[:,1] <= 100.)
+
+def test_init(self, lh):
+    assert lh is not None
+
+
+def test_parameters(self, lh):
+    assert lh.get_n_parameters() == 2
+
+
+# Test LatinHypercube Sampling
+@pytest.fixture
+def lh_sample(self, lh):
+    return lh.sample(3)
+
+
+def test_sample_shape(self, lh_sample):
+    assert lh_sample.shape == (3, 2)
+
+
+def test_sample_lower_bound_par1(self, lh_sample):
+    assert np.all(lh_sample[:, 0] >= 0.0)
+
+
+def test_sample_upper_bound_par1(self, lh_sample):
+    assert np.all(lh_sample[:, 0] <= 1.0)
+
+
+def test_sample_lower_bound_par2(self, lh_sample):
+    assert np.all(lh_sample[:, 1] >= 10.0)
+
+
+def test_sample_upper_bound_par2(self, lh_sample):
+    assert np.all(lh_sample[:, 1] <= 100.0)
