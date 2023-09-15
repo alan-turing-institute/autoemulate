@@ -1,4 +1,3 @@
-# An Emulator Platform for Digital Twins
+# dtemulate
 
-Simulations can be too computationally expensive to be practical in real world scenarios, such as digital twins. Emulator or surrogate models can be used as efficient replacements for simulations, but chosing among many different models is difficult. This project aims to streamline that process by automatically fitting and comparing a range of models using a simple high level interface with sensible defaults, but allowing for customization when needed.
-
+Digital twins need to run fast, but simulations of real-world systems are often slow and compute-intensive. The goal of `dtemulate` is to make it easy to replace simulations with fast, accurate emulator models.
