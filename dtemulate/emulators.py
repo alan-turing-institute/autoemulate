@@ -17,19 +17,38 @@ class Emulator(ABC):
     def fit(self, X, y):
         """Fits the emulator to the data.
 
-        :param X: Input data (simulation input).
-        :param y: Target data (simulation output).
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
+
         """
         pass
 
     @abstractmethod
     def predict(self, X):
-        """Predicts the output of the simulator for a given input."""
+        """Predicts the output of the simulator for a given input.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        """
         pass
 
     @abstractmethod
     def score(self, X, y):
-        """Returns the score of the emulator."""
+        """Returns the score of the emulator.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
+        """
         pass
 
 
@@ -48,8 +67,12 @@ class GaussianProcess(Emulator):
     def fit(self, X, y):
         """Fits the emulator to the data.
 
-        :param X: Input data (simulation input).
-        :param y: Target data (simulation output).
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
         """
         self.model = mogp_emulator.GaussianProcess(X, y, *self.args, **self.kwargs)
         self.model = mogp_emulator.fit_GP_MAP(self.model)
@@ -57,7 +80,15 @@ class GaussianProcess(Emulator):
     def predict(self, X):
         """Predicts the output of the simulator for a given input.
 
-        :param X: Input data (simulation input).
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+
+        Returns
+        -------
+        predictions : numpy.ndarray
+            Predictions of the emulator.
         """
         if self.model is not None:
             return self.model.predict(X)
@@ -65,7 +96,20 @@ class GaussianProcess(Emulator):
             raise ValueError("Emulator not fitted yet.")
 
     def score(self, X, y):
-        """Returns the score of the emulator."""
+        """Returns the score of the emulator.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
+
+        Returns
+        -------
+        rmse : float
+            Root mean squared error of the emulator.
+        """
         predictions_means = self.predict(X).mean
         rmse = np.sqrt(mean_squared_error(y, predictions_means)).round(2)
         return rmse
@@ -86,20 +130,46 @@ class RandomForest(Emulator):
     def fit(self, X, y):
         """Fits the emulator to the data.
 
-        :param X: Input data (simulation input).
-        :param y: Target data (simulation output).
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
         """
         self.model.fit(X, y)
 
     def predict(self, X):
         """Predicts the output of the simulator for a given input.
 
-        :param X: Input data (simulation input).
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+
+        Returns
+        -------
+        predictions : numpy.ndarray
+            Predictions of the emulator.
         """
         return self.model.predict(X)
 
     def score(self, X, y):
-        """Returns the score of the emulator."""
+        """Returns the score of the emulator.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
+
+        Returns
+        -------
+        rmse : float
+            Root mean squared error of the emulator.
+
+        """
         predictions = self.predict(X)
         rmse = np.sqrt(mean_squared_error(y, predictions)).round(2)
         return rmse

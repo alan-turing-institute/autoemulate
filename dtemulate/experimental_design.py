@@ -6,10 +6,12 @@ class ExperimentalDesign(ABC):
     def __init__(self, bounds_list):
         """Initializes a Sampler object.
 
-        :param bounds_list: List tuples with two numeric values.
-                            Each tuple corresponds to the lower and
-                            upper bounds of a parameter.
-        :type bounds_list: list
+        Parameters
+        ----------
+        bounds_list : list
+            List tuples with two numeric values.
+            Each tuple corresponds to the lower and
+            upper bounds of a parameter.
         """
         pass
 
@@ -17,8 +19,10 @@ class ExperimentalDesign(ABC):
     def sample(self, n: int):
         """Samples n points from the sample space.
 
-        :param n: The number of points to sample.
-        :type n: int
+        Parameters
+        ----------
+        n : int
+            The number of points to sample.
         """
         pass
 
@@ -26,8 +30,10 @@ class ExperimentalDesign(ABC):
     def get_n_parameters(self):
         """Returns the number of parameters in the sample space.
 
-        :return: The number of parameters in the sample space.
-        :rtype: int
+        Returns
+        -------
+        n_parameters : int
+            The number of parameters in the sample space.
         """
         pass
 
@@ -36,27 +42,36 @@ class LatinHypercube(ExperimentalDesign):
     def __init__(self, bounds_list):
         """Initializes a LatinHypercube object.
 
-        :param bounds_list: List tuples with two numeric values.
-                            Each tuple corresponds to the lower and
-                            upper bounds of a parameter.
-        :type bounds_list: list
+        Parameters
+        ----------
+        bounds_list : list
+            List tuples with two numeric values.
+            Each tuple corresponds to the lower and
+            upper bounds of a parameter.
         """
         self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
 
     def sample(self, n: int):
         """Samples n points from the sample space.
 
-        :param n: The number of points to sample.
-        :type n: int
-        :return: A numpy array of shape (n, dim) containing the sampled points.
-        :rtype: numpy.ndarray
+        Parameters
+        ----------
+        n : int
+            The number of points to sample.
+
+        Returns
+        -------
+        samples : numpy.ndarray
+            A numpy array of shape (n, dim) containing the sampled points.
         """
         return self.sampler.sample(n)
 
     def get_n_parameters(self):
         """Returns the number of parameters in the sample space.
 
-        :return: The number of parameters in the sample space.
-        :rtype: int
+        Returns
+        -------
+        n_parameters : int
+            The number of parameters in the sample space.
         """
         return self.sampler.get_n_parameters()
