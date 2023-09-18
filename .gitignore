@@ -1,3 +1,16 @@
 notebooks/
 __pycache__/
 dist/
+
+# Ignore Sphinx build artifacts
+docs/build/
+docs/generated/
+.sphinx-build-environment
+
+# Auto-generated documentation
+_autosummary/
+_autodoc/
+
+# System-specific files
+Thumbs.db
+.DS_Store
