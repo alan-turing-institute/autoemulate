@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import importlib.metadata
 
-project = "dtemulate"
+project = "autoemulate"
 copyright = "2023, Martin A. Stoffel"
 author = "Martin A. Stoffel"
-version = release = importlib.metadata.version("dtemulate")
+version = release = importlib.metadata.version("autoemulate")
 
 extensions = [
     "myst_parser",

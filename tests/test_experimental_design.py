@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dtemulate.experimental_design import ExperimentalDesign, LatinHypercube
+from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
 
 # Test LatinHypercube Initialisation
 @pytest.fixture
