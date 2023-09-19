@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from dtemulate.experimental_design import ExperimentalDesign, LatinHypercube
-from dtemulate.emulators import GaussianProcess, RandomForest
-from dtemulate.compare import compare
+from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
+from autoemulate.emulators import GaussianProcess, RandomForest
+from autoemulate.compare import compare
 
 
 def simple_sim(params):

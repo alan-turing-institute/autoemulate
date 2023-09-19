@@ -1,14 +1,14 @@
 # API-reference
 
 ```{eval-rst}
-.. automodule:: dtemulate.compare
+.. automodule:: autoemulate.compare
    :members:
 
-.. automodule:: dtemulate.emulators
+.. automodule:: autoemulate.emulators
    :members:
    :inherited-members:
 
-.. automodule:: dtemulate.experimental_design
+.. automodule:: autoemulate.experimental_design
    :members:
    :inherited-members:
 ```

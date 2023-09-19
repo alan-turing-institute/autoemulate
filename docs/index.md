@@ -1,4 +1,4 @@
-# Welcome to the `dtemulate` docs!
+# Welcome to the `autoemulate` docs!
 
 ```{toctree}
 :maxdepth: 2

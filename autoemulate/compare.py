@@ -1,6 +1,6 @@
 from sklearn.model_selection import KFold
-from dtemulate.experimental_design import LatinHypercube
-from dtemulate.emulators import GaussianProcess, RandomForest
+from autoemulate.experimental_design import LatinHypercube
+from autoemulate.emulators import GaussianProcess, RandomForest
 import numpy as np
 
 

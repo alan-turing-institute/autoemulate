@@ -1,3 +1,3 @@
 # Installation 
 
-How to install `dtemulate`
+How to install `autoemulate`
