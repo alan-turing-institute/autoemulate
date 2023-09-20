@@ -1,6 +1,7 @@
 notebooks/
 __pycache__/
 dist/
+data/
 
 # Ignore Sphinx build artifacts
 docs/build/
