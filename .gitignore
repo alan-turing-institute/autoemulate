@@ -1,5 +1,6 @@
 notebooks/
 __pycache__/
+.pytest_cache/
 dist/
 data/
 
@@ -15,3 +16,6 @@ _autodoc/
 # System-specific files
 Thumbs.db
 .DS_Store
+
+# coverage
+.coverage
