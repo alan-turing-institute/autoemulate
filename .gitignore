@@ -1,6 +1,8 @@
 notebooks/
 __pycache__/
+.pytest_cache/
 dist/
+data/
 
 # Ignore Sphinx build artifacts
 docs/build/
@@ -14,3 +16,6 @@ _autodoc/
 # System-specific files
 Thumbs.db
 .DS_Store
+
+# coverage
+.coverage

@@ -1,4 +1,4 @@
-name: Unit tests
+name: ci
 
 on:
   push:
@@ -46,6 +46,14 @@ jobs:
       run: |
         poetry install
 
-    - name: Run tests
+    - name: Run Tests with Coverage
       run: |
-        poetry run pytest
+        poetry run coverage run -m pytest
+      env: 
+        COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
+      
+    - name: Store coverage file
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: .coverage.${{ matrix.python-version }}
