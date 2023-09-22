@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
 from autoemulate.emulators import GaussianProcess, RandomForest
-from autoemulate.compare import compare
+from autoemulate.compare import AutoEmulate
 
 
 def simple_sim(params):
@@ -18,7 +18,9 @@ def compare_results():
     np.random.seed(41)
     sim_in = lh.sample(10)
     sim_out = [simple_sim(p) for p in sim_in]
-    return compare(sim_in, sim_out)
+    em = AutoEmulate()
+    em.compare(X=sim_in, y=sim_out, cv=5)
+    return em.scores
 
 
 def test_compare_not_none(compare_results):
