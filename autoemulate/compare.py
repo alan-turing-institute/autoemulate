@@ -4,53 +4,72 @@ from autoemulate.emulators import GaussianProcess, RandomForest
 import numpy as np
 
 
-def compare(X, y, cv=5, models=None):
-    """
-    Compare emulator models using K-fold cross-validation.
+class AutoEmulate:
+    """Automatically compares emulators."""
 
-    Parameters
-    ----------
-    X : numpy.ndarray
-        Input data (simulation input).
-    y : numpy.ndarray
-        Target data (simulation output).
-    cv : int
-        Number of folds for cross-validation.
-    models : list
-        List of emulators to compare.
+    def __init__(self):
+        """Initializes an AutoEmulate object."""
+        self.X = None
+        self.y = None
+        self.cv = None
+        self.models = None
+        self.scores = {}
+        self.fitted_models = {}
 
-    Returns
-    -------
-    scores : dict
-        Dictionary of scores for each model.
-    """
+    def compare(self, X, y, cv=5, models=None):
+        """ "Compares emulators using cross-validation.
 
-    X = np.array(X)
-    y = np.array(y)
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data (simulation input).
+        y : numpy.ndarray
+            Target data (simulation output).
+        cv : int
+            Number of folds for cross-validation.
+        models : list
+            List of emulators to compare.
 
-    # Check X and y have same number of samples
-    if X.shape[0] != y.shape[0]:
-        raise ValueError("X and y must have the same number of samples.")
+        Returns
+        -------
+        scores : dict
+            Dictionary of scores for each emulator.
+        """
+        self.X = np.array(X)
+        self.y = np.array(y)
+        self.cv = cv
+        self.models = models if models else [GaussianProcess(), RandomForest()]
 
-    # Check for NaNs
-    if np.isnan(X).any() or np.isnan(y).any():
-        raise ValueError("X and y should not contain NaNs.")
+        # Validation checks, same as before
+        if self.X.shape[0] != self.y.shape[0]:
+            raise ValueError("X and y must have the same number of samples.")
+        if np.isnan(self.X).any() or np.isnan(self.y).any():
+            raise ValueError("X and y should not contain NaNs.")
 
-    scores = {}
-    kfold = KFold(n_splits=cv, shuffle=True)
-    if models is None:
-        models = [GaussianProcess(), RandomForest()]
+        print(f"Starting {self.cv}-fold cross-validation...")
 
-    for model in models:
-        fold_scores = []
+        for model in self.models:
+            model_name = type(model).__name__
+            print(f"Training {model_name}...")
+            fold_scores = []
+            self.fitted_models[model_name] = []
 
-        for train_index, test_index in kfold.split(X):
-            X_train, X_test = X[train_index], X[test_index]
-            y_train, y_test = y[train_index], y[test_index]
-            model.fit(X_train, y_train)
-            fold_scores.append(model.score(X_test, y_test))
+            kfold = KFold(n_splits=self.cv, shuffle=True)
+            for train_index, test_index in kfold.split(self.X):
+                X_train, X_test = self.X[train_index], self.X[test_index]
+                y_train, y_test = self.y[train_index], self.y[test_index]
+                model.fit(X_train, y_train)
+                fold_scores.append(model.score(X_test, y_test))
+                self.fitted_models[model_name].append(model)
 
-        # average score over folds, score is a tuple of (rsme, r2)
-        scores[type(model).__name__] = sum(fold_scores) / cv
+            self.scores[model_name] = sum(fold_scores) / self.cv
 
-    return scores
+    def print_scores(self):
+        """Prints scores for each emulator."""
+        print(f"RSME scores (average over {self.cv} folds):")
+        for model, score in self.scores.items():
+            print(f"{model}: {round(score, 2)}")
+
+    def get_fitted_models(self):
+        """Returns the fitted models."""
+        return self.fitted_models
