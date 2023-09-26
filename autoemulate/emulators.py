@@ -41,7 +41,7 @@ class Emulator(ABC):
         pass
 
     @abstractmethod
-    def score(self, X, y):
+    def score(self, X, y, metric):
         """Returns the score of the emulator.
 
         Parameters
@@ -50,6 +50,8 @@ class Emulator(ABC):
             Simulation input.
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
+        metric : str
+            Name of the metric to use, currently either rsme or r2.
         """
         pass
 
@@ -93,7 +95,7 @@ class GaussianProcess2(Emulator):
         """
         return self.model.predict(X)
 
-    def score(self, X, y):
+    def score(self, X, y, metric):
         """Returns the score of the emulator.
 
         Parameters
@@ -105,13 +107,12 @@ class GaussianProcess2(Emulator):
 
         Returns
         -------
-        rmse : float
-            Root mean squared error of the emulator.
+        metric : float
+            Metric of the emulator.
 
         """
         predictions = self.predict(X)
-        rmse = mean_squared_error(y, predictions, squared=False).round(2)
-        return rmse
+        return metric(y, predictions)
 
 
 class RandomForest(Emulator):
@@ -153,7 +154,7 @@ class RandomForest(Emulator):
         """
         return self.model.predict(X)
 
-    def score(self, X, y):
+    def score(self, X, y, metric):
         """Returns the score of the emulator.
 
         Parameters
@@ -162,16 +163,16 @@ class RandomForest(Emulator):
             Simulation input.
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
-
+        metric : str
+            Name of the metric to use, currently either rsme or r2.
         Returns
         -------
-        rmse : float
-            Root mean squared error of the emulator.
+        metric : float
+            Metric of the emulator.
 
         """
         predictions = self.predict(X)
-        rmse = mean_squared_error(y, predictions, squared=False).round(2)
-        return rmse
+        return metric(y, predictions)
 
 
 class NeuralNetwork(Emulator):
@@ -227,7 +228,7 @@ class NeuralNetwork(Emulator):
         else:
             raise ValueError("Emulator not fitted yet.")
 
-    def score(self, X, y):
+    def score(self, X, y, metric):
         """Returns the score of the emulator.
 
         Parameters
@@ -236,16 +237,17 @@ class NeuralNetwork(Emulator):
             Simulation input.
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
+        metric : str
+            Name of the metric to use, currently either rsme or r2.
 
         Returns
         -------
-        rmse : float
-            Root mean squared error of the emulator.
+        metric : float
+            Metric of the emulator.
         """
 
         predictions = self.predict(X)
-        rmse = mean_squared_error(y, predictions, squared=False).round(2)
-        return rmse
+        return metric(y, predictions)
 
 
 class GaussianProcess(Emulator):
@@ -291,7 +293,7 @@ class GaussianProcess(Emulator):
         else:
             raise ValueError("Emulator not fitted yet.")
 
-    def score(self, X, y):
+    def score(self, X, y, metric):
         """Returns the score of the emulator.
 
         Parameters
@@ -307,5 +309,4 @@ class GaussianProcess(Emulator):
             Root mean squared error of the emulator.
         """
         prediction_means = self.predict(X).mean
-        rmse = mean_squared_error(y, prediction_means, squared=False).round(2)
-        return rmse
+        return metric(y, prediction_means)

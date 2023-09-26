@@ -6,7 +6,9 @@ from autoemulate.emulators import (
     GaussianProcess2,
     NeuralNetwork,
 )
+from autoemulate.metrics import METRIC_REGISTRY
 import numpy as np
+import pandas as pd
 
 
 class AutoEmulate:
@@ -21,7 +23,7 @@ class AutoEmulate:
         self.scores = {}
         self.fitted_models = {}
 
-    def compare(self, X, y, cv=5, models=None):
+    def compare(self, X, y, cv=5, models=None, metrics=None):
         """ "Compares emulators using cross-validation.
 
         Parameters
@@ -54,6 +56,14 @@ class AutoEmulate:
             ]
         )
 
+        if metrics is None:
+            metrics = METRIC_REGISTRY.keys()
+
+        self.scores = {
+            type(model).__name__: {metric: 0 for metric in metrics}
+            for model in self.models
+        }
+
         # Validation checks, same as before
         if self.X.shape[0] != self.y.shape[0]:
             raise ValueError("X and y must have the same number of samples.")
@@ -65,24 +75,30 @@ class AutoEmulate:
         for model in self.models:
             model_name = type(model).__name__
             print(f"Training {model_name}...")
-            fold_scores = []
-            self.fitted_models[model_name] = []
+            metric_fold_scores = {metric: [] for metric in metrics}
 
             kfold = KFold(n_splits=self.cv, shuffle=True)
             for train_index, test_index in kfold.split(self.X):
                 X_train, X_test = self.X[train_index], self.X[test_index]
                 y_train, y_test = self.y[train_index], self.y[test_index]
-                model.fit(X_train, y_train)
-                fold_scores.append(model.score(X_test, y_test))
-                self.fitted_models[model_name].append(model)
 
-            self.scores[model_name] = sum(fold_scores) / self.cv
+                model.fit(X_train, y_train)
+
+                for metric in metrics:
+                    metric_func = METRIC_REGISTRY[metric]
+                    score = model.score(X_test, y_test, metric=metric_func)
+                    metric_fold_scores[metric].append(score)
+
+            for metric, scores in metric_fold_scores.items():
+                self.scores[model_name][metric] = np.mean(scores)
 
     def print_scores(self):
-        """Prints scores for each emulator."""
-        print(f"RSME scores (average over {self.cv} folds):")
-        for model, score in self.scores.items():
-            print(f"{model}: {round(score, 2)}")
+        """Prints scores for each emulator in a table format."""
+        # Convert the nested dictionary to a Pandas DataFrame
+        df_scores = pd.DataFrame(self.scores).T
+
+        print(f"Scores (average over {self.cv} folds):")
+        print(df_scores.to_string())
 
     def get_fitted_models(self):
         """Returns the fitted models."""
