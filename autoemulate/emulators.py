@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import mogp_emulator
 import numpy as np
@@ -19,10 +21,10 @@ class Emulator(ABC):
 
         Parameters
         ----------
-        X : numpy.ndarray
-            Input data (simulation input).
-        y : numpy.ndarray
-            Target data (simulation output).
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
 
         """
         pass
@@ -33,8 +35,8 @@ class Emulator(ABC):
 
         Parameters
         ----------
-        X : numpy.ndarray
-            Input data (simulation input).
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
         """
         pass
 
@@ -44,12 +46,206 @@ class Emulator(ABC):
 
         Parameters
         ----------
-        X : numpy.ndarray
-            Input data (simulation input).
-        y : numpy.ndarray
-            Target data (simulation output).
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
         """
         pass
+
+
+class GaussianProcess2(Emulator):
+    """Gaussian process Emulator.
+
+    Implements GaussianProcessRegressor from scikit-learn.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Initializes a GaussianProcess object."""
+        self.args = args
+        self.kwargs = kwargs
+        self.model = GaussianProcessRegressor(*self.args, **self.kwargs)
+
+    def fit(self, X, y):
+        """Fits the emulator to the data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+        """
+        self.model.fit(X, y)
+
+    def predict(self, X):
+        """Predicts the output of the simulator for a given input.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+
+        Returns
+        -------
+        predictions : numpy.ndarray
+            Predictions of the emulator.
+        """
+        return self.model.predict(X)
+
+    def score(self, X, y):
+        """Returns the score of the emulator.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+
+        Returns
+        -------
+        rmse : float
+            Root mean squared error of the emulator.
+
+        """
+        predictions = self.predict(X)
+        rmse = mean_squared_error(y, predictions, squared=False).round(2)
+        return rmse
+
+
+class RandomForest(Emulator):
+    """Random forest Emulator.
+
+    Implements Random Forests regression from scikit-learn.
+    """
+
+    def __init__(self, n_estimators=100, *args, **kwargs):
+        """Initializes a RandomForest object."""
+        self.args = args
+        self.kwargs = {"n_estimators": n_estimators, **kwargs}
+        self.model = RandomForestRegressor(*self.args, **self.kwargs)
+
+    def fit(self, X, y):
+        """Fits the emulator to the data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+        """
+        self.model.fit(X, y)
+
+    def predict(self, X):
+        """Predicts the output of the simulator for a given input.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+
+        Returns
+        -------
+        predictions : numpy.ndarray
+            Predictions of the emulator.
+        """
+        return self.model.predict(X)
+
+    def score(self, X, y):
+        """Returns the score of the emulator.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+
+        Returns
+        -------
+        rmse : float
+            Root mean squared error of the emulator.
+
+        """
+        predictions = self.predict(X)
+        rmse = mean_squared_error(y, predictions, squared=False).round(2)
+        return rmse
+
+
+class NeuralNetwork(Emulator):
+    """Multi-layer perceptron Emulator.
+
+    Implements MLPRegressor from scikit-learn.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Initializes an MLPRegressor object."""
+        self.args = args
+        self.kwargs = kwargs
+        self.model = None
+
+    def fit(self, X, y):
+        """Fits the emulator to the data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+        """
+        # just to test, for now
+        hidden_layers = (X.shape[1] * 2, X.shape[1])
+        self.model = MLPRegressor(
+            solver="adam",
+            alpha=1e-5,
+            hidden_layer_sizes=hidden_layers,
+            max_iter=1000,
+            *self.args,
+            **self.kwargs
+        )
+        self.model.fit(X, y)
+
+    def predict(self, X):
+        """Predicts the output of the simulator for a given input.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+
+        Returns
+        -------
+        predictions : numpy.ndarray
+            Predictions of the emulator.
+        """
+
+        if self.model is not None:
+            return self.model.predict(X)
+        else:
+            raise ValueError("Emulator not fitted yet.")
+
+    def score(self, X, y):
+        """Returns the score of the emulator.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+
+        Returns
+        -------
+        rmse : float
+            Root mean squared error of the emulator.
+        """
+
+        predictions = self.predict(X)
+        rmse = mean_squared_error(y, predictions, squared=False).round(2)
+        return rmse
 
 
 class GaussianProcess(Emulator):
@@ -110,66 +306,6 @@ class GaussianProcess(Emulator):
         rmse : float
             Root mean squared error of the emulator.
         """
-        predictions_means = self.predict(X).mean
-        rmse = np.sqrt(mean_squared_error(y, predictions_means)).round(2)
-        return rmse
-
-
-class RandomForest(Emulator):
-    """Random forest Emulator.
-
-    Implements Random Forests regression from scikit-learn.
-    """
-
-    def __init__(self, n_estimators=100, *args, **kwargs):
-        """Initializes a RandomForest object."""
-        self.args = args
-        self.kwargs = {"n_estimators": n_estimators, **kwargs}
-        self.model = RandomForestRegressor(*self.args, **self.kwargs)
-
-    def fit(self, X, y):
-        """Fits the emulator to the data.
-
-        Parameters
-        ----------
-        X : numpy.ndarray
-            Input data (simulation input).
-        y : numpy.ndarray
-            Target data (simulation output).
-        """
-        self.model.fit(X, y)
-
-    def predict(self, X):
-        """Predicts the output of the simulator for a given input.
-
-        Parameters
-        ----------
-        X : numpy.ndarray
-            Input data (simulation input).
-
-        Returns
-        -------
-        predictions : numpy.ndarray
-            Predictions of the emulator.
-        """
-        return self.model.predict(X)
-
-    def score(self, X, y):
-        """Returns the score of the emulator.
-
-        Parameters
-        ----------
-        X : numpy.ndarray
-            Input data (simulation input).
-        y : numpy.ndarray
-            Target data (simulation output).
-
-        Returns
-        -------
-        rmse : float
-            Root mean squared error of the emulator.
-
-        """
-        predictions = self.predict(X)
-        rmse = np.sqrt(mean_squared_error(y, predictions)).round(2)
+        prediction_means = self.predict(X).mean
+        rmse = mean_squared_error(y, prediction_means, squared=False).round(2)
         return rmse

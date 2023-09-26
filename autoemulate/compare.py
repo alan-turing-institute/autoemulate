@@ -1,6 +1,11 @@
 from sklearn.model_selection import KFold
 from autoemulate.experimental_design import LatinHypercube
-from autoemulate.emulators import GaussianProcess, RandomForest
+from autoemulate.emulators import (
+    GaussianProcess,
+    RandomForest,
+    GaussianProcess2,
+    NeuralNetwork,
+)
 import numpy as np
 
 
@@ -38,7 +43,16 @@ class AutoEmulate:
         self.X = np.array(X)
         self.y = np.array(y)
         self.cv = cv
-        self.models = models if models else [GaussianProcess(), RandomForest()]
+        self.models = (
+            models
+            if models
+            else [
+                GaussianProcess(),
+                RandomForest(),
+                GaussianProcess2(),
+                NeuralNetwork(),
+            ]
+        )
 
         # Validation checks, same as before
         if self.X.shape[0] != self.y.shape[0]:
