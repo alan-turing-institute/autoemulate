@@ -310,3 +310,11 @@ class GaussianProcess(Emulator):
         """
         prediction_means = self.predict(X).mean
         return metric(y, prediction_means)
+
+
+MODEL_REGISTRY = {
+    "GaussianProcess": GaussianProcess,
+    "RandomForest": RandomForest,
+    "GaussianProcess2": GaussianProcess2,
+    "NeuralNetwork": NeuralNetwork,
+}
