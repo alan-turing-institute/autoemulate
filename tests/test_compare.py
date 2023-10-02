@@ -19,7 +19,8 @@ def compare_results():
     sim_in = lh.sample(10)
     sim_out = [simple_sim(p) for p in sim_in]
     em = AutoEmulate()
-    em.compare(X=sim_in, y=sim_out, cv=5)
+    em.setup(X=sim_in, y=sim_out, cv=5)
+    em.compare()
     return em.scores
 
 
@@ -34,4 +35,4 @@ def test_compare_dict(compare_results):
 
 # check that dict values are numeric
 def test_compare_dict_values_numeric(compare_results):
-    assert all(isinstance(v, float) for v in compare_results.values())
+    assert all(isinstance(v, dict) for v in compare_results.values())
