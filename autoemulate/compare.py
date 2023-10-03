@@ -77,7 +77,7 @@ class AutoEmulate:
             )
             print("Average scores across all models:")
             print(means.to_string(index=False))
-           
+
         else:
             specific_model_scores = self.scores_df[self.scores_df["model"] == model]
             folds = (
@@ -92,11 +92,10 @@ class AutoEmulate:
             folds.loc["Std Dev"] = folds.std()
             print(f"Scores for {model} across all folds:")
             print(folds.to_string())
-            
 
     def _check_data(self, X, y):
         """Validates data.
-        
+
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -108,8 +107,7 @@ class AutoEmulate:
             raise ValueError("X and y must have the same number of samples.")
         if np.isnan(X).any() or np.isnan(y).any():
             raise ValueError("X and y should not contain NaNs.")
-        
-        
+
     def _preprocess_data(self, X, y):
         """Preprocesses data.
 
@@ -123,7 +121,6 @@ class AutoEmulate:
         """
         self.X = np.array(X)
         self.y = np.array(y)
-
 
     def _train_model(self, model, X, y):
         """Trains the model.
