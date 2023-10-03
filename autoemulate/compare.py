@@ -2,6 +2,7 @@ from sklearn.model_selection import KFold
 from autoemulate.experimental_design import LatinHypercube
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.cv import CV_REGISTRY
 import pandas as pd
 import numpy as np
 
@@ -13,8 +14,6 @@ class AutoEmulate:
         """Initializes an AutoEmulate object."""
         self.X = None
         self.y = None
-        self.cv = None
-        self.models = None
         self.scores_df = pd.DataFrame(
             columns=["model", "metric", "fold", "score"]
         ).astype(
@@ -22,16 +21,31 @@ class AutoEmulate:
         )
         self.is_set_up = False
 
-    def setup(self, X, y, cv=None):
+    def setup(self, X, y, fold_strategy="kfold", folds=5):
+        """Sets up the AutoEmulate object.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+        fold_strategy : str
+            Name of the cross-validation strategy to use, currently either kfold or stratified_kfold.
+        folds : int
+            Number of folds.
+
+        """
         self._preprocess_data(X, y)
-        self.cv = cv if cv else 5
         self.models = [
             MODEL_REGISTRY[model_name]() for model_name in MODEL_REGISTRY.keys()
         ]
         self.metrics = [metric_name for metric_name in METRIC_REGISTRY.keys()]
+        self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.is_set_up = True
 
     def compare(self):
+        """Compares the emulators."""
         if not self.is_set_up:
             raise RuntimeError("Must run setup() before compare()")
 
@@ -43,15 +57,23 @@ class AutoEmulate:
             self._score_model_with_cv(model)
 
     def print_scores(self, model=None):
+        """Prints the scores of the emulators.
+
+        Parameters
+        ----------
+        model : str, optional
+            If model is None, prints the average scores across all models.
+            Otherwise, prints the scores for the specified model across folds.
+
+        """
         if model is None:
             means = (
-                self.scores_df
-                .groupby(["model", "metric"])["score"]
+                self.scores_df.groupby(["model", "metric"])["score"]
                 .mean()
                 .unstack()
                 .reset_index()
             )
-            print("Average Scores Across All Models:")
+            print("Average scores across all models:")
             print(means.to_string(index=False))
         else:
             specific_model_scores = self.scores_df[self.scores_df["model"] == model]
@@ -69,6 +91,16 @@ class AutoEmulate:
             print(folds.to_string())
 
     def _preprocess_data(self, X, y):
+        """Preprocesses and validates the data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+
+        """
         self.X = np.array(X)
         self.y = np.array(y)
 
@@ -78,10 +110,40 @@ class AutoEmulate:
             raise ValueError("X and y should not contain NaNs.")
 
     def _train_model(self, model, X, y):
+        """Trains the model.
+
+        Parameters
+        ----------
+        model : object
+            The model to train.
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+
+        Returns
+        -------
+        model : object
+            The trained model.
+        """
         model.fit(X, y)
         return model
 
     def _evaluate_model(self, trained_model, X, y):
+        """Evaluates the model.
+
+        Parameters
+        ----------
+        trained_model : object
+            The trained model.
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+
+        Returns
+        -------
+        scores : dict
+            The scores of the model.
+        """
         scores = {}
         for metric in self.metrics:
             metric_func = METRIC_REGISTRY[metric]
@@ -90,10 +152,22 @@ class AutoEmulate:
         return scores
 
     def _score_model_with_cv(self, model):
-        kfold = KFold(n_splits=self.cv, shuffle=True)
+        """Scores the model using cross-validation.
+
+        Parameters
+        ----------
+        model : object
+            The model to score.
+
+        Returns
+        -------
+        scores_df : pandas.DataFrame
+            The scores of the model.
+        """
+        cv = self.cv
         model_name = type(model).__name__
 
-        for fold, (train_index, test_index) in enumerate(kfold.split(self.X)):
+        for fold, (train_index, test_index) in enumerate(cv.split(self.X)):
             X_train, X_test = self.X[train_index], self.X[test_index]
             y_train, y_test = self.y[train_index], self.y[test_index]
 
