@@ -31,11 +31,12 @@ class AutoEmulate:
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
         fold_strategy : str
-            Name of the cross-validation strategy to use, currently either kfold or stratified_kfold.
+            Cross-validation strategy, currently either "kfold" or "stratified_kfold".
         folds : int
             Number of folds.
 
         """
+        self._check_data(X, y)
         self._preprocess_data(X, y)
         self.models = [
             MODEL_REGISTRY[model_name]() for model_name in MODEL_REGISTRY.keys()
@@ -72,9 +73,11 @@ class AutoEmulate:
                 .mean()
                 .unstack()
                 .reset_index()
+                .sort_values(by="r2", ascending=False)
             )
             print("Average scores across all models:")
             print(means.to_string(index=False))
+           
         else:
             specific_model_scores = self.scores_df[self.scores_df["model"] == model]
             folds = (
@@ -89,9 +92,26 @@ class AutoEmulate:
             folds.loc["Std Dev"] = folds.std()
             print(f"Scores for {model} across all folds:")
             print(folds.to_string())
+            
 
+    def _check_data(self, X, y):
+        """Validates data.
+        
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+        """
+        if X.shape[0] != y.shape[0]:
+            raise ValueError("X and y must have the same number of samples.")
+        if np.isnan(X).any() or np.isnan(y).any():
+            raise ValueError("X and y should not contain NaNs.")
+        
+        
     def _preprocess_data(self, X, y):
-        """Preprocesses and validates the data.
+        """Preprocesses data.
 
         Parameters
         ----------
@@ -104,10 +124,6 @@ class AutoEmulate:
         self.X = np.array(X)
         self.y = np.array(y)
 
-        if self.X.shape[0] != self.y.shape[0]:
-            raise ValueError("X and y must have the same number of samples.")
-        if np.isnan(self.X).any() or np.isnan(self.y).any():
-            raise ValueError("X and y should not contain NaNs.")
 
     def _train_model(self, model, X, y):
         """Trains the model.
