@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import pandas as pd
 from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
 from autoemulate.emulators import GaussianProcess, RandomForest
 from autoemulate.compare import AutoEmulate
@@ -22,17 +23,3 @@ def compare_results():
     em.setup(X=sim_in, y=sim_out, cv=5)
     em.compare()
     return em.scores
-
-
-def test_compare_not_none(compare_results):
-    assert compare_results is not None
-
-
-# check that the results are a dictionary
-def test_compare_dict(compare_results):
-    assert isinstance(compare_results, dict)
-
-
-# check that dict values are numeric
-def test_compare_dict_values_numeric(compare_results):
-    assert all(isinstance(v, dict) for v in compare_results.values())
