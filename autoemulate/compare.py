@@ -5,6 +5,7 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class AutoEmulate:
@@ -20,6 +21,7 @@ class AutoEmulate:
             {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
         )
         self.is_set_up = False
+        self.predictions_data = {}
 
     def setup(self, X, y, fold_strategy="kfold", folds=5):
         """Sets up the AutoEmulate object.
@@ -179,6 +181,8 @@ class AutoEmulate:
         """
         cv = self.cv
         model_name = type(model).__name__
+        if model_name not in self.predictions_data:
+            self.predictions_data[model_name] = {}
 
         for fold, (train_index, test_index) in enumerate(cv.split(self.X)):
             X_train, X_test = self.X[train_index], self.X[test_index]
@@ -186,6 +190,12 @@ class AutoEmulate:
 
             trained_model = self._train_model(model, X_train, y_train)
             fold_scores = self._evaluate_model(trained_model, X_test, y_test)
+
+            y_pred = trained_model.predict(X_test)
+            self.predictions_data[model_name][fold] = {
+                "y_true": y_test,
+                "y_pred": y_pred,
+            }
 
             for metric, score in fold_scores.items():
                 new_row = pd.DataFrame(
@@ -197,3 +207,67 @@ class AutoEmulate:
                     }
                 )
                 self.scores_df = pd.concat([self.scores_df, new_row], ignore_index=True)
+
+    def plot_predictions(self, model=None):
+        """Plot predictions vs ground truth based on the condition.
+
+        Parameters
+        ----------
+        model : str, optional
+            Name of the model to plot. If None, plots the best fold for each model.
+        """
+        if not self.predictions_data:
+            print("No prediction data available for plotting.")
+            return
+
+        if model:
+            # Plot all folds for the specified model
+            if model not in self.predictions_data:
+                print(f"No prediction data available for model {model}.")
+                return
+
+            model_data = self.predictions_data[model]
+            num_folds = len(model_data)
+
+            fig, axes = plt.subplots(1, num_folds, figsize=(15, 3))
+            if num_folds == 1:
+                axes = [axes]  # Make it iterable
+
+            for fold, ax in zip(model_data.keys(), axes):
+                data = model_data[fold]
+                y_true = np.array(data["y_true"])
+                y_pred = np.array(data["y_pred"])
+
+                ax.scatter(y_true, y_pred, alpha=0.5)
+                ax.set_xlabel("Simulation output")
+                ax.set_ylabel("Predictions")
+                ax.set_title(f"Model: {model}, Fold: {fold}")
+
+        else:
+            # Plot the best fold for each model
+            best_folds = (
+                self.scores_df[self.scores_df["metric"] == "r2"]
+                .groupby(["model"])["score"]
+                .idxmax()
+                .map(lambda x: self.scores_df.loc[x, "fold"])
+                .to_dict()
+            )
+
+            fig, axes = plt.subplots(1, len(best_folds), figsize=(20, 3))
+            if len(best_folds) == 1:
+                axes = [axes]  # Make it iterable
+
+            for ax, (model, best_fold) in zip(axes, best_folds.items()):
+                model_data = self.predictions_data.get(model, {})
+                data = model_data.get(best_fold, {})
+
+                y_true = np.array(data.get("y_true", []))
+                y_pred = np.array(data.get("y_pred", []))
+
+                ax.scatter(y_true, y_pred, alpha=0.5)
+                ax.set_xlabel("Simulation output")
+                ax.set_ylabel("Predictions")
+                ax.set_title(f"Model: {model}, Best Fold: {best_fold}")
+
+        plt.tight_layout()
+        plt.show()
