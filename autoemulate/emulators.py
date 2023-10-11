@@ -289,7 +289,7 @@ class GaussianProcess(Emulator):
             Predictions of the emulator.
         """
         if self.model is not None:
-            return self.model.predict(X)
+            return self.model.predict(X).mean
         else:
             raise ValueError("Emulator not fitted yet.")
 
@@ -308,7 +308,7 @@ class GaussianProcess(Emulator):
         rmse : float
             Root mean squared error of the emulator.
         """
-        prediction_means = self.predict(X).mean
+        prediction_means = self.predict(X)
         return metric(y, prediction_means)
 
 

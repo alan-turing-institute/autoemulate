@@ -55,14 +55,13 @@ def test_gp_pred_exists(gp_model, simulation_io):
 def test_gp_pred_len(gp_model, simulation_io):
     sim_in, sim_out = simulation_io
     predictions = gp_model.predict(sim_in)
-    assert len(predictions.mean) == len(sim_out)
+    assert len(predictions) == len(sim_out)
 
 
 def test_gp_pred_type(gp_model, simulation_io):
     sim_in, sim_out = simulation_io
     predictions = gp_model.predict(sim_in)
-    print(type(predictions.mean))
-    assert isinstance(predictions.mean, np.ndarray)
+    assert isinstance(predictions, np.ndarray)
 
 
 # Test Random Forest
