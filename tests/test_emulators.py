@@ -64,6 +64,18 @@ def test_gp_pred_type(gp_model, simulation_io):
     assert isinstance(predictions, np.ndarray)
 
 
+def test_gp_pred_with_std_len(gp_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = gp_model.predict(sim_in, return_std=True)
+    assert len(predictions) == 2
+
+
+def test_gp_pred_with_std_len_of_var(gp_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = gp_model.predict(sim_in, return_std=True)
+    assert len(predictions[1]) == len(sim_out)
+
+
 # Test Random Forest
 def test_rf_initialisation():
     rf = RandomForest()
