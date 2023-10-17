@@ -30,13 +30,16 @@ class Emulator(ABC):
         pass
 
     @abstractmethod
-    def predict(self, X):
+    def predict(self, X, return_std=False):
         """Predicts the output of the simulator for a given input.
 
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             Simulation input.
+        return_std : bool
+            If True, returns a touple with two ndarrays,
+            one with the mean and one with the standard deviations of the prediction.
         """
         pass
 
@@ -80,20 +83,23 @@ class GaussianProcess2(Emulator):
         """
         self.model.fit(X, y)
 
-    def predict(self, X):
+    def predict(self, X, return_std=False):
         """Predicts the output of the simulator for a given input.
 
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             Simulation input.
+        return_std : bool
+            If True, returns a touple with two ndarrays,
+            one with the mean and one with the variance of the prediction.
 
         Returns
         -------
         predictions : numpy.ndarray
             Predictions of the emulator.
         """
-        return self.model.predict(X)
+        return self.model.predict(X, return_std=return_std)
 
     def score(self, X, y, metric):
         """Returns the score of the emulator.
@@ -275,23 +281,27 @@ class GaussianProcess(Emulator):
         self.model = mogp_emulator.GaussianProcess(X, y, *self.args, **self.kwargs)
         self.model = mogp_emulator.fit_GP_MAP(self.model)
 
-    def predict(self, X):
+    def predict(self, X, return_std=False):
         """Predicts the output of the simulator for a given input.
 
         Parameters
         ----------
         X : numpy.ndarray
             Input data (simulation input).
+        return_var : bool
+            If True, returns a touple with two ndarrays,
+            one with the mean and one with the standard deviations of the prediction.
 
         Returns
         -------
         predictions : numpy.ndarray
             Predictions of the emulator.
         """
-        if self.model is not None:
-            return self.model.predict(X).mean
+        if return_std:
+            mean, var, _ = self.model.predict(X)
+            return mean, np.sqrt(var)
         else:
-            raise ValueError("Emulator not fitted yet.")
+            return self.model.predict(X).mean
 
     def score(self, X, y, metric):
         """Returns the score of the emulator.
