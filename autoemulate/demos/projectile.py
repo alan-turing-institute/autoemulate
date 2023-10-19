@@ -12,13 +12,14 @@ from scipy.integrate import solve_ivp
 
 # define functions needed for simulator
 
+
 def f(t, y, c):
     "Compute RHS of system of differential equations, returning vector derivative"
 
     # check inputs and extract
 
     assert len(y) == 4
-    assert c >= 0.
+    assert c >= 0.0
 
     vx = y[0]
     vy = y[1]
@@ -27,24 +28,27 @@ def f(t, y, c):
 
     dydt = np.zeros(4)
 
-    dydt[0] = -c*vx*np.sqrt(vx**2 + vy**2)
-    dydt[1] = -9.8 - c*vy*np.sqrt(vx**2 + vy**2)
+    dydt[0] = -c * vx * np.sqrt(vx**2 + vy**2)
+    dydt[1] = -9.8 - c * vy * np.sqrt(vx**2 + vy**2)
     dydt[2] = vx
     dydt[3] = vy
 
     return dydt
 
+
 def event(t, y, c):
     "event to trigger end of integration"
 
     assert len(y) == 4
-    assert c >= 0.
+    assert c >= 0.0
 
     return y[3]
+
 
 event.terminal = True
 
 # now can define simulator
+
 
 def simulator_base(x):
     "simulator to solve ODE system for projectile motion with drag. returns distance projectile travels"
@@ -52,24 +56,25 @@ def simulator_base(x):
     # unpack values
 
     assert len(x) == 2
-    assert x[1] > 0.
+    assert x[1] > 0.0
 
-    c = 10.**x[0]
+    c = 10.0 ** x[0]
     v0 = x[1]
 
     # set initial conditions
 
     y0 = np.zeros(4)
 
-    y0[0] = v0/np.sqrt(2.)
-    y0[1] = v0/np.sqrt(2.)
-    y0[3] = 2.
+    y0[0] = v0 / np.sqrt(2.0)
+    y0[1] = v0 / np.sqrt(2.0)
+    y0[3] = 2.0
 
     # run simulation
 
-    results = solve_ivp(f, (0., 1.e8), y0, events=event, args = (c,))
+    results = solve_ivp(f, (0.0, 1.0e8), y0, events=event, args=(c,))
 
     return results
+
 
 def simulator(x):
     "simulator to solve ODE system for projectile motion with drag. returns distance projectile travels"
@@ -78,33 +83,42 @@ def simulator(x):
 
     return results.y_events[0][0][2]
 
+
 def simulator_multioutput(x):
     "simulator to solve ODE system with multiple outputs"
-    
+
     results = simulator_base(x)
-    
-    return (results.y_events[0][0][2],
-            np.sqrt(results.y_events[0][0][0]**2 + results.y_events[0][0][1]**2))
+
+    return (
+        results.y_events[0][0][2],
+        np.sqrt(results.y_events[0][0][0] ** 2 + results.y_events[0][0][1] ** 2),
+    )
+
 
 # functions for printing out results
+
 
 def print_results(inputs, arg, var):
     "convenience function for printing out generic results"
 
-    print("---------------------------------------------------------------------------------")
+    print(
+        "---------------------------------------------------------------------------------"
+    )
 
     for pp, m, v in zip(inputs, arg, var):
         print("{}      {}       {}".format(pp, m, v))
 
+
 def print_predictions(inputs, pred, var):
     "convenience function for printing predictions"
-    
+
     print("Target Point                Predicted Mean             Predictive Variance")
     print_results(inputs, pred, var)
+
 
 def print_errors(inputs, errors, var):
     "convenience function for printing out results and computing mean square error"
 
     print("Target Point                Standard Error             Predictive Variance")
     print_results(inputs, errors, var)
-    print("Mean squared error: {}".format(np.sum(errors**2)/len(errors)))
+    print("Mean squared error: {}".format(np.sum(errors**2) / len(errors)))
