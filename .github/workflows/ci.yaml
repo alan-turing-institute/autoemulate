@@ -25,33 +25,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Cache Poetry dependencies
+      # Cache pip dependencies
       - name: Cache dependencies
         uses: actions/cache@v2
         with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-poetry-
-            
-      - name: Install poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python -
+            ${{ runner.os }}-pip-
 
-      - name: Configure poetry
+      # Set up venv and install dependencies
+      - name: Set up Virtual Environment and Install Dependencies
         run: |
-          poetry config virtualenvs.create false
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
 
-      - name: Install dependencies
-        run: |
-          poetry install
-
+      # Run Tests with Coverage
       - name: Run Tests with Coverage
         run: |
-          poetry run coverage run -m pytest
+          source .venv/bin/activate
+          coverage run -m pytest
         env: 
           COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
-        
+
       - name: Store coverage file
         uses: actions/upload-artifact@v3
         with:
