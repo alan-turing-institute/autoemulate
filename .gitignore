@@ -4,6 +4,8 @@ __pycache__/
 dist/
 data/
 
+.venv/
+
 # Ignore Sphinx build artifacts
 docs/build/
 docs/generated/
