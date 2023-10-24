@@ -1,2 +1,0 @@
-[sphinx.html_themes]
-basic-ng = sphinx_basic_ng
