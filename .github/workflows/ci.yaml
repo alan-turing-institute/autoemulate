@@ -43,6 +43,7 @@ jobs:
       - name: Set up Virtual Environment and Install Dependencies
         run: |
           pip install --upgrade pip
+          mkdir -p .venv
           python -m venv .venv
           source .venv/bin/activate
           pip install -r requirements.txt
