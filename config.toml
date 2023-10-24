@@ -1,4 +1,4 @@
-[tool.poetry]
+# Project Metadata
 name = "autoemulate"
 version = "0.1.0"
 description = "An emulator platform for Digital Twins"
@@ -6,7 +6,8 @@ license = "MIT"
 authors = ["martin stoffel <martin.adam.stoffel@gmail.com>"]
 readme = "README.md"
 
-[tool.poetry.dependencies]
+# Dependencies
+[dependencies]
 python = ">=3.10,<3.13"
 mogp-emulator = "^0.7.2"
 matplotlib = "^3.7.2"
@@ -20,17 +21,10 @@ sphinx-autodoc-typehints = "^1.24.0"
 coverage = "^7.3.1"
 pandas = "^2.1.1"
 
-[tool.poetry.group.dev.dependencies]
+# Dev Dependencies
+[dev_dependencies]
 ipykernel = "^6.25.0"
 
-[tool.poetry.extras]
-docs = ["furo", 
-        "sphinx-copybutton", 
-        "sphinx-autodoc-typehints"]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.coverage.run]
-relative_files = true
+# Extras
+[extras]
+docs = ["furo", "sphinx-copybutton", "sphinx-autodoc-typehints"]
