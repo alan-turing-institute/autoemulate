@@ -38,6 +38,7 @@ jobs:
         run: |
           python --version
           pwd
+          which python
 
       # Set up venv and install dependencies
       - name: Set up Virtual Environment and Install Dependencies
