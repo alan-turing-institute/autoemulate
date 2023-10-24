@@ -38,10 +38,11 @@ jobs:
         run: |
           python --version
           pwd
-          
+
       # Set up venv and install dependencies
       - name: Set up Virtual Environment and Install Dependencies
         run: |
+          pip install --upgrade pip
           python -m venv .venv
           source .venv/bin/activate
           pip install -r requirements.txt
