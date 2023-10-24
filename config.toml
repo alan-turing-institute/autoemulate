@@ -28,7 +28,3 @@ ipykernel = "^6.25.0"
 # Extras
 [extras]
 docs = ["furo", "sphinx-copybutton", "sphinx-autodoc-typehints"]
-
-# Coverage Run
-[coverage_run]
-relative_files = true
