@@ -1,47 +1,47 @@
 import numpy as np
 
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
 from autoemulate.emulators import Emulator
 
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.gaussian_process.kernels import RBF, Matern, DotProduct
 
 
-class RandomForest(BaseEstimator, RegressorMixin):
-    """Random forest Emulator.
+class GaussianProcessSk(BaseEstimator, RegressorMixin):
+    """Gaussian process Emulator.
 
-    Implements Random Forests regression from scikit-learn.
+    Implements GaussianProcessRegressor from scikit-learn.
     """
 
     def __init__(
         self,
-        n_estimators=100,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features=1.0,
-        bootstrap=True,
+        kernel=None,
+        alpha=1e-10,
+        optimizer="fmin_l_bfgs_b",
+        n_restarts_optimizer=0,
+        normalize_y=False,
+        copy_X_train=True,
         random_state=None,
     ):
-        """Initializes a RandomForest object."""
-        self.n_estimators = n_estimators
-        self.max_depth = max_depth
-        self.min_samples_split = min_samples_split
-        self.min_samples_leaf = min_samples_leaf
-        self.max_features = max_features
-        self.bootstrap = bootstrap
+        """Initializes a GaussianProcess object."""
+        self.kernel = kernel
+        self.alpha = alpha
+        self.optimizer = optimizer
+        self.n_restarts_optimizer = n_restarts_optimizer
+        self.normalize_y = normalize_y
+        self.copy_X_train = copy_X_train
         self.random_state = random_state
 
     def fit(self, X, y):
         """Fits the emulator to the data.
 
-        Parameters
+         Parameters
         ----------
         X : {array-like, sparse matrix}, shape (n_samples, n_features)
             The training input samples.
         y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-            The target values (class labels in classification, real numbers in
-            regression).
+            The target values (real numbers).
 
         Returns
         -------
@@ -50,20 +50,20 @@ class RandomForest(BaseEstimator, RegressorMixin):
         """
         X, y = check_X_y(X, y, multi_output=True, y_numeric=True)
         self.n_features_in_ = X.shape[1]
-        self.model_ = RandomForestRegressor(
-            n_estimators=self.n_estimators,
-            max_depth=self.max_depth,
-            min_samples_split=self.min_samples_split,
-            min_samples_leaf=self.min_samples_leaf,
-            max_features=self.max_features,
-            bootstrap=self.bootstrap,
+        self.model_ = GaussianProcessRegressor(
+            kernel=self.kernel,
+            alpha=self.alpha,
+            optimizer=self.optimizer,
+            n_restarts_optimizer=self.n_restarts_optimizer,
+            normalize_y=self.normalize_y,
+            copy_X_train=self.copy_X_train,
             random_state=self.random_state,
         )
         self.model_.fit(X, y)
         self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, X, return_std=False):
         """Predicts the output of the simulator for a given input.
 
         Parameters
@@ -82,15 +82,15 @@ class RandomForest(BaseEstimator, RegressorMixin):
         """
         X = check_array(X)
         check_is_fitted(self, "is_fitted_")
-        return self.model_.predict(X)
+        return self.model_.predict(X, return_std=return_std)
 
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "n_estimators": [10, 100],
-            "max_depth": [None, 10],
-            "min_samples_split": [2, 10, 100],
-            "min_samples_leaf": [1, 10, 100],
+            "kernel": [RBF(), Matern(), DotProduct()],
+            "alpha": [1e-10, 1e-5],
+            "optimizer": ["fmin_l_bfgs_b"],
+            "n_restarts_optimizer": [0, 2],
         }
         return param_grid
 
@@ -106,8 +106,7 @@ class RandomForest(BaseEstimator, RegressorMixin):
     #         Simulation input.
     #     y : array-like, shape (n_samples, n_outputs)
     #         Simulation output.
-    #     metric : str
-    #         Name of the metric to use, currently either rsme or r2.
+
     #     Returns
     #     -------
     #     metric : float
@@ -116,7 +115,3 @@ class RandomForest(BaseEstimator, RegressorMixin):
     #     """
     #     predictions = self.predict(X)
     #     return metric(y, predictions)
-
-    # def _more_tags(self):
-    #     return {'non_deterministic': True,
-    #             'multioutput': True}

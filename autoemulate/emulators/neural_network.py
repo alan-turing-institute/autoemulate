@@ -3,77 +3,116 @@ import numpy as np
 from sklearn.neural_network import MLPRegressor
 from autoemulate.emulators import Emulator
 
+from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-class NeuralNetwork(Emulator):
+
+class NeuralNetwork(BaseEstimator, RegressorMixin):
     """Multi-layer perceptron Emulator.
 
     Implements MLPRegressor from scikit-learn.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        hidden_layer_sizes=(100,),
+        activation="relu",
+        solver="adam",
+        alpha=0.0001,
+        learning_rate="constant",
+        learning_rate_init=0.001,
+        max_iter=200,
+        random_state=None,
+    ):
         """Initializes an MLPRegressor object."""
-        self.args = args
-        self.kwargs = kwargs
-        self.model = None
+        self.hidden_layer_sizes = hidden_layer_sizes
+        self.activation = activation
+        self.solver = solver
+        self.alpha = alpha
+        self.learning_rate = learning_rate
+        self.learning_rate_init = learning_rate_init
+        self.max_iter = max_iter
+        self.random_state = random_state
 
     def fit(self, X, y):
         """Fits the emulator to the data.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Simulation input.
-        y : array-like, shape (n_samples, n_outputs)
-            Simulation output.
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+            The target values (class labels in classification, real numbers in
+            regression).
+
+        Returns
+        -------
+        self : object
+            Returns self.
         """
-        # just to test, for now
-        hidden_layers = (X.shape[1] * 2, X.shape[1])
-        self.model = MLPRegressor(
-            solver="adam",
-            alpha=1e-5,
-            hidden_layer_sizes=hidden_layers,
-            max_iter=1000,
-            *self.args,
-            **self.kwargs
+        X, y = check_X_y(X, y, multi_output=True, y_numeric=True)
+        self.n_features_in_ = X.shape[1]
+        self.model_ = MLPRegressor(
+            hidden_layer_sizes=self.hidden_layer_sizes,
+            activation=self.activation,
+            solver=self.solver,
+            alpha=self.alpha,
+            learning_rate=self.learning_rate,
+            learning_rate_init=self.learning_rate_init,
+            max_iter=self.max_iter,
+            random_state=self.random_state,
         )
-        self.model.fit(X, y)
+        self.model_.fit(X, y)
+        # expose n_iter_ attribute to be consistent with sklearn estimators
+        self.n_iter_ = self.model_.n_iter_
+        self.is_fitted_ = True
+        return self
 
     def predict(self, X):
         """Predicts the output of the simulator for a given input.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Simulation input.
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
 
         Returns
         -------
-        predictions : numpy.ndarray
-            Predictions of the emulator.
+        y : ndarray, shape (n_samples,)
+            Model predictions.
         """
+        X = check_array(X)
+        check_is_fitted(self, "is_fitted_")
+        return self.model_.predict(X)
 
-        if self.model is not None:
-            return self.model.predict(X)
-        else:
-            raise ValueError("Emulator not fitted yet.")
+    def get_grid_params(self):
+        """Returns the grid parameters of the emulator."""
+        param_grid = {
+            "hidden_layer_sizes": [(100,), (100, 100)],
+            "activation": ["tanh", "relu"],
+        }
+        return param_grid
 
-    def score(self, X, y, metric):
-        """Returns the score of the emulator.
+    def _more_tags(self):
+        return {"multioutput": True}
 
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Simulation input.
-        y : array-like, shape (n_samples, n_outputs)
-            Simulation output.
-        metric : str
-            Name of the metric to use, currently either rsme or r2.
+    # def score(self, X, y, metric):
+    #     """Returns the score of the emulator.
 
-        Returns
-        -------
-        metric : float
-            Metric of the emulator.
-        """
+    #     Parameters
+    #     ----------
+    #     X : array-like, shape (n_samples, n_features)
+    #         Simulation input.
+    #     y : array-like, shape (n_samples, n_outputs)
+    #         Simulation output.
+    #     metric : str
+    #         Name of the metric to use, currently either rsme or r2.
 
-        predictions = self.predict(X)
-        return metric(y, predictions)
+    #     Returns
+    #     -------
+    #     metric : float
+    #         Metric of the emulator.
+    #     """
+
+    #     predictions = self.predict(X)
+    #     return metric(y, predictions)

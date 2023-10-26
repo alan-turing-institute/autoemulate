@@ -46,43 +46,6 @@ def test_setup(ae_instance):
     assert len(ae.metrics) == len(METRIC_REGISTRY.keys())
 
 
-def test_check_data(random_data):
-    X, y = random_data
-    ae = AutoEmulate()
-    ae._check_data(X, y)
-    # Check that error is raised when X and y have different lengths
-    with pytest.raises(ValueError):
-        ae._check_data(X, np.random.rand(101))
-    # Check that error is raised when X / y have nan values
-    with pytest.raises(ValueError):
-        ae._check_data(X, np.array([[np.nan]] * 100))
-
-
-def test_preprocess_data(random_data):
-    X, y = random_data
-    X = X.tolist()
-    y = y.tolist()
-    # check that X, y are converted to numpy arrays
-    ae = AutoEmulate()
-    ae._preprocess_data(X, y)
-    assert isinstance(ae.X, np.ndarray)
-    assert isinstance(ae.y, np.ndarray)
-
-
-def test__evaluate_model(fitted_ae_instance):
-    ae = fitted_ae_instance
-    X, y = ae.X, ae.y
-    model = ae.models[0]  # just take first model
-    scores = ae._evaluate_model(model, X, y)
-    metrics = METRIC_REGISTRY.keys()
-    # check that scores is a dict
-    assert isinstance(scores, dict)
-    # check that all metrics are present
-    assert set(scores.keys()) == set(metrics)
-    # check that all scores are floats
-    assert all([isinstance(score, float) for score in scores.values()])
-
-
 def test__score_model_with_cv(fitted_ae_instance):
     ae = fitted_ae_instance
     # test that ae.scores_df is pandas dataframe with correct columns

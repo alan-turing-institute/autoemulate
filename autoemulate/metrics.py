@@ -12,7 +12,7 @@ def rsme(y_true, y_pred):
     y_pred : array-like, shape (n_samples, n_outputs)
         Emulator output.
     """
-    return mean_squared_error(y_true, y_pred, squared=True)
+    return mean_squared_error(y_true, y_pred)
 
 
 def r2(y_true, y_pred):
