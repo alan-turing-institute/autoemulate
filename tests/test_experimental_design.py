@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
 
+
 # Test LatinHypercube Initialisation
 @pytest.fixture
 def lh():

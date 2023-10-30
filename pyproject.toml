@@ -19,6 +19,7 @@ sphinx-copybutton = "^0.5.2"
 sphinx-autodoc-typehints = "^1.24.0"
 coverage = "^7.3.1"
 pandas = "^2.1.1"
+black = "^23.10.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.0"
