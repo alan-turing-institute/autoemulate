@@ -2,24 +2,26 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/alan-turing-institute/autoemulate/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                                        |    Stmts |     Miss |   Cover |   Missing |
-|-------------------------------------------- | -------: | -------: | ------: | --------: |
-| autoemulate/\_\_init\_\_.py                 |        0 |        0 |    100% |           |
-| autoemulate/compare.py                      |      112 |       48 |     57% |53, 72-96, 219-273 |
-| autoemulate/cv.py                           |        6 |        1 |     83% |        37 |
-| autoemulate/emulators/\_\_init\_\_.py       |        6 |        0 |    100% |           |
-| autoemulate/emulators/base.py               |       14 |        4 |     71% |10, 24, 38, 53 |
-| autoemulate/emulators/gaussian\_process2.py |       15 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py  |       19 |        0 |    100% |           |
-| autoemulate/emulators/neural\_network.py    |       19 |        1 |     95% |        58 |
-| autoemulate/emulators/random\_forest.py     |       15 |        0 |    100% |           |
-| autoemulate/experimental\_design.py         |       18 |        3 |     83% |16, 27, 38 |
-| autoemulate/metrics.py                      |        7 |        0 |    100% |           |
-| tests/\_\_init\_\_.py                       |        0 |        0 |    100% |           |
-| tests/test\_compare.py                      |       65 |        0 |    100% |           |
-| tests/test\_emulators.py                    |       63 |        0 |    100% |           |
-| tests/test\_experimental\_design.py         |       21 |        0 |    100% |           |
-|                                   **TOTAL** |  **380** |   **57** | **85%** |           |
+| Name                                           |    Stmts |     Miss |   Cover |   Missing |
+|----------------------------------------------- | -------: | -------: | ------: | --------: |
+| autoemulate/\_\_init\_\_.py                    |        3 |        0 |    100% |           |
+| autoemulate/compare.py                         |       60 |       17 |     72% |58, 64, 87-96, 99-115 |
+| autoemulate/cv.py                              |        6 |        1 |     83% |        37 |
+| autoemulate/emulators/\_\_init\_\_.py          |        6 |        0 |    100% |           |
+| autoemulate/emulators/base.py                  |       14 |        4 |     71% |10, 24, 38, 53 |
+| autoemulate/emulators/gaussian\_process.py     |       27 |        2 |     93% |     67-68 |
+| autoemulate/emulators/gaussian\_process\_sk.py |       31 |        2 |     94% |     89-95 |
+| autoemulate/emulators/neural\_network.py       |       32 |        2 |     94% |     90-94 |
+| autoemulate/emulators/random\_forest.py        |       30 |        2 |     93% |     89-95 |
+| autoemulate/experimental\_design.py            |       18 |        3 |     83% |16, 27, 38 |
+| autoemulate/logging\_config.py                 |        7 |        0 |    100% |           |
+| autoemulate/metrics.py                         |        7 |        0 |    100% |           |
+| tests/\_\_init\_\_.py                          |        0 |        0 |    100% |           |
+| tests/test\_compare.py                         |       40 |        0 |    100% |           |
+| tests/test\_emulators.py                       |       63 |        0 |    100% |           |
+| tests/test\_estimators.py                      |        6 |        0 |    100% |           |
+| tests/test\_experimental\_design.py            |       21 |        0 |    100% |           |
+|                                      **TOTAL** |  **371** |   **33** | **91%** |           |
 
 
 ## Setup coverage badge
