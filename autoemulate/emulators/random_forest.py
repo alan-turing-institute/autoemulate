@@ -88,9 +88,9 @@ class RandomForest(BaseEstimator, RegressorMixin):
         """Returns the grid parameters of the emulator."""
         param_grid = {
             "n_estimators": [10, 100],
-            "max_depth": [None, 10],
-            "min_samples_split": [2, 10, 100],
-            "min_samples_leaf": [1, 10, 100],
+            # "max_depth": [None, 10],
+            # "min_samples_split": [2, 10, 100],
+            "min_samples_leaf": [1, 10],
         }
         return param_grid
 

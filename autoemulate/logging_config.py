@@ -1,27 +1,37 @@
 import logging
+import warnings
 
 
-def configure_logging(verbose=False):
-    # Set a basic configuration for the root logger
-    level = logging.INFO if verbose else logging.WARNING
-    logging.basicConfig(level=level, format="%(message)s")
-
-    # Capture warnings from the `warnings` module into the logging system
-    logging.captureWarnings(True)
-
-    # Adjust the logger for this package specifically
+def configure_logging(log_to_file=False):
+    # Create a logger
     logger = logging.getLogger("autoemulate")
-    logger.setLevel(
-        logging.INFO if verbose else logging.ERROR
-    )  # Always INFO for the package
+    logger.setLevel(logging.INFO)
+    logger.handlers = []  # Clear existing handlers
 
-    # Adjust other loggers based on the verbose setting
-    # if verbose == 0:
-    #     for logger_name in logging.root.manager.loggerDict:
-    #         if logger_name != 'autoemulate':
-    #             logging.getLogger(logger_name).setLevel(logging.WARNING)
+    # Create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
 
-    # If you want to redirect logs to a file
-    # file_handler = logging.FileHandler('autoemulate.log', mode='w')
-    # file_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-    # logger.addHandler(file_handler)
+    # Create formatter and add it to the handler
+    formatter = logging.Formatter("%(name)s - %(message)s")
+    ch.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(ch)
+
+    # Optionally add a file handler
+    if log_to_file:
+        fh = logging.FileHandler("autoemulate.log")
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    # Set up the warnings logger to suppress warnings from models we use
+    logging.captureWarnings(True)
+    warnings_logger = logging.getLogger("py.warnings")
+    warnings_logger.setLevel(logging.ERROR)  # Only log errors and above, not warnings
+    warnings_logger.addHandler(
+        ch
+    )  # Still use the console handler for error level warnings
+
+    return logger
