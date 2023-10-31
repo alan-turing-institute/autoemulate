@@ -5,7 +5,7 @@ from .neural_network import NeuralNetwork
 from .random_forest import RandomForest
 
 MODEL_REGISTRY = {
-    "GaussianProcess": GaussianProcess,
+    # "GaussianProcess": GaussianProcess,
     "GaussianProcessSk": GaussianProcessSk,
     "NeuralNetwork": NeuralNetwork,
     "RandomForest": RandomForest,

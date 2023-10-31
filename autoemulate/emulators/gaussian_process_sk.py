@@ -87,8 +87,8 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "kernel": [RBF(), Matern(), DotProduct()],
-            "alpha": [1e-10, 1e-5],
+            "kernel": [RBF(), Matern()],
+            "alpha": [1e-5, 1e-2],
             "optimizer": ["fmin_l_bfgs_b"],
             "n_restarts_optimizer": [0, 2],
         }

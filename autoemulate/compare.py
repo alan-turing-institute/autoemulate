@@ -12,10 +12,6 @@ from sklearn.utils.validation import check_X_y
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
-import logging
-
-verbose = 0  # or 1, based on user input or command-line argument
-configure_logging(verbose)
 
 
 class AutoEmulate:
@@ -30,7 +26,16 @@ class AutoEmulate:
         )
         self.is_set_up = False
 
-    def setup(self, X, y, hyperparameter_search=False, fold_strategy="kfold", folds=5):
+    def setup(
+        self,
+        X,
+        y,
+        hyperparameter_search=False,
+        fold_strategy="kfold",
+        folds=5,
+        n_jobs=None,
+        log_to_file=False,
+    ):
         """Sets up the AutoEmulate object.
 
         Parameters
@@ -51,7 +56,8 @@ class AutoEmulate:
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.is_set_up = True
         self.hyperparameter_search = hyperparameter_search
-        self.logger = logging.getLogger(type(self).__name__)
+        self.n_jobs = n_jobs
+        self.logger = configure_logging(log_to_file=log_to_file)
 
     def compare(self):
         if not self.is_set_up:
@@ -63,12 +69,17 @@ class AutoEmulate:
             if self.hyperparameter_search:
                 self.perform_hyperparameter_search_for_model(model)
 
-            self.logger.info(f"Training {model_name}...")
+            self.logger.info(f"Cross-validating {model_name}...")
             self.logger.info(f"Parameters: {model.get_params()}")
             for metric_name in self.metrics:
                 scorer = make_scorer(METRIC_REGISTRY[metric_name])
                 scores = cross_val_score(
-                    model, self.X, self.y, cv=self.cv, scoring=scorer
+                    model,
+                    self.X,
+                    self.y,
+                    cv=self.cv,
+                    scoring=scorer,
+                    n_jobs=self.n_jobs,
                 )
                 for fold, score in enumerate(scores):
                     new_row = pd.DataFrame(
@@ -86,10 +97,8 @@ class AutoEmulate:
     def perform_hyperparameter_search_for_model(self, model):
         model_name = type(model).__name__
         self.logger.info(f"Performing grid search for {model_name}...")
-        param_grid = (
-            model.get_grid_params()
-        )  # Assumes that each model has a `get_grid_params` method
-        grid_search = GridSearchCV(model, param_grid, cv=self.cv)
+        param_grid = model.get_grid_params()  # Grid search
+        grid_search = GridSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
         grid_search.fit(self.X, self.y)
         best_params = grid_search.best_params_
         self.logger.info(f"Best parameters for {model_name}: {best_params}")
