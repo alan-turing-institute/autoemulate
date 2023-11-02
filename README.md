@@ -7,11 +7,12 @@
 | autoemulate/\_\_init\_\_.py                    |        0 |        0 |    100% |           |
 | autoemulate/compare.py                         |       58 |       17 |     71% |64, 70, 98-105, 108-124 |
 | autoemulate/cv.py                              |        6 |        1 |     83% |        37 |
-| autoemulate/emulators/\_\_init\_\_.py          |        6 |        0 |    100% |           |
+| autoemulate/emulators/\_\_init\_\_.py          |        7 |        0 |    100% |           |
 | autoemulate/emulators/base.py                  |       14 |        4 |     71% |10, 24, 38, 53 |
 | autoemulate/emulators/gaussian\_process.py     |       27 |        3 |     89% | 67-68, 71 |
 | autoemulate/emulators/gaussian\_process\_sk.py |       31 |        2 |     94% |     89-95 |
 | autoemulate/emulators/neural\_network.py       |       32 |        2 |     94% |     90-94 |
+| autoemulate/emulators/radial\_basis.py         |       29 |        2 |     93% |     75-80 |
 | autoemulate/emulators/random\_forest.py        |       30 |        2 |     93% |     89-95 |
 | autoemulate/experimental\_design.py            |       18 |        3 |     83% |16, 27, 38 |
 | autoemulate/logging\_config.py                 |       21 |        4 |     81% |     24-27 |
@@ -21,7 +22,7 @@
 | tests/test\_emulators.py                       |       63 |        0 |    100% |           |
 | tests/test\_estimators.py                      |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py            |       21 |        0 |    100% |           |
-|                                      **TOTAL** |  **380** |   **38** | **90%** |           |
+|                                      **TOTAL** |  **410** |   **40** | **90%** |           |
 
 
 ## Setup coverage badge
