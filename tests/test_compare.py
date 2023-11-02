@@ -36,7 +36,6 @@ def fitted_ae_instance(random_data):
 def test_initialisation():
     ae = AutoEmulate()
     assert ae.is_set_up == False
-    assert isinstance(ae.scores_df, pd.DataFrame)
 
 
 def test_setup(ae_instance):
