@@ -1657,6 +1657,21 @@ files = [
 ]
 
 [[package]]
+name = "pydoe3"
+version = "1.0.0"
+description = "Design of experiments for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pydoe3-1.0.0-py2.py3-none-any.whl", hash = "sha256:979a7a387dfb0a1d9242add9b49b0f3b1eec7a94b047bd7bb8b481018f18b182"},
+    {file = "pydoe3-1.0.0.tar.gz", hash = "sha256:fc3210ea5a3c1059587e06f1b559bad664e2ff817f28a2bf794901f991ddd1d5"},
+]
+
+[package.dependencies]
+numpy = "*"
+scipy = "*"
+
+[[package]]
 name = "pygments"
 version = "2.16.1"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -2072,6 +2087,44 @@ files = [
 ]
 
 [[package]]
+name = "smt"
+version = "2.1.0"
+description = "The Surrogate Modeling Toolbox (SMT)"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "smt-2.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c0488415e0906453e64d76481f53f4daadf0a81063465465f61edb58e25a5923"},
+    {file = "smt-2.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0f60ed54136153a5ef8cb98ca7e592d9b0e2ff5e078f79cccc0e259904ccf3eb"},
+    {file = "smt-2.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:95bbe8a37ae13d6d741be2afa8e75a3fa203e0200189478571e26691c11123de"},
+    {file = "smt-2.1.0-cp310-cp310-win32.whl", hash = "sha256:393f42dd97504d2c2c3dbab3d081461193496872d184d2cf4c627e24276e60fe"},
+    {file = "smt-2.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:53fa7c64e0727f2335c6f2a6889b78aae879e1c3e84205b5221238b5fb1e9071"},
+    {file = "smt-2.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f75fa617750424ff9d0962106719859612a091862833a59fccb44565afad5507"},
+    {file = "smt-2.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3e51accb75800679a73524634076f7c982ea4ade8214727b67d65ae06b508a3f"},
+    {file = "smt-2.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:155916d1478851bd0db201ce5c75c5b7219ab7e749047f6217c762565b96cd0c"},
+    {file = "smt-2.1.0-cp311-cp311-win32.whl", hash = "sha256:5d631c82603911e7f238b50d02fa917fcdad0c457bd9a69bac0f9f7e6bcef1cd"},
+    {file = "smt-2.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:b89a56311441295a01a931aee0968daaf1f0992d6926c946f5209ab4db952ae4"},
+    {file = "smt-2.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:22faebca2cddb3fd0bade980be76917d9a6a89684c24f941ffb08c3ceb4205e0"},
+    {file = "smt-2.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b8091c5e594df2a440cd91669b182943b50f745285ff13ffedd8da720e0fd37d"},
+    {file = "smt-2.1.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:32c47ace8493f23cd321b79e1ff7badbc0c57c6316ecc7fe4171fc56f875637c"},
+    {file = "smt-2.1.0-cp38-cp38-win32.whl", hash = "sha256:d8d337508d8206e690620d6bab66151f54b454478d83e4137143722ff472a1a5"},
+    {file = "smt-2.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:6e58c9968236541ac23841a4e61aa42ee0e1dbcb5559e92b085736b373c189e3"},
+    {file = "smt-2.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d13b72388791e2b4aab163189f8b4f6b1238be4d9d83068e737bcb87ce22d981"},
+    {file = "smt-2.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:48ab33c9c4b49c3d5933b9bcb581ff3e2f2b59a4f7dfff72dccfeabb90a30bdb"},
+    {file = "smt-2.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:28c71f2811dbf25e3f2b26f131610f1f8b5fc2ef26ec9faef6c1ab5d0dea727f"},
+    {file = "smt-2.1.0-cp39-cp39-win32.whl", hash = "sha256:1b2ee1381284a79f436ccaae997a3b1cbbbfe5c7ad6f85c9f7cf0e5a780761f2"},
+    {file = "smt-2.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:d8e088ce8dd4c4ca1ca6db98553c85118dd258939bdf7a630f786ca4df574bd0"},
+    {file = "smt-2.1.0.tar.gz", hash = "sha256:e9369dcd4c6505f6750d30a38c5ae73f6fe0c26dda524c6f36e7e082542afc9b"},
+]
+
+[package.dependencies]
+pyDOE3 = "*"
+scikit-learn = "*"
+scipy = "*"
+
+[package.extras]
+numba = ["numba (>=0.56.4,<0.57.0)"]
+
+[[package]]
 name = "snowballstemmer"
 version = "2.2.0"
 description = "This package provides 29 stemmers for 28 languages generated from Snowball algorithms."
@@ -2437,4 +2490,4 @@ docs = ["furo", "sphinx-autodoc-typehints", "sphinx-copybutton"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "9e83d95f24edefb0184ae3b44dc69d8c86152d0de0a782f0d39fed345268ec4c"
+content-hash = "e78aab7699419d4e5d924de27e35ad66f9c6682ef1aba69dfffb19fc928c7175"

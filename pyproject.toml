@@ -22,6 +22,7 @@ pandas = "^2.1.1"
 black = "^23.10.1"
 colorlog = "^6.7.0"
 pre-commit = "^3.5.0"
+smt = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.0"
