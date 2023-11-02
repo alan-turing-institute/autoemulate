@@ -4,6 +4,7 @@ from autoemulate.emulators import (
     GaussianProcessSk,
     NeuralNetwork,
     GaussianProcess,
+    RadialBasis,
 )
 from functools import partial
 
@@ -13,6 +14,7 @@ from functools import partial
         RandomForest(random_state=42),
         GaussianProcessSk(random_state=1337),
         NeuralNetwork(random_state=13),
+        # RadialBasis(),
     ]
 )
 def test_check_estimator(estimator, check):
