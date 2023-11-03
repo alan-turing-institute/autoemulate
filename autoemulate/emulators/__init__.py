@@ -6,7 +6,7 @@ from .random_forest import RandomForest
 from .radial_basis import RadialBasis
 
 MODEL_REGISTRY = {
-    # "GaussianProcess": GaussianProcess,
+    "GaussianProcess": GaussianProcess,
     "GaussianProcessSk": GaussianProcessSk,
     "NeuralNetwork": NeuralNetwork,
     "RandomForest": RandomForest,
