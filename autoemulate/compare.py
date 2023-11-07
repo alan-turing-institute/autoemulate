@@ -51,7 +51,10 @@ class AutoEmulate:
         log_to_file : bool
             Whether to log to file.
         """
-        self.X, self.y = check_X_y(X, y, multi_output=True, y_numeric=True)
+        self.X, self.y = check_X_y(
+            X, y, multi_output=True, y_numeric=True, dtype="float32"
+        )
+        self.y = self.y.astype("float32")  # needed for pytorch models
         self.models = [model() for model in MODEL_REGISTRY.values()]
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
