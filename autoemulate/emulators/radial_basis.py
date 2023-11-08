@@ -80,4 +80,9 @@ class RadialBasis(BaseEstimator, RegressorMixin):
         return param_grid
 
     def _more_tags(self):
-        return {"multioutput": True}
+        return {
+            "multioutput": True,
+            "_xfail_checks": {
+                "check_estimators_pickle": "Can't be pickled, written in C++"
+            },
+        }

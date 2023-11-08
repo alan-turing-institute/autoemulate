@@ -33,7 +33,7 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
         X, y = check_X_y(X, y, multi_output=False, y_numeric=True)
         self.n_features_in_ = X.shape[1]
         self.model_ = mogp_emulator.GaussianProcess(X, y, nugget=self.nugget)
-        self.model_ = mogp_emulator.fit_GP_MAP(self.model_, n_tries=2)
+        self.model_ = mogp_emulator.fit_GP_MAP(self.model_, n_tries=15)
         self.is_fitted_ = True
         return self
 
