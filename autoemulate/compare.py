@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 from sklearn.utils.validation import check_X_y
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from skopt import BayesSearchCV
 
 
 class AutoEmulate:
@@ -130,6 +131,7 @@ class AutoEmulate:
         self.logger.info(f"Performing grid search for {model_name}...")
         param_grid = model.get_grid_params()  # Grid search
         grid_search = GridSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
+        # grid_search = BayesSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
         grid_search.fit(self.X, self.y)
         best_params = grid_search.best_params_
         self.logger.info(f"Best parameters for {model_name}: {best_params}")

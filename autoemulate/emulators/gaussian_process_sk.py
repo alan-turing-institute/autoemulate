@@ -5,7 +5,7 @@ from autoemulate.emulators import Emulator
 
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-from sklearn.gaussian_process.kernels import RBF, Matern, DotProduct
+from sklearn.gaussian_process.kernels import RBF, Matern, DotProduct, RationalQuadratic
 
 
 class GaussianProcessSk(BaseEstimator, RegressorMixin):
@@ -16,11 +16,11 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
 
     def __init__(
         self,
-        kernel=None,
+        kernel=RBF(),
         alpha=1e-10,
         optimizer="fmin_l_bfgs_b",
-        n_restarts_optimizer=0,
-        normalize_y=False,
+        n_restarts_optimizer=15,
+        normalize_y=True,
         copy_X_train=True,
         random_state=None,
     ):
@@ -87,10 +87,15 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "kernel": [RBF(), Matern()],
-            "alpha": [1e-5, 1e-2],
-            "optimizer": ["fmin_l_bfgs_b"],
-            "n_restarts_optimizer": [0, 2],
+            "kernel": [
+                RBF(),
+                # Matern(),
+                # RationalQuadratic(),
+                # DotProduct(),
+            ],
+            "alpha": [1e-10, 1e-5, 1e-2],
+            # "n_restarts_optimizer": [5, 10, 20],
+            "normalize_y": [True, False],
         }
         return param_grid
 
