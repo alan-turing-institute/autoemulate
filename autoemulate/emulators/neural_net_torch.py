@@ -1,10 +1,12 @@
+# experimental version of a PyTorch neural network emulator wrapped in Skorch
+# to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
+# but doesn't pass tests, because we're subclassing
+
 import torch
 import numpy as np
 import skorch
 from torch import nn
 from skorch import NeuralNetRegressor
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 
 class InputShapeSetter(skorch.callbacks.Callback):
@@ -40,7 +42,7 @@ class MLPModule(nn.Module):
 
 
 # Step 2: Create the Skorch wrapper for the NeuralNetRegressor
-class SkorchMLPRegressor(NeuralNetRegressor):
+class NeuralNetTorch(NeuralNetRegressor):
     def __init__(
         self,
         module=MLPModule,

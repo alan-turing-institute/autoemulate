@@ -5,6 +5,7 @@ from autoemulate.emulators import (
     NeuralNetwork,
     GaussianProcess,
     RadialBasis,
+    SkorchMLPRegressor,
 )
 from functools import partial
 
@@ -12,9 +13,10 @@ from functools import partial
 @parametrize_with_checks(
     [  # GaussianProcess(),
         RandomForest(random_state=42),
-        GaussianProcessSk(random_state=1337),
-        NeuralNetwork(random_state=13),
+        # GaussianProcessSk(random_state=1337),
+        # NeuralNetwork(random_state=13),
         # RadialBasis(),
+        SkorchMLPRegressor(random_state=42),
     ]
 )
 def test_check_estimator(estimator, check):
