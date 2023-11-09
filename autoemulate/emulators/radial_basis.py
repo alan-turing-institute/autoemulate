@@ -73,7 +73,7 @@ class RadialBasis(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "d0": [1.0],
+            "d0": [0.1, 1.0, 2.0],
             "poly_degree": [-1, 0, 1],
             "reg": [1e-10, 1e-5, 1e-2],
         }

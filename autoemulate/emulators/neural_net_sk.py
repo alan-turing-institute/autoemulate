@@ -22,6 +22,7 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
         learning_rate="constant",
         learning_rate_init=0.001,
         max_iter=200,
+        tol=1e-4,
         random_state=None,
     ):
         """Initializes an MLPRegressor object."""
@@ -32,6 +33,7 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
         self.learning_rate = learning_rate
         self.learning_rate_init = learning_rate_init
         self.max_iter = max_iter
+        self.tol = tol
         self.random_state = random_state
 
     def fit(self, X, y):
@@ -88,8 +90,13 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "hidden_layer_sizes": [(100,), (100, 100)],
+            "hidden_layer_sizes": [(50,), (100,), (100, 50), (50, 50)],
             "activation": ["tanh", "relu"],
+            "solver": ["sgd", "adam"],
+            "alpha": [0.0001, 0.001, 0.01],
+            "learning_rate_init": [0.001, 0.01],
+            "max_iter": [300, 500, 700],
+            "tol": [1e-4, 1e-5],
         }
         return param_grid
 

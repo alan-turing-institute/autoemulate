@@ -16,20 +16,26 @@ class RandomForest(BaseEstimator, RegressorMixin):
     def __init__(
         self,
         n_estimators=100,
+        criterion="squared_error",
         max_depth=None,
         min_samples_split=2,
         min_samples_leaf=1,
         max_features=1.0,
         bootstrap=True,
+        oob_score=False,
+        max_samples=None,
         random_state=None,
     ):
         """Initializes a RandomForest object."""
         self.n_estimators = n_estimators
+        self.criterion = criterion
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.max_features = max_features
         self.bootstrap = bootstrap
+        self.oob_score = oob_score
+        self.max_samples = max_samples
         self.random_state = random_state
 
     def fit(self, X, y):
@@ -87,10 +93,46 @@ class RandomForest(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "n_estimators": [10, 100],
-            # "max_depth": [None, 10],
-            # "min_samples_split": [2, 10, 100],
-            "min_samples_leaf": [1, 10],
+            "n_estimators": [
+                100,
+                200,
+                300,
+                400,
+            ],  # More trees can lead to better performance but take longer to compute.
+            # "max_depth": [
+            #     None,
+            #     10,
+            #     20,
+            #     30,
+            # ],  # Maximum depth of the tree. None means the tree will grow as much as possible.
+            "min_samples_split": [
+                2,
+                5,
+                10,
+            ],  # The minimum number of samples required to split a node.
+            "min_samples_leaf": [
+                1,
+                2,
+                4,
+            ],  # The minimum number of samples required to be at a leaf node.
+            "max_features": [
+                1.0,
+                "sqrt",
+                "log2",
+            ],  # The number of features to consider for the best split. 'auto' is equivalent to the total number of features.
+            "bootstrap": [
+                True,
+                False,
+            ],  # Whether bootstrap samples are used when building trees.
+            "oob_score": [
+                True,
+                False,
+            ],  # Whether to use out-of-bag samples to estimate the generalization score.
+            "max_samples": [
+                None,
+                0.5,
+                0.75,
+            ],  # The number of samples to draw from X to train each base estimator.
         }
         return param_grid
 
