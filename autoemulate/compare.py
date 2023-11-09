@@ -7,11 +7,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# impoprt check_X_y from sklearn
 from sklearn.utils.validation import check_X_y
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
 from skopt import BayesSearchCV
 
 
@@ -21,12 +21,14 @@ class AutoEmulate:
         self.X = None
         self.y = None
         self.is_set_up = False
+        self.scaler = None
 
     def setup(
         self,
         X,
         y,
         hyperparameter_search=False,
+        normalise=True,
         fold_strategy="kfold",
         folds=5,
         n_jobs=None,
@@ -42,7 +44,9 @@ class AutoEmulate:
             Simulation output.
         hyperparameter_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
-            TODO: Custom parameter grids.
+        normalise : bool, default=False
+            Whether to normalise the data before fitting the models. Currently only
+            z-transformation using StandardScaler.
         fold_strategy : str
             Cross-validation strategy, currently either "kfold" or "stratified_kfold".
         folds : int
@@ -56,10 +60,16 @@ class AutoEmulate:
             X, y, multi_output=True, y_numeric=True, dtype="float32"
         )
         self.y = self.y.astype("float32")  # needed for pytorch models
+
+        if normalise:
+            self.scaler = StandardScaler()
+            self.X = self.scaler.fit_transform(self.X)
+
         self.models = [model() for model in MODEL_REGISTRY.values()]
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.hyperparameter_search = hyperparameter_search
+        self.normalise = normalise
         self.n_jobs = n_jobs
         self.logger = configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
