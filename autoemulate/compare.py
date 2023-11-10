@@ -2,6 +2,7 @@ from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.logging_config import configure_logging
+from autoemulate.plotting import plot_results
 
 import pandas as pd
 import numpy as np
@@ -73,6 +74,12 @@ class AutoEmulate:
         self.n_jobs = n_jobs
         self.logger = configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
+        self.scores_df = pd.DataFrame(
+            columns=["model", "metric", "fold", "score"]
+        ).astype(
+            {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
+        )
+        self.cv_results = {}
 
     def compare(self):
         """Compares the emulator models on the data. self.setup() must be run first.
@@ -85,46 +92,76 @@ class AutoEmulate:
         if not self.is_set_up:
             raise RuntimeError("Must run setup() before compare()")
 
-        # Create scorers from metrics
+        for model in self.models:
+            # search for best hyperparameters
+            if self.hyperparameter_search:
+                self.hyperparam_search(model)
+            # run cv
+            self.cross_validate(model)
+
+    def cross_validate(self, model):
+        """Perform cross-validation on a given model using the specified metrics.
+
+        Parameters
+        ----------
+            model: A scikit-learn estimator object.
+
+        Class attributes used
+        ---------------------
+            self.X : array-like, shape (n_samples, n_features)
+                Simulation input.
+            self.y : array-like, shape (n_samples, n_outputs)
+                Simulation output.
+            self.cv : scikit-learn cross-validation object
+                Cross-validation strategy.
+            self.metrics : list of str
+                List of metrics to use for cross-validation.
+            self.n_jobs : int
+                Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
+
+        Returns
+        -------
+            scores_df : pandas.DataFrame
+                Dataframe containing the scores for each model, metric and fold.
+
+        """
+
+        # Get model name
+        model_name = type(model).__name__
+
+        # The metrics we want to use for cross-validation
         scorers = {name: make_scorer(METRIC_REGISTRY[name]) for name in self.metrics}
 
-        # Initialise scores dataframe
-        self.scores_df = pd.DataFrame(
-            columns=["model", "metric", "fold", "score"]
-        ).astype(
-            {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
+        self.logger.info(f"Cross-validating {model_name}...")
+        self.logger.info(f"Parameters: {model.get_params()}")
+
+        # Cross-validate
+        cv = cross_validate(
+            model,
+            self.X,
+            self.y,
+            cv=self.cv,
+            scoring=scorers,
+            n_jobs=self.n_jobs,
+            return_estimator=True,
+            return_indices=True,
         )
 
-        for model in self.models:
-            model_name = type(model).__name__
+        # Gather scores from each metric
+        # Initialise scores dataframe
+        for key in cv.keys():
+            if key.startswith("test_"):
+                for fold, score in enumerate(cv[key]):
+                    self.scores_df.loc[len(self.scores_df.index)] = {
+                        "model": model_name,
+                        "metric": key.split("test_", 1)[1],
+                        "fold": fold,
+                        "score": score,
+                    }
+        # save results for plotting etc.
+        self.cv_results[model_name] = cv
 
-            if self.hyperparameter_search:
-                self.perform_hyperparameter_search_for_model(model)
-
-            self.logger.info(f"Cross-validating {model_name}...")
-            self.logger.info(f"Parameters: {model.get_params()}")
-
-            cv = cross_validate(
-                model,
-                self.X,
-                self.y,
-                cv=self.cv,
-                scoring=scorers,
-                n_jobs=self.n_jobs,
-            )
-
-            # gather scores from each metric
-            for key in cv.keys():
-                if key.startswith("test_"):
-                    for fold, score in enumerate(cv[key]):
-                        self.scores_df.loc[len(self.scores_df.index)] = {
-                            "model": model_name,
-                            "metric": key.split("test_", 1)[1],
-                            "fold": fold,
-                            "score": score,
-                        }
-
-    def perform_hyperparameter_search_for_model(self, model):
+    def hyperparam_search(self, model):
         """Performs hyperparameter search for a given model.
 
         Parameters
@@ -170,3 +207,14 @@ class AutoEmulate:
             )
             print(f"Scores for {model} across all folds:")
             print(scores)
+
+    def plot_results(self, model_name=None):
+        """Plots the results of the cross-validation.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the model to plot. If None, plots best folds of each models.
+            If a model name is specified, plots all folds of that model.
+        """
+        plot_results(self.cv_results, self.X, self.y, model_name=model_name)
