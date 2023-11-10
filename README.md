@@ -5,7 +5,7 @@
 | Name                                           |    Stmts |     Miss |   Cover |   Missing |
 |----------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                    |        0 |        0 |    100% |           |
-| autoemulate/compare.py                         |       77 |       22 |     71% |93, 98, 177-185, 189-209, 220 |
+| autoemulate/compare.py                         |       79 |       22 |     72% |88, 100, 196-204, 208-228, 239 |
 | autoemulate/cv.py                              |        6 |        1 |     83% |        37 |
 | autoemulate/datasets.py                        |       13 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py          |        8 |        0 |    100% |           |
@@ -26,7 +26,7 @@
 | tests/test\_emulators.py                       |       63 |        0 |    100% |           |
 | tests/test\_estimators.py                      |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py            |       21 |        0 |    100% |           |
-|                                      **TOTAL** |  **535** |   **96** | **82%** |           |
+|                                      **TOTAL** |  **537** |   **96** | **82%** |           |
 
 
 ## Setup coverage badge
