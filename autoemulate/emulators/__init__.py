@@ -12,5 +12,5 @@ MODEL_REGISTRY = {
     "NeuralNetSk": NeuralNetSk,
     "RandomForest": RandomForest,
     "RadialBasis": RadialBasis,
-    # "NeuralNetTorch": NeuralNetTorch,
+    "NeuralNetTorch": NeuralNetTorch,
 }

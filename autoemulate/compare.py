@@ -93,6 +93,8 @@ class AutoEmulate:
         ).astype(
             {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
         )
+        # Freshly initialise best parameters for each model
+        self.best_params = {}
 
         for model in self.models:
             # search for best hyperparameters
@@ -100,6 +102,9 @@ class AutoEmulate:
                 self.hyperparam_search(model)
             # run cv
             self.cross_validate(model)
+
+        # returns best model fitted on full data
+        return self.get_best_model(metric="r2")
 
     def cross_validate(self, model):
         """Perform cross-validation on a given model using the specified metrics.
@@ -148,7 +153,10 @@ class AutoEmulate:
             return_estimator=True,
             return_indices=True,
         )
+        # updates pandas dataframe with model cv scores
         self._update_scores_df(model_name, cv_results)
+        # save results for plotting etc.
+        self.cv_results[model_name] = cv_results
 
     def _update_scores_df(self, model_name, cv_results):
         """Updates the scores dataframe with the results of the cross-validation.
@@ -177,8 +185,6 @@ class AutoEmulate:
                         "fold": fold,
                         "score": score,
                     }
-        # save results for plotting etc.
-        self.cv_results[model_name] = cv_results
 
     def hyperparam_search(self, model):
         """Performs hyperparameter search for a given model.
@@ -195,13 +201,61 @@ class AutoEmulate:
         """
         model_name = type(model).__name__
         self.logger.info(f"Performing grid search for {model_name}...")
-        param_grid = model.get_grid_params()  # Grid search
+
+        # grid search
+        param_grid = model.get_grid_params()
         grid_search = GridSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
-        # grid_search = BayesSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
         grid_search.fit(self.X, self.y)
+
+        # get and set best parameters
         best_params = grid_search.best_params_
         self.logger.info(f"Best parameters for {model_name}: {best_params}")
         model.set_params(**best_params)  # Update the model with the best parameters
+
+        # store best parameters
+        self.best_params[model_name] = best_params
+
+    def get_best_model(self, metric="r2"):
+        """Determine the best model using average cv score
+
+        Parameters
+        ----------
+        metric : str
+            Metric to use for determining the best model.
+
+        Returns
+        -------
+        best_model : object
+            Best model.
+        """
+
+        # best model name
+        means = (
+            self.scores_df.groupby(["model", "metric"])["score"]
+            .mean()
+            .unstack()
+            .reset_index()
+        )
+        # get best model name
+        best_model_name = means.loc[means[metric].idxmax(), "model"]
+
+        # get best model with hyperparameters if available
+        if len(self.best_params) > 0:
+            best_model_params = self.best_params[best_model_name]
+            best_model = MODEL_REGISTRY[best_model_name](**best_model_params)
+        else:
+            best_model = MODEL_REGISTRY[best_model_name]()
+
+        self.logger.info(
+            f"Refitting {best_model_name}(the best model) on full dataset..."
+        )
+        # refit best model on full dataset
+        best_model.fit(self.X, self.y)
+        # set scaler if normalised
+        if self.normalise:
+            best_model.scaler = self.scaler
+
+        return best_model
 
     def print_scores(self, model=None):
         # check if model is in self.models
