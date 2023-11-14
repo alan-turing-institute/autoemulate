@@ -19,13 +19,6 @@ def rf_pipeline():
     return Pipeline([("model", RandomForest())])
 
 
-# fixture for hyperparameter search object
-@pytest.fixture
-def hyperparam_search(X_y):
-    X, y = X_y
-    return HyperparamSearch(X, y, cv=3, n_jobs=1, logger=logging.getLogger(__name__))
-
-
 # param grid for random forest
 @pytest.fixture
 def param_grid():
@@ -33,6 +26,15 @@ def param_grid():
         "n_estimators": [10, 20],
         "max_depth": [None, 3],
     }
+
+
+# fixture for hyperparameter search object
+@pytest.fixture
+def hyperparam_search(X_y, param_grid):
+    X, y = X_y
+    return HyperparamSearch(
+        X, y, cv=3, n_jobs=1, param_grid=param_grid, logger=logging.getLogger(__name__)
+    )
 
 
 # test prepare_param_grid
@@ -47,12 +49,9 @@ def test_search(rf_pipeline, hyperparam_search):
     # check that the best_params attribute is empty before search
     assert hyperparam_search.best_params == {}
     # check that the best_params attribute is populated after search
-
-
-# hyperparam_search.search(rf_pipeline, param_grid = param_grid)
-# assert hyperparam_search.best_params != {}
-# # check that the best_params attribute is a dictionary
-# assert type(hyperparam_search.best_params) == dict
-# # check that the best_params attribute is a dictionary of strings and floats
-# assert all([type(key) == str for key in hyperparam_search.best_params.keys()])
-# assert all([type(value) == float for value in hyperparam_search.best_params.values()])
+    hyperparam_search.search(rf_pipeline)
+    assert hyperparam_search.best_params != {}
+    # # check that the best_params attribute is a dictionary
+    assert type(hyperparam_search.best_params) == dict
+    # # check that best param keys are strings
+    assert all([type(key) == str for key in hyperparam_search.best_params.keys()])

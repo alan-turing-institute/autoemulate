@@ -5,7 +5,7 @@ import logging
 class HyperparamSearch:
     """Performs hyperparameter search for a given model."""
 
-    def __init__(self, X, y, cv, n_jobs, logger=None):
+    def __init__(self, X, y, cv, n_jobs, param_grid=None, logger=None):
         """Initializes a HyperparamSearch object.
 
         Parameters
@@ -19,6 +19,12 @@ class HyperparamSearch:
             Number of folds in the cross-validation.
         n_jobs : int
             Number of jobs to run in parallel.
+        param_grid : dict, default=None
+            Dictionary with parameters names (string) as keys and lists of
+            parameter settings to try as values, or a list of such dictionaries,
+            in which case the grids spanned by each dictionary in the list are
+            explored. This enables searching over any sequence of parameter
+            settings.
         logger : logging.Logger
             Logger object.
         """
@@ -26,6 +32,7 @@ class HyperparamSearch:
         self.y = y
         self.cv = cv
         self.n_jobs = n_jobs
+        self.param_grid = param_grid
         self.logger = logger or logging.getLogger(__name__)
         self.best_params = {}
 
@@ -35,7 +42,9 @@ class HyperparamSearch:
         self.logger.info(f"Performing grid search for {model_name}...")
 
         try:
-            param_grid = self.prepare_param_grid(model)
+            # TODO: checks that parameters
+            param_grid = self.prepare_param_grid(model, self.param_grid)
+
             grid_search = GridSearchCV(
                 model, param_grid, cv=self.cv, n_jobs=self.n_jobs
             )
@@ -51,9 +60,11 @@ class HyperparamSearch:
         return model
 
     @staticmethod
-    def prepare_param_grid(model):
+    def prepare_param_grid(model, param_grid=None):
         """Prepares the parameter grid with prefixed parameters."""
-        param_grid = model.named_steps["model"].get_grid_params()
+        if param_grid is None:
+            param_grid = model.named_steps["model"].get_grid_params()
+        print(f"param_grid: {param_grid}")
         return {f"model__{key}": value for key, value in param_grid.items()}
 
     @staticmethod
