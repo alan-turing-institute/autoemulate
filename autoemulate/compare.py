@@ -13,6 +13,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 from skopt import BayesSearchCV
 
 
@@ -61,12 +62,7 @@ class AutoEmulate:
             X, y, multi_output=True, y_numeric=True, dtype="float32"
         )
         self.y = self.y.astype("float32")  # needed for pytorch models
-
-        if normalise:
-            self.scaler = StandardScaler()
-            self.X = self.scaler.fit_transform(self.X)
-
-        self.models = [model() for model in MODEL_REGISTRY.values()]
+        self.models = self._get_models(MODEL_REGISTRY, normalise=normalise)
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.hyperparameter_search = hyperparameter_search
@@ -75,6 +71,34 @@ class AutoEmulate:
         self.logger = configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
         self.cv_results = {}
+
+    def _get_models(self, MODEL_REGISTRY, normalise=True):
+        """Get models from REGISTRY and add scaler if normalised.
+
+        Parameters
+        ----------
+        MODEL_REGISTRY : dict
+            Registry of models.
+        normalise : bool
+            If True, add scaler to models.
+
+        Returns
+        -------
+        self.models : list
+            List of models.
+
+        """
+        if normalise:
+            self.scaler = StandardScaler()
+            models = [
+                Pipeline([("scaler", self.scaler), ("model", model())])
+                for model in MODEL_REGISTRY.values()
+            ]
+        else:
+            models = [
+                Pipeline([("model", model())]) for model in MODEL_REGISTRY.values()
+            ]
+        return models
 
     def compare(self):
         """Compares the emulator models on the data. self.setup() must be run first.
@@ -134,13 +158,13 @@ class AutoEmulate:
         """
 
         # Get model name
-        model_name = type(model).__name__
+        model_name = type(model.named_steps["model"]).__name__
 
         # The metrics we want to use for cross-validation
         scorers = {name: make_scorer(METRIC_REGISTRY[name]) for name in self.metrics}
 
         self.logger.info(f"Cross-validating {model_name}...")
-        self.logger.info(f"Parameters: {model.get_params()}")
+        self.logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
 
         # Cross-validate
         cv_results = cross_validate(
@@ -199,18 +223,27 @@ class AutoEmulate:
         model : object
             Emulator model with updated parameters.
         """
-        model_name = type(model).__name__
+        model_name = type(model.named_steps["model"]).__name__
         self.logger.info(f"Performing grid search for {model_name}...")
 
-        # grid search
-        param_grid = model.get_grid_params()
+        # get grid parameters
+        param_grid = model.named_steps["model"].get_grid_params()
+        # add model__ prefix to parameters
+        param_grid = {f"model__{key}": value for key, value in param_grid.items()}
         grid_search = GridSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
         grid_search.fit(self.X, self.y)
 
         # get and set best parameters
         best_params = grid_search.best_params_
+        # remove model__ prefix
+        best_params = {
+            key.split("model__", 1)[1]: value for key, value in best_params.items()
+        }
+
         self.logger.info(f"Best parameters for {model_name}: {best_params}")
-        model.set_params(**best_params)  # Update the model with the best parameters
+        model.named_steps["model"].set_params(
+            **best_params
+        )  # Update the model with the best parameters
 
         # store best parameters
         self.best_params[model_name] = best_params
@@ -247,7 +280,7 @@ class AutoEmulate:
             best_model = MODEL_REGISTRY[best_model_name]()
 
         self.logger.info(
-            f"Refitting {best_model_name}(the best model) on full dataset..."
+            f"{best_model_name} is the best model, refitting on full dataset..."
         )
         # refit best model on full dataset
         best_model.fit(self.X, self.y)
