@@ -3,6 +3,7 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.logging_config import configure_logging
 from autoemulate.plotting import plot_results
+from autoemulate.hyperparam_search import HyperparamSearch
 
 import pandas as pd
 import numpy as np
@@ -58,10 +59,7 @@ class AutoEmulate:
         log_to_file : bool
             Whether to log to file.
         """
-        self.X, self.y = check_X_y(
-            X, y, multi_output=True, y_numeric=True, dtype="float32"
-        )
-        self.y = self.y.astype("float32")  # needed for pytorch models
+        self.X, self.y = self._check_input(X, y)
         self.models = self._get_models(MODEL_REGISTRY, normalise=normalise)
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
@@ -71,6 +69,28 @@ class AutoEmulate:
         self.logger = configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
         self.cv_results = {}
+
+    def _check_input(self, X, y):
+        """Checks and possibly converts the input data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+
+        Returns
+        -------
+        X_converted : array-like, shape (n_samples, n_features)
+            Simulation input.
+        y_converted : array-like, shape (n_samples, n_outputs)
+            Simulation output.
+        """
+
+        X, y = check_X_y(X, y, multi_output=True, y_numeric=True, dtype="float32")
+        y = y.astype("float32")  # needed for pytorch models
+        return X, y
 
     def _get_models(self, MODEL_REGISTRY, normalise=True):
         """Get models from REGISTRY and add scaler if normalised.
@@ -120,15 +140,16 @@ class AutoEmulate:
         # Freshly initialise best parameters for each model
         self.best_params = {}
 
-        for model in self.models:
-            # search for best hyperparameters
-            if self.hyperparameter_search:
-                self.hyperparam_search(model)
-            # run cv
-            self.cross_validate(model)
+        for i, model in enumerate(self.models):
+            updated_model = (
+                self._get_best_hyperparams_hyperparams(i, model)
+                if self.hyperparameter_search
+                else model
+            )
+            self.cross_validate(updated_model)
 
         # returns best model fitted on full data
-        return self.get_best_model(metric="r2")
+        return self._get_best_model(metric="r2")
 
     def cross_validate(self, model):
         """Perform cross-validation on a given model using the specified metrics.
@@ -210,45 +231,31 @@ class AutoEmulate:
                         "score": score,
                     }
 
-    def hyperparam_search(self, model):
-        """Performs hyperparameter search for a given model.
+    def _get_best_hyperparams(self, model_index, model):
+        """Performs hyperparameter search and updates the model.
 
         Parameters
         ----------
-        model : object
-            Emulator model.
-
-        Returns
-        -------
-        model : object
-            Emulator model with updated parameters.
+        model_index : int
+            Index of the model in self.models.
+        model : scikit-learn estimator object
+            Model to perform hyperparameter search on.
         """
+        # Perform hyperparameter search and update model
+        hyperparam_searcher = HyperparamSearch(
+            self.X, self.y, self.cv, self.n_jobs, self.logger
+        )
+        updated_model = hyperparam_searcher.search(model)
+
+        # Update the model in the list
+        self.models[model_index] = updated_model
+        # Update best parameter list
         model_name = type(model.named_steps["model"]).__name__
-        self.logger.info(f"Performing grid search for {model_name}...")
+        self.best_params[model_name] = hyperparam_searcher.best_params
 
-        # get grid parameters
-        param_grid = model.named_steps["model"].get_grid_params()
-        # add model__ prefix to parameters
-        param_grid = {f"model__{key}": value for key, value in param_grid.items()}
-        grid_search = GridSearchCV(model, param_grid, cv=self.cv, n_jobs=self.n_jobs)
-        grid_search.fit(self.X, self.y)
+        return updated_model
 
-        # get and set best parameters
-        best_params = grid_search.best_params_
-        # remove model__ prefix
-        best_params = {
-            key.split("model__", 1)[1]: value for key, value in best_params.items()
-        }
-
-        self.logger.info(f"Best parameters for {model_name}: {best_params}")
-        model.named_steps["model"].set_params(
-            **best_params
-        )  # Update the model with the best parameters
-
-        # store best parameters
-        self.best_params[model_name] = best_params
-
-    def get_best_model(self, metric="r2"):
+    def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
 
         Parameters
@@ -259,7 +266,8 @@ class AutoEmulate:
         Returns
         -------
         best_model : object
-            Best model.
+            Best model fitted on full data. If normalised, returns a pipeline with
+            the scaler and the best model.
         """
 
         # best model name
@@ -275,18 +283,19 @@ class AutoEmulate:
         # get best model with hyperparameters if available
         if len(self.best_params) > 0:
             best_model_params = self.best_params[best_model_name]
+            print(best_model_params)
             best_model = MODEL_REGISTRY[best_model_name](**best_model_params)
         else:
             best_model = MODEL_REGISTRY[best_model_name]()
+
+        if self.normalise:
+            best_model = Pipeline([("scaler", self.scaler), ("model", best_model)])
 
         self.logger.info(
             f"{best_model_name} is the best model, refitting on full dataset..."
         )
         # refit best model on full dataset
         best_model.fit(self.X, self.y)
-        # set scaler if normalised
-        if self.normalise:
-            best_model.scaler = self.scaler
 
         return best_model
 
