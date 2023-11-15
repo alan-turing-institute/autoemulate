@@ -51,7 +51,7 @@ class HyperparamSearch:
             #     model, param_grid, cv=self.cv, n_jobs=self.n_jobs
             # )
             grid_search = RandomizedSearchCV(
-                model, param_grid, n_iter=20, cv=self.cv, n_jobs=self.n_jobs
+                model, param_grid, n_iter=50, cv=self.cv, n_jobs=self.n_jobs
             )
             grid_search.fit(self.X, self.y)
 
