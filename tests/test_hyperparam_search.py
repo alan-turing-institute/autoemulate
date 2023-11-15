@@ -30,11 +30,9 @@ def param_grid():
 
 # fixture for hyperparameter search object
 @pytest.fixture
-def hyperparam_search(X_y, param_grid):
+def hyperparam_search(X_y):
     X, y = X_y
-    return HyperparamSearch(
-        X, y, cv=3, n_jobs=1, param_grid=param_grid, logger=logging.getLogger(__name__)
-    )
+    return HyperparamSearch(X, y, cv=3, n_jobs=1, logger=logging.getLogger(__name__))
 
 
 # test prepare_param_grid

@@ -218,8 +218,8 @@ class AutoEmulate:
 
         Returns
         -------
-            scores_df : pandas.DataFrame
-                Dataframe containing the scores for each model, metric and fold.
+            None
+                Modifies the self.scores_df DataFrame in-place.
 
         """
         # Gather scores from each metric
@@ -249,7 +249,6 @@ class AutoEmulate:
             X=self.X,
             y=self.y,
             cv=self.cv,
-            param_grid=None,
             niter=self.grid_search_iters,
             n_jobs=self.n_jobs,
             logger=self.logger,
@@ -292,7 +291,6 @@ class AutoEmulate:
         # get best model with hyperparameters if available
         if len(self.best_params) > 0:
             best_model_params = self.best_params[best_model_name]
-            print(best_model_params)
             best_model = MODEL_REGISTRY[best_model_name](**best_model_params)
         else:
             best_model = MODEL_REGISTRY[best_model_name]()
@@ -311,7 +309,7 @@ class AutoEmulate:
     def print_results(self, model=None):
         # check if model is in self.models
         if model is not None:
-            model_names = [type(model).__name__ for model in self.models]
+            model_names = [type(model.steps[-1][1]).__name__ for model in self.models]
             if model not in model_names:
                 raise ValueError(
                     f"Model {model} not found. Available models are: {model_names}"
