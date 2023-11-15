@@ -142,7 +142,7 @@ class AutoEmulate:
 
         for i, model in enumerate(self.models):
             updated_model = (
-                self._get_best_hyperparams_hyperparams(i, model)
+                self._get_best_hyperparams(i, model)
                 if self.hyperparameter_search
                 else model
             )
