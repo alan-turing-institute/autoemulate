@@ -20,7 +20,8 @@ def fetch_dataset(dataset_name, train_test=False, test_size=0.2, random_state=42
         "four_chamber" is the 4-chamber model without LH sampling.
         "circ_adapt" is the circulatory adaptation model also from LH sampling.
     train_test : bool, optional
-        If True, returns the dataset split into training and testing sets.
+        If True, returns the dataset split into training and testing sets,
+        X_train, X_test, y_train, y_test.
         If False, returns the entire dataset. Default is False.
     test_size : float, optional
         The proportion of the dataset to include in the test split.
