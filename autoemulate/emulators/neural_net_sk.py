@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.neural_network import MLPRegressor
 from autoemulate.emulators import Emulator
 
+from scipy.stats import loguniform, randint
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
@@ -90,13 +91,20 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "hidden_layer_sizes": [(50,), (100,), (100, 50), (50, 50)],
-            "activation": ["relu"],  # "tanh",
-            "solver": ["sgd", "adam"],
-            "alpha": [0.0001, 0.001, 0.01],
-            "learning_rate_init": [0.001, 0.01],
-            "max_iter": [200],
-            "tol": [1e-4],
+            "hidden_layer_sizes": [
+                (50,),
+                (100,),
+                (100, 50),
+                (100, 100),
+                (100, 100, 100),
+            ],
+            "activation": ["relu"],  # "tanh", "logistic"
+            "solver": ["adam", "lbfgs"],  # "sgd",
+            "alpha": loguniform(1e-5, 1e-1),
+            "learning_rate_init": loguniform(1e-4, 1e-2),
+            # "max_iter": [randint(100, 1000)],
+            # "tol": loguniform(1e-5, 1e-3),
+            # "learning_rate": ["constant", "invscaling", "adaptive"],
         }
         return param_grid
 

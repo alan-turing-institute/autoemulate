@@ -3112,4 +3112,4 @@ docs = ["furo", "sphinx-autodoc-typehints", "sphinx-copybutton"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "e19af3671af4aa62085899fe1b532dd9c76b2154294abdb967ed91a164e69a41"
+content-hash = "522d80d0da02abd89f496742e0753c6156a78bef0974a3806a14057b0ec82577"

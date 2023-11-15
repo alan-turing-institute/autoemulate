@@ -1,11 +1,13 @@
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import logging
+
+# from skopt import BayesSearchCV
 
 
 class HyperparamSearch:
     """Performs hyperparameter search for a given model."""
 
-    def __init__(self, X, y, cv, n_jobs, param_grid=None, logger=None):
+    def __init__(self, X, y, cv, n_jobs, param_grid=None, niter=20, logger=None):
         """Initializes a HyperparamSearch object.
 
         Parameters
@@ -25,6 +27,8 @@ class HyperparamSearch:
             in which case the grids spanned by each dictionary in the list are
             explored. This enables searching over any sequence of parameter
             settings.
+        niter : int, default=20
+            Number of parameter settings that are sampled.
         logger : logging.Logger
             Logger object.
         """
@@ -33,6 +37,7 @@ class HyperparamSearch:
         self.cv = cv
         self.n_jobs = n_jobs
         self.param_grid = param_grid
+        self.niter = niter
         self.logger = logger
         self.best_params = {}
 
@@ -45,8 +50,11 @@ class HyperparamSearch:
             # TODO: checks that parameters
             param_grid = self.prepare_param_grid(model, self.param_grid)
 
-            grid_search = GridSearchCV(
-                model, param_grid, cv=self.cv, n_jobs=self.n_jobs
+            # grid_search = GridSearchCV(
+            #     model, param_grid, cv=self.cv, n_jobs=self.n_jobs
+            # )
+            grid_search = RandomizedSearchCV(
+                model, param_grid, n_iter=self.niter, cv=self.cv, n_jobs=self.n_jobs
             )
             grid_search.fit(self.X, self.y)
 

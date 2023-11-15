@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from autoemulate.emulators import Emulator
 
+from scipy.stats import randint, uniform
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
@@ -93,13 +94,14 @@ class RandomForest(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "n_estimators": [10, 100, 300],
-            "min_samples_split": [2, 5, 10],
-            "min_samples_leaf": [1, 2, 4],
-            "max_features": [1.0, "sqrt", "log2"],
+            "n_estimators": randint(50, 500),  # broader range
+            "min_samples_split": randint(2, 20),
+            "min_samples_leaf": randint(1, 10),
+            "max_features": [1.0, "sqrt", "log2"],  # instead of fixed values
             "bootstrap": [True, False],
             "oob_score": [True, False],
-            "max_samples": [None, 0.5, 0.75],
+            # "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
+            "max_samples": [None, 0.5, 0.75],  # assuming max_samples is relevant
         }
         return param_grid
 
