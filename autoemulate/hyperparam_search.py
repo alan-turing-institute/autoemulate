@@ -33,7 +33,7 @@ class HyperparamSearch:
         self.cv = cv
         self.n_jobs = n_jobs
         self.param_grid = param_grid
-        self.logger = logger or logging.getLogger(__name__)
+        self.logger = logger
         self.best_params = {}
 
     def search(self, model):
@@ -64,7 +64,7 @@ class HyperparamSearch:
         """Prepares the parameter grid with prefixed parameters."""
         if param_grid is None:
             param_grid = model.named_steps["model"].get_grid_params()
-        print(f"param_grid: {param_grid}")
+        # print(f"param_grid: {param_grid}")
         return {f"model__{key}": value for key, value in param_grid.items()}
 
     @staticmethod
