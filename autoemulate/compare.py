@@ -142,7 +142,7 @@ class AutoEmulate:
 
         for i, model in enumerate(self.models):
             updated_model = (
-                self._get_best_hyperparams_hyperparams(i, model)
+                self._get_best_hyperparams(i, model)
                 if self.hyperparameter_search
                 else model
             )
@@ -243,7 +243,12 @@ class AutoEmulate:
         """
         # Perform hyperparameter search and update model
         hyperparam_searcher = HyperparamSearch(
-            self.X, self.y, self.cv, self.n_jobs, self.logger
+            X=self.X,
+            y=self.y,
+            cv=self.cv,
+            param_grid=None,
+            n_jobs=self.n_jobs,
+            logger=self.logger,
         )
         updated_model = hyperparam_searcher.search(model)
 
@@ -299,7 +304,7 @@ class AutoEmulate:
 
         return best_model
 
-    def print_scores(self, model=None):
+    def print_results(self, model=None):
         # check if model is in self.models
         if model is not None:
             model_names = [type(model).__name__ for model in self.models]
