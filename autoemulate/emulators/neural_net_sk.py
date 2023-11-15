@@ -91,14 +91,20 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "hidden_layer_sizes": [(50,), (100,), (100, 50), (100, 100), (200, 100)],
-            "activation": ["relu", "tanh", "logistic"],
-            "solver": ["adam", "sgd", "lbfgs"],
+            "hidden_layer_sizes": [
+                (50,),
+                (100,),
+                (100, 50),
+                (100, 100),
+                (100, 100, 100),
+            ],
+            "activation": ["relu"],  # "tanh", "logistic"
+            "solver": ["adam", "lbfgs"],  # "sgd",
             "alpha": loguniform(1e-5, 1e-1),
             "learning_rate_init": loguniform(1e-4, 1e-2),
-            "max_iter": randint(100, 500),
-            "tol": loguniform(1e-5, 1e-3),
-            "learning_rate": ["constant", "invscaling", "adaptive"],
+            # "max_iter": [randint(100, 1000)],
+            # "tol": loguniform(1e-5, 1e-3),
+            # "learning_rate": ["constant", "invscaling", "adaptive"],
         }
         return param_grid
 

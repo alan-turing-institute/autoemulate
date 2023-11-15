@@ -30,7 +30,8 @@ class AutoEmulate:
         self,
         X,
         y,
-        hyperparameter_search=False,
+        use_grid_search=False,
+        grid_search_iters=20,
         normalise=True,
         fold_strategy="kfold",
         folds=5,
@@ -45,8 +46,11 @@ class AutoEmulate:
             Simulation input.
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
-        hyperparameter_search : bool
+        use_grid_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
+        grid_search_iters : int
+            Number of parameter settings that are sampled. Only used if
+            use_grid_search=True.
         normalise : bool, default=False
             Whether to normalise the data before fitting the models. Currently only
             z-transformation using StandardScaler.
@@ -63,7 +67,8 @@ class AutoEmulate:
         self.models = self._get_models(MODEL_REGISTRY, normalise=normalise)
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
-        self.hyperparameter_search = hyperparameter_search
+        self.use_grid_search = use_grid_search
+        self.grid_search_iters = grid_search_iters
         self.normalise = normalise
         self.n_jobs = n_jobs
         self.logger = configure_logging(log_to_file=log_to_file)
@@ -142,9 +147,7 @@ class AutoEmulate:
 
         for i, model in enumerate(self.models):
             updated_model = (
-                self._get_best_hyperparams(i, model)
-                if self.hyperparameter_search
-                else model
+                self._get_best_hyperparams(i, model) if self.use_grid_search else model
             )
             self.cross_validate(updated_model)
 
@@ -247,6 +250,7 @@ class AutoEmulate:
             y=self.y,
             cv=self.cv,
             param_grid=None,
+            niter=self.grid_search_iters,
             n_jobs=self.n_jobs,
             logger=self.logger,
         )

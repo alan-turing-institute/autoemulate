@@ -97,10 +97,11 @@ class RandomForest(BaseEstimator, RegressorMixin):
             "n_estimators": randint(50, 500),  # broader range
             "min_samples_split": randint(2, 20),
             "min_samples_leaf": randint(1, 10),
-            "max_features": uniform(0.1, 0.9),  # instead of fixed values
+            "max_features": [1.0, "sqrt", "log2"],  # instead of fixed values
             "bootstrap": [True, False],
-            "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
-            "max_samples": uniform(0.1, 1.0),  # assuming max_samples is relevant
+            "oob_score": [True, False],
+            # "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
+            "max_samples": [None, 0.5, 0.75],  # assuming max_samples is relevant
         }
         return param_grid
 
