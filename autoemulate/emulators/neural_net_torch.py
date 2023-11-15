@@ -7,6 +7,7 @@ import numpy as np
 import skorch
 from torch import nn
 from skorch import NeuralNetRegressor
+from scipy.stats import loguniform
 
 
 class InputShapeSetter(skorch.callbacks.Callback):
@@ -81,9 +82,15 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     def get_grid_params(self):
         return {
-            "lr": [0.001, 0.01, 0.05],
+            "lr": loguniform(1e-4, 1e-2),
             "max_epochs": [10, 20, 30],
-            "module__hidden_layer_sizes": [(100,), (100, 100), (100, 100, 100)],
+            "module__hidden_layer_sizes": [
+                (50,),
+                (100,),
+                (100, 50),
+                (100, 100),
+                (200, 100),
+            ],
         }
 
     def _more_tags(self):

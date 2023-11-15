@@ -1,5 +1,7 @@
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import logging
+
+# from skopt import BayesSearchCV
 
 
 class HyperparamSearch:
@@ -45,8 +47,11 @@ class HyperparamSearch:
             # TODO: checks that parameters
             param_grid = self.prepare_param_grid(model, self.param_grid)
 
-            grid_search = GridSearchCV(
-                model, param_grid, cv=self.cv, n_jobs=self.n_jobs
+            # grid_search = GridSearchCV(
+            #     model, param_grid, cv=self.cv, n_jobs=self.n_jobs
+            # )
+            grid_search = RandomizedSearchCV(
+                model, param_grid, n_iter=20, cv=self.cv, n_jobs=self.n_jobs
             )
             grid_search.fit(self.X, self.y)
 

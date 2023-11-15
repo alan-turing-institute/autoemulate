@@ -1,10 +1,11 @@
 import numpy as np
 
-from sklearn.gaussian_process import GaussianProcessRegressor
 from autoemulate.emulators import Emulator
 
+from scipy.stats import loguniform, randint
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, Matern, DotProduct, RationalQuadratic
 
 
@@ -93,8 +94,8 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
                 # RationalQuadratic(),
                 # DotProduct(),
             ],
-            "alpha": [1e-10, 1e-5, 1e-2],
-            # "n_restarts_optimizer": [5, 10, 20],
+            "alpha": loguniform(1e-10, 1e-1),
+            "n_restarts_optimizer": randint(0, 10),
             "normalize_y": [True, False],
         }
         return param_grid

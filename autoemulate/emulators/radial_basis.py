@@ -4,6 +4,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from smt.surrogate_models import RBF
+from scipy.stats import loguniform, uniform
 
 
 class RadialBasis(BaseEstimator, RegressorMixin):
@@ -73,9 +74,9 @@ class RadialBasis(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "d0": [0.1, 1.0, 2.0],
+            "d0": uniform(0.1, 2.0),  # or loguniform if appropriate
             "poly_degree": [-1, 0, 1],
-            "reg": [1e-10, 1e-5, 1e-2],
+            "reg": loguniform(1e-10, 1e-2),
         }
         return param_grid
 
