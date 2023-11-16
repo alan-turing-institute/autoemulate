@@ -94,14 +94,14 @@ class RandomForest(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "n_estimators": randint(50, 500),  # broader range
-            "min_samples_split": randint(2, 20),
-            "min_samples_leaf": randint(1, 10),
-            "max_features": [1.0, "sqrt", "log2"],  # instead of fixed values
-            "bootstrap": [True, False],
-            "oob_score": [True, False],
-            # "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
-            "max_samples": [None, 0.5, 0.75],  # assuming max_samples is relevant
+            "model__n_estimators": randint(50, 500),  # broader range
+            "model__min_samples_split": randint(2, 20),
+            "model__min_samples_leaf": randint(1, 10),
+            "model__max_features": [1.0, "sqrt", "log2"],  # instead of fixed values
+            "model__bootstrap": [True, False],
+            "model__oob_score": [True, False],
+            # "model__max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
+            "model__max_samples": [None, 0.5, 0.75],  # assuming max_samples is relevant
         }
         return param_grid
 

@@ -15,7 +15,7 @@ def X_y():
 
 # fixture for random forest model in pipeline
 @pytest.fixture
-def rf_pipeline():
+def model():
     return Pipeline([("model", RandomForest())])
 
 
@@ -35,19 +35,28 @@ def hyperparam_search(X_y):
     return HyperparamSearch(X, y, cv=3, n_jobs=1, logger=logging.getLogger(__name__))
 
 
-# test prepare_param_grid
-def test_prepare_param_grid(rf_pipeline, param_grid, hyperparam_search):
-    param_grid = hyperparam_search.prepare_param_grid(rf_pipeline)
-    # check that the parameter grid is prefixed with "model__"
-    assert all([key.startswith("model__") for key in param_grid.keys()])
+def test_check_param_grid(hyperparam_search, model, param_grid):
+    # param_grid should be a dictionary
+    with pytest.raises(TypeError):
+        hyperparam_search.check_param_grid([], model)
+    # keys in param_grid should be strings
+    with pytest.raises(TypeError):
+        hyperparam_search.check_param_grid({1: []}, model)
+    # values in param_grid should be lists
+    with pytest.raises(TypeError):
+        hyperparam_search.check_param_grid({"n_estimators": 10}, model)
+    # model__ prefixed keys should be actual parameters in the model
+    with pytest.raises(ValueError):
+        hyperparam_search.check_param_grid({"model__invalid_param": [1, 2]}, model)
+    # check param_grid returned if valid
+    assert hyperparam_search.check_param_grid(param_grid, model) == param_grid
 
 
-# test
-def test_search(rf_pipeline, hyperparam_search):
+def test_search(model, hyperparam_search):
     # check that the best_params attribute is empty before search
     assert hyperparam_search.best_params == {}
     # check that the best_params attribute is populated after search
-    hyperparam_search.search(rf_pipeline)
+    hyperparam_search.search(model)
     assert hyperparam_search.best_params != {}
     # # check that the best_params attribute is a dictionary
     assert type(hyperparam_search.best_params) == dict

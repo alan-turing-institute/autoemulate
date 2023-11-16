@@ -64,7 +64,7 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
-        param_grid = {"nugget": ["fit", "adaptive", "pivot"]}
+        param_grid = {"model__nugget": ["fit", "adaptive", "pivot"]}
         return param_grid
 
     def _more_tags(self):
