@@ -20,7 +20,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         kernel=RBF(),
         alpha=1e-10,
         optimizer="fmin_l_bfgs_b",
-        n_restarts_optimizer=15,
+        n_restarts_optimizer=20,
         normalize_y=True,
         copy_X_train=True,
         random_state=None,
@@ -90,13 +90,14 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         param_grid = {
             "kernel": [
                 RBF(),
-                # Matern(),
-                # RationalQuadratic(),
+                Matern(),
+                RationalQuadratic(),
                 # DotProduct(),
             ],
+            "optimizer": ["fmin_l_bfgs_b"],
             "alpha": [1e-10, 1e-5, 1e-2],
-            "n_restarts_optimizer": [15, 30],
-            # "normalize_y": [True, False],
+            "n_restarts_optimizer": [20],
+            "normalize_y": [True],
         }
         return param_grid
 

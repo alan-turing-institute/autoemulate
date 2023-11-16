@@ -1,3 +1,5 @@
+"""Test whether emulators are sklearn-compatible."""
+
 from sklearn.utils.estimator_checks import parametrize_with_checks, _yield_all_checks
 from autoemulate.emulators import (
     RandomForest,
