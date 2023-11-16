@@ -5,30 +5,30 @@
 | Name                                           |    Stmts |     Miss |   Cover |   Missing |
 |----------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                    |        0 |        0 |    100% |           |
-| autoemulate/compare.py                         |      100 |       23 |     77% |123, 137, 248-265, 294-296, 313-333, 344 |
+| autoemulate/compare.py                         |       99 |        9 |     91% |248-264, 293-294, 342 |
 | autoemulate/cv.py                              |        6 |        1 |     83% |        37 |
 | autoemulate/datasets.py                        |       13 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py          |        8 |        0 |    100% |           |
 | autoemulate/emulators/base.py                  |       14 |        4 |     71% |10, 24, 38, 53 |
 | autoemulate/emulators/gaussian\_process.py     |       27 |        3 |     89% | 67-68, 71 |
-| autoemulate/emulators/gaussian\_process\_sk.py |       32 |        2 |     94% |    90-101 |
+| autoemulate/emulators/gaussian\_process\_sk.py |       32 |        2 |     94% |    90-102 |
 | autoemulate/emulators/neural\_net\_sk.py       |       34 |        2 |     94% |    93-109 |
 | autoemulate/emulators/neural\_net\_torch.py    |       35 |       19 |     46% |17-18, 24-29, 32-35, 38-42, 65, 84, 97 |
 | autoemulate/emulators/radial\_basis.py         |       30 |        2 |     93% |     76-81 |
 | autoemulate/emulators/random\_forest.py        |       34 |        0 |    100% |           |
 | autoemulate/experimental\_design.py            |       18 |        3 |     83% |16, 27, 38 |
-| autoemulate/hyperparam\_search.py              |       35 |        3 |     91% |     65-67 |
+| autoemulate/hyperparam\_search.py              |       34 |        3 |     91% |     75-77 |
 | autoemulate/logging\_config.py                 |       21 |        4 |     81% |     24-27 |
 | autoemulate/metrics.py                         |        7 |        0 |    100% |           |
 | autoemulate/plotting.py                        |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
 | tests/\_\_init\_\_.py                          |        0 |        0 |    100% |           |
-| tests/test\_compare.py                         |       39 |        0 |    100% |           |
+| tests/test\_compare.py                         |       96 |        0 |    100% |           |
 | tests/test\_datasets.py                        |       17 |        0 |    100% |           |
 | tests/test\_emulators.py                       |       63 |        0 |    100% |           |
 | tests/test\_estimators.py                      |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py            |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py              |       30 |        0 |    100% |           |
-|                                      **TOTAL** |  **628** |   **98** | **84%** |           |
+|                                      **TOTAL** |  **683** |   **84** | **88%** |           |
 
 
 ## Setup coverage badge
