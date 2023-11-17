@@ -265,7 +265,7 @@ class AutoEmulate:
         model.set_params(**best_params)
         # Update best parameter list
         model_name = type(model.named_steps["model"]).__name__
-        self.best_params[model_name] = hyperparam_searcher.best_params
+        self.best_params[model_name] = best_params
 
         return model
 
