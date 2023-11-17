@@ -5,7 +5,7 @@
 | Name                                           |    Stmts |     Miss |   Cover |   Missing |
 |----------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                    |        0 |        0 |    100% |           |
-| autoemulate/compare.py                         |       99 |        9 |     91% |248-264, 293-294, 342 |
+| autoemulate/compare.py                         |       99 |        8 |     92% |154, 253-270, 344 |
 | autoemulate/cv.py                              |        6 |        1 |     83% |        37 |
 | autoemulate/datasets.py                        |       13 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py          |        8 |        0 |    100% |           |
@@ -17,7 +17,7 @@
 | autoemulate/emulators/radial\_basis.py         |       30 |        2 |     93% |     76-81 |
 | autoemulate/emulators/random\_forest.py        |       34 |        0 |    100% |           |
 | autoemulate/experimental\_design.py            |       18 |        3 |     83% |16, 27, 38 |
-| autoemulate/hyperparam\_search.py              |       34 |        3 |     91% |     75-77 |
+| autoemulate/hyperparam\_search.py              |       42 |        5 |     88% |66, 69, 82-86 |
 | autoemulate/logging\_config.py                 |       21 |        4 |     81% |     24-27 |
 | autoemulate/metrics.py                         |        7 |        0 |    100% |           |
 | autoemulate/plotting.py                        |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
@@ -27,8 +27,8 @@
 | tests/test\_emulators.py                       |       63 |        0 |    100% |           |
 | tests/test\_estimators.py                      |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py            |       21 |        0 |    100% |           |
-| tests/test\_hyperparam\_search.py              |       30 |        0 |    100% |           |
-|                                      **TOTAL** |  **683** |   **84** | **88%** |           |
+| tests/test\_hyperparam\_search.py              |       36 |        0 |    100% |           |
+|                                      **TOTAL** |  **697** |   **85** | **88%** |           |
 
 
 ## Setup coverage badge
