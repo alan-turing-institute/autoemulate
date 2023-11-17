@@ -145,16 +145,15 @@ class AutoEmulate:
         # Freshly initialise best parameters for each model
         self.best_params = {}
 
-        for i, model in enumerate(self.models):
-            updated_model = (
-                self._get_best_hyperparams(i, model) if self.use_grid_search else model
-            )
-            self.cross_validate(updated_model)
+        for i in range(len(self.models)):
+            if self.use_grid_search:
+                self.models[i] = self._update_to_best_hyperparams(self.models[i])
+            self._cross_validate(self.models[i])
 
         # returns best model fitted on full data
         return self._get_best_model(metric="r2")
 
-    def cross_validate(self, model):
+    def _cross_validate(self, model):
         """Perform cross-validation on a given model using the specified metrics.
 
         Parameters
@@ -177,7 +176,7 @@ class AutoEmulate:
         Returns
         -------
             scores_df : pandas.DataFrame
-                Dataframe containing the scores for each model, metric and fold.
+                Updates dataframe containing the cv scores the model.
 
         """
 
@@ -234,7 +233,7 @@ class AutoEmulate:
                         "score": score,
                     }
 
-    def _get_best_hyperparams(self, model_index, model):
+    def _update_to_best_hyperparams(self, model):
         """Performs hyperparameter search and updates the model.
 
         Parameters
@@ -253,15 +252,18 @@ class AutoEmulate:
             n_jobs=self.n_jobs,
             logger=self.logger,
         )
-        updated_model = hyperparam_searcher.search(model)
-
-        # Update the model in the list
-        self.models[model_index] = updated_model
+        best_params = hyperparam_searcher.search(
+            model, search_type="random", param_grid=None
+        )
+        print(f"best parameters from search: {best_params}")
+        # Update model with best parameters
+        model.set_params(**best_params)
+        print(f"best parameters from model params: {model.get_params()}")
         # Update best parameter list
         model_name = type(model.named_steps["model"]).__name__
         self.best_params[model_name] = hyperparam_searcher.best_params
 
-        return updated_model
+        return model
 
     def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
@@ -288,15 +290,11 @@ class AutoEmulate:
         # get best model name
         best_model_name = means.loc[means[metric].idxmax(), "model"]
 
-        # get best model with hyperparameters if available
-        if len(self.best_params) > 0:
-            best_model_params = self.best_params[best_model_name]
-            best_model = MODEL_REGISTRY[best_model_name](**best_model_params)
-        else:
-            best_model = MODEL_REGISTRY[best_model_name]()
-
-        if self.normalise:
-            best_model = Pipeline([("scaler", self.scaler), ("model", best_model)])
+        # get best model:
+        for model in self.models:
+            if type(model.named_steps["model"]).__name__ == best_model_name:
+                best_model = model
+                break
 
         self.logger.info(
             f"{best_model_name} is the best model, refitting on full dataset..."

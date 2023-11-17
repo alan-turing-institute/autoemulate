@@ -34,7 +34,7 @@ class HyperparamSearch:
         self.logger = logger
         self.best_params = {}
 
-    def search(self, model, param_grid=None):
+    def search(self, model, search_type="random", param_grid=None):
         """Performs hyperparameter search for a given model.
 
         Parameters
@@ -57,26 +57,39 @@ class HyperparamSearch:
         model_name = type(model.named_steps["model"]).__name__
         self.logger.info(f"Performing grid search for {model_name}...")
 
-        try:
-            # TODO: checks that parameters
-            if param_grid is None:
-                param_grid = model.named_steps["model"].get_grid_params()
-            else:
-                param_grid = self.check_param_grid(param_grid, model)
+        # get default param grid if not provided
+        if param_grid is None:
+            param_grid = model.named_steps["model"].get_grid_params()
+        # check that the provided param grid is valid
+        else:
+            param_grid = self.check_param_grid(param_grid, model)
 
-            grid_search = RandomizedSearchCV(
-                model, param_grid, n_iter=self.niter, cv=self.cv, n_jobs=self.n_jobs
+        if search_type == "grid":
+            searcher = GridSearchCV(
+                model, param_grid, cv=self.cv, n_jobs=self.n_jobs, refit=True
             )
-            grid_search.fit(self.X, self.y)
+        elif search_type == "random":
+            searcher = RandomizedSearchCV(
+                model,
+                param_grid,
+                n_iter=self.niter,
+                cv=self.cv,
+                n_jobs=self.n_jobs,
+                refit=True,
+            )
+        # TODO, currently problems with skopt
+        elif search_type == "bayes":
+            # not implemented yet
+            raise NotImplementedError
+        else:
+            raise ValueError(f"Invalid search type: {search_type}")
 
-            best_params = grid_search.best_params_
-            self.logger.info(f"Best parameters for {model_name}: {best_params}")
+        searcher.fit(self.X, self.y)
+        best_params = searcher.best_params_
+        self.logger.info(f"Best parameters for {model_name}: {best_params}")
+        # self.best_params = best_params
 
-            self.best_params = best_params
-        except Exception as e:
-            self.logger.error(f"Error during grid search for {model_name}: {e}")
-            raise
-        return model
+        return best_params
 
     @staticmethod
     def check_param_grid(param_grid, model):
