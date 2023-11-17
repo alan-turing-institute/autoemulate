@@ -53,12 +53,10 @@ def test_check_param_grid(hyperparam_search, model, param_grid):
 
 
 def test_search(model, hyperparam_search):
-    # check that the best_params attribute is empty before search
-    assert hyperparam_search.best_params == {}
     # check that the best_params attribute is populated after search
-    hyperparam_search.search(model)
-    assert hyperparam_search.best_params != {}
+    best_params = hyperparam_search.search(model)
+    assert best_params != {}
     # # check that the best_params attribute is a dictionary
-    assert type(hyperparam_search.best_params) == dict
+    assert type(best_params) == dict
     # # check that best param keys are strings
-    assert all([type(key) == str for key in hyperparam_search.best_params.keys()])
+    assert all([type(key) == str for key in best_params.keys()])

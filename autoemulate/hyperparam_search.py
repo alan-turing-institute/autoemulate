@@ -32,7 +32,6 @@ class HyperparamSearch:
         self.n_jobs = n_jobs
         self.niter = niter
         self.logger = logger
-        self.best_params = {}
 
     def search(self, model, search_type="random", param_grid=None):
         """Performs hyperparameter search for a given model.
