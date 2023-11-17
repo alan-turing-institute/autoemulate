@@ -82,9 +82,9 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     def get_grid_params(self):
         return {
-            "lr": loguniform(1e-4, 1e-2),
-            "max_epochs": [10, 20, 30],
-            "module__hidden_layer_sizes": [
+            "model__lr": loguniform(1e-4, 1e-2),
+            "model__max_epochs": [10, 20, 30],
+            "model__module__hidden_layer_sizes": [
                 (50,),
                 (100,),
                 (100, 50),

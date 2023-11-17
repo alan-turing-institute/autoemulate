@@ -31,6 +31,7 @@ class AutoEmulate:
         X,
         y,
         use_grid_search=False,
+        grid_search_type="random",
         grid_search_iters=20,
         normalise=True,
         fold_strategy="kfold",
@@ -48,9 +49,11 @@ class AutoEmulate:
             Simulation output.
         use_grid_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
+        grid_search_type : str
+            Type of hyperparameter search to perform. Can be "grid", "random", or "bayes".
         grid_search_iters : int
             Number of parameter settings that are sampled. Only used if
-            use_grid_search=True.
+            use_grid_search=True and grid_search_type="random".
         normalise : bool, default=False
             Whether to normalise the data before fitting the models. Currently only
             z-transformation using StandardScaler.
@@ -68,6 +71,7 @@ class AutoEmulate:
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.use_grid_search = use_grid_search
+        self.search_type = grid_search_type
         self.grid_search_iters = grid_search_iters
         self.normalise = normalise
         self.n_jobs = n_jobs
@@ -145,16 +149,17 @@ class AutoEmulate:
         # Freshly initialise best parameters for each model
         self.best_params = {}
 
-        for i, model in enumerate(self.models):
-            updated_model = (
-                self._get_best_hyperparams(i, model) if self.use_grid_search else model
-            )
-            self.cross_validate(updated_model)
+        for i in range(len(self.models)):
+            if self.use_grid_search:
+                self.models[i] = self._update_to_best_hyperparams(
+                    self.models[i], self.search_type
+                )
+            self._cross_validate(self.models[i])
 
         # returns best model fitted on full data
         return self._get_best_model(metric="r2")
 
-    def cross_validate(self, model):
+    def _cross_validate(self, model):
         """Perform cross-validation on a given model using the specified metrics.
 
         Parameters
@@ -177,7 +182,7 @@ class AutoEmulate:
         Returns
         -------
             scores_df : pandas.DataFrame
-                Dataframe containing the scores for each model, metric and fold.
+                Updates dataframe containing the cv scores the model.
 
         """
 
@@ -234,7 +239,7 @@ class AutoEmulate:
                         "score": score,
                     }
 
-    def _get_best_hyperparams(self, model_index, model):
+    def _update_to_best_hyperparams(self, model, search_type):
         """Performs hyperparameter search and updates the model.
 
         Parameters
@@ -253,15 +258,16 @@ class AutoEmulate:
             n_jobs=self.n_jobs,
             logger=self.logger,
         )
-        updated_model = hyperparam_searcher.search(model)
-
-        # Update the model in the list
-        self.models[model_index] = updated_model
+        best_params = hyperparam_searcher.search(
+            model, search_type=search_type, param_grid=None
+        )
+        # Update model with best parameters
+        model.set_params(**best_params)
         # Update best parameter list
         model_name = type(model.named_steps["model"]).__name__
-        self.best_params[model_name] = hyperparam_searcher.best_params
+        self.best_params[model_name] = best_params
 
-        return updated_model
+        return model
 
     def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
@@ -288,15 +294,11 @@ class AutoEmulate:
         # get best model name
         best_model_name = means.loc[means[metric].idxmax(), "model"]
 
-        # get best model with hyperparameters if available
-        if len(self.best_params) > 0:
-            best_model_params = self.best_params[best_model_name]
-            best_model = MODEL_REGISTRY[best_model_name](**best_model_params)
-        else:
-            best_model = MODEL_REGISTRY[best_model_name]()
-
-        if self.normalise:
-            best_model = Pipeline([("scaler", self.scaler), ("model", best_model)])
+        # get best model:
+        for model in self.models:
+            if type(model.named_steps["model"]).__name__ == best_model_name:
+                best_model = model
+                break
 
         self.logger.info(
             f"{best_model_name} is the best model, refitting on full dataset..."
