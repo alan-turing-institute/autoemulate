@@ -31,6 +31,7 @@ class AutoEmulate:
         X,
         y,
         use_grid_search=False,
+        grid_search_type="random",
         grid_search_iters=20,
         normalise=True,
         fold_strategy="kfold",
@@ -48,9 +49,11 @@ class AutoEmulate:
             Simulation output.
         use_grid_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
+        grid_search_type : str
+            Type of hyperparameter search to perform. Can be "grid", "random", or "bayes".
         grid_search_iters : int
             Number of parameter settings that are sampled. Only used if
-            use_grid_search=True.
+            use_grid_search=True and grid_search_type="random".
         normalise : bool, default=False
             Whether to normalise the data before fitting the models. Currently only
             z-transformation using StandardScaler.
@@ -68,6 +71,7 @@ class AutoEmulate:
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.use_grid_search = use_grid_search
+        self.search_type = grid_search_type
         self.grid_search_iters = grid_search_iters
         self.normalise = normalise
         self.n_jobs = n_jobs
@@ -147,7 +151,9 @@ class AutoEmulate:
 
         for i in range(len(self.models)):
             if self.use_grid_search:
-                self.models[i] = self._update_to_best_hyperparams(self.models[i])
+                self.models[i] = self._update_to_best_hyperparams(
+                    self.models[i], self.search_type
+                )
             self._cross_validate(self.models[i])
 
         # returns best model fitted on full data
@@ -233,7 +239,7 @@ class AutoEmulate:
                         "score": score,
                     }
 
-    def _update_to_best_hyperparams(self, model):
+    def _update_to_best_hyperparams(self, model, search_type):
         """Performs hyperparameter search and updates the model.
 
         Parameters
@@ -253,12 +259,10 @@ class AutoEmulate:
             logger=self.logger,
         )
         best_params = hyperparam_searcher.search(
-            model, search_type="random", param_grid=None
+            model, search_type=search_type, param_grid=None
         )
-        print(f"best parameters from search: {best_params}")
         # Update model with best parameters
         model.set_params(**best_params)
-        print(f"best parameters from model params: {model.get_params()}")
         # Update best parameter list
         model_name = type(model.named_steps["model"]).__name__
         self.best_params[model_name] = hyperparam_searcher.best_params

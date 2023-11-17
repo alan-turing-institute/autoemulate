@@ -41,6 +41,8 @@ class HyperparamSearch:
         ----------
         model : sklearn.pipeline.Pipeline
             Model to be optimized.
+        search_type : str, default="random"
+            Type of search to perform. Can be "grid", "random", or "bayes".
         param_grid : dict, default=None
             Dictionary with parameters names (string) as keys and lists of
             parameter settings to try as values, or a list of such dictionaries,
