@@ -55,7 +55,7 @@ def _plot_best_fold(cv_results, X, y, model_name, ax):
         The axes on which to plot the results.
     """
     # Find the fold with the best score for the model
-    best_fold_index = np.argmin(cv_results[model_name]["test_r2"])
+    best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
     _plot_fold(
         cv_results,
         X,
