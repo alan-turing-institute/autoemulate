@@ -143,7 +143,8 @@ class AutoEmulate:
         return models
 
     def _get_metrics(self, METRIC_REGISTRY):
-        """Get metrics from REGISTRY
+        """
+        Get metrics from REGISTRY
 
         Parameters
         ----------
@@ -152,8 +153,8 @@ class AutoEmulate:
 
         Returns
         -------
-        list
-            List of metrics.
+        List[Callable]
+            List of metric functions.
         """
         return [metric for metric in METRIC_REGISTRY.values()]
 
