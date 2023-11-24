@@ -1,9 +1,6 @@
-import numpy as np
+from scipy.stats import randint
 
 from sklearn.ensemble import RandomForestRegressor
-from autoemulate.emulators import Emulator
-
-from scipy.stats import randint, uniform
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 

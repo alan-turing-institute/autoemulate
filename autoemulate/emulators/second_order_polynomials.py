@@ -55,10 +55,6 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
         X = check_array(X, dtype=np.float64)
         check_is_fitted(self)
         predictions = self.model_.predict_values(X)
-        # Check if dimension 2 is 1, if so, reshape to 1D array
-        # This is needed to pass sklearn's check_estimator
-        # if predictions.ndim == 2 and predictions.shape[1] == 1:
-        #     predictions = predictions.ravel()
         return predictions
 
     def get_grid_params(self):

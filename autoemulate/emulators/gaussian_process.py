@@ -1,14 +1,14 @@
 import numpy as np
-import mogp_emulator
-from autoemulate.emulators import Emulator
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+import mogp_emulator
+
 
 class GaussianProcess(BaseEstimator, RegressorMixin):
-    """Gaussian process Emulator.
+    """Gaussian Process Emulator.
 
-    Implements GaussianProcess regression from the mogp_emulator package.
+    Wraps Gaussian Process Regression from the mogp_emulator package.
     """
 
     def __init__(self, nugget="fit"):
@@ -69,21 +69,3 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
 
     def _more_tags(self):
         return {"multioutput": False}
-
-    # def score(self, X, y, metric):
-    #     """Returns the score of the emulator.
-
-    #     Parameters
-    #     ----------
-    #     X : numpy.ndarray
-    #         Input data (simulation input).
-    #     y : numpy.ndarray
-    #         Target data (simulation output).
-
-    #     Returns
-    #     -------
-    #     rmse : float
-    #         Root mean squared error of the emulator.
-    #     """
-    #     prediction_means = self.predict(X)
-    #     return metric(y, prediction_means)

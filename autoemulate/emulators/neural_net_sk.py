@@ -1,9 +1,7 @@
 import numpy as np
+from scipy.stats import loguniform
 
 from sklearn.neural_network import MLPRegressor
-from autoemulate.emulators import Emulator
-
-from scipy.stats import loguniform, randint
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
@@ -11,7 +9,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 class NeuralNetSk(BaseEstimator, RegressorMixin):
     """Multi-layer perceptron Emulator.
 
-    Implements MLPRegressor from scikit-learn.
+    Wraps MLPRegressor from scikit-learn.
     """
 
     def __init__(
