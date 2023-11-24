@@ -22,7 +22,6 @@ class AutoEmulate:
         self.X = None
         self.y = None
         self.is_set_up = False
-        self.scaler = None
 
     def setup(
         self,
@@ -67,14 +66,15 @@ class AutoEmulate:
         """
         self.X, self.y = self._check_input(X, y)
         self.models = self._wrap_models_in_pipeline(
-            self._get_models(MODEL_REGISTRY), normalise=normalise, scaler=self.scaler
+            self._get_models(MODEL_REGISTRY), normalise=normalise, scaler=scaler
         )
-        self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
+        self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.use_grid_search = use_grid_search
         self.search_type = grid_search_type
         self.grid_search_iters = grid_search_iters
         self.normalise = normalise
+        self.scaler = scaler
         self.n_jobs = n_jobs
         self.logger = configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
@@ -117,7 +117,7 @@ class AutoEmulate:
         """
         return [model() for model in MODEL_REGISTRY.values()]
 
-    def _wrap_models_in_pipeline(self, models, normalise=True, scaler=StandardScaler()):
+    def _wrap_models_in_pipeline(self, models, normalise, scaler):
         """Create pipelines from models
 
         Parameters
@@ -135,14 +135,27 @@ class AutoEmulate:
             List of models wrapped in pipelines.
         """
         if normalise:
-            self.scaler = scaler
             models = [
-                Pipeline([("scaler", self.scaler), ("model", model)])
-                for model in models
+                Pipeline([("scaler", scaler), ("model", model)]) for model in models
             ]
         else:
             models = [Pipeline([("model", model)]) for model in models]
         return models
+
+    def _get_metrics(self, METRIC_REGISTRY):
+        """Get metrics from REGISTRY
+
+        Parameters
+        ----------
+        METRIC_REGISTRY : dict
+            Registry of metrics.
+
+        Returns
+        -------
+        list
+            List of metrics.
+        """
+        return [metric for metric in METRIC_REGISTRY.values()]
 
     def compare(self):
         """Compares the emulator models on the data. self.setup() must be run first.
@@ -205,7 +218,7 @@ class AutoEmulate:
         model_name = type(model.named_steps["model"]).__name__
 
         # The metrics we want to use for cross-validation
-        scorers = {name: make_scorer(METRIC_REGISTRY[name]) for name in self.metrics}
+        scorers = {metric.__name__: make_scorer(metric) for metric in self.metrics}
 
         self.logger.info(f"Cross-validating {model_name}...")
         self.logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
