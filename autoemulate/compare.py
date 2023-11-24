@@ -32,6 +32,7 @@ class AutoEmulate:
         grid_search_type="random",
         grid_search_iters=20,
         normalise=True,
+        scaler=StandardScaler(),
         fold_strategy="kfold",
         folds=5,
         n_jobs=None,
@@ -65,7 +66,9 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.models = self._get_models(MODEL_REGISTRY, normalise=normalise)
+        self.models = self._wrap_models_in_pipeline(
+            self._get_models(MODEL_REGISTRY), normalise=normalise, scaler=self.scaler
+        )
         self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
         self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
         self.use_grid_search = use_grid_search
@@ -99,32 +102,46 @@ class AutoEmulate:
         y = y.astype("float32")  # needed for pytorch models
         return X, y
 
-    def _get_models(self, MODEL_REGISTRY, normalise=True):
-        """Get models from REGISTRY and add scaler if normalised.
+    def _get_models(self, MODEL_REGISTRY):
+        """Get models from REGISTRY
 
         Parameters
         ----------
         MODEL_REGISTRY : dict
             Registry of models.
-        normalise : bool
-            If True, add scaler to models.
 
         Returns
         -------
-        self.models : list
+        list
             List of models.
+        """
+        return [model() for model in MODEL_REGISTRY.values()]
 
+    def _wrap_models_in_pipeline(self, models, normalise=True, scaler=StandardScaler()):
+        """Create pipelines from models
+
+        Parameters
+        ----------
+        models : list
+            List of models.
+        normalise : bool
+            If True, add scaler to models.
+        scaler : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler.
+
+        Returns
+        -------
+        list
+            List of models wrapped in pipelines.
         """
         if normalise:
-            self.scaler = StandardScaler()
+            self.scaler = scaler
             models = [
-                Pipeline([("scaler", self.scaler), ("model", model())])
-                for model in MODEL_REGISTRY.values()
+                Pipeline([("scaler", self.scaler), ("model", model)])
+                for model in models
             ]
         else:
-            models = [
-                Pipeline([("model", model())]) for model in MODEL_REGISTRY.values()
-            ]
+            models = [Pipeline([("model", model)]) for model in models]
         return models
 
     def compare(self):
