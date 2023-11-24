@@ -121,9 +121,7 @@ def test__get_models(ae):
 # -----------------------test _wrap_models_in_pipeline-------------------#
 def test__wrap_models_in_pipeline_no_scaler(ae):
     models = ae._get_models(MODEL_REGISTRY)
-    models = ae._wrap_models_in_pipeline(
-        models, normalise=False, scaler=StandardScaler()
-    )
+    models = ae._wrap_models_in_pipeline(models, scale=False, scaler=StandardScaler())
     assert isinstance(models, list)
     assert all([isinstance(model, Pipeline) for model in models])
     # assert that pipeline does not have a scaler as first step
@@ -132,9 +130,7 @@ def test__wrap_models_in_pipeline_no_scaler(ae):
 
 def test__wrap_models_in_pipeline_scaler(ae):
     models = ae._get_models(MODEL_REGISTRY)
-    models = ae._wrap_models_in_pipeline(
-        models, normalise=True, scaler=StandardScaler()
-    )
+    models = ae._wrap_models_in_pipeline(models, scale=True, scaler=StandardScaler())
     assert isinstance(models, list)
     assert all([isinstance(model, Pipeline) for model in models])
     # assert that pipeline does have a scaler as first step
