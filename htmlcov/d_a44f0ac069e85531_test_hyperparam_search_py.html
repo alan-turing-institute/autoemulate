@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="index.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.3.2">coverage.py v7.3.2</a>,
-            created at 2023-11-24 09:47 +0000
+            created at 2023-11-24 13:25 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -81,7 +81,7 @@
 </header>
 <main id="source">
     <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">import</span> <span class="nam">pytest</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">hyperparam_search</span> <span class="key">import</span> <span class="nam">HyperparamSearch</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">hyperparam_search</span> <span class="key">import</span> <span class="nam">HyperparamSearcher</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">emulators</span> <span class="key">import</span> <span class="nam">RandomForest</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">sklearn</span><span class="op">.</span><span class="nam">datasets</span> <span class="key">import</span> <span class="nam">make_regression</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">sklearn</span><span class="op">.</span><span class="nam">model_selection</span> <span class="key">import</span> <span class="nam">GridSearchCV</span>&nbsp;</span><span class="r"></span></p>
@@ -114,7 +114,7 @@
     <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="op">@</span><span class="nam">pytest</span><span class="op">.</span><span class="nam">fixture</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">def</span> <span class="nam">hyperparam_search</span><span class="op">(</span><span class="nam">X_y</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">    <span class="nam">X</span><span class="op">,</span> <span class="nam">y</span> <span class="op">=</span> <span class="nam">X_y</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="key">return</span> <span class="nam">HyperparamSearch</span><span class="op">(</span><span class="nam">X</span><span class="op">,</span> <span class="nam">y</span><span class="op">,</span> <span class="nam">cv</span><span class="op">=</span><span class="num">3</span><span class="op">,</span> <span class="nam">n_jobs</span><span class="op">=</span><span class="num">1</span><span class="op">,</span> <span class="nam">logger</span><span class="op">=</span><span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="key">return</span> <span class="nam">HyperparamSearcher</span><span class="op">(</span><span class="nam">X</span><span class="op">,</span> <span class="nam">y</span><span class="op">,</span> <span class="nam">cv</span><span class="op">=</span><span class="num">3</span><span class="op">,</span> <span class="nam">n_jobs</span><span class="op">=</span><span class="num">1</span><span class="op">,</span> <span class="nam">logger</span><span class="op">=</span><span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">def</span> <span class="nam">test_check_param_grid</span><span class="op">(</span><span class="nam">hyperparam_search</span><span class="op">,</span> <span class="nam">model</span><span class="op">,</span> <span class="nam">param_grid</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -151,7 +151,7 @@
             <a id="nextFileLink" class="nav" href="index.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.3.2">coverage.py v7.3.2</a>,
-            created at 2023-11-24 09:47 +0000
+            created at 2023-11-24 13:25 +0000
         </p>
     </div>
 </footer>

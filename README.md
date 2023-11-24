@@ -5,31 +5,30 @@
 | Name                                                |    Stmts |     Miss |   Cover |   Missing |
 |---------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
-| autoemulate/compare.py                              |       99 |        8 |     92% |154, 253-270, 344 |
-| autoemulate/cv.py                                   |        6 |        1 |     83% |        37 |
+| autoemulate/compare.py                              |      102 |        8 |     92% |202, 301-320, 394 |
+| autoemulate/cv.py                                   |        4 |        0 |    100% |           |
 | autoemulate/datasets.py                             |       13 |        0 |    100% |           |
-| autoemulate/emulators/\_\_init\_\_.py               |        9 |        0 |    100% |           |
-| autoemulate/emulators/base.py                       |       14 |        4 |     71% |10, 24, 38, 53 |
-| autoemulate/emulators/gaussian\_process.py          |       27 |        3 |     89% | 67-68, 71 |
-| autoemulate/emulators/gaussian\_process\_sk.py      |       32 |        2 |     94% |    90-102 |
-| autoemulate/emulators/neural\_net\_sk.py            |       34 |        2 |     94% |    93-109 |
+| autoemulate/emulators/\_\_init\_\_.py               |        8 |        0 |    100% |           |
+| autoemulate/emulators/gaussian\_process.py          |       26 |        3 |     88% | 67-68, 71 |
+| autoemulate/emulators/gaussian\_process\_sk.py      |       29 |        2 |     93% |     85-97 |
+| autoemulate/emulators/neural\_net\_sk.py            |       33 |        2 |     94% |    91-107 |
 | autoemulate/emulators/neural\_net\_torch.py         |       35 |       19 |     46% |17-18, 24-29, 32-35, 38-42, 65, 84, 97 |
-| autoemulate/emulators/radial\_basis.py              |       30 |        2 |     93% |     76-81 |
-| autoemulate/emulators/random\_forest.py             |       34 |        0 |    100% |           |
-| autoemulate/emulators/second\_order\_polynomials.py |       24 |        1 |     96% |        72 |
+| autoemulate/emulators/radial\_basis.py              |       29 |        2 |     93% |     75-80 |
+| autoemulate/emulators/random\_forest.py             |       32 |        0 |    100% |           |
+| autoemulate/emulators/second\_order\_polynomials.py |       24 |        1 |     96% |        68 |
 | autoemulate/experimental\_design.py                 |       18 |        3 |     83% |16, 27, 38 |
-| autoemulate/hyperparam\_search.py                   |       42 |        5 |     88% |66, 69, 82-86 |
+| autoemulate/hyperparam\_search.py                   |       41 |        5 |     88% |66, 69, 82-86 |
 | autoemulate/logging\_config.py                      |       21 |        4 |     81% |     24-27 |
 | autoemulate/metrics.py                              |        7 |        0 |    100% |           |
 | autoemulate/plotting.py                             |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
 | tests/\_\_init\_\_.py                               |        0 |        0 |    100% |           |
-| tests/test\_compare.py                              |       97 |        0 |    100% |           |
+| tests/test\_compare.py                              |      110 |        0 |    100% |           |
 | tests/test\_datasets.py                             |       17 |        0 |    100% |           |
 | tests/test\_emulators.py                            |       63 |        0 |    100% |           |
 | tests/test\_estimators.py                           |       12 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                 |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                   |       36 |        0 |    100% |           |
-|                                           **TOTAL** |  **729** |   **86** | **88%** |           |
+|                                           **TOTAL** |  **719** |   **81** | **89%** |           |
 
 
 ## Setup coverage badge
