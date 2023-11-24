@@ -1,10 +1,3 @@
-from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.emulators import MODEL_REGISTRY
-from autoemulate.cv import CV_REGISTRY
-from autoemulate.logging_config import configure_logging
-from autoemulate.plotting import plot_results
-from autoemulate.hyperparam_search import HyperparamSearch
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,10 +5,15 @@ import matplotlib.pyplot as plt
 from sklearn.utils.validation import check_X_y
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from skopt import BayesSearchCV
+
+from autoemulate.metrics import METRIC_REGISTRY
+from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.cv import CV_REGISTRY
+from autoemulate.logging_config import configure_logging
+from autoemulate.plotting import plot_results
+from autoemulate.hyperparam_search import HyperparamSearcher
 
 
 class AutoEmulate:
@@ -250,16 +248,18 @@ class AutoEmulate:
             Model to perform hyperparameter search on.
         """
         # Perform hyperparameter search and update model
-        hyperparam_searcher = HyperparamSearch(
+        hyperparam_searcher = HyperparamSearcher(
             X=self.X,
             y=self.y,
             cv=self.cv,
-            niter=self.grid_search_iters,
             n_jobs=self.n_jobs,
             logger=self.logger,
         )
         best_params = hyperparam_searcher.search(
-            model, search_type=search_type, param_grid=None
+            model,
+            search_type=search_type,
+            param_grid=None,
+            niter=self.grid_search_iters,
         )
         # Update model with best parameters
         model.set_params(**best_params)
