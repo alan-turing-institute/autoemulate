@@ -1,13 +1,11 @@
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import logging
 
-# from skopt import BayesSearchCV
 
-
-class HyperparamSearch:
+class HyperparamSearcher:
     """Performs hyperparameter search for a given model."""
 
-    def __init__(self, X, y, cv, n_jobs, niter=20, logger=None):
+    def __init__(self, X, y, cv, n_jobs, logger=None):
         """Initializes a HyperparamSearch object.
 
         Parameters
@@ -30,10 +28,9 @@ class HyperparamSearch:
         self.y = y
         self.cv = cv
         self.n_jobs = n_jobs
-        self.niter = niter
-        self.logger = logger
+        self.logger = logger if logger else logging.getLogger(__name__)
 
-    def search(self, model, search_type="random", param_grid=None):
+    def search(self, model, search_type="random", param_grid=None, niter=20):
         """Performs hyperparameter search for a given model.
 
         Parameters
@@ -49,6 +46,9 @@ class HyperparamSearch:
             explored. This enables searching over any sequence of parameter
             settings. Parameters names should be prefixed with "model__" to indicate that
             they are parameters of the model.
+        niter : int, default=20
+            Number of parameter settings that are sampled. Only used if
+            search_type="random".
 
         Returns
         -------
@@ -73,7 +73,7 @@ class HyperparamSearch:
             searcher = RandomizedSearchCV(
                 model,
                 param_grid,
-                n_iter=self.niter,
+                n_iter=niter,
                 cv=self.cv,
                 n_jobs=self.n_jobs,
                 refit=True,

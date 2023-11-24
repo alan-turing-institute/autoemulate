@@ -4,7 +4,6 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from smt.surrogate_models import RBF
-from scipy.stats import loguniform, uniform
 
 
 class RadialBasis(BaseEstimator, RegressorMixin):

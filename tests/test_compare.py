@@ -2,13 +2,17 @@ import pytest
 import numpy as np
 import pandas as pd
 import torch
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
 from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
 from autoemulate.emulators import GaussianProcess, RandomForest
 from autoemulate.compare import AutoEmulate
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
-from sklearn.pipeline import Pipeline
+
 
 # remove "SecondOrderPolynomial" from MODEL_REGISTRY
 # this is because it needs +++ samples
@@ -106,20 +110,40 @@ def test__check_input_errors_with_NA_values_in_X(ae):
 
 
 # -----------------------test _get_models-----------------------------#
-def test__get_models_normalised(ae):
-    models = ae._get_models(MODEL_REGISTRY, normalise=True)
+def test__get_models(ae):
+    models = ae._get_models(MODEL_REGISTRY)
     assert isinstance(models, list)
-    assert all([isinstance(model, Pipeline) for model in models])
-    # assert that pipeline has a scaler as first step
-    assert all([model.steps[0][0] == "scaler" for model in models])
+    model_names = [type(model).__name__ for model in models]
+    # check all model names are in MODEL_REGISTRY
+    assert all([model_name in MODEL_REGISTRY for model_name in model_names])
 
 
-def test__get_models_not_normalised(ae):
-    models = ae._get_models(MODEL_REGISTRY, normalise=False)
+# -----------------------test _wrap_models_in_pipeline-------------------#
+def test__wrap_models_in_pipeline_no_scaler(ae):
+    models = ae._get_models(MODEL_REGISTRY)
+    models = ae._wrap_models_in_pipeline(models, scale=False, scaler=StandardScaler())
     assert isinstance(models, list)
     assert all([isinstance(model, Pipeline) for model in models])
     # assert that pipeline does not have a scaler as first step
     assert all([model.steps[0][0] != "scaler" for model in models])
+
+
+def test__wrap_models_in_pipeline_scaler(ae):
+    models = ae._get_models(MODEL_REGISTRY)
+    models = ae._wrap_models_in_pipeline(models, scale=True, scaler=StandardScaler())
+    assert isinstance(models, list)
+    assert all([isinstance(model, Pipeline) for model in models])
+    # assert that pipeline does have a scaler as first step
+    assert all([model.steps[0][0] == "scaler" for model in models])
+
+
+# -----------------------test _get_metric-------------------#
+def test__get_metrics(ae):
+    metrics = ae._get_metrics(METRIC_REGISTRY)
+    assert isinstance(metrics, list)
+    metric_names = [metric.__name__ for metric in metrics]
+    # check all metric names are in METRIC_REGISTRY
+    assert all([metric_name in METRIC_REGISTRY for metric_name in metric_names])
 
 
 # -----------------------test _update_scores_df-----------------------------#

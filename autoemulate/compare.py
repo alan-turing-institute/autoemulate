@@ -1,10 +1,3 @@
-from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.emulators import MODEL_REGISTRY
-from autoemulate.cv import CV_REGISTRY
-from autoemulate.logging_config import configure_logging
-from autoemulate.plotting import plot_results
-from autoemulate.hyperparam_search import HyperparamSearch
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,10 +5,15 @@ import matplotlib.pyplot as plt
 from sklearn.utils.validation import check_X_y
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from skopt import BayesSearchCV
+
+from autoemulate.metrics import METRIC_REGISTRY
+from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.cv import CV_REGISTRY
+from autoemulate.logging_config import configure_logging
+from autoemulate.plotting import plot_results
+from autoemulate.hyperparam_search import HyperparamSearcher
 
 
 class AutoEmulate:
@@ -24,7 +22,6 @@ class AutoEmulate:
         self.X = None
         self.y = None
         self.is_set_up = False
-        self.scaler = None
 
     def setup(
         self,
@@ -33,7 +30,8 @@ class AutoEmulate:
         use_grid_search=False,
         grid_search_type="random",
         grid_search_iters=20,
-        normalise=True,
+        scale=True,
+        scaler=StandardScaler(),
         fold_strategy="kfold",
         folds=5,
         n_jobs=None,
@@ -54,9 +52,10 @@ class AutoEmulate:
         grid_search_iters : int
             Number of parameter settings that are sampled. Only used if
             use_grid_search=True and grid_search_type="random".
-        normalise : bool, default=False
-            Whether to normalise the data before fitting the models. Currently only
-            z-transformation using StandardScaler.
+        scale : bool, default=False
+            Whether to scale the data before fitting the models using a scaler.
+        scaler : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.
         fold_strategy : str
             Cross-validation strategy, currently either "kfold" or "stratified_kfold".
         folds : int
@@ -67,13 +66,16 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.models = self._get_models(MODEL_REGISTRY, normalise=normalise)
-        self.metrics = [metric for metric in METRIC_REGISTRY.keys()]
-        self.cv = CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
+        self.models = self._wrap_models_in_pipeline(
+            self._get_models(MODEL_REGISTRY), scale=scale, scaler=scaler
+        )
+        self.metrics = self._get_metrics(METRIC_REGISTRY)
+        self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
         self.use_grid_search = use_grid_search
         self.search_type = grid_search_type
         self.grid_search_iters = grid_search_iters
-        self.normalise = normalise
+        self.scale = scale
+        self.scaler = scaler
         self.n_jobs = n_jobs
         self.logger = configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
@@ -96,38 +98,84 @@ class AutoEmulate:
         y_converted : array-like, shape (n_samples, n_outputs)
             Simulation output.
         """
-
         X, y = check_X_y(X, y, multi_output=True, y_numeric=True, dtype="float32")
         y = y.astype("float32")  # needed for pytorch models
         return X, y
 
-    def _get_models(self, MODEL_REGISTRY, normalise=True):
-        """Get models from REGISTRY and add scaler if normalised.
+    def _get_models(self, MODEL_REGISTRY):
+        """Get models from REGISTRY
 
         Parameters
         ----------
         MODEL_REGISTRY : dict
             Registry of models.
-        normalise : bool
-            If True, add scaler to models.
 
         Returns
         -------
-        self.models : list
+        list
             List of models.
-
         """
-        if normalise:
-            self.scaler = StandardScaler()
+        return [model() for model in MODEL_REGISTRY.values()]
+
+    def _wrap_models_in_pipeline(self, models, scale, scaler):
+        """Create pipelines from models
+
+        Parameters
+        ----------
+        models : list
+            List of models.
+        scale : bool
+            If True, add scaler to models.
+        scaler : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler.
+
+        Returns
+        -------
+        list
+            List of models wrapped in pipelines.
+        """
+        if scale:
             models = [
-                Pipeline([("scaler", self.scaler), ("model", model())])
-                for model in MODEL_REGISTRY.values()
+                Pipeline([("scaler", scaler), ("model", model)]) for model in models
             ]
         else:
-            models = [
-                Pipeline([("model", model())]) for model in MODEL_REGISTRY.values()
-            ]
+            models = [Pipeline([("model", model)]) for model in models]
         return models
+
+    def _get_metrics(self, METRIC_REGISTRY):
+        """
+        Get metrics from REGISTRY
+
+        Parameters
+        ----------
+        METRIC_REGISTRY : dict
+            Registry of metrics.
+
+        Returns
+        -------
+        List[Callable]
+            List of metric functions.
+        """
+        return [metric for metric in METRIC_REGISTRY.values()]
+
+    def _get_cv(self, CV_REGISTRY, fold_strategy, folds):
+        """Get cross-validation strategy from REGISTRY
+
+        Parameters
+        ----------
+        CV_REGISTRY : dict
+            Registry of cross-validation strategies.
+        fold_strategy : str
+            Name of the cross-validation strategy. Currently only "kfold" is supported.
+        folds : int
+            Number of folds.
+
+        Returns
+        -------
+        cv : sklearn.model_selection.KFold
+            An instance of the KFold class.
+        """
+        return CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
 
     def compare(self):
         """Compares the emulator models on the data. self.setup() must be run first.
@@ -190,7 +238,7 @@ class AutoEmulate:
         model_name = type(model.named_steps["model"]).__name__
 
         # The metrics we want to use for cross-validation
-        scorers = {name: make_scorer(METRIC_REGISTRY[name]) for name in self.metrics}
+        scorers = {metric.__name__: make_scorer(metric) for metric in self.metrics}
 
         self.logger.info(f"Cross-validating {model_name}...")
         self.logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
@@ -250,16 +298,18 @@ class AutoEmulate:
             Model to perform hyperparameter search on.
         """
         # Perform hyperparameter search and update model
-        hyperparam_searcher = HyperparamSearch(
+        hyperparam_searcher = HyperparamSearcher(
             X=self.X,
             y=self.y,
             cv=self.cv,
-            niter=self.grid_search_iters,
             n_jobs=self.n_jobs,
             logger=self.logger,
         )
         best_params = hyperparam_searcher.search(
-            model, search_type=search_type, param_grid=None
+            model,
+            search_type=search_type,
+            param_grid=None,
+            niter=self.grid_search_iters,
         )
         # Update model with best parameters
         model.set_params(**best_params)

@@ -1,8 +1,3 @@
-import numpy as np
-
-from autoemulate.emulators import Emulator
-
-from scipy.stats import uniform, randint
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -10,9 +5,9 @@ from sklearn.gaussian_process.kernels import RBF, Matern, RationalQuadratic
 
 
 class GaussianProcessSk(BaseEstimator, RegressorMixin):
-    """Gaussian process Emulator.
+    """Gaussian Process Emulator.
 
-    Implements GaussianProcessRegressor from scikit-learn.
+    Wraps GaussianProcessRegressor from scikit-learn.
     """
 
     def __init__(
@@ -103,22 +98,3 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
 
     def _more_tags(self):
         return {"multioutput": True}
-
-    # def score(self, X, y, metric):
-    #     """Returns the score of the emulator.
-
-    #     Parameters
-    #     ----------
-    #     X : array-like, shape (n_samples, n_features)
-    #         Simulation input.
-    #     y : array-like, shape (n_samples, n_outputs)
-    #         Simulation output.
-
-    #     Returns
-    #     -------
-    #     metric : float
-    #         Metric of the emulator.
-
-    #     """
-    #     predictions = self.predict(X)
-    #     return metric(y, predictions)
