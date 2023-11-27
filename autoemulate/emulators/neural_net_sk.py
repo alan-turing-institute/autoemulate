@@ -4,6 +4,7 @@ from scipy.stats import loguniform
 from sklearn.neural_network import MLPRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from autoemulate.utils import suppress_convergence_warnings
 
 
 class NeuralNetSk(BaseEstimator, RegressorMixin):
@@ -63,7 +64,8 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
             max_iter=self.max_iter,
             random_state=self.random_state,
         )
-        self.model_.fit(X, y)
+        with suppress_convergence_warnings():
+            self.model_.fit(X, y)
         # expose n_iter_ attribute to be consistent with sklearn estimators
         self.n_iter_ = self.model_.n_iter_
         self.is_fitted_ = True
