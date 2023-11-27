@@ -2,6 +2,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, Matern, RationalQuadratic
+from autoemulate.utils import suppress_convergence_warnings
 
 
 class GaussianProcessSk(BaseEstimator, RegressorMixin):
@@ -55,7 +56,8 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
             copy_X_train=self.copy_X_train,
             random_state=self.random_state,
         )
-        self.model_.fit(X, y)
+        with suppress_convergence_warnings():
+            self.model_.fit(X, y)
         self.is_fitted_ = True
         return self
 
