@@ -11,7 +11,7 @@
 | autoemulate/emulators/\_\_init\_\_.py               |        8 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py          |       26 |        3 |     88% | 67-68, 71 |
 | autoemulate/emulators/gaussian\_process\_sk.py      |       31 |        2 |     94% |     87-99 |
-| autoemulate/emulators/neural\_net\_sk.py            |       33 |        2 |     94% |    91-107 |
+| autoemulate/emulators/neural\_net\_sk.py            |       35 |        2 |     94% |    93-109 |
 | autoemulate/emulators/neural\_net\_torch.py         |       35 |       19 |     46% |17-18, 24-29, 32-35, 38-42, 65, 84, 97 |
 | autoemulate/emulators/radial\_basis.py              |       29 |        2 |     93% |     75-80 |
 | autoemulate/emulators/random\_forest.py             |       32 |        0 |    100% |           |
@@ -29,7 +29,7 @@
 | tests/test\_estimators.py                           |       12 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                 |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                   |       36 |        0 |    100% |           |
-|                                           **TOTAL** |  **737** |   **82** | **89%** |           |
+|                                           **TOTAL** |  **739** |   **82** | **89%** |           |
 
 
 ## Setup coverage badge
