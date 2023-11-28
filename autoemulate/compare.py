@@ -15,6 +15,7 @@ from autoemulate.cv import CV_REGISTRY
 from autoemulate.logging_config import configure_logging
 from autoemulate.plotting import plot_results
 from autoemulate.hyperparam_search import HyperparamSearcher
+from autoemulate.utils import get_model_name
 
 
 class AutoEmulate:
@@ -139,7 +140,7 @@ class AutoEmulate:
         return [model() for model in MODEL_REGISTRY.values()]
 
     def _turn_model_into_multioutput(self, models):
-        """Turn single output models into multioutput models
+        """Turn single output models into multioutput models if y is 2D.
 
         Parameters
         ----------
@@ -152,7 +153,10 @@ class AutoEmulate:
             List of models, with single output models wrapped in MultiOutputRegressor.
         """
         models_multi = [
-            MultiOutputRegressor(model) if not model.native_multioutput else model
+            MultiOutputRegressor(model)
+            if not model._more_tags()["multioutput"]
+            and (self.y.ndim > 1 and self.y.shape[1] > 1)
+            else model
             for model in models
         ]
         return models_multi
@@ -170,6 +174,7 @@ class AutoEmulate:
             Scaler to use. Defaults to StandardScaler.
 
         Returns
+
         -------
         list
             List of models wrapped in pipelines.
@@ -275,7 +280,7 @@ class AutoEmulate:
         """
 
         # Get model name
-        model_name = type(model.named_steps["model"]).__name__
+        model_name = get_model_name(model)
 
         # The metrics we want to use for cross-validation
         scorers = {metric.__name__: make_scorer(metric) for metric in self.metrics}
@@ -359,7 +364,7 @@ class AutoEmulate:
             )
         except Exception as e:
             self.logger.error(
-                f"Failed to perform hyperparameter search on {model}, using default parameters"
+                f"Failed to perform hyperparameter search on {get_model_name(model)}, using default parameters"
             )
             self.logger.error(e)
             best_params = model.named_steps["model"].get_params()
@@ -367,7 +372,7 @@ class AutoEmulate:
         # Update model with best parameters
         model.set_params(**best_params)
         # Update best parameter list
-        model_name = type(model.named_steps["model"]).__name__
+        model_name = get_model_name(model)
         self.best_params[model_name] = best_params
 
         return model
@@ -399,7 +404,7 @@ class AutoEmulate:
 
         # get best model:
         for model in self.models:
-            if type(model.named_steps["model"]).__name__ == best_model_name:
+            if get_model_name(model) == best_model_name:
                 best_model = model
                 break
 
@@ -414,7 +419,7 @@ class AutoEmulate:
     def print_results(self, model=None):
         # check if model is in self.models
         if model is not None:
-            model_names = [type(model.steps[-1][1]).__name__ for model in self.models]
+            model_names = [get_model_name(model) for model in self.models]
             if model not in model_names:
                 raise ValueError(
                     f"Model {model} not found. Available models are: {model_names}"

@@ -14,7 +14,7 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
 
     def __init__(self):
         """Initializes a QuadraticPolynomial object."""
-        self.native_multioutput = True
+        pass
 
     def fit(self, X, y):
         """Fits the emulator to the data.

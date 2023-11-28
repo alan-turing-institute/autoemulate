@@ -1,5 +1,11 @@
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import logging
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from autoemulate.utils import (
+    get_model_name,
+    get_model_params,
+    get_model_param_grid,
+    adjust_param_grid,
+)
 
 
 class HyperparamSearcher:
@@ -55,20 +61,25 @@ class HyperparamSearcher:
         model : sklearn.pipeline.Pipeline
             Model pipeline with optimized parameters.
         """
-        model_name = type(model.named_steps["model"]).__name__
+        model_name = get_model_name(model)
         self.logger.info(f"Performing grid search for {model_name}...")
 
         # get default param grid if not provided
         if param_grid is None:
-            param_grid = model.named_steps["model"].get_grid_params()
+            param_grid = get_model_param_grid(model)
         # check that the provided param grid is valid
         else:
             param_grid = self.check_param_grid(param_grid, model)
 
+        # adjust param_grid to include prefixes
+        param_grid = adjust_param_grid(model, param_grid)
+
+        # full grid search
         if search_type == "grid":
             searcher = GridSearchCV(
                 model, param_grid, cv=self.cv, n_jobs=self.n_jobs, refit=True
             )
+        # random search
         elif search_type == "random":
             searcher = RandomizedSearchCV(
                 model,
@@ -78,7 +89,7 @@ class HyperparamSearcher:
                 n_jobs=self.n_jobs,
                 refit=True,
             )
-        # TODO, currently problems with skopt
+        # Bayes search || TODO, currently problems with skopt
         elif search_type == "bayes":
             # not implemented yet
             raise NotImplementedError
@@ -91,6 +102,27 @@ class HyperparamSearcher:
         # self.best_params = best_params
 
         return best_params
+
+    def get_param_grid(self, model):
+        """Returns the parameter grid of the model.
+
+        Parameters
+        ----------
+        model : sklearn.pipeline.Pipeline
+            Model to be optimized.
+
+        Returns
+        -------
+        param_grid : dict
+            Parameter grid of the model.
+        """
+        # if model is MultiOutputRegressor, get the grid params of the estimator
+        model = model.named_steps["model"]
+        if hasattr(model, "estimator"):
+            grid_params = model.estimator.get_grid_params()
+        else:
+            grid_params = model.get_grid_params()
+        return grid_params
 
     @staticmethod
     def check_param_grid(param_grid, model):
@@ -120,13 +152,10 @@ class HyperparamSearcher:
             if type(value) != list:
                 raise TypeError("param_grid values must be lists")
 
-        # check that the parameters start with "model__" prefix are
-        # actually parameters of the model
-        model_params = model.named_steps["model"].get_params()
+        inbuilt_grid = get_model_params(model)
+        # check that all keys in param_grid are in the inbuilt grid
         for key in param_grid.keys():
-            if key.startswith("model__"):
-                if key.split("__")[1] not in model_params.keys():
-                    raise ValueError(
-                        f"{key} is not a parameter of {type(model.named_steps['model']).__name__}"
-                    )
+            if key not in inbuilt_grid.keys():
+                raise ValueError(f"Invalid parameter: {key}")
+
         return param_grid

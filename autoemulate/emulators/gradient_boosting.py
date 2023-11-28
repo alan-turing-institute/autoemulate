@@ -34,8 +34,6 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         self.ccp_alpha = ccp_alpha
         self.n_iter_no_change = n_iter_no_change
 
-        self.native_multioutput = False  # doesn't native support multioutput
-
     def fit(self, X, y):
         """Fits the emulator to the data.
 
@@ -51,7 +49,9 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         self : object
             Returns self.
         """
-        X, y = check_X_y(X, y, multi_output=self.native_multioutput, y_numeric=True)
+        X, y = check_X_y(
+            X, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
+        )
 
         self.n_features_in_ = X.shape[1]
         self.model_ = GradientBoostingRegressor(
@@ -90,16 +90,16 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "model__learning_rate": [0.01, 0.05, 0.1, 0.2],
-            "model__n_estimators": [100, 200, 300, 500],
-            "model__max_depth": [3, 4, 5, 6, 8],
-            "model__min_samples_split": [2, 5, 10, 20],
-            "model__min_samples_leaf": [1, 2, 4, 6],
-            "model__subsample": [0.6, 0.8, 1.0],
-            "model__max_features": ["sqrt", "log2", None],
-            "model__ccp_alpha": [0.0, 0.01, 0.1],
+            "learning_rate": [0.01, 0.05, 0.1, 0.2],
+            "n_estimators": [100, 200, 300, 500],
+            "max_depth": [3, 4, 5, 6, 8],
+            "min_samples_split": [2, 5, 10, 20],
+            "min_samples_leaf": [1, 2, 4, 6],
+            "subsample": [0.6, 0.8, 1.0],
+            "max_features": ["sqrt", "log2", None],
+            "ccp_alpha": [0.0, 0.01, 0.1],
         }
         return param_grid
 
     def _more_tags(self):
-        return {"multioutput": True}
+        return {"multioutput": False}

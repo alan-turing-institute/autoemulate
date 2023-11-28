@@ -36,8 +36,6 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
         self.tol = tol
         self.random_state = random_state
 
-        self.native_multioutput = True
-
     def fit(self, X, y):
         """Fits the emulator to the data.
 
@@ -93,17 +91,17 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "model__hidden_layer_sizes": [
+            "hidden_layer_sizes": [
                 (50,),
                 (100,),
                 (100, 50),
                 (100, 100),
                 (100, 100, 100),
             ],
-            "model__activation": ["relu"],  # "tanh", "logistic"
-            "model__solver": ["adam", "lbfgs"],  # "sgd",
-            "model__alpha": loguniform(1e-5, 1e-1),
-            "model__learning_rate_init": loguniform(1e-4, 1e-2),
+            "activation": ["relu"],  # "tanh", "logistic"
+            "solver": ["adam", "lbfgs"],  # "sgd",
+            "alpha": loguniform(1e-5, 1e-1),
+            "learning_rate_init": loguniform(1e-4, 1e-2),
             # "model__max_iter": [randint(100, 1000)],
             # "model__tol": loguniform(1e-5, 1e-3),
             # "model__learning_rate": ["constant", "invscaling", "adaptive"],

@@ -30,8 +30,6 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         self.copy_X_train = copy_X_train
         self.random_state = random_state
 
-        self.native_multioutput = True
-
     def fit(self, X, y):
         """Fits the emulator to the data.
 
@@ -87,16 +85,16 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
     def get_grid_params(self):
         """Returns the grid parameters of the emulator."""
         param_grid = {
-            "model__kernel": [
+            "kernel": [
                 RBF(),
                 Matern(),
                 RationalQuadratic(),
                 # DotProduct(),
             ],
-            "model__optimizer": ["fmin_l_bfgs_b"],
-            "model__alpha": [1e-10, 1e-5, 1e-2],
-            "model__n_restarts_optimizer": [20],
-            "model__normalize_y": [True],
+            "optimizer": ["fmin_l_bfgs_b"],
+            "alpha": [1e-10, 1e-5, 1e-2],
+            "n_restarts_optimizer": [20],
+            "normalize_y": [True],
         }
         return param_grid
 
