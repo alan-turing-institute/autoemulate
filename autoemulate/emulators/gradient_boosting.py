@@ -34,6 +34,8 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         self.ccp_alpha = ccp_alpha
         self.n_iter_no_change = n_iter_no_change
 
+        self.native_multioutput = False  # doesn't native support multioutput
+
     def fit(self, X, y):
         """Fits the emulator to the data.
 
@@ -49,7 +51,8 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         self : object
             Returns self.
         """
-        X, y = check_X_y(X, y, multi_output=True, y_numeric=True)
+        X, y = check_X_y(X, y, multi_output=self.native_multioutput, y_numeric=True)
+
         self.n_features_in_ = X.shape[1]
         self.model_ = GradientBoostingRegressor(
             loss=self.loss,

@@ -23,6 +23,8 @@ class RadialBasis(BaseEstimator, RegressorMixin):
         self.poly_degree = poly_degree
         self.reg = reg
 
+        self.native_multioutput = True
+
     def fit(self, X, y):
         """Fits the emulator to the data.
 

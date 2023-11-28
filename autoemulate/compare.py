@@ -7,6 +7,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.multioutput import MultiOutputRegressor
 
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
@@ -66,9 +67,7 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.models = self._wrap_models_in_pipeline(
-            self._get_models(MODEL_REGISTRY), scale=scale, scaler=scaler
-        )
+        self.models = self._get_and_process_models(MODEL_REGISTRY, scale, scaler)
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
         self.use_grid_search = use_grid_search
@@ -102,6 +101,28 @@ class AutoEmulate:
         y = y.astype("float32")  # needed for pytorch models
         return X, y
 
+    def _get_and_process_models(self, MODEL_REGISTRY, scale, scaler):
+        """Get models from REGISTRY and process them
+
+        Parameters
+        ----------
+        MODEL_REGISTRY : dict
+            Registry of models.
+        scale : bool
+            If True, add scaler to models.
+        scaler : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler.
+
+        Returns
+        -------
+        list
+            List of models.
+        """
+        models = self._get_models(MODEL_REGISTRY)
+        models = self._turn_model_into_multioutput(models)
+        models = self._wrap_models_in_pipeline(models, scale, scaler)
+        return models
+
     def _get_models(self, MODEL_REGISTRY):
         """Get models from REGISTRY
 
@@ -116,6 +137,25 @@ class AutoEmulate:
             List of models.
         """
         return [model() for model in MODEL_REGISTRY.values()]
+
+    def _turn_model_into_multioutput(self, models):
+        """Turn single output models into multioutput models
+
+        Parameters
+        ----------
+        models : list
+            List of models.
+
+        Returns
+        -------
+        models_multi : list
+            List of models, with single output models wrapped in MultiOutputRegressor.
+        """
+        models_multi = [
+            MultiOutputRegressor(model) if not model.native_multioutput else model
+            for model in models
+        ]
+        return models_multi
 
     def _wrap_models_in_pipeline(self, models, scale, scaler):
         """Create pipelines from models

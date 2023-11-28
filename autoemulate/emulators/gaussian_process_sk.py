@@ -30,6 +30,8 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         self.copy_X_train = copy_X_train
         self.random_state = random_state
 
+        self.native_multioutput = True
+
     def fit(self, X, y):
         """Fits the emulator to the data.
 

@@ -36,6 +36,8 @@ class RandomForest(BaseEstimator, RegressorMixin):
         self.max_samples = max_samples
         self.random_state = random_state
 
+        self.native_multioutput = True
+
     def fit(self, X, y):
         """Fits the emulator to the data.
 
