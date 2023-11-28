@@ -243,21 +243,26 @@ class AutoEmulate:
         self.logger.info(f"Cross-validating {model_name}...")
         self.logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
 
-        # Cross-validate
-        cv_results = cross_validate(
-            model,
-            self.X,
-            self.y,
-            cv=self.cv,
-            scoring=scorers,
-            n_jobs=self.n_jobs,
-            return_estimator=True,
-            return_indices=True,
-        )
-        # updates pandas dataframe with model cv scores
-        self._update_scores_df(model_name, cv_results)
-        # save results for plotting etc.
-        self.cv_results[model_name] = cv_results
+        try:
+            # Cross-validate
+            cv_results = cross_validate(
+                model,
+                self.X,
+                self.y,
+                cv=self.cv,
+                scoring=scorers,
+                n_jobs=self.n_jobs,
+                return_estimator=True,
+                return_indices=True,
+            )
+            # updates pandas dataframe with model cv scores
+            self._update_scores_df(model_name, cv_results)
+            # save results for plotting etc.
+            self.cv_results[model_name] = cv_results
+
+        except Exception as e:
+            self.logger.error(f"Failed to cross-validate {model_name}")
+            self.logger.error(e)
 
     def _update_scores_df(self, model_name, cv_results):
         """Updates the scores dataframe with the results of the cross-validation.
@@ -305,12 +310,20 @@ class AutoEmulate:
             n_jobs=self.n_jobs,
             logger=self.logger,
         )
-        best_params = hyperparam_searcher.search(
-            model,
-            search_type=search_type,
-            param_grid=None,
-            niter=self.grid_search_iters,
-        )
+        try:
+            best_params = hyperparam_searcher.search(
+                model,
+                search_type=search_type,
+                param_grid=None,
+                niter=self.grid_search_iters,
+            )
+        except Exception as e:
+            self.logger.error(
+                f"Failed to perform hyperparameter search on {model}, using default parameters"
+            )
+            self.logger.error(e)
+            best_params = model.named_steps["model"].get_params()
+
         # Update model with best parameters
         model.set_params(**best_params)
         # Update best parameter list
