@@ -7,6 +7,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics import make_scorer
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.multioutput import MultiOutputRegressor
 
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
@@ -14,6 +15,7 @@ from autoemulate.cv import CV_REGISTRY
 from autoemulate.logging_config import configure_logging
 from autoemulate.plotting import plot_results
 from autoemulate.hyperparam_search import HyperparamSearcher
+from autoemulate.utils import get_model_name
 
 
 class AutoEmulate:
@@ -66,9 +68,7 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.models = self._wrap_models_in_pipeline(
-            self._get_models(MODEL_REGISTRY), scale=scale, scaler=scaler
-        )
+        self.models = self._get_and_process_models(MODEL_REGISTRY, scale, scaler)
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
         self.use_grid_search = use_grid_search
@@ -102,6 +102,28 @@ class AutoEmulate:
         y = y.astype("float32")  # needed for pytorch models
         return X, y
 
+    def _get_and_process_models(self, MODEL_REGISTRY, scale, scaler):
+        """Get models from REGISTRY and process them
+
+        Parameters
+        ----------
+        MODEL_REGISTRY : dict
+            Registry of models.
+        scale : bool
+            If True, add scaler to models.
+        scaler : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler.
+
+        Returns
+        -------
+        list
+            List of models.
+        """
+        models = self._get_models(MODEL_REGISTRY)
+        models = self._turn_model_into_multioutput(models)
+        models = self._wrap_models_in_pipeline(models, scale, scaler)
+        return models
+
     def _get_models(self, MODEL_REGISTRY):
         """Get models from REGISTRY
 
@@ -117,6 +139,28 @@ class AutoEmulate:
         """
         return [model() for model in MODEL_REGISTRY.values()]
 
+    def _turn_model_into_multioutput(self, models):
+        """Turn single output models into multioutput models if y is 2D.
+
+        Parameters
+        ----------
+        models : list
+            List of models.
+
+        Returns
+        -------
+        models_multi : list
+            List of models, with single output models wrapped in MultiOutputRegressor.
+        """
+        models_multi = [
+            MultiOutputRegressor(model)
+            if not model._more_tags()["multioutput"]
+            and (self.y.ndim > 1 and self.y.shape[1] > 1)
+            else model
+            for model in models
+        ]
+        return models_multi
+
     def _wrap_models_in_pipeline(self, models, scale, scaler):
         """Create pipelines from models
 
@@ -130,6 +174,7 @@ class AutoEmulate:
             Scaler to use. Defaults to StandardScaler.
 
         Returns
+
         -------
         list
             List of models wrapped in pipelines.
@@ -235,7 +280,7 @@ class AutoEmulate:
         """
 
         # Get model name
-        model_name = type(model.named_steps["model"]).__name__
+        model_name = get_model_name(model)
 
         # The metrics we want to use for cross-validation
         scorers = {metric.__name__: make_scorer(metric) for metric in self.metrics}
@@ -243,21 +288,26 @@ class AutoEmulate:
         self.logger.info(f"Cross-validating {model_name}...")
         self.logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
 
-        # Cross-validate
-        cv_results = cross_validate(
-            model,
-            self.X,
-            self.y,
-            cv=self.cv,
-            scoring=scorers,
-            n_jobs=self.n_jobs,
-            return_estimator=True,
-            return_indices=True,
-        )
-        # updates pandas dataframe with model cv scores
-        self._update_scores_df(model_name, cv_results)
-        # save results for plotting etc.
-        self.cv_results[model_name] = cv_results
+        try:
+            # Cross-validate
+            cv_results = cross_validate(
+                model,
+                self.X,
+                self.y,
+                cv=self.cv,
+                scoring=scorers,
+                n_jobs=self.n_jobs,
+                return_estimator=True,
+                return_indices=True,
+            )
+            # updates pandas dataframe with model cv scores
+            self._update_scores_df(model_name, cv_results)
+            # save results for plotting etc.
+            self.cv_results[model_name] = cv_results
+
+        except Exception as e:
+            self.logger.error(f"Failed to cross-validate {model_name}")
+            self.logger.error(e)
 
     def _update_scores_df(self, model_name, cv_results):
         """Updates the scores dataframe with the results of the cross-validation.
@@ -305,16 +355,24 @@ class AutoEmulate:
             n_jobs=self.n_jobs,
             logger=self.logger,
         )
-        best_params = hyperparam_searcher.search(
-            model,
-            search_type=search_type,
-            param_grid=None,
-            niter=self.grid_search_iters,
-        )
+        try:
+            best_params = hyperparam_searcher.search(
+                model,
+                search_type=search_type,
+                param_grid=None,
+                niter=self.grid_search_iters,
+            )
+        except Exception as e:
+            self.logger.error(
+                f"Failed to perform hyperparameter search on {get_model_name(model)}, using default parameters"
+            )
+            self.logger.error(e)
+            best_params = model.named_steps["model"].get_params()
+
         # Update model with best parameters
         model.set_params(**best_params)
         # Update best parameter list
-        model_name = type(model.named_steps["model"]).__name__
+        model_name = get_model_name(model)
         self.best_params[model_name] = best_params
 
         return model
@@ -346,7 +404,7 @@ class AutoEmulate:
 
         # get best model:
         for model in self.models:
-            if type(model.named_steps["model"]).__name__ == best_model_name:
+            if get_model_name(model) == best_model_name:
                 best_model = model
                 break
 
@@ -361,7 +419,7 @@ class AutoEmulate:
     def print_results(self, model=None):
         # check if model is in self.models
         if model is not None:
-            model_names = [type(model.steps[-1][1]).__name__ for model in self.models]
+            model_names = [get_model_name(model) for model in self.models]
             if model not in model_names:
                 raise ValueError(
                     f"Model {model} not found. Available models are: {model_names}"
