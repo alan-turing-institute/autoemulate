@@ -21,6 +21,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         max_features=None,
         ccp_alpha=0.0,
         n_iter_no_change=None,
+        random_state=None,
     ):
         """Initializes a GradientBoosting object."""
         self.loss = loss
@@ -33,6 +34,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         self.max_features = max_features
         self.ccp_alpha = ccp_alpha
         self.n_iter_no_change = n_iter_no_change
+        self.random_state = random_state
 
     def fit(self, X, y):
         """Fits the emulator to the data.
@@ -65,6 +67,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
             max_features=self.max_features,
             ccp_alpha=self.ccp_alpha,
             n_iter_no_change=self.n_iter_no_change,
+            random_state=self.random_state,
         )
         self.model_.fit(X, y)
         self.is_fitted_ = True
