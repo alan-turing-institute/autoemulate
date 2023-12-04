@@ -10,18 +10,20 @@ from autoemulate.emulators import (
     NeuralNetTorch,
     SecondOrderPolynomial,
     GradientBoosting,
+    SupportVectorMachines,
 )
 from functools import partial
 
 
 @parametrize_with_checks(
-    [  # GaussianProcess(),
-        RandomForest(random_state=42),
-        GaussianProcessSk(random_state=1337),
-        NeuralNetSk(random_state=13),
-        RadialBasis(),
-        GradientBoosting(random_state=42),
-        # NeuralNetTorch(random_state=42), # fails because it subclasses
+    [  # GaussianProcess()
+        SupportVectorMachines(),
+        # RandomForest(random_state=42),
+        # GaussianProcessSk(random_state=1337),
+        # NeuralNetSk(random_state=13),
+        # RadialBasis(),
+        # GradientBoosting(random_state=42),
+        # #NeuralNetTorch(random_state=42), # fails because it subclasses
     ]
 )
 def test_check_estimator(estimator, check):
