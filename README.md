@@ -7,7 +7,7 @@
 | autoemulate/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
 | autoemulate/compare.py                              |      121 |       16 |     87% |247, 308-310, 351-378, 452 |
 | autoemulate/cv.py                                   |        4 |        0 |    100% |           |
-| autoemulate/datasets.py                             |       13 |        0 |    100% |           |
+| autoemulate/datasets.py                             |       20 |        6 |     70% |     89-96 |
 | autoemulate/emulators/\_\_init\_\_.py               |        9 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py          |       26 |        3 |     88% | 67-68, 71 |
 | autoemulate/emulators/gaussian\_process\_sk.py      |       31 |        2 |     94% |     87-99 |
@@ -31,7 +31,7 @@
 | tests/test\_experimental\_design.py                 |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                   |       36 |        0 |    100% |           |
 | tests/test\_utils.py                                |       91 |        6 |     93% |50, 56, 61, 66, 71, 76 |
-|                                           **TOTAL** |  **929** |  **105** | **89%** |           |
+|                                           **TOTAL** |  **936** |  **111** | **88%** |           |
 
 
 ## Setup coverage badge
