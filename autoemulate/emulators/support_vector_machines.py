@@ -1,6 +1,10 @@
+import numpy as np
+
 from sklearn.svm import SVR
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+
+from autoemulate.utils import normalise_y, denormalise_y
 
 
 class SupportVectorMachines(BaseEstimator, RegressorMixin):
@@ -22,6 +26,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         cache_size=200,
         verbose=False,
         max_iter=-1,
+        normalise_y=True,
     ):
         """Initializes a SupportVectorMachines object."""
         self.kernel = kernel
@@ -35,6 +40,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         self.cache_size = cache_size
         self.verbose = verbose
         self.max_iter = max_iter
+        self.normalise_y = normalise_y
 
     def fit(self, X, y):
         """Fits the emulator to the data.
@@ -52,11 +58,23 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
             Returns self.
         """
         X, y = check_X_y(
-            X, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
+            X,
+            y,
+            multi_output=self._more_tags()["multioutput"],
+            y_numeric=True,
+            ensure_min_samples=2,
         )
 
+        # required for sklearn compatibility
         self.n_features_in_ = X.shape[1]
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
+
+        if self.normalise_y:
+            y, self.y_mean_, self.y_std_ = normalise_y(y)
+        else:
+            y = y
+            self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
+            self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
 
         self.model_ = SVR(
             kernel=self.kernel,
@@ -90,7 +108,12 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         """
         check_is_fitted(self)
         X = check_array(X)
-        return self.model_.predict(X)
+        y_pred = self.model_.predict(X)
+
+        if self.normalise_y:
+            y_pred = denormalise_y(y_pred, self.y_mean_, self.y_std_)
+
+        return y_pred
 
     def get_grid_params(self):
         """Returns the grid paramaters for the emulator."""

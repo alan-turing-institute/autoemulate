@@ -1,5 +1,6 @@
 import warnings
 import os
+import numpy as np
 from contextlib import contextmanager
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.multioutput import MultiOutputRegressor
@@ -166,3 +167,47 @@ def adjust_param_grid(model, param_grid):
         return {prefix + key: value for key, value in param_grid.items()}
 
     return param_grid
+
+
+def normalise_y(y):
+    """Normalize the target values y.
+
+    Parameters
+    ----------
+    y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+        The target values (real numbers).
+
+    Returns
+    -------
+    y_norm : array-like, shape (n_samples,) or (n_samples, n_outputs)
+        The normalized target values.
+    y_mean : array-like, shape (n_outputs,)
+        The mean of the target values.
+    y_std : array-like, shape (n_outputs,)
+        The standard deviation of the target values.
+
+    """
+    y_mean = np.mean(y, axis=0)
+    y_std = np.std(y, axis=0)
+    return (y - y_mean) / y_std, y_mean, y_std
+
+
+def denormalise_y(y_pred, y_mean, y_std):
+    """Denormalize the predicted values.
+
+    Parameters
+    ----------
+    y_pred : array-like, shape (n_samples,) or (n_samples, n_outputs)
+        The predicted target values.
+    y_mean : array-like, shape (n_outputs,)
+        The mean of the target values.
+    y_std : array-like, shape (n_outputs,)
+        The standard deviation of the target values.
+
+    Returns
+    -------
+    y_pred_denorm : array-like, shape (n_samples,) or (n_samples, n_outputs)
+        The denormalized predicted target values.
+
+    """
+    return y_pred * y_std + y_mean

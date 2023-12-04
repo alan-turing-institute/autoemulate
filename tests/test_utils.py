@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import GradientBoostingRegressor
@@ -7,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 from autoemulate.utils import get_model_name, get_model_param_grid, adjust_param_grid
 from autoemulate.emulators import GradientBoosting
+from autoemulate.utils import normalise_y, denormalise_y
 
 
 # test retrieving model name ---------------------------------------------------
@@ -160,3 +162,39 @@ def test_adj_param_multiout_pipe(model_multiout_pipe, param_grid):
     assert all(
         key.startswith("model__estimator__") for key in adjusted_param_grid.keys()
     )
+
+
+# test normalise_y and denormalise_y -------------------------------------------
+
+
+def test_normalise_1d():
+    y = np.array([1, 2, 3, 4, 5])
+    y_norm, y_mean, y_std = normalise_y(y)
+
+    assert np.isclose(np.mean(y_norm), 0, atol=1e-5)
+    assert np.isclose(np.std(y_norm), 1, atol=1e-5)
+
+
+def test_normalise_2d():
+    y = np.array([[1, 2], [3, 4], [5, 6]])
+    y_norm, y_mean, y_std = normalise_y(y)
+
+    for i in range(y_norm.shape[1]):
+        assert np.isclose(np.mean(y_norm[:, i]), 0, atol=1e-5)
+        assert np.isclose(np.std(y_norm[:, i]), 1, atol=1e-5)
+
+
+def test_denormalise_1d():
+    y = np.array([1, 2, 3, 4, 5])
+    y_norm, y_mean, y_std = normalise_y(y)
+    y_denorm = denormalise_y(y_norm, y_mean, y_std)
+
+    np.testing.assert_array_almost_equal(y, y_denorm)
+
+
+def test_denormalise_2d():
+    y = np.array([[1, 2], [3, 4], [5, 6]])
+    y_norm, y_mean, y_std = normalise_y(y)
+    y_denorm = denormalise_y(y_norm, y_mean, y_std)
+
+    np.testing.assert_array_almost_equal(y, y_denorm)

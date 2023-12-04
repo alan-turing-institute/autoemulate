@@ -10,12 +10,12 @@ from .support_vector_machines import SupportVectorMachines
 
 MODEL_REGISTRY = {
     # "GaussianProcess": GaussianProcess,
-    # "GaussianProcessSk": GaussianProcessSk,
-    # "NeuralNetSk": NeuralNetSk,
-    # "RandomForest": RandomForest,
-    # "GradientBoosting": GradientBoosting,
+    "GaussianProcessSk": GaussianProcessSk,
+    "NeuralNetSk": NeuralNetSk,
+    "RandomForest": RandomForest,
+    "GradientBoosting": GradientBoosting,
     "SupportVectorMachines": SupportVectorMachines,
     # "RadialBasis": RadialBasis,
-    # "SecondOrderPolynomial": SecondOrderPolynomial,
+    "SecondOrderPolynomial": SecondOrderPolynomial,
     # "NeuralNetTorch": NeuralNetTorch,
 }
