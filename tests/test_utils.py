@@ -110,8 +110,14 @@ def model_multiout_pipe(model):
 
 
 # test get_model_param_grid ----------------------------------------------------
-def test_param_basic(model, param_grid):
-    model_grid = get_model_param_grid(model)
+def test_param_basic_random(model, param_grid):
+    model_grid = get_model_param_grid(model, search_type="random")
+    # check that all keys in model_grid are in param_grid
+    assert all(key in param_grid.keys() for key in model_grid.keys())
+
+
+def test_param_basic_bayes(model, param_grid):
+    model_grid = get_model_param_grid(model, search_type="bayes")
     # check that all keys in model_grid are in param_grid
     assert all(key in param_grid.keys() for key in model_grid.keys())
 

@@ -1,5 +1,7 @@
 import logging
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from skopt import BayesSearchCV
+
 from autoemulate.utils import (
     get_model_name,
     get_model_params,
@@ -66,7 +68,7 @@ class HyperparamSearcher:
 
         # get default param grid if not provided
         if param_grid is None:
-            param_grid = get_model_param_grid(model)
+            param_grid = get_model_param_grid(model, search_type)
         # check that the provided param grid is valid
         else:
             param_grid = self.check_param_grid(param_grid, model)
@@ -76,9 +78,11 @@ class HyperparamSearcher:
 
         # full grid search
         if search_type == "grid":
-            searcher = GridSearchCV(
-                model, param_grid, cv=self.cv, n_jobs=self.n_jobs, refit=True
-            )
+            # currently not available, give error message
+            raise NotImplementedError("Grid search not available yet.")
+            # searcher = GridSearchCV(
+            #     model, param_grid, cv=self.cv, n_jobs=self.n_jobs, refit=True
+            # )
         # random search
         elif search_type == "random":
             searcher = RandomizedSearchCV(
@@ -91,38 +95,20 @@ class HyperparamSearcher:
             )
         # Bayes search || TODO, currently problems with skopt
         elif search_type == "bayes":
-            # not implemented yet
-            raise NotImplementedError
-        else:
-            raise ValueError(f"Invalid search type: {search_type}")
+            searcher = BayesSearchCV(
+                model,
+                param_grid,
+                n_iter=niter,
+                cv=self.cv,
+                n_jobs=self.n_jobs,
+                refit=True,
+            )
 
         searcher.fit(self.X, self.y)
         best_params = searcher.best_params_
         self.logger.info(f"Best parameters for {model_name}: {best_params}")
-        # self.best_params = best_params
 
-        return best_params
-
-    def get_param_grid(self, model):
-        """Returns the parameter grid of the model.
-
-        Parameters
-        ----------
-        model : sklearn.pipeline.Pipeline
-            Model to be optimized.
-
-        Returns
-        -------
-        param_grid : dict
-            Parameter grid of the model.
-        """
-        # if model is MultiOutputRegressor, get the grid params of the estimator
-        model = model.named_steps["model"]
-        if hasattr(model, "estimator"):
-            grid_params = model.estimator.get_grid_params()
-        else:
-            grid_params = model.get_grid_params()
-        return grid_params
+        return searcher
 
     @staticmethod
     def check_param_grid(param_grid, model):

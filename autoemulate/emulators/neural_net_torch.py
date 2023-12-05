@@ -8,6 +8,7 @@ import skorch
 from torch import nn
 from skorch import NeuralNetRegressor
 from scipy.stats import loguniform
+from skopt.space import Real, Integer
 
 
 class InputShapeSetter(skorch.callbacks.Callback):
@@ -80,8 +81,8 @@ class NeuralNetTorch(NeuralNetRegressor):
             **kwargs
         )
 
-    def get_grid_params(self):
-        return {
+    def get_grid_params(self, search_type="random"):
+        param_grid_random = {
             "lr": loguniform(1e-4, 1e-2),
             "max_epochs": [10, 20, 30],
             "module__hidden_layer_sizes": [
@@ -92,6 +93,18 @@ class NeuralNetTorch(NeuralNetRegressor):
                 (200, 100),
             ],
         }
+
+        param_grid_bayes = {
+            "lr": Real(1e-4, 1e-2, prior="log-uniform"),
+            "max_epochs": Integer(10, 30),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
+        return param_grid
 
     def _more_tags(self):
         return {"multioutput": True}

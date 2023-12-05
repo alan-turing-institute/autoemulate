@@ -2,6 +2,10 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, Matern, RationalQuadratic
+
+from scipy.stats import uniform, loguniform
+from skopt.space import Real, Categorical, Integer
+
 from autoemulate.utils import suppress_convergence_warnings
 
 
@@ -82,9 +86,9 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X, return_std=return_std)
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid = {
+        param_grid_random = {
             "kernel": [
                 RBF(),
                 Matern(),
@@ -92,10 +96,21 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
                 # DotProduct(),
             ],
             "optimizer": ["fmin_l_bfgs_b"],
-            "alpha": [1e-10, 1e-5, 1e-2],
-            "n_restarts_optimizer": [20],
+            "alpha": loguniform(1e-10, 1e-2),
             "normalize_y": [True],
         }
+        param_grid_bayes = {
+            # "kernel": Categorical([RBF(), Matern()]), # unhashable type
+            "optimizer": Categorical(["fmin_l_bfgs_b"]),
+            "alpha": Real(1e-10, 1e-2, prior="log-uniform"),
+            "normalize_y": Categorical([True]),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
         return param_grid
 
     def _more_tags(self):

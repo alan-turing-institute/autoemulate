@@ -52,11 +52,22 @@ def test_check_param_grid(hyperparam_search, model, param_grid):
     assert hyperparam_search.check_param_grid(param_grid, model) == param_grid
 
 
-def test_search(model, hyperparam_search):
+def test_search_params(model, hyperparam_search):
     # check that the best_params attribute is populated after search
-    best_params = hyperparam_search.search(model)
+    searcher = hyperparam_search.search(model)
+    best_params = searcher.best_params_
     assert best_params != {}
     # # check that the best_params attribute is a dictionary
     assert type(best_params) == dict
     # # check that best param keys are strings
     assert all([type(key) == str for key in best_params.keys()])
+
+
+def test_search_model(model, hyperparam_search):
+    # check that the best_estimator_ attribute is populated after search
+    searcher = hyperparam_search.search(model)
+    model = searcher.best_estimator_
+    assert model is not None
+    assert type(model) == Pipeline
+    # check that fitted model is returned
+    assert model.named_steps["model"].is_fitted_ == True

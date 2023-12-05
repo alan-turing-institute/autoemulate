@@ -346,6 +346,11 @@ class AutoEmulate:
             Index of the model in self.models.
         model : scikit-learn estimator object
             Model to perform hyperparameter search on.
+
+        Returns
+        -------
+        model : scikit-learn estimator object
+            Model with best hyperparameters, fitted on full data.
         """
         # Perform hyperparameter search and update model
         hyperparam_searcher = HyperparamSearcher(
@@ -356,26 +361,24 @@ class AutoEmulate:
             logger=self.logger,
         )
         try:
-            best_params = hyperparam_searcher.search(
+            searcher = hyperparam_searcher.search(
                 model,
                 search_type=search_type,
                 param_grid=None,
                 niter=self.grid_search_iters,
             )
         except Exception as e:
-            self.logger.error(
+            self.logger.info(
                 f"Failed to perform hyperparameter search on {get_model_name(model)}, using default parameters"
             )
-            self.logger.error(e)
-            best_params = model.named_steps["model"].get_params()
+            self.logger.info(e)
+            return model
 
-        # Update model with best parameters
-        model.set_params(**best_params)
-        # Update best parameter list
+        # extract best params
         model_name = get_model_name(model)
-        self.best_params[model_name] = best_params
-
-        return model
+        self.best_params[model_name] = searcher.best_params_
+        # return model with best params fitted on full data
+        return searcher.best_estimator_
 
     def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
@@ -408,11 +411,13 @@ class AutoEmulate:
                 best_model = model
                 break
 
+        # only refit if not already fitted (like after grid search)
+        if not hasattr(best_model, "is_fitted_"):
+            best_model.fit(self.X, self.y)
+
         self.logger.info(
-            f"{best_model_name} is the best model, refitting on full dataset..."
+            f"{best_model_name} is the best model with {metric} = {means[metric].max():.3f}."
         )
-        # refit best model on full dataset
-        best_model.fit(self.X, self.y)
 
         return best_model
 

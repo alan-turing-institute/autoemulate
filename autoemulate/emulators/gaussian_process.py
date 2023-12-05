@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-
+from skopt.space import Real, Categorical
 import mogp_emulator
 
 
@@ -62,9 +62,20 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
         else:
             return np.asarray(self.model_.predict(X).mean)
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid = {"model__nugget": ["fit", "adaptive", "pivot"]}
+        param_grid_random = {
+            "nugget": ["fit", "adaptive", "pivot"],
+        }
+        param_grid_bayes = {
+            "nugget": Categorical(["fit", "adaptive", "pivot"]),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
         return param_grid
 
     def _more_tags(self):
