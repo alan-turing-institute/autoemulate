@@ -100,7 +100,7 @@ def get_model_params(model):
         return model.get_params()
 
 
-def get_model_param_grid(model):
+def get_model_param_grid(model, search_type="random"):
     """Get the parameter grid of the base model. This is used for hyperparameter search.
 
     This function handles standalone models, models wrapped in a MultiOutputRegressor,
@@ -110,6 +110,9 @@ def get_model_param_grid(model):
     ----------
     model : model instance or Pipeline and/or MultiOutputRegressor
         The model or pipeline from which to retrieve the base model parameter grid.
+    search_type : str
+        The type of hyperparameter search to be performed. Can be "random" or "bayes".
+        Default is "random".
 
     Returns
     -------
@@ -120,17 +123,17 @@ def get_model_param_grid(model):
         step = model.named_steps["model"]
 
         if isinstance(step, MultiOutputRegressor):
-            return step.estimator.get_grid_params()
+            return step.estimator.get_grid_params(search_type)
         else:
-            return step.get_grid_params()
+            return step.get_grid_params(search_type)
 
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
-        return model.estimator.get_grid_params()
+        return model.estimator.get_grid_params(search_type)
 
     # Otherwise, it's a standalone model
     else:
-        return model.get_grid_params()
+        return model.get_grid_params(search_type)
 
 
 def adjust_param_grid(model, param_grid):

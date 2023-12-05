@@ -9,13 +9,13 @@ from .gradient_boosting import GradientBoosting
 from .support_vector_machines import SupportVectorMachines
 
 MODEL_REGISTRY = {
-    # "GaussianProcess": GaussianProcess,
     "GaussianProcessSk": GaussianProcessSk,
     "NeuralNetSk": NeuralNetSk,
     "RandomForest": RandomForest,
     "GradientBoosting": GradientBoosting,
     "SupportVectorMachines": SupportVectorMachines,
-    # "RadialBasis": RadialBasis,
     "SecondOrderPolynomial": SecondOrderPolynomial,
+    # "RadialBasis": RadialBasis,
     # "NeuralNetTorch": NeuralNetTorch,
+    # "GaussianProcess": GaussianProcess,
 }

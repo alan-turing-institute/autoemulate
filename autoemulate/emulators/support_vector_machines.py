@@ -1,5 +1,8 @@
 import numpy as np
 
+from scipy.stats import uniform, randint
+from skopt.space import Real, Integer, Categorical
+
 from sklearn.svm import SVR
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
@@ -115,21 +118,41 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
 
         return y_pred
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid paramaters for the emulator."""
-        param_grid = {
+        param_grid_random = {
             "kernel": ["rbf", "linear", "poly", "sigmoid"],
-            "degree": [2, 3, 4, 5],
+            "degree": randint(2, 6),
             "gamma": ["scale", "auto"],
-            "coef0": [0.0, 0.5, 1.0],
-            "tol": [1e-3, 1e-4, 1e-5],
-            "C": [1.0, 2.0, 3.0],
-            "epsilon": [0.1, 0.2, 0.3],
+            "coef0": uniform(0.0, 1.0),
+            "tol": uniform(1e-5, 1e-3),
+            "C": uniform(1.0, 3.0),
+            "epsilon": uniform(0.1, 0.3),
             "shrinking": [True, False],
-            "cache_size": [200, 300, 400],
+            "cache_size": randint(200, 401),
             "verbose": [False],
             "max_iter": [-1],
         }
+
+        param_grid_bayes = {
+            "kernel": Categorical(["rbf", "linear", "poly", "sigmoid"]),
+            "degree": Integer(2, 5),
+            "gamma": Categorical(["scale", "auto"]),
+            "coef0": Real(0.0, 1.0),
+            "tol": Real(1e-5, 1e-3),
+            "C": Real(1.0, 4.0),
+            "epsilon": Real(0.1, 0.4),
+            "shrinking": Categorical([True, False]),
+            "cache_size": Integer(200, 400),
+            "verbose": Categorical([False]),
+            "max_iter": Categorical([-1]),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
         return param_grid
 
     def _more_tags(self):

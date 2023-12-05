@@ -5,6 +5,9 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from smt.surrogate_models import RBF
 
+from scipy.stats import uniform, randint
+from skopt.space import Real, Categorical
+
 
 class RadialBasis(BaseEstimator, RegressorMixin):
     """Radial basis function Emulator.
@@ -70,13 +73,25 @@ class RadialBasis(BaseEstimator, RegressorMixin):
             predictions = predictions.ravel()
         return predictions
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid = {
-            "d0": [0.1, 1.0, 2.0],
-            "poly_degree": [-1, 0, 1],
-            "reg": [1e-10, 1e-5, 1e-2],
+        param_grid_random = {
+            "d0": uniform(0.1, 1.9),
+            "poly_degree": randint(-1, 2),
+            "reg": uniform(1e-10, 1e-2 - 1e-10),
         }
+
+        param_space_bayes = {
+            "d0": Real(0.1, 2.0),
+            "poly_degree": Categorical([-1, 0, 1]),
+            "reg": Real(1e-10, 1e-2),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        else:
+            param_grid = param_space_bayes
+
         return param_grid
 
     def _more_tags(self):

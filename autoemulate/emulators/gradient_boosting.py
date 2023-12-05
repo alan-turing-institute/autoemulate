@@ -2,6 +2,9 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+from scipy.stats import loguniform, randint, uniform
+from skopt.space import Real, Integer, Categorical
+
 
 class GradientBoosting(BaseEstimator, RegressorMixin):
     """Gradient Boosting Emulator.
@@ -90,18 +93,35 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X)
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid = {
-            "learning_rate": [0.01, 0.05, 0.1, 0.2],
-            "n_estimators": [100, 200, 300, 500],
-            "max_depth": [3, 4, 5, 6, 8],
-            "min_samples_split": [2, 5, 10, 20],
-            "min_samples_leaf": [1, 2, 4, 6],
-            "subsample": [0.6, 0.8, 1.0],
+        param_grid_random = {
+            "learning_rate": loguniform(0.01, 0.2),
+            "n_estimators": randint(100, 500),
+            "max_depth": randint(3, 8),
+            "min_samples_split": randint(2, 20),
+            "min_samples_leaf": randint(1, 6),
+            "subsample": uniform(0.6, 0.4),  # 0.4 is the range width (1.0 - 0.6)
             "max_features": ["sqrt", "log2", None],
-            "ccp_alpha": [0.0, 0.01, 0.1],
+            "ccp_alpha": loguniform(0.01, 0.1),
         }
+
+        param_grid_bayes = {
+            "learning_rate": Real(0.01, 0.2, prior="log-uniform"),
+            "n_estimators": Integer(100, 500),
+            "max_depth": Integer(3, 8),
+            "min_samples_split": Integer(2, 20),
+            "min_samples_leaf": Integer(1, 6),
+            "subsample": Real(0.6, 1.0),
+            "max_features": Categorical(["sqrt", "log2", None]),
+            "ccp_alpha": Real(0.01, 0.1, prior="log-uniform"),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
         return param_grid
 
     def _more_tags(self):

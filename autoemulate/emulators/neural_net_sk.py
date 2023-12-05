@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import loguniform
+from skopt.space import Real, Categorical
 
 from sklearn.neural_network import MLPRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -15,7 +16,10 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
 
     def __init__(
         self,
-        hidden_layer_sizes=(100,),
+        hidden_layer_sizes=(
+            100,
+            100,
+        ),
         activation="relu",
         solver="adam",
         alpha=0.0001,
@@ -88,9 +92,9 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X)
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid = {
+        param_grid_random = {
             "hidden_layer_sizes": [
                 (50,),
                 (100,),
@@ -102,10 +106,28 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
             "solver": ["adam", "lbfgs"],  # "sgd",
             "alpha": loguniform(1e-5, 1e-1),
             "learning_rate_init": loguniform(1e-4, 1e-2),
-            # "model__max_iter": [randint(100, 1000)],
-            # "model__tol": loguniform(1e-5, 1e-3),
-            # "model__learning_rate": ["constant", "invscaling", "adaptive"],
         }
+
+        param_grid_bayes = {
+            # doesn't work with bayes
+            # "hidden_layer_sizes": Categorical([
+            #     (50,),
+            #     (100,),
+            #     (100, 50),
+            #     (100, 100),
+            #     (100, 100, 100),
+            # ]),
+            "activation": Categorical(["relu"]),  # Add "tanh", "logistic" if needed
+            "solver": Categorical(["adam", "lbfgs"]),  # Add "sgd" if needed
+            "alpha": Real(1e-5, 1e-1, prior="log-uniform"),
+            "learning_rate_init": Real(1e-4, 1e-2, prior="log-uniform"),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
         return param_grid
 
     def _more_tags(self):

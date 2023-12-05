@@ -57,7 +57,7 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
         predictions = self.model_.predict_values(X)
         return predictions
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator.
 
         Returns
@@ -65,7 +65,11 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
         params : dict
             Dictionary of grid parameters.
         """
-        return {}
+        if search_type == "random":
+            param_grid = {}
+        else:
+            param_grid = {}
+        return param_grid
 
     def _more_tags(self):
         return {"multioutput": True}

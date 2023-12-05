@@ -4,6 +4,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+from skopt.space import Real, Categorical, Integer
+
 
 class RandomForest(BaseEstimator, RegressorMixin):
     """Random forest Emulator.
@@ -88,18 +90,36 @@ class RandomForest(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X)
 
-    def get_grid_params(self):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid = {
-            "n_estimators": randint(50, 500),  # broader range
+
+        param_grid_random = {
+            "n_estimators": randint(50, 500),
             "min_samples_split": randint(2, 20),
             "min_samples_leaf": randint(1, 10),
-            "max_features": [1.0, "sqrt", "log2"],  # instead of fixed values
+            "max_features": [None, "sqrt", "log2"],
             "bootstrap": [True, False],
             "oob_score": [True, False],
-            # "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
-            "max_samples": [None, 0.5, 0.75],  # assuming max_samples is relevant
+            # # "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
+            "max_samples": [None, 0.5, 0.75],
         }
+
+        param_grid_bayes = {
+            "n_estimators": Integer(50, 500),
+            "min_samples_split": Integer(2, 20),
+            "min_samples_leaf": Integer(1, 10),
+            "max_features": Categorical([None, "sqrt", "log2"]),
+            "bootstrap": Categorical([True, False]),
+            "oob_score": Categorical([True, False]),
+            # "max_depth": Categorical([None] + list(range(3, 20))),  # None plus a range of depths
+            "max_samples": Categorical([None, 0.5, 0.75]),
+        }
+
+        if search_type == "random":
+            param_grid = param_grid_random
+        elif search_type == "bayes":
+            param_grid = param_grid_bayes
+
         return param_grid
 
     def _more_tags(self):
