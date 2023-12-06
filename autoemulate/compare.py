@@ -54,7 +54,7 @@ class AutoEmulate:
         grid_search_iters : int
             Number of parameter settings that are sampled. Only used if
             use_grid_search=True and grid_search_type="random".
-        scale : bool, default=False
+        scale : bool, default=True
             Whether to scale the data before fitting the models using a scaler.
         scaler : sklearn.preprocessing.StandardScaler
             Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.

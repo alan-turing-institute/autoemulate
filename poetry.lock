@@ -3737,10 +3737,37 @@ io = ["cftime", "fsspec", "h5netcdf", "netCDF4", "pooch", "pydap", "scipy", "zar
 parallel = ["dask[complete]"]
 viz = ["matplotlib", "nc-time-axis", "seaborn"]
 
+[[package]]
+name = "xgboost"
+version = "2.0.2"
+description = "XGBoost Python Package"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "xgboost-2.0.2-py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:630f04b04b0dccd532ad9e5c112030c04ea4e4764b6c3dc8ac49431ce60c03df"},
+    {file = "xgboost-2.0.2-py3-none-macosx_12_0_arm64.whl", hash = "sha256:ceefbf09a66af56109e9076680e44f14895a09e3c81e1af9e22ee57a86d86c9b"},
+    {file = "xgboost-2.0.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:6c98b48229eefbdc7a30ce7df88ec5c8e88c5a5d13a7dd78952de2f12ae72480"},
+    {file = "xgboost-2.0.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:351acb1696f6e83ce7650a8ca1fee5d4f9e4cef78d39c0973984c8eb226e2bff"},
+    {file = "xgboost-2.0.2-py3-none-win_amd64.whl", hash = "sha256:f07f42441f05a289bc4d34342c2335726763ae0759d7241ef25d0eab007dbec4"},
+    {file = "xgboost-2.0.2.tar.gz", hash = "sha256:55b5188e6da1d61f02f30a5dd8daffc3a6b5bb975a7249bf381dc1754dc89688"},
+]
+
+[package.dependencies]
+numpy = "*"
+scipy = "*"
+
+[package.extras]
+dask = ["dask", "distributed", "pandas"]
+datatable = ["datatable"]
+pandas = ["pandas"]
+plotting = ["graphviz", "matplotlib"]
+pyspark = ["cloudpickle", "pyspark", "scikit-learn"]
+scikit-learn = ["scikit-learn"]
+
 [extras]
 docs = ["furo", "sphinx-autodoc-typehints", "sphinx-copybutton"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "72f90926b434c1c4244cc1c4a8bc1532c5bd182ff2784c4e651e1496648775a9"
+content-hash = "a59d984fe61f045dd4d3cb6c34049226ed42e8b55430d3efb93817bf24901dcd"
