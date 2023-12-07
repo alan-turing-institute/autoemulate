@@ -7,15 +7,17 @@ from .neural_net_torch import NeuralNetTorch
 from .second_order_polynomials import SecondOrderPolynomial
 from .gradient_boosting import GradientBoosting
 from .support_vector_machines import SupportVectorMachines
+from .xgboost import XGBoost
 
 MODEL_REGISTRY = {
-    "GaussianProcessSk": GaussianProcessSk,
-    "NeuralNetSk": NeuralNetSk,
+    "SecondOrderPolynomial": SecondOrderPolynomial,
     "RandomForest": RandomForest,
     "GradientBoosting": GradientBoosting,
+    "GaussianProcessSk": GaussianProcessSk,
     "SupportVectorMachines": SupportVectorMachines,
-    "SecondOrderPolynomial": SecondOrderPolynomial,
-    # "RadialBasis": RadialBasis,
+    "XGBoost": XGBoost,
+    "NeuralNetSk": NeuralNetSk,
+    "RadialBasis": RadialBasis,
     # "NeuralNetTorch": NeuralNetTorch,
     # "GaussianProcess": GaussianProcess,
 }
