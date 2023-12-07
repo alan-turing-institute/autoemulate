@@ -8,16 +8,17 @@
 | autoemulate/compare.py                              |      121 |       15 |     88% |247, 308-310, 356-381, 457 |
 | autoemulate/cv.py                                   |        4 |        0 |    100% |           |
 | autoemulate/datasets.py                             |       20 |        6 |     70% |     89-96 |
-| autoemulate/emulators/\_\_init\_\_.py               |       10 |        0 |    100% |           |
+| autoemulate/emulators/\_\_init\_\_.py               |       11 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py          |       32 |        8 |     75% | 67-79, 82 |
 | autoemulate/emulators/gaussian\_process\_sk.py      |       38 |        7 |     82% |    91-114 |
 | autoemulate/emulators/gradient\_boosting.py         |       39 |        0 |    100% |           |
 | autoemulate/emulators/neural\_net\_sk.py            |       41 |        7 |     83% |    97-131 |
 | autoemulate/emulators/neural\_net\_torch.py         |       42 |       25 |     40% |18-19, 25-30, 33-36, 39-43, 66, 85-107, 110 |
-| autoemulate/emulators/radial\_basis.py              |       35 |       23 |     34% |25-27, 44-52, 67-74, 78-95, 98 |
+| autoemulate/emulators/radial\_basis.py              |       35 |        6 |     83% |     78-95 |
 | autoemulate/emulators/random\_forest.py             |       38 |        2 |     95% |   120-121 |
 | autoemulate/emulators/second\_order\_polynomials.py |       27 |        4 |     85% |     68-72 |
 | autoemulate/emulators/support\_vector\_machines.py  |       51 |       10 |     80% |78-80, 123-156 |
+| autoemulate/emulators/xgboost.py                    |       49 |        7 |     86% |   130-167 |
 | autoemulate/experimental\_design.py                 |       18 |        3 |     83% |16, 27, 38 |
 | autoemulate/hyperparam\_search.py                   |       42 |        4 |     90% |74, 82, 97-98 |
 | autoemulate/logging\_config.py                      |       21 |        4 |     81% |     24-27 |
@@ -28,11 +29,11 @@
 | tests/test\_compare.py                              |      110 |        0 |    100% |           |
 | tests/test\_datasets.py                             |       17 |        0 |    100% |           |
 | tests/test\_emulators.py                            |       63 |        0 |    100% |           |
-| tests/test\_estimators.py                           |       12 |        0 |    100% |           |
+| tests/test\_estimators.py                           |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                 |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                   |       43 |        0 |    100% |           |
 | tests/test\_utils.py                                |      117 |        6 |     95% |52, 58, 63, 68, 73, 78 |
-|                                           **TOTAL** | **1070** |  **161** | **85%** |           |
+|                                           **TOTAL** | **1114** |  **151** | **86%** |           |
 
 
 ## Setup coverage badge
