@@ -16,6 +16,7 @@ from autoemulate.logging_config import configure_logging
 from autoemulate.plotting import plot_results
 from autoemulate.hyperparam_search import HyperparamSearcher
 from autoemulate.utils import get_model_name
+from autoemulate.save import ModelSerialiser
 
 
 class AutoEmulate:
@@ -250,7 +251,8 @@ class AutoEmulate:
             self._cross_validate(self.models[i])
 
         # returns best model fitted on full data
-        return self._get_best_model(metric="r2")
+        self.best_model = self._get_best_model(metric="r2")
+        return self.best_model
 
     def _cross_validate(self, model):
         """Perform cross-validation on a given model using the specified metrics.
@@ -420,6 +422,18 @@ class AutoEmulate:
         )
 
         return best_model
+
+    def save_model(self, filepath):
+        """Saves the best model to disk."""
+        if not hasattr(self, "best_model"):
+            raise RuntimeError("Must run compare() before save_model()")
+        serialiser = ModelSerialiser()
+        serialiser.save_model(self.best_model, filepath)
+
+    def load_model(self, filepath):
+        """Loads a model from disk."""
+        serialiser = ModelSerialiser()
+        return serialiser.load_model(filepath)
 
     def print_results(self, model=None):
         # check if model is in self.models
