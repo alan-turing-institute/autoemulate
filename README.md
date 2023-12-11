@@ -5,7 +5,7 @@
 | Name                                                |    Stmts |     Miss |   Cover |   Missing |
 |---------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
-| autoemulate/compare.py                              |      121 |       15 |     88% |247, 308-310, 356-381, 457 |
+| autoemulate/compare.py                              |      131 |       21 |     84% |248, 310-312, 358-383, 428-431, 435-436, 471 |
 | autoemulate/cv.py                                   |        4 |        0 |    100% |           |
 | autoemulate/datasets.py                             |       20 |        6 |     70% |     89-96 |
 | autoemulate/emulators/\_\_init\_\_.py               |       11 |        0 |    100% |           |
@@ -24,6 +24,7 @@
 | autoemulate/logging\_config.py                      |       21 |        4 |     81% |     24-27 |
 | autoemulate/metrics.py                              |        7 |        0 |    100% |           |
 | autoemulate/plotting.py                             |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
+| autoemulate/save.py                                 |       29 |        1 |     97% |        44 |
 | autoemulate/utils.py                                |       63 |        5 |     92% |28, 90, 95-100 |
 | tests/\_\_init\_\_.py                               |        0 |        0 |    100% |           |
 | tests/test\_compare.py                              |      110 |        0 |    100% |           |
@@ -32,8 +33,9 @@
 | tests/test\_estimators.py                           |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                 |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                   |       43 |        0 |    100% |           |
+| tests/test\_save.py                                 |       42 |        0 |    100% |           |
 | tests/test\_utils.py                                |      117 |        6 |     95% |52, 58, 63, 68, 73, 78 |
-|                                           **TOTAL** | **1114** |  **151** | **86%** |           |
+|                                           **TOTAL** | **1195** |  **158** | **87%** |           |
 
 
 ## Setup coverage badge
