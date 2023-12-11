@@ -17,7 +17,7 @@ MODEL_REGISTRY = {
     "SupportVectorMachines": SupportVectorMachines,
     "XGBoost": XGBoost,
     "NeuralNetSk": NeuralNetSk,
-    "RadialBasis": RadialBasis,
+    # "RadialBasis": RadialBasis,
     # "NeuralNetTorch": NeuralNetTorch,
     # "GaussianProcess": GaussianProcess,
 }
