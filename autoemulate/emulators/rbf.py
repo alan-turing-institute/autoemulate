@@ -89,7 +89,7 @@ class RBF(BaseEstimator, RegressorMixin):
         # }
         param_grid_random = [
             {
-                "kernel": ["linear", "multiquadratic"],
+                "kernel": ["linear", "multiquadric"],
                 "degree": randint(0, 3),  # Degrees valid for these kernels
                 "smoothing": uniform(0.0, 1.0),
             },
@@ -112,7 +112,7 @@ class RBF(BaseEstimator, RegressorMixin):
 
         param_grid_bayes = [
             {
-                "kernel": Categorical(["linear", "multiquadratic"]),
+                "kernel": Categorical(["linear", "multiquadric"]),
                 "degree": Integer(0, 4),  # Degrees valid for these kernels
                 "smoothing": Real(0.0, 1.0),
             },
