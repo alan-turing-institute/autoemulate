@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.base import RegressorMixin
 
 
 @contextmanager
@@ -163,13 +164,43 @@ def adjust_param_grid(model, param_grid):
             prefix = "model__estimator__"
         else:
             prefix = "model__"
-        return {prefix + key: value for key, value in param_grid.items()}
-
-    if isinstance(model, MultiOutputRegressor):
+    elif isinstance(model, MultiOutputRegressor):
         prefix = "estimator__"
-        return {prefix + key: value for key, value in param_grid.items()}
+    # if model isn't wrapped in anything return param_grid as is
+    elif isinstance(model, RegressorMixin):
+        return param_grid
 
-    return param_grid
+    return add_prefix_to_param_grid(param_grid, prefix)
+
+
+def add_prefix_to_param_grid(param_grid, prefix):
+    """Adds a prefix to all keys in a parameter grid.
+
+    Works when param_grid is a dict or when param_grid is a list of dicts.
+
+    Parameters
+    ----------
+    param_grid : dict or list of dicts
+        The parameter grid to which the prefix will be added.
+    prefix : str
+        The prefix to be added to each parameter name in the grid.
+
+    Returns
+    -------
+    dict or list of dicts
+        The parameter grid with the prefix added to each key.
+    """
+    if isinstance(param_grid, list):
+        # If param_grid is a list of dictionaries, add the prefix to each dictionary
+        return [add_prefix_to_single_grid(grid, prefix) for grid in param_grid]
+    else:
+        # If param_grid is a single dictionary, add the prefix directly
+        return add_prefix_to_single_grid(param_grid, prefix)
+
+
+def add_prefix_to_single_grid(grid, prefix):
+    """Adds a prefix to all keys in a single parameter grid dictionary."""
+    return {prefix + key: value for key, value in grid.items()}
 
 
 def normalise_y(y):
