@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.base import RegressorMixin
 
 
 @contextmanager
@@ -163,9 +164,11 @@ def adjust_param_grid(model, param_grid):
             prefix = "model__estimator__"
         else:
             prefix = "model__"
-
-    if isinstance(model, MultiOutputRegressor):
+    elif isinstance(model, MultiOutputRegressor):
         prefix = "estimator__"
+    # if model isn't wrapped in anything return param_grid as is
+    elif isinstance(model, RegressorMixin):
+        return param_grid
 
     return add_prefix_to_param_grid(param_grid, prefix)
 

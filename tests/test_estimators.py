@@ -9,7 +9,6 @@ from autoemulate.emulators import (
     GaussianProcessSk,
     NeuralNetSk,
     GaussianProcess,
-    RadialBasis,
     NeuralNetTorch,
     SecondOrderPolynomial,
     GradientBoosting,

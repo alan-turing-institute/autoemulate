@@ -6,7 +6,13 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from autoemulate.utils import get_model_name, get_model_param_grid, adjust_param_grid
+from autoemulate.utils import (
+    get_model_name,
+    get_model_param_grid,
+    adjust_param_grid,
+    add_prefix_to_param_grid,
+    add_prefix_to_single_grid,
+)
 from autoemulate.emulators import GradientBoosting
 from autoemulate.utils import normalise_y, denormalise_y
 
