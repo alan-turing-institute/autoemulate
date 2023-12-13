@@ -14,8 +14,8 @@
 | autoemulate/emulators/gradient\_boosting.py         |       39 |        0 |    100% |           |
 | autoemulate/emulators/neural\_net\_sk.py            |       41 |        7 |     83% |    97-131 |
 | autoemulate/emulators/neural\_net\_torch.py         |       42 |       25 |     40% |18-19, 25-30, 33-36, 39-43, 66, 85-107, 110 |
-| autoemulate/emulators/radial\_basis.py              |       35 |        6 |     83% |     78-95 |
 | autoemulate/emulators/random\_forest.py             |       38 |        2 |     95% |   120-121 |
+| autoemulate/emulators/rbf.py                        |       32 |        7 |     78% |    90-141 |
 | autoemulate/emulators/second\_order\_polynomials.py |       27 |        4 |     85% |     68-72 |
 | autoemulate/emulators/support\_vector\_machines.py  |       51 |       10 |     80% |78-80, 123-156 |
 | autoemulate/emulators/xgboost.py                    |       49 |        7 |     86% |   130-167 |
@@ -25,7 +25,7 @@
 | autoemulate/metrics.py                              |        7 |        0 |    100% |           |
 | autoemulate/plotting.py                             |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
 | autoemulate/save.py                                 |       29 |        1 |     97% |        44 |
-| autoemulate/utils.py                                |       63 |        5 |     92% |28, 90, 95-100 |
+| autoemulate/utils.py                                |       70 |        5 |     93% |29, 91, 96-101 |
 | tests/\_\_init\_\_.py                               |        0 |        0 |    100% |           |
 | tests/test\_compare.py                              |      110 |        0 |    100% |           |
 | tests/test\_datasets.py                             |       17 |        0 |    100% |           |
@@ -34,8 +34,8 @@
 | tests/test\_experimental\_design.py                 |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                   |       43 |        0 |    100% |           |
 | tests/test\_save.py                                 |       42 |        0 |    100% |           |
-| tests/test\_utils.py                                |      117 |        6 |     95% |52, 58, 63, 68, 73, 78 |
-|                                           **TOTAL** | **1195** |  **158** | **87%** |           |
+| tests/test\_utils.py                                |      135 |        6 |     96% |58, 64, 69, 74, 79, 84 |
+|                                           **TOTAL** | **1217** |  **159** | **87%** |           |
 
 
 ## Setup coverage badge
