@@ -210,3 +210,64 @@ def test_denormalise_2d():
     y_denorm = denormalise_y(y_norm, y_mean, y_std)
 
     np.testing.assert_array_almost_equal(y, y_denorm)
+
+
+# test add_prefix_to_param_grid ------------------------------------------------
+
+
+@pytest.fixture
+def grid():
+    return {"param1": [1, 2, 3], "param2": [4, 5, 6], "param3": [7, 8, 9]}
+
+
+@pytest.fixture
+def grid_list():
+    return [
+        {"param1": [1, 2, 3], "param2": [4, 5, 6]},
+        {"param3": [7, 8, 9], "param4": [10, 11, 12]},
+    ]
+
+
+@pytest.fixture
+def prefix():
+    return "prefix_"
+
+
+def test_add_prefix_to_param_grid_dict(grid, prefix):
+    """
+    Test whether add_prefix_to_param_grid correctly adds a prefix to each key
+    in a parameter grid dictionary.
+    """
+    expected_result = {
+        "prefix_param1": [1, 2, 3],
+        "prefix_param2": [4, 5, 6],
+        "prefix_param3": [7, 8, 9],
+    }
+    assert (
+        add_prefix_to_param_grid(grid, prefix) == expected_result
+    ), "Prefix not correctly added to param grid dict"
+
+
+def test_add_prefix_to_param_grid_list(grid_list, prefix):
+    """
+    Test whether add_prefix_to_param_grid correctly adds a prefix to each key
+    in a list of parameter grid dictionaries.
+    """
+    expected_result = [
+        {"prefix_param1": [1, 2, 3], "prefix_param2": [4, 5, 6]},
+        {"prefix_param3": [7, 8, 9], "prefix_param4": [10, 11, 12]},
+    ]
+    assert (
+        add_prefix_to_param_grid(grid_list, prefix) == expected_result
+    ), "Prefix not correctly added to param grid list"  # test add_prefix_to_single_grid ------------------------------------------------
+
+
+def test_add_prefix_to_single_grid(grid, prefix):
+    expected_result = {
+        "prefix_param1": [1, 2, 3],
+        "prefix_param2": [4, 5, 6],
+        "prefix_param3": [7, 8, 9],
+    }
+    assert (
+        add_prefix_to_single_grid(grid, prefix) == expected_result
+    ), "Prefix not correctly added to single grid dictionary"
