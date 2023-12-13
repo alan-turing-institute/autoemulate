@@ -21,7 +21,7 @@ class RBF(BaseEstimator, RegressorMixin):
         epsilon=1.0,
         degree=1,
     ):
-        """Initializes a RadialBasis object."""
+        """Initializes an RBF object."""
         self.smoothing = smoothing
         self.kernel = kernel
         self.epsilon = epsilon
