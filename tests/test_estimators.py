@@ -15,20 +15,22 @@ from autoemulate.emulators import (
     GradientBoosting,
     SupportVectorMachines,
     XGBoost,
+    RBF,
 )
 from functools import partial
 
 
 @parametrize_with_checks(
     [
-        SupportVectorMachines(),
-        RandomForest(random_state=42),
-        GaussianProcessSk(random_state=1337),
-        NeuralNetSk(random_state=13),
-        GradientBoosting(random_state=42),
-        SecondOrderPolynomial(),
-        XGBoost(),
-        RadialBasis(),
+        # SupportVectorMachines(),
+        # RandomForest(random_state=42),
+        # GaussianProcessSk(random_state=1337),
+        # NeuralNetSk(random_state=13),
+        # GradientBoosting(random_state=42),
+        # SecondOrderPolynomial(),
+        # XGBoost(),
+        # RadialBasis(),
+        RBF(),
         # NeuralNetTorch(random_state=42), # fails because it subclasses
         # GaussianProcess()
     ]

@@ -8,8 +8,10 @@ from .second_order_polynomials import SecondOrderPolynomial
 from .gradient_boosting import GradientBoosting
 from .support_vector_machines import SupportVectorMachines
 from .xgboost import XGBoost
+from .rbf import RBF
 
 MODEL_REGISTRY = {
+    "RBF": RBF,
     "SecondOrderPolynomial": SecondOrderPolynomial,
     "RandomForest": RandomForest,
     "GradientBoosting": GradientBoosting,
