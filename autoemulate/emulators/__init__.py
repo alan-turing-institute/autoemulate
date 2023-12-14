@@ -7,10 +7,10 @@ from .gradient_boosting import GradientBoosting
 from .support_vector_machines import SupportVectorMachines
 from .xgboost import XGBoost
 from .rbf import RBF
-from .polynomials import SecondOrderPolynomials
+from .polynomials import SecondOrderPolynomial
 
 MODEL_REGISTRY = {
-    "SecondOrderPolynomials": SecondOrderPolynomials,
+    "SecondOrderPolynomial": SecondOrderPolynomial,
     "RBF": RBF,
     "RandomForest": RandomForest,
     "GradientBoosting": GradientBoosting,

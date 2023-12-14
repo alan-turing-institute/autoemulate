@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 
 
-class SecondOrderPolynomials(BaseEstimator, RegressorMixin):
+class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
     """Second order polynomial emulator.
 
     Creates a second order polynomial emulator. This is a linear model
@@ -17,7 +17,7 @@ class SecondOrderPolynomials(BaseEstimator, RegressorMixin):
     """
 
     def __init__(self, degree=2):
-        """Initializes a SecondOrderPolynomials object."""
+        """Initializes a SecondOrderPolynomial object."""
         self.degree = degree
 
     def fit(self, X, y):
