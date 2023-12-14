@@ -8,16 +8,18 @@ from .gradient_boosting import GradientBoosting
 from .support_vector_machines import SupportVectorMachines
 from .xgboost import XGBoost
 from .rbf import RBF
+from .polynomials import SecondOrderPolynomials
 
 MODEL_REGISTRY = {
+    "SecondOrderPolynomials": SecondOrderPolynomials,
     "SecondOrderPolynomial": SecondOrderPolynomial,
-    "RBF": RBF,
-    "RandomForest": RandomForest,
-    "GradientBoosting": GradientBoosting,
-    "GaussianProcessSk": GaussianProcessSk,
-    "SupportVectorMachines": SupportVectorMachines,
-    "XGBoost": XGBoost,
-    "NeuralNetSk": NeuralNetSk,
-    # "NeuralNetTorch": NeuralNetTorch,
+    # "RBF": RBF,
+    # "RandomForest": RandomForest,
+    # "GradientBoosting": GradientBoosting,
+    # "GaussianProcessSk": GaussianProcessSk,
+    # "SupportVectorMachines": SupportVectorMachines,
+    # "XGBoost": XGBoost,
+    # "NeuralNetSk": NeuralNetSk,
+    # # "NeuralNetTorch": NeuralNetTorch,
     # "GaussianProcess": GaussianProcess,
 }
