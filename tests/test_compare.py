@@ -14,11 +14,6 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 
 
-# remove "SecondOrderPolynomial" from MODEL_REGISTRY
-# this is because it needs +++ samples
-MODEL_REGISTRY.pop("SecondOrderPolynomial")
-
-
 @pytest.fixture(scope="module")
 def ae():
     return AutoEmulate()
