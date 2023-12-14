@@ -82,7 +82,7 @@ class SecondOrderPolynomials(BaseEstimator, RegressorMixin):
         if search_type == "random":
             param_grid = {}
         elif search_type == "bayes":
-            param_grid = [({"degree": Integer(2, 3)}, 1)]
+            param_grid = [({"degree": Categorical([2])}, 1)]
 
         return param_grid
 

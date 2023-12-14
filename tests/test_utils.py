@@ -229,6 +229,14 @@ def grid_list():
 
 
 @pytest.fixture
+def grid_list_of_tuples():
+    return [
+        ({"param1": [1, 2, 3]}, 1),
+        ({"param2": [4, 5, 6]}, 1),
+    ]
+
+
+@pytest.fixture
 def prefix():
     return "prefix_"
 
@@ -260,6 +268,20 @@ def test_add_prefix_to_param_grid_list(grid_list, prefix):
     assert (
         add_prefix_to_param_grid(grid_list, prefix) == expected_result
     ), "Prefix not correctly added to param grid list"  # test add_prefix_to_single_grid ------------------------------------------------
+
+
+def test_add_prefix_to_param_grid_list_of_tuples(grid_list_of_tuples, prefix):
+    """
+    Test whether add_prefix_to_param_grid correctly adds a prefix to each key
+    in a list of parameter grid dictionaries.
+    """
+    expected_result = [
+        ({"prefix_param1": [1, 2, 3]}, 1),
+        ({"prefix_param2": [4, 5, 6]}, 1),
+    ]
+    assert (
+        add_prefix_to_param_grid(grid_list_of_tuples, prefix) == expected_result
+    ), "Prefix not correctly added to param grid list of tuples"
 
 
 def test_add_prefix_to_single_grid(grid, prefix):

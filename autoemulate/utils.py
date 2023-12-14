@@ -176,7 +176,14 @@ def adjust_param_grid(model, param_grid):
 def add_prefix_to_param_grid(param_grid, prefix):
     """Adds a prefix to all keys in a parameter grid.
 
-    Works when param_grid is a dict or when param_grid is a list of dicts.
+    Works for three types of param_grids:
+    * when param_grid is a dict (standard case)
+    * when param_grid is a list of dicts (when we only want
+    to iterate over certain parameter combinations, like in RBF)
+    * when param_grid contains tuples of (dict, int) (when we want
+    to iterate a certain number of times over a parameter subspace
+    (only in BayesSearchCV). This can be used to prevent bayes search
+    from iterating many times using the same parameters.
 
     Parameters
     ----------
@@ -191,8 +198,17 @@ def add_prefix_to_param_grid(param_grid, prefix):
         The parameter grid with the prefix added to each key.
     """
     if isinstance(param_grid, list):
-        # If param_grid is a list of dictionaries, add the prefix to each dictionary
-        return [add_prefix_to_single_grid(grid, prefix) for grid in param_grid]
+        new_param_grid = []
+        for param in param_grid:
+            # Handle tuple (dict, int) used in BayesSearchCV
+            if isinstance(param, tuple):
+                # Reconstruct the tuple with the modified dictionary
+                dict_with_prefix = add_prefix_to_single_grid(param[0], prefix)
+                new_param_grid.append((dict_with_prefix,) + param[1:])
+            elif isinstance(param, dict):
+                # Add prefix to the dictionary
+                new_param_grid.append(add_prefix_to_single_grid(param, prefix))
+        return new_param_grid
     else:
         # If param_grid is a single dictionary, add the prefix directly
         return add_prefix_to_single_grid(param_grid, prefix)
