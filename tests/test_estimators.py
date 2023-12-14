@@ -10,7 +10,7 @@ from autoemulate.emulators import (
     NeuralNetSk,
     GaussianProcess,
     NeuralNetTorch,
-    SecondOrderPolynomial,
+    SecondOrderPolynomials,
     GradientBoosting,
     SupportVectorMachines,
     XGBoost,
@@ -26,7 +26,7 @@ from functools import partial
         GaussianProcessSk(random_state=1337),
         NeuralNetSk(random_state=13),
         GradientBoosting(random_state=42),
-        SecondOrderPolynomial(),
+        SecondOrderPolynomials(),
         XGBoost(),
         RBF(),
         # NeuralNetTorch(random_state=42), # fails because it subclasses
