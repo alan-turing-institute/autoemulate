@@ -4,7 +4,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 <!-- SPHINX-START -->
-Simulations of physical systems are often slow and compute-intensive, which makes them unpractical for applications like digital twins. The goal of `autoemulate` is to make it easy to replace simulations with fast, accurate emulator models.
+Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins. The goal of `autoemulate` is to make it easy to replace simulations with fast, accurate emulator models.
 
 The project is in very early development. 
 
