@@ -17,7 +17,7 @@ from autoemulate.compare import AutoEmulate
 from autoemulate.experimental_design import LatinHypercube
 from autoemulate.demos.projectile import simulator
 
-# sample
+# sample from a simulation
 lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
 X = lhd.sample(100)
 y = np.array([simulator(x) for x in X])
@@ -25,9 +25,12 @@ y = np.array([simulator(x) for x in X])
 # compare emulators and select best
 ae = AutoEmulate()
 ae.setup(X, y)
-best_model = ae.compare() 
+ae.compare() 
 
 # evaluate
 ae.print_results()
-ae.plot_results()
+
+# save & load
+ae.save_model("best_model")
+best_emulator = ae.load_model("best_model")
 ```
