@@ -1,7 +1,9 @@
 # autoemulate
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
+[![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 <!-- SPHINX-START -->
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins. The goal of `autoemulate` is to make it easy to replace simulations with fast, accurate emulator models.
