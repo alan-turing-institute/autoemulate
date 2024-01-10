@@ -11,7 +11,7 @@ Simulations of physical systems are often slow and need lots of compute, which m
 
 The project is in very early development. 
 
-<img src="misc/robot.png" alt="emulating simulations with ML" width="61.8%">
+<img src="misc/robot2.png" alt="emulating simulations with ML" width="61.8%">
 
 
 # quick start
