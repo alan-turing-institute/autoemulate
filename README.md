@@ -27,7 +27,7 @@ lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
 X = lhd.sample(100)
 y = np.array([simulator(x) for x in X])
 
-# compare emulators and select best
+# compare emulator models
 ae = AutoEmulate()
 ae.setup(X, y)
 ae.compare() 
@@ -35,7 +35,10 @@ ae.compare()
 # evaluate
 ae.print_results()
 
-# save & load
+# save & load best model
 ae.save_model("best_model")
 best_emulator = ae.load_model("best_model")
+
+# emulate
+best_emulator.predict(X)
 ```
