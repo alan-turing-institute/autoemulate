@@ -147,19 +147,19 @@ class AutoEmulate:
             List of model instances.
         """
         if hasattr(self, "model_subset") and self.model_subset is not None:
-            self._check_model_names(MODEL_REGISTRY)
+            self._check_model_names(self.model_subset, MODEL_REGISTRY)
             models = [MODEL_REGISTRY[model]() for model in self.model_subset]
         else:
             models = [model() for model in MODEL_REGISTRY.values()]
         return models
 
-    def _check_model_names(self, MODEL_REGISTRY):
+    def _check_model_names(self, model_names, MODEL_REGISTRY):
         """Check whether chosen_models are in MODEL_REGISTRY
 
         Parameters
         ----------
-        chosen_models : list
-            List of models to use.
+        model_names : list
+            List of model names.
         MODEL_REGISTRY : dict
             Registry of models.
 
@@ -168,11 +168,11 @@ class AutoEmulate:
         None
             Raises ValueError if a model in chosen_models is not in MODEL_REGISTRY.
         """
-        model_names = MODEL_REGISTRY.keys()
-        for model in self.model_subset:
-            if model not in model_names:
+        model_names_registry = MODEL_REGISTRY.keys()
+        for model in model_names:
+            if model not in model_names_registry:
                 raise ValueError(
-                    f"Model {model} not found. Available models are: {model_names}"
+                    f"Model {model} not found. Available models are: {model_names_registry}"
                 )
 
     def _turn_model_into_multioutput(self, models):
