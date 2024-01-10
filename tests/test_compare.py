@@ -14,19 +14,19 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def ae():
     return AutoEmulate()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def Xy():
     X = np.random.rand(20, 5)
     y = np.random.rand(20)
     return X, y
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def ae_run(ae, Xy):
     X, y = Xy
     ae.setup(X, y)
@@ -111,6 +111,17 @@ def test__get_models(ae):
     model_names = [type(model).__name__ for model in models]
     # check all model names are in MODEL_REGISTRY
     assert all([model_name in MODEL_REGISTRY for model_name in model_names])
+
+
+def test__get_models_subset(ae, Xy):
+    X, y = Xy
+    ae.setup(X, y, model_subset=["RBF", "RandomForest"])
+    models = ae._get_models(MODEL_REGISTRY)
+    # check that subset worked
+    assert len(models) == 2
+    # assert that an error is raised if model_subset contains a model that is not in MODEL_REGISTRY
+    with pytest.raises(ValueError):
+        ae.setup(X, y, model_subset=["not_a_model"])
 
 
 # -----------------------test _wrap_models_in_pipeline-------------------#

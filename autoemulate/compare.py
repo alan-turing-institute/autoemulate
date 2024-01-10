@@ -38,6 +38,7 @@ class AutoEmulate:
         fold_strategy="kfold",
         folds=5,
         n_jobs=None,
+        model_subset=None,
         log_to_file=False,
     ):
         """Sets up the automatic emulation.
@@ -65,10 +66,15 @@ class AutoEmulate:
             Number of folds.
         n_jobs : int
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
+        model_subset : list
+            List of models to use. If None, uses all models in MODEL_REGISTRY.
+            Currently, any of: SecondOrderPolynomial, RBF, RandomForest, GradientBoosting,
+            GaussianProcessSk, SupportVectorMachines, XGBoost
         log_to_file : bool
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
+        self.model_subset = model_subset
         self.models = self._get_and_process_models(MODEL_REGISTRY, scale, scaler)
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
@@ -126,9 +132,11 @@ class AutoEmulate:
         return models
 
     def _get_models(self, MODEL_REGISTRY):
-        """Get models from REGISTRY
+        """Get models from REGISTRY.
+        Takes a subset of models if model_subset argument was used.
 
         Parameters
+
         ----------
         MODEL_REGISTRY : dict
             Registry of models.
@@ -136,9 +144,36 @@ class AutoEmulate:
         Returns
         -------
         list
-            List of models.
+            List of model instances.
         """
-        return [model() for model in MODEL_REGISTRY.values()]
+        if hasattr(self, "model_subset") and self.model_subset is not None:
+            self._check_model_names(MODEL_REGISTRY)
+            models = [MODEL_REGISTRY[model]() for model in self.model_subset]
+        else:
+            models = [model() for model in MODEL_REGISTRY.values()]
+        return models
+
+    def _check_model_names(self, MODEL_REGISTRY):
+        """Check whether chosen_models are in MODEL_REGISTRY
+
+        Parameters
+        ----------
+        chosen_models : list
+            List of models to use.
+        MODEL_REGISTRY : dict
+            Registry of models.
+
+        Returns
+        -------
+        None
+            Raises ValueError if a model in chosen_models is not in MODEL_REGISTRY.
+        """
+        model_names = MODEL_REGISTRY.keys()
+        for model in self.model_subset:
+            if model not in model_names:
+                raise ValueError(
+                    f"Model {model} not found. Available models are: {model_names}"
+                )
 
     def _turn_model_into_multioutput(self, models):
         """Turn single output models into multioutput models if y is 2D.
