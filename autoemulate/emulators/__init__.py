@@ -16,7 +16,7 @@ MODEL_REGISTRY = {
     "GradientBoosting": GradientBoosting,
     "GaussianProcessSk": GaussianProcessSk,
     "SupportVectorMachines": SupportVectorMachines,
-    # "XGBoost": XGBoost,
+    "XGBoost": XGBoost,
     "NeuralNetSk": NeuralNetSk,
     # "NeuralNetTorch": NeuralNetTorch,
     # "GaussianProcess": GaussianProcess,

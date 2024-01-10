@@ -14,19 +14,19 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def ae():
     return AutoEmulate()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def Xy():
     X = np.random.rand(20, 5)
     y = np.random.rand(20)
     return X, y
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def ae_run(ae, Xy):
     X, y = Xy
     ae.setup(X, y)
@@ -111,6 +111,39 @@ def test__get_models(ae):
     model_names = [type(model).__name__ for model in models]
     # check all model names are in MODEL_REGISTRY
     assert all([model_name in MODEL_REGISTRY for model_name in model_names])
+
+
+def test__check_model_names(ae):
+    models = ae._get_models(MODEL_REGISTRY)
+    model_names = [type(model).__name__ for model in models]
+    # check all model names are in MODEL_REGISTRY
+    assert all([model_name in MODEL_REGISTRY for model_name in model_names])
+
+
+def test__get_models_subset(ae, Xy):
+    X, y = Xy
+    ae.setup(X, y, model_subset=["RBF", "RandomForest"])
+    models = ae._get_models(MODEL_REGISTRY)
+    # check that subset worked
+    assert len(models) == 2
+    # assert that an error is raised if model_subset contains a model that is not in MODEL_REGISTRY
+    with pytest.raises(ValueError):
+        ae.setup(X, y, model_subset=["not_a_model"])
+
+
+def test__check_model_names(ae):
+    model_names = ["GaussianProcess", "RandomForest"]
+    MODEL_REGISTRY = {"GaussianProcess": GaussianProcess, "RandomForest": RandomForest}
+    ae._check_model_names(model_names, MODEL_REGISTRY)
+    # No exception should be raised
+
+
+def test__check_model_names_with_invalid_model(ae):
+    model_names = ["GaussianProcess", "InvalidModel"]
+    MODEL_REGISTRY = {"GaussianProcess": GaussianProcess, "RandomForest": RandomForest}
+    with pytest.raises(ValueError):
+        ae._check_model_names(model_names, MODEL_REGISTRY)
+    # ValueError should be raised with the appropriate error message
 
 
 # -----------------------test _wrap_models_in_pipeline-------------------#
