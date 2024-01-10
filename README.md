@@ -6,12 +6,15 @@
 
 
 <!-- SPHINX-START -->
-Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins. The goal of `autoemulate` is to make it easy to replace simulations with fast, accurate emulator models.
+
+Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins or for exploring sensitivities and uncertainties. The goal of `autoemulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `autoemulate` automatically fits and compares lots of models, from Radial Basis Functions to Gaussian Processes to Neural Networks to find the best emulator for a simulation.
 
 The project is in very early development. 
 
+<img src="misc/robot.png" alt="emulating simulations with ML" width="61.8%">
 
-# usage
+
+# quick start
 
 ```python
 import numpy as np
