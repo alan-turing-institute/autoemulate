@@ -126,25 +126,3 @@ def test__update_scores_df(ae_run):
     )
     # Check that all scores are floats
     assert ae_run.scores_df["score"].dtype == np.float64
-
-
-# -----------------------test _print_results-----------------------------#
-def test_print_results_all_models(ae_run, capsys):
-    ae_run.print_results()
-    captured = capsys.readouterr()
-    assert "Average scores across all models:" in captured.out
-    assert "model" in captured.out
-    assert "metric" in captured.out
-
-
-def test_print_results_single_model(ae_run, capsys):
-    ae_run.print_results("GaussianProcessSk")
-    captured = capsys.readouterr()
-    assert "Scores for GaussianProcessSk across all folds:" in captured.out
-    assert "fold" in captured.out
-    assert "metric" in captured.out
-
-
-def test_print_results_invalid_model(ae_run):
-    with pytest.raises(ValueError):
-        ae_run.print_results("InvalidModel")

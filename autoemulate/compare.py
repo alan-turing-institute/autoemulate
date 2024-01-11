@@ -18,6 +18,7 @@ from autoemulate.hyperparam_search import HyperparamSearcher
 from autoemulate.utils import get_model_name
 from autoemulate.save import ModelSerialiser
 from autoemulate.model_processing import get_and_process_models
+from autoemulate.printing import print_cv_results
 
 
 class AutoEmulate:
@@ -359,28 +360,15 @@ class AutoEmulate:
         return serialiser.load_model(filepath)
 
     def print_results(self, model=None):
-        # check if model is in self.models
-        if model is not None:
-            model_names = [get_model_name(model) for model in self.models]
-            if model not in model_names:
-                raise ValueError(
-                    f"Model {model} not found. Available models are: {model_names}"
-                )
-        if model is None:
-            means = (
-                self.scores_df.groupby(["model", "metric"])["score"]
-                .mean()
-                .unstack()
-                .reset_index()
-            )
-            print("Average scores across all models:")
-            print(means)
-        else:
-            scores = self.scores_df[self.scores_df["model"] == model].pivot(
-                index="fold", columns="metric", values="score"
-            )
-            print(f"Scores for {model} across all folds:")
-            print(scores)
+        """Print cv results.
+
+        Parameters
+        ----------
+        model : str, optional
+            The name of the model to print. If None, the best fold from each model will be printed.
+            If a model name is provided, the scores for that model across all folds will be printed.
+        """
+        print_cv_results(self.models, self.scores_df, model=model)
 
     def plot_results(self, model_name=None):
         """Plots the results of the cross-validation.
