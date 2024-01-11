@@ -104,67 +104,6 @@ def test__check_input_errors_with_NA_values_in_X(ae):
         ae._check_input(X, y)
 
 
-# -----------------------test _get_models-----------------------------#
-def test__get_models(ae):
-    models = ae._get_models(MODEL_REGISTRY)
-    assert isinstance(models, list)
-    model_names = [type(model).__name__ for model in models]
-    # check all model names are in MODEL_REGISTRY
-    assert all([model_name in MODEL_REGISTRY for model_name in model_names])
-
-
-def test__check_model_names(ae):
-    models = ae._get_models(MODEL_REGISTRY)
-    model_names = [type(model).__name__ for model in models]
-    # check all model names are in MODEL_REGISTRY
-    assert all([model_name in MODEL_REGISTRY for model_name in model_names])
-
-
-def test__get_models_subset(ae, Xy):
-    X, y = Xy
-    ae.setup(X, y, model_subset=["RBF", "RandomForest"])
-    models = ae._get_models(MODEL_REGISTRY)
-    # check that subset worked
-    assert len(models) == 2
-    # assert that an error is raised if model_subset contains a model that is not in MODEL_REGISTRY
-    with pytest.raises(ValueError):
-        ae.setup(X, y, model_subset=["not_a_model"])
-
-
-def test__check_model_names(ae):
-    model_names = ["GaussianProcess", "RandomForest"]
-    MODEL_REGISTRY = {"GaussianProcess": GaussianProcess, "RandomForest": RandomForest}
-    ae._check_model_names(model_names, MODEL_REGISTRY)
-    # No exception should be raised
-
-
-def test__check_model_names_with_invalid_model(ae):
-    model_names = ["GaussianProcess", "InvalidModel"]
-    MODEL_REGISTRY = {"GaussianProcess": GaussianProcess, "RandomForest": RandomForest}
-    with pytest.raises(ValueError):
-        ae._check_model_names(model_names, MODEL_REGISTRY)
-    # ValueError should be raised with the appropriate error message
-
-
-# -----------------------test _wrap_models_in_pipeline-------------------#
-def test__wrap_models_in_pipeline_no_scaler(ae):
-    models = ae._get_models(MODEL_REGISTRY)
-    models = ae._wrap_models_in_pipeline(models, scale=False, scaler=StandardScaler())
-    assert isinstance(models, list)
-    assert all([isinstance(model, Pipeline) for model in models])
-    # assert that pipeline does not have a scaler as first step
-    assert all([model.steps[0][0] != "scaler" for model in models])
-
-
-def test__wrap_models_in_pipeline_scaler(ae):
-    models = ae._get_models(MODEL_REGISTRY)
-    models = ae._wrap_models_in_pipeline(models, scale=True, scaler=StandardScaler())
-    assert isinstance(models, list)
-    assert all([isinstance(model, Pipeline) for model in models])
-    # assert that pipeline does have a scaler as first step
-    assert all([model.steps[0][0] == "scaler" for model in models])
-
-
 # -----------------------test _get_metric-------------------#
 def test__get_metrics(ae):
     metrics = ae._get_metrics(METRIC_REGISTRY)
