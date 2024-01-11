@@ -17,6 +17,8 @@ from autoemulate.plotting import plot_results
 from autoemulate.hyperparam_search import HyperparamSearcher
 from autoemulate.utils import get_model_name
 from autoemulate.save import ModelSerialiser
+from autoemulate.model_processing import get_and_process_models
+from autoemulate.printing import print_cv_results
 
 
 class AutoEmulate:
@@ -74,8 +76,9 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.model_subset = model_subset
-        self.models = self._get_and_process_models(MODEL_REGISTRY, scale, scaler)
+        self.models = get_and_process_models(
+            MODEL_REGISTRY, model_subset, self.y, scale, scaler
+        )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
         self.use_grid_search = use_grid_search
@@ -108,120 +111,6 @@ class AutoEmulate:
         X, y = check_X_y(X, y, multi_output=True, y_numeric=True, dtype="float32")
         y = y.astype("float32")  # needed for pytorch models
         return X, y
-
-    def _get_and_process_models(self, MODEL_REGISTRY, scale, scaler):
-        """Get models from REGISTRY and process them
-
-        Parameters
-        ----------
-        MODEL_REGISTRY : dict
-            Registry of models.
-        scale : bool
-            If True, add scaler to models.
-        scaler : sklearn.preprocessing.StandardScaler
-            Scaler to use. Defaults to StandardScaler.
-
-        Returns
-        -------
-        list
-            List of models.
-        """
-        models = self._get_models(MODEL_REGISTRY)
-        models = self._turn_model_into_multioutput(models)
-        models = self._wrap_models_in_pipeline(models, scale, scaler)
-        return models
-
-    def _get_models(self, MODEL_REGISTRY):
-        """Get models from REGISTRY.
-        Takes a subset of models if model_subset argument was used.
-
-        Parameters
-
-        ----------
-        MODEL_REGISTRY : dict
-            Registry of models.
-
-        Returns
-        -------
-        list
-            List of model instances.
-        """
-        if hasattr(self, "model_subset") and self.model_subset is not None:
-            self._check_model_names(self.model_subset, MODEL_REGISTRY)
-            models = [MODEL_REGISTRY[model]() for model in self.model_subset]
-        else:
-            models = [model() for model in MODEL_REGISTRY.values()]
-        return models
-
-    def _check_model_names(self, model_names, MODEL_REGISTRY):
-        """Check whether chosen_models are in MODEL_REGISTRY
-
-        Parameters
-        ----------
-        model_names : list
-            List of model names.
-        MODEL_REGISTRY : dict
-            Registry of models.
-
-        Returns
-        -------
-        None
-            Raises ValueError if a model in chosen_models is not in MODEL_REGISTRY.
-        """
-        model_names_registry = MODEL_REGISTRY.keys()
-        for model in model_names:
-            if model not in model_names_registry:
-                raise ValueError(
-                    f"Model {model} not found. Available models are: {model_names_registry}"
-                )
-
-    def _turn_model_into_multioutput(self, models):
-        """Turn single output models into multioutput models if y is 2D.
-
-        Parameters
-        ----------
-        models : list
-            List of models.
-
-        Returns
-        -------
-        models_multi : list
-            List of models, with single output models wrapped in MultiOutputRegressor.
-        """
-        models_multi = [
-            MultiOutputRegressor(model)
-            if not model._more_tags()["multioutput"]
-            and (self.y.ndim > 1 and self.y.shape[1] > 1)
-            else model
-            for model in models
-        ]
-        return models_multi
-
-    def _wrap_models_in_pipeline(self, models, scale, scaler):
-        """Create pipelines from models
-
-        Parameters
-        ----------
-        models : list
-            List of models.
-        scale : bool
-            If True, add scaler to models.
-        scaler : sklearn.preprocessing.StandardScaler
-            Scaler to use. Defaults to StandardScaler.
-
-        Returns
-
-        -------
-        list
-            List of models wrapped in pipelines.
-        """
-        if scale:
-            models = [
-                Pipeline([("scaler", scaler), ("model", model)]) for model in models
-            ]
-        else:
-            models = [Pipeline([("model", model)]) for model in models]
-        return models
 
     def _get_metrics(self, METRIC_REGISTRY):
         """
@@ -471,28 +360,15 @@ class AutoEmulate:
         return serialiser.load_model(filepath)
 
     def print_results(self, model=None):
-        # check if model is in self.models
-        if model is not None:
-            model_names = [get_model_name(model) for model in self.models]
-            if model not in model_names:
-                raise ValueError(
-                    f"Model {model} not found. Available models are: {model_names}"
-                )
-        if model is None:
-            means = (
-                self.scores_df.groupby(["model", "metric"])["score"]
-                .mean()
-                .unstack()
-                .reset_index()
-            )
-            print("Average scores across all models:")
-            print(means)
-        else:
-            scores = self.scores_df[self.scores_df["model"] == model].pivot(
-                index="fold", columns="metric", values="score"
-            )
-            print(f"Scores for {model} across all folds:")
-            print(scores)
+        """Print cv results.
+
+        Parameters
+        ----------
+        model : str, optional
+            The name of the model to print. If None, the best fold from each model will be printed.
+            If a model name is provided, the scores for that model across all folds will be printed.
+        """
+        print_cv_results(self.models, self.scores_df, model=model)
 
     def plot_results(self, model_name=None):
         """Plots the results of the cross-validation.

@@ -9,6 +9,7 @@ from .xgboost import XGBoost
 from .rbf import RBF
 from .polynomials import SecondOrderPolynomial
 
+# REGISTRY keys are the class names (i.e. type(model).__name__)
 MODEL_REGISTRY = {
     "SecondOrderPolynomial": SecondOrderPolynomial,
     "RBF": RBF,
