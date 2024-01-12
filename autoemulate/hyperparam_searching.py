@@ -15,6 +15,8 @@ import numpy as np
 # import cv
 from sklearn.model_selection import KFold
 
+from autoemulate.logging_config import configure_logging
+
 
 def search(
     X,
@@ -159,14 +161,14 @@ def optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger):
     return searcher.best_estimator_
 
 
-# if __name__ == "__main__":
-#     X = np.random.rand(100, 10)
-#     y = np.random.rand(100, 2)
-#     cv = KFold(5)
-#     model = RandomForest()
-#     search_type = "random"
-#     niter = 20
-#     n_jobs = 1
-#     logger = logging.getLogger(__name__)
-#     best = optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger)
-#     print(best.get_params())
+if __name__ == "__main__":
+    X = np.random.rand(100, 10)
+    y = np.random.rand(100, 2)
+    cv = KFold(5)
+    model = RandomForest()
+    search_type = "random"
+    niter = 20
+    n_jobs = 1
+    logger = logging.getLogger(__name__)
+    best = optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger)
+    # print(best.get_params())

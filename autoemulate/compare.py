@@ -175,7 +175,7 @@ class AutoEmulate:
                     self.cv,
                     self.models[i],
                     self.search_type,
-                    self.niter,
+                    self.grid_search_iters,
                     self.n_jobs,
                     self.logger,
                 )
