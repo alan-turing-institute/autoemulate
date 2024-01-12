@@ -2,19 +2,25 @@
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
 
-import torch
 import numpy as np
 import skorch
-from torch import nn
-from skorch import NeuralNetRegressor
+import torch
 from scipy.stats import loguniform
-from skopt.space import Real, Integer
+from skopt.space import Integer, Real
+from skorch import NeuralNetRegressor
+from torch import nn
 
 
 class InputShapeSetter(skorch.callbacks.Callback):
     """Callback to set input and output layer sizes dynamically."""
 
-    def on_train_begin(self, net, X, y):
+    def on_train_begin(
+        self,
+        net,
+        X: torch.Tensor | np.ndarray = None,
+        y: torch.Tensor | np.ndarray = None,
+        **kwargs
+    ):
         output_size = 1 if y.ndim == 1 else y.shape[1]
         net.set_params(module__input_size=X.shape[1], module__output_size=output_size)
 
@@ -35,7 +41,7 @@ class MLPModule(nn.Module):
             self.hidden_layers.append(nn.Linear(hs[i], hs[i + 1]))
         self.output_layer = nn.Linear(hidden_layer_sizes[-1], output_size)
 
-    def forward(self, X):
+    def forward(self, X: torch.Tensor):
         for layer in self.hidden_layers:
             X = torch.relu(layer(X))
         if self.output_layer is not None:

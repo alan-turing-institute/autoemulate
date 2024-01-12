@@ -60,6 +60,8 @@ def nn_torch_model(simulation_io):
     """Setup for tests (Arrange)"""
     sim_in, sim_out = simulation_io
     nn_torch = NeuralNetTorch()
+    sim_in = sim_in.astype(np.float32)
+    sim_out = np.array(sim_out, dtype=np.float32)
     nn_torch.fit(sim_in, sim_out)
     return nn_torch
 
@@ -156,17 +158,21 @@ def test_nn_torch_initialisation():
 
 def test_nn_torch_pred_exists(nn_torch_model, simulation_io):
     sim_in, sim_out = simulation_io
+    sim_in = sim_in.astype(np.float32)
     predictions = nn_torch_model.predict(sim_in)
     assert predictions is not None
 
 
 def test_nn_torch_pred_len(nn_torch_model, simulation_io):
     sim_in, sim_out = simulation_io
+    sim_in = sim_in.astype(np.float32)
+    sim_out = np.array(sim_out, dtype=np.float32)
     predictions = nn_torch_model.predict(sim_in)
     assert len(predictions) == len(sim_out)
 
 
 def test_nn_torch_pred_type(nn_torch_model, simulation_io):
     sim_in, sim_out = simulation_io
+    sim_in = sim_in.astype(np.float32)
     predictions = nn_torch_model.predict(sim_in)
     assert isinstance(predictions, np.ndarray)
