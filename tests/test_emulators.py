@@ -1,7 +1,13 @@
-import pytest
 import numpy as np
+import pytest
+
+from autoemulate.emulators import (
+    GaussianProcess,
+    NeuralNetSk,
+    NeuralNetTorch,
+    RandomForest,
+)
 from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
-from autoemulate.emulators import GaussianProcess, RandomForest
 
 
 def simple_sim(params):
@@ -38,6 +44,24 @@ def rf_model(simulation_io):
     rf = RandomForest()
     rf.fit(sim_in, sim_out)
     return rf
+
+
+@pytest.fixture(scope="module")
+def nn_sk_model(simulation_io):
+    """Setup for tests (Arrange)"""
+    sim_in, sim_out = simulation_io
+    nn_sk = NeuralNetSk()
+    nn_sk.fit(sim_in, sim_out)
+    return nn_sk
+
+
+@pytest.fixture(scope="module")
+def nn_torch_model(simulation_io):
+    """Setup for tests (Arrange)"""
+    sim_in, sim_out = simulation_io
+    nn_torch = NeuralNetTorch()
+    nn_torch.fit(sim_in, sim_out)
+    return nn_torch
 
 
 # Test Gaussian Process
@@ -97,4 +121,52 @@ def test_rf_pred_len(rf_model, simulation_io):
 def test_rf_pred_type(rf_model, simulation_io):
     sim_in, sim_out = simulation_io
     predictions = rf_model.predict(sim_in)
+    assert isinstance(predictions, np.ndarray)
+
+
+# Test Neural Network sklearn
+def test_nn_sk_initialisation():
+    nn_sk = NeuralNetSk()
+    assert nn_sk is not None
+
+
+def test_nn_sk_pred_exists(nn_sk_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = nn_sk_model.predict(sim_in)
+    assert predictions is not None
+
+
+def test_nn_sk_pred_len(nn_sk_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = nn_sk_model.predict(sim_in)
+    assert len(predictions) == len(sim_out)
+
+
+def test_nn_sk_pred_type(nn_sk_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = nn_sk_model.predict(sim_in)
+    assert isinstance(predictions, np.ndarray)
+
+
+# Test PyTorch Neural Network (skorch)
+def test_nn_torch_initialisation():
+    nn_torch = NeuralNetTorch()
+    assert nn_torch is not None
+
+
+def test_nn_torch_pred_exists(nn_torch_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = nn_torch_model.predict(sim_in)
+    assert predictions is not None
+
+
+def test_nn_torch_pred_len(nn_torch_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = nn_torch_model.predict(sim_in)
+    assert len(predictions) == len(sim_out)
+
+
+def test_nn_torch_pred_type(nn_torch_model, simulation_io):
+    sim_in, sim_out = simulation_io
+    predictions = nn_torch_model.predict(sim_in)
     assert isinstance(predictions, np.ndarray)
