@@ -9,6 +9,12 @@ from autoemulate.utils import (
     adjust_param_grid,
 )
 
+from autoemulate.emulators import RandomForest
+import numpy as np
+
+# import cv
+from sklearn.model_selection import KFold
+
 
 def search(
     X,
@@ -129,3 +135,38 @@ def check_param_grid(param_grid, model):
             raise ValueError(f"Invalid parameter: {key}")
 
     return param_grid
+
+
+def optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger):
+    """Runs hyperparameter search and returns model with best hyperparameters."""
+    try:
+        searcher = search(
+            X=X,
+            y=y,
+            cv=cv,
+            model=model,
+            search_type=search_type,
+            niter=niter,
+            n_jobs=n_jobs,
+            logger=logger,
+        )
+    except Exception as e:
+        logger.info(
+            f"Failed to perform hyperparameter search on {get_model_name(model)}"
+        )
+        logger.info(e)
+
+    return searcher.best_estimator_
+
+
+# if __name__ == "__main__":
+#     X = np.random.rand(100, 10)
+#     y = np.random.rand(100, 2)
+#     cv = KFold(5)
+#     model = RandomForest()
+#     search_type = "random"
+#     niter = 20
+#     n_jobs = 1
+#     logger = logging.getLogger(__name__)
+#     best = optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger)
+#     print(best.get_params())

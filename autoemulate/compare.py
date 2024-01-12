@@ -14,7 +14,7 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.logging_config import configure_logging
 from autoemulate.plotting import plot_results
-from autoemulate.hyperparam_searching import search
+from autoemulate.hyperparam_searching import optimize_params
 from autoemulate.utils import get_model_name
 from autoemulate.save import ModelSerialiser
 from autoemulate.model_processing import get_and_process_models
@@ -169,8 +169,15 @@ class AutoEmulate:
 
         for i in range(len(self.models)):
             if self.use_grid_search:
-                self.models[i] = self._update_to_best_hyperparams(
-                    self.models[i], self.search_type
+                self.models[i] = optimize_params(
+                    self.X,
+                    self.y,
+                    self.cv,
+                    self.models[i],
+                    self.search_type,
+                    self.niter,
+                    self.n_jobs,
+                    self.logger,
                 )
             self._cross_validate(self.models[i])
 
@@ -262,48 +269,6 @@ class AutoEmulate:
                         "fold": fold,
                         "score": score,
                     }
-
-    def _update_to_best_hyperparams(self, model, search_type):
-        """Performs hyperparameter search and updates the model.
-
-        Parameters
-        ----------
-        model_index : int
-            Index of the model in self.models.
-        model : scikit-learn estimator object
-            Model to perform hyperparameter search on.
-
-        Returns
-        -------
-        model : scikit-learn estimator object
-            Model with best hyperparameters, fitted on full data.
-        """
-        # Perform hyperparameter search and update model
-
-        try:
-            searcher = search(
-                X=self.X,
-                y=self.y,
-                cv=self.cv,
-                model=model,
-                search_type=search_type,
-                param_grid=None,
-                niter=self.grid_search_iters,
-                n_jobs=self.n_jobs,
-                logger=self.logger,
-            )
-        except Exception as e:
-            self.logger.info(
-                f"Failed to perform hyperparameter search on {get_model_name(model)}, using default parameters"
-            )
-            self.logger.info(e)
-            return model
-
-        # extract best params
-        model_name = get_model_name(model)
-        self.best_params[model_name] = searcher.best_params_
-        # return model with best params fitted on full data
-        return searcher.best_estimator_
 
     def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
