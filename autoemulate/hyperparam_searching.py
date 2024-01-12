@@ -9,16 +9,8 @@ from autoemulate.utils import (
     adjust_param_grid,
 )
 
-from autoemulate.emulators import RandomForest
-import numpy as np
 
-# import cv
-from sklearn.model_selection import KFold
-
-from autoemulate.logging_config import configure_logging
-
-
-def search(
+def optimize_params(
     X,
     y,
     cv,
@@ -56,8 +48,6 @@ def search(
     logger : logging.Logger
         Logger instance.
 
-
-
     Returns
     -------
     searcher : sklearn.model_selection._search.BaseSearchCV or skopt.searchcv.BayesSearchCV
@@ -65,14 +55,7 @@ def search(
     """
     model_name = get_model_name(model)
     logger.info(f"Performing grid search for {model_name}...")
-
-    # get param_grid
-    if param_grid is None:
-        param_grid = get_model_param_grid(model, search_type)
-    else:
-        param_grid = check_param_grid(param_grid, model)
-    # adjust param_grid to include prefixes
-    param_grid = adjust_param_grid(model, param_grid)
+    param_grid = process_param_grid(model, search_type, param_grid)
 
     # random search
     if search_type == "random":
@@ -97,10 +80,49 @@ def search(
     elif search_type == "grid":
         raise NotImplementedError("Grid search not available yet.")
 
-    searcher.fit(X, y)
+    # run hyperparameter search
+    try:
+        searcher.fit(X, y)
+    except Exception as e:
+        logger.info(
+            f"Failed to perform hyperparameter search on {get_model_name(model)}"
+        )
+        logger.info(e)
     logger.info(f"Best parameters for {model_name}: {searcher.best_params_}")
 
-    return searcher
+    return searcher.best_estimator_
+
+
+def process_param_grid(model, search_type, param_grid):
+    """Process parameter grid for hyperparameter search.
+    Gets the parameter grid for the model and adjusts it to include prefixes
+    for pipelines / multioutput estimators.
+
+    Parameters
+    ----------
+    model : model instance to do hyperparameter search for.
+    search_type : str, default="random"
+        Type of search to perform. Can be "random" or "bayes", "grid" not yet implemented.
+    param_grid : dict, default=None
+        Dictionary with parameters names (string) as keys and lists of
+        parameter settings to try as values, or a list of such dictionaries,
+        in which case the grids spanned by each dictionary in the list are
+        explored. This enables searching over any sequence of parameter
+        settings.
+
+    Returns
+    -------
+    param_grid : dict
+        Adjusted parameter grid.
+    """
+    # get param_grid if not provided
+    if param_grid is None:
+        param_grid = get_model_param_grid(model, search_type)
+    else:
+        param_grid = check_param_grid(param_grid, model)
+    # include prefixes for pipelines / multioutput estimators
+    param_grid = adjust_param_grid(model, param_grid)
+    return param_grid
 
 
 def check_param_grid(param_grid, model):
@@ -139,36 +161,15 @@ def check_param_grid(param_grid, model):
     return param_grid
 
 
-def optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger):
-    """Runs hyperparameter search and returns model with best hyperparameters."""
-    try:
-        searcher = search(
-            X=X,
-            y=y,
-            cv=cv,
-            model=model,
-            search_type=search_type,
-            niter=niter,
-            n_jobs=n_jobs,
-            logger=logger,
-        )
-    except Exception as e:
-        logger.info(
-            f"Failed to perform hyperparameter search on {get_model_name(model)}"
-        )
-        logger.info(e)
-
-    return searcher.best_estimator_
-
-
-if __name__ == "__main__":
-    X = np.random.rand(100, 10)
-    y = np.random.rand(100, 2)
-    cv = KFold(5)
-    model = RandomForest()
-    search_type = "random"
-    niter = 20
-    n_jobs = 1
-    logger = logging.getLogger(__name__)
-    best = optimize_params(X, y, cv, model, search_type, niter, n_jobs, logger)
-    # print(best.get_params())
+# if __name__ == "__main__":
+#     X = np.random.rand(100, 10)
+#     y = np.random.rand(100, 2)
+#     cv = KFold(5)
+#     model = RandomForest()
+#     search_type = "random"
+#     niter = 20
+#     n_jobs = 1
+#     logger = logging.getLogger(__name__)
+#     param_grid = {"n_estimators": [10, 20], "max_depth": [None, 3]}
+#     best = optimize_params(X, y, cv, model, search_type, niter, param_grid, n_jobs, logger)
+#     # print(best.get_params())

@@ -164,20 +164,19 @@ class AutoEmulate:
         ).astype(
             {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
         )
-        # Freshly initialise best parameters for each model
-        self.best_params = {}
 
         for i in range(len(self.models)):
             if self.use_grid_search:
                 self.models[i] = optimize_params(
-                    self.X,
-                    self.y,
-                    self.cv,
-                    self.models[i],
-                    self.search_type,
-                    self.grid_search_iters,
-                    self.n_jobs,
-                    self.logger,
+                    X=self.X,
+                    y=self.y,
+                    cv=self.cv,
+                    model=self.models[i],
+                    search_type=self.search_type,
+                    niter=self.grid_search_iters,
+                    param_grid=None,
+                    n_jobs=self.n_jobs,
+                    logger=self.logger,
                 )
             self._cross_validate(self.models[i])
 
