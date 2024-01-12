@@ -14,7 +14,7 @@ from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.logging_config import configure_logging
 from autoemulate.plotting import plot_results
-from autoemulate.hyperparam_search import HyperparamSearcher
+from autoemulate.hyperparam_searching import search
 from autoemulate.utils import get_model_name
 from autoemulate.save import ModelSerialiser
 from autoemulate.model_processing import get_and_process_models
@@ -279,19 +279,18 @@ class AutoEmulate:
             Model with best hyperparameters, fitted on full data.
         """
         # Perform hyperparameter search and update model
-        hyperparam_searcher = HyperparamSearcher(
-            X=self.X,
-            y=self.y,
-            cv=self.cv,
-            n_jobs=self.n_jobs,
-            logger=self.logger,
-        )
+
         try:
-            searcher = hyperparam_searcher.search(
-                model,
+            searcher = search(
+                X=self.X,
+                y=self.y,
+                cv=self.cv,
+                model=model,
                 search_type=search_type,
                 param_grid=None,
                 niter=self.grid_search_iters,
+                n_jobs=self.n_jobs,
+                logger=self.logger,
             )
         except Exception as e:
             self.logger.info(
