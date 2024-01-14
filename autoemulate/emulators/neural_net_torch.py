@@ -7,7 +7,7 @@ import skorch
 import torch
 from scipy.stats import loguniform
 from skopt.space import Integer, Real
-from skorch import NeuralNetRegressor
+from skorch import NeuralNet, NeuralNetRegressor
 from torch import nn
 
 
@@ -21,6 +21,8 @@ class InputShapeSetter(skorch.callbacks.Callback):
         y: torch.Tensor | np.ndarray = None,
         **kwargs
     ):
+        if X.ndim == 1:
+            raise ValueError("Reshape your data")
         output_size = 1 if y.ndim == 1 else y.shape[1]
         net.set_params(module__input_size=X.shape[1], module__output_size=output_size)
 
@@ -31,7 +33,7 @@ class MLPModule(nn.Module):
         super().__init__()
         self.hidden_layers = nn.ModuleList()
         self.output_layer = None
-
+        self.input_size = input_size
         if input_size is not None and output_size is not None:
             self.build_module(input_size, output_size, hidden_layer_sizes)
 
@@ -42,6 +44,7 @@ class MLPModule(nn.Module):
         self.output_layer = nn.Linear(hidden_layer_sizes[-1], output_size)
 
     def forward(self, X: torch.Tensor):
+        X = X.to(torch.float32)
         for layer in self.hidden_layers:
             X = torch.relu(layer(X))
         if self.output_layer is not None:
@@ -69,7 +72,9 @@ class NeuralNetTorch(NeuralNetRegressor):
         verbose=0,
         **kwargs
     ):
-        super().__init__(
+        if "random_state" in kwargs:
+            torch.random.manual_seed(kwargs.pop("random_state"))
+        super(NeuralNetTorch, self).__init__(
             module=module,
             criterion=criterion,
             optimizer=optimizer,
@@ -113,4 +118,21 @@ class NeuralNetTorch(NeuralNetRegressor):
         return param_grid
 
     def _more_tags(self):
-        return {"multioutput": True}
+        return {"multioutput": True, "stateless": True}
+
+    def fit(self, X, y, **fit_params):
+        y = y.astype(np.float32)
+        estimator = super(NeuralNetRegressor, self).fit(X, y, **fit_params)
+        if not hasattr(estimator, "n_features_in_"):
+            setattr(estimator, "n_features_in_", X.shape[1])
+        return estimator
+
+    def predict(self, X):
+        if X.ndim == 1:
+            raise ValueError("Reshape your data")
+        return super(NeuralNetRegressor, self).predict(X)
+
+    def predict_proba(self, X):
+        if X.ndim == 1:
+            raise ValueError("Reshape your data")
+        return super(NeuralNetRegressor, self).predict_proba(X)
