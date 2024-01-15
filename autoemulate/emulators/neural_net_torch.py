@@ -163,8 +163,11 @@ class NeuralNetTorch(NeuralNetRegressor):
 
         return param_grid
 
+    def __sklearn_is_fitted__(self):
+        return hasattr(self, "n_features_in_")
+
     def _more_tags(self):
-        return {"multioutput": True, "stateless": True, "poor_score": True}
+        return {"multioutput": True, "poor_score": True}
 
     def check_data(self, X: np.ndarray, y: np.ndarray = None):
         if isinstance(y, np.ndarray):
