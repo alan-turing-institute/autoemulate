@@ -23,15 +23,15 @@ from autoemulate.emulators import (
 
 @parametrize_with_checks(
     [
-        # SupportVectorMachines(),
-        # RandomForest(random_state=42),
-        # GaussianProcessSk(random_state=1337),
-        # NeuralNetSk(random_state=13),
-        # GradientBoosting(random_state=42),
-        # SecondOrderPolynomial(),
-        # XGBoost(),
-        # RBF(),
-        NeuralNetTorch(random_state=42),  # fails because it subclasses
+        SupportVectorMachines(),
+        RandomForest(random_state=42),
+        GaussianProcessSk(random_state=1337),
+        NeuralNetSk(random_state=13),
+        GradientBoosting(random_state=42),
+        SecondOrderPolynomial(),
+        XGBoost(),
+        RBF(),
+        NeuralNetTorch(random_state=42),
         # GaussianProcess()
     ]
 )
