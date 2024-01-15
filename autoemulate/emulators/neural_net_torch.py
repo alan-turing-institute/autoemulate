@@ -3,6 +3,7 @@
 # but doesn't pass tests, because we're subclassing
 
 import random
+import warnings
 from typing import List, Tuple
 
 import numpy as np
@@ -10,6 +11,7 @@ import skorch
 import torch
 from scipy.sparse import issparse
 from scipy.stats import loguniform
+from sklearn.exceptions import DataConversionWarning
 from skopt.space import Integer, Real
 from skorch import NeuralNet, NeuralNetRegressor
 from skorch.callbacks import Callback
@@ -60,8 +62,11 @@ class MLPModule(nn.Module):
         input_size: int = None,
         output_size: int = None,
         hidden_size: int = 100,
+        random_state: int = None,
     ):
         super(MLPModule, self).__init__()
+        if random_state is not None:
+            set_random_seed(random_state)
         self.model = nn.Sequential(
             nn.Linear(in_features=input_size, out_features=hidden_size),
             nn.ReLU(),
@@ -81,8 +86,8 @@ class NeuralNetTorch(NeuralNetRegressor):
         optimizer=torch.optim.Adam,
         lr: float = 0.01,
         batch_size: int = 128,
-        max_epochs: int = 10,
-        module__input_size: int = 10,
+        max_epochs: int = 1,
+        module__input_size: int = 2,
         module__output_size: int = 1,
         module__hidden_size: int = 100,
         optimizer__weight_decay: float = 0.0001,
@@ -93,8 +98,9 @@ class NeuralNetTorch(NeuralNetRegressor):
         **kwargs,
     ):
         if "random_state" in kwargs:
-            set_random_seed(kwargs.pop("random_state"))
-        super(NeuralNetTorch, self).__init__(
+            setattr(self, "random_state", kwargs.pop("random_state"))
+            set_random_seed(self.random_state)
+        super().__init__(
             module=module,
             criterion=criterion,
             optimizer=optimizer,
@@ -114,13 +120,23 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     def set_params(self, **params):
         if "random_state" in params:
-            set_random_seed(params.pop("random_state"))
+            random_state = params.pop("random_state")
+            if hasattr(self, "random_state"):
+                self.random_state = random_state
+            else:
+                setattr(self, "random_state", random_state)
+            set_random_seed(self.random_state)
             self._initialize_module()
-            self._initialize_criterion()
             self._initialize_optimizer()
-            return self
-        else:
-            return super(NeuralNetTorch, self).set_params(**params)
+        return super().set_params(**params)
+
+    def initialize_module(self, reason=None):
+        kwargs = self.get_params_for("module")
+        if hasattr(self, "random_state"):
+            kwargs["random_state"] = self.random_state
+        module = self.initialized_instance(self.module, kwargs)
+        self.module_ = module
+        return self
 
     def get_grid_params(self, search_type="random"):
         param_grid_random = {
@@ -177,30 +193,39 @@ class NeuralNetTorch(NeuralNetRegressor):
             y = y.astype(np.float32)
             if np.isnan(y).any() or np.isinf(y).any():
                 raise ValueError("NaNs and inf values are not supported.")
+            if y.ndim == 2 and y.shape[1] == 1:
+                warnings.warn(
+                    DataConversionWarning(
+                        "A column-vector y was passed when a 1d array was expected"
+                    )
+                )
+                y = np.squeeze(y, axis=-1)
         return X, y
 
     def fit_loop(self, X, y=None, epochs=None, **fit_params):
         X, y = self.check_data(X, y)
-        if not hasattr(self, "n_features_in_"):
-            setattr(self, "n_features_in_", X.shape[1])
-        return super(NeuralNetRegressor, self).fit_loop(X, y, epochs, **fit_params)
+        return super().fit_loop(X, y, epochs, **fit_params)
 
     def partial_fit(self, X, y=None, classes=None, **fit_params):
         X, y = self.check_data(X, y)
-        return super(NeuralNetRegressor, self).partial_fit(X, y, classes, **fit_params)
+        return super().partial_fit(X, y, classes, **fit_params)
 
     def fit(self, X, y, **fit_params):
         X, y = self.check_data(X, y)
-        super(NeuralNetRegressor, self).fit(X, y, **fit_params)
-        return self
+        return super().fit(X, y, **fit_params)
 
     @torch.inference_mode()
     def predict_proba(self, X):
         dtype = X.dtype if hasattr(X, "dtype") else None
         X, _ = self.check_data(X)
-        y_pred = super(NeuralNetRegressor, self).predict_proba(X)
+        y_pred = super().predict_proba(X)
         if self.module__output_size == 1 and y_pred.shape[-1] == 1:
             y_pred = np.squeeze(y_pred, axis=-1)
         if dtype is not None:
             y_pred = y_pred.astype(dtype)
         return y_pred
+
+    def infer(self, x: torch.Tensor, **fit_params):
+        if not hasattr(self, "n_features_in_"):
+            setattr(self, "n_features_in_", x.size(1))
+        return super().infer(x, **fit_params)
