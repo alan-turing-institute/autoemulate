@@ -4,16 +4,15 @@
 
 import random
 import warnings
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
-import skorch
 import torch
 from scipy.sparse import issparse
 from scipy.stats import loguniform
 from sklearn.exceptions import DataConversionWarning
 from skopt.space import Integer, Real
-from skorch import NeuralNet, NeuralNetRegressor
+from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 from torch import nn
 
@@ -38,7 +37,7 @@ class InputShapeSetter(Callback):
 
     def on_train_begin(
         self,
-        net,
+        net: NeuralNetRegressor,
         X: torch.Tensor | np.ndarray = None,
         y: torch.Tensor | np.ndarray = None,
         **kwargs,
