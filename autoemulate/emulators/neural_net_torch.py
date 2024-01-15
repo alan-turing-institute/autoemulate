@@ -2,6 +2,8 @@
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
 
+import random
+
 import numpy as np
 import skorch
 import torch
@@ -9,6 +11,21 @@ from scipy.stats import loguniform
 from skopt.space import Integer, Real
 from skorch import NeuralNet, NeuralNetRegressor
 from torch import nn
+
+
+def set_random_seed(seed: int, deterministic: bool = False):
+    """Set random seed for Python, Numpy and PyTorch.
+    Args:
+        seed: int, the random seed to use.
+        deterministic: bool, use "deterministic" algorithms in PyTorch.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    if deterministic:
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)
 
 
 class InputShapeSetter(skorch.callbacks.Callback):
@@ -19,10 +36,8 @@ class InputShapeSetter(skorch.callbacks.Callback):
         net,
         X: torch.Tensor | np.ndarray = None,
         y: torch.Tensor | np.ndarray = None,
-        **kwargs
+        **kwargs,
     ):
-        if X.ndim == 1:
-            raise ValueError("Reshape your data")
         output_size = 1 if y.ndim == 1 else y.shape[1]
         net.set_params(module__input_size=X.shape[1], module__output_size=output_size)
 
@@ -70,10 +85,11 @@ class NeuralNetTorch(NeuralNetRegressor):
         callbacks=[InputShapeSetter()],
         train_split=False,  # to run cross_validate without splitting the data
         verbose=0,
-        **kwargs
+        **kwargs,
     ):
         if "random_state" in kwargs:
-            torch.random.manual_seed(kwargs.pop("random_state"))
+            setattr(self, "random_state", kwargs.pop("random_state"))
+            set_random_seed(self.random_state)
         super(NeuralNetTorch, self).__init__(
             module=module,
             criterion=criterion,
@@ -89,8 +105,16 @@ class NeuralNetTorch(NeuralNetRegressor):
             callbacks=callbacks,
             train_split=train_split,
             verbose=verbose,
-            **kwargs
+            **kwargs,
         )
+
+    def set_params(self, **params):
+        if "random_state" in params:
+            set_random_seed(self.random_state)
+            # self._initialize_module()
+            # self._initialize_criterion()
+            # self._initialize_optimizer()
+        super(NeuralNetTorch, self).set_params(**params)
 
     def get_grid_params(self, search_type="random"):
         param_grid_random = {
@@ -120,7 +144,34 @@ class NeuralNetTorch(NeuralNetRegressor):
     def _more_tags(self):
         return {"multioutput": True, "stateless": True}
 
+    def check_data(self, X: np.ndarray, y: np.ndarray = None):
+        if X.size == 0:
+            raise ValueError(
+                f"0 feature(s) (shape={X.shape}) while a minimum of {self.module__input_size} is required."
+            )
+        if X.ndim == 1:
+            raise ValueError("Reshape your data")
+        if np.iscomplex(X).any():
+            raise ValueError("Complex data not supported")
+        X = X.astype(np.float32)
+        if np.isnan(X).any() or np.isinf(X).any():
+            raise ValueError("NaNs and inf values are not supported.")
+        if y is not None:
+            if np.iscomplex(y).any():
+                raise ValueError("Complex data not supported")
+            y = y.astype(np.float32)
+            if np.isnan(y).any() or np.isinf(y).any():
+                raise ValueError("NaNs and inf values are not supported.")
+
+    def fit_loop(self, X, y=None, epochs=None, **fit_params):
+        self.check_data(X, y)
+        X = X.astype(np.float32)
+        y = y.astype(np.float32)
+        super(NeuralNetRegressor, self).fit_loop(X, y, epochs, **fit_params)
+
     def fit(self, X, y, **fit_params):
+        self.check_data(X, y)
+        X = X.astype(np.float32)
         y = y.astype(np.float32)
         estimator = super(NeuralNetRegressor, self).fit(X, y, **fit_params)
         if not hasattr(estimator, "n_features_in_"):
@@ -128,11 +179,11 @@ class NeuralNetTorch(NeuralNetRegressor):
         return estimator
 
     def predict(self, X):
-        if X.ndim == 1:
-            raise ValueError("Reshape your data")
+        self.check_data(X)
+        X = X.astype(np.float32)
         return super(NeuralNetRegressor, self).predict(X)
 
     def predict_proba(self, X):
-        if X.ndim == 1:
-            raise ValueError("Reshape your data")
+        self.check_data(X)
+        X = X.astype(np.float32)
         return super(NeuralNetRegressor, self).predict_proba(X)
