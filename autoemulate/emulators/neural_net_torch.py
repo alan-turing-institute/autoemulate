@@ -4,7 +4,7 @@
 
 import random
 import warnings
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -60,17 +60,19 @@ class MLPModule(nn.Module):
         self,
         input_size: int = None,
         output_size: int = None,
-        hidden_size: int = 100,
+        hidden_sizes: Tuple[int] = (100,),
         random_state: int = None,
     ):
         super(MLPModule, self).__init__()
         if random_state is not None:
             set_random_seed(random_state)
-        self.model = nn.Sequential(
-            nn.Linear(in_features=input_size, out_features=hidden_size),
-            nn.ReLU(),
-            nn.Linear(in_features=hidden_size, out_features=output_size),
-        )
+        modules = []
+        for hidden_size in hidden_sizes:
+            modules.append(nn.Linear(in_features=input_size, out_features=hidden_size))
+            modules.append(nn.ReLU())
+            input_size = hidden_size
+        modules.append(nn.Linear(in_features=input_size, out_features=output_size))
+        self.model = nn.Sequential(*modules)
 
     def forward(self, X: torch.Tensor):
         return self.model(X)
@@ -88,7 +90,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         max_epochs: int = 1,
         module__input_size: int = 2,
         module__output_size: int = 1,
-        module__hidden_size: int = 100,
+        module__hidden_sizes: Tuple[int] = (100,),
         optimizer__weight_decay: float = 0.0001,
         iterator_train__shuffle: bool = True,
         callbacks: List[Callback] = [InputShapeSetter()],
@@ -108,7 +110,7 @@ class NeuralNetTorch(NeuralNetRegressor):
             max_epochs=max_epochs,
             module__input_size=module__input_size,
             module__output_size=module__output_size,
-            module__hidden_size=module__hidden_size,
+            module__hidden_sizes=module__hidden_sizes,
             optimizer__weight_decay=optimizer__weight_decay,
             iterator_train__shuffle=iterator_train__shuffle,
             callbacks=callbacks,
@@ -221,8 +223,6 @@ class NeuralNetTorch(NeuralNetRegressor):
         dtype = X.dtype if hasattr(X, "dtype") else None
         X, _ = self.check_data(X)
         y_pred = super().predict_proba(X)
-        if self.module__output_size == 1 and y_pred.shape[-1] == 1:
-            y_pred = np.squeeze(y_pred, axis=-1)
         if dtype is not None:
             y_pred = y_pred.astype(dtype)
         return y_pred
@@ -230,4 +230,7 @@ class NeuralNetTorch(NeuralNetRegressor):
     def infer(self, x: torch.Tensor, **fit_params):
         if not hasattr(self, "n_features_in_"):
             setattr(self, "n_features_in_", x.size(1))
-        return super().infer(x, **fit_params)
+        y_pred = super().infer(x, **fit_params)
+        if self.module__output_size == 1 and y_pred.shape[-1] == 1:
+            y_pred = np.squeeze(y_pred, axis=-1)
+        return y_pred
