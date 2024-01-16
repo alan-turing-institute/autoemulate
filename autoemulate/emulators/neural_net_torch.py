@@ -168,7 +168,16 @@ class NeuralNetTorch(NeuralNetRegressor):
         return hasattr(self, "n_features_in_")
 
     def _more_tags(self):
-        return {"multioutput": True, "poor_score": True}
+        return {
+            "multioutput": True,
+            "poor_score": True,
+            "_xfail_checks": {
+                "check_no_attributes_set_in_init": "skorch initialize attributes in __init__.",
+                "check_regressors_no_decision_function": "skorch NeuralNetRegressor class implements the predict_proba.",
+                "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
+                "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
+            },
+        }
 
     def check_data(self, X: np.ndarray, y: np.ndarray = None):
         if isinstance(y, np.ndarray):
