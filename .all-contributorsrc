@@ -1,4 +1,23 @@
 {
   "projectName": "autoemulate",
-  "projectOwner": "alan-turing-institute"
+  "projectOwner": "alan-turing-institute",
+  "files": [
+    "README.md"
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "kallewesterling",
+      "name": "Kalle Westerling",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7298727?v=4",
+      "profile": "http://www.westerling.nu",
+      "contributions": [
+        "doc",
+        "code",
+        "content"
+      ]
+    }
+  ]
 }
