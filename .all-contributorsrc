@@ -41,6 +41,18 @@
         "research",
         "review"
       ]
+    },
+    {
+      "login": "edaub",
+      "name": "Eric Daub",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45598892?v=4",
+      "profile": "https://github.com/edaub",
+      "contributions": [
+        "ideas",
+        "projectManagement",
+        "review",
+        "code"
+      ]
     }
   ]
 }
