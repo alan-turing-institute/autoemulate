@@ -13,7 +13,7 @@
 | autoemulate/emulators/gaussian\_process\_sk.py     |       38 |        7 |     82% |    91-114 |
 | autoemulate/emulators/gradient\_boosting.py        |       39 |        0 |    100% |           |
 | autoemulate/emulators/neural\_net\_sk.py           |       41 |        7 |     83% |    97-131 |
-| autoemulate/emulators/neural\_net\_torch.py        |       42 |       25 |     40% |18-19, 25-30, 33-36, 39-43, 66, 85-107, 110 |
+| autoemulate/emulators/neural\_net\_torch.py        |      126 |       11 |     91% |31-32, 128, 143-165, 203 |
 | autoemulate/emulators/polynomials.py               |       30 |        5 |     83% |     82-87 |
 | autoemulate/emulators/random\_forest.py            |       38 |        2 |     95% |   120-121 |
 | autoemulate/emulators/rbf.py                       |       32 |        7 |     78% |    90-141 |
@@ -31,7 +31,7 @@
 | tests/\_\_init\_\_.py                              |        0 |        0 |    100% |           |
 | tests/test\_compare.py                             |       77 |        0 |    100% |           |
 | tests/test\_datasets.py                            |       17 |        0 |    100% |           |
-| tests/test\_emulators.py                           |       63 |        0 |    100% |           |
+| tests/test\_emulators.py                           |      122 |        0 |    100% |           |
 | tests/test\_estimators.py                          |        6 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                |       21 |        0 |    100% |           |
 | tests/test\_hyperparam\_search.py                  |       43 |        0 |    100% |           |
@@ -39,7 +39,7 @@
 | tests/test\_printing.py                            |       32 |        0 |    100% |           |
 | tests/test\_save.py                                |       42 |        0 |    100% |           |
 | tests/test\_utils.py                               |      141 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                          **TOTAL** | **1288** |  **161** | **88%** |           |
+|                                          **TOTAL** | **1431** |  **147** | **90%** |           |
 
 
 ## Setup coverage badge
