@@ -18,6 +18,20 @@
         "code",
         "content"
       ]
+    },
+    {
+      "login": "mastoffel",
+      "name": "martin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7348440?v=4",
+      "profile": "https://github.com/mastoffel",
+      "contributions": [
+        "code",
+        "ideas",
+        "doc",
+        "maintenance",
+        "research",
+        "review"
+      ]
     }
   ]
 }
