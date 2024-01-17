@@ -176,3 +176,18 @@ def test_nn_torch_pred_type(nn_torch_model, simulation_io):
     sim_in = sim_in.astype(np.float32)
     predictions = nn_torch_model.predict(sim_in)
     assert isinstance(predictions, np.ndarray)
+
+
+def test_nn_torch_shape_setter():
+    input_size, output_size = 10, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(
+        module__input_size=input_size, module__output_size=output_size
+    )
+    nn_torch_model.fit(X, y)
+    assert nn_torch_model.module__input_size == input_size
+    assert nn_torch_model.n_features_in_ == input_size
+    assert nn_torch_model.module_.model[0].in_features == input_size
+    assert nn_torch_model.module__output_size == output_size
+    assert nn_torch_model.module_.model[-1].out_features == output_size
