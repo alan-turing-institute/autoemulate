@@ -62,6 +62,7 @@ best_emulator.predict(X)
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://www.westerling.nu"><img src="https://avatars.githubusercontent.com/u/7298727?v=4?s=100" width="100px;" alt="Kalle Westerling"/><br /><sub><b>Kalle Westerling</b></sub></a><br /><a href="#doc-kallewesterling" title="Documentation">📖</a> <a href="#code-kallewesterling" title="Code">💻</a> <a href="#content-kallewesterling" title="Content">🖋</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ProjectManagement"><img src="https://avatars.githubusercontent.com/u/7088369?v=4?s=100" width="100px;" alt="projectManagement"/><br /><sub><b>projectManagement</b></sub></a><br /><a href="#projectManagement-projectManagement" title="Project Management">📆</a></td>
     </tr>
   </tbody>
 </table>
