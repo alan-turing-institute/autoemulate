@@ -18,6 +18,15 @@
         "code",
         "content"
       ]
+    },
+    {
+      "login": "bryanlimy",
+      "name": "Bryan M. Li",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9648242?v=4",
+      "profile": "https://bryanli.io",
+      "contributions": [
+        "code"
+      ]
     }
   ]
 }
