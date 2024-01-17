@@ -18,6 +18,15 @@
         "code",
         "content"
       ]
+    },
+    {
+      "login": "projectManagement",
+      "name": "projectManagement",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7088369?v=4",
+      "profile": "https://github.com/ProjectManagement",
+      "contributions": [
+        "projectManagement"
+      ]
     }
   ]
 }
