@@ -13,7 +13,7 @@ The project is in very early development.
 
 <img src="misc/robot2.png" alt="emulating simulations with ML" width="61.8%">
 
-# setup 
+## setup 
 
 using [Poetry](https://python-poetry.org/):
 
@@ -24,7 +24,7 @@ poetry install
 poetry shell
 ```
 
-# quick start
+## quick start
 
 ```python
 import numpy as np
@@ -52,3 +52,14 @@ best_emulator = ae.load_model("best_model")
 # emulate
 best_emulator.predict(X)
 ```
+
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
