@@ -1,8 +1,10 @@
-import pytest
-from autoemulate.save import ModelSerialiser
-from sklearn.ensemble import RandomForestRegressor
-import os
 import json
+import os
+
+import pytest
+from sklearn.ensemble import RandomForestRegressor
+
+from autoemulate.save import ModelSerialiser
 
 
 @pytest.fixture

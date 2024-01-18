@@ -1,9 +1,15 @@
+from scipy.stats import loguniform
+from scipy.stats import randint
+from scipy.stats import uniform
+from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-
-from scipy.stats import loguniform, randint, uniform
-from skopt.space import Real, Integer, Categorical
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_X_y
+from skopt.space import Categorical
+from skopt.space import Integer
+from skopt.space import Real
 
 
 class GradientBoosting(BaseEstimator, RegressorMixin):

@@ -1,6 +1,8 @@
-import pytest
 import numpy as np
-from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
+import pytest
+
+from autoemulate.experimental_design import ExperimentalDesign
+from autoemulate.experimental_design import LatinHypercube
 
 
 # Test LatinHypercube Initialisation

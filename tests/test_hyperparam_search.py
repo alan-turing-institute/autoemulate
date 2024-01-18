@@ -1,10 +1,12 @@
+import logging
+
 import pytest
-from autoemulate.hyperparam_search import HyperparamSearcher
-from autoemulate.emulators import RandomForest
 from sklearn.datasets import make_regression
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-import logging
+
+from autoemulate.emulators import RandomForest
+from autoemulate.hyperparam_search import HyperparamSearcher
 
 
 @pytest.fixture
