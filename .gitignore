@@ -18,3 +18,12 @@ Thumbs.db
 
 # coverage
 .coverage
+
+# PyCharm settings
+.idea/
+
+# macOS custom attributes file
+*.DS_Store
+
+# VScode settings
+.vscode/
