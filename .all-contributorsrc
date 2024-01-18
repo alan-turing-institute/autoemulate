@@ -53,6 +53,17 @@
         "review",
         "code"
       ]
+    },
+    {
+      "login": "snie007",
+      "name": "steven niederer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20723650?v=4",
+      "profile": "https://github.com/snie007",
+      "contributions": [
+        "ideas",
+        "content",
+        "projectManagement"
+      ]
     }
   ]
 }
