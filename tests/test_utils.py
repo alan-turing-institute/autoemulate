@@ -1,20 +1,18 @@
-import pytest
 import numpy as np
-
-from sklearn.multioutput import MultiOutputRegressor
+import pytest
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from autoemulate.utils import (
-    get_model_name,
-    get_model_param_grid,
-    adjust_param_grid,
-    add_prefix_to_param_grid,
-    add_prefix_to_single_grid,
-)
 from autoemulate.emulators import GradientBoosting
-from autoemulate.utils import normalise_y, denormalise_y
+from autoemulate.utils import add_prefix_to_param_grid
+from autoemulate.utils import add_prefix_to_single_grid
+from autoemulate.utils import adjust_param_grid
+from autoemulate.utils import denormalise_y
+from autoemulate.utils import get_model_name
+from autoemulate.utils import get_model_param_grid
+from autoemulate.utils import normalise_y
 
 
 # test retrieving model name ---------------------------------------------------

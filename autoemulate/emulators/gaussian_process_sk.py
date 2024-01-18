@@ -1,10 +1,17 @@
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from scipy.stats import loguniform
+from scipy.stats import uniform
+from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, Matern, RationalQuadratic
-
-from scipy.stats import uniform, loguniform
-from skopt.space import Real, Categorical, Integer
+from sklearn.gaussian_process.kernels import Matern
+from sklearn.gaussian_process.kernels import RationalQuadratic
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_X_y
+from skopt.space import Categorical
+from skopt.space import Integer
+from skopt.space import Real
 
 from autoemulate.utils import suppress_convergence_warnings
 

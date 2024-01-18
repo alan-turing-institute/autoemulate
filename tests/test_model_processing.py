@@ -1,17 +1,14 @@
-import pytest
 import numpy as np
-
+import pytest
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from autoemulate.model_processing import (
-    get_models,
-    check_model_names,
-    turn_models_into_multioutput,
-    wrap_models_in_pipeline,
-)
 from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.model_processing import check_model_names
+from autoemulate.model_processing import get_models
+from autoemulate.model_processing import turn_models_into_multioutput
+from autoemulate.model_processing import wrap_models_in_pipeline
 
 
 # -----------------------test getting models-------------------#

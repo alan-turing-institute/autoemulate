@@ -1,5 +1,4 @@
 """Functions for getting and processing models."""
-
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 

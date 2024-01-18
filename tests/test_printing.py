@@ -1,8 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
 
-from autoemulate.emulators import GaussianProcessSk, RandomForest
+from autoemulate.emulators import GaussianProcessSk
+from autoemulate.emulators import RandomForest
 from autoemulate.printing import print_cv_results
 from autoemulate.utils import get_model_name
 

@@ -1,7 +1,10 @@
-import pytest
 import numpy as np
-from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
-from autoemulate.emulators import GaussianProcess, RandomForest
+import pytest
+
+from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import RandomForest
+from autoemulate.experimental_design import ExperimentalDesign
+from autoemulate.experimental_design import LatinHypercube
 
 
 def simple_sim(params):

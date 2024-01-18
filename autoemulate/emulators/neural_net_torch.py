@@ -1,14 +1,14 @@
 # experimental version of a PyTorch neural network emulator wrapped in Skorch
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
-
-import torch
 import numpy as np
 import skorch
-from torch import nn
-from skorch import NeuralNetRegressor
+import torch
 from scipy.stats import loguniform
-from skopt.space import Real, Integer
+from skopt.space import Integer
+from skopt.space import Real
+from skorch import NeuralNetRegressor
+from torch import nn
 
 
 class InputShapeSetter(skorch.callbacks.Callback):

@@ -1,13 +1,18 @@
 import numpy as np
-
-from scipy.stats import uniform, randint
-from skopt.space import Real, Integer, Categorical
-
+from scipy.stats import randint
+from scipy.stats import uniform
+from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
 from sklearn.svm import SVR
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_X_y
+from skopt.space import Categorical
+from skopt.space import Integer
+from skopt.space import Real
 
-from autoemulate.utils import normalise_y, denormalise_y
+from autoemulate.utils import denormalise_y
+from autoemulate.utils import normalise_y
 
 
 class SupportVectorMachines(BaseEstimator, RegressorMixin):

@@ -1,17 +1,18 @@
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 import torch
-
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
-from autoemulate.emulators import GaussianProcess, RandomForest
 from autoemulate.compare import AutoEmulate
-from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
+from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.emulators import RandomForest
+from autoemulate.experimental_design import ExperimentalDesign
+from autoemulate.experimental_design import LatinHypercube
+from autoemulate.metrics import METRIC_REGISTRY
 
 
 @pytest.fixture()
