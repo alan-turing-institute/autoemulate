@@ -1,7 +1,6 @@
 # experimental version of a PyTorch neural network emulator wrapped in Skorch
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
-
 import random
 import warnings
 from typing import List
@@ -17,6 +16,7 @@ from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 from torch import nn
+
 
 def set_random_seed(seed: int, deterministic: bool = False):
     """Set random seed for Python, Numpy and PyTorch.
