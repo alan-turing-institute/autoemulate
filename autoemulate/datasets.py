@@ -1,8 +1,8 @@
+from pathlib import Path
+
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from pathlib import Path
-import pandas as pd
-import numpy as np
 
 data_dir = Path(__file__).parent.parent / "data"
 

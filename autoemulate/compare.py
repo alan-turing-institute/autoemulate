@@ -1,25 +1,22 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-
-from sklearn.utils.validation import check_X_y
-from sklearn.model_selection import cross_validate
-from sklearn.metrics import make_scorer
-from sklearn.preprocessing import StandardScaler
+import numpy as np
+import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
-from sklearn.multioutput import MultiOutputRegressor
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import cross_validate
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import check_X_y
 
-from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.cv import CV_REGISTRY
-from autoemulate.logging_config import configure_logging
-from autoemulate.plotting import plot_results
+from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.hyperparam_search import HyperparamSearcher
-from autoemulate.utils import get_model_name
-from autoemulate.save import ModelSerialiser
+from autoemulate.logging_config import configure_logging
+from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import get_and_process_models
+from autoemulate.plotting import plot_results
 from autoemulate.printing import print_cv_results
+from autoemulate.save import ModelSerialiser
+from autoemulate.utils import get_model_name
 
 
 class AutoEmulate:
