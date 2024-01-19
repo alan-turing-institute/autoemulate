@@ -92,7 +92,6 @@ class AutoEmulate:
             scaler,
             reduce_dim,
             dim_reducer,
-            n_dims,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
