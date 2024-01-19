@@ -68,8 +68,13 @@ class AutoEmulate:
         reduce_dim : bool, default=False
             Whether to reduce the dimensionality of the data before fitting the models.
         dim_reducer : sklearn.decomposition object
-            Dimensionality reduction method to use. Can be anything in `sklearn.decomposition`
-            with an `n_components` parameter. Defaults to PCA.
+            Dimensionality reduction method to use. Can be any method in `sklearn.decomposition`
+            with an `n_components` parameter. Defaults to PCA. Specify n_components like so:
+            `dim_reducer=PCA(n_components=2)` for choosing 2 principal components, or
+            `dim_reducer=PCA(n_components=0.95)` for choosing the number of components that
+            explain 95% of the variance. Other methods can have slightly different n_components
+            parameter inputs, see the sklearn documentation for more details. Dimension reduction
+            is always performed after scaling.
         fold_strategy : str
             Cross-validation strategy, currently either "kfold" or "stratified_kfold".
         folds : int
