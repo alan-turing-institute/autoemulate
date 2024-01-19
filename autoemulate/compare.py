@@ -39,7 +39,7 @@ class AutoEmulate:
         scale=True,
         scaler=StandardScaler(),
         reduce_dim=False,
-        dim_reducer=PCA(n_components=0.95),
+        dim_reducer=PCA(),
         fold_strategy="kfold",
         folds=5,
         n_jobs=None,
@@ -67,8 +67,9 @@ class AutoEmulate:
             Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.
         reduce_dim : bool, default=False
             Whether to reduce the dimensionality of the data before fitting the models.
-        dim_reducer : sklearn.decomposition.PCA
-            Dimensionality reduction method to use. Defaults to PCA keeping PCs explaining 95% variance.
+        dim_reducer : sklearn.decomposition object
+            Dimensionality reduction method to use. Can be anything in `sklearn.decomposition`
+            with an `n_components` parameter. Defaults to PCA.
         fold_strategy : str
             Cross-validation strategy, currently either "kfold" or "stratified_kfold".
         folds : int
@@ -84,7 +85,14 @@ class AutoEmulate:
         """
         self.X, self.y = self._check_input(X, y)
         self.models = get_and_process_models(
-            MODEL_REGISTRY, model_subset, self.y, scale, scaler, reduce_dim, dim_reducer
+            MODEL_REGISTRY,
+            model_subset,
+            self.y,
+            scale,
+            scaler,
+            reduce_dim,
+            dim_reducer,
+            n_dims,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
