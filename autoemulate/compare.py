@@ -1,10 +1,7 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
-from sklearn.multioutput import MultiOutputRegressor
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
