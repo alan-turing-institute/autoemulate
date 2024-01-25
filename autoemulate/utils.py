@@ -1,11 +1,12 @@
-import warnings
 import os
-import numpy as np
+import warnings
 from contextlib import contextmanager
+
+import numpy as np
+from sklearn.base import RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.base import RegressorMixin
 
 
 @contextmanager

@@ -1,0 +1,69 @@
+{
+  "projectName": "autoemulate",
+  "projectOwner": "alan-turing-institute",
+  "files": [
+    "README.md"
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "kallewesterling",
+      "name": "Kalle Westerling",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7298727?v=4",
+      "profile": "http://www.westerling.nu",
+      "contributions": [
+        "doc",
+        "code",
+        "content"
+      ]
+    },
+    {
+      "login": "bryanlimy",
+      "name": "Bryan M. Li",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9648242?v=4",
+      "profile": "https://bryanli.io",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mastoffel",
+      "name": "martin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7348440?v=4",
+      "profile": "https://github.com/mastoffel",
+      "contributions": [
+        "code",
+        "ideas",
+        "doc",
+        "maintenance",
+        "research",
+        "review"
+      ]
+    },
+    {
+      "login": "edaub",
+      "name": "Eric Daub",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45598892?v=4",
+      "profile": "https://github.com/edaub",
+      "contributions": [
+        "ideas",
+        "projectManagement",
+        "review",
+        "code"
+      ]
+    },
+    {
+      "login": "snie007",
+      "name": "steven niederer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20723650?v=4",
+      "profile": "https://github.com/snie007",
+      "contributions": [
+        "ideas",
+        "content",
+        "projectManagement"
+      ]
+    }
+  ]
+}

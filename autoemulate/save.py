@@ -1,8 +1,10 @@
-import os
-import joblib
 import json
-import sklearn
+import os
+
+import joblib
 import numpy as np
+import sklearn
+
 from autoemulate.utils import get_model_name
 
 
