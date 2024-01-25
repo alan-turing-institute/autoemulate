@@ -56,6 +56,7 @@ def optimize_params(
     model_name = get_model_name(model)
     logger.info(f"Performing grid search for {model_name}...")
     param_grid = process_param_grid(model, search_type, param_grid)
+    search_type = search_type.lower()
 
     # random search
     if search_type == "random":
@@ -79,6 +80,8 @@ def optimize_params(
         )
     elif search_type == "grid":
         raise NotImplementedError("Grid search not available yet.")
+    else:
+        raise ValueError(f"Invalid search type: {search_type}")
 
     # run hyperparameter search
     try:
@@ -159,17 +162,3 @@ def check_param_grid(param_grid, model):
             raise ValueError(f"Invalid parameter: {key}")
 
     return param_grid
-
-
-# if __name__ == "__main__":
-#     X = np.random.rand(100, 10)
-#     y = np.random.rand(100, 2)
-#     cv = KFold(5)
-#     model = RandomForest()
-#     search_type = "random"
-#     niter = 20
-#     n_jobs = 1
-#     logger = logging.getLogger(__name__)
-#     param_grid = {"n_estimators": [10, 20], "max_depth": [None, 3]}
-#     best = optimize_params(X, y, cv, model, search_type, niter, param_grid, n_jobs, logger)
-#     # print(best.get_params())
