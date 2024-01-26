@@ -5,7 +5,7 @@
 | Name                                               |    Stmts |     Miss |   Cover |   Missing |
 |--------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                        |        0 |        0 |    100% |           |
-| autoemulate/compare.py                             |       93 |       12 |     87% |166, 236-238, 311-314, 318-319, 330, 341 |
+| autoemulate/compare.py                             |       94 |       12 |     87% |185, 255-257, 330-333, 337-338, 349, 360 |
 | autoemulate/cv.py                                  |        5 |        0 |    100% |           |
 | autoemulate/datasets.py                            |       19 |        6 |     68% |     89-96 |
 | autoemulate/emulators/\_\_init\_\_.py              |       11 |        0 |    100% |           |
@@ -23,7 +23,7 @@
 | autoemulate/hyperparam\_searching.py               |       45 |        8 |     82% |71-83, 88-92 |
 | autoemulate/logging\_config.py                     |       21 |        4 |     81% |     24-27 |
 | autoemulate/metrics.py                             |        8 |        0 |    100% |           |
-| autoemulate/model\_processing.py                   |       25 |        0 |    100% |           |
+| autoemulate/model\_processing.py                   |       31 |        0 |    100% |           |
 | autoemulate/plotting.py                            |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
 | autoemulate/printing.py                            |       13 |        0 |    100% |           |
 | autoemulate/save.py                                |       29 |        1 |     97% |        46 |
@@ -35,11 +35,11 @@
 | tests/test\_estimators.py                          |       16 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                |       22 |        0 |    100% |           |
 | tests/test\_hyperparam\_searching.py               |       48 |        0 |    100% |           |
-| tests/test\_model\_processing.py                   |       44 |        0 |    100% |           |
+| tests/test\_model\_processing.py                   |       58 |        0 |    100% |           |
 | tests/test\_printing.py                            |       33 |        0 |    100% |           |
 | tests/test\_save.py                                |       42 |        0 |    100% |           |
 | tests/test\_utils.py                               |      146 |        6 |     96% |56, 62, 67, 72, 77, 82 |
-|                                          **TOTAL** | **1506** |  **141** | **91%** |           |
+|                                          **TOTAL** | **1527** |  **141** | **91%** |           |
 
 
 ## Setup coverage badge
