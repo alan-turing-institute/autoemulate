@@ -13,9 +13,15 @@ The project is in very early development.
 
 <img src="misc/robot2.png" alt="emulating simulations with ML" width="61.8%">
 
-## setup 
+## installation
 
-using [Poetry](https://python-poetry.org/):
+development version from GitHub:
+
+```bash
+pip install git+https://github.com/alan-turing-institute/autoemulate.git
+```
+
+or for contributors using [Poetry](https://python-poetry.org/):
 
 ```bash
 git clone https://github.com/alan-turing-institute/autoemulate.git

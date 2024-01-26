@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
@@ -9,7 +8,7 @@ from sklearn.utils.validation import check_X_y
 
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
-from autoemulate.hyperparam_search import HyperparamSearcher
+from autoemulate.hyperparam_searching import optimize_params
 from autoemulate.logging_config import configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import get_and_process_models
@@ -180,13 +179,19 @@ class AutoEmulate:
         ).astype(
             {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
         )
-        # Freshly initialise best parameters for each model
-        self.best_params = {}
 
         for i in range(len(self.models)):
             if self.use_grid_search:
-                self.models[i] = self._update_to_best_hyperparams(
-                    self.models[i], self.search_type
+                self.models[i] = optimize_params(
+                    X=self.X,
+                    y=self.y,
+                    cv=self.cv,
+                    model=self.models[i],
+                    search_type=self.search_type,
+                    niter=self.grid_search_iters,
+                    param_grid=None,
+                    n_jobs=self.n_jobs,
+                    logger=self.logger,
                 )
             self._cross_validate(self.models[i])
 
@@ -278,49 +283,6 @@ class AutoEmulate:
                         "fold": fold,
                         "score": score,
                     }
-
-    def _update_to_best_hyperparams(self, model, search_type):
-        """Performs hyperparameter search and updates the model.
-
-        Parameters
-        ----------
-        model_index : int
-            Index of the model in self.models.
-        model : scikit-learn estimator object
-            Model to perform hyperparameter search on.
-
-        Returns
-        -------
-        model : scikit-learn estimator object
-            Model with best hyperparameters, fitted on full data.
-        """
-        # Perform hyperparameter search and update model
-        hyperparam_searcher = HyperparamSearcher(
-            X=self.X,
-            y=self.y,
-            cv=self.cv,
-            n_jobs=self.n_jobs,
-            logger=self.logger,
-        )
-        try:
-            searcher = hyperparam_searcher.search(
-                model,
-                search_type=search_type,
-                param_grid=None,
-                niter=self.grid_search_iters,
-            )
-        except Exception as e:
-            self.logger.info(
-                f"Failed to perform hyperparameter search on {get_model_name(model)}, using default parameters"
-            )
-            self.logger.info(e)
-            return model
-
-        # extract best params
-        model_name = get_model_name(model)
-        self.best_params[model_name] = searcher.best_params_
-        # return model with best params fitted on full data
-        return searcher.best_estimator_
 
     def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
