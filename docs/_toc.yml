@@ -1,0 +1,43 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: index
+chapters:
+
+- file: getting-started/index
+  sections:
+  # - file: getting-started/overview
+  # - file: getting-started/data_requirements
+  - file: getting-started/installation
+  - file: getting-started/quickstart
+
+- file: reference/index
+  sections:
+  - file: reference/compare
+  - file: reference/cv
+  - file: reference/datasets
+  - file: reference/experimental_design
+  - file: reference/hyperparam_searching
+  - file: reference/logging_config
+  - file: reference/metrics
+  - file: reference/model_processing
+  - file: reference/plotting
+  - file: reference/printing
+  - file: reference/save
+  - file: reference/utils
+  - file: reference/demos/index
+    sections:
+    - file: reference/demos/projectile
+  - file: reference/emulators/index
+    sections:
+    - file: reference/emulators/gaussian_process_sk
+    - file: reference/emulators/gaussian_process
+    - file: reference/emulators/gradient_boosting
+    - file: reference/emulators/neural_net_sk
+    - file: reference/emulators/neural_net_torch
+    - file: reference/emulators/polynomials
+    - file: reference/emulators/random_forest
+    - file: reference/emulators/rbf
+    - file: reference/emulators/support_vector_machines
+    - file: reference/emulators/xgboost

@@ -1,0 +1,63 @@
+title: "AutoEmulate: An emulator platform for Digital Twins"
+author: Martin Stoffel
+# logo: logo.png
+
+# Force re-execution of notebooks on each build.
+# See https://jupyterbook.org/content/execute.html
+execute:
+  execute_notebooks: force
+
+# Define the name of the latex output file for PDF builds
+latex:
+  latex_documents:
+    targetname: autoemulate-docs.tex
+
+# Add a bibtex file so that we can create citations
+bibtex_bibfiles:
+  - references.bib
+
+only_build_toc_files: true
+
+# Information about where the book exists on the web
+repository:
+  url: https://github.com/alan-turing-institute/autoemulate
+  path_to_book: docs
+  branch: main
+
+# Add GitHub buttons to your book
+# See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
+html:
+  use_issues_button: true
+  use_repository_button: true
+
+sphinx:
+  extra_extensions:
+    - 'sphinx.ext.autodoc'
+    - 'sphinx.ext.napoleon'
+    - 'sphinx.ext.viewcode'
+  config:
+    add_module_names: False
+    autodoc_typehints: none
+    autoclass_content: class
+    bibtex_reference_style: author_year
+    intersphinx_mapping:
+      python:
+        - https://docs.python.org/3
+        - null
+      pandas:
+        - http://pandas.pydata.org/pandas-docs/stable/
+        - null
+      # tensorflow:
+      #  - http://www.tensorflow.org/api_docs/python
+      #  - https://raw.githubusercontent.com/GPflow/tensorflow-intersphinx/master/tf2_py_objects.inv
+      numpy:
+        - https://numpy.org/doc/stable/
+        - null
+      matplotlib:
+        - http://matplotlib.org/stable/
+        - null
+      sklearn:
+        - http://scikit-learn.org/stable
+        - null
+    language: en
+    copybutton_prompt_text: "$"
