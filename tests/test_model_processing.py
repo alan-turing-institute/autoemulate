@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from sklearn.decomposition import PCA
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -55,7 +56,13 @@ def test_turn_models_into_multioutput():
 # -----------------------test wrapping models in pipeline-------------------#
 def test_wrap_models_in_pipeline_no_scaler():
     models = get_models(MODEL_REGISTRY)
-    models = wrap_models_in_pipeline(models, scale=False, scaler=StandardScaler())
+    models = wrap_models_in_pipeline(
+        models,
+        scale=False,
+        scaler=StandardScaler(),
+        reduce_dim=False,
+        dim_reducer=PCA(),
+    )
     assert isinstance(models, list)
     assert all([isinstance(model, Pipeline) for model in models])
     # assert that pipeline does have a scaler as first step
@@ -64,8 +71,33 @@ def test_wrap_models_in_pipeline_no_scaler():
 
 def test_wrap_models_in_pipeline_scaler():
     models = get_models(MODEL_REGISTRY)
-    models = wrap_models_in_pipeline(models, scale=True, scaler=StandardScaler())
+    models = wrap_models_in_pipeline(
+        models, scale=True, scaler=StandardScaler(), reduce_dim=False, dim_reducer=PCA()
+    )
     assert isinstance(models, list)
     assert all([isinstance(model, Pipeline) for model in models])
     # assert that pipeline does have a scaler as first step
     assert all([model.steps[0][0] == "scaler" for model in models])
+
+
+def test_wrap_models_in_pipeline_no_scaler_dim_reducer():
+    models = get_models(MODEL_REGISTRY)
+    models = wrap_models_in_pipeline(
+        models, scale=False, scaler=StandardScaler(), reduce_dim=True, dim_reducer=PCA()
+    )
+    assert isinstance(models, list)
+    # check that dim_reducer is first step
+    assert all([isinstance(model, Pipeline) for model in models])
+    assert all([model.steps[0][0] == "dim_reducer" for model in models])
+
+
+def test_wrap_models_in_pipeline_scaler_dim_reducer():
+    models = get_models(MODEL_REGISTRY)
+    models = wrap_models_in_pipeline(
+        models, scale=True, scaler=StandardScaler(), reduce_dim=True, dim_reducer=PCA()
+    )
+    assert isinstance(models, list)
+    assert all([isinstance(model, Pipeline) for model in models])
+    # assert that pipeline does have a scaler as first step
+    assert all([model.steps[0][0] == "scaler" for model in models])
+    assert all([model.steps[1][0] == "dim_reducer" for model in models])

@@ -73,7 +73,7 @@ def turn_models_into_multioutput(models, y):
     return models_multi
 
 
-def wrap_models_in_pipeline(models, scale, scaler):
+def wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     """Wrap models in a pipeline if scale is True.
 
     Parameters
@@ -84,20 +84,35 @@ def wrap_models_in_pipeline(models, scale, scaler):
         Whether to scale the data.
     scaler : sklearn.preprocessing object
         Scaler to use.
+    reduce_dim : bool
+        Whether to reduce the dimensionality of the data.
+    dim_reducer : sklearn.decomposition object
+        Dimensionality reduction method to use.
 
     Returns
     -------
     models_scaled : list
         List of model instances, with scaled models wrapped in a pipeline.
     """
-    if scale:
-        models = [Pipeline([("scaler", scaler), ("model", model)]) for model in models]
-    else:
-        models = [Pipeline([("model", model)]) for model in models]
-    return models
+
+    models_piped = []
+
+    for model in models:
+        steps = []
+        if scale:
+            steps.append(("scaler", scaler))
+        if reduce_dim:
+            steps.append(("dim_reducer", dim_reducer))
+        steps.append(("model", model))
+
+        models_piped.append(Pipeline(steps))
+
+    return models_piped
 
 
-def get_and_process_models(model_registry, model_subset, y, scale, scaler):
+def get_and_process_models(
+    model_registry, model_subset, y, scale, scaler, reduce_dim, dim_reducer
+):
     """Get and process models.
 
     Parameters
@@ -120,5 +135,7 @@ def get_and_process_models(model_registry, model_subset, y, scale, scaler):
     """
     models = get_models(model_registry, model_subset)
     models_multi = turn_models_into_multioutput(models, y)
-    models_scaled = wrap_models_in_pipeline(models_multi, scale, scaler)
+    models_scaled = wrap_models_in_pipeline(
+        models_multi, scale, scaler, reduce_dim, dim_reducer
+    )
     return models_scaled
