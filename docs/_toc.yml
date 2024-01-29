@@ -12,6 +12,10 @@ chapters:
   - file: getting-started/installation
   - file: getting-started/quickstart
 
+- file: tutorials/index
+  sections:
+  - file: tutorials/01_start
+
 - file: reference/index
   sections:
   - file: reference/compare
