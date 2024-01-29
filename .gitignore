@@ -5,6 +5,7 @@ dist/
 
 # Ignore Sphinx build artifacts
 docs/build/
+docs/_build/
 docs/generated/
 .sphinx-build-environment
 

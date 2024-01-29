@@ -59,6 +59,14 @@ best_emulator = ae.load_model("best_model")
 best_emulator.predict(X)
 ```
 
+## documentation
+
+The documentation is currently created using JupyterBook. To build the documentation locally, run:
+
+```bash
+poetry run jupyter-book build docs
+```
+
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
