@@ -49,8 +49,7 @@ def optimize_params(
 
     Returns
     -------
-    searcher : sklearn.model_selection._search.BaseSearchCV or skopt.searchcv.BayesSearchCV
-        Searcher instance.
+    Refitted estimator on the whole dataset with best parameters.
     """
     model_name = get_model_name(model)
     logger.info(f"Performing grid search for {model_name}...")

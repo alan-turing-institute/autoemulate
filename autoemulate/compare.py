@@ -6,6 +6,8 @@ from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
+from autoemulate.cross_validate import run_cv
+from autoemulate.cross_validate import update_scores_df
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.hyperparam_searching import optimize_params
@@ -181,6 +183,7 @@ class AutoEmulate:
         )
 
         for i in range(len(self.models)):
+            # hyperparameter search
             if self.use_grid_search:
                 self.models[i] = optimize_params(
                     X=self.X,
@@ -193,96 +196,26 @@ class AutoEmulate:
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
-            self._cross_validate(self.models[i])
+            # run cross validation and store results
+            self.cv_results[get_model_name(self.models[i])] = run_cv(
+                X=self.X,
+                y=self.y,
+                cv=self.cv,
+                model=self.models[i],
+                metrics=self.metrics,
+                n_jobs=self.n_jobs,
+                logger=self.logger,
+            )
+            # update scores dataframe
+            self.scores_df = update_scores_df(
+                self.scores_df,
+                self.models[i],
+                self.cv_results[get_model_name(self.models[i])],
+            )
 
         # returns best model fitted on full data
         self.best_model = self._get_best_model(metric="r2")
         return self.best_model
-
-    def _cross_validate(self, model):
-        """Perform cross-validation on a given model using the specified metrics.
-
-        Parameters
-        ----------
-            model: A scikit-learn estimator object.
-
-        Class attributes used
-        ---------------------
-            self.X : array-like, shape (n_samples, n_features)
-                Simulation input.
-            self.y : array-like, shape (n_samples, n_outputs)
-                Simulation output.
-            self.cv : scikit-learn cross-validation object
-                Cross-validation strategy.
-            self.metrics : list of str
-                List of metrics to use for cross-validation.
-            self.n_jobs : int
-                Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
-
-        Returns
-        -------
-            scores_df : pandas.DataFrame
-                Updates dataframe containing the cv scores the model.
-
-        """
-
-        # Get model name
-        model_name = get_model_name(model)
-
-        # The metrics we want to use for cross-validation
-        scorers = {metric.__name__: make_scorer(metric) for metric in self.metrics}
-
-        self.logger.info(f"Cross-validating {model_name}...")
-        self.logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
-
-        try:
-            # Cross-validate
-            cv_results = cross_validate(
-                model,
-                self.X,
-                self.y,
-                cv=self.cv,
-                scoring=scorers,
-                n_jobs=self.n_jobs,
-                return_estimator=True,
-                return_indices=True,
-            )
-            # updates pandas dataframe with model cv scores
-            self._update_scores_df(model_name, cv_results)
-            # save results for plotting etc.
-            self.cv_results[model_name] = cv_results
-
-        except Exception as e:
-            self.logger.error(f"Failed to cross-validate {model_name}")
-            self.logger.error(e)
-
-    def _update_scores_df(self, model_name, cv_results):
-        """Updates the scores dataframe with the results of the cross-validation.
-
-        Parameters
-        ----------
-            model_name : str
-                Name of the model.
-            cv_results : dict
-                Results of the cross-validation.
-
-        Returns
-        -------
-            None
-                Modifies the self.scores_df DataFrame in-place.
-
-        """
-        # Gather scores from each metric
-        # Initialise scores dataframe
-        for key in cv_results.keys():
-            if key.startswith("test_"):
-                for fold, score in enumerate(cv_results[key]):
-                    self.scores_df.loc[len(self.scores_df.index)] = {
-                        "model": model_name,
-                        "metric": key.split("test_", 1)[1],
-                        "fold": fold,
-                        "score": score,
-                    }
 
     def _get_best_model(self, metric="r2"):
         """Determine the best model using average cv score
