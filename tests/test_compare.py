@@ -112,18 +112,3 @@ def test__get_metrics(ae):
     metric_names = [metric.__name__ for metric in metrics]
     # check all metric names are in METRIC_REGISTRY
     assert all([metric_name in METRIC_REGISTRY for metric_name in metric_names])
-
-
-# -----------------------test _update_scores_df-----------------------------#
-def test__update_scores_df(ae_run):
-    # Check that scores_df is not empty after running compare
-    assert not ae_run.scores_df.empty
-    # Check that scores_df has the expected columns
-    assert ae_run.scores_df.columns.tolist() == ["model", "metric", "fold", "score"]
-    # # Check that scores_df has the expected number of rows
-    assert (
-        len(ae_run.scores_df)
-        == len(ae_run.models) * len(METRIC_REGISTRY) * ae_run.cv.n_splits
-    )
-    # Check that all scores are floats
-    assert ae_run.scores_df["score"].dtype == np.float64

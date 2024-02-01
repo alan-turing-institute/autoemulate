@@ -299,6 +299,8 @@ def get_mean_scores(scores_df, metric):
         .unstack()
         .reset_index()
         .sort_values(by=metric, ascending=asc)
+        .rename_axis(None, axis=1)
+        .reset_index(drop=True)
     )
 
     return means_df
