@@ -240,6 +240,9 @@ class AutoEmulate:
             Model fitted on full data.
         """
 
+        if not hasattr(self, "scores_df"):
+            raise RuntimeError("Must run compare() before get_model()")
+
         # get average scores across folds
         means = get_mean_scores(self.scores_df, metric)
 
@@ -272,16 +275,18 @@ class AutoEmulate:
         serialiser = ModelSerialiser()
         return serialiser.load_model(filepath)
 
-    def print_results(self, model=None):
+    def print_results(self, sort_by="r2", model=None):
         """Print cv results.
 
         Parameters
         ----------
+        sort_by : str, optional
+            The metric to sort by. Default is "r2", can also be "rmse".
         model : str, optional
             The name of the model to print. If None, the best fold from each model will be printed.
             If a model name is provided, the scores for that model across all folds will be printed.
         """
-        print_cv_results(self.models, self.scores_df, model=model)
+        print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
 
     def plot_results(self, model_name=None):
         """Plots the results of the cross-validation.
