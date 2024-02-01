@@ -3,7 +3,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 
 
-def rsme(y_true, y_pred):
+def rmse(y_true, y_pred):
     """Returns the root mean squared error.
 
     Parameters
@@ -30,6 +30,6 @@ def r2(y_true, y_pred):
 
 
 METRIC_REGISTRY = {
-    "rsme": rsme,
+    "rmse": rmse,
     "r2": r2,
 }

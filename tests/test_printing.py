@@ -12,7 +12,7 @@ MODEL_REGISTRY = {"GaussianProcessSk": GaussianProcessSk, "RandomForest": Random
 models = [MODEL_REGISTRY[model]() for model in MODEL_REGISTRY.keys()]
 
 # make scores_df
-metrics = ["rsme", "r2"]
+metrics = ["rmse", "r2"]
 model_names = [get_model_name(model) for model in models]
 data = []
 for model in model_names:
@@ -20,7 +20,7 @@ for model in model_names:
         for fold in range(5):
             score = (
                 np.random.uniform(-5000, 5000)
-                if metric == "rsme"
+                if metric == "rmse"
                 else np.random.uniform(-1, 1)
             )
             data.append(
