@@ -214,23 +214,30 @@ class AutoEmulate:
             )
 
         # returns best model fitted on full data
-        self.best_model = self._get_best_model(metric="r2")
-        return self.best_model
+        self.best_model = self.get_model(rank=1, metric="r2")
 
-    def _get_best_model(self, metric="r2"):
-        """Determine the best model using average cv score
+    def get_model(self, rank=1, metric="r2"):
+        """Get a fitted model based on it's rank in the comparison.
 
         Parameters
         ----------
+        rank : int
+            Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
 
         Returns
         -------
-        best_model : object
-            Best model fitted on full data. If normalised, returns a pipeline with
-            the scaler and the best model.
+        model : object
+            Model fitted on full data.
         """
+
+        if metric == "r2":
+            asc = False
+        elif metric == "rmse":
+            asc = True
+        else:
+            raise RuntimeError(f"Metric {metric} not supported.")
 
         # best model name
         means = (
@@ -238,25 +245,25 @@ class AutoEmulate:
             .mean()
             .unstack()
             .reset_index()
+            .sort_values(by=metric, ascending=asc)
         )
-        # get best model name
-        best_model_name = means.loc[means[metric].idxmax(), "model"]
+
+        # get model by rank
+        if (rank > len(means)) or (rank < 1):
+            raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
+        chosen_model_name = means.iloc[rank - 1]["model"]
 
         # get best model:
         for model in self.models:
-            if get_model_name(model) == best_model_name:
-                best_model = model
+            if get_model_name(model) == chosen_model_name:
+                chosen_model = model
                 break
 
         # only refit if not already fitted (like after grid search)
-        if not hasattr(best_model, "is_fitted_"):
-            best_model.fit(self.X, self.y)
+        if not hasattr(chosen_model, "is_fitted_"):
+            chosen_model.fit(self.X, self.y)
 
-        self.logger.info(
-            f"{best_model_name} is the best model with {metric} = {means[metric].max():.3f}."
-        )
-
-        return best_model
+        return chosen_model
 
     def save_model(self, filepath):
         """Saves the best model to disk."""
