@@ -112,3 +112,30 @@ def test__get_metrics(ae):
     metric_names = [metric.__name__ for metric in metrics]
     # check all metric names are in METRIC_REGISTRY
     assert all([metric_name in METRIC_REGISTRY for metric_name in metric_names])
+
+
+# -----------------------test get_model-------------------#
+
+
+def test_get_model(ae_run):
+    # Test getting the best model
+    model = ae_run.get_model(rank=1)
+    assert model is not None
+
+
+def test_get_model_with_invalid_rank(ae_run):
+    # Test getting a model with an invalid rank
+    with pytest.raises(RuntimeError):
+        ae_run.get_model(rank=0)
+
+
+def test_get_model_before_compare(ae):
+    # Test getting a model before running compare
+    with pytest.raises(RuntimeError):
+        ae.get_model()
+
+
+def test_get_model_with_invalid_metric(ae_run):
+    # Test getting a model with an invalid metric
+    with pytest.raises(ValueError):
+        ae_run.get_model(metric="invalid_metric")
