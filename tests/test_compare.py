@@ -114,16 +114,26 @@ def test__get_metrics(ae):
     assert all([metric_name in METRIC_REGISTRY for metric_name in metric_names])
 
 
-# -----------------------test _update_scores_df-----------------------------#
-def test__update_scores_df(ae_run):
-    # Check that scores_df is not empty after running compare
-    assert not ae_run.scores_df.empty
-    # Check that scores_df has the expected columns
-    assert ae_run.scores_df.columns.tolist() == ["model", "metric", "fold", "score"]
-    # # Check that scores_df has the expected number of rows
-    assert (
-        len(ae_run.scores_df)
-        == len(ae_run.models) * len(METRIC_REGISTRY) * ae_run.cv.n_splits
-    )
-    # Check that all scores are floats
-    assert ae_run.scores_df["score"].dtype == np.float64
+# -----------------------test get_model-------------------#
+def test_get_model(ae_run):
+    # Test getting the best model
+    model = ae_run.get_model(rank=1)
+    assert model is not None
+
+
+def test_get_model_with_invalid_rank(ae_run):
+    # Test getting a model with an invalid rank
+    with pytest.raises(RuntimeError):
+        ae_run.get_model(rank=0)
+
+
+def test_get_model_before_compare(ae):
+    # Test getting a model before running compare
+    with pytest.raises(RuntimeError):
+        ae.get_model()
+
+
+def test_get_model_with_invalid_metric(ae_run):
+    # Test getting a model with an invalid metric
+    with pytest.raises(ValueError):
+        ae_run.get_model(metric="invalid_metric")

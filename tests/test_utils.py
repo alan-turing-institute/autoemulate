@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.multioutput import MultiOutputRegressor
@@ -10,6 +11,7 @@ from autoemulate.utils import add_prefix_to_param_grid
 from autoemulate.utils import add_prefix_to_single_grid
 from autoemulate.utils import adjust_param_grid
 from autoemulate.utils import denormalise_y
+from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_grid
 from autoemulate.utils import normalise_y
@@ -265,7 +267,9 @@ def test_add_prefix_to_param_grid_list(grid_list, prefix):
     ]
     assert (
         add_prefix_to_param_grid(grid_list, prefix) == expected_result
-    ), "Prefix not correctly added to param grid list"  # test add_prefix_to_single_grid ------------------------------------------------
+    ), "Prefix not correctly added to param grid list"
+
+    # test add_prefix_to_single_grid ------------------------------------------------
 
 
 def test_add_prefix_to_param_grid_list_of_tuples(grid_list_of_tuples, prefix):
@@ -291,3 +295,69 @@ def test_add_prefix_to_single_grid(grid, prefix):
     assert (
         add_prefix_to_single_grid(grid, prefix) == expected_result
     ), "Prefix not correctly added to single grid dictionary"
+
+
+import pandas as pd
+import pytest
+
+from autoemulate.utils import get_mean_scores
+
+
+# Test case for calculating mean scores with metric "r2"
+def test_get_mean_scores_r2():
+    scores_df = pd.DataFrame(
+        {
+            "model": ["Model A", "Model B", "Model A", "Model B"],
+            "metric": ["r2", "r2", "r2", "r2"],
+            "fold": [1, 2, 1, 2],
+            "score": [0.8, 0.9, 0.7, 0.6],
+        }
+    )
+    expected_result = pd.DataFrame(
+        {"model": ["Model A", "Model B"], "r2": [0.75, 0.75]}
+    )
+    assert get_mean_scores(scores_df, "r2").equals(expected_result)
+
+
+# Test case for calculating mean scores with metric "rmse"
+def test_get_mean_scores_rmse():
+    scores_df = pd.DataFrame(
+        {
+            "model": ["Model A", "Model B", "Model A", "Model B"],
+            "metric": ["rmse", "rmse", "rmse", "rmse"],
+            "fold": [1, 2, 1, 2],
+            "score": [1.0, 0.5, 0.8, 0.6],
+        }
+    )
+    expected_result = pd.DataFrame(
+        {"model": ["Model B", "Model A"], "rmse": [0.55, 0.9]}
+    )
+    assert get_mean_scores(scores_df, "rmse").equals(expected_result)
+
+
+# Test case for unsupported metric
+def test_get_mean_scores_unsupported_metric():
+    scores_df = pd.DataFrame(
+        {
+            "model": ["Model A", "Model B"],
+            "metric": ["mae", "mae"],
+            "fold": [1, 2],
+            "score": [0.5, 0.6],
+        }
+    )
+    with pytest.raises(RuntimeError):
+        get_mean_scores(scores_df, "mae")
+
+
+# Test case for metric not found in scores_df
+def test_get_mean_scores_metric_not_found():
+    scores_df = pd.DataFrame(
+        {
+            "model": ["Model A", "Model B"],
+            "metric": ["r2", "r2"],
+            "fold": [1, 2],
+            "score": [0.8, 0.9],
+        }
+    )
+    with pytest.raises(ValueError):
+        get_mean_scores(scores_df, "rmse")

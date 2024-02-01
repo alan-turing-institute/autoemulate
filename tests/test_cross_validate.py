@@ -37,13 +37,13 @@ def test_cv(cv_results):
     assert isinstance(cv_results, dict)
     # check that it contains scores
     assert "test_r2" in cv_results.keys()
-    assert "test_rsme" in cv_results.keys()
+    assert "test_rmse" in cv_results.keys()
 
     assert isinstance(cv_results["test_r2"], np.ndarray)
-    assert isinstance(cv_results["test_rsme"], np.ndarray)
+    assert isinstance(cv_results["test_rmse"], np.ndarray)
 
     assert len(cv_results["test_r2"]) == 5
-    assert len(cv_results["test_rsme"]) == 5
+    assert len(cv_results["test_rmse"]) == 5
 
 
 def test_update_scores_df(cv_results):

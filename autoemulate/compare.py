@@ -17,6 +17,7 @@ from autoemulate.model_processing import get_and_process_models
 from autoemulate.plotting import plot_results
 from autoemulate.printing import print_cv_results
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 
 
@@ -214,49 +215,53 @@ class AutoEmulate:
             )
 
         # returns best model fitted on full data
-        self.best_model = self._get_best_model(metric="r2")
-        return self.best_model
+        self.best_model = self.get_model(rank=1, metric="r2")
 
-    def _get_best_model(self, metric="r2"):
-        """Determine the best model using average cv score
+        # print best model
+        best_model_name = get_model_name(self.best_model)
+        mean_scores = get_mean_scores(self.scores_df, "r2")
+        self.logger.info(
+            f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
+        )
+
+    def get_model(self, rank=1, metric="r2"):
+        """Get a fitted model based on it's rank in the comparison.
 
         Parameters
         ----------
+        rank : int
+            Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
 
         Returns
         -------
-        best_model : object
-            Best model fitted on full data. If normalised, returns a pipeline with
-            the scaler and the best model.
+        model : object
+            Model fitted on full data.
         """
 
-        # best model name
-        means = (
-            self.scores_df.groupby(["model", "metric"])["score"]
-            .mean()
-            .unstack()
-            .reset_index()
-        )
-        # get best model name
-        best_model_name = means.loc[means[metric].idxmax(), "model"]
+        if not hasattr(self, "scores_df"):
+            raise RuntimeError("Must run compare() before get_model()")
+
+        # get average scores across folds
+        means = get_mean_scores(self.scores_df, metric)
+
+        # get model by rank
+        if (rank > len(means)) or (rank < 1):
+            raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
+        chosen_model_name = means.iloc[rank - 1]["model"]
 
         # get best model:
         for model in self.models:
-            if get_model_name(model) == best_model_name:
-                best_model = model
+            if get_model_name(model) == chosen_model_name:
+                chosen_model = model
                 break
 
         # only refit if not already fitted (like after grid search)
-        if not hasattr(best_model, "is_fitted_"):
-            best_model.fit(self.X, self.y)
+        if not hasattr(chosen_model, "is_fitted_"):
+            chosen_model.fit(self.X, self.y)
 
-        self.logger.info(
-            f"{best_model_name} is the best model with {metric} = {means[metric].max():.3f}."
-        )
-
-        return best_model
+        return chosen_model
 
     def save_model(self, filepath):
         """Saves the best model to disk."""
@@ -270,16 +275,18 @@ class AutoEmulate:
         serialiser = ModelSerialiser()
         return serialiser.load_model(filepath)
 
-    def print_results(self, model=None):
+    def print_results(self, sort_by="r2", model=None):
         """Print cv results.
 
         Parameters
         ----------
+        sort_by : str, optional
+            The metric to sort by. Default is "r2", can also be "rmse".
         model : str, optional
             The name of the model to print. If None, the best fold from each model will be printed.
             If a model name is provided, the scores for that model across all folds will be printed.
         """
-        print_cv_results(self.models, self.scores_df, model=model)
+        print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
 
     def plot_results(self, model_name=None):
         """Plots the results of the cross-validation.
