@@ -5,7 +5,7 @@
 | Name                                               |    Stmts |     Miss |   Cover |   Missing |
 |--------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                        |        0 |        0 |    100% |           |
-| autoemulate/compare.py                             |       80 |        9 |     89% |188, 263-266, 270-271, 282, 293 |
+| autoemulate/compare.py                             |       86 |        9 |     90% |189, 268-271, 275-276, 289, 300 |
 | autoemulate/cross\_validate.py                     |       21 |        3 |     86% |     31-33 |
 | autoemulate/cv.py                                  |        5 |        0 |    100% |           |
 | autoemulate/datasets.py                            |       19 |        6 |     68% |     89-96 |
@@ -26,11 +26,11 @@
 | autoemulate/metrics.py                             |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                   |       31 |        0 |    100% |           |
 | autoemulate/plotting.py                            |       38 |       32 |     16% |22-38, 58-59, 85-92, 116-129 |
-| autoemulate/printing.py                            |       13 |        0 |    100% |           |
+| autoemulate/printing.py                            |       14 |        0 |    100% |           |
 | autoemulate/save.py                                |       29 |        1 |     97% |        46 |
-| autoemulate/utils.py                               |       77 |        5 |     94% |30, 92, 97-102 |
+| autoemulate/utils.py                               |       87 |        5 |     94% |30, 92, 97-102 |
 | tests/\_\_init\_\_.py                              |        0 |        0 |    100% |           |
-| tests/test\_compare.py                             |       79 |        0 |    100% |           |
+| tests/test\_compare.py                             |       86 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                     |       38 |        0 |    100% |           |
 | tests/test\_datasets.py                            |       17 |        0 |    100% |           |
 | tests/test\_emulators.py                           |      126 |        0 |    100% |           |
@@ -38,10 +38,10 @@
 | tests/test\_experimental\_design.py                |       22 |        0 |    100% |           |
 | tests/test\_hyperparam\_searching.py               |       48 |        0 |    100% |           |
 | tests/test\_model\_processing.py                   |       58 |        0 |    100% |           |
-| tests/test\_printing.py                            |       33 |        0 |    100% |           |
+| tests/test\_printing.py                            |       32 |        0 |    100% |           |
 | tests/test\_save.py                                |       42 |        0 |    100% |           |
-| tests/test\_utils.py                               |      146 |        6 |     96% |56, 62, 67, 72, 77, 82 |
-|                                          **TOTAL** | **1572** |  **141** | **91%** |           |
+| tests/test\_utils.py                               |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
+|                                          **TOTAL** | **1616** |  **141** | **91%** |           |
 
 
 ## Setup coverage badge

@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">79 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">79<span class="text"> run</span></button>
+            <span class="text">86 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">86<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_a44f0ac069e85531_test_cross_validate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-01-31 11:53 +0000
+            created at 2024-02-01 10:04 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -196,19 +196,29 @@
     <p class="run"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">    <span class="key">assert</span> <span class="nam">all</span><span class="op">(</span><span class="op">[</span><span class="nam">metric_name</span> <span class="key">in</span> <span class="nam">METRIC_REGISTRY</span> <span class="key">for</span> <span class="nam">metric_name</span> <span class="key">in</span> <span class="nam">metric_names</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t"><span class="com"># -----------------------test _update_scores_df-----------------------------#</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t"><span class="key">def</span> <span class="nam">test__update_scores_df</span><span class="op">(</span><span class="nam">ae_run</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">    <span class="com"># Check that scores_df is not empty after running compare</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="key">assert</span> <span class="key">not</span> <span class="nam">ae_run</span><span class="op">.</span><span class="nam">scores_df</span><span class="op">.</span><span class="nam">empty</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="com"># Check that scores_df has the expected columns</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">    <span class="key">assert</span> <span class="nam">ae_run</span><span class="op">.</span><span class="nam">scores_df</span><span class="op">.</span><span class="nam">columns</span><span class="op">.</span><span class="nam">tolist</span><span class="op">(</span><span class="op">)</span> <span class="op">==</span> <span class="op">[</span><span class="str">"model"</span><span class="op">,</span> <span class="str">"metric"</span><span class="op">,</span> <span class="str">"fold"</span><span class="op">,</span> <span class="str">"score"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">    <span class="com"># # Check that scores_df has the expected number of rows</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">    <span class="key">assert</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">        <span class="nam">len</span><span class="op">(</span><span class="nam">ae_run</span><span class="op">.</span><span class="nam">scores_df</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">        <span class="op">==</span> <span class="nam">len</span><span class="op">(</span><span class="nam">ae_run</span><span class="op">.</span><span class="nam">models</span><span class="op">)</span> <span class="op">*</span> <span class="nam">len</span><span class="op">(</span><span class="nam">METRIC_REGISTRY</span><span class="op">)</span> <span class="op">*</span> <span class="nam">ae_run</span><span class="op">.</span><span class="nam">cv</span><span class="op">.</span><span class="nam">n_splits</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">    <span class="com"># Check that all scores are floats</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">    <span class="key">assert</span> <span class="nam">ae_run</span><span class="op">.</span><span class="nam">scores_df</span><span class="op">[</span><span class="str">"score"</span><span class="op">]</span><span class="op">.</span><span class="nam">dtype</span> <span class="op">==</span> <span class="nam">np</span><span class="op">.</span><span class="nam">float64</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t"><span class="com"># -----------------------test get_model-------------------#</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t"><span class="key">def</span> <span class="nam">test_get_model</span><span class="op">(</span><span class="nam">ae_run</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">    <span class="com"># Test getting the best model</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="nam">model</span> <span class="op">=</span> <span class="nam">ae_run</span><span class="op">.</span><span class="nam">get_model</span><span class="op">(</span><span class="nam">rank</span><span class="op">=</span><span class="num">1</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="key">assert</span> <span class="nam">model</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="key">def</span> <span class="nam">test_get_model_with_invalid_rank</span><span class="op">(</span><span class="nam">ae_run</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="com"># Test getting a model with an invalid rank</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="key">with</span> <span class="nam">pytest</span><span class="op">.</span><span class="nam">raises</span><span class="op">(</span><span class="nam">RuntimeError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">        <span class="nam">ae_run</span><span class="op">.</span><span class="nam">get_model</span><span class="op">(</span><span class="nam">rank</span><span class="op">=</span><span class="num">0</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t"><span class="key">def</span> <span class="nam">test_get_model_before_compare</span><span class="op">(</span><span class="nam">ae</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">    <span class="com"># Test getting a model before running compare</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">    <span class="key">with</span> <span class="nam">pytest</span><span class="op">.</span><span class="nam">raises</span><span class="op">(</span><span class="nam">RuntimeError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">        <span class="nam">ae</span><span class="op">.</span><span class="nam">get_model</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t"><span class="key">def</span> <span class="nam">test_get_model_with_invalid_metric</span><span class="op">(</span><span class="nam">ae_run</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">    <span class="com"># Test getting a model with an invalid metric</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">    <span class="key">with</span> <span class="nam">pytest</span><span class="op">.</span><span class="nam">raises</span><span class="op">(</span><span class="nam">ValueError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">        <span class="nam">ae_run</span><span class="op">.</span><span class="nam">get_model</span><span class="op">(</span><span class="nam">metric</span><span class="op">=</span><span class="str">"invalid_metric"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -218,7 +228,7 @@
             <a id="nextFileLink" class="nav" href="d_a44f0ac069e85531_test_cross_validate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-01-31 11:53 +0000
+            created at 2024-02-01 10:04 +0000
         </p>
     </div>
 </footer>
