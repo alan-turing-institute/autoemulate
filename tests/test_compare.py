@@ -115,8 +115,6 @@ def test__get_metrics(ae):
 
 
 # -----------------------test get_model-------------------#
-
-
 def test_get_model(ae_run):
     # Test getting the best model
     model = ae_run.get_model(rank=1)

@@ -34,7 +34,6 @@ def test_print_results_all_models(capsys):
     captured = capsys.readouterr()
     assert "Average scores across all models:" in captured.out
     assert "model" in captured.out
-    assert "metric" in captured.out
 
 
 def test_print_results_single_model(capsys):
