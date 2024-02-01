@@ -280,6 +280,12 @@ def get_mean_scores(scores_df, metric):
         DataFrame with columns "model", "metric", "mean_score".
     """
 
+    # check if metric is in scores_df metric column
+    if metric not in scores_df["metric"].unique():
+        raise ValueError(
+            f"Metric {metric} not found. Available metrics are: {scores_df['metric'].unique()}"
+        )
+
     if metric == "r2":
         asc = False
     elif metric == "rmse":
