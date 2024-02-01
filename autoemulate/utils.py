@@ -262,3 +262,37 @@ def denormalise_y(y_pred, y_mean, y_std):
 
     """
     return y_pred * y_std + y_mean
+
+
+def get_mean_scores(scores_df, metric):
+    """Get the mean scores for each model and metric.
+
+    Parameters
+    ----------
+    scores_df : pandas.DataFrame
+        DataFrame with columns "model", "metric", "fold", "score".
+    metric : str
+        The metric for which to calculate the mean score. Currently supported are "r2" and "rmse".
+
+    Returns
+    -------
+    mean_scores_df : pandas.DataFrame
+        DataFrame with columns "model", "metric", "mean_score".
+    """
+
+    if metric == "r2":
+        asc = False
+    elif metric == "rmse":
+        asc = True
+    else:
+        raise RuntimeError(f"Metric {metric} not supported.")
+
+    means_df = (
+        scores_df.groupby(["model", "metric"])["score"]
+        .mean()
+        .unstack()
+        .reset_index()
+        .sort_values(by=metric, ascending=asc)
+    )
+
+    return means_df

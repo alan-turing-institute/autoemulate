@@ -17,6 +17,7 @@ from autoemulate.model_processing import get_and_process_models
 from autoemulate.plotting import plot_results
 from autoemulate.printing import print_cv_results
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 
 
@@ -216,6 +217,13 @@ class AutoEmulate:
         # returns best model fitted on full data
         self.best_model = self.get_model(rank=1, metric="r2")
 
+        # print best model
+        best_model_name = get_model_name(self.best_model)
+        mean_scores = get_mean_scores(self.scores_df, "r2")
+        self.logger.info(
+            f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
+        )
+
     def get_model(self, rank=1, metric="r2"):
         """Get a fitted model based on it's rank in the comparison.
 
@@ -232,21 +240,8 @@ class AutoEmulate:
             Model fitted on full data.
         """
 
-        if metric == "r2":
-            asc = False
-        elif metric == "rmse":
-            asc = True
-        else:
-            raise RuntimeError(f"Metric {metric} not supported.")
-
-        # best model name
-        means = (
-            self.scores_df.groupby(["model", "metric"])["score"]
-            .mean()
-            .unstack()
-            .reset_index()
-            .sort_values(by=metric, ascending=asc)
-        )
+        # get average scores across folds
+        means = get_mean_scores(self.scores_df, metric)
 
         # get model by rank
         if (rank > len(means)) or (rank < 1):
