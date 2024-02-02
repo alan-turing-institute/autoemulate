@@ -8,7 +8,7 @@
 | autoemulate/compare.py                             |       86 |        9 |     90% |189, 268-271, 275-276, 289, 300 |
 | autoemulate/cross\_validate.py                     |       21 |        3 |     86% |     31-33 |
 | autoemulate/cv.py                                  |        5 |        0 |    100% |           |
-| autoemulate/datasets.py                            |       19 |        6 |     68% |     89-96 |
+| autoemulate/datasets.py                            |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py              |       11 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py         |       36 |        8 |     78% | 71-83, 86 |
 | autoemulate/emulators/gaussian\_process\_sk.py     |       46 |        7 |     85% |    98-121 |
@@ -32,7 +32,7 @@
 | tests/\_\_init\_\_.py                              |        0 |        0 |    100% |           |
 | tests/test\_compare.py                             |       86 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                     |       38 |        0 |    100% |           |
-| tests/test\_datasets.py                            |       17 |        0 |    100% |           |
+| tests/test\_datasets.py                            |       13 |        0 |    100% |           |
 | tests/test\_emulators.py                           |      126 |        0 |    100% |           |
 | tests/test\_estimators.py                          |       16 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                |       22 |        0 |    100% |           |
@@ -41,7 +41,7 @@
 | tests/test\_printing.py                            |       32 |        0 |    100% |           |
 | tests/test\_save.py                                |       42 |        0 |    100% |           |
 | tests/test\_utils.py                               |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                          **TOTAL** | **1616** |  **141** | **91%** |           |
+|                                          **TOTAL** | **1605** |  **135** | **92%** |           |
 
 
 ## Setup coverage badge
