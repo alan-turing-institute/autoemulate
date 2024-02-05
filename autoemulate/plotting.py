@@ -24,8 +24,19 @@ def validate_inputs(cv_results, y, model_name):
                 f"Model {model_name} not found. Available models are: {cv_results.keys()}"
             )
 
+
+def check_multi_output(y, output_index):
     if y.ndim > 1:
-        raise ValueError("Multi-output can't be plotted yet.")
+        if (output_index > y.shape[1]) | (output_index < 0):
+            raise ValueError(
+                f"Output index {output_index} is out of range. The index should be between 0 and {y.shape[1] - 1}."
+            )
+        print(
+            f"Multi-output detected. Plotting only the output variable with index {output_index}. To plot other outputs, set `output_index` to the desired index."
+        )
+
+    # if y.ndim > 1:
+    #     raise ValueError("Multi-output can't be plotted yet.")
 
 
 def plot_single_fold(
@@ -37,6 +48,7 @@ def plot_single_fold(
     ax,
     plot_type="actual_vs_predicted",
     annotation=" ",
+    output_index=0,
 ):
     """Plots a single fold for a given model.
 
@@ -58,14 +70,21 @@ def plot_single_fold(
         The type of plot to draw:
         “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
         “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
-
+    output_index : int, optional
+        The index of the output to plot. Default is 0.
     """
     test_indices = cv_results[model_name]["indices"]["test"][fold_index]
 
     true_values = y[test_indices]
+
     predicted_values = cv_results[model_name]["estimator"][fold_index].predict(
         X[test_indices]
     )
+
+    # if y is multi-output, we need to select the correct column
+    if y.ndim > 1:
+        true_values = true_values[:, output_index]
+        predicted_values = predicted_values[:, output_index]
 
     display = PredictionErrorDisplay.from_predictions(
         y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
@@ -74,7 +93,13 @@ def plot_single_fold(
 
 
 def plot_best_fold_per_model(
-    cv_results, X, y, n_cols=4, plot_type="actual_vs_predicted", figsize=None
+    cv_results,
+    X,
+    y,
+    n_cols=4,
+    plot_type="actual_vs_predicted",
+    figsize=None,
+    output_index=0,
 ):
     """Plots the best fold for each model in cv_results.
 
@@ -117,6 +142,7 @@ def plot_best_fold_per_model(
             ax,
             plot_type=plot_type,
             annotation="Best CV-fold",
+            output_index=output_index,
         )
     plt.tight_layout()
     plt.show()
@@ -130,6 +156,7 @@ def plot_model_folds(
     n_cols=5,
     plot_type="actual_vs_predicted",
     figsize=None,
+    output_index=0,
 ):
     """Plots all the folds for a given model.
 
@@ -174,6 +201,7 @@ def plot_model_folds(
             ax,
             plot_type,
             annotation="CV-fold",
+            output_index=output_index,
         )
     plt.tight_layout()
     plt.show()
@@ -187,6 +215,7 @@ def plot_results(
     n_cols=4,
     plot_type="actual_vs_predicted",
     figsize=None,
+    output_index=0,
 ):
     """Plots the results of cross-validation.
 
@@ -211,8 +240,13 @@ def plot_results(
     """
 
     validate_inputs(cv_results, y, model_name)
+    check_multi_output(y, output_index)
 
     if model_name:
-        plot_model_folds(cv_results, X, y, model_name, n_cols, plot_type, figsize)
+        plot_model_folds(
+            cv_results, X, y, model_name, n_cols, plot_type, figsize, output_index
+        )
     else:
-        plot_best_fold_per_model(cv_results, X, y, n_cols, plot_type, figsize)
+        plot_best_fold_per_model(
+            cv_results, X, y, n_cols, plot_type, figsize, output_index
+        )

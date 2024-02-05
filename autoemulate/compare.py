@@ -289,13 +289,19 @@ class AutoEmulate:
         print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
 
     def plot_results(
-        self, model_name=None, plot_type="actual_vs_predicted", n_cols=4, figsize=None
+        self,
+        model_name=None,
+        plot_type="actual_vs_predicted",
+        n_cols=4,
+        figsize=None,
+        output_index=0,
     ):
         """Plots the results of the cross-validation.
 
         Parameters
         ----------
         model_name : str
+
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
         plot_type : str, optional
@@ -306,6 +312,8 @@ class AutoEmulate:
             Number of columns in the plot grid.
         figsize : tuple, optional
             Overrides the default figure size.
+        output_index : int
+            Index of the output to plot. Default is 0.
         """
         plot_results(
             self.cv_results,
@@ -315,4 +323,5 @@ class AutoEmulate:
             n_cols=n_cols,
             plot_type=plot_type,
             figsize=figsize,
+            output_index=output_index,
         )
