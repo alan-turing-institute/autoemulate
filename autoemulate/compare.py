@@ -288,7 +288,7 @@ class AutoEmulate:
         """
         print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
 
-    def plot_results(self, model_name=None, n_cols=4):
+    def plot_results(self, model_name=None, plot_type="actual_vs_predicted", n_cols=4):
         """Plots the results of the cross-validation.
 
         Parameters
@@ -296,9 +296,18 @@ class AutoEmulate:
         model_name : str
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
+        plot_type : str, optional
+            The type of plot to draw:
+            “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
         """
         plot_results(
-            self.cv_results, self.X, self.y, model_name=model_name, n_cols=n_cols
+            self.cv_results,
+            self.X,
+            self.y,
+            model_name=model_name,
+            n_cols=n_cols,
+            plot_type=plot_type,
         )

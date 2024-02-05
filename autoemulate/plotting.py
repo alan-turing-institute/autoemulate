@@ -1,8 +1,78 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import PredictionErrorDisplay
 
 
-def plot_results(cv_results, X, y, model_name=None, n_cols=4):
+def validate_inputs(cv_results, y, model_name):
+    if not cv_results:
+        raise ValueError("Run .compare() first.")
+
+    if model_name:
+        if model_name not in cv_results:
+            raise ValueError(
+                f"Model {model_name} not found. Available models are: {cv_results.keys()}"
+            )
+
+    if y.ndim > 1:
+        raise ValueError("Multi-output can't be plotted yet.")
+
+
+def plot_single_fold(
+    cv_results,
+    X,
+    y,
+    model_name,
+    fold_index,
+    ax,
+    annotation="",
+    plot_type="actual_vs_predicted",
+):
+    # Extract the indices for the test set
+    test_indices = cv_results[model_name]["indices"]["test"][fold_index]
+
+    # Extract the true and predicted values
+    true_values = y[test_indices]
+    predicted_values = cv_results[model_name]["estimator"][fold_index].predict(
+        X[test_indices]
+    )
+
+    # plotting with sklearn
+    display = PredictionErrorDisplay.from_predictions(
+        y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
+    )
+    ax.set_title(f"{model_name} - Best CV-fold: {fold_index}")
+
+
+def plot_best_fold_per_model(
+    cv_results, X, y, n_cols=4, plot_type="actual_vs_predicted"
+):
+    n_models = len(cv_results)
+    n_rows = int(np.ceil(n_models / n_cols))
+
+    # figure size
+    plt.figure(figsize=(4 * n_cols, 3 * n_rows))
+
+    if n_models == 1:
+        axes = [axes]
+    for i, model_name in enumerate(cv_results):
+        best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
+        ax = plt.subplot(n_rows, n_cols, i + 1)
+        plot_single_fold(
+            cv_results,
+            X,
+            y,
+            model_name,
+            best_fold_index,
+            ax,
+            plot_type=plot_type,
+        )
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_results(
+    cv_results, X, y, model_name=None, n_cols=4, plot_type="actual_vs_predicted"
+):
     """Plots the results of cross-validation.
 
     Parameters
@@ -17,6 +87,10 @@ def plot_results(cv_results, X, y, model_name=None, n_cols=4):
         The name of the model to plot. If None, all models will be plotted.
     n_cols : int, optional
         The number of columns in the plot. Default is 4.
+    plot_type : str, optional
+        The type of plot to draw:
+        “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+        “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
     """
 
     is_multioutput = y.ndim > 1
@@ -29,66 +103,25 @@ def plot_results(cv_results, X, y, model_name=None, n_cols=4):
     if model_name:
         plot_model_folds(cv_results, X, y, model_name)
     else:
-        plot_best_fold_per_model(cv_results, X, y, n_cols)
+        plot_best_fold_per_model(cv_results, X, y, n_cols, plot_type)
 
 
 def plot_model_folds(cv_results, X, y, model_name):
     pass
 
-
-def plot_best_fold_per_model(cv_results, X, y, n_cols=4):
-    n_models = len(cv_results)
-    n_rows = int(np.ceil(n_models / n_cols))
-
-    # Define the size of each subplot and overall figure size
-    subplot_width = 4  # Width of each subplot in inches
-    subplot_height = 3  # Height of each subplot in inches
-    fig_width = n_cols * subplot_width  # Total figure width
-    fig_height = n_rows * subplot_height  # Total figure height
-    # Initialize the figure with the defined size
-    plt.figure(figsize=(fig_width, fig_height))
-
-    if n_models == 1:
-        axes = [axes]
-    for i, model_name in enumerate(cv_results):
-        best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
-        ax = plt.subplot(n_rows, n_cols, i + 1)
-        plot_fold(
-            cv_results,
-            X,
-            y,
-            model_name,
-            best_fold_index,
-            ax,
-            annotation=f"Best Fold: {best_fold_index}",
-        )
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_fold(cv_results, X, y, model_name, fold_index, ax, annotation=""):
-    # Extract the indices for the test set
-    test_indices = cv_results[model_name]["indices"]["test"][fold_index]
-
-    # Extract the true and predicted values
-    true_values = y[test_indices]
-    predicted_values = cv_results[model_name]["estimator"][fold_index].predict(
-        X[test_indices]
-    )
-
-    # Plotting
-    ax.scatter(true_values, predicted_values)
-    ax.set_xlabel("True Values")
-    ax.set_ylabel("Predicted Values")
-    ax.set_title(f"Model: {model_name}")
-    ax.text(
-        0.05,
-        0.95,
-        annotation,
-        transform=ax.transAxes,
-        fontsize=12,
-        verticalalignment="top",
-    )
+    # # Plotting
+    # ax.scatter(true_values, predicted_values)
+    # ax.set_xlabel("True Values")
+    # ax.set_ylabel("Predicted Values")
+    # ax.set_title(f"Model: {model_name}")
+    # ax.text(
+    #     0.05,
+    #     0.95,
+    #     annotation,
+    #     transform=ax.transAxes,
+    #     fontsize=12,
+    #     verticalalignment="top",
+    # )
 
 
 # def plot_results(cv_results, X, y, model_name=None):
