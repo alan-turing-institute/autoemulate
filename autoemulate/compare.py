@@ -292,7 +292,7 @@ class AutoEmulate:
         self,
         model_name=None,
         plot_type="actual_vs_predicted",
-        n_cols=4,
+        n_cols=3,
         figsize=None,
         output_index=0,
     ):

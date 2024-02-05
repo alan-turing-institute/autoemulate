@@ -95,7 +95,7 @@ def plot_best_fold_per_model(
     cv_results,
     X,
     y,
-    n_cols=4,
+    n_cols=3,
     plot_type="actual_vs_predicted",
     figsize=None,
     output_index=0,
@@ -111,7 +111,7 @@ def plot_best_fold_per_model(
     y : array-like, shape (n_samples, n_outputs)
         Simulation output.
     n_cols : int, optional
-        The number of columns in the plot. Default is 4.
+        The number of columns in the plot. Default is 3.
     plot_type : str, optional
         The type of plot to draw:
         “actual_vs_predicted” or “residual_vs_predicted”.
@@ -152,7 +152,7 @@ def plot_model_folds(
     X,
     y,
     model_name,
-    n_cols=5,
+    n_cols=3,
     plot_type="actual_vs_predicted",
     figsize=None,
     output_index=0,
@@ -211,7 +211,7 @@ def plot_results(
     X,
     y,
     model_name=None,
-    n_cols=4,
+    n_cols=3,
     plot_type="actual_vs_predicted",
     figsize=None,
     output_index=0,
@@ -229,7 +229,7 @@ def plot_results(
     model_name : (str, optional)
         The name of the model to plot. If None, the best (largest R^2) fold for each model will be plotted.
     n_cols : int, optional
-        The number of columns in the plot. Default is 4.
+        The number of columns in the plot. Default is 3.
     plot_type : str, optional
         The type of plot to draw:
         “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
