@@ -74,7 +74,7 @@ def plot_single_fold(
 
 
 def plot_best_fold_per_model(
-    cv_results, X, y, n_cols=4, plot_type="actual_vs_predicted"
+    cv_results, X, y, n_cols=4, plot_type="actual_vs_predicted", figsize=None
 ):
     """Plots the best fold for each model in cv_results.
 
@@ -91,12 +91,17 @@ def plot_best_fold_per_model(
     plot_type : str, optional
         The type of plot to draw:
         “actual_vs_predicted” or “residual_vs_predicted”.
+    figsize : tuple, optional
+        Overrides the default figure size.
     """
 
     n_models = len(cv_results)
     n_rows = int(np.ceil(n_models / n_cols))
 
-    plt.figure(figsize=(4 * n_cols, 3 * n_rows))
+    if figsize is None:
+        figsize = (4 * n_cols, 3 * n_rows)
+
+    plt.figure(figsize=figsize)
 
     if n_models == 1:
         axes = [axes]
@@ -118,7 +123,13 @@ def plot_best_fold_per_model(
 
 
 def plot_model_folds(
-    cv_results, X, y, model_name, n_cols=5, plot_type="actual_vs_predicted"
+    cv_results,
+    X,
+    y,
+    model_name,
+    n_cols=5,
+    plot_type="actual_vs_predicted",
+    figsize=None,
 ):
     """Plots all the folds for a given model.
 
@@ -138,26 +149,44 @@ def plot_model_folds(
     plot_type : str, optional
         The type of plot to draw:
         “actual_vs_predicted” or “residual_vs_predicted”.
+    figsize : tuple, optional
+        Overrides the default figure size.
     """
 
     n_folds = len(cv_results[model_name]["estimator"])
     n_rows = int(np.ceil(n_folds / n_cols))
 
-    # figure size
-    plt.figure(figsize=(4 * n_cols, 3 * n_rows))
+    if figsize is None:
+        figsize = (4 * n_cols, 3 * n_rows)
+
+    plt.figure(figsize=figsize)
+
     if n_folds == 1:
         axes = [axes]
     for i in range(n_folds):
         ax = plt.subplot(n_rows, n_cols, i + 1)
         plot_single_fold(
-            cv_results, X, y, model_name, i, ax, plot_type, annotation="CV-fold"
+            cv_results,
+            X,
+            y,
+            model_name,
+            i,
+            ax,
+            plot_type,
+            annotation="CV-fold",
         )
     plt.tight_layout()
     plt.show()
 
 
 def plot_results(
-    cv_results, X, y, model_name=None, n_cols=4, plot_type="actual_vs_predicted"
+    cv_results,
+    X,
+    y,
+    model_name=None,
+    n_cols=4,
+    plot_type="actual_vs_predicted",
+    figsize=None,
 ):
     """Plots the results of cross-validation.
 
@@ -177,11 +206,13 @@ def plot_results(
         The type of plot to draw:
         “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
         “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+    figsize : tuple, optional
+        Overrides the default figure size.
     """
 
     validate_inputs(cv_results, y, model_name)
 
     if model_name:
-        plot_model_folds(cv_results, X, y, model_name, n_cols, plot_type)
+        plot_model_folds(cv_results, X, y, model_name, n_cols, plot_type, figsize)
     else:
-        plot_best_fold_per_model(cv_results, X, y, n_cols, plot_type)
+        plot_best_fold_per_model(cv_results, X, y, n_cols, plot_type, figsize)

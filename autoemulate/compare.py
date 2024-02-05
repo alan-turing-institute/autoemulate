@@ -288,7 +288,9 @@ class AutoEmulate:
         """
         print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
 
-    def plot_results(self, model_name=None, plot_type="actual_vs_predicted", n_cols=4):
+    def plot_results(
+        self, model_name=None, plot_type="actual_vs_predicted", n_cols=4, figsize=None
+    ):
         """Plots the results of the cross-validation.
 
         Parameters
@@ -302,6 +304,8 @@ class AutoEmulate:
             “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
+        figsize : tuple, optional
+            Overrides the default figure size.
         """
         plot_results(
             self.cv_results,
@@ -310,4 +314,5 @@ class AutoEmulate:
             model_name=model_name,
             n_cols=n_cols,
             plot_type=plot_type,
+            figsize=figsize,
         )
