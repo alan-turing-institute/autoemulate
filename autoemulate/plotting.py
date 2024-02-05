@@ -32,11 +32,9 @@ def check_multi_output(y, output_index):
                 f"Output index {output_index} is out of range. The index should be between 0 and {y.shape[1] - 1}."
             )
         print(
-            f"Multi-output detected. Plotting only the output variable with index {output_index}. To plot other outputs, set `output_index` to the desired index."
+            f"""Multi-output detected. Plotting only the output variable with index {output_index}. 
+To plot other outputs, set `output_index` to the desired index."""
         )
-
-    # if y.ndim > 1:
-    #     raise ValueError("Multi-output can't be plotted yet.")
 
 
 def plot_single_fold(
@@ -69,7 +67,8 @@ def plot_single_fold(
     annotation : str, optional
         The type of plot to draw:
         “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-        “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+        “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values,
+        (y-axis) vs. the predicted values (x-axis).
     output_index : int, optional
         The index of the output to plot. Default is 0.
     """
