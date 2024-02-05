@@ -24,19 +24,15 @@ def plot_single_fold(
     model_name,
     fold_index,
     ax,
-    annotation="",
     plot_type="actual_vs_predicted",
 ):
-    # Extract the indices for the test set
     test_indices = cv_results[model_name]["indices"]["test"][fold_index]
 
-    # Extract the true and predicted values
     true_values = y[test_indices]
     predicted_values = cv_results[model_name]["estimator"][fold_index].predict(
         X[test_indices]
     )
 
-    # plotting with sklearn
     display = PredictionErrorDisplay.from_predictions(
         y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
     )
@@ -93,12 +89,7 @@ def plot_results(
         “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
     """
 
-    is_multioutput = y.ndim > 1
-    if is_multioutput:
-        raise ValueError("Multi-output can't be plotted yet.")
-
-    if not cv_results:
-        raise ValueError("Run .compare() first.")
+    validate_inputs(cv_results, y, model_name)
 
     if model_name:
         plot_model_folds(cv_results, X, y, model_name)
@@ -106,22 +97,59 @@ def plot_results(
         plot_best_fold_per_model(cv_results, X, y, n_cols, plot_type)
 
 
-def plot_model_folds(cv_results, X, y, model_name):
-    pass
+def plot_model_folds(cv_results, X, y, model_name, n_cols=5):
+    n_folds = len(cv_results[model_name]["estimator"])
+    n_rows = int(np.ceil(n_folds / n_cols))
 
-    # # Plotting
-    # ax.scatter(true_values, predicted_values)
-    # ax.set_xlabel("True Values")
-    # ax.set_ylabel("Predicted Values")
-    # ax.set_title(f"Model: {model_name}")
-    # ax.text(
-    #     0.05,
-    #     0.95,
-    #     annotation,
-    #     transform=ax.transAxes,
-    #     fontsize=12,
-    #     verticalalignment="top",
-    # )
+    # figure size
+    plt.figure(figsize=(4 * n_cols, 3 * n_rows))
+    if n_folds == 1:
+        axes = [axes]
+    for i in range(n_folds):
+        ax = plt.subplot(n_rows, n_cols, i + 1)
+        plot_single_fold(cv_results, X, y, model_name, i, ax)
+    plt.tight_layout()
+    plt.show()
+
+
+# def _plot_model_folds(cv_results, X, y, model_name):
+#     """Plots all folds for a given model.
+
+#     Parameters
+#     ----------
+#     cv_results: dict
+#         A list of cross-validation results for each model.
+#     X : array-like, shape (n_samples, n_features)
+#         Simulation input.
+#     y : array-like, shape (n_samples, n_outputs)
+#         Simulation output.
+#     model_name : str
+#         The name of the model to plot.
+#     """
+#     # Plot all folds for the specified model
+#     n_folds = len(cv_results[model_name]["estimator"])
+#     fig, axes = plt.subplots(1, n_folds, figsize=(n_folds * 5, 4))
+#     if n_folds == 1:
+#         axes = [axes]
+#     for i in range(n_folds):
+#         _plot_fold(cv_results, X, y, model_name, i, axes[i], annotation=.)
+#     plt.tight_layout()
+#     plt.show()
+
+
+# # Plotting
+# ax.scatter(true_values, predicted_values)
+# ax.set_xlabel("True Values")
+# ax.set_ylabel("Predicted Values")
+# ax.set_title(f"Model: {model_name}")
+# ax.text(
+#     0.05,
+#     0.95,
+#     annotation,
+#     transform=ax.transAxes,
+#     fontsize=12,
+#     verticalalignment="top",
+# )
 
 
 # def plot_results(cv_results, X, y, model_name=None):
@@ -190,31 +218,6 @@ def plot_model_folds(cv_results, X, y, model_name):
 #         ax,
 #         annotation=f"Best Fold: {best_fold_index}",
 #     )
-
-
-# def _plot_model_folds(cv_results, X, y, model_name):
-#     """Plots all folds for a given model.
-
-#     Parameters
-#     ----------
-#     cv_results: dict
-#         A list of cross-validation results for each model.
-#     X : array-like, shape (n_samples, n_features)
-#         Simulation input.
-#     y : array-like, shape (n_samples, n_outputs)
-#         Simulation output.
-#     model_name : str
-#         The name of the model to plot.
-#     """
-#     # Plot all folds for the specified model
-#     n_folds = len(cv_results[model_name]["estimator"])
-#     fig, axes = plt.subplots(1, n_folds, figsize=(n_folds * 5, 4))
-#     if n_folds == 1:
-#         axes = [axes]
-#     for i in range(n_folds):
-#         _plot_fold(cv_results, X, y, model_name, i, axes[i], annotation=.)
-#     plt.tight_layout()
-#     plt.show()
 
 
 # def _plot_fold(cv_results, X, y, model, fold_index, ax, annotation=""):
