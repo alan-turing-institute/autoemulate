@@ -288,7 +288,7 @@ class AutoEmulate:
         """
         print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
 
-    def plot_results(self, model_name=None):
+    def plot_results(self, model_name=None, n_cols=4):
         """Plots the results of the cross-validation.
 
         Parameters
@@ -296,5 +296,9 @@ class AutoEmulate:
         model_name : str
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
+        n_cols : int
+            Number of columns in the plot grid.
         """
-        plot_results(self.cv_results, self.X, self.y, model_name=model_name)
+        plot_results(
+            self.cv_results, self.X, self.y, model_name=model_name, n_cols=n_cols
+        )
