@@ -1,9 +1,9 @@
 # experimental version of a PyTorch neural network emulator wrapped in Skorch
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
-import random
+
 import warnings
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import torch
@@ -13,7 +13,6 @@ from sklearn.exceptions import DataConversionWarning
 from skopt.space import Integer, Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
-from torch import nn
 
 from autoemulate.emulators.neural_networks import get_module
 from autoemulate.utils import set_random_seed

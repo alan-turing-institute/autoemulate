@@ -152,7 +152,7 @@ def test_nn_sk_pred_type(nn_sk_model, simulation_io):
 
 # Test PyTorch Neural Network (skorch)
 def test_nn_torch_initialisation():
-    nn_torch = NeuralNetTorch()
+    nn_torch = NeuralNetTorch(module="mlp")
     assert nn_torch is not None
 
 
@@ -183,7 +183,9 @@ def test_nn_torch_shape_setter():
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
     nn_torch_model = NeuralNetTorch(
-        module__input_size=input_size, module__output_size=output_size
+        module="mlp",
+        module__input_size=input_size,
+        module__output_size=output_size,
     )
     nn_torch_model.fit(X, y)
     assert nn_torch_model.module__input_size == input_size
