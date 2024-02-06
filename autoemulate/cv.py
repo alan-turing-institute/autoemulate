@@ -1,5 +1,4 @@
-from sklearn.model_selection import KFold
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold
 
 
 def kfold(folds=None, shuffle=True):

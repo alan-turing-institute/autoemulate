@@ -3,10 +3,12 @@ import logging
 from sklearn.model_selection import RandomizedSearchCV
 from skopt import BayesSearchCV
 
-from autoemulate.utils import adjust_param_space
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_model_param_space
-from autoemulate.utils import get_model_params
+from autoemulate.utils import (
+    adjust_param_space,
+    get_model_name,
+    get_model_param_space,
+    get_model_params,
+)
 
 
 def optimize_params(

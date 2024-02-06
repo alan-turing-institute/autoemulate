@@ -6,8 +6,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
-from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import update_scores_df
+from autoemulate.cross_validate import run_cv, update_scores_df
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.hyperparam_searching import optimize_params
@@ -17,8 +16,7 @@ from autoemulate.model_processing import get_and_process_models
 from autoemulate.plotting import plot_results
 from autoemulate.printing import print_cv_results
 from autoemulate.save import ModelSerialiser
-from autoemulate.utils import get_mean_scores
-from autoemulate.utils import get_model_name
+from autoemulate.utils import get_mean_scores, get_model_name
 
 
 class AutoEmulate:

@@ -1,12 +1,13 @@
 import numpy as np
 import pytest
 
-from autoemulate.emulators import GaussianProcess
-from autoemulate.emulators import NeuralNetSk
-from autoemulate.emulators import NeuralNetTorch
-from autoemulate.emulators import RandomForest
-from autoemulate.experimental_design import ExperimentalDesign
-from autoemulate.experimental_design import LatinHypercube
+from autoemulate.emulators import (
+    GaussianProcess,
+    NeuralNetSk,
+    NeuralNetTorch,
+    RandomForest,
+)
+from autoemulate.experimental_design import ExperimentalDesign, LatinHypercube
 
 
 def simple_sim(params):

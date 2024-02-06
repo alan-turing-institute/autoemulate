@@ -7,14 +7,16 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GradientBoosting
-from autoemulate.utils import add_prefix_to_param_space
-from autoemulate.utils import add_prefix_to_single_grid
-from autoemulate.utils import adjust_param_space
-from autoemulate.utils import denormalise_y
-from autoemulate.utils import get_mean_scores
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_model_param_space
-from autoemulate.utils import normalise_y
+from autoemulate.utils import (
+    add_prefix_to_param_space,
+    add_prefix_to_single_grid,
+    adjust_param_space,
+    denormalise_y,
+    get_mean_scores,
+    get_model_name,
+    get_model_param_space,
+    normalise_y,
+)
 
 
 # test retrieving model name ---------------------------------------------------

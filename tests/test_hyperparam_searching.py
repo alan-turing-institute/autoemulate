@@ -5,9 +5,11 @@ from sklearn.datasets import make_regression
 from sklearn.pipeline import Pipeline
 
 from autoemulate.emulators import RandomForest
-from autoemulate.hyperparam_searching import check_param_space
-from autoemulate.hyperparam_searching import optimize_params
-from autoemulate.hyperparam_searching import process_param_space
+from autoemulate.hyperparam_searching import (
+    check_param_space,
+    optimize_params,
+    process_param_space,
+)
 from autoemulate.utils import get_model_name
 
 

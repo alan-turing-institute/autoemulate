@@ -3,34 +3,20 @@
 # but doesn't pass tests, because we're subclassing
 import random
 import warnings
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import torch
 from scipy.sparse import issparse
 from scipy.stats import loguniform
 from sklearn.exceptions import DataConversionWarning
-from skopt.space import Integer
-from skopt.space import Real
+from skopt.space import Integer, Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 from torch import nn
 
-
-def set_random_seed(seed: int, deterministic: bool = False):
-    """Set random seed for Python, Numpy and PyTorch.
-    Args:
-        seed: int, the random seed to use.
-        deterministic: bool, use "deterministic" algorithms in PyTorch.
-    """
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    if deterministic:
-        torch.backends.cudnn.benchmark = False
-        torch.use_deterministic_algorithms(True)
+from autoemulate.emulators.neural_networks import get_module
+from autoemulate.utils import set_random_seed
 
 
 class InputShapeSetter(Callback):
@@ -55,35 +41,11 @@ class InputShapeSetter(Callback):
             )
 
 
-# Step 1: Define the PyTorch Module for the MLP
-class MLPModule(nn.Module):
-    def __init__(
-        self,
-        input_size: int = None,
-        output_size: int = None,
-        hidden_sizes: Tuple[int] = (100,),
-        random_state: int = None,
-    ):
-        super(MLPModule, self).__init__()
-        if random_state is not None:
-            set_random_seed(random_state)
-        modules = []
-        for hidden_size in hidden_sizes:
-            modules.append(nn.Linear(in_features=input_size, out_features=hidden_size))
-            modules.append(nn.ReLU())
-            input_size = hidden_size
-        modules.append(nn.Linear(in_features=input_size, out_features=output_size))
-        self.model = nn.Sequential(*modules)
-
-    def forward(self, X: torch.Tensor):
-        return self.model(X)
-
-
 # Step 2: Create the Skorch wrapper for the NeuralNetRegressor
 class NeuralNetTorch(NeuralNetRegressor):
     def __init__(
         self,
-        module: nn.Module = MLPModule,
+        module: str = "mlp",
         criterion=torch.nn.MSELoss,
         optimizer=torch.optim.Adam,
         lr: float = 0.01,
@@ -91,7 +53,6 @@ class NeuralNetTorch(NeuralNetRegressor):
         max_epochs: int = 1,
         module__input_size: int = 2,
         module__output_size: int = 1,
-        module__hidden_sizes: Tuple[int] = (100,),
         optimizer__weight_decay: float = 0.0001,
         iterator_train__shuffle: bool = True,
         callbacks: List[Callback] = [InputShapeSetter()],
@@ -102,8 +63,18 @@ class NeuralNetTorch(NeuralNetRegressor):
         if "random_state" in kwargs:
             setattr(self, "random_state", kwargs.pop("random_state"))
             set_random_seed(self.random_state)
+        # get all arguments for module initialization
+        module_args = {
+            "input_size": module__input_size,
+            "output_size": module__output_size,
+        }
+        for k, v in kwargs.items():
+            if k.startswith("module__"):
+                module_args[k.replace("module__", "")] = v
+                kwargs.pop(k)
+
         super().__init__(
-            module=module,
+            module=get_module(module, module_args),
             criterion=criterion,
             optimizer=optimizer,
             lr=lr,
@@ -111,7 +82,6 @@ class NeuralNetTorch(NeuralNetRegressor):
             max_epochs=max_epochs,
             module__input_size=module__input_size,
             module__output_size=module__output_size,
-            module__hidden_sizes=module__hidden_sizes,
             optimizer__weight_decay=optimizer__weight_decay,
             iterator_train__shuffle=iterator_train__shuffle,
             callbacks=callbacks,

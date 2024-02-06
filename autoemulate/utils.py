@@ -1,8 +1,10 @@
 import os
+import random
 import warnings
 from contextlib import contextmanager
 
 import numpy as np
+import torch
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.multioutput import MultiOutputRegressor
@@ -304,3 +306,18 @@ def get_mean_scores(scores_df, metric):
     )
 
     return means_df
+
+
+def set_random_seed(seed: int, deterministic: bool = False):
+    """Set random seed for Python, Numpy and PyTorch.
+    Args:
+        seed: int, the random seed to use.
+        deterministic: bool, use "deterministic" algorithms in PyTorch.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    if deterministic:
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)

@@ -4,9 +4,7 @@ from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-from autoemulate.plotting import check_multioutput
-from autoemulate.plotting import plot_single_fold
-from autoemulate.plotting import validate_inputs
+from autoemulate.plotting import check_multioutput, plot_single_fold, validate_inputs
 
 
 # ------------------------------ test validate_inputs ------------------------------
