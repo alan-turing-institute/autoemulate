@@ -32,9 +32,9 @@ class AutoEmulate:
         self,
         X,
         y,
-        use_grid_search=False,
-        grid_search_type="random",
-        grid_search_iters=20,
+        use_param_search=False,
+        param_search_type="random",
+        param_search_iters=20,
         scale=True,
         scaler=StandardScaler(),
         reduce_dim=False,
@@ -53,13 +53,13 @@ class AutoEmulate:
             Simulation input.
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
-        use_grid_search : bool
+        use_param_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
-        grid_search_type : str
+        param_search_type : str
             Type of hyperparameter search to perform. Can be "grid", "random", or "bayes".
-        grid_search_iters : int
+        param_search_iters : int
             Number of parameter settings that are sampled. Only used if
-            use_grid_search=True and grid_search_type="random".
+            use_param_search=True and param_search_type="random".
         scale : bool, default=True
             Whether to scale the data before fitting the models using a scaler.
         scaler : sklearn.preprocessing.StandardScaler
@@ -99,9 +99,9 @@ class AutoEmulate:
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
-        self.use_grid_search = use_grid_search
-        self.search_type = grid_search_type
-        self.grid_search_iters = grid_search_iters
+        self.use_param_search = use_param_search
+        self.search_type = param_search_type
+        self.param_search_iters = param_search_iters
         self.scale = scale
         self.scaler = scaler
         self.n_jobs = n_jobs
@@ -185,14 +185,14 @@ class AutoEmulate:
 
         for i in range(len(self.models)):
             # hyperparameter search
-            if self.use_grid_search:
+            if self.use_param_search:
                 self.models[i] = optimize_params(
                     X=self.X,
                     y=self.y,
                     cv=self.cv,
                     model=self.models[i],
                     search_type=self.search_type,
-                    niter=self.grid_search_iters,
+                    niter=self.param_search_iters,
                     param_space=None,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
