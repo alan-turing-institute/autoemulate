@@ -125,7 +125,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid paramaters for the emulator."""
-        param_grid_random = {
+        param_space_random = {
             "kernel": ["rbf", "linear", "poly", "sigmoid"],
             "degree": randint(2, 6),
             "gamma": ["scale", "auto"],
@@ -139,7 +139,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
             "max_iter": [-1],
         }
 
-        param_grid_bayes = {
+        param_space_bayes = {
             "kernel": Categorical(["rbf", "linear", "poly", "sigmoid"]),
             "degree": Integer(2, 5),
             "gamma": Categorical(["scale", "auto"]),
@@ -154,11 +154,11 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": False}

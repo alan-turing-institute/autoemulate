@@ -82,11 +82,11 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
             The parameter grid for the model.
         """
         if search_type == "random":
-            param_grid = {}
+            param_space = {}
         elif search_type == "bayes":
-            param_grid = [({"degree": Categorical([2])}, 1)]
+            param_space = [({"degree": Categorical([2])}, 1)]
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": True}

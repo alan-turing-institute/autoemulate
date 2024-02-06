@@ -132,7 +132,7 @@ class XGBoost(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid_random = {
+        param_space_random = {
             "booster": ["gbtree", "dart"],
             "n_estimators": randint(100, 1000),
             "max_depth": randint(3, 10),
@@ -148,7 +148,7 @@ class XGBoost(BaseEstimator, RegressorMixin):
             "reg_lambda": loguniform(0.01, 1),
         }
 
-        param_grid_bayes = {
+        param_space_bayes = {
             "booster": Categorical(["gbtree", "dart"]),
             "n_estimators": Integer(100, 1000),
             "max_depth": Integer(3, 10),
@@ -165,11 +165,11 @@ class XGBoost(BaseEstimator, RegressorMixin):
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": True}

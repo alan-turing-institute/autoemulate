@@ -85,13 +85,13 @@ class RBF(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        # param_grid_random = {
+        # param_space_random = {
         #     #"smoothing": uniform(0.0, 1.0),
         #     "kernel": ["linear", "thin_plate_spline", "cubic", "quintic", "multiquadric", "inverse_multiquadric", "gaussian"],
         #     #"epsilon": uniform(0.0, 1.0),
         #     "degree": randint(0, 5),
         # }
-        param_grid_random = [
+        param_space_random = [
             {
                 "kernel": ["linear", "multiquadric"],
                 "degree": randint(0, 3),  # Degrees valid for these kernels
@@ -114,7 +114,7 @@ class RBF(BaseEstimator, RegressorMixin):
             },
         ]
 
-        param_grid_bayes = [
+        param_space_bayes = [
             {
                 "kernel": Categorical(["linear", "multiquadric"]),
                 "degree": Integer(0, 4),  # Degrees valid for these kernels
@@ -138,11 +138,11 @@ class RBF(BaseEstimator, RegressorMixin):
         ]
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": True}

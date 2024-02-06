@@ -96,7 +96,7 @@ class RandomForest(BaseEstimator, RegressorMixin):
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
 
-        param_grid_random = {
+        param_space_random = {
             "n_estimators": randint(50, 500),
             "min_samples_split": randint(2, 20),
             "min_samples_leaf": randint(1, 10),
@@ -107,7 +107,7 @@ class RandomForest(BaseEstimator, RegressorMixin):
             "max_samples": [None, 0.5, 0.75],
         }
 
-        param_grid_bayes = {
+        param_space_bayes = {
             "n_estimators": Integer(50, 500),
             "min_samples_split": Integer(2, 20),
             "min_samples_leaf": Integer(1, 10),
@@ -119,11 +119,11 @@ class RandomForest(BaseEstimator, RegressorMixin):
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": True}

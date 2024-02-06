@@ -102,7 +102,7 @@ def get_model_params(model):
         return model.get_params()
 
 
-def get_model_param_grid(model, search_type="random"):
+def get_model_param_space(model, search_type="random"):
     """Get the parameter grid of the base model. This is used for hyperparameter search.
 
     This function handles standalone models, models wrapped in a MultiOutputRegressor,
@@ -138,7 +138,7 @@ def get_model_param_grid(model, search_type="random"):
         return model.get_grid_params(search_type)
 
 
-def adjust_param_grid(model, param_grid):
+def adjust_param_space(model, param_space):
     """Adjusts param grid to be compatible with the model.
     Adds `model__` if model is a pipeline and
     `estimator__` if model is a MultiOutputRegressor. Or `model__estimator__` if both,
@@ -148,14 +148,14 @@ def adjust_param_grid(model, param_grid):
     ----------
     model : model instance or Pipeline
         The pipeline, model or MultiOutputRegressor to which the param grid should be adjusted.
-    param_grid : dict
+    param_space : dict
         The param grid to be adjusted. This is a dictionary with the parameter names as keys
         which would work for GridSearchCv if the model wouldn't be wrapped in a pipeline or
         MultiOutputRegressor.
 
     Returns
     -------
-    param_grid : dict
+    param_space : dict
         Adjusted param grid.
     """
     if isinstance(model, Pipeline):
@@ -167,28 +167,28 @@ def adjust_param_grid(model, param_grid):
             prefix = "model__"
     elif isinstance(model, MultiOutputRegressor):
         prefix = "estimator__"
-    # if model isn't wrapped in anything return param_grid as is
+    # if model isn't wrapped in anything return param_space as is
     elif isinstance(model, RegressorMixin):
-        return param_grid
+        return param_space
 
-    return add_prefix_to_param_grid(param_grid, prefix)
+    return add_prefix_to_param_space(param_space, prefix)
 
 
-def add_prefix_to_param_grid(param_grid, prefix):
+def add_prefix_to_param_space(param_space, prefix):
     """Adds a prefix to all keys in a parameter grid.
 
-    Works for three types of param_grids:
-    * when param_grid is a dict (standard case)
-    * when param_grid is a list of dicts (when we only want
+    Works for three types of param_spaces:
+    * when param_space is a dict (standard case)
+    * when param_space is a list of dicts (when we only want
     to iterate over certain parameter combinations, like in RBF)
-    * when param_grid contains tuples of (dict, int) (when we want
+    * when param_space contains tuples of (dict, int) (when we want
     to iterate a certain number of times over a parameter subspace
     (only in BayesSearchCV). This can be used to prevent bayes search
     from iterating many times using the same parameters.
 
     Parameters
     ----------
-    param_grid : dict or list of dicts
+    param_space : dict or list of dicts
         The parameter grid to which the prefix will be added.
     prefix : str
         The prefix to be added to each parameter name in the grid.
@@ -198,21 +198,21 @@ def add_prefix_to_param_grid(param_grid, prefix):
     dict or list of dicts
         The parameter grid with the prefix added to each key.
     """
-    if isinstance(param_grid, list):
-        new_param_grid = []
-        for param in param_grid:
+    if isinstance(param_space, list):
+        new_param_space = []
+        for param in param_space:
             # Handle tuple (dict, int) used in BayesSearchCV
             if isinstance(param, tuple):
                 # Reconstruct the tuple with the modified dictionary
                 dict_with_prefix = add_prefix_to_single_grid(param[0], prefix)
-                new_param_grid.append((dict_with_prefix,) + param[1:])
+                new_param_space.append((dict_with_prefix,) + param[1:])
             elif isinstance(param, dict):
                 # Add prefix to the dictionary
-                new_param_grid.append(add_prefix_to_single_grid(param, prefix))
-        return new_param_grid
+                new_param_space.append(add_prefix_to_single_grid(param, prefix))
+        return new_param_space
     else:
-        # If param_grid is a single dictionary, add the prefix directly
-        return add_prefix_to_single_grid(param_grid, prefix)
+        # If param_space is a single dictionary, add the prefix directly
+        return add_prefix_to_single_grid(param_space, prefix)
 
 
 def add_prefix_to_single_grid(grid, prefix):

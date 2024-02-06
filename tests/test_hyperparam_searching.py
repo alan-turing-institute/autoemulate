@@ -5,9 +5,9 @@ from sklearn.datasets import make_regression
 from sklearn.pipeline import Pipeline
 
 from autoemulate.emulators import RandomForest
-from autoemulate.hyperparam_searching import check_param_grid
+from autoemulate.hyperparam_searching import check_param_space
 from autoemulate.hyperparam_searching import optimize_params
-from autoemulate.hyperparam_searching import process_param_grid
+from autoemulate.hyperparam_searching import process_param_space
 from autoemulate.utils import get_model_name
 
 
@@ -25,7 +25,7 @@ def model():
 
 # param grid for random forest
 @pytest.fixture
-def param_grid():
+def param_space():
     return {
         "n_estimators": [10, 20],
         "max_depth": [None, 3],
@@ -49,39 +49,39 @@ def test_optimize_params(Xy, model):
     assert best_estimator.named_steps["model"].is_fitted_ == True
 
 
-def test_process_param_grid_none(model, param_grid):
+def test_process_param_space_none(model, param_space):
     search_type = "random"
-    param_grid = process_param_grid(model, search_type, param_grid=None)
-    # check that param_grid has been populated
-    assert type(param_grid) == dict
+    param_space = process_param_space(model, search_type, param_space=None)
+    # check that param_space has been populated
+    assert type(param_space) == dict
 
 
-def test_process_param_grid(model, param_grid):
+def test_process_param_space(model, param_space):
     search_type = "random"
-    param_grid = process_param_grid(model, search_type, param_grid)
-    # check that param_grid has been populated
-    assert type(param_grid) == dict
+    param_space = process_param_space(model, search_type, param_space)
+    # check that param_space has been populated
+    assert type(param_space) == dict
 
 
-def test_process_param_grid_invalid(model, param_grid):
+def test_process_param_space_invalid(model, param_space):
     search_type = "random"
-    param_grid = {"invalid_param": [1, 2]}
+    param_space = {"invalid_param": [1, 2]}
     with pytest.raises(ValueError):
-        param_grid = process_param_grid(model, search_type, param_grid)
+        param_space = process_param_space(model, search_type, param_space)
 
 
-def test_check_param_grid(param_grid, model):
-    # param_grid should be a dictionary
+def test_check_param_space(param_space, model):
+    # param_space should be a dictionary
     with pytest.raises(TypeError):
-        check_param_grid(model, [])
-    # keys in param_grid should be strings
+        check_param_space(model, [])
+    # keys in param_space should be strings
     with pytest.raises(TypeError):
-        check_param_grid({1: []}, model)
-    # values in param_grid should be lists
+        check_param_space({1: []}, model)
+    # values in param_space should be lists
     with pytest.raises(TypeError):
-        check_param_grid({"n_estimators": 10}, model)
+        check_param_space({"n_estimators": 10}, model)
     #     # model__ prefixed keys should be actual parameters in the model
     with pytest.raises(ValueError):
-        check_param_grid({"model__invalid_param": [1, 2]}, model)
-    # check param_grid returned if valid
-    assert check_param_grid(param_grid, model) == param_grid
+        check_param_space({"model__invalid_param": [1, 2]}, model)
+    # check param_space returned if valid
+    assert check_param_space(param_space, model) == param_space

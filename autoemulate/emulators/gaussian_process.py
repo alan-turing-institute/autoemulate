@@ -68,19 +68,19 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid_random = {
+        param_space_random = {
             "nugget": ["fit", "adaptive", "pivot"],
         }
-        param_grid_bayes = {
+        param_space_bayes = {
             "nugget": Categorical(["fit", "adaptive", "pivot"]),
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": False}

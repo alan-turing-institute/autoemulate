@@ -98,7 +98,7 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid_random = {
+        param_space_random = {
             "hidden_layer_sizes": [
                 (50,),
                 (100,),
@@ -112,7 +112,7 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
             "learning_rate_init": loguniform(1e-4, 1e-2),
         }
 
-        param_grid_bayes = {
+        param_space_bayes = {
             # doesn't work with bayes
             # "hidden_layer_sizes": Categorical([
             #     (50,),
@@ -128,11 +128,11 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": True}

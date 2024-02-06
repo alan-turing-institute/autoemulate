@@ -95,7 +95,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid_random = {
+        param_space_random = {
             "kernel": [
                 RBF(),
                 Matern(),
@@ -106,7 +106,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
             "alpha": loguniform(1e-10, 1e-2),
             "normalize_y": [True],
         }
-        param_grid_bayes = {
+        param_space_bayes = {
             # "kernel": Categorical([RBF(), Matern()]), # unhashable type
             "optimizer": Categorical(["fmin_l_bfgs_b"]),
             "alpha": Real(1e-10, 1e-2, prior="log-uniform"),
@@ -114,11 +114,11 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": True}
