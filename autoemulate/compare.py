@@ -32,7 +32,7 @@ class AutoEmulate:
         self,
         X,
         y,
-        use_param_search=False,
+        param_search=False,
         param_search_type="random",
         param_search_iters=20,
         scale=True,
@@ -53,13 +53,13 @@ class AutoEmulate:
             Simulation input.
         y : array-like, shape (n_samples, n_outputs)
             Simulation output.
-        use_param_search : bool
+        param_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
         param_search_type : str
             Type of hyperparameter search to perform. Can be "grid", "random", or "bayes".
         param_search_iters : int
             Number of parameter settings that are sampled. Only used if
-            use_param_search=True and param_search_type="random".
+            param_search=True and param_search_type="random".
         scale : bool, default=True
             Whether to scale the data before fitting the models using a scaler.
         scaler : sklearn.preprocessing.StandardScaler
@@ -99,7 +99,7 @@ class AutoEmulate:
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
-        self.use_param_search = use_param_search
+        self.param_search = param_search
         self.search_type = param_search_type
         self.param_search_iters = param_search_iters
         self.scale = scale
@@ -185,7 +185,7 @@ class AutoEmulate:
 
         for i in range(len(self.models)):
             # hyperparameter search
-            if self.use_param_search:
+            if self.param_search:
                 self.models[i] = optimize_params(
                     X=self.X,
                     y=self.y,
