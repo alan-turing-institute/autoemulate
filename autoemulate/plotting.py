@@ -90,16 +90,6 @@ def plot_single_fold(
         y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
     )
     ax.set_title(f"{model_name} - {annotation}: {fold_index}")
-    # add R2 score to the plot
-    # if plot_type == "actual_vs_predicted":
-    #     ax.text(
-    #         0.05,
-    #         0.95,
-    #         f"$R^2$ = {cv_results[model_name]['test_r2'][fold_index]:.3f}",
-    #         horizontalalignment="left",
-    #         verticalalignment="top",
-    #         transform=ax.transAxes,
-    #     )
 
 
 def plot_best_fold_per_model(
@@ -254,7 +244,7 @@ def plot_results(
     """
 
     validate_inputs(cv_results, model_name)
-    check_multioutput(y, output_index, plot_type)
+    check_multioutput(y, output_index)
 
     if model_name:
         plot_model_folds(
