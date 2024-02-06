@@ -193,7 +193,7 @@ class AutoEmulate:
                     model=self.models[i],
                     search_type=self.search_type,
                     niter=self.grid_search_iters,
-                    param_grid=None,
+                    param_space=None,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )

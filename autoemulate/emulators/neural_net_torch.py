@@ -141,7 +141,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         return self
 
     def get_grid_params(self, search_type="random"):
-        param_grid_random = {
+        param_space_random = {
             "lr": loguniform(1e-4, 1e-2),
             "max_epochs": [10, 20, 30],
             "module__hidden_sizes": [
@@ -153,17 +153,17 @@ class NeuralNetTorch(NeuralNetRegressor):
             ],
         }
 
-        param_grid_bayes = {
+        param_space_bayes = {
             "lr": Real(1e-4, 1e-2, prior="log-uniform"),
             "max_epochs": Integer(10, 30),
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def __sklearn_is_fitted__(self):
         return hasattr(self, "n_features_in_")

@@ -7,13 +7,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GradientBoosting
-from autoemulate.utils import add_prefix_to_param_grid
+from autoemulate.utils import add_prefix_to_param_space
 from autoemulate.utils import add_prefix_to_single_grid
-from autoemulate.utils import adjust_param_grid
+from autoemulate.utils import adjust_param_space
 from autoemulate.utils import denormalise_y
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
-from autoemulate.utils import get_model_param_grid
+from autoemulate.utils import get_model_param_space
 from autoemulate.utils import normalise_y
 
 
@@ -60,7 +60,7 @@ def model():
 
 # gets all the parameters of the model with the sklearn get_params() method
 @pytest.fixture
-def param_grid(model):
+def param_space(model):
     return model.get_params()
 
 
@@ -91,7 +91,7 @@ def model():
 
 # gets all the parameters of the model with the sklearn get_params() method
 @pytest.fixture
-def param_grid(model):
+def param_space(model):
     return model.get_params()
 
 
@@ -115,64 +115,64 @@ def model_multiout_pipe(model):
     return Pipeline([("model", MultiOutputRegressor(model))])
 
 
-# test get_model_param_grid ----------------------------------------------------
-def test_param_basic_random(model, param_grid):
-    model_grid = get_model_param_grid(model, search_type="random")
-    # check that all keys in model_grid are in param_grid
-    assert all(key in param_grid.keys() for key in model_grid.keys())
+# test get_model_param_space ----------------------------------------------------
+def test_param_basic_random(model, param_space):
+    model_grid = get_model_param_space(model, search_type="random")
+    # check that all keys in model_grid are in param_space
+    assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-def test_param_basic_bayes(model, param_grid):
-    model_grid = get_model_param_grid(model, search_type="bayes")
-    # check that all keys in model_grid are in param_grid
-    assert all(key in param_grid.keys() for key in model_grid.keys())
+def test_param_basic_bayes(model, param_space):
+    model_grid = get_model_param_space(model, search_type="bayes")
+    # check that all keys in model_grid are in param_space
+    assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-def test_param_pipe(model_in_pipe, param_grid):
-    model_grid = get_model_param_grid(model_in_pipe)
-    assert all(key in param_grid.keys() for key in model_grid.keys())
+def test_param_pipe(model_in_pipe, param_space):
+    model_grid = get_model_param_space(model_in_pipe)
+    assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-def test_param_pipe_scaler(model_in_pipe_w_scaler, param_grid):
-    model_grid = get_model_param_grid(model_in_pipe_w_scaler)
-    assert all(key in param_grid.keys() for key in model_grid.keys())
+def test_param_pipe_scaler(model_in_pipe_w_scaler, param_space):
+    model_grid = get_model_param_space(model_in_pipe_w_scaler)
+    assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-def test_param_multiout(model_multiout, param_grid):
-    model_grid = get_model_param_grid(model_multiout)
-    assert all(key in param_grid.keys() for key in model_grid.keys())
+def test_param_multiout(model_multiout, param_space):
+    model_grid = get_model_param_space(model_multiout)
+    assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-def test_param_multiout_pipe(model_multiout_pipe, param_grid):
-    model_grid = get_model_param_grid(model_multiout_pipe)
-    assert all(key in param_grid.keys() for key in model_grid.keys())
+def test_param_multiout_pipe(model_multiout_pipe, param_space):
+    model_grid = get_model_param_space(model_multiout_pipe)
+    assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-# test adjust_param_grid -------------------------------------------------------
-def test_adj_param_basic(model, param_grid):
-    adjusted_param_grid = adjust_param_grid(model, param_grid)
-    assert all(key in param_grid.keys() for key in adjusted_param_grid.keys())
+# test adjust_param_space -------------------------------------------------------
+def test_adj_param_basic(model, param_space):
+    adjusted_param_space = adjust_param_space(model, param_space)
+    assert all(key in param_space.keys() for key in adjusted_param_space.keys())
 
 
-def test_adj_param_pipe(model_in_pipe, param_grid):
-    adjusted_param_grid = adjust_param_grid(model_in_pipe, param_grid)
-    assert all(key.startswith("model__") for key in adjusted_param_grid.keys())
+def test_adj_param_pipe(model_in_pipe, param_space):
+    adjusted_param_space = adjust_param_space(model_in_pipe, param_space)
+    assert all(key.startswith("model__") for key in adjusted_param_space.keys())
 
 
-def test_adj_param_pipe_scaler(model_in_pipe_w_scaler, param_grid):
-    adjusted_param_grid = adjust_param_grid(model_in_pipe_w_scaler, param_grid)
-    assert all(key.startswith("model__") for key in adjusted_param_grid.keys())
+def test_adj_param_pipe_scaler(model_in_pipe_w_scaler, param_space):
+    adjusted_param_space = adjust_param_space(model_in_pipe_w_scaler, param_space)
+    assert all(key.startswith("model__") for key in adjusted_param_space.keys())
 
 
-def test_adj_param_multiout(model_multiout, param_grid):
-    adjusted_param_grid = adjust_param_grid(model_multiout, param_grid)
-    assert all(key.startswith("estimator__") for key in adjusted_param_grid.keys())
+def test_adj_param_multiout(model_multiout, param_space):
+    adjusted_param_space = adjust_param_space(model_multiout, param_space)
+    assert all(key.startswith("estimator__") for key in adjusted_param_space.keys())
 
 
-def test_adj_param_multiout_pipe(model_multiout_pipe, param_grid):
-    adjusted_param_grid = adjust_param_grid(model_multiout_pipe, param_grid)
+def test_adj_param_multiout_pipe(model_multiout_pipe, param_space):
+    adjusted_param_space = adjust_param_space(model_multiout_pipe, param_space)
     assert all(
-        key.startswith("model__estimator__") for key in adjusted_param_grid.keys()
+        key.startswith("model__estimator__") for key in adjusted_param_space.keys()
     )
 
 
@@ -212,7 +212,7 @@ def test_denormalise_2d():
     np.testing.assert_array_almost_equal(y, y_denorm)
 
 
-# test add_prefix_to_param_grid ------------------------------------------------
+# test add_prefix_to_param_space ------------------------------------------------
 
 
 @pytest.fixture
@@ -241,9 +241,9 @@ def prefix():
     return "prefix_"
 
 
-def test_add_prefix_to_param_grid_dict(grid, prefix):
+def test_add_prefix_to_param_space_dict(grid, prefix):
     """
-    Test whether add_prefix_to_param_grid correctly adds a prefix to each key
+    Test whether add_prefix_to_param_space correctly adds a prefix to each key
     in a parameter grid dictionary.
     """
     expected_result = {
@@ -252,13 +252,13 @@ def test_add_prefix_to_param_grid_dict(grid, prefix):
         "prefix_param3": [7, 8, 9],
     }
     assert (
-        add_prefix_to_param_grid(grid, prefix) == expected_result
+        add_prefix_to_param_space(grid, prefix) == expected_result
     ), "Prefix not correctly added to param grid dict"
 
 
-def test_add_prefix_to_param_grid_list(grid_list, prefix):
+def test_add_prefix_to_param_space_list(grid_list, prefix):
     """
-    Test whether add_prefix_to_param_grid correctly adds a prefix to each key
+    Test whether add_prefix_to_param_space correctly adds a prefix to each key
     in a list of parameter grid dictionaries.
     """
     expected_result = [
@@ -266,15 +266,15 @@ def test_add_prefix_to_param_grid_list(grid_list, prefix):
         {"prefix_param3": [7, 8, 9], "prefix_param4": [10, 11, 12]},
     ]
     assert (
-        add_prefix_to_param_grid(grid_list, prefix) == expected_result
+        add_prefix_to_param_space(grid_list, prefix) == expected_result
     ), "Prefix not correctly added to param grid list"
 
     # test add_prefix_to_single_grid ------------------------------------------------
 
 
-def test_add_prefix_to_param_grid_list_of_tuples(grid_list_of_tuples, prefix):
+def test_add_prefix_to_param_space_list_of_tuples(grid_list_of_tuples, prefix):
     """
-    Test whether add_prefix_to_param_grid correctly adds a prefix to each key
+    Test whether add_prefix_to_param_space correctly adds a prefix to each key
     in a list of parameter grid dictionaries.
     """
     expected_result = [
@@ -282,7 +282,7 @@ def test_add_prefix_to_param_grid_list_of_tuples(grid_list_of_tuples, prefix):
         ({"prefix_param2": [4, 5, 6]}, 1),
     ]
     assert (
-        add_prefix_to_param_grid(grid_list_of_tuples, prefix) == expected_result
+        add_prefix_to_param_space(grid_list_of_tuples, prefix) == expected_result
     ), "Prefix not correctly added to param grid list of tuples"
 
 

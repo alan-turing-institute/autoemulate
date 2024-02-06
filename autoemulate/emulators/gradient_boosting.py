@@ -101,7 +101,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_grid_random = {
+        param_space_random = {
             "learning_rate": loguniform(0.01, 0.2),
             "n_estimators": randint(100, 500),
             "max_depth": randint(3, 8),
@@ -112,7 +112,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
             "ccp_alpha": loguniform(0.01, 0.1),
         }
 
-        param_grid_bayes = {
+        param_space_bayes = {
             "learning_rate": Real(0.01, 0.2, prior="log-uniform"),
             "n_estimators": Integer(100, 500),
             "max_depth": Integer(3, 8),
@@ -124,11 +124,11 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
         }
 
         if search_type == "random":
-            param_grid = param_grid_random
+            param_space = param_space_random
         elif search_type == "bayes":
-            param_grid = param_grid_bayes
+            param_space = param_space_bayes
 
-        return param_grid
+        return param_space
 
     def _more_tags(self):
         return {"multioutput": False}
