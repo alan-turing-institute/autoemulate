@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_neural_net_sk_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-02-06 11:37 +0000
+            created at 2024-02-06 15:51 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -183,7 +183,7 @@
     <p class="pln"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_grid_params</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">search_type</span><span class="op">=</span><span class="str">"random"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="str">"""Returns the grid parameters of the emulator."""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">param_grid_random</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">param_space_random</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">            <span class="str">"learning_rate"</span><span class="op">:</span> <span class="nam">loguniform</span><span class="op">(</span><span class="num">0.01</span><span class="op">,</span> <span class="num">0.2</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">            <span class="str">"n_estimators"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="num">100</span><span class="op">,</span> <span class="num">500</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">            <span class="str">"max_depth"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="num">3</span><span class="op">,</span> <span class="num">8</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -194,7 +194,7 @@
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="str">"ccp_alpha"</span><span class="op">:</span> <span class="nam">loguniform</span><span class="op">(</span><span class="num">0.01</span><span class="op">,</span> <span class="num">0.1</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">        <span class="nam">param_grid_bayes</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">        <span class="nam">param_space_bayes</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">            <span class="str">"learning_rate"</span><span class="op">:</span> <span class="nam">Real</span><span class="op">(</span><span class="num">0.01</span><span class="op">,</span> <span class="num">0.2</span><span class="op">,</span> <span class="nam">prior</span><span class="op">=</span><span class="str">"log-uniform"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">            <span class="str">"n_estimators"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="num">100</span><span class="op">,</span> <span class="num">500</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">            <span class="str">"max_depth"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="num">3</span><span class="op">,</span> <span class="num">8</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -206,11 +206,11 @@
     <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">        <span class="key">if</span> <span class="nam">search_type</span> <span class="op">==</span> <span class="str">"random"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">            <span class="nam">param_grid</span> <span class="op">=</span> <span class="nam">param_grid_random</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">            <span class="nam">param_space</span> <span class="op">=</span> <span class="nam">param_space_random</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">        <span class="key">elif</span> <span class="nam">search_type</span> <span class="op">==</span> <span class="str">"bayes"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">            <span class="nam">param_grid</span> <span class="op">=</span> <span class="nam">param_grid_bayes</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">            <span class="nam">param_space</span> <span class="op">=</span> <span class="nam">param_space_bayes</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">        <span class="key">return</span> <span class="nam">param_grid</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">        <span class="key">return</span> <span class="nam">param_space</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">    <span class="key">def</span> <span class="nam">_more_tags</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="str">"multioutput"</span><span class="op">:</span> <span class="key">False</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
@@ -223,7 +223,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_neural_net_sk_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-02-06 11:37 +0000
+            created at 2024-02-06 15:51 +0000
         </p>
     </div>
 </footer>

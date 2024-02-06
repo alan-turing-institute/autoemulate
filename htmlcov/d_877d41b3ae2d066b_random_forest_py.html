@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_rbf_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-02-06 11:37 +0000
+            created at 2024-02-06 15:51 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -178,7 +178,7 @@
     <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_grid_params</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">search_type</span><span class="op">=</span><span class="str">"random"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">        <span class="str">"""Returns the grid parameters of the emulator."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">        <span class="nam">param_grid_random</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">        <span class="nam">param_space_random</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">            <span class="str">"n_estimators"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="num">50</span><span class="op">,</span> <span class="num">500</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">            <span class="str">"min_samples_split"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="num">2</span><span class="op">,</span> <span class="num">20</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">            <span class="str">"min_samples_leaf"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">10</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -189,7 +189,7 @@
     <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">            <span class="str">"max_samples"</span><span class="op">:</span> <span class="op">[</span><span class="key">None</span><span class="op">,</span> <span class="num">0.5</span><span class="op">,</span> <span class="num">0.75</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">        <span class="nam">param_grid_bayes</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">        <span class="nam">param_space_bayes</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">            <span class="str">"n_estimators"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="num">50</span><span class="op">,</span> <span class="num">500</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="str">"min_samples_split"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="num">2</span><span class="op">,</span> <span class="num">20</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">            <span class="str">"min_samples_leaf"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">10</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -201,11 +201,11 @@
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">        <span class="key">if</span> <span class="nam">search_type</span> <span class="op">==</span> <span class="str">"random"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="nam">param_grid</span> <span class="op">=</span> <span class="nam">param_grid_random</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="nam">param_space</span> <span class="op">=</span> <span class="nam">param_space_random</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">        <span class="key">elif</span> <span class="nam">search_type</span> <span class="op">==</span> <span class="str">"bayes"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">            <span class="nam">param_grid</span> <span class="op">=</span> <span class="nam">param_grid_bayes</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">            <span class="nam">param_space</span> <span class="op">=</span> <span class="nam">param_space_bayes</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">        <span class="key">return</span> <span class="nam">param_grid</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">        <span class="key">return</span> <span class="nam">param_space</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">    <span class="key">def</span> <span class="nam">_more_tags</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="str">"multioutput"</span><span class="op">:</span> <span class="key">True</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
@@ -242,7 +242,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_rbf_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-02-06 11:37 +0000
+            created at 2024-02-06 15:51 +0000
         </p>
     </div>
 </footer>
