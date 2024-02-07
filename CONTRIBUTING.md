@@ -13,7 +13,7 @@ We hope that the information provided in this document will make it as easy as p
 If you'd like to find out more about AutoEmulate, make sure to check out:
 
 1. **README**: For a high-level overview of the project, please refer to our README.
-2. **Documentation**: For more detailed information about the project, please refer to our [documentation](<LINK TO DOCUMENTATION HERE>).
+2. **Documentation**: For more detailed information about the project, please refer to our [documentation](https://alan-turing-institute.github.io/autoemulate).
 3. **Project Roadmap**: Familiarise yourself with our direction and goals by checking out [the project's project board](https://github.com/orgs/alan-turing-institute/projects/185/views/4) in lieu of a formal product roadmap.
 
 ## Get in touch
