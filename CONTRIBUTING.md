@@ -4,33 +4,23 @@
 
 By joining our efforts, you will be helping to democratise emulation for Digital Twins and beyond.
 
-We want to ensure that every user and contributor feels welcome, included and supported to
-participate in the AutoEmulate community. Whether you're a seasoned developer, a machine learning
-researcher, a data scientist, or just someone eager to learn and contribute, **you are
-welcome here**. We value every contribution, be it big or small, and we appreciate the unique
-perspectives you bring to the project.
+We want to ensure that every user and contributor feels welcome, included and supported to participate in the AutoEmulate community. Whether you're a seasoned developer, a machine learning researcher, a data scientist, or just someone eager to learn and contribute, **you are welcome here**. We value every contribution, be it big or small, and we appreciate the unique perspectives you bring to the project.
 
-We hope that the information provided in this document will make it as easy as possible for you to
-get involved. If you find that you have questions that are not discussed below, please let us know
-through one of the many ways to [get in touch](#get-in-touch).
+We hope that the information provided in this document will make it as easy as possible for you to get involved. If you find that you have questions that are not discussed below, please let us know through one of the many ways to [get in touch](#get-in-touch).
 
 ## Important Resources
 
 If you'd like to find out more about AutoEmulate, make sure to check out:
 
 1. **README**: For a high-level overview of the project, please refer to our README.
-2. **Documentation**: For more detailed information about the project, please refer to
-   our [documentation](<LINK TO DOCUMENTATION HERE>).
-3. **Project Roadmap**: Familiarise yourself with our direction and goals by checking
-   out [the project's project board](https://github.com/orgs/alan-turing-institute/projects/185/views/4) in lieu of a formal product roadmap.
+2. **Documentation**: For more detailed information about the project, please refer to our [documentation](<LINK TO DOCUMENTATION HERE>).
+3. **Project Roadmap**: Familiarise yourself with our direction and goals by checking out [the project's project board](https://github.com/orgs/alan-turing-institute/projects/185/views/4) in lieu of a formal product roadmap.
 
 ## Get in touch
 
-The easiest way to get involved with the active development of AutoEmulate is to join our regular
-community calls. The community calls are currently on a hiatus but if you are interested in
-participating in the forthcoming community calls, which will start in 2024, you should join our
-Slack workspace, where conversation about when to hold the community calls in the future will take
-place.
+The easiest way to get involved with the active development of AutoEmulate is to join our sprints. If you are looking to become part of the core development team in this way, reach out to Research Application Manager Kalle Westerling via email kwesterling@turing.ac.uk to request an invite.
+
+<!-- The easiest way to get involved with the active development of AutoEmulate is to join our regular community calls. The community calls are currently on a hiatus but if you are interested in participating in the forthcoming community calls, which will start in 2024, you should join our Slack workspace, where conversation about when to hold the community calls in the future will take place. -->
 
 <!--
 **Slack Workspace**: Join our [AutoEmulate Slack channel](<LINK TO SIGN-UP OR TO THE SLACK TEAM>) for discussions, queries, and community interactions. Send us an email at kwesterling@turing.ac.uk to request an invite.
@@ -109,7 +99,7 @@ You can see the [Emoji Key (Contribution Types Reference)](https://allcontributo
 
 **PLEASE NOTE: Only one contributor can be added with the bot at a time!** Add each contributor in turn, merge the pull request and delete the branch (`all-contributors/add-<username>`) before adding another one. Otherwise, you can end up with dreaded [merge conflicts](https://help.github.com/articles/about-merge-conflicts). Therefore, please check the open pull requests first to make sure there aren't any [open requests from the bot](https://github.com/alan-turing-institute/autoemulate/pulls/app%2Fallcontributors) before adding another.
 
-What happens if you accidentally run the bot before the previous run was merged and you got those pesky merge conflicts? (Don't feel bad, we have all done it! 🙈) Simply close the pull request and delete the branch (`all-contributors/add-<username>`). If you are unable to do this for any reason, please let us know on Slack <link to Slack> or by opening an issue, and one of our core team members will be very happy to help!
+What happens if you accidentally run the bot before the previous run was merged and you got those pesky merge conflicts? (Don't feel bad, we have all done it! 🙈) Simply close the pull request and delete the branch (`all-contributors/add-<username>`). If you are unable to do this for any reason, please <!-- let us know on Slack <link to Slack>--> reach out to us via email or open an issue, and one of our core team members will be very happy to help!
 
 ## Need Help?
 
