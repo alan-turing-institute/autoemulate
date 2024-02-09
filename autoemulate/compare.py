@@ -202,6 +202,12 @@ class AutoEmulate:
         """
         return CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
 
+    def _custom_split(self, X, test_idxs):
+        split_index = np.full(X.shape[0], -1)
+        split_index[test_idxs] = 0
+
+        return PredefinedSplit(test_fold=split_index)
+
     def compare(self):
         """Compares the emulator models on the data. self.setup() must be run first.
 
@@ -238,12 +244,13 @@ class AutoEmulate:
                 self.cv_results[get_model_name(self.models[i])] = run_cv(
                     X=self.X,
                     y=self.y,
-                    cv=PredefinedSplit(test_fold=self.test_idxs),
+                    cv=self._custom_split(self.X, self.test_idxs),
                     model=self.models[i],
                     metrics=self.metrics,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
+                print(f"cv output: {self.cv_results[get_model_name(self.models[i])]}")
             else:
                 # run cross validation and store results
                 self.cv_results[get_model_name(self.models[i])] = run_cv(
