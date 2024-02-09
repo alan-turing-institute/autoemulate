@@ -91,6 +91,8 @@ class NeuralNetTorch(NeuralNetRegressor):
             verbose=verbose,
             **kwargs,
         )
+        self._initialize_module()
+        self._initialize_optimizer()
 
     def set_params(self, **params):
         if "random_state" in params:
@@ -128,6 +130,7 @@ class NeuralNetTorch(NeuralNetRegressor):
                 "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
                 "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
                 "check_estimators_overwrite_params": "module parameters changes upon fitting the estimator hence produce non-identical result.",
+                "check_estimators_unfitted": "NeuralNetTorch does not support prediction without initializing the module.",
             },
         }
 
