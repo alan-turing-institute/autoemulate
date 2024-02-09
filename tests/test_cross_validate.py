@@ -10,7 +10,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
-from autoemulate.cross_validate import run_cv, update_scores_df
+from autoemulate.cross_validate import run_cv
+from autoemulate.cross_validate import update_scores_df
 from autoemulate.emulators import RandomForest
 from autoemulate.metrics import METRIC_REGISTRY
 

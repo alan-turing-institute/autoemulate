@@ -3,7 +3,8 @@ from typing import Tuple
 import torch
 from torch import nn
 
-from autoemulate.emulators.neural_networks.neural_networks import TorchModule, register
+from autoemulate.emulators.neural_networks.neural_networks import register
+from autoemulate.emulators.neural_networks.neural_networks import TorchModule
 
 
 @register("mlp")

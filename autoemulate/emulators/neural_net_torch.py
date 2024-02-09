@@ -1,7 +1,6 @@
 # experimental version of a PyTorch neural network emulator wrapped in Skorch
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
-
 import warnings
 from typing import List
 
@@ -10,7 +9,8 @@ import torch
 from scipy.sparse import issparse
 from scipy.stats import loguniform
 from sklearn.exceptions import DataConversionWarning
-from skopt.space import Integer, Real
+from skopt.space import Integer
+from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 

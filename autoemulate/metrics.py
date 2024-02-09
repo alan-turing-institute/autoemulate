@@ -1,5 +1,6 @@
 import numpy as np
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
 
 
 def rmse(y_true, y_pred):

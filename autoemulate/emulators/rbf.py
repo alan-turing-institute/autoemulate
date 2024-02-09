@@ -1,9 +1,15 @@
 import numpy as np
 from scipy.interpolate import RBFInterpolator
-from scipy.stats import randint, uniform
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from skopt.space import Categorical, Integer, Real
+from scipy.stats import randint
+from scipy.stats import uniform
+from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_X_y
+from skopt.space import Categorical
+from skopt.space import Integer
+from skopt.space import Real
 
 
 class RBF(BaseEstimator, RegressorMixin):

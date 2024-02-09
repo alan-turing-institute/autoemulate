@@ -1,4 +1,5 @@
-from autoemulate.utils import get_mean_scores, get_model_name
+from autoemulate.utils import get_mean_scores
+from autoemulate.utils import get_model_name
 
 
 def print_cv_results(models, scores_df, model=None, sort_by="r2"):
