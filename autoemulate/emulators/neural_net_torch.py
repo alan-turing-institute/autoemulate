@@ -73,7 +73,6 @@ class NeuralNetTorch(NeuralNetRegressor):
         for k, v in kwargs.items():
             if k.startswith("module__"):
                 module_args[k.replace("module__", "")] = v
-                # kwargs.pop(k)
 
         super().__init__(
             module=get_module(module, module_args),
