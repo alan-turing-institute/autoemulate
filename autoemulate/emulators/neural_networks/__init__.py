@@ -1,2 +1,2 @@
-from .mlp import MLPModule
-from .neural_networks import get_module
+from .base import TorchModule
+from .get_module import get_module

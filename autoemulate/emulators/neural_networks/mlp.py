@@ -6,12 +6,12 @@ from skopt.space import Integer
 from skopt.space import Real
 from torch import nn
 
-from autoemulate.emulators.neural_networks.neural_networks import register
-from autoemulate.emulators.neural_networks.neural_networks import TorchModule
+from autoemulate.emulators.neural_networks.base import TorchModule
 
 
-@register("mlp")
 class MLPModule(TorchModule):
+    """Multi-layer perceptron module for NeuralNetRegressor"""
+
     def __init__(
         self,
         input_size: int = None,
@@ -34,28 +34,24 @@ class MLPModule(TorchModule):
         self.model = nn.Sequential(*modules)
 
     def get_grid_params(self, search_type: str = "random"):
-        param_space_random = {
-            "lr": loguniform(1e-4, 1e-2),
-            "max_epochs": [10, 20, 30],
-            "module__hidden_sizes": [
-                (50,),
-                (100,),
-                (100, 50),
-                (100, 100),
-                (200, 100),
-            ],
-        }
-
-        param_space_bayes = {
-            "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-            "max_epochs": Integer(10, 30),
-        }
-
         match search_type:
             case "random":
-                param_space = param_space_random
+                param_space = {
+                    "lr": loguniform(1e-4, 1e-2),
+                    "max_epochs": [10, 20, 30],
+                    "module__hidden_sizes": [
+                        (50,),
+                        (100,),
+                        (100, 50),
+                        (100, 100),
+                        (200, 100),
+                    ],
+                }
             case "bayes":
-                param_space = param_space_bayes
+                param_space = {
+                    "lr": Real(1e-4, 1e-2, prior="log-uniform"),
+                    "max_epochs": Integer(10, 30),
+                }
             case _:
                 raise ValueError(f"Invalid search type: {search_type}")
 
