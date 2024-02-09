@@ -40,6 +40,7 @@ class AutoEmulate:
         param_search=False,
         param_search_type="random",
         param_search_iters=20,
+        param_search_test_size=0.2,
         scale=True,
         scaler=StandardScaler(),
         reduce_dim=False,
@@ -94,7 +95,7 @@ class AutoEmulate:
         """
         self.X, self.y = self._check_input(X, y)
         self.train_idxs, self.test_idxs = split_data(
-            self.X, test_size=0.2, param_search=param_search
+            self.X, test_size=param_search_test_size, param_search=param_search
         )
         self.models = get_and_process_models(
             MODEL_REGISTRY,
@@ -306,7 +307,13 @@ class AutoEmulate:
             The name of the model to print. If None, the best fold from each model will be printed.
             If a model name is provided, the scores for that model across all folds will be printed.
         """
-        print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
+        print_cv_results(
+            self.models,
+            self.scores_df,
+            model=model,
+            sort_by=sort_by,
+            param_search=self.param_search,
+        )
 
     def plot_results(
         self,
