@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import PredefinedSplit
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
@@ -88,6 +91,9 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
+        self.train_idxs, self.test_idxs = self._split_data(
+            self.X, test_size=0.2, param_search=param_search
+        )
         self.models = get_and_process_models(
             MODEL_REGISTRY,
             model_subset,
@@ -129,6 +135,37 @@ class AutoEmulate:
         X, y = check_X_y(X, y, multi_output=True, y_numeric=True, dtype="float32")
         y = y.astype("float32")  # needed for pytorch models
         return X, y
+
+    def _split_data(self, X, test_size=0.2, random_state=None, param_search=False):
+        """Splits the data into training and testing sets.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Simulation input.
+        test_size : float, default=0.2
+            Proportion of the dataset to include in the test split.
+        random_state : int, RandomState instance or None, default=None
+            Controls the shuffling applied to the data before applying the split.
+        param_search : bool
+            Whether to split the data for hyperparameter search.
+
+        Returns
+        -------
+        train_idx : array-like
+            Indices of the training set.
+        test_idx : array-like
+            Indices of the testing set.
+        """
+
+        if param_search:
+            idxs = np.arange(X.shape[0])
+            train_idxs, test_idxs = train_test_split(
+                idxs, test_size=test_size, random_state=random_state
+            )
+        else:
+            train_idxs, test_idxs = None, None
+        return train_idxs, test_idxs
 
     def _get_metrics(self, METRIC_REGISTRY):
         """
@@ -187,8 +224,8 @@ class AutoEmulate:
             # hyperparameter search
             if self.param_search:
                 self.models[i] = optimize_params(
-                    X=self.X,
-                    y=self.y,
+                    X=self.X[self.train_idxs],
+                    y=self.y[self.train_idxs],
                     cv=self.cv,
                     model=self.models[i],
                     search_type=self.search_type,
@@ -197,16 +234,27 @@ class AutoEmulate:
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
-            # run cross validation and store results
-            self.cv_results[get_model_name(self.models[i])] = run_cv(
-                X=self.X,
-                y=self.y,
-                cv=self.cv,
-                model=self.models[i],
-                metrics=self.metrics,
-                n_jobs=self.n_jobs,
-                logger=self.logger,
-            )
+                # only predict on one test set
+                self.cv_results[get_model_name(self.models[i])] = run_cv(
+                    X=self.X,
+                    y=self.y,
+                    cv=PredefinedSplit(test_fold=self.test_idxs),
+                    model=self.models[i],
+                    metrics=self.metrics,
+                    n_jobs=self.n_jobs,
+                    logger=self.logger,
+                )
+            else:
+                # run cross validation and store results
+                self.cv_results[get_model_name(self.models[i])] = run_cv(
+                    X=self.X,
+                    y=self.y,
+                    cv=self.cv,
+                    model=self.models[i],
+                    metrics=self.metrics,
+                    n_jobs=self.n_jobs,
+                    logger=self.logger,
+                )
             # update scores dataframe
             self.scores_df = update_scores_df(
                 self.scores_df,
