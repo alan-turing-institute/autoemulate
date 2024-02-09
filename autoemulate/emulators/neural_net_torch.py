@@ -7,10 +7,7 @@ from typing import List
 import numpy as np
 import torch
 from scipy.sparse import issparse
-from scipy.stats import loguniform
 from sklearn.exceptions import DataConversionWarning
-from skopt.space import Integer
-from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 
@@ -40,8 +37,14 @@ class InputShapeSetter(Callback):
             )
 
 
-# Step 2: Create the Skorch wrapper for the NeuralNetRegressor
 class NeuralNetTorch(NeuralNetRegressor):
+    """
+    Wrap PyTorch modules in Skorch to make them compatible with scikit-learn.
+
+    module__input_size and module__output_size must be provided to define the
+    input and output dimension of the data.
+    """
+
     def __init__(
         self,
         module: str = "mlp",
@@ -88,6 +91,8 @@ class NeuralNetTorch(NeuralNetRegressor):
             verbose=verbose,
             **kwargs,
         )
+        self._initialize_module()
+        self._initialize_optimizer()
 
     def set_params(self, **params):
         if "random_state" in params:
@@ -110,29 +115,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         return self
 
     def get_grid_params(self, search_type="random"):
-        param_space_random = {
-            "lr": loguniform(1e-4, 1e-2),
-            "max_epochs": [10, 20, 30],
-            "module__hidden_sizes": [
-                (50,),
-                (100,),
-                (100, 50),
-                (100, 100),
-                (200, 100),
-            ],
-        }
-
-        param_space_bayes = {
-            "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-            "max_epochs": Integer(10, 30),
-        }
-
-        if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
-        return param_space
+        return self.module_.get_grid_params(search_type)
 
     def __sklearn_is_fitted__(self):
         return hasattr(self, "n_features_in_")
@@ -146,6 +129,7 @@ class NeuralNetTorch(NeuralNetRegressor):
                 "check_regressors_no_decision_function": "skorch NeuralNetRegressor class implements the predict_proba.",
                 "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
                 "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
+                "check_estimators_overwrite_params": "module parameters changes upon fitting the estimator hence produce non-identical result.",
             },
         }
 

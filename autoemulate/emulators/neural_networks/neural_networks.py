@@ -16,6 +16,10 @@ def register(name):
 
 
 class TorchModule(nn.Module):
+    """
+    Basic structure of a `module` for `NeuralNetRegressor`
+    """
+
     def __init__(
         self,
         module_name: str,
@@ -30,11 +34,20 @@ class TorchModule(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
 
+    def get_grid_params(self, search_type: str = "random"):
+        """Return the hyperparameter search space for the module"""
+        raise NotImplementedError("get_grid_params method not implemented.")
+
     def forward(self, X: torch.Tensor):
         raise NotImplementedError("forward method not implemented.")
 
 
 def get_module(module: str | TorchModule, module_args) -> TorchModule:
+    """
+    Return the module instance for NeuralNetRegressor. If `module` is a string,
+    then initialize a TorchModule with the same registered name. If `module` is
+    already a TorchModule, then return it as is.
+    """
     if isinstance(module, TorchModule):
         return module
     if module not in _MODULES:

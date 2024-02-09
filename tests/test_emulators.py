@@ -192,3 +192,18 @@ def test_nn_torch_shape_setter():
     assert nn_torch_model.module_.model[0].in_features == input_size
     assert nn_torch_model.module__output_size == output_size
     assert nn_torch_model.module_.model[-1].out_features == output_size
+
+
+def test_nn_torch_module_methods():
+    input_size, output_size = 10, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(
+        module="mlp",
+        module__input_size=input_size,
+        module__output_size=output_size,
+    )
+    nn_torch_model.fit(X, y)
+    assert callable(getattr(nn_torch_model, "get_grid_params"))
+    assert callable(getattr(nn_torch_model.module_, "forward"))
+    assert callable(getattr(nn_torch_model.module_, "get_grid_params"))
