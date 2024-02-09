@@ -1,0 +1,29 @@
+name: Docs
+on: [push, pull_request, workflow_dispatch]
+permissions:
+    contents: write
+jobs:
+    docs:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-python@v2
+              with:
+                python-version: 3.11
+            - uses: nikeee/setup-pandoc@v1
+            - name: "Upgrade pip"
+              run: pip install --upgrade pip
+            - name: "Install jupyterbook"
+              run: pip install -r docs/requirements.txt
+            - name: "Install autoemulate"
+              run: pip install git+https://github.com/alan-turing-institute/autoemulate.git
+            - name: "Run jupyterbook"
+              run: jupyter-book build docs --all
+            - name: "Deploy"
+              uses: peaceiris/actions-gh-pages@v3
+              if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/docs') }}
+              with:
+                    publish_branch: gh-pages
+                    github_token: ${{ secrets.GITHUB_TOKEN }}
+                    publish_dir: docs/_build/html/
+                    force_orphan: true
