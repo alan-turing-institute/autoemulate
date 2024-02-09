@@ -91,8 +91,6 @@ class NeuralNetTorch(NeuralNetRegressor):
             verbose=verbose,
             **kwargs,
         )
-        self._initialize_module()
-        self._initialize_optimizer()
 
     def set_params(self, **params):
         if "random_state" in params:
