@@ -1,12 +1,17 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import PredefinedSplit
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
 from autoemulate.cross_validate import run_cv
+from autoemulate.cross_validate import single_split
+from autoemulate.cross_validate import split_data
 from autoemulate.cross_validate import update_scores_df
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.emulators import MODEL_REGISTRY
@@ -35,6 +40,7 @@ class AutoEmulate:
         param_search=False,
         param_search_type="random",
         param_search_iters=20,
+        param_search_test_size=0.2,
         scale=True,
         scaler=StandardScaler(),
         reduce_dim=False,
@@ -88,6 +94,9 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
+        self.train_idxs, self.test_idxs = split_data(
+            self.X, test_size=param_search_test_size, param_search=param_search
+        )
         self.models = get_and_process_models(
             MODEL_REGISTRY,
             model_subset,
@@ -187,8 +196,8 @@ class AutoEmulate:
             # hyperparameter search
             if self.param_search:
                 self.models[i] = optimize_params(
-                    X=self.X,
-                    y=self.y,
+                    X=self.X[self.train_idxs],
+                    y=self.y[self.train_idxs],
                     cv=self.cv,
                     model=self.models[i],
                     search_type=self.search_type,
@@ -197,16 +206,28 @@ class AutoEmulate:
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
-            # run cross validation and store results
-            self.cv_results[get_model_name(self.models[i])] = run_cv(
-                X=self.X,
-                y=self.y,
-                cv=self.cv,
-                model=self.models[i],
-                metrics=self.metrics,
-                n_jobs=self.n_jobs,
-                logger=self.logger,
-            )
+
+                self.cv_results[get_model_name(self.models[i])] = run_cv(
+                    X=self.X,
+                    y=self.y,
+                    cv=single_split(self.X, self.test_idxs),  # predict on test set
+                    model=self.models[i],
+                    metrics=self.metrics,
+                    n_jobs=self.n_jobs,
+                    logger=self.logger,
+                )
+
+            else:
+                # run cross validation and store results
+                self.cv_results[get_model_name(self.models[i])] = run_cv(
+                    X=self.X,
+                    y=self.y,
+                    cv=self.cv,
+                    model=self.models[i],
+                    metrics=self.metrics,
+                    n_jobs=self.n_jobs,
+                    logger=self.logger,
+                )
             # update scores dataframe
             self.scores_df = update_scores_df(
                 self.scores_df,
@@ -275,22 +296,28 @@ class AutoEmulate:
         serialiser = ModelSerialiser()
         return serialiser.load_model(filepath)
 
-    def print_results(self, sort_by="r2", model=None):
+    def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
 
         Parameters
         ----------
-        sort_by : str, optional
-            The metric to sort by. Default is "r2", can also be "rmse".
         model : str, optional
             The name of the model to print. If None, the best fold from each model will be printed.
             If a model name is provided, the scores for that model across all folds will be printed.
+        sort_by : str, optional
+            The metric to sort by. Default is "r2", can also be "rmse".
         """
-        print_cv_results(self.models, self.scores_df, model=model, sort_by=sort_by)
+        print_cv_results(
+            self.models,
+            self.scores_df,
+            model=model,
+            sort_by=sort_by,
+            param_search=self.param_search,
+        )
 
     def plot_results(
         self,
-        model_name=None,
+        model=None,
         plot_type="actual_vs_predicted",
         n_cols=3,
         figsize=None,
@@ -300,8 +327,7 @@ class AutoEmulate:
 
         Parameters
         ----------
-        model_name : str
-
+        model : str
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
         plot_type : str, optional
@@ -319,9 +345,10 @@ class AutoEmulate:
             self.cv_results,
             self.X,
             self.y,
-            model_name=model_name,
+            model_name=model,
             n_cols=n_cols,
             plot_type=plot_type,
             figsize=figsize,
             output_index=output_index,
+            param_search=self.param_search,
         )
