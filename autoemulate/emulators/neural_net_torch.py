@@ -92,8 +92,7 @@ class NeuralNetTorch(NeuralNetRegressor):
             else:
                 setattr(self, "random_state", random_state)
             set_random_seed(self.random_state)
-            self._initialize_module()
-            self._initialize_optimizer()
+            self.initialize()
         return super().set_params(**params)
 
     def initialize_module(self, reason=None):
@@ -117,10 +116,9 @@ class NeuralNetTorch(NeuralNetRegressor):
             "_xfail_checks": {
                 "check_no_attributes_set_in_init": "skorch initialize attributes in __init__.",
                 "check_regressors_no_decision_function": "skorch NeuralNetRegressor class implements the predict_proba.",
-                # "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
-                # "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
-                # "check_estimators_overwrite_params": "module parameters changes upon fitting the estimator hence produce non-identical result.",
-                # "check_estimators_unfitted": "NeuralNetTorch does not support prediction without initializing the module.",
+                "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
+                "check_methods_subset_invariance": "the assert_allclose check is done in float64 while Torch models operate in float32. The max absolute difference is 1.1920929e-07.",
+                "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
             },
         }
 
