@@ -11,10 +11,16 @@ chapters:
   # - file: getting-started/data_requirements
   - file: getting-started/installation
   - file: getting-started/quickstart
+  - file: getting-started/choosing-design
 
 - file: tutorials/index
   sections:
   - file: tutorials/01_start
+
+- file: community/index
+  sections:
+  - file: community/contributing
+  - file: community/code-of-conduct
 
 - file: reference/index
   sections:
