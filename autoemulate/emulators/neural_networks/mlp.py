@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import numpy as np
 import torch
 from scipy.stats import loguniform
 from skopt.space import Integer
@@ -34,24 +35,27 @@ class MLPModule(TorchModule):
         self.model = nn.Sequential(*modules)
 
     def get_grid_params(self, search_type: str = "random"):
+        param_space = {
+            "lr": loguniform(1e-06, 0.01),
+            "max_epochs": np.arange(10, 110, 10).tolist(),
+            "module__hidden_sizes": [
+                (32,),
+                (64,),
+                (128,),
+                (128, 128),
+                (128, 256),
+                (256, 256),
+                (512, 512),
+                (128, 128, 128),
+            ],
+            "batch_size": np.arange(2, 128, 2).tolist(),
+            "optimizer__weight_decay": loguniform(1e-8, 0.1),
+        }
         match search_type:
             case "random":
-                param_space = {
-                    "lr": loguniform(1e-4, 1e-2),
-                    "max_epochs": [10, 20, 30],
-                    "module__hidden_sizes": [
-                        (50,),
-                        (100,),
-                        (100, 50),
-                        (100, 100),
-                        (200, 100),
-                    ],
-                }
+                pass
             case "bayes":
-                param_space = {
-                    "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-                    "max_epochs": Integer(10, 30),
-                }
+                pass
             case _:
                 raise ValueError(f"Invalid search type: {search_type}")
 
