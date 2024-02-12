@@ -26,7 +26,7 @@
 | autoemulate/emulators/xgboost.py                       |       56 |        7 |     88% |   135-172 |
 | autoemulate/experimental\_design.py                    |       19 |        3 |     84% |18, 29, 40 |
 | autoemulate/hyperparam\_searching.py                   |       45 |        8 |     82% |70-82, 87-91 |
-| autoemulate/logging\_config.py                         |       21 |        4 |     81% |     24-27 |
+| autoemulate/logging\_config.py                         |       22 |        4 |     82% |     25-28 |
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                       |       31 |        0 |    100% |           |
 | autoemulate/plotting.py                                |       53 |       26 |     51% |128-152, 192-215, 255-271 |
@@ -46,7 +46,7 @@
 | tests/test\_printing.py                                |       32 |        0 |    100% |           |
 | tests/test\_save.py                                    |       42 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                              **TOTAL** | **1788** |  **150** | **92%** |           |
+|                                              **TOTAL** | **1789** |  **150** | **92%** |           |
 
 
 ## Setup coverage badge
