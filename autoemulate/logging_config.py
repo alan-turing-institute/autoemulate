@@ -1,4 +1,5 @@
 import logging
+import sys
 import warnings
 
 
@@ -9,7 +10,7 @@ def configure_logging(log_to_file=False):
     logger.handlers = []  # Clear existing handlers
 
     # Create console handler with a higher log level
-    ch = logging.StreamHandler()
+    ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.INFO)
 
     # Create formatter and add it to the handler
