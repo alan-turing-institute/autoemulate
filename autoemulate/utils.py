@@ -308,6 +308,14 @@ def get_mean_scores(scores_df, metric):
     return means_df
 
 
+def get_model_scores(scores_df, model_name):
+    model_scores = scores_df[scores_df["model"] == model_name].pivot(
+        index="fold", columns="metric", values="score"
+    )
+
+    return model_scores
+
+
 def set_random_seed(seed: int, deterministic: bool = False):
     """Set random seed for Python, Numpy and PyTorch.
     Args:

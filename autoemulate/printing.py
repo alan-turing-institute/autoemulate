@@ -1,5 +1,6 @@
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
+from autoemulate.utils import get_model_scores
 
 
 def print_cv_results(models, scores_df, model=None, sort_by="r2", param_search=False):
@@ -36,16 +37,10 @@ def print_cv_results(models, scores_df, model=None, sort_by="r2", param_search=F
             print(means)
     else:
         if param_search:
-            scores = scores_df[scores_df["model"] == model].pivot(
-                index="fold", columns="metric", values="score"
-            )
-            # drop metric column
-            # get index of scores
+            scores = get_model_scores(scores_df, model)
             print(f"Test score for {model}:")
             print(scores)
         else:
-            scores = scores_df[scores_df["model"] == model].pivot(
-                index="fold", columns="metric", values="score"
-            )
+            scores = get_model_scores(scores_df, model)
             print(f"Scores for {model} across all folds:")
             print(scores)

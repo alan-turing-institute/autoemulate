@@ -296,16 +296,16 @@ class AutoEmulate:
         serialiser = ModelSerialiser()
         return serialiser.load_model(filepath)
 
-    def print_results(self, sort_by="r2", model=None):
+    def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
 
         Parameters
         ----------
-        sort_by : str, optional
-            The metric to sort by. Default is "r2", can also be "rmse".
         model : str, optional
             The name of the model to print. If None, the best fold from each model will be printed.
             If a model name is provided, the scores for that model across all folds will be printed.
+        sort_by : str, optional
+            The metric to sort by. Default is "r2", can also be "rmse".
         """
         print_cv_results(
             self.models,
