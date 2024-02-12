@@ -30,9 +30,9 @@ chapters:
   - file: reference/printing
   - file: reference/save
   - file: reference/utils
-  - file: reference/demos/index
+  - file: reference/simulations/index
     sections:
-    - file: reference/demos/projectile
+    - file: reference/simulations/projectile
   - file: reference/emulators/index
     sections:
     - file: reference/emulators/gaussian_process_sk

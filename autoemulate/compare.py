@@ -284,14 +284,24 @@ class AutoEmulate:
 
         return chosen_model
 
-    def save_model(self, filepath):
-        """Saves the best model to disk."""
+    def save_model(self, model=None, filepath="emulator.pkl"):
+        """Saves the best model to disk.
+
+        Parameters
+        ----------
+        model : object
+            Model to save.
+        filepath : str
+            Path to save the model to.
+        """
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save_model()")
         serialiser = ModelSerialiser()
-        serialiser.save_model(self.best_model, filepath)
+        if model is None:
+            model = self.best_model
+        serialiser.save_model(model, filepath)
 
-    def load_model(self, filepath):
+    def load_model(self, filepath="emulator.pkl"):
         """Loads a model from disk."""
         serialiser = ModelSerialiser()
         return serialiser.load_model(filepath)
