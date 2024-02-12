@@ -1,36 +1,18 @@
 # experimental version of a PyTorch neural network emulator wrapped in Skorch
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
-import random
 import warnings
 from typing import List
-from typing import Tuple
 
 import numpy as np
 import torch
 from scipy.sparse import issparse
-from scipy.stats import loguniform
 from sklearn.exceptions import DataConversionWarning
-from skopt.space import Integer
-from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
-from torch import nn
 
-
-def set_random_seed(seed: int, deterministic: bool = False):
-    """Set random seed for Python, Numpy and PyTorch.
-    Args:
-        seed: int, the random seed to use.
-        deterministic: bool, use "deterministic" algorithms in PyTorch.
-    """
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    if deterministic:
-        torch.backends.cudnn.benchmark = False
-        torch.use_deterministic_algorithms(True)
+from autoemulate.emulators.neural_networks import get_module
+from autoemulate.utils import set_random_seed
 
 
 class InputShapeSetter(Callback):
@@ -55,35 +37,17 @@ class InputShapeSetter(Callback):
             )
 
 
-# Step 1: Define the PyTorch Module for the MLP
-class MLPModule(nn.Module):
-    def __init__(
-        self,
-        input_size: int = None,
-        output_size: int = None,
-        hidden_sizes: Tuple[int] = (100,),
-        random_state: int = None,
-    ):
-        super(MLPModule, self).__init__()
-        if random_state is not None:
-            set_random_seed(random_state)
-        modules = []
-        for hidden_size in hidden_sizes:
-            modules.append(nn.Linear(in_features=input_size, out_features=hidden_size))
-            modules.append(nn.ReLU())
-            input_size = hidden_size
-        modules.append(nn.Linear(in_features=input_size, out_features=output_size))
-        self.model = nn.Sequential(*modules)
-
-    def forward(self, X: torch.Tensor):
-        return self.model(X)
-
-
-# Step 2: Create the Skorch wrapper for the NeuralNetRegressor
 class NeuralNetTorch(NeuralNetRegressor):
+    """
+    Wrap PyTorch modules in Skorch to make them compatible with scikit-learn.
+
+    module__input_size and module__output_size must be provided to define the
+    input and output dimension of the data.
+    """
+
     def __init__(
         self,
-        module: nn.Module = MLPModule,
+        module: str = "mlp",
         criterion=torch.nn.MSELoss,
         optimizer=torch.optim.Adam,
         lr: float = 0.01,
@@ -91,7 +55,6 @@ class NeuralNetTorch(NeuralNetRegressor):
         max_epochs: int = 1,
         module__input_size: int = 2,
         module__output_size: int = 1,
-        module__hidden_sizes: Tuple[int] = (100,),
         optimizer__weight_decay: float = 0.0001,
         iterator_train__shuffle: bool = True,
         callbacks: List[Callback] = [InputShapeSetter()],
@@ -102,8 +65,17 @@ class NeuralNetTorch(NeuralNetRegressor):
         if "random_state" in kwargs:
             setattr(self, "random_state", kwargs.pop("random_state"))
             set_random_seed(self.random_state)
+        # get all arguments for module initialization
+        module_args = {
+            "input_size": module__input_size,
+            "output_size": module__output_size,
+        }
+        for k, v in kwargs.items():
+            if k.startswith("module__"):
+                module_args[k.replace("module__", "")] = v
+
         super().__init__(
-            module=module,
+            module=get_module(module, module_args),
             criterion=criterion,
             optimizer=optimizer,
             lr=lr,
@@ -111,7 +83,6 @@ class NeuralNetTorch(NeuralNetRegressor):
             max_epochs=max_epochs,
             module__input_size=module__input_size,
             module__output_size=module__output_size,
-            module__hidden_sizes=module__hidden_sizes,
             optimizer__weight_decay=optimizer__weight_decay,
             iterator_train__shuffle=iterator_train__shuffle,
             callbacks=callbacks,
@@ -119,6 +90,8 @@ class NeuralNetTorch(NeuralNetRegressor):
             verbose=verbose,
             **kwargs,
         )
+        self._initialize_module()
+        self._initialize_optimizer()
 
     def set_params(self, **params):
         if "random_state" in params:
@@ -141,29 +114,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         return self
 
     def get_grid_params(self, search_type="random"):
-        param_space_random = {
-            "lr": loguniform(1e-4, 1e-2),
-            "max_epochs": [10, 20, 30],
-            "module__hidden_sizes": [
-                (50,),
-                (100,),
-                (100, 50),
-                (100, 100),
-                (200, 100),
-            ],
-        }
-
-        param_space_bayes = {
-            "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-            "max_epochs": Integer(10, 30),
-        }
-
-        if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
-        return param_space
+        return self.module_.get_grid_params(search_type)
 
     def __sklearn_is_fitted__(self):
         return hasattr(self, "n_features_in_")
@@ -177,6 +128,8 @@ class NeuralNetTorch(NeuralNetRegressor):
                 "check_regressors_no_decision_function": "skorch NeuralNetRegressor class implements the predict_proba.",
                 "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
                 "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
+                "check_estimators_overwrite_params": "module parameters changes upon fitting the estimator hence produce non-identical result.",
+                "check_estimators_unfitted": "NeuralNetTorch does not support prediction without initializing the module.",
             },
         }
 
