@@ -56,7 +56,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         max_epochs: int = 1,
         module__input_size: int = 2,
         module__output_size: int = 1,
-        optimizer__weight_decay: float = 0.0001,
+        optimizer__weight_decay: float = 0.0,
         iterator_train__shuffle: bool = True,
         callbacks: List[Callback] = [InputShapeSetter()],
         train_split: bool = False,  # to run cross_validate without splitting the data
