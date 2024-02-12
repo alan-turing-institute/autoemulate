@@ -133,8 +133,6 @@ def plot_best_fold_per_model(
 
     plt.figure(figsize=figsize)
 
-    if n_models == 1:
-        axes = [axes]
     for i, model_name in enumerate(cv_results):
         best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
         ax = plt.subplot(n_rows, n_cols, i + 1)
@@ -199,8 +197,6 @@ def plot_model_folds(
 
     plt.figure(figsize=figsize)
 
-    if n_folds == 1:
-        axes = [axes]
     for i in range(n_folds):
         ax = plt.subplot(n_rows, n_cols, i + 1)
         plot_single_fold(
