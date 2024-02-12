@@ -32,7 +32,7 @@ The easiest way to get involved with the active development of AutoEmulate is to
 
 We welcome contributions of all kinds, be it code, documentation, or community engagement. We encourage you to read through the following sections to learn more about how you can contribute to the package.
 
-We are always interested in adding more sampling/experimental design strategies (see https://github.com/alan-turing-institute/autoemulate/issues/6) and more simulation data packages (see https://github.com/alan-turing-institute/autoemulate/issues/4).
+We are always interested in adding more simulations or simulation input/output datasets from any field (see https://github.com/alan-turing-institute/autoemulate/issues/4).
 
 ## How to Submit Changes
 
