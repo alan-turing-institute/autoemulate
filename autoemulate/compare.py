@@ -317,7 +317,7 @@ class AutoEmulate:
 
     def plot_results(
         self,
-        model_name=None,
+        model=None,
         plot_type="actual_vs_predicted",
         n_cols=3,
         figsize=None,
@@ -327,8 +327,7 @@ class AutoEmulate:
 
         Parameters
         ----------
-        model_name : str
-
+        model : str
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
         plot_type : str, optional
@@ -346,9 +345,10 @@ class AutoEmulate:
             self.cv_results,
             self.X,
             self.y,
-            model_name=model_name,
+            model_name=model,
             n_cols=n_cols,
             plot_type=plot_type,
             figsize=figsize,
             output_index=output_index,
+            param_search=self.param_search,
         )
