@@ -14,11 +14,11 @@
 | autoemulate/emulators/gaussian\_process\_sk.py         |       46 |        7 |     85% |    98-121 |
 | autoemulate/emulators/gradient\_boosting.py            |       46 |        0 |    100% |           |
 | autoemulate/emulators/neural\_net\_sk.py               |       45 |        7 |     84% |   101-135 |
-| autoemulate/emulators/neural\_net\_torch.py            |      102 |        4 |     96% |75, 102, 117, 157 |
+| autoemulate/emulators/neural\_net\_torch.py            |       99 |        3 |     97% |93, 107, 146 |
 | autoemulate/emulators/neural\_networks/\_\_init\_\_.py |        2 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/base.py         |       15 |        2 |     87% |    28, 31 |
-| autoemulate/emulators/neural\_networks/get\_module.py  |       10 |        2 |     80% |     15-16 |
-| autoemulate/emulators/neural\_networks/mlp.py          |       28 |        8 |     71% |     37-58 |
+| autoemulate/emulators/neural\_networks/get\_module.py  |       11 |        2 |     82% |     15-16 |
+| autoemulate/emulators/neural\_networks/mlp.py          |       31 |        9 |     71% |     41-63 |
 | autoemulate/emulators/polynomials.py                   |       34 |        5 |     85% |     84-89 |
 | autoemulate/emulators/random\_forest.py                |       43 |        2 |     95% |   123-124 |
 | autoemulate/emulators/rbf.py                           |       38 |        7 |     82% |    94-145 |
@@ -46,7 +46,7 @@
 | tests/test\_printing.py                                |       32 |        0 |    100% |           |
 | tests/test\_save.py                                    |       42 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                              **TOTAL** | **1789** |  **150** | **92%** |           |
+|                                              **TOTAL** | **1790** |  **150** | **92%** |           |
 
 
 ## Setup coverage badge
