@@ -27,6 +27,12 @@ from autoemulate.utils import get_model_name
 
 
 class AutoEmulate:
+    """
+    The AutoEmulate class is the main class of the AutoEmulate package. It is used to set up and compare
+    different emulator models on a given dataset. It can also be used to save and load models, and to
+    print and plot the results of the comparison.
+    """
+
     def __init__(self):
         """Initializes an AutoEmulate object."""
         self.X = None
