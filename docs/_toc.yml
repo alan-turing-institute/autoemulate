@@ -25,6 +25,7 @@ chapters:
 - file: reference/index
   sections:
   - file: reference/compare
+  - file: reference/cross_validate
   - file: reference/cv
   - file: reference/datasets
   - file: reference/experimental_design
