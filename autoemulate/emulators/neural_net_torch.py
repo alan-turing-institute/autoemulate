@@ -8,6 +8,7 @@ import numpy as np
 import torch
 from scipy.sparse import issparse
 from sklearn.exceptions import DataConversionWarning
+from sklearn.exceptions import NotFittedError
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 
@@ -49,13 +50,13 @@ class NeuralNetTorch(NeuralNetRegressor):
         self,
         module: str = "mlp",
         criterion=torch.nn.MSELoss,
-        optimizer=torch.optim.Adam,
-        lr: float = 0.01,
+        optimizer=torch.optim.AdamW,
+        lr: float = 1e-3,
         batch_size: int = 128,
         max_epochs: int = 1,
         module__input_size: int = 2,
         module__output_size: int = 1,
-        optimizer__weight_decay: float = 0.0001,
+        optimizer__weight_decay: float = 0.0,
         iterator_train__shuffle: bool = True,
         callbacks: List[Callback] = [InputShapeSetter()],
         train_split: bool = False,  # to run cross_validate without splitting the data
@@ -65,17 +66,8 @@ class NeuralNetTorch(NeuralNetRegressor):
         if "random_state" in kwargs:
             setattr(self, "random_state", kwargs.pop("random_state"))
             set_random_seed(self.random_state)
-        # get all arguments for module initialization
-        module_args = {
-            "input_size": module__input_size,
-            "output_size": module__output_size,
-        }
-        for k, v in kwargs.items():
-            if k.startswith("module__"):
-                module_args[k.replace("module__", "")] = v
-
         super().__init__(
-            module=get_module(module, module_args),
+            module=get_module(module),
             criterion=criterion,
             optimizer=optimizer,
             lr=lr,
@@ -90,8 +82,7 @@ class NeuralNetTorch(NeuralNetRegressor):
             verbose=verbose,
             **kwargs,
         )
-        self._initialize_module()
-        self._initialize_optimizer()
+        self.initialize()
 
     def set_params(self, **params):
         if "random_state" in params:
@@ -101,8 +92,7 @@ class NeuralNetTorch(NeuralNetRegressor):
             else:
                 setattr(self, "random_state", random_state)
             set_random_seed(self.random_state)
-            self._initialize_module()
-            self._initialize_optimizer()
+            self.initialize()
         return super().set_params(**params)
 
     def initialize_module(self, reason=None):
@@ -127,9 +117,8 @@ class NeuralNetTorch(NeuralNetRegressor):
                 "check_no_attributes_set_in_init": "skorch initialize attributes in __init__.",
                 "check_regressors_no_decision_function": "skorch NeuralNetRegressor class implements the predict_proba.",
                 "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
+                "check_methods_subset_invariance": "the assert_allclose check is done in float64 while Torch models operate in float32. The max absolute difference is 1.1920929e-07.",
                 "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
-                "check_estimators_overwrite_params": "module parameters changes upon fitting the estimator hence produce non-identical result.",
-                "check_estimators_unfitted": "NeuralNetTorch does not support prediction without initializing the module.",
             },
         }
 
@@ -183,6 +172,8 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     @torch.inference_mode()
     def predict_proba(self, X):
+        if not hasattr(self, "n_features_in_"):
+            raise NotFittedError
         dtype = X.dtype if hasattr(X, "dtype") else None
         X, _ = self.check_data(X)
         y_pred = super().predict_proba(X)
