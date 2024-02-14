@@ -310,6 +310,21 @@ def get_mean_scores(scores_df, metric):
 
 
 def get_model_scores(scores_df, model_name):
+    """
+    Get the scores for a specific model.
+
+    Parameters
+    ----------
+    scores_df : pandas.DataFrame
+        DataFrame with columns "model", "metric", "fold", "score".
+    model_name : str
+        The name of the model for which to retrieve the scores.
+
+    Returns
+    -------
+    model_scores : pandas.DataFrame
+        DataFrame with columns "fold", "metric", "score".
+    """
     model_scores = scores_df[scores_df["model"] == model_name].pivot(
         index="fold", columns="metric", values="score"
     )
