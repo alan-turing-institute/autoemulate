@@ -165,7 +165,6 @@ def plot_model_folds(
 ):
     """Plots all the folds for a given model.
 
-
     Parameters
     ----------
     cv_results : dict
