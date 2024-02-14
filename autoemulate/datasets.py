@@ -14,14 +14,16 @@ def fetch_data(dataset, split=False, test_size=0.2, random_state=42):
     Parameters
     ----------
     dataset : str
-        cardiac1: ionic atrial cell model data from LH sampling.
-        cardiac2: isotonic contraction ventricular cell model, no LH sampling.
-        cardiac3: CircAdapt: four-chamber pressure and volume CircAdapt ODE model from LH sampling.
-        cardiac4: four chamber: 3D-0D four-chamber electromechanics model to predict pressure and volume biomarkers for cardiac function.
-        cardiac5: passive mechanics: inflated volumes and mean atrial and ventricular fiber strains for a passive inflation.
-        cardiac6: tissue electrophysiology: predict total atrial and ventricular activation times with an Eikonal model.
-        climate1: GENIE model: predict climate variables SAT, ACC, VEGC, SOILC, MAXPMOC, OCN_O2, fCaCO3, SIAREA_S.
-        engineering1: Cantilever truss simulation.
+        Dataset to load. Can be any of the following strings:
+
+        - **cardiac1**: ionic atrial cell model data from LH sampling.
+        - **cardiac2**: isotonic contraction ventricular cell model, no LH sampling.
+        - **cardiac3**: CircAdapt: four-chamber pressure and volume CircAdapt ODE model from LH sampling.
+        - **cardiac4**: four chamber: 3D-0D four-chamber electromechanics model to predict pressure and volume biomarkers for cardiac function.
+        - **cardiac5**: passive mechanics: inflated volumes and mean atrial and ventricular fiber strains for a passive inflation.
+        - **cardiac6**: tissue electrophysiology: predict total atrial and ventricular activation times with an Eikonal model.
+        - **climate1**: GENIE model: predict climate variables SAT, ACC, VEGC, SOILC, MAXPMOC, OCN_O2, fCaCO3, SIAREA_S.
+        - **engineering1**: Cantilever truss simulation.
     split : bool, optional
         Whether to split the data into training and testing sets. Default is False.
     test_size : float, optional
