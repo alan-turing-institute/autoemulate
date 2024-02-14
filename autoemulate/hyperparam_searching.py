@@ -40,7 +40,7 @@ def optimize_params(
         parameter settings to try as values, or a list of such dictionaries,
         in which case the grids spanned by each dictionary in the list are
         explored. This enables searching over any sequence of parameter
-        settings. Parameters names should be prefixed with "model__" to indicate that
+        settings. Parameters names should be prefixed with ``model__`` to indicate that
         they are parameters of the model.
     n_jobs : int
         Number of jobs to run in parallel.
@@ -136,7 +136,7 @@ def check_param_space(param_space, model):
         parameter settings to try as values, or a list of such dictionaries,
         in which case the grids spanned by each dictionary in the list are
         explored. This enables searching over any sequence of parameter
-        settings. Parameters names should be prefixed with "model__" to indicate that
+        settings. Parameters names should be prefixed with ``model__`` to indicate that
         they are parameters of the model.
     model : sklearn.pipeline.Pipeline
         Model to be optimized.
