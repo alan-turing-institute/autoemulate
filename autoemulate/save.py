@@ -9,6 +9,10 @@ from autoemulate.utils import get_model_name
 
 
 class ModelSerialiser:
+    """
+    The ModelSerialiser class is responsible for saving and loading models to disk.
+    """
+
     def save_model(self, model, path):
         """Saves a model + metadata to disk."""
         # model
