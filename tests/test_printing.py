@@ -4,7 +4,7 @@ import pytest
 
 from autoemulate.emulators import GaussianProcessSk
 from autoemulate.emulators import RandomForest
-from autoemulate.printing import print_cv_results
+from autoemulate.printing import _print_cv_results
 from autoemulate.utils import get_model_name
 
 # prep inputs
@@ -30,14 +30,14 @@ scores_df = pd.DataFrame(data)
 
 
 def test_print_results_all_models(capsys):
-    print_cv_results(models, scores_df)
+    _print_cv_results(models, scores_df)
     captured = capsys.readouterr()
     assert "Average scores across all models:" in captured.out
     assert "model" in captured.out
 
 
 def test_print_results_single_model(capsys):
-    print_cv_results(models, scores_df, model="GaussianProcessSk")
+    _print_cv_results(models, scores_df, model="GaussianProcessSk")
     captured = capsys.readouterr()
     assert "Scores for GaussianProcessSk across all folds:" in captured.out
     assert "fold" in captured.out
@@ -46,4 +46,4 @@ def test_print_results_single_model(capsys):
 
 def test_print_results_invalid_model():
     with pytest.raises(ValueError):
-        print_cv_results(models, scores_df, model="InvalidModel")
+        _print_cv_results(models, scores_df, model="InvalidModel")

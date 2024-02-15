@@ -10,17 +10,17 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
 from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import single_split
-from autoemulate.cross_validate import split_data
 from autoemulate.cross_validate import update_scores_df
 from autoemulate.cv import CV_REGISTRY
+from autoemulate.data_splitting import split_data
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.hyperparam_searching import optimize_params
 from autoemulate.logging_config import configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import get_and_process_models
-from autoemulate.plotting import plot_results
-from autoemulate.printing import print_cv_results
+from autoemulate.plotting import _plot_model
+from autoemulate.plotting import _plot_results
+from autoemulate.printing import _print_cv_results
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
@@ -40,7 +40,7 @@ class AutoEmulate:
         param_search=False,
         param_search_type="random",
         param_search_iters=20,
-        param_search_test_size=0.2,
+        test_set_size=0.2,
         scale=True,
         scaler=StandardScaler(),
         reduce_dim=False,
@@ -95,7 +95,7 @@ class AutoEmulate:
         """
         self.X, self.y = self._check_input(X, y)
         self.train_idxs, self.test_idxs = split_data(
-            self.X, test_size=param_search_test_size, param_search=param_search
+            self.X, test_size=test_set_size, random_state=42
         )
         self.models = get_and_process_models(
             MODEL_REGISTRY,
@@ -207,27 +207,20 @@ class AutoEmulate:
                     logger=self.logger,
                 )
 
-                self.cv_results[get_model_name(self.models[i])] = run_cv(
-                    X=self.X,
-                    y=self.y,
-                    cv=single_split(self.X, self.test_idxs),  # predict on test set
-                    model=self.models[i],
-                    metrics=self.metrics,
-                    n_jobs=self.n_jobs,
-                    logger=self.logger,
-                )
+            # run cross validation
+            fitted_model, cv_results = run_cv(
+                X=self.X[self.train_idxs],
+                y=self.y[self.train_idxs],
+                cv=self.cv,
+                model=self.models[i],
+                metrics=self.metrics,
+                n_jobs=self.n_jobs,
+                logger=self.logger,
+            )
 
-            else:
-                # run cross validation and store results
-                self.cv_results[get_model_name(self.models[i])] = run_cv(
-                    X=self.X,
-                    y=self.y,
-                    cv=self.cv,
-                    model=self.models[i],
-                    metrics=self.metrics,
-                    n_jobs=self.n_jobs,
-                    logger=self.logger,
-                )
+            self.models[i] = fitted_model
+            self.cv_results[get_model_name(self.models[i])] = cv_results
+
             # update scores dataframe
             self.scores_df = update_scores_df(
                 self.scores_df,
@@ -244,6 +237,8 @@ class AutoEmulate:
         self.logger.info(
             f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
         )
+
+        return self.best_model
 
     def get_model(self, rank=1, metric="r2"):
         """Get a fitted model based on it's rank in the comparison.
@@ -307,12 +302,11 @@ class AutoEmulate:
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
         """
-        print_cv_results(
+        _print_cv_results(
             self.models,
             self.scores_df,
             model=model,
             sort_by=sort_by,
-            param_search=self.param_search,
         )
 
     def plot_results(
@@ -341,7 +335,7 @@ class AutoEmulate:
         output_index : int
             Index of the output to plot. Default is 0.
         """
-        plot_results(
+        _plot_results(
             self.cv_results,
             self.X,
             self.y,
@@ -350,5 +344,54 @@ class AutoEmulate:
             plot_type=plot_type,
             figsize=figsize,
             output_index=output_index,
-            param_search=self.param_search,
+        )
+
+    def evaluate_model(self, model=None):
+        """
+        Evaluates the model on the hold-out set.
+
+        Parameters
+        ----------
+        model : object
+            Fitted model.
+
+        Returns
+        -------
+        scores_df : pandas.DataFrame
+            Dataframe containing the model scores on the test set.
+        """
+        if model is None:
+            raise ValueError("Model must be provided")
+
+        y_pred = model.predict(self.X[self.test_idxs])
+        scores = {}
+        for metric in self.metrics:
+            scores[metric.__name__] = metric(self.y[self.test_idxs], y_pred)
+
+        scores_df = pd.concat(
+            [
+                pd.DataFrame({"model": [get_model_name(model)]}),
+                pd.DataFrame(scores, index=[0]),
+            ],
+            axis=1,
+        ).round(3)
+
+        return scores_df
+
+    def plot_model(self, model, plot="standard", n_cols=2, figsize=None):
+        """Plots the model predictions vs. the true values.
+
+        Parameters
+        ----------
+        model : object
+            Fitted model.
+        plot : str, optional
+            The type of plot to draw:
+            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+        n_cols : int, optional
+            Number of columns in the plot grid for multi-output. Default is 2.
+        """
+        _plot_model(
+            model, self.X[self.test_idxs], self.y[self.test_idxs], plot, n_cols, figsize
         )

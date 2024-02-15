@@ -3,7 +3,7 @@ from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_scores
 
 
-def print_cv_results(models, scores_df, model=None, sort_by="r2", param_search=False):
+def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
     """Print cv results.
 
     Parameters
@@ -27,20 +27,10 @@ def print_cv_results(models, scores_df, model=None, sort_by="r2", param_search=F
                 f"Model {model} not found. Available models are: {model_names}"
             )
     if model is None:
-        if param_search:
-            means = get_mean_scores(scores_df, metric=sort_by)
-            print("Test score for each model:")
-            print(means)
-        else:
-            means = get_mean_scores(scores_df, metric=sort_by)
-            print("Average scores across all models:")
-            print(means)
+        means = get_mean_scores(scores_df, metric=sort_by)
+        print("Average scores across all models:")
+        print(means)
     else:
-        if param_search:
-            scores = get_model_scores(scores_df, model)
-            print(f"Test score for {model}:")
-            print(scores)
-        else:
-            scores = get_model_scores(scores_df, model)
-            print(f"Scores for {model} across all folds:")
-            print(scores)
+        scores = get_model_scores(scores_df, model)
+        print(f"Scores for {model} across all folds:")
+        print(scores)
