@@ -19,8 +19,9 @@ from autoemulate.hyperparam_searching import optimize_params
 from autoemulate.logging_config import configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import get_and_process_models
-from autoemulate.plotting import plot_results
-from autoemulate.printing import print_cv_results
+from autoemulate.plotting import _plot_model
+from autoemulate.plotting import _plot_results
+from autoemulate.printing import _print_cv_results
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
@@ -318,7 +319,7 @@ class AutoEmulate:
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
         """
-        print_cv_results(
+        _print_cv_results(
             self.models,
             self.scores_df,
             model=model,
@@ -351,7 +352,7 @@ class AutoEmulate:
         output_index : int
             Index of the output to plot. Default is 0.
         """
-        plot_results(
+        _plot_results(
             self.cv_results,
             self.X,
             self.y,
@@ -362,8 +363,8 @@ class AutoEmulate:
             output_index=output_index,
         )
 
-    def model_test_score(self, model=None):
-        """Gets test set scores for a model.
+    def get_test_score(self, model=None):
+        """
 
         Parameters
         ----------
@@ -371,6 +372,8 @@ class AutoEmulate:
             Fitted model.
         X : array-like, shape (n_samples, n_features)
             Simulation input.
+        y : array-like, shape (n_samples, n_outputs)
+            Simulation output.
 
         Returns
         -------
@@ -394,3 +397,21 @@ class AutoEmulate:
         ).round(3)
 
         return scores_df
+
+    def plot_model(self, model, plot="standard", n_cols=2, figsize=None):
+        """Plots the model predictions vs. the true values.
+
+        Parameters
+        ----------
+        model : object
+            Fitted model.
+        plot : str, optional
+            The type of plot to draw:
+            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+        n_cols : int, optional
+            Number of columns in the plot grid for multi-output. Default is 2.
+        """
+        _plot_model(
+            model, self.X[self.test_idxs], self.y[self.test_idxs], plot, n_cols, figsize
+        )

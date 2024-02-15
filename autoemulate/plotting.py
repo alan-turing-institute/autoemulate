@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import PredictionErrorDisplay
 
+from autoemulate.utils import get_model_name
+
 
 def validate_inputs(cv_results, model_name):
     """Validates cv_results and model_name for plotting.
@@ -207,7 +209,7 @@ def plot_model_folds(
     plt.show()
 
 
-def plot_results(
+def _plot_results(
     cv_results,
     X,
     y,
@@ -259,3 +261,73 @@ def plot_results(
         plot_best_fold_per_model(
             cv_results, X, y, n_cols, plot_type, figsize, output_index
         )
+
+
+def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
+    """Plots the model predictions vs. the true values.
+
+    Parameters
+    ----------
+    model : object
+        A fitted model.
+    X : array-like, shape (n_samples, n_features)
+        Simulation input.
+    y : array-like, shape (n_samples, n_outputs)
+        Simulation output.
+    plot : str, optional
+        The type of plot to draw:
+        “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+        “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+    n_cols : int, optional
+        The number of columns in the plot. Default is 2.
+    figsize : tuple, optional
+        Overrides the default figure size.
+    """
+
+    match plot:
+        case "standard":
+            plot_type = "actual_vs_predicted"
+        case "residual":
+            plot_type = "residual_vs_predicted"
+        case _:
+            ValueError(f"Invalid plot type: {plot}")
+
+    # figsize
+    if figsize is None:
+        if y.ndim == 1 or y.shape[1] == 1:
+            figsize = (6, 4)
+        else:  # Dynamic calculation for multi-output
+            n_outputs = y.shape[1]
+            n_rows = np.ceil(n_outputs / n_cols).astype(int)
+            figsize = (4 * n_cols, 4 * n_rows)
+    # predictions
+    y_pred = model.predict(X)
+
+    if y.ndim == 1 or y.shape[1] == 1:  # single output
+        _, ax = plt.subplots(figsize=figsize)
+        display = PredictionErrorDisplay.from_predictions(
+            y_true=y, y_pred=y_pred, kind=plot_type, ax=ax
+        )
+        ax.set_title(f"{get_model_name(model)} - Test Set")
+    else:  # Multi-output
+        n_outputs = y.shape[1]
+        n_rows = np.ceil(n_outputs / n_cols).astype(int)
+        fig, axs = plt.subplots(
+            n_rows, n_cols, figsize=figsize, constrained_layout=True
+        )
+        axs = axs.flatten()
+
+        for i in range(n_outputs):
+            if i < len(
+                axs
+            ):  # Check to avoid index error if n_cols * n_rows > n_outputs
+                display = PredictionErrorDisplay.from_predictions(
+                    y_true=y[:, i], y_pred=y_pred[:, i], kind=plot_type, ax=axs[i]
+                )
+                axs[i].set_title(f"{get_model_name(model)} - Test Set - Output {i+1}")
+
+        # Hide any unused subplots if n_cols * n_rows > n_outputs
+        for ax in axs[n_outputs:]:
+            ax.set_visible(False)
+
+    plt.show()

@@ -3,7 +3,7 @@ from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_scores
 
 
-def print_cv_results(models, scores_df, model=None, sort_by="r2"):
+def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
     """Print cv results.
 
     Parameters
