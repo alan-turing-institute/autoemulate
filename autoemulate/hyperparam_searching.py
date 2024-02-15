@@ -94,14 +94,6 @@ def optimize_params(
     return searcher.best_estimator_
 
 
-def get_best_model_cv_results(searcher):
-    cv_results = searcher.cv_results_
-    best_index = searcher.best_index_
-
-    best_model_cv_results = {k: cv_results[k][best_index] for k in cv_results.keys()}
-    return best_model_cv_results
-
-
 def process_param_space(model, search_type, param_space):
     """Process parameter grid for hyperparameter search.
     Gets the parameter grid for the model and adjusts it to include prefixes

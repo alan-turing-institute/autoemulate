@@ -69,24 +69,3 @@ def update_scores_df(scores_df, model, cv_results):
                     "score": score,
                 }
     return scores_df
-
-
-def single_split(X, test_idxs):
-    """Create a single split for sklearn's `cross_validate` function.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        Simulation input.
-    test_idxs : array-like
-        Indices of the testing set.
-
-    Returns
-    -------
-    split_index : sklearn.model_selection.PredefinedSplit
-        An instance of the PredefinedSplit class.
-    """
-    split_index = np.full(X.shape[0], -1)
-    split_index[test_idxs] = 0
-
-    return PredefinedSplit(test_fold=split_index)

@@ -10,7 +10,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
 from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import single_split
 from autoemulate.cross_validate import update_scores_df
 from autoemulate.cv import CV_REGISTRY
 from autoemulate.data_splitting import split_data
@@ -347,17 +346,14 @@ class AutoEmulate:
             output_index=output_index,
         )
 
-    def get_test_score(self, model=None):
+    def evaluate_model(self, model=None):
         """
+        Evaluates the model on the hold-out set.
 
         Parameters
         ----------
         model : object
             Fitted model.
-        X : array-like, shape (n_samples, n_features)
-            Simulation input.
-        y : array-like, shape (n_samples, n_outputs)
-            Simulation output.
 
         Returns
         -------
