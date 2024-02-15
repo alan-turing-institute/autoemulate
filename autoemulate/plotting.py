@@ -46,7 +46,6 @@ def plot_single_fold(
     plot_type="actual_vs_predicted",
     annotation=" ",
     output_index=0,
-    param_search=False,
 ):
     """Plots a single cv fold for a given model.
 
@@ -90,7 +89,7 @@ def plot_single_fold(
     display = PredictionErrorDisplay.from_predictions(
         y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
     )
-    title_suffix = "Test set" if param_search else f"{annotation}: {fold_index}"
+    title_suffix = f"{annotation}: {fold_index}"
     ax.set_title(f"{model_name} - {title_suffix}")
 
 
@@ -102,7 +101,6 @@ def plot_best_fold_per_model(
     plot_type="actual_vs_predicted",
     figsize=None,
     output_index=0,
-    param_search=False,
 ):
     """Plots results of the best (highest R^2) cv-fold for each model in cv_results.
 
@@ -146,7 +144,6 @@ def plot_best_fold_per_model(
             plot_type=plot_type,
             annotation="Best CV-fold",
             output_index=output_index,
-            param_search=param_search,
         )
     plt.tight_layout()
     plt.show()
@@ -161,7 +158,6 @@ def plot_model_folds(
     plot_type="actual_vs_predicted",
     figsize=None,
     output_index=0,
-    param_search=False,
 ):
     """Plots all the folds for a given model.
 
@@ -185,8 +181,6 @@ def plot_model_folds(
         Overrides the default figure size.
     output_index : int, optional
         The index of the output to plot. Default is 0.
-    param_search : bool, optional
-        Whether there was a hyperparameter search.
     """
 
     n_folds = len(cv_results[model_name]["estimator"])
@@ -209,7 +203,6 @@ def plot_model_folds(
             plot_type,
             annotation="CV-fold",
             output_index=output_index,
-            param_search=param_search,
         )
     plt.tight_layout()
     plt.show()
@@ -224,7 +217,6 @@ def plot_results(
     plot_type="actual_vs_predicted",
     figsize=None,
     output_index=0,
-    param_search=False,
 ):
     """Plots the results of cross-validation.
 
@@ -248,8 +240,6 @@ def plot_results(
         Overrides the default figure size.
     output_index : int, optional
         For multi-output: Index of the output variable to plot.
-    param_search : bool, optional
-        Whether hyperparameter search was done.
     """
 
     validate_inputs(cv_results, model_name)
@@ -265,9 +255,8 @@ def plot_results(
             plot_type,
             figsize,
             output_index,
-            param_search,
         )
     else:
         plot_best_fold_per_model(
-            cv_results, X, y, n_cols, plot_type, figsize, output_index, param_search
+            cv_results, X, y, n_cols, plot_type, figsize, output_index
         )

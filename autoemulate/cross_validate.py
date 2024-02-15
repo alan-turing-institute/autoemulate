@@ -33,7 +33,10 @@ def run_cv(X, y, cv, model, metrics, n_jobs, logger):
         logger.error(f"Failed to cross-validate {model_name}")
         logger.error(e)
 
-    return cv_results
+    # refit the model on the whole dataset
+    fitted_model = model.fit(X, y)
+
+    return fitted_model, cv_results
 
 
 def update_scores_df(scores_df, model, cv_results):
@@ -66,38 +69,6 @@ def update_scores_df(scores_df, model, cv_results):
                     "score": score,
                 }
     return scores_df
-
-
-def split_data(X, test_size=0.2, random_state=None, param_search=False):
-    """Splits the data into training and testing sets.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        Simulation input.
-    test_size : float, default=0.2
-        Proportion of the dataset to include in the test split.
-    random_state : int, RandomState instance or None, default=None
-        Controls the shuffling applied to the data before applying the split.
-    param_search : bool
-        Whether to split the data for hyperparameter search.
-
-    Returns
-    -------
-    train_idx : array-like
-        Indices of the training set.
-    test_idx : array-like
-        Indices of the testing set.
-    """
-
-    if param_search:
-        idxs = np.arange(X.shape[0])
-        train_idxs, test_idxs = train_test_split(
-            idxs, test_size=test_size, random_state=random_state
-        )
-    else:
-        train_idxs, test_idxs = None, None
-    return train_idxs, test_idxs
 
 
 def single_split(X, test_idxs):
