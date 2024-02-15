@@ -13,7 +13,6 @@ from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
 from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import single_split
 from autoemulate.cross_validate import update_scores_df
 from autoemulate.data_splitting import split_data
 from autoemulate.emulators import RandomForest
@@ -68,12 +67,3 @@ def test_update_scores_df(cv_output):
     assert scores_df_new.shape[0] == 10
     assert scores_df_new.shape[1] == 4
     assert scores_df_new["model"][0] == "RandomForest"
-
-
-def test_single_split():
-    X = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
-    test_idxs = [1, 3]
-    split_index = single_split(X, test_idxs)
-
-    assert isinstance(split_index, PredefinedSplit)
-    assert np.array_equal(split_index.test_fold, [-1, 0, -1, 0])

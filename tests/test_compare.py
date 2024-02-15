@@ -139,9 +139,9 @@ def test_get_model_with_invalid_metric(ae_run):
         ae_run.get_model(metric="invalid_metric")
 
 
-def test_get_test_score(ae_run):
+def test_evaluate_model(ae_run):
     model = ae_run.get_model(rank=1)
-    scores_df = ae_run.get_test_score(model=model)
+    scores_df = ae_run.evaluate_model(model=model)
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (1, len(ae_run.metrics) + 1)
     assert "model" in scores_df.columns
@@ -150,4 +150,4 @@ def test_get_test_score(ae_run):
 
 def test_score_without_model(ae_run):
     with pytest.raises(ValueError):
-        ae_run.get_test_score()
+        ae_run.evaluate_model()
