@@ -291,7 +291,7 @@ class AutoEmulate:
         Parameters
         ----------
         model : object
-            Fitted model.
+            Usually a fitted model.
 
         Returns
         -------
