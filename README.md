@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      106 |       10 |     91% |198, 284-287, 291-292, 305, 338, 395 |
+| autoemulate/compare.py                                 |      117 |       17 |     85% |199, 296, 303-312, 316-320, 333, 366, 423 |
 | autoemulate/cross\_validate.py                         |       25 |        3 |     88% |     32-34 |
 | autoemulate/cv.py                                      |        5 |        0 |    100% |           |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
@@ -35,7 +35,7 @@
 | autoemulate/save.py                                    |       29 |        1 |     97% |        46 |
 | autoemulate/utils.py                                   |      100 |        7 |     93% |32, 94, 99-104, 330-331 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
-| tests/test\_compare.py                                 |       96 |        0 |    100% |           |
+| tests/test\_compare.py                                 |      100 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                         |       48 |        0 |    100% |           |
 | tests/test\_data\_splitting.py                         |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                |       13 |        0 |    100% |           |
@@ -48,7 +48,7 @@
 | tests/test\_printing.py                                |       32 |        0 |    100% |           |
 | tests/test\_save.py                                    |       42 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                              **TOTAL** | **1834** |  **173** | **91%** |           |
+|                                              **TOTAL** | **1849** |  **180** | **90%** |           |
 
 
 ## Setup coverage badge
