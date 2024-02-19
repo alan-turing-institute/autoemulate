@@ -151,3 +151,9 @@ def test_evaluate_model(ae_run):
 def test_score_without_model(ae_run):
     with pytest.raises(ValueError):
         ae_run.evaluate_model()
+
+
+def test_refit_model(ae_run):
+    model = ae_run.get_model(rank=1)
+    refitted_model = ae_run.refit_model(model)
+    assert refitted_model is not None
