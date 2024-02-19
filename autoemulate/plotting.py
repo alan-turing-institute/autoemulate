@@ -45,7 +45,7 @@ def plot_single_fold(
     model_name,
     fold_index,
     ax,
-    plot_type="actual_vs_predicted",
+    plot="standard",
     annotation=" ",
     output_index=0,
 ):
@@ -65,10 +65,10 @@ def plot_single_fold(
         The index of the fold to plot.
     ax : matplotlib.axes.Axes
         The axes on which to plot the results.
-    plot_type : str, optional
+    plot : str, optional
         The type of plot to draw:
-        “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-        “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values,
+        “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+        “residual” draws the residuals, i.e. difference between observed and predicted values,
         (y-axis) vs. the predicted values (x-axis).
     annotation : str, optional
         The annotation to add to the plot title. Default is an empty string.
@@ -87,6 +87,15 @@ def plot_single_fold(
     if y.ndim > 1:
         true_values = true_values[:, output_index]
         predicted_values = predicted_values[:, output_index]
+
+    match plot:
+        case "standard":
+            plot_type = "actual_vs_predicted"
+        case "residual":
+            plot_type = "residual_vs_predicted"
+        case _:
+            ValueError(f"Invalid plot type: {plot}")
+
     # plot
     display = PredictionErrorDisplay.from_predictions(
         y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
@@ -100,7 +109,7 @@ def plot_best_fold_per_model(
     X,
     y,
     n_cols=3,
-    plot_type="actual_vs_predicted",
+    plot="standard",
     figsize=None,
     output_index=0,
 ):
@@ -116,9 +125,9 @@ def plot_best_fold_per_model(
         Simulation output.
     n_cols : int, optional
         The number of columns in the plot. Default is 3.
-    plot_type : str, optional
+    plot : str, optional
         The type of plot to draw:
-        “actual_vs_predicted” or “residual_vs_predicted”.
+        “standard" or "residual”.
     figsize : tuple, optional
         Width, height in inches. Overrides the default figure size.
     output_index : int, optional
@@ -143,7 +152,7 @@ def plot_best_fold_per_model(
             model_name,
             best_fold_index,
             ax,
-            plot_type=plot_type,
+            plot=plot,
             annotation="Best CV-fold",
             output_index=output_index,
         )
@@ -157,7 +166,7 @@ def plot_model_folds(
     y,
     model_name,
     n_cols=3,
-    plot_type="actual_vs_predicted",
+    plot="standard",
     figsize=None,
     output_index=0,
 ):
@@ -175,9 +184,9 @@ def plot_model_folds(
         The name of the model to plot.
     n_cols : int, optional
         The number of columns in the plot. Default is 5.
-    plot_type : str, optional
+    plot : str, optional
         The type of plot to draw:
-        “actual_vs_predicted” or “residual_vs_predicted”.
+        “standard” or “residual”.
     figsize : tuple, optional
         Overrides the default figure size.
     output_index : int, optional
@@ -201,7 +210,7 @@ def plot_model_folds(
             model_name,
             i,
             ax,
-            plot_type,
+            plot,
             annotation="CV-fold",
             output_index=output_index,
         )
@@ -215,7 +224,7 @@ def _plot_results(
     y,
     model_name=None,
     n_cols=3,
-    plot_type="actual_vs_predicted",
+    plot="standard",
     figsize=None,
     output_index=0,
 ):
@@ -233,10 +242,10 @@ def _plot_results(
         The name of the model to plot. If None, the best (largest R^2) fold for each model will be plotted.
     n_cols : int, optional
         The number of columns in the plot. Default is 3.
-    plot_type : str, optional
+    plot : str, optional
         The type of plot to draw:
-        “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-        “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+        “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+        “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
     figsize : tuple, optional
         Overrides the default figure size.
     output_index : int, optional
@@ -253,14 +262,12 @@ def _plot_results(
             y,
             model_name,
             n_cols,
-            plot_type,
+            plot,
             figsize,
             output_index,
         )
     else:
-        plot_best_fold_per_model(
-            cv_results, X, y, n_cols, plot_type, figsize, output_index
-        )
+        plot_best_fold_per_model(cv_results, X, y, n_cols, plot, figsize, output_index)
 
 
 def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
