@@ -1,4 +1,4 @@
-# autoemulate
+# AutoEmulate
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
@@ -7,7 +7,7 @@
 
 <!-- SPHINX-START -->
 
-Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or in situations where they have to run thousands of times, like sensitivity analyses. The goal of `autoemulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `autoemulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
+Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or in situations where they have to run thousands of times, like sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
 
 The project is in very early development. 
 
