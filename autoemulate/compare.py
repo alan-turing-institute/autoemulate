@@ -7,6 +7,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 
 from autoemulate.cross_validate import run_cv
@@ -273,13 +274,12 @@ class AutoEmulate:
                 chosen_model = model
                 break
 
-        # only refit if not already fitted (like after grid search)
-        if not hasattr(chosen_model, "is_fitted_"):
-            chosen_model.fit(self.X, self.y)
+        # check whether the model is fitted
+        check_is_fitted(chosen_model)
 
         return chosen_model
 
-    def save_model(self, filepath):
+    def save_model(self, model, filepath):
         """Saves the best model to disk."""
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save_model()")
