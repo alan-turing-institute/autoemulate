@@ -285,26 +285,44 @@ class AutoEmulate:
 
         return chosen_model
 
-    def save_model(self, model=None, filepath=None):
-        """Saves the best model to disk.
+    def refit_model(self, model):
+        """Refits a model on the full data.
 
         Parameters
         ----------
         model : object
-            Model to save.
-        filepath : str
-            Path to save the model to.
+            Fitted model.
+
+        Returns
+        -------
+        model : object
+            Refitted model.
         """
+        if not hasattr(self, "X"):
+            raise RuntimeError("Must run setup() before refit_model()")
+
+        model.fit(self.X, self.y)
+        return model
+
+    def save_model(self, model=None, filepath=None):
+        """Saves the best model to disk."""
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save_model()")
         serialiser = ModelSerialiser()
+
         if model is None:
             model = self.best_model
+        if filepath is None:
+            raise ValueError("Filepath must be provided")
+
         serialiser.save_model(model, filepath)
 
-    def load_model(self, filepath="emulator.pkl"):
+    def load_model(self, filepath=None):
         """Loads a model from disk."""
         serialiser = ModelSerialiser()
+        if filepath is None:
+            raise ValueError("Filepath must be provided")
+
         return serialiser.load_model(filepath)
 
     def print_results(self, model=None, sort_by="r2"):
