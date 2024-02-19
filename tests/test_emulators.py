@@ -207,3 +207,19 @@ def test_nn_torch_module_methods():
     assert callable(getattr(nn_torch_model, "get_grid_params"))
     assert callable(getattr(nn_torch_model.module_, "forward"))
     assert callable(getattr(nn_torch_model.module_, "get_grid_params"))
+    assert callable(getattr(nn_torch_model.module_, "check_input_size"))
+
+
+def test_nn_torch_cnn_module():
+    # input size has shape (features, length)
+    input_size, output_size = (32, 128), 10
+    num_samples = 1000
+    X = np.random.rand(num_samples, *input_size).astype(np.float32)
+    y = np.random.rand(num_samples, output_size).astype(np.float32)
+    nn_torch_model = NeuralNetTorch(
+        module="cnn1d",
+        module__input_size=input_size,
+        module__output_size=output_size,
+        module__hidden_layers=3,
+    )
+    nn_torch_model.fit(X, y)

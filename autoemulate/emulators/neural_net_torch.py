@@ -3,6 +3,8 @@
 # but doesn't pass tests, because we're subclassing
 import warnings
 from typing import List
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import torch
@@ -34,7 +36,7 @@ class InputShapeSetter(Callback):
         if not hasattr(net, "n_features_in_"):
             output_size = 1 if y.ndim == 1 else y.shape[1]
             net.set_params(
-                module__input_size=X.shape[1], module__output_size=output_size
+                module__input_size=X.shape[1:], module__output_size=output_size
             )
 
 
@@ -54,7 +56,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         lr: float = 1e-3,
         batch_size: int = 128,
         max_epochs: int = 1,
-        module__input_size: int = 2,
+        module__input_size: Union[int, Tuple[int, int]] = 2,
         module__output_size: int = 1,
         optimizer__weight_decay: float = 0.0,
         iterator_train__shuffle: bool = True,

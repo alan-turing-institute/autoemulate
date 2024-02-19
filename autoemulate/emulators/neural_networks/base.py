@@ -1,3 +1,6 @@
+from typing import Tuple
+from typing import Union
+
 import torch
 from torch import nn
 
@@ -12,16 +15,20 @@ class TorchModule(nn.Module):
     def __init__(
         self,
         module_name: str,
-        input_size: int = None,
+        input_size: Union[int, Tuple] = None,
         output_size: int = None,
         random_state: int = None,
     ):
         super(TorchModule, self).__init__()
+        self.check_input_size(input_size)
         if random_state is not None:
             set_random_seed(random_state)
         self.module_name = module_name
         self.input_size = input_size
         self.output_size = output_size
+
+    def check_input_size(self, input_size: Union[int, Tuple]):
+        raise NotImplementedError("check_input_size method not implemented.")
 
     def get_grid_params(self, search_type: str = "random"):
         """Return the hyperparameter search space for the module"""

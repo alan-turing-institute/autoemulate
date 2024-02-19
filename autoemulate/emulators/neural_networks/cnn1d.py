@@ -11,8 +11,8 @@ from torch import nn
 from autoemulate.emulators.neural_networks.base import TorchModule
 
 
-class MLPModule(TorchModule):
-    """Multi-layer perceptron module for NeuralNetRegressor"""
+class CNN1dModule(TorchModule):
+    """1-dimensional CNN module for NeuralNetRegressor"""
 
     def __init__(
         self,
@@ -21,27 +21,40 @@ class MLPModule(TorchModule):
         random_state: int = None,
         hidden_layers: int = 1,
         hidden_size: int = 100,
+        kernel_size: int = 3,
+        dropout: float = 0.0,
         hidden_activation: Tuple[callable] = nn.ReLU,
     ):
-        super(MLPModule, self).__init__(
-            module_name="mlp",
+        super(CNN1dModule, self).__init__(
+            module_name="cnn1d",
             input_size=input_size,
             output_size=output_size,
             random_state=random_state,
         )
+        in_channel, length = input_size
         modules = []
         assert hidden_layers >= 1
         for _ in range(hidden_layers):
-            modules.append(nn.Linear(in_features=input_size, out_features=hidden_size))
+            modules.append(
+                nn.Conv1d(
+                    in_channels=in_channel,
+                    out_channels=hidden_size,
+                    kernel_size=kernel_size,
+                    padding="same",
+                )
+            )
             modules.append(hidden_activation())
-            input_size = hidden_size
-        modules.append(nn.Linear(in_features=input_size, out_features=output_size))
+            modules.append(nn.Dropout1d(p=dropout))
+            in_channel = hidden_size
+        in_channel = in_channel * length
+        modules.append(nn.Flatten())
+        modules.append(nn.Linear(in_features=in_channel, out_features=output_size))
         self.model = nn.Sequential(*modules)
 
-    def check_input_size(self, input_size: Union[int, Tuple]):
-        assert type(input_size) == int or (
-            type(input_size) in (list, tuple) and len(input_size) == 1
-        ), "MLPModule input_size should has format (features,)"
+    def check_input_size(self, input_size: Tuple[int, int]):
+        assert (
+            type(input_size) in (list, tuple) and len(input_size) == 2
+        ), "CNN1dModule input_size should has format (features, length)"
 
     def get_grid_params(self, search_type: str = "random"):
         param_space = {
@@ -49,12 +62,14 @@ class MLPModule(TorchModule):
             "batch_size": np.arange(2, 128, 2).tolist(),
             "module__hidden_layers": np.arange(1, 4).tolist(),
             "module__hidden_size": np.arange(50, 250, 50).tolist(),
+            "module__kernel_size": np.arange(2, 6).tolist(),
             "module__hidden_activation": [
                 nn.ReLU,
                 nn.Tanh,
                 nn.Sigmoid,
                 nn.GELU,
             ],
+            "module__dropout": np.arange(0, 0.55, 0.05).tolist(),
             "optimizer": [torch.optim.AdamW, torch.optim.SGD],
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
