@@ -194,30 +194,35 @@ class AutoEmulate:
         )
 
         for i in range(len(self.models)):
-            # hyperparameter search
-            if self.param_search:
-                self.models[i] = optimize_params(
+            try:
+                # hyperparameter search
+                if self.param_search:
+                    self.models[i] = optimize_params(
+                        X=self.X[self.train_idxs],
+                        y=self.y[self.train_idxs],
+                        cv=self.cv,
+                        model=self.models[i],
+                        search_type=self.search_type,
+                        niter=self.param_search_iters,
+                        param_space=None,
+                        n_jobs=self.n_jobs,
+                        logger=self.logger,
+                    )
+
+                # run cross validation
+                fitted_model, cv_results = run_cv(
                     X=self.X[self.train_idxs],
                     y=self.y[self.train_idxs],
                     cv=self.cv,
                     model=self.models[i],
-                    search_type=self.search_type,
-                    niter=self.param_search_iters,
-                    param_space=None,
+                    metrics=self.metrics,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
-
-            # run cross validation
-            fitted_model, cv_results = run_cv(
-                X=self.X[self.train_idxs],
-                y=self.y[self.train_idxs],
-                cv=self.cv,
-                model=self.models[i],
-                metrics=self.metrics,
-                n_jobs=self.n_jobs,
-                logger=self.logger,
-            )
+            except Exception as e:
+                print(f"Error fitting model {get_model_name(self.models[i])}")
+                print(e)  # should be replaced with logging
+                continue
 
             self.models[i] = fitted_model
             self.cv_results[get_model_name(self.models[i])] = cv_results
