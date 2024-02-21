@@ -178,8 +178,8 @@ def test_nn_torch_pred_type(nn_torch_model, simulation_io):
 
 
 def test_nn_torch_shape_setter():
-    input_size, output_size = 10, 2
-    X = np.random.rand(100, input_size)
+    input_size, output_size = (10,), 2
+    X = np.random.rand(100, *input_size)
     y = np.random.rand(100, output_size)
     nn_torch_model = NeuralNetTorch(
         module="mlp",
@@ -187,14 +187,14 @@ def test_nn_torch_shape_setter():
         module__output_size=output_size,
     )
     nn_torch_model.fit(X, y)
-    assert nn_torch_model.module__input_size == input_size
-    assert nn_torch_model.n_features_in_ == input_size
-    assert nn_torch_model.module_.model[0].in_features == input_size
+    assert nn_torch_model.module_.input_size == input_size
+    assert nn_torch_model.n_features_in_ == input_size[0]
+    assert nn_torch_model.module_.model[0].in_features == input_size[0]
     assert nn_torch_model.module__output_size == output_size
     assert nn_torch_model.module_.model[-1].out_features == output_size
 
 
-def test_nn_torch_module_methods():
+def test_nn_torch_module_required_methods():
     input_size, output_size = 10, 2
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
@@ -208,6 +208,56 @@ def test_nn_torch_module_methods():
     assert callable(getattr(nn_torch_model.module_, "forward"))
     assert callable(getattr(nn_torch_model.module_, "get_grid_params"))
     assert callable(getattr(nn_torch_model.module_, "check_input_size"))
+
+
+def test_nn_torch_module_input_size_1d():
+    input_size, output_size = 10, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(
+        module="mlp",
+        module__input_size=input_size,
+        module__output_size=output_size,
+    )
+    nn_torch_model.fit(X, y)
+    assert type(nn_torch_model.module_.input_size) == tuple
+    assert len(nn_torch_model.module_.input_size) == 1
+
+
+def test_nn_torch_module_input_size_2d():
+    input_size, output_size = (10, 256), 2
+    X = np.random.rand(100, *input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(
+        module="cnn1d",
+        module__input_size=input_size,
+        module__output_size=output_size,
+    )
+    nn_torch_model.fit(X, y)
+    assert type(nn_torch_model.module_.input_size) == tuple
+    assert len(nn_torch_model.module_.input_size) == 2
+
+
+def test_nn_torch_module_invalid_input_size_1d():
+    input_size, output_size = (10, 256), 2
+    with pytest.raises(AssertionError) as e:
+        nn_torch_model = NeuralNetTorch(
+            module="mlp",
+            module__input_size=input_size,
+            module__output_size=output_size,
+        )
+    assert "input_size should has format (features,)" in str(e.value)
+
+
+def test_nn_torch_module_invalid_input_size_2d():
+    input_size, output_size = (10,), 2
+    with pytest.raises(AssertionError) as e:
+        nn_torch_model = NeuralNetTorch(
+            module="cnn1d",
+            module__input_size=input_size,
+            module__output_size=output_size,
+        )
+    assert "input_size should has format (features, length)" in str(e.value)
 
 
 def test_nn_torch_cnn_module():

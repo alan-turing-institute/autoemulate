@@ -20,14 +20,15 @@ class TorchModule(nn.Module):
         random_state: int = None,
     ):
         super(TorchModule, self).__init__()
-        self.check_input_size(input_size)
+
         if random_state is not None:
             set_random_seed(random_state)
         self.module_name = module_name
-        self.input_size = input_size
+        self.input_size = input_size if type(input_size) == tuple else (input_size,)
         self.output_size = output_size
+        self.check_input_size()
 
-    def check_input_size(self, input_size: Union[int, Tuple]):
+    def check_input_size(self):
         raise NotImplementedError("check_input_size method not implemented.")
 
     def get_grid_params(self, search_type: str = "random"):

@@ -29,8 +29,9 @@ class MLPModule(TorchModule):
             output_size=output_size,
             random_state=random_state,
         )
-        modules = []
         assert hidden_layers >= 1
+        modules = []
+        input_size = self.input_size[0]
         for _ in range(hidden_layers):
             modules.append(nn.Linear(in_features=input_size, out_features=hidden_size))
             modules.append(hidden_activation())
@@ -38,9 +39,9 @@ class MLPModule(TorchModule):
         modules.append(nn.Linear(in_features=input_size, out_features=output_size))
         self.model = nn.Sequential(*modules)
 
-    def check_input_size(self, input_size: Union[int, Tuple]):
-        assert type(input_size) == int or (
-            type(input_size) in (list, tuple) and len(input_size) == 1
+    def check_input_size(self):
+        assert (
+            len(self.input_size) == 1
         ), "MLPModule input_size should has format (features,)"
 
     def get_grid_params(self, search_type: str = "random"):

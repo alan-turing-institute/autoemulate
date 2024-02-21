@@ -56,7 +56,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         lr: float = 1e-3,
         batch_size: int = 128,
         max_epochs: int = 1,
-        module__input_size: Union[int, Tuple[int, int]] = 2,
+        module__input_size: Union[int, Tuple] = 2,
         module__output_size: int = 1,
         optimizer__weight_decay: float = 0.0,
         iterator_train__shuffle: bool = True,
@@ -121,6 +121,7 @@ class NeuralNetTorch(NeuralNetRegressor):
                 "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
                 "check_methods_subset_invariance": "the assert_allclose check is done in float64 while Torch models operate in float32. The max absolute difference is 1.1920929e-07.",
                 "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
+                "check_estimators_overwrite_params": "TorchModule store input_size has a tuple instead of an integer to support multi-dimensional input, hence always convert module__input_size to a tuple.",
             },
         }
 

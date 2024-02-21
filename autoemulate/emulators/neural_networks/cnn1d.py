@@ -32,8 +32,8 @@ class CNN1dModule(TorchModule):
             random_state=random_state,
         )
         in_channel, length = input_size
-        modules = []
         assert hidden_layers >= 1
+        modules = []
         for _ in range(hidden_layers):
             modules.append(
                 nn.Conv1d(
@@ -51,9 +51,9 @@ class CNN1dModule(TorchModule):
         modules.append(nn.Linear(in_features=in_channel, out_features=output_size))
         self.model = nn.Sequential(*modules)
 
-    def check_input_size(self, input_size: Tuple[int, int]):
+    def check_input_size(self):
         assert (
-            type(input_size) in (list, tuple) and len(input_size) == 2
+            len(self.input_size) == 2
         ), "CNN1dModule input_size should has format (features, length)"
 
     def get_grid_params(self, search_type: str = "random"):
