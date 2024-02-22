@@ -32,14 +32,22 @@ def nn_torch_model(simulation_io):
     return nn_torch
 
 
-def test_nn_torch_mlp_initialisation():
-    nn_torch = NeuralNetTorch(module="mlp")
+def test_nn_torch_initialisation():
+    nn_torch = NeuralNetTorch()
     assert nn_torch is not None
+    assert not hasattr(nn_torch, "module_")
 
 
-def test_nn_torch_rbf_initialisation():
-    nn_torch = NeuralNetTorch(module="rbf")
-    assert nn_torch is not None
+def test_nn_torch_module_initialisation():
+    for module in ("mlp", "rbf"):
+        nn_torch = NeuralNetTorch(
+            module=module,
+            module__input_size=10,
+            module__output_size=2,
+        )
+        assert nn_torch is not None
+        assert hasattr(nn_torch, "module_")
+        del nn_torch
 
 
 def test_nn_torch_pred_exists(nn_torch_model, simulation_io):
