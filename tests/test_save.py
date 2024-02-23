@@ -19,7 +19,7 @@ def model():
 
 @pytest.fixture
 def test_path():
-    return "test_model.joblib"
+    return "test_model"
 
 
 def test_save_model(model_serialiser, model, test_path):
@@ -55,6 +55,6 @@ def test_load_model_with_missing_meta_file(model_serialiser, model, test_path):
 
 def test_invalid_file_path(model_serialiser, model):
     with pytest.raises(Exception):
-        model_serialiser.save_model(model, "/invalid/path/model.joblib")
+        model_serialiser.save_model(model, "/invalid/path/model")
     with pytest.raises(Exception):
-        model_serialiser.load_model("/invalid/path/model.joblib")
+        model_serialiser.load_model("/invalid/path/model")
