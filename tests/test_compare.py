@@ -157,3 +157,9 @@ def test_refit_model(ae_run):
     model = ae_run.get_model(rank=1)
     refitted_model = ae_run.refit_model(model)
     assert refitted_model is not None
+
+
+def test_refit_models(ae_run):
+    models = ae_run.refit_models()
+    assert models is not None
+    assert len(models) == len(ae_run.models)

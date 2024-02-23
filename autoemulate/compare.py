@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
@@ -303,26 +305,62 @@ class AutoEmulate:
         model.fit(self.X, self.y)
         return model
 
-    def save_model(self, model=None, filepath=None):
-        """Saves the best model to disk."""
+    def refit_models(self):
+        """(Re-) fits all models on the full data.
+
+        Returns
+        -------
+        models : list
+            List of refitted models.
+        """
+        if not hasattr(self, "X"):
+            raise RuntimeError("Must run setup() before refit_models()")
+        for i in range(len(self.models)):
+            self.models[i] = self.refit_model(self.models[i])
+        return self.models
+
+    def save_model(self, model=None, path=None):
+        """Saves model to disk.
+
+        Parameters
+        ----------
+        model : object, optional
+            Model to save. If None, saves the best model.
+            If "all", saves all models.
+        path : str
+            Path to save the model.
+        """
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save_model()")
         serialiser = ModelSerialiser()
 
-        if model is None:
-            model = self.best_model
-        if filepath is None:
-            raise ValueError("Filepath must be provided")
+        if model is None or not isinstance(model, (Pipeline, BaseEstimator)):
+            raise ValueError(
+                "Model must be provided and should be a scikit-learn pipeline or model"
+            )
+        serialiser._save_model(model, path)
 
-        serialiser.save_model(model, filepath)
+    def save_models(self, path=None):
+        """Saves all models to disk.
 
-    def load_model(self, filepath=None):
+        Parameters
+        ----------
+        path : str
+            Directory to save the models.
+            If None, saves to the current working directory.
+        """
+        if not hasattr(self, "best_model"):
+            raise RuntimeError("Must run compare() before save_models()")
+        serialiser = ModelSerialiser()
+        serialiser._save_models(self.models, path)
+
+    def load_model(self, path=None):
         """Loads a model from disk."""
         serialiser = ModelSerialiser()
-        if filepath is None:
+        if path is None:
             raise ValueError("Filepath must be provided")
 
-        return serialiser.load_model(filepath)
+        return serialiser.load_model(path)
 
     def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
