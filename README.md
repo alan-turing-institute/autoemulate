@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      122 |       21 |     83% |200, 222-225, 301, 308-317, 321-325, 338, 371, 428 |
+| autoemulate/compare.py                                 |      133 |       24 |     82% |202, 224-227, 303, 317, 333-341, 352-355, 359-363, 376, 409, 466 |
 | autoemulate/cross\_validate.py                         |       25 |        3 |     88% |     32-34 |
 | autoemulate/cv.py                                      |        5 |        0 |    100% |           |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
@@ -32,10 +32,10 @@
 | autoemulate/model\_processing.py                       |       31 |        0 |    100% |           |
 | autoemulate/plotting.py                                |       84 |       55 |     35% |128-151, 188-210, 247-262, 288-334 |
 | autoemulate/printing.py                                |       15 |        0 |    100% |           |
-| autoemulate/save.py                                    |       29 |        1 |     97% |        46 |
+| autoemulate/save.py                                    |       39 |        2 |     95% |    38, 61 |
 | autoemulate/utils.py                                   |      100 |        7 |     93% |32, 94, 99-104, 330-331 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
-| tests/test\_compare.py                                 |      100 |        0 |    100% |           |
+| tests/test\_compare.py                                 |      104 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                         |       48 |        0 |    100% |           |
 | tests/test\_data\_splitting.py                         |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                |       13 |        0 |    100% |           |
@@ -46,9 +46,9 @@
 | tests/test\_model\_processing.py                       |       58 |        0 |    100% |           |
 | tests/test\_plotting.py                                |       68 |        7 |     90% |18, 28, 50-51, 59-60, 68 |
 | tests/test\_printing.py                                |       32 |        0 |    100% |           |
-| tests/test\_save.py                                    |       42 |        0 |    100% |           |
+| tests/test\_save.py                                    |       88 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                              **TOTAL** | **1854** |  **184** | **90%** |           |
+|                                              **TOTAL** | **1925** |  **188** | **90%** |           |
 
 
 ## Setup coverage badge
