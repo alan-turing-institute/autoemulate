@@ -121,7 +121,9 @@ def test_nn_torch_module_methods():
 def test_nn_torch_module_grid_params():
     # ensure get_grid_params returns search space even if module is not initialized
     nn_torch_model = NeuralNetTorch(module="mlp")
+    assert not hasattr(nn_torch_model, "module_")
     assert callable(getattr(nn_torch_model, "get_grid_params"))
+    assert callable(getattr(nn_torch_model.module, "get_grid_params"))
 
 
 def test_nn_torch_module_ui():

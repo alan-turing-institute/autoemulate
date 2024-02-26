@@ -31,11 +31,16 @@ class InputShapeSetter(Callback):
                 f"Mismatch number of features, "
                 f"expected {net.n_features_in_}, received {X.shape[-1]}."
             )
-        if not hasattr(net, "n_features_in_"):
-            output_size = 1 if y.ndim == 1 else y.shape[1]
-            net.set_params(
-                module__input_size=X.shape[1], module__output_size=output_size
-            )
+        # if hasattr(net, "n_features_in_") and net.n_features_in_ != X.shape[-1]:
+        #     raise ValueError(
+        #         f"Mismatch number of features, "
+        #         f"expected {net.n_features_in_}, received {X.shape[-1]}."
+        #     )
+        # if not hasattr(net, "n_features_in_"):
+        #     output_size = 1 if y.ndim == 1 else y.shape[1]
+        #     net.set_params(
+        #         module__input_size=X.shape[1], module__output_size=output_size
+        #     )
 
 
 class NeuralNetTorch(NeuralNetRegressor):
