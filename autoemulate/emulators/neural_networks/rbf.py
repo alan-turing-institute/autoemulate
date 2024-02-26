@@ -268,9 +268,20 @@ class RBFLayer(nn.Module):
 
 
 class RBFModule(TorchModule):
-    """
-    Radial Basis Function Layer module for NeuralNetRegressor
+    """Radial Basis Function Layer
 
+    Wrapper around the Radial Basis Function Layer package https://github.com/rssalessio/PytorchRBFLayer.
+
+    Parameters
+    ---
+    radial_function: callable
+        a radial basis function that returns a tensor of real values given a
+        tensor of real values. `rbf_gaussian`, `rbf_linear`, `rbf_multiquadric`,
+        `rbf_inverse_quadratic`, `rbf_inverse_multiquadric` are available.
+    norm_function: callable
+        a normalization function applied on the features. `l_norm` is available.
+    normalization: bool
+        if True applies the normalization trick to the RBF layer
     """
 
     def __init__(
