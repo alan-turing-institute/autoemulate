@@ -170,7 +170,6 @@ class NeuralNetTorch(NeuralNetRegressor):
                 raise ValueError(
                     f"Mismatch number of features, "
                     f"expected {self.n_features_in_}, received {x.shape[-1]}."
-                    f"input_size: {self.module__input_size}."
                 )
         else:
             setattr(self, "n_features_in_", x.size(1))

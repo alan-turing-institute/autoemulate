@@ -6,32 +6,31 @@ from autoemulate.emulators import NeuralNetTorch
 from autoemulate.experimental_design import LatinHypercube
 from autoemulate.utils import get_model_name
 
-
-def simple_sim(params):
-    """A simple simulator."""
-    x, y = params
-    return x + 2 * y
-
-
-# fixture for simulation input and output
-@pytest.fixture(scope="module")
-def simulation_io():
-    """Setup for tests (Arrange)"""
-    lh = LatinHypercube([(0.0, 1.0), (10.0, 100.0)])
-    sim_in = lh.sample(10)
-    sim_out = [simple_sim(p) for p in sim_in]
-    return sim_in, sim_out
+# def simple_sim(params):
+#     """A simple simulator."""
+#     x, y = params
+#     return x + 2 * y
 
 
-@pytest.fixture(scope="module")
-def nn_torch_model(simulation_io):
-    """Setup for tests (Arrange)"""
-    sim_in, sim_out = simulation_io
-    nn_torch = NeuralNetTorch(module="mlp")
-    sim_in = sim_in.astype(np.float32)
-    sim_out = np.array(sim_out, dtype=np.float32)
-    nn_torch.fit(sim_in, sim_out)
-    return nn_torch
+# # fixture for simulation input and output
+# @pytest.fixture(scope="module")
+# def simulation_io():
+#     """Setup for tests (Arrange)"""
+#     lh = LatinHypercube([(0.0, 1.0), (10.0, 100.0)])
+#     sim_in = lh.sample(10)
+#     sim_out = [simple_sim(p) for p in sim_in]
+#     return sim_in, sim_out
+
+
+# @pytest.fixture(scope="module")
+# def nn_torch_model(simulation_io):
+#     """Setup for tests (Arrange)"""
+#     sim_in, sim_out = simulation_io
+#     nn_torch = NeuralNetTorch(module="mlp")
+#     sim_in = sim_in.astype(np.float32)
+#     sim_out = np.array(sim_out, dtype=np.float32)
+#     nn_torch.fit(sim_in, sim_out)
+#     return nn_torch
 
 
 def test_nn_torch_initialisation():
@@ -48,25 +47,33 @@ def test_nn_torch_module_initialisation():
         del nn_torch
 
 
-def test_nn_torch_pred_exists(nn_torch_model, simulation_io):
-    sim_in, sim_out = simulation_io
-    sim_in = sim_in.astype(np.float32)
-    predictions = nn_torch_model.predict(sim_in)
+def test_nn_torch_pred_exists():
+    input_size, output_size = 10, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(module="mlp")
+    nn_torch_model.fit(X, y)
+    predictions = nn_torch_model.predict(X)
     assert predictions is not None
 
 
-def test_nn_torch_pred_len(nn_torch_model, simulation_io):
-    sim_in, sim_out = simulation_io
-    sim_in = sim_in.astype(np.float32)
-    sim_out = np.array(sim_out, dtype=np.float32)
-    predictions = nn_torch_model.predict(sim_in)
-    assert len(predictions) == len(sim_out)
+def test_nn_torch_pred_len():
+    input_size, output_size = 10, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(module="mlp")
+    nn_torch_model.fit(X, y)
+    predictions = nn_torch_model.predict(X)
+    assert len(predictions) == len(y)
 
 
-def test_nn_torch_pred_type(nn_torch_model, simulation_io):
-    sim_in, sim_out = simulation_io
-    sim_in = sim_in.astype(np.float32)
-    predictions = nn_torch_model.predict(sim_in)
+def test_nn_torch_pred_type():
+    input_size, output_size = 10, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    nn_torch_model = NeuralNetTorch(module="mlp")
+    nn_torch_model.fit(X, y)
+    predictions = nn_torch_model.predict(X)
     assert isinstance(predictions, np.ndarray)
 
 
@@ -127,7 +134,7 @@ def test_nn_torch_module_grid_params():
 
 
 def test_nn_torch_module_ui():
-    input_size, output_size = 20, 2
+    input_size, output_size = 10, 2
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
     em = AutoEmulate()
