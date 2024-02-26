@@ -75,8 +75,8 @@ def test_nn_torch_shape_setter():
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
     nn_torch_model = NeuralNetTorch(module="mlp")
-    assert not hasattr(nn_torch_model, "module__input_size")
-    assert not hasattr(nn_torch_model, "module__output_size")
+    assert nn_torch_model.module__input_size is None
+    assert nn_torch_model.module__output_size is None
     nn_torch_model.fit(X, y)
     assert nn_torch_model.module__input_size == input_size
     assert nn_torch_model.n_features_in_ == input_size
