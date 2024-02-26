@@ -1,9 +1,19 @@
+from .types import TYPE_CHECKING
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_scores
 
+if TYPE_CHECKING:
+    import pandas as pd
 
-def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
+
+# TODO: Suggestion to change model to model_name, to avoid confusion
+def _print_cv_results(
+    models: list,
+    scores_df: pd.DataFrame,
+    model: str = None,
+    sort_by: str = "r2",
+) -> None:
     """Print cv results.
 
     Parameters
@@ -18,6 +28,14 @@ def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
     sort_by : str, optional
         The metric to sort by. Default is "r2".
 
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If model is not in self.models.
     """
     # check if model is in self.models
     if model is not None:

@@ -11,6 +11,13 @@ from skopt.space import Categorical
 from skopt.space import Integer
 from skopt.space import Real
 
+from ..types import Any
+from ..types import ArrayLike
+from ..types import Literal
+from ..types import MatrixLike
+from ..types import Optional
+from ..types import Self
+from ..types import Union
 from autoemulate.utils import denormalise_y
 from autoemulate.utils import normalise_y
 
@@ -19,22 +26,49 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
     """Support Vector Machines Emulator.
 
     Wraps Support Vector Regressor from scikit-learn.
+
+    Parameters
+    ----------
+    kernel : {'rbf', 'linear', 'poly', 'sigmoid'}, default='rbf'
+        Specifies the kernel type to be used in the algorithm.
+    degree : int, default=3
+        Degree of the polynomial kernel function ('poly').
+    gamma : {'scale', 'auto'}, default='scale'
+        Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.
+    coef0 : float, default=0.0
+        Independent term in kernel function. It is only significant in 'poly' and 'sigmoid'.
+    tol : float, default=1e-3
+        Tolerance for stopping criterion.
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is inversely proportional to C.
+    epsilon : float, default=0.1
+        Epsilon in the epsilon-SVR model. It specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value.
+    shrinking : bool, default=True
+        Whether to use the shrinking heuristic.
+    cache_size : float, default=200
+        Specify the size of the kernel cache (in MB).
+    verbose : bool, default=False
+        Enable verbose output.
+    max_iter : int, default=-1
+        Hard limit on iterations within solver, or -1 for no limit.
+    normalise_y : bool, default=True
+        Whether to normalise the target values before fitting the model.
     """
 
     def __init__(
         self,
-        kernel="rbf",
-        degree=3,
-        gamma="scale",
-        coef0=0.0,
-        tol=1e-3,
+        kernel: Literal["rbf", "linear", "poly", "sigmoid"] = "rbf",
+        degree: int = 3,
+        gamma: Literal["scale", "auto"] = "scale",
+        coef0: float = 0.0,
+        tol: float = 1e-3,
         C=1.0,
-        epsilon=0.1,
-        shrinking=True,
-        cache_size=200,
-        verbose=False,
-        max_iter=-1,
-        normalise_y=True,
+        epsilon: float = 0.1,
+        shrinking: bool = True,
+        cache_size: int = 200,
+        verbose: bool = False,
+        max_iter: int = -1,
+        normalise_y: bool = True,
     ):
         """Initializes a SupportVectorMachines object."""
         self.kernel = kernel
@@ -50,7 +84,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         self.max_iter = max_iter
         self.normalise_y = normalise_y
 
-    def fit(self, X, y):
+    def fit(self, X: MatrixLike, y: ArrayLike) -> Self:
         """Fits the emulator to the data.
 
         Parameters
@@ -101,7 +135,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, X: MatrixLike) -> ArrayLike:
         """Predicts the output for a given input.
 
         Parameters
@@ -123,8 +157,22 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
 
         return y_pred
 
-    def get_grid_params(self, search_type="random"):
-        """Returns the grid paramaters for the emulator."""
+    def get_grid_params(
+        self, search_type: Literal["random", "bayes"] = "random"
+    ) -> dict[str, Any]:
+        """Returns the grid paramaters for the emulator.
+
+        Parameters
+        ----------
+        search_type : str, optional
+            The type of parameter search to perform. Can be either 'random' or 'bayes'.
+            Defaults to 'random'.
+
+        Returns
+        -------
+        dict
+            The parameter grid for the model.
+        """
         param_space_random = {
             "kernel": ["rbf", "linear", "poly", "sigmoid"],
             "degree": randint(2, 6),
@@ -158,7 +206,16 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         elif search_type == "bayes":
             param_space = param_space_bayes
 
+        # TODO: Should this raise an error if the search type is not recognised?
+
         return param_space
 
     def _more_tags(self):
+        """Returns more tags for the estimator.
+
+        Returns
+        -------
+        dict
+            The tags for the estimator.
+        """
         return {"multioutput": False}

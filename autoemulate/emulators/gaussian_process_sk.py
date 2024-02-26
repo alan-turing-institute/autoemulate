@@ -13,6 +13,11 @@ from skopt.space import Categorical
 from skopt.space import Integer
 from skopt.space import Real
 
+from ..types import ArrayLike
+from ..types import Literal
+from ..types import MatrixLike
+from ..types import Optional
+from ..types import Self
 from autoemulate.utils import suppress_convergence_warnings
 
 
@@ -24,15 +29,34 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
 
     def __init__(
         self,
-        kernel=RBF(),
-        alpha=1e-10,
-        optimizer="fmin_l_bfgs_b",
-        n_restarts_optimizer=20,
-        normalize_y=True,
-        copy_X_train=True,
-        random_state=None,
+        kernel: RBF = RBF(),  # TODO: Is this the correct type then?
+        alpha: float = 1e-10,
+        optimizer: str = "fmin_l_bfgs_b",
+        n_restarts_optimizer: int = 20,
+        normalize_y: bool = True,
+        copy_X_train: bool = True,
+        random_state: Optional[int] = None,
     ):
-        """Initializes a GaussianProcess object."""
+        """Initializes a GaussianProcess object.
+
+        Parameters
+        ----------
+        kernel : kernel object
+            The kernel specifying the covariance function of the GP.
+        alpha : float
+            Value added to the diagonal of the kernel matrix during fitting.
+            This can prevent a potential numerical issue during fitting.
+        optimizer : str
+            The optimizer to use for optimizing the kernel's parameters.
+        n_restarts_optimizer : int
+            The number of restarts of the optimizer for finding the kernel's parameters.
+        normalize_y : bool
+            Whether to normalize the target values.
+        copy_X_train : bool
+            Whether to make a copy of the training data.
+        random_state : int
+            The random state to use for the emulator.
+        """
         self.kernel = kernel
         self.alpha = alpha
         self.optimizer = optimizer
@@ -41,7 +65,8 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         self.copy_X_train = copy_X_train
         self.random_state = random_state
 
-    def fit(self, X, y):
+    # TODO: Should X be MatrixLike here?
+    def fit(self, X: ArrayLike, y: ArrayLike) -> Self:
         """Fits the emulator to the data.
 
          Parameters
@@ -72,7 +97,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         self.is_fitted_ = True
         return self
 
-    def predict(self, X, return_std=False):
+    def predict(self, X: MatrixLike, return_std: bool = False) -> ArrayLike:
         """Predicts the output of the simulator for a given input.
 
         Parameters
@@ -93,7 +118,9 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X, return_std=return_std)
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(
+        self, search_type: Literal["random", "bayes"] = "random"
+    ) -> dict[str, list]:
         """Returns the grid parameters of the emulator."""
         param_space_random = {
             "kernel": [
@@ -118,7 +145,16 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         elif search_type == "bayes":
             param_space = param_space_bayes
 
+        # TODO: Should this raise an error if the search type is not recognised?
+
         return param_space
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
+        """Returns more tags for the estimator.
+
+        Returns
+        -------
+        dict
+            The multioutput tag.
+        """
         return {"multioutput": True}

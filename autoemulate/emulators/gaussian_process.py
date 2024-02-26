@@ -8,6 +8,10 @@ from sklearn.utils.validation import check_X_y
 from skopt.space import Categorical
 from skopt.space import Real
 
+from ..types import ArrayLike
+from ..types import Literal
+from ..types import Self
+
 
 class GaussianProcess(BaseEstimator, RegressorMixin):
     """Gaussian Process Emulator.
@@ -15,11 +19,11 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
     Wraps Gaussian Process Regression from the mogp_emulator package.
     """
 
-    def __init__(self, nugget="fit"):
+    def __init__(self, nugget: str = "fit"):
         """Initializes a GaussianProcess object."""
         self.nugget = nugget
 
-    def fit(self, X, y):
+    def fit(self, X: ArrayLike, y: ArrayLike) -> Self:
         """Fits the emulator to the data.
 
         Parameters
@@ -41,7 +45,7 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
         self.is_fitted_ = True
         return self
 
-    def predict(self, X, return_std=False):
+    def predict(self, X: ArrayLike, return_std: bool = False) -> ArrayLike:
         """Predicts the output of the simulator for a given input.
 
         Parameters
@@ -66,8 +70,21 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
         else:
             return np.asarray(self.model_.predict(X).mean)
 
-    def get_grid_params(self, search_type="random"):
-        """Returns the grid parameters of the emulator."""
+    def get_grid_params(
+        self, search_type: Literal["random", "bayes"] = "random"
+    ) -> dict[str, list]:
+        """Returns the grid parameters of the emulator.
+
+        Parameters
+        ----------
+        search_type : {"random", "bayes"}
+            The type of search to be used.
+
+        Returns
+        -------
+        dict[str, list]
+            The grid parameters of the emulator.
+        """
         param_space_random = {
             "nugget": ["fit", "adaptive", "pivot"],
         }
@@ -80,7 +97,16 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
         elif search_type == "bayes":
             param_space = param_space_bayes
 
+        # TODO: Should this raise an error if the search type is not recognised?
+
         return param_space
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
+        """Returns more tags for the estimator.
+
+        Returns
+        -------
+        dict
+            The tags of the emulator.
+        """
         return {"multioutput": False}

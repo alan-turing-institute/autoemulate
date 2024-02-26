@@ -1,9 +1,12 @@
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import KFold
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -36,22 +39,22 @@ class AutoEmulate:
 
     def setup(
         self,
-        X,
-        y,
-        param_search=False,
-        param_search_type="random",
-        param_search_iters=20,
-        test_set_size=0.2,
-        scale=True,
-        scaler=StandardScaler(),
-        reduce_dim=False,
-        dim_reducer=PCA(),
-        fold_strategy="kfold",
-        folds=5,
-        n_jobs=None,
-        model_subset=None,
-        log_to_file=False,
-    ):
+        X: np.ndarray,
+        y: np.ndarray,
+        param_search: bool = False,
+        param_search_type: str = "random",
+        param_search_iters: int = 20,
+        test_set_size: float = 0.2,
+        scale: bool = True,
+        scaler: StandardScaler = StandardScaler(),
+        reduce_dim: bool = False,
+        dim_reducer: PCA = PCA(),
+        fold_strategy: str = "kfold",
+        folds: int = 5,
+        n_jobs: Optional[int] = None,
+        model_subset: Optional[list] = None,
+        log_to_file: bool = False,
+    ) -> None:
         """Sets up the automatic emulation.
 
         Parameters
@@ -119,7 +122,9 @@ class AutoEmulate:
         self.is_set_up = True
         self.cv_results = {}
 
-    def _check_input(self, X, y):
+    def _check_input(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Checks and possibly converts the input data.
 
         Parameters
@@ -140,7 +145,7 @@ class AutoEmulate:
         y = y.astype("float32")  # needed for pytorch models
         return X, y
 
-    def _get_metrics(self, METRIC_REGISTRY):
+    def _get_metrics(self, METRIC_REGISTRY: dict) -> list:
         """
         Get metrics from REGISTRY
 
@@ -156,7 +161,7 @@ class AutoEmulate:
         """
         return [metric for metric in METRIC_REGISTRY.values()]
 
-    def _get_cv(self, CV_REGISTRY, fold_strategy, folds):
+    def _get_cv(self, CV_REGISTRY: dict, fold_strategy: str, folds: int) -> KFold:
         """Get cross-validation strategy from REGISTRY
 
         Parameters
@@ -175,7 +180,7 @@ class AutoEmulate:
         """
         return CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
 
-    def compare(self):
+    def compare(self) -> pd.DataFrame:
         """Compares the emulator models on the data. self.setup() must be run first.
 
         Returns
@@ -190,7 +195,12 @@ class AutoEmulate:
         self.scores_df = pd.DataFrame(
             columns=["model", "metric", "fold", "score"]
         ).astype(
-            {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
+            {
+                "model": "object",
+                "metric": "object",
+                "fold": "int64",
+                "score": "float64",
+            }
         )
 
         for i in range(len(self.models)):
@@ -246,7 +256,7 @@ class AutoEmulate:
 
         return self.best_model
 
-    def get_model(self, rank=1, metric="r2"):
+    def get_model(self, rank: int = 1, metric: str = "r2"):  # TODO: add return type
         """Get a fitted model based on it's rank in the comparison.
 
         Parameters
@@ -284,7 +294,7 @@ class AutoEmulate:
 
         return chosen_model
 
-    def refit_model(self, model):
+    def refit_model(self, model):  # TODO: add model type
         """Refits a model on the full data.
 
         Parameters
@@ -303,8 +313,22 @@ class AutoEmulate:
         model.fit(self.X, self.y)
         return model
 
-    def save_model(self, model=None, filepath=None):
-        """Saves the best model to disk."""
+    def save_model(
+        self, model=None, filepath: str = None
+    ) -> None:  # TODO add model type
+        """Saves the best model to disk.
+
+        Parameters
+        ----------
+        model : object
+            Fitted model.
+        filepath : str
+            Path to the model file.
+
+        Returns
+        -------
+        None
+        """
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save_model()")
         serialiser = ModelSerialiser()
@@ -316,15 +340,27 @@ class AutoEmulate:
 
         serialiser.save_model(model, filepath)
 
-    def load_model(self, filepath=None):
-        """Loads a model from disk."""
+    def load_model(self, filepath: str = None):  # TODO add return type (model type)
+        """Loads a model from disk.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to the model file.
+
+        Returns
+        -------
+        model : object
+            Loaded model.
+        """
         serialiser = ModelSerialiser()
         if filepath is None:
             raise ValueError("Filepath must be provided")
 
         return serialiser.load_model(filepath)
 
-    def print_results(self, model=None, sort_by="r2"):
+    # TODO for print_results: suggestion, rename model to model_name here to not confuse with other references to the model object
+    def print_results(self, model: Optional[str] = None, sort_by: str = "r2") -> None:
         """Print cv results.
 
         Parameters
@@ -342,13 +378,14 @@ class AutoEmulate:
             sort_by=sort_by,
         )
 
+    # TODO for plot_results: suggestion, rename model to model_name here to not confuse with other references to the model object
     def plot_results(
         self,
-        model=None,
-        plot_type="actual_vs_predicted",
-        n_cols=3,
-        figsize=None,
-        output_index=0,
+        model: Optional[str] = None,
+        plot_type: str = "actual_vs_predicted",
+        n_cols: int = 3,
+        figsize: Optional[tuple] = None,
+        output_index: int = 0,
     ):
         """Plots the results of the cross-validation.
 
@@ -379,7 +416,7 @@ class AutoEmulate:
             output_index=output_index,
         )
 
-    def evaluate_model(self, model=None):
+    def evaluate_model(self, model=None) -> pd.DataFrame:  # TODO add model type
         """
         Evaluates the model on the hold-out set.
 
@@ -411,7 +448,13 @@ class AutoEmulate:
 
         return scores_df
 
-    def plot_model(self, model, plot="standard", n_cols=2, figsize=None):
+    def plot_model(
+        self,
+        model,
+        plot: str = "standard",
+        n_cols: int = 2,
+        figsize: Optional[tuple] = None,
+    ) -> None:  # TODO add model type
         """Plots the model predictions vs. the true values.
 
         Parameters
@@ -424,7 +467,14 @@ class AutoEmulate:
             “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
             Number of columns in the plot grid for multi-output. Default is 2.
+        figsize : tuple, optional
+            Overrides the default figure size.
         """
         _plot_model(
-            model, self.X[self.test_idxs], self.y[self.test_idxs], plot, n_cols, figsize
+            model,
+            self.X[self.test_idxs],
+            self.y[self.test_idxs],
+            plot,
+            n_cols,
+            figsize,
         )

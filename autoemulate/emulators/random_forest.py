@@ -9,25 +9,74 @@ from skopt.space import Categorical
 from skopt.space import Integer
 from skopt.space import Real
 
+from ..types import Any
+from ..types import ArrayLike
+from ..types import Literal
+from ..types import MatrixLike
+from ..types import Optional
+from ..types import Self
+from ..types import Union
+
 
 class RandomForest(BaseEstimator, RegressorMixin):
     """Random forest Emulator.
 
     Implements Random Forests regression from scikit-learn.
+
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        The number of trees in the forest.
+    criterion : {"squared_error", "mse", "mae"}, default="squared_error"
+        The function to measure the quality of a split.
+    max_depth : int, default=None
+        The maximum depth of the tree. If None, then nodes are expanded until
+        all leaves are pure or until all leaves contain less than
+        min_samples_split samples.
+    min_samples_split : int, default=2
+        The minimum number of samples required to split an internal node.
+    min_samples_leaf : int, default=1
+        The minimum number of samples required to be at a leaf node.
+    max_features : {"auto", "sqrt", "log2"}, int or float, default="auto"
+        The number of features to consider when looking for the best split:
+        - If int, then consider max_features features at each split.
+        - If float, then max_features is a fraction and
+          int(max_features * n_features) features are considered at each split.
+        - If "auto", then max_features=sqrt(n_features).
+        - If "sqrt", then max_features=sqrt(n_features).
+        - If "log2", then max_features=log2(n_features).
+        - If None, then max_features=n_features.
+    bootstrap : bool, default=True
+        Whether bootstrap samples are used when building trees.
+    oob_score : bool, default=False
+        Whether to use out-of-bag samples to estimate the R^2 on unseen data.
+    max_samples : int or float, default=None
+        If bootstrap is True, the number of samples to draw from X to train
+        each base estimator. If None (default), then draw X.shape[0] samples.
+        If int, then draw max_samples samples.
+        If float, then draw max_samples * X.shape[0] samples. Thus, max_samples
+        should be in the interval (0, 1).
+    random_state : int, RandomState instance or None, default=None
+        Controls both the randomness of the bootstrapping of the samples used
+        when building trees (if bootstrap=True) and the sampling of the features
+        to consider when looking for the best split at each node (if
+        max_features < n_features).
     """
 
     def __init__(
         self,
-        n_estimators=100,
-        criterion="squared_error",
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features=1.0,
-        bootstrap=True,
-        oob_score=False,
-        max_samples=None,
-        random_state=None,
+        n_estimators: int = 100,
+        criterion: Literal["squared_error", "mse", "mae"] = "squared_error",
+        max_depth: Optional[int] = None,
+        min_samples_split: int = 2,
+        min_samples_leaf: int = 1,
+        max_features: Optional[
+            Union[Literal["auto", "sqrt", "log2"], int, float]
+        ] = 1.0,
+        bootstrap: bool = True,
+        oob_score: bool = False,
+        max_samples: Union[int, float] = None,
+        random_state=None,  # TODO: set correct type
     ):
         """Initializes a RandomForest object."""
         self.n_estimators = n_estimators
@@ -41,7 +90,7 @@ class RandomForest(BaseEstimator, RegressorMixin):
         self.max_samples = max_samples
         self.random_state = random_state
 
-    def fit(self, X, y):
+    def fit(self, X: MatrixLike, y: ArrayLike) -> Self:
         """Fits the emulator to the data.
 
         Parameters
@@ -72,17 +121,13 @@ class RandomForest(BaseEstimator, RegressorMixin):
         self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, X: MatrixLike) -> ArrayLike:
         """Predicts the output of the simulator for a given input.
 
         Parameters
         ----------
         X : {array-like, sparse matrix}, shape (n_samples, n_features)
             The training input samples.
-
-        return_std : bool
-            If True, returns a touple with two ndarrays,
-            one with the mean and one with the standard deviations of the prediction.
 
         Returns
         -------
@@ -93,7 +138,9 @@ class RandomForest(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X)
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(
+        self, search_type: Literal["random", "bayes"] = "random"
+    ) -> dict[str, Any]:
         """Returns the grid parameters of the emulator."""
 
         param_space_random = {
@@ -123,12 +170,21 @@ class RandomForest(BaseEstimator, RegressorMixin):
         elif search_type == "bayes":
             param_space = param_space_bayes
 
+        # TODO: Should this raise an error if the search type is not recognised?
+
         return param_space
 
     def _more_tags(self):
+        """Returns more tags for the estimator.
+
+        Returns
+        -------
+        dict
+            The tags for the estimator.
+        """
         return {"multioutput": True}
 
-    # def score(self, X, y, metric):
+    # def score(self, X: ArrayLike, y: ArrayLike, metric:Literal["rsme", "r2"]) -> float:
     #     """Returns the score of the emulator.
 
     #     Parameters
@@ -149,5 +205,11 @@ class RandomForest(BaseEstimator, RegressorMixin):
     #     return metric(y, predictions)
 
     # def _more_tags(self):
+    #     """Returns more tags for the estimator.
+    #     Returns
+    #     -------
+    #     dict
+    #         The tags for the estimator.
+    #     """
     #     return {'non_deterministic': True,
     #             'multioutput': True}

@@ -3,6 +3,12 @@ import numpy as np
 import scipy
 from scipy.integrate import solve_ivp
 
+from ..types import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..types import ArrayLike
+    from scipy.integrate._ivp.ivp import OdeResult
+
 # Create our simulator, which solves a nonlinear differential equation describing projectile
 # motion with drag. A projectile is launched from an initial height of 2 meters at an
 # angle of 45 degrees and falls under the influence of gravity and air resistance.
@@ -12,8 +18,23 @@ from scipy.integrate import solve_ivp
 # define functions needed for simulator
 
 
-def f(t, y, c):
-    "Compute RHS of system of differential equations, returning vector derivative"
+def f(t: float, y: ArrayLike, c: float) -> ArrayLike:
+    """Compute RHS of system of differential equations, returning vector derivative.
+
+    Parameters
+    ----------
+    t : float
+        Time.
+    y : array-like, shape (4,)
+        State vector.
+    c : float
+        Drag coefficient.
+
+    Returns
+    -------
+    dydt : array-like, shape (4,)
+        Vector derivative.
+    """
 
     # check inputs and extract
 
@@ -35,8 +56,23 @@ def f(t, y, c):
     return dydt
 
 
-def event(t, y, c):
-    "event to trigger end of integration"
+def event(t: float, y: ArrayLike, c: float) -> float:
+    """Event to trigger end of integration
+
+    Parameters
+    ----------
+    t : float
+        Time.
+    y : array-like, shape (4,)
+        State vector.
+    c : float
+        Drag coefficient.
+
+    Returns
+    -------
+    float
+        Distance travelled by the projectile.
+    """
 
     assert len(y) == 4
     assert c >= 0.0
@@ -49,8 +85,19 @@ event.terminal = True
 # now can define simulator
 
 
-def simulator_base(x):
-    "simulator to solve ODE system for projectile motion with drag. returns distance projectile travels"
+def simulator_base(x: ArrayLike) -> OdeResult:
+    """Simulator to solve ODE system for projectile motion with drag. returns distance projectile travels
+
+    Parameters
+    ----------
+    x : array-like, shape (2,)
+        Drag coefficient and launch velocity.
+
+    Returns
+    -------
+    results : scipy.integrate._ivp.ivp.OdeResult
+        Results of the ODE solver.
+    """
 
     # unpack values
 
@@ -75,16 +122,38 @@ def simulator_base(x):
     return results
 
 
-def simulator(x):
-    "simulator to solve ODE system for projectile motion with drag. returns distance projectile travels"
+def simulator(x: ArrayLike) -> float:
+    """Simulator to solve ODE system for projectile motion with drag. returns distance projectile travels.
+
+    Parameters
+    ----------
+    x : array-like, shape (2,)
+        Drag coefficient and launch velocity.
+
+    Returns
+    -------
+    float
+        Distance travelled by the projectile.
+    """
 
     results = simulator_base(x)
 
     return results.y_events[0][0][2]
 
 
-def simulator_multioutput(x):
-    "simulator to solve ODE system with multiple outputs"
+def simulator_multioutput(x: ArrayLike) -> tuple[float, float]:
+    """Simulator to solve ODE system with multiple outputs
+
+    Parameters
+    ----------
+    x : array-like, shape (2,)
+        Drag coefficient and launch velocity.
+
+    Returns
+    -------
+    tuple
+        Distance travelled by the projectile and the speed of the projectile.
+    """
 
     results = simulator_base(x)
 
@@ -97,8 +166,22 @@ def simulator_multioutput(x):
 # functions for printing out results
 
 
-def print_results(inputs, arg, var):
-    "convenience function for printing out generic results"
+def print_results(inputs, arg, var) -> None:
+    """Convenience function for printing out generic results
+
+    Parameters
+    ----------
+    inputs : array-like
+        Input values.
+    arg : array-like
+        Mean values.
+    var : array-like
+        Variance values.
+
+    Returns
+    -------
+    None
+    """
 
     print(
         "---------------------------------------------------------------------------------"
@@ -108,15 +191,43 @@ def print_results(inputs, arg, var):
         print("{}      {}       {}".format(pp, m, v))
 
 
-def print_predictions(inputs, pred, var):
-    "convenience function for printing predictions"
+def print_predictions(inputs, pred, var) -> None:
+    """Convenience function for printing predictions
+
+    Parameters
+    ----------
+    inputs : array-like
+        Input values.
+    pred : array-like
+        Predicted mean values.
+    var : array-like
+        Predictive variance values.
+
+    Returns
+    -------
+    None
+    """
 
     print("Target Point                Predicted Mean             Predictive Variance")
     print_results(inputs, pred, var)
 
 
-def print_errors(inputs, errors, var):
-    "convenience function for printing out results and computing mean square error"
+def print_errors(inputs, errors, var) -> None:
+    """Convenience function for printing out results and computing mean square error
+
+    Parameters
+    ----------
+    inputs : array-like
+        Input values.
+    errors : array-like
+        Error values.
+    var : array-like
+        Variance values.
+
+    Returns
+    -------
+    None
+    """
 
     print("Target Point                Standard Error             Predictive Variance")
     print_results(inputs, errors, var)

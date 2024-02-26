@@ -2,8 +2,10 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 
+from .types import ArrayLike
 
-def rmse(y_true, y_pred):
+
+def rmse(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """Returns the root mean squared error.
 
     Parameters
@@ -16,7 +18,7 @@ def rmse(y_true, y_pred):
     return mean_squared_error(y_true, y_pred, squared=False)
 
 
-def r2(y_true, y_pred):
+def r2(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """Returns the R^2 score.
 
     Parameters

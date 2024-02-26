@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+from ...types import Optional
 from autoemulate.utils import set_random_seed
 
 
@@ -12,9 +13,9 @@ class TorchModule(nn.Module):
     def __init__(
         self,
         module_name: str,
-        input_size: int = None,
-        output_size: int = None,
-        random_state: int = None,
+        input_size: Optional[int] = None,
+        output_size: Optional[int] = None,
+        random_state: Optional[int] = None,
     ):
         super(TorchModule, self).__init__()
         if random_state is not None:
@@ -28,4 +29,5 @@ class TorchModule(nn.Module):
         raise NotImplementedError("get_grid_params method not implemented.")
 
     def forward(self, X: torch.Tensor):
+        """Forward pass through the module"""
         raise NotImplementedError("forward method not implemented.")

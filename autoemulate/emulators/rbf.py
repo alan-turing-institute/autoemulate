@@ -11,19 +11,45 @@ from skopt.space import Categorical
 from skopt.space import Integer
 from skopt.space import Real
 
+from ..types import Any
+from ..types import ArrayLike
+from ..types import List
+from ..types import Literal
+from ..types import MatrixLike
+from ..types import Self
+
 
 class RBF(BaseEstimator, RegressorMixin):
     """Radial basis function Emulator.
 
     Wraps the RBF interpolator from scipy.
+
+    Parameters
+    ----------
+    smoothing : float, default=0.0
+        The smoothing factor for the RBF interpolator.
+    kernel : {'linear', 'thin_plate_spline', 'cubic', 'quintic', 'multiquadric', 'inverse_multiquadric', 'gaussian'}, default='thin_plate_spline'
+        The kernel to be used in the RBF interpolator.
+    epsilon : float, default=1.0
+        The epsilon parameter for the RBF interpolator.
+    degree : int, default=1
+        The degree of the polynomial used in the RBF interpolator.
     """
 
     def __init__(
         self,
-        smoothing=0.0,
-        kernel="thin_plate_spline",
-        epsilon=1.0,
-        degree=1,
+        smoothing: float = 0.0,
+        kernel: Literal[
+            "linear",
+            "thin_plate_spline",
+            "cubic",
+            "quintic",
+            "multiquadric",
+            "inverse_multiquadric",
+            "gaussian",
+        ] = "thin_plate_spline",
+        epsilon: float = 1.0,
+        degree: int = 1,
     ):
         """Initializes an RBF object."""
         self.smoothing = smoothing
@@ -31,7 +57,7 @@ class RBF(BaseEstimator, RegressorMixin):
         self.epsilon = epsilon
         self.degree = degree
 
-    def fit(self, X, y):
+    def fit(self, X: MatrixLike, y: ArrayLike) -> Self:
         """Fits the emulator to the data.
 
         Parameters
@@ -66,7 +92,7 @@ class RBF(BaseEstimator, RegressorMixin):
         self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, X: MatrixLike) -> ArrayLike:
         """Predicts the output of the emulator for a given input.
 
         Parameters
@@ -83,7 +109,9 @@ class RBF(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_(X)
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(
+        self, search_type: Literal["random", "bayes"] = "random"
+    ) -> List[dict[str, Any]]:
         """Returns the grid parameters of the emulator."""
         # param_space_random = {
         #     #"smoothing": uniform(0.0, 1.0),
@@ -142,7 +170,16 @@ class RBF(BaseEstimator, RegressorMixin):
         elif search_type == "bayes":
             param_space = param_space_bayes
 
+        # TODO: Should this raise an error if the search type is not recognised?
+
         return param_space
 
     def _more_tags(self):
+        """Returns more tags for the estimator.
+
+        Returns
+        -------
+        dict
+            The tags for the estimator.
+        """
         return {"multioutput": True}

@@ -1,8 +1,13 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+from .types import ArrayLike
+from .types import Optional
 
-def split_data(X, test_size=0.2, random_state=None):
+
+def split_data(
+    X: ArrayLike, test_size: float = 0.2, random_state: Optional[int] = None
+) -> tuple[ArrayLike, ArrayLike]:
     """Splits the data into training and testing sets.
 
     Parameters

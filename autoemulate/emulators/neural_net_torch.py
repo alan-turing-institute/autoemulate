@@ -2,7 +2,6 @@
 # to make it compatible with scikit-learn. Works with cross_validate and GridSearchCV,
 # but doesn't pass tests, because we're subclassing
 import warnings
-from typing import List
 
 import numpy as np
 import torch
@@ -12,18 +11,37 @@ from sklearn.exceptions import NotFittedError
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 
+from ..types import ArrayLike
+from ..types import List
+from ..types import Literal
+from ..types import MatrixLike
+from ..types import Optional
+from ..types import Self
+from ..types import Union
 from autoemulate.emulators.neural_networks import get_module
 from autoemulate.utils import set_random_seed
 
 
 class InputShapeSetter(Callback):
-    """Callback to set input and output layer sizes dynamically."""
+    """Callback to set input and output layer sizes dynamically.
+
+    This is needed to support dynamic input size.
+
+    Parameters
+    ----------
+    net : NeuralNetRegressor
+        The neural network regressor.
+    X : Optional[Union[torch.Tensor, np.ndarray]], optional
+        The input samples, by default None.
+    y : Optional[Union[torch.Tensor, np.ndarray]], optional
+        The target values, by default None.
+    """
 
     def on_train_begin(
         self,
         net: NeuralNetRegressor,
-        X: torch.Tensor | np.ndarray = None,
-        y: torch.Tensor | np.ndarray = None,
+        X: Optional[Union[torch.Tensor, np.ndarray]] = None,
+        y: Optional[Union[torch.Tensor, np.ndarray]] = None,
         **kwargs,
     ):
         if hasattr(net, "n_features_in_") and net.n_features_in_ != X.shape[-1]:
@@ -44,13 +62,46 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     module__input_size and module__output_size must be provided to define the
     input and output dimension of the data.
+
+    Parameters
+    ----------
+    module : str, optional
+        The module to use, by default "mlp"
+    criterion : torch.nn.Module, optional
+        The loss function, by default torch.nn.MSELoss
+    optimizer : torch.optim.Optimizer, optional
+        The optimizer to use, by default torch.optim.AdamW
+    lr : float, optional
+        The learning rate, by default 1e-3
+    batch_size : int, optional
+        The batch size, by default 128
+    max_epochs : int, optional
+        The maximum number of epochs, by default 1
+    module__input_size : int, optional
+        The input size, by default 2
+    module__output_size : int, optional
+        The output size, by default 1
+    optimizer__weight_decay : float, optional
+        The weight decay, by default 0.0
+    iterator_train__shuffle : bool, optional
+        Whether to shuffle the training data, by default True
+    callbacks : List[Callback], optional
+        The callbacks to use, by default [InputShapeSetter()]
+    train_split : bool, optional
+        Whether to split the data, by default False
+    verbose : int, optional
+        The verbosity level, by default 0
+    random_state : int, optional
+        The random state, by default None
+    **kwargs
+        Additional keyword arguments to pass to the neural network regressor.
     """
 
     def __init__(
         self,
         module: str = "mlp",
-        criterion=torch.nn.MSELoss,
-        optimizer=torch.optim.AdamW,
+        criterion: torch.nn.Module = torch.nn.MSELoss,  # TODO: verify type here
+        optimizer: torch.optim.Optimizer = torch.optim.AdamW,  # TODO: verify type here
         lr: float = 1e-3,
         batch_size: int = 128,
         max_epochs: int = 1,
@@ -84,7 +135,20 @@ class NeuralNetTorch(NeuralNetRegressor):
         )
         self.initialize()
 
-    def set_params(self, **params):
+    def set_params(self, **params) -> Self:
+        """Set the parameters of the neural network regressor.
+
+        Parameters
+        ----------
+        **params
+            The parameters to set. If `random_state` is provided, it is set as
+            an attribute of the class.
+
+        Returns
+        -------
+        self
+            The neural network regressor with the new parameters.
+        """
         if "random_state" in params:
             random_state = params.pop("random_state")
             if hasattr(self, "random_state"):
@@ -95,7 +159,19 @@ class NeuralNetTorch(NeuralNetRegressor):
             self.initialize()
         return super().set_params(**params)
 
-    def initialize_module(self, reason=None):
+    def initialize_module(self, reason: Optional[str] = None) -> Self:
+        """Initializes the module.
+
+        Parameters
+        ----------
+        reason : str, optional
+            The reason for initializing the module, by default None
+
+        Returns
+        -------
+        self
+            The neural network regressor with the initialized module.
+        """
         kwargs = self.get_params_for("module")
         if hasattr(self, "random_state"):
             kwargs["random_state"] = self.random_state
@@ -103,13 +179,26 @@ class NeuralNetTorch(NeuralNetRegressor):
         self.module_ = module
         return self
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(
+        self,
+        search_type: Literal[
+            "random", "bayes"
+        ] = "random",  # TODO: Verify search_type types
+    ) -> dict[str, Union[bool, dict[str, str]]]:
         return self.module_.get_grid_params(search_type)
 
-    def __sklearn_is_fitted__(self):
+    def __sklearn_is_fitted__(self) -> bool:
+        """Private method to check if the model is fitted. This is used by scikit-learn."""
         return hasattr(self, "n_features_in_")
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict[str, Union[bool, dict[str, str]]]:
+        """Returns more tags for the estimator.
+
+        Returns
+        -------
+        dict
+            The tags of the neural network regressor.
+        """
         return {
             "multioutput": True,
             "poor_score": True,
@@ -122,7 +211,21 @@ class NeuralNetTorch(NeuralNetRegressor):
             },
         }
 
-    def check_data(self, X: np.ndarray, y: np.ndarray = None):
+    def check_data(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> np.ndarray:
+        """Check the data for the neural network regressor.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The input samples.
+        y : np.ndarray, optional
+            The target values, by default None
+
+        Returns
+        -------
+        np.ndarray
+            The input samples.
+        """
         if isinstance(y, np.ndarray):
             if np.iscomplex(X).any():
                 raise ValueError("Complex data not supported")
@@ -158,20 +261,98 @@ class NeuralNetTorch(NeuralNetRegressor):
                 y = np.squeeze(y, axis=-1)
         return X, y
 
-    def fit_loop(self, X, y=None, epochs=None, **fit_params):
+    def fit_loop(
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        epochs: Optional[int] = None,
+        **fit_params,
+    ) -> Self:
+        """Loop to fit the neural network regressor.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The input samples.
+        y : np.ndarray, optional
+            The target values, by default None
+        epochs : int, optional
+            The number of epochs, by default None
+        **fit_params
+            Additional keyword arguments to pass to the fit method.
+
+        Returns
+        -------
+        self
+            The neural network regressor fitted to the data.
+        """
         X, y = self.check_data(X, y)
         return super().fit_loop(X, y, epochs, **fit_params)
 
-    def partial_fit(self, X, y=None, classes=None, **fit_params):
+    def partial_fit(
+        self,
+        X: ArrayLike,
+        y: Optional[ArrayLike] = None,
+        classes: ArrayLike = None,
+        **fit_params,
+    ) -> Self:
+        """Partially fit the neural network regressor.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The input samples.
+        y : np.ndarray, optional
+            The target values, by default None
+        classes : np.ndarray, optional
+            The classes, by default None
+        **fit_params
+            Additional keyword arguments to pass to the fit method.
+
+        Returns
+        -------
+        self
+            The neural network regressor partially fitted to the data.
+        """
         X, y = self.check_data(X, y)
         return super().partial_fit(X, y, classes, **fit_params)
 
-    def fit(self, X, y, **fit_params):
+    def fit(self, X: MatrixLike, y: Optional[ArrayLike], **fit_params) -> Self:
+        """
+        Fits the emulator to the data.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+            The target values (real numbers).
+        **fit_params
+            Additional keyword arguments to pass to the fit method.
+
+        Returns
+        -------
+        self : object
+            Returns self.
+        """
         X, y = self.check_data(X, y)
         return super().fit(X, y, **fit_params)
 
     @torch.inference_mode()
-    def predict_proba(self, X):
+    def predict_proba(self, X: MatrixLike) -> np.ndarray:
+        """
+        Predicts the output of the emulator for a given input.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The input samples.
+
+        Returns
+        -------
+        y : ndarray of shape (n_samples, n_features)
+            The predicted values.
+        """
         if not hasattr(self, "n_features_in_"):
             raise NotFittedError
         dtype = X.dtype if hasattr(X, "dtype") else None
@@ -181,7 +362,21 @@ class NeuralNetTorch(NeuralNetRegressor):
             y_pred = y_pred.astype(dtype)
         return y_pred
 
-    def infer(self, x: torch.Tensor, **fit_params):
+    def infer(self, x: torch.Tensor, **fit_params) -> np.ndarray:
+        """Predicts the output of the emulator for a given input.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            The input samples.
+        **fit_params
+            Additional keyword arguments to pass to the infer method.
+
+        Returns
+        -------
+        y_pred : np.ndarray
+            The predicted values.
+        """
         if not hasattr(self, "n_features_in_"):
             setattr(self, "n_features_in_", x.size(1))
         y_pred = super().infer(x, **fit_params)

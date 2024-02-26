@@ -2,10 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import PredictionErrorDisplay
 
+from .types import TYPE_CHECKING
 from autoemulate.utils import get_model_name
 
+if TYPE_CHECKING:
+    from .types import ArrayLike, Literal, Optional
 
-def validate_inputs(cv_results, model_name):
+    PlotTypes = Literal["actual_vs_predicted", "residual_vs_predicted"]
+
+
+def validate_inputs(cv_results: dict, model_name: str) -> None:
     """Validates cv_results and model_name for plotting.
 
     Parameters
@@ -14,6 +20,16 @@ def validate_inputs(cv_results, model_name):
         A list of cross-validation results for each model.
     model_name : str
         The name of a model to plot.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If cv_results is empty.
+        If model_name is not in cv_results.
     """
     if not cv_results:
         raise ValueError("Run .compare() first.")
@@ -25,8 +41,25 @@ def validate_inputs(cv_results, model_name):
             )
 
 
-def check_multioutput(y, output_index):
-    """Checks if y is multi-output and if the output_index is valid."""
+def check_multioutput(y: ArrayLike, output_index: int) -> None:
+    """Checks if y is multi-output and if the output_index is valid.
+
+    Parameters
+    ----------
+    y : array-like, shape (n_samples, n_outputs)
+        Simulation output.
+    output_index : int
+        The index of the output to plot.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If output_index is out of range.
+    """
     if y.ndim > 1:
         if (output_index > y.shape[1] - 1) | (output_index < 0):
             raise ValueError(
@@ -38,17 +71,18 @@ To plot other outputs, set `output_index` argument to the desired index."""
         )
 
 
+# TODO: Should X be MatrixLike?
 def plot_single_fold(
-    cv_results,
-    X,
-    y,
-    model_name,
-    fold_index,
-    ax,
-    plot_type="actual_vs_predicted",
-    annotation=" ",
-    output_index=0,
-):
+    cv_results: dict,
+    X: ArrayLike,
+    y: ArrayLike,
+    model_name: str,
+    fold_index: int,
+    ax: plt.Axes,
+    plot_type: PlotTypes = "actual_vs_predicted",
+    annotation: str = " ",
+    output_index: int = 0,
+) -> None:
     """Plots a single cv fold for a given model.
 
     Parameters
@@ -74,6 +108,10 @@ def plot_single_fold(
         The annotation to add to the plot title. Default is an empty string.
     output_index : int, optional
         The index of the output to plot. Default is 0.
+
+    Returns
+    -------
+    None
     """
     test_indices = cv_results[model_name]["indices"]["test"][fold_index]
 
@@ -95,15 +133,16 @@ def plot_single_fold(
     ax.set_title(f"{model_name} - {title_suffix}")
 
 
+# TODO: Should X be MatrixLike?
 def plot_best_fold_per_model(
-    cv_results,
-    X,
-    y,
-    n_cols=3,
-    plot_type="actual_vs_predicted",
-    figsize=None,
-    output_index=0,
-):
+    cv_results: dict,
+    X: ArrayLike,
+    y: ArrayLike,
+    n_cols: int = 3,
+    plot_type: PlotTypes = "actual_vs_predicted",
+    figsize: Optional[tuple[int, int]] = None,
+    output_index: int = 0,
+) -> None:
     """Plots results of the best (highest R^2) cv-fold for each model in cv_results.
 
     Parameters
@@ -123,6 +162,10 @@ def plot_best_fold_per_model(
         Width, height in inches. Overrides the default figure size.
     output_index : int, optional
         The index of the output to plot. Default is 0.
+
+    Returns
+    -------
+    None
     """
 
     n_models = len(cv_results)
@@ -151,18 +194,18 @@ def plot_best_fold_per_model(
     plt.show()
 
 
+# TODO: Should X be MatrixLike?
 def plot_model_folds(
-    cv_results,
-    X,
-    y,
-    model_name,
-    n_cols=3,
-    plot_type="actual_vs_predicted",
-    figsize=None,
-    output_index=0,
-):
+    cv_results: dict,
+    X: ArrayLike,
+    y: ArrayLike,
+    model_name: str,
+    n_cols: int = 3,
+    plot_type: PlotTypes = "actual_vs_predicted",
+    figsize: Optional[tuple[int, int]] = None,
+    output_index: int = 0,
+) -> None:
     """Plots all the folds for a given model.
-
 
     Parameters
     ----------
@@ -183,6 +226,10 @@ def plot_model_folds(
         Overrides the default figure size.
     output_index : int, optional
         The index of the output to plot. Default is 0.
+
+    Returns
+    -------
+    None
     """
 
     n_folds = len(cv_results[model_name]["estimator"])
@@ -210,16 +257,17 @@ def plot_model_folds(
     plt.show()
 
 
+# TODO: Should X be MatrixLike?
 def _plot_results(
-    cv_results,
-    X,
-    y,
-    model_name=None,
-    n_cols=3,
-    plot_type="actual_vs_predicted",
-    figsize=None,
-    output_index=0,
-):
+    cv_results: dict,
+    X: ArrayLike,
+    y: ArrayLike,
+    model_name: Optional[str] = None,
+    n_cols: int = 3,
+    plot_type: PlotTypes = "actual_vs_predicted",
+    figsize: Optional[tuple[int, int]] = None,
+    output_index: int = 0,
+) -> None:
     """Plots the results of cross-validation.
 
     Parameters
@@ -264,7 +312,15 @@ def _plot_results(
         )
 
 
-def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
+# TODO: add model type, is Pipeline correct?
+def _plot_model(
+    model,
+    X: ArrayLike,
+    y: ArrayLike,
+    plot: Literal["standard", "residual"] = "standard",
+    n_cols: int = 2,
+    figsize: Optional[tuple[int, int]] = None,
+):
     """Plots the model predictions vs. the true values.
 
     Parameters
@@ -323,7 +379,10 @@ def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
                 axs
             ):  # Check to avoid index error if n_cols * n_rows > n_outputs
                 display = PredictionErrorDisplay.from_predictions(
-                    y_true=y[:, i], y_pred=y_pred[:, i], kind=plot_type, ax=axs[i]
+                    y_true=y[:, i],
+                    y_pred=y_pred[:, i],
+                    kind=plot_type,
+                    ax=axs[i],
                 )
                 axs[i].set_title(f"{get_model_name(model)} - Test Set - Output {i+1}")
 

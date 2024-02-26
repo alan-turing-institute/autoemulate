@@ -2,10 +2,13 @@ from abc import ABC
 from abc import abstractmethod
 
 import mogp_emulator
+import numpy as np
+
+from .types import List
 
 
 class ExperimentalDesign(ABC):
-    def __init__(self, bounds_list):
+    def __init__(self, bounds_list: List[tuple[float, float]]):
         """Initializes a Sampler object.
 
         Parameters
@@ -29,7 +32,7 @@ class ExperimentalDesign(ABC):
         pass
 
     @abstractmethod
-    def get_n_parameters(self):
+    def get_n_parameters(self) -> int:
         """Returns the number of parameters in the sample space.
 
         Returns
@@ -41,7 +44,7 @@ class ExperimentalDesign(ABC):
 
 
 class LatinHypercube(ExperimentalDesign):
-    def __init__(self, bounds_list):
+    def __init__(self, bounds_list: List[tuple[float, float]]):
         """Initializes a LatinHypercube object.
 
         Parameters
@@ -53,7 +56,7 @@ class LatinHypercube(ExperimentalDesign):
         """
         self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
 
-    def sample(self, n: int):
+    def sample(self, n: int) -> np.ndarray:
         """Samples n points from the sample space.
 
         Parameters
@@ -68,7 +71,7 @@ class LatinHypercube(ExperimentalDesign):
         """
         return self.sampler.sample(n)
 
-    def get_n_parameters(self):
+    def get_n_parameters(self) -> int:
         """Returns the number of parameters in the sample space.
 
         Returns

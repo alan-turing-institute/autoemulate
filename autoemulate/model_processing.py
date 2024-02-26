@@ -2,8 +2,11 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from .types import ArrayLike
+from .types import Optional
 
-def get_models(model_registry, model_subset=None):
+
+def get_models(model_registry: dict, model_subset: Optional[list] = None) -> list:
     """Get models from REGISTRY.
     Takes a subset of models if model_subset argument was used in setup().
 
@@ -27,7 +30,7 @@ def get_models(model_registry, model_subset=None):
     return models
 
 
-def check_model_names(model_names, model_registry):
+def check_model_names(model_names: list, model_registry: dict) -> None:
     """Check whether model_names are in MODEL_REGISTRY
 
     Parameters
@@ -40,7 +43,11 @@ def check_model_names(model_names, model_registry):
     Returns
     -------
     None
-        Raises ValueError if a model in chosen_models is not in MODEL_REGISTRY.
+
+    Raises
+    ------
+    ValueError
+        If a model in chosen_models is not in MODEL_REGISTRY.
     """
     for model in model_names:
         if model not in model_registry:
@@ -49,7 +56,7 @@ def check_model_names(model_names, model_registry):
             )
 
 
-def turn_models_into_multioutput(models, y):
+def turn_models_into_multioutput(models: list, y: ArrayLike) -> list:
     """Turn single output models into multioutput models if y is 2D.
 
     Parameters
@@ -65,15 +72,20 @@ def turn_models_into_multioutput(models, y):
         List of model instances, with single output models wrapped in MultiOutputRegressor.
     """
     models_multi = [
-        MultiOutputRegressor(model)
-        if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
-        else model
+        (
+            MultiOutputRegressor(model)
+            if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
+            else model
+        )
         for model in models
     ]
     return models_multi
 
 
-def wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
+# TODO: add types for scaler and dim_reducer
+def wrap_models_in_pipeline(
+    models: list, scale: bool, scaler, reduce_dim: bool, dim_reducer
+):
     """Wrap models in a pipeline if scale is True.
 
     Parameters
@@ -110,8 +122,15 @@ def wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     return models_piped
 
 
+# TODO: add types for scaler and dim_reducer
 def get_and_process_models(
-    model_registry, model_subset, y, scale, scaler, reduce_dim, dim_reducer
+    model_registry: dict,
+    model_subset: list,
+    y: ArrayLike,
+    scale: bool,
+    scaler,
+    reduce_dim: bool,
+    dim_reducer,
 ):
     """Get and process models.
 
@@ -127,6 +146,10 @@ def get_and_process_models(
         Whether to scale the data.
     scaler : sklearn.preprocessing object
         Scaler to use.
+    reduce_dim : bool
+        Whether to reduce the dimensionality of the data.
+    dim_reducer : sklearn.decomposition object
+        Dimensionality reduction method to use.
 
     Returns
     -------

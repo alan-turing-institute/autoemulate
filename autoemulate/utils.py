@@ -10,6 +10,12 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from .types import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .types import Literal, Union, ArrayLike, List
+    import pandas as pd
+
 
 @contextmanager
 def suppress_convergence_warnings():
@@ -34,7 +40,8 @@ def suppress_convergence_warnings():
             del os.environ["PYTHONWARNINGS"]
 
 
-def get_model_name(model):
+# TODO: Add model type, what is another model type than Pipeline?
+def get_model_name(model) -> str:
     """Get the name of the base model.
 
     This function handles standalone models, models wrapped in a MultiOutputRegressor,
@@ -70,6 +77,7 @@ def get_model_name(model):
         return type(model).__name__
 
 
+# TODO: add model type
 def get_model_params(model):
     """Get the parameters of the base model, which are not prefixed with `model__` or `estimator__`.
 
@@ -104,7 +112,10 @@ def get_model_params(model):
         return model.get_params()
 
 
-def get_model_param_space(model, search_type="random"):
+# TODO: add model type
+def get_model_param_space(
+    model, search_type: Literal["random", "bayes"] = "random"
+) -> dict:
     """Get the parameter grid of the base model. This is used for hyperparameter search.
 
     This function handles standalone models, models wrapped in a MultiOutputRegressor,
@@ -140,7 +151,8 @@ def get_model_param_space(model, search_type="random"):
         return model.get_grid_params(search_type)
 
 
-def adjust_param_space(model, param_space):
+# TODO: add model type
+def adjust_param_space(model, param_space: dict) -> dict:
     """Adjusts param grid to be compatible with the model.
     Adds `model__` if model is a pipeline and
     `estimator__` if model is a MultiOutputRegressor. Or `model__estimator__` if both,
@@ -176,7 +188,9 @@ def adjust_param_space(model, param_space):
     return add_prefix_to_param_space(param_space, prefix)
 
 
-def add_prefix_to_param_space(param_space, prefix):
+def add_prefix_to_param_space(
+    param_space: Union[dict, List[dict]], prefix: str
+) -> Union[dict, List[dict]]:
     """Adds a prefix to all keys in a parameter grid.
 
     Works for three types of param_spaces:
@@ -217,12 +231,25 @@ def add_prefix_to_param_space(param_space, prefix):
         return add_prefix_to_single_grid(param_space, prefix)
 
 
-def add_prefix_to_single_grid(grid, prefix):
-    """Adds a prefix to all keys in a single parameter grid dictionary."""
+def add_prefix_to_single_grid(grid: dict, prefix: str) -> dict:
+    """Adds a prefix to all keys in a single parameter grid dictionary.
+
+    Parameters
+    ----------
+    grid : dict
+        The parameter grid to which the prefix will be added.
+    prefix : str
+        The prefix to be added to each parameter name in the grid.
+
+    Returns
+    -------
+    dict
+        The parameter grid with the prefix added to each key.
+    """
     return {prefix + key: value for key, value in grid.items()}
 
 
-def normalise_y(y):
+def normalise_y(y: ArrayLike) -> tuple[ArrayLike, ArrayLike, ArrayLike]:
     """Normalize the target values y.
 
     Parameters
@@ -238,14 +265,13 @@ def normalise_y(y):
         The mean of the target values.
     y_std : array-like, shape (n_outputs,)
         The standard deviation of the target values.
-
     """
     y_mean = np.mean(y, axis=0)
     y_std = np.std(y, axis=0)
     return (y - y_mean) / y_std, y_mean, y_std
 
 
-def denormalise_y(y_pred, y_mean, y_std):
+def denormalise_y(y_pred: ArrayLike, y_mean: ArrayLike, y_std: ArrayLike) -> ArrayLike:
     """Denormalize the predicted values.
 
     Parameters
@@ -261,12 +287,13 @@ def denormalise_y(y_pred, y_mean, y_std):
     -------
     y_pred_denorm : array-like, shape (n_samples,) or (n_samples, n_outputs)
         The denormalized predicted target values.
-
     """
     return y_pred * y_std + y_mean
 
 
-def get_mean_scores(scores_df, metric):
+def get_mean_scores(
+    scores_df: pd.DataFrame, metric: Literal["r2", "rmse"]
+) -> pd.DataFrame:
     """Get the mean scores for each model and metric.
 
     Parameters
@@ -308,7 +335,21 @@ def get_mean_scores(scores_df, metric):
     return means_df
 
 
-def get_model_scores(scores_df, model_name):
+def get_model_scores(scores_df: pd.DataFrame, model_name: str) -> pd.DataFrame:
+    """Get the scores for a specific model.
+
+    Parameters
+    ----------
+    scores_df : pandas.DataFrame
+        DataFrame with columns "model", "metric", "fold", "score".
+    model_name : str
+        The name of the model.
+
+    Returns
+    -------
+    model_scores : pandas.DataFrame
+        DataFrame with columns "fold", "metric", "score".
+    """
     model_scores = scores_df[scores_df["model"] == model_name].pivot(
         index="fold", columns="metric", values="score"
     )
@@ -316,11 +357,19 @@ def get_model_scores(scores_df, model_name):
     return model_scores
 
 
-def set_random_seed(seed: int, deterministic: bool = False):
+def set_random_seed(seed: int, deterministic: bool = False) -> None:
     """Set random seed for Python, Numpy and PyTorch.
-    Args:
-        seed: int, the random seed to use.
-        deterministic: bool, use "deterministic" algorithms in PyTorch.
+
+    Parameters
+    ----------
+    seed : int
+        The random seed to use.
+    deterministic : bool
+        Use "deterministic" algorithms in PyTorch.
+
+    Returns
+    -------
+    None
     """
     random.seed(seed)
     np.random.seed(seed)

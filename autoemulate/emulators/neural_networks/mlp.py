@@ -7,6 +7,8 @@ from skopt.space import Integer
 from skopt.space import Real
 from torch import nn
 
+from ...types import Literal
+from ...types import Optional
 from autoemulate.emulators.neural_networks.base import TorchModule
 
 
@@ -15,12 +17,14 @@ class MLPModule(TorchModule):
 
     def __init__(
         self,
-        input_size: int = None,
-        output_size: int = None,
-        random_state: int = None,
+        input_size: Optional[int] = None,
+        output_size: Optional[int] = None,
+        random_state: Optional[int] = None,
         hidden_layers: int = 1,
         hidden_size: int = 100,
-        hidden_activation: Tuple[callable] = nn.ReLU,
+        hidden_activation: tuple[
+            callable
+        ] = nn.ReLU,  # TODO: Is this really the correct type?
     ):
         super(MLPModule, self).__init__(
             module_name="mlp",
@@ -37,7 +41,26 @@ class MLPModule(TorchModule):
         modules.append(nn.Linear(in_features=input_size, out_features=output_size))
         self.model = nn.Sequential(*modules)
 
-    def get_grid_params(self, search_type: str = "random"):
+    def get_grid_params(
+        self, search_type: Literal["random", "bayes"] = "random"
+    ) -> dict[str, list]:
+        """Return the hyperparameter search space for the module.
+
+        Parameters
+        ----------
+        search_type : str, optional
+            The type of search space to return, by default "random"
+
+        Returns
+        -------
+        dict
+            The hyperparameter search space for the module
+
+        Raises
+        ------
+        ValueError
+            If the search type is not implemented
+        """
         param_space = {
             "max_epochs": np.arange(10, 110, 10).tolist(),
             "batch_size": np.arange(2, 128, 2).tolist(),
@@ -62,5 +85,17 @@ class MLPModule(TorchModule):
 
         return param_space
 
-    def forward(self, X: torch.Tensor):
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Forward pass through the module.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            The input data
+
+        Returns
+        -------
+        torch.Tensor
+            The output data
+        """
         return self.model(X)

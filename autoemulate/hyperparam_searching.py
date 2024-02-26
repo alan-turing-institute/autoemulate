@@ -3,23 +3,37 @@ import logging
 from sklearn.model_selection import RandomizedSearchCV
 from skopt import BayesSearchCV
 
-from autoemulate.utils import adjust_param_space
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_model_param_space
-from autoemulate.utils import get_model_params
+from .types import ArrayLike
+from .types import MatrixLike
+from .types import TYPE_CHECKING
+from .utils import adjust_param_space
+from .utils import get_model_name
+from .utils import get_model_param_space
+from .utils import get_model_params
 
 
+if TYPE_CHECKING:
+    from logging import Logger
+    from .types import Iterable, Union, Optional, Literal
+    from sklearn.model_selection import BaseCrossValidator
+    from sklearn.model_selection import BaseShuffleSplit
+    from sklearn.pipeline import Pipeline
+
+    SearchTypes = Literal["random", "bayes"]
+
+
+# TODO: Note that BayesSearchCV takes a n_jobs Int parameter. We should enforce that here to avoid bugs. Also check that model and return type are correct.
 def optimize_params(
-    X,
-    y,
-    cv,
-    model,
-    search_type="random",
-    niter=20,
-    param_space=None,
-    n_jobs=None,
-    logger=None,
-):
+    X: MatrixLike,
+    y: Union[MatrixLike, ArrayLike],
+    cv: Union[int, BaseCrossValidator, Iterable, BaseShuffleSplit],
+    model: Pipeline,  # TODO: Verify that this is correct
+    search_type: SearchTypes = "random",
+    niter: int = 20,
+    param_space: Optional[dict] = None,
+    n_jobs: Optional[int] = None,
+    logger: Optional[Logger] = None,
+) -> Pipeline:
     """Performs hyperparameter search for the provided model.
 
     Parameters
@@ -35,16 +49,16 @@ def optimize_params(
         Type of search to perform. Can be "random" or "bayes", "grid" not yet implemented.
     niter : int, default=20
         Number of parameter settings that are sampled. Trades off runtime vs quality of the solution.
-        param_space : dict, default=None
+    param_space : dict, default=None
         Dictionary with parameters names (string) as keys and lists of
         parameter settings to try as values, or a list of such dictionaries,
         in which case the grids spanned by each dictionary in the list are
         explored. This enables searching over any sequence of parameter
         settings. Parameters names should be prefixed with "model__" to indicate that
         they are parameters of the model.
-    n_jobs : int
+    n_jobs : int, optional
         Number of jobs to run in parallel.
-    logger : logging.Logger
+    logger : logging.Logger, optional
         Logger instance.
 
     Returns
@@ -94,14 +108,19 @@ def optimize_params(
     return searcher.best_estimator_
 
 
-def process_param_space(model, search_type, param_space):
-    """Process parameter grid for hyperparameter search.
+def process_param_space(
+    model: Pipeline, search_type: SearchTypes, param_space: dict
+) -> dict:
+    """
+    Process parameter grid for hyperparameter search.
+
     Gets the parameter grid for the model and adjusts it to include prefixes
     for pipelines / multioutput estimators.
 
     Parameters
     ----------
-    model : model instance to do hyperparameter search for.
+    model : Pipeline
+        Model instance to do hyperparameter search for.
     search_type : str, default="random"
         Type of search to perform. Can be "random" or "bayes", "grid" not yet implemented.
     param_space : dict, default=None
@@ -126,7 +145,7 @@ def process_param_space(model, search_type, param_space):
     return param_space
 
 
-def check_param_space(param_space, model):
+def check_param_space(param_space: dict, model: Pipeline) -> dict:
     """Checks that the parameter grid is valid.
 
     Parameters
@@ -145,12 +164,12 @@ def check_param_space(param_space, model):
     -------
     param_space : dict
     """
-    if type(param_space) != dict:
+    if not isinstance(param_space, dict):
         raise TypeError("param_space must be a dictionary")
     for key, value in param_space.items():
-        if type(key) != str:
+        if not isinstance(key, str):
             raise TypeError("param_space keys must be strings")
-        if type(value) != list:
+        if not isinstance(value, list):
             raise TypeError("param_space values must be lists")
 
     inbuilt_grid = get_model_params(model)

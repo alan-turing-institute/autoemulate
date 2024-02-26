@@ -7,7 +7,13 @@ from sklearn.model_selection import train_test_split
 data_dir = Path(__file__).parent.parent / "data"
 
 
-def fetch_data(dataset, split=False, test_size=0.2, random_state=42):
+# TODO: Verify that this is a return of a tuple of np.ndarray elements
+def fetch_data(
+    dataset: str,
+    split: bool = False,
+    test_size: float = 0.2,
+    random_state: int = 42,
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Fetch a dataset by name.
 

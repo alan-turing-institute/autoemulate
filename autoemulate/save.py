@@ -9,8 +9,21 @@ from autoemulate.utils import get_model_name
 
 
 class ModelSerialiser:
-    def save_model(self, model, path):
-        """Saves a model + metadata to disk."""
+    # TODO: Add model type, is Pipeline correct?
+    def save_model(self, model, path: str) -> None:
+        """Saves a model + metadata to disk.
+
+        Parameters
+        ----------
+        model : object
+            Model to save.
+        path : str
+            Path to save the model to.
+
+        Returns
+        -------
+        None
+        """
         # model
         joblib.dump(model, path)
 
@@ -24,8 +37,20 @@ class ModelSerialiser:
         with open(self.get_meta_path(path), "w") as f:
             json.dump(meta, f)
 
-    def load_model(self, path):
-        """Loads a model from disk and checks version."""
+    # TODO: Add return type, is Pipeline correct?
+    def load_model(self, path: str):
+        """Loads a model from disk and checks version.
+
+        Parameters
+        ----------
+        path : str
+            Path to the model file.
+
+        Returns
+        -------
+        <TYPE>
+            Model instance.
+        """
         model = joblib.load(path)
         meta_path = self.get_meta_path(path)
 
@@ -49,11 +74,21 @@ class ModelSerialiser:
 
         return model
 
-    def get_meta_path(self, path):
+    def get_meta_path(self, path: str) -> str:
         """Returns the path to the metadata file.
 
         If the path has an extension, it is replaced with _meta.json.
         Otherwise, _meta.json is appended to the path.
+
+        Parameters
+        ----------
+        path : str
+            Path to the model file.
+
+        Returns
+        -------
+        str
+            Path to the metadata file.
         """
         base, ext = os.path.splitext(path)
         meta_path = f"{base}_meta.json" if ext else f"{base}_meta{ext}.json"
