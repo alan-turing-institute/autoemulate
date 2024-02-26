@@ -1,4 +1,6 @@
 """Functions for getting and processing models."""
+from copy import deepcopy
+
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
@@ -19,11 +21,12 @@ def _get_models(model_registry, model_subset=None):
     list
         List of model instances.
     """
+    # TODO replace deepcopy with a proper model register
     if model_subset is not None:
         _check_model_names(model_subset, model_registry)
-        models = [model_registry[model] for model in model_subset]
+        models = [deepcopy(model_registry)[model] for model in model_subset]
     else:
-        models = [model for model in model_registry.values()]
+        models = [deepcopy(model) for model in model_registry.values()]
     return models
 
 
@@ -65,9 +68,11 @@ def _turn_models_into_multioutput(models, y):
         List of model instances, with single output models wrapped in MultiOutputRegressor.
     """
     models_multi = [
-        MultiOutputRegressor(model)
-        if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
-        else model
+        (
+            MultiOutputRegressor(model)
+            if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
+            else model
+        )
         for model in models
     ]
     return models_multi
