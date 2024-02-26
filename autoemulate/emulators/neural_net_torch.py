@@ -141,11 +141,6 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     def fit_loop(self, X, y=None, epochs=None, **fit_params):
         X, y = self.check_data(X, y)
-        if hasattr(self, "n_features_in_") and self.n_features_in_ != X.shape[-1]:
-            raise ValueError(
-                f"Mismatch number of features, "
-                f"expected {self.n_features_in_}, received {X.shape[-1]}."
-            )
         return super().fit_loop(X, y, epochs, **fit_params)
 
     def partial_fit(self, X, y=None, classes=None, **fit_params):
@@ -170,7 +165,14 @@ class NeuralNetTorch(NeuralNetRegressor):
         return y_pred
 
     def infer(self, x: torch.Tensor, **fit_params):
-        if not hasattr(self, "n_features_in_"):
+        if hasattr(self, "n_features_in_"):
+            if self.n_features_in_ != x.shape[-1]:
+                raise ValueError(
+                    f"Mismatch number of features, "
+                    f"expected {self.n_features_in_}, received {x.shape[-1]}."
+                    f"input_size: {self.module__input_size}."
+                )
+        else:
             setattr(self, "n_features_in_", x.size(1))
         y_pred = super().infer(x, **fit_params)
         if self.module__output_size == 1 and y_pred.shape[-1] == 1:
