@@ -126,15 +126,15 @@ def test_nn_torch_module_grid_params():
     assert callable(getattr(nn_torch_model.module, "get_grid_params"))
 
 
-# def test_nn_torch_module_ui():
-#     input_size, output_size = 10, 2
-#     X = np.random.rand(100, input_size)
-#     y = np.random.rand(100, output_size)
-#     em = AutoEmulate()
-#     em.setup(X, y, model_subset=["NeuralNetTorch"])
-#     # check that compare does not raise an error
-#     best = em.compare()
-#     assert get_model_name(best) == "NeuralNetTorch"
+def test_nn_torch_module_ui():
+    input_size, output_size = 20, 2
+    X = np.random.rand(100, input_size)
+    y = np.random.rand(100, output_size)
+    em = AutoEmulate()
+    em.setup(X, y, model_subset=["NeuralNetTorch"])
+    # check that compare does not raise an error
+    best = em.compare()
+    assert get_model_name(best) == "NeuralNetTorch"
 
 
 def test_nn_torch_module_ui_param_search():
