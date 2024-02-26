@@ -17,6 +17,7 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     logger.info(f"Cross-validating {model_name}...")
     logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
 
+    cv_results = None
     try:
         cv_results = cross_validate(
             model,
@@ -31,7 +32,6 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     except Exception as e:
         logger.error(f"Failed to cross-validate {model_name}")
         logger.error(e)
-        exit()
 
     # refit the model on the whole dataset
     fitted_model = model.fit(X, y)
