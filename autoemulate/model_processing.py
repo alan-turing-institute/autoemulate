@@ -1,6 +1,7 @@
-"""Functions for getting and processing models."""
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
+
+from autoemulate.utils import get_model_name
 
 
 def _get_models(model_registry, model_subset=None):
@@ -139,3 +140,23 @@ def _get_and_process_models(
         models_multi, scale, scaler, reduce_dim, dim_reducer
     )
     return models_scaled
+
+
+def _get_model_name_dict(model_registry):
+    """Get a dictionary of short model names and their corresponding class names.
+
+    Parameters
+    ----------
+    MODEL_REGISTRY : dict
+        Dictionary of models.
+
+    Returns
+    -------
+    model_name_dict : dict
+        Dictionary model short names and corresponding class names.
+    """
+    model_name_dict = {
+        short_name: get_model_name(model)
+        for short_name, model in model_registry.items()
+    }
+    return model_name_dict

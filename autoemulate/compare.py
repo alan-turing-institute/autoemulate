@@ -21,6 +21,7 @@ from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _get_and_process_models
+from autoemulate.model_processing import _get_model_name_dict
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
@@ -100,6 +101,7 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
+        self.model_name_dict = _get_model_name_dict(MODEL_REGISTRY)
         self.models = _get_and_process_models(
             MODEL_REGISTRY,
             model_subset,

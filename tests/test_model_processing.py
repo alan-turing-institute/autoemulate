@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.model_processing import _check_model_names
+from autoemulate.model_processing import _get_model_name_dict
 from autoemulate.model_processing import _get_models
 from autoemulate.model_processing import _turn_models_into_multioutput
 from autoemulate.model_processing import _wrap_models_in_pipeline
@@ -35,6 +36,13 @@ def test_get_models_subset():
     assert len(models) == 2
     model_names = [type(model).__name__ for model in models]
     assert all([model_name in MODEL_REGISTRY for model_name in model_names])
+
+
+# -----------------------test get model name dict from model registry-------------------#``
+def test_get_model_name_dict():
+    model_name_dict = _get_model_name_dict(MODEL_REGISTRY)
+    assert isinstance(model_name_dict, dict)
+    assert all([model_name in model_name_dict for model_name in MODEL_REGISTRY])
 
 
 # -----------------------test turning models into multioutput-------------------#
