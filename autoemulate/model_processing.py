@@ -21,9 +21,9 @@ def get_models(model_registry, model_subset=None):
     """
     if model_subset is not None:
         check_model_names(model_subset, model_registry)
-        models = [model_registry[model]() for model in model_subset]
+        models = [model_registry[model] for model in model_subset]
     else:
-        models = [model() for model in model_registry.values()]
+        models = [model for model in model_registry.values()]
     return models
 
 
