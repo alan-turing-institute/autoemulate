@@ -1,9 +1,8 @@
 """Functions for getting and processing models."""
+from copy import deepcopy
 
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-
-from copy import deepcopy
 
 
 def _get_models(model_registry, model_subset=None):
