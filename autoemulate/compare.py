@@ -197,6 +197,8 @@ class AutoEmulate:
 
         for i in range(len(self.models)):
             try:
+                # warmup model
+                self.models[i].fit(self.X[self.train_idxs], self.y[self.train_idxs])
                 # hyperparameter search
                 if self.param_search:
                     self.models[i] = _optimize_params(
