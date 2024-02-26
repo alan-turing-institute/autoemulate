@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_xgboost_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-26 09:07 +0000
+            created at 2024-02-26 12:14 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -93,8 +93,8 @@
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">skopt</span><span class="op">.</span><span class="nam">space</span> <span class="key">import</span> <span class="nam">Integer</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">skopt</span><span class="op">.</span><span class="nam">space</span> <span class="key">import</span> <span class="nam">Real</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">denormalise_y</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">normalise_y</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">_denormalise_y</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">_normalise_y</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">class</span> <span class="nam">SupportVectorMachines</span><span class="op">(</span><span class="nam">BaseEstimator</span><span class="op">,</span> <span class="nam">RegressorMixin</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -160,7 +160,7 @@
     <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">n_iter_</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">max_iter</span> <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">max_iter</span> <span class="op">></span> <span class="num">0</span> <span class="key">else</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">normalise_y</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">            <span class="nam">y</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_mean_</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_std_</span> <span class="op">=</span> <span class="nam">normalise_y</span><span class="op">(</span><span class="nam">y</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">            <span class="nam">y</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_mean_</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_std_</span> <span class="op">=</span> <span class="nam">_normalise_y</span><span class="op">(</span><span class="nam">y</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">            <span class="nam">y</span> <span class="op">=</span> <span class="nam">y</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">y_mean_</span> <span class="op">=</span> <span class="nam">np</span><span class="op">.</span><span class="nam">zeros</span><span class="op">(</span><span class="nam">y</span><span class="op">.</span><span class="nam">shape</span><span class="op">[</span><span class="num">1</span><span class="op">]</span><span class="op">)</span> <span class="key">if</span> <span class="nam">y</span><span class="op">.</span><span class="nam">ndim</span> <span class="op">></span> <span class="num">1</span> <span class="key">else</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
@@ -201,7 +201,7 @@
     <p class="run"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="nam">y_pred</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">model_</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">X</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">normalise_y</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="nam">y_pred</span> <span class="op">=</span> <span class="nam">denormalise_y</span><span class="op">(</span><span class="nam">y_pred</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_mean_</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_std_</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="nam">y_pred</span> <span class="op">=</span> <span class="nam">_denormalise_y</span><span class="op">(</span><span class="nam">y_pred</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_mean_</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">y_std_</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">        <span class="key">return</span> <span class="nam">y_pred</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -253,7 +253,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_xgboost_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-26 09:07 +0000
+            created at 2024-02-26 12:14 +0000
         </p>
     </div>
 </footer>

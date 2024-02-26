@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_1723575ec71c99c4_cv_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-26 09:07 +0000
+            created at 2024-02-26 12:14 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -90,7 +90,7 @@
     <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">get_model_name</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">def</span> <span class="nam">run_cv</span><span class="op">(</span><span class="nam">X</span><span class="op">,</span> <span class="nam">y</span><span class="op">,</span> <span class="nam">cv</span><span class="op">,</span> <span class="nam">model</span><span class="op">,</span> <span class="nam">metrics</span><span class="op">,</span> <span class="nam">n_jobs</span><span class="op">,</span> <span class="nam">logger</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">def</span> <span class="nam">_run_cv</span><span class="op">(</span><span class="nam">X</span><span class="op">,</span> <span class="nam">y</span><span class="op">,</span> <span class="nam">cv</span><span class="op">,</span> <span class="nam">model</span><span class="op">,</span> <span class="nam">metrics</span><span class="op">,</span> <span class="nam">n_jobs</span><span class="op">,</span> <span class="nam">logger</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t">    <span class="nam">model_name</span> <span class="op">=</span> <span class="nam">get_model_name</span><span class="op">(</span><span class="nam">model</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">    <span class="com"># The metrics we want to use for cross-validation</span>&nbsp;</span><span class="r"></span></p>
@@ -121,7 +121,7 @@
     <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="key">return</span> <span class="nam">fitted_model</span><span class="op">,</span> <span class="nam">cv_results</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="key">def</span> <span class="nam">update_scores_df</span><span class="op">(</span><span class="nam">scores_df</span><span class="op">,</span> <span class="nam">model</span><span class="op">,</span> <span class="nam">cv_results</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="key">def</span> <span class="nam">_update_scores_df</span><span class="op">(</span><span class="nam">scores_df</span><span class="op">,</span> <span class="nam">model</span><span class="op">,</span> <span class="nam">cv_results</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="str">"""Updates the scores dataframe with the results of the cross-validation.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t"><span class="str">    Parameters</span>&nbsp;</span><span class="r"></span></p>
@@ -160,7 +160,7 @@
             <a id="nextFileLink" class="nav" href="d_1723575ec71c99c4_cv_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-26 09:07 +0000
+            created at 2024-02-26 12:14 +0000
         </p>
     </div>
 </footer>
