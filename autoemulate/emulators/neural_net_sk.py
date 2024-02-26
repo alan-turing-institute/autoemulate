@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_X_y
 from skopt.space import Categorical
 from skopt.space import Real
 
-from autoemulate.utils import suppress_convergence_warnings
+from autoemulate.utils import _suppress_convergence_warnings
 
 
 class NeuralNetSk(BaseEstimator, RegressorMixin):
@@ -72,7 +72,7 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
             max_iter=self.max_iter,
             random_state=self.random_state,
         )
-        with suppress_convergence_warnings():
+        with _suppress_convergence_warnings():
             self.model_.fit(X, y)
         # expose n_iter_ attribute to be consistent with sklearn estimators
         self.n_iter_ = self.model_.n_iter_

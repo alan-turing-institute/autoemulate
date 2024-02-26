@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from autoemulate.utils import get_model_name
 
 
-def run_cv(X, y, cv, model, metrics, n_jobs, logger):
+def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     model_name = get_model_name(model)
 
     # The metrics we want to use for cross-validation
@@ -39,7 +39,7 @@ def run_cv(X, y, cv, model, metrics, n_jobs, logger):
     return fitted_model, cv_results
 
 
-def update_scores_df(scores_df, model, cv_results):
+def _update_scores_df(scores_df, model, cv_results):
     """Updates the scores dataframe with the results of the cross-validation.
 
     Parameters

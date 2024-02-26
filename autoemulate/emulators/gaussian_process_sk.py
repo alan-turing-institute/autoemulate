@@ -13,7 +13,7 @@ from skopt.space import Categorical
 from skopt.space import Integer
 from skopt.space import Real
 
-from autoemulate.utils import suppress_convergence_warnings
+from autoemulate.utils import _suppress_convergence_warnings
 
 
 class GaussianProcessSk(BaseEstimator, RegressorMixin):
@@ -67,7 +67,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
             copy_X_train=self.copy_X_train,
             random_state=self.random_state,
         )
-        with suppress_convergence_warnings():
+        with _suppress_convergence_warnings():
             self.model_.fit(X, y)
         self.is_fitted_ = True
         return self

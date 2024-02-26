@@ -12,7 +12,7 @@ from sklearn.pipeline import Pipeline
 
 
 @contextmanager
-def suppress_convergence_warnings():
+def _suppress_convergence_warnings():
     """Context manager to suppress sklearn convergence warnings."""
     # store the current state of the warning filters and environment variable
     original_filters = warnings.filters[:]
@@ -140,7 +140,7 @@ def get_model_param_space(model, search_type="random"):
         return model.get_grid_params(search_type)
 
 
-def adjust_param_space(model, param_space):
+def _adjust_param_space(model, param_space):
     """Adjusts param grid to be compatible with the model.
     Adds `model__` if model is a pipeline and
     `estimator__` if model is a MultiOutputRegressor. Or `model__estimator__` if both,
@@ -173,10 +173,10 @@ def adjust_param_space(model, param_space):
     elif isinstance(model, RegressorMixin):
         return param_space
 
-    return add_prefix_to_param_space(param_space, prefix)
+    return _add_prefix_to_param_space(param_space, prefix)
 
 
-def add_prefix_to_param_space(param_space, prefix):
+def _add_prefix_to_param_space(param_space, prefix):
     """Adds a prefix to all keys in a parameter grid.
 
     Works for three types of param_spaces:
@@ -206,23 +206,23 @@ def add_prefix_to_param_space(param_space, prefix):
             # Handle tuple (dict, int) used in BayesSearchCV
             if isinstance(param, tuple):
                 # Reconstruct the tuple with the modified dictionary
-                dict_with_prefix = add_prefix_to_single_grid(param[0], prefix)
+                dict_with_prefix = _add_prefix_to_single_grid(param[0], prefix)
                 new_param_space.append((dict_with_prefix,) + param[1:])
             elif isinstance(param, dict):
                 # Add prefix to the dictionary
-                new_param_space.append(add_prefix_to_single_grid(param, prefix))
+                new_param_space.append(_add_prefix_to_single_grid(param, prefix))
         return new_param_space
     else:
         # If param_space is a single dictionary, add the prefix directly
-        return add_prefix_to_single_grid(param_space, prefix)
+        return _add_prefix_to_single_grid(param_space, prefix)
 
 
-def add_prefix_to_single_grid(grid, prefix):
+def _add_prefix_to_single_grid(grid, prefix):
     """Adds a prefix to all keys in a single parameter grid dictionary."""
     return {prefix + key: value for key, value in grid.items()}
 
 
-def normalise_y(y):
+def _normalise_y(y):
     """Normalize the target values y.
 
     Parameters
@@ -245,7 +245,7 @@ def normalise_y(y):
     return (y - y_mean) / y_std, y_mean, y_std
 
 
-def denormalise_y(y_pred, y_mean, y_std):
+def _denormalise_y(y_pred, y_mean, y_std):
     """Denormalize the predicted values.
 
     Parameters
