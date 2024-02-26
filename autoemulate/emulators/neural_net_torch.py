@@ -99,7 +99,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         return self
 
     def get_grid_params(self, search_type="random"):
-        return self.module_.get_grid_params(search_type)
+        return self.module.get_grid_params(search_type)
 
     def __sklearn_is_fitted__(self):
         return hasattr(self, "n_features_in_")
