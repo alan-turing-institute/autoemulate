@@ -5,7 +5,7 @@ from sklearn.metrics import PredictionErrorDisplay
 from autoemulate.utils import get_model_name
 
 
-def validate_inputs(cv_results, model_name):
+def _validate_inputs(cv_results, model_name):
     """Validates cv_results and model_name for plotting.
 
     Parameters
@@ -38,7 +38,7 @@ To plot other outputs, set `output_index` argument to the desired index."""
         )
 
 
-def plot_single_fold(
+def _plot_single_fold(
     cv_results,
     X,
     y,
@@ -95,7 +95,7 @@ def plot_single_fold(
     ax.set_title(f"{model_name} - {title_suffix}")
 
 
-def plot_best_fold_per_model(
+def _plot_best_fold_per_model(
     cv_results,
     X,
     y,
@@ -136,7 +136,7 @@ def plot_best_fold_per_model(
     for i, model_name in enumerate(cv_results):
         best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
         ax = plt.subplot(n_rows, n_cols, i + 1)
-        plot_single_fold(
+        _plot_single_fold(
             cv_results,
             X,
             y,
@@ -151,7 +151,7 @@ def plot_best_fold_per_model(
     plt.show()
 
 
-def plot_model_folds(
+def _plot_model_folds(
     cv_results,
     X,
     y,
@@ -195,7 +195,7 @@ def plot_model_folds(
 
     for i in range(n_folds):
         ax = plt.subplot(n_rows, n_cols, i + 1)
-        plot_single_fold(
+        _plot_single_fold(
             cv_results,
             X,
             y,
@@ -244,11 +244,11 @@ def _plot_results(
         For multi-output: Index of the output variable to plot.
     """
 
-    validate_inputs(cv_results, model_name)
+    _validate_inputs(cv_results, model_name)
     check_multioutput(y, output_index)
 
     if model_name:
-        plot_model_folds(
+        _plot_model_folds(
             cv_results,
             X,
             y,
@@ -259,7 +259,7 @@ def _plot_results(
             output_index,
         )
     else:
-        plot_best_fold_per_model(
+        _plot_best_fold_per_model(
             cv_results, X, y, n_cols, plot_type, figsize, output_index
         )
 

@@ -12,15 +12,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 
-from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import update_scores_df
+from autoemulate.cross_validate import _run_cv
+from autoemulate.cross_validate import _update_scores_df
 from autoemulate.cv import CV_REGISTRY
-from autoemulate.data_splitting import split_data
+from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import MODEL_REGISTRY
-from autoemulate.hyperparam_searching import optimize_params
-from autoemulate.logging_config import configure_logging
+from autoemulate.hyperparam_searching import _optimize_params
+from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import get_and_process_models
+from autoemulate.model_processing import _get_and_process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
@@ -97,10 +97,10 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.train_idxs, self.test_idxs = split_data(
+        self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
-        self.models = get_and_process_models(
+        self.models = _get_and_process_models(
             MODEL_REGISTRY,
             model_subset,
             self.y,
@@ -117,7 +117,7 @@ class AutoEmulate:
         self.scale = scale
         self.scaler = scaler
         self.n_jobs = n_jobs
-        self.logger = configure_logging(log_to_file=log_to_file)
+        self.logger = _configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
         self.cv_results = {}
 
@@ -199,7 +199,7 @@ class AutoEmulate:
             try:
                 # hyperparameter search
                 if self.param_search:
-                    self.models[i] = optimize_params(
+                    self.models[i] = _optimize_params(
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
                         cv=self.cv,
@@ -212,7 +212,7 @@ class AutoEmulate:
                     )
 
                 # run cross validation
-                fitted_model, cv_results = run_cv(
+                fitted_model, cv_results = _run_cv(
                     X=self.X[self.train_idxs],
                     y=self.y[self.train_idxs],
                     cv=self.cv,
@@ -230,7 +230,7 @@ class AutoEmulate:
             self.cv_results[get_model_name(self.models[i])] = cv_results
 
             # update scores dataframe
-            self.scores_df = update_scores_df(
+            self.scores_df = _update_scores_df(
                 self.scores_df,
                 self.models[i],
                 self.cv_results[get_model_name(self.models[i])],

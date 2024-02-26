@@ -3,7 +3,7 @@ import sys
 import warnings
 
 
-def configure_logging(log_to_file=False):
+def _configure_logging(log_to_file=False):
     # Create a logger
     logger = logging.getLogger("autoemulate")
     logger.setLevel(logging.INFO)
