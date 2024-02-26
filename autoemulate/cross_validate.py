@@ -28,10 +28,10 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
             return_estimator=True,
             return_indices=True,
         )
-
     except Exception as e:
         logger.error(f"Failed to cross-validate {model_name}")
         logger.error(e)
+        exit()
 
     # refit the model on the whole dataset
     fitted_model = model.fit(X, y)
