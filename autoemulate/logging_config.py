@@ -3,20 +3,7 @@ import sys
 import warnings
 
 
-def configure_logging(log_to_file=False):
-    """
-    Configure the logging for the package.
-
-    Parameters
-    ----------
-    log_to_file : bool, optional
-        Whether to log to a file. Default is False.
-
-    Returns
-    -------
-    logger : logging.Logger
-        The configured logger.
-    """
+def _configure_logging(log_to_file=False):
     # Create a logger
     logger = logging.getLogger("autoemulate")
     logger.setLevel(logging.INFO)

@@ -7,7 +7,7 @@
 
 <!-- SPHINX-START -->
 
-Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or in situations where they have to run thousands of times, like sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
+Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or when they have to run thousands of times to do uncertainty quantification or sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
 
 The project is in very early development. 
 
@@ -46,14 +46,21 @@ y = np.array([simulator(x) for x in X])
 # compare emulator models
 ae = AutoEmulate()
 ae.setup(X, y)
-ae.compare() 
+best_model = ae.compare() 
 
-# evaluate
+# training set cv results
 ae.print_results()
+ae.plot_results()
+
+# predict on test set
+ae.evaluate_model(best_model)
+
+# refit on full data
+best_emulator = ae.refit_model(best_model)
 
 # save & load best model
-ae.save_model("best_model")
-best_emulator = ae.load_model("best_model")
+ae.save_model("best_emulator")
+best_emulator = ae.load_model("best_emulator")
 
 # emulate
 best_emulator.predict(X)

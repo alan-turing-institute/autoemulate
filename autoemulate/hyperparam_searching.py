@@ -3,13 +3,13 @@ import logging
 from sklearn.model_selection import RandomizedSearchCV
 from skopt import BayesSearchCV
 
-from autoemulate.utils import adjust_param_space
+from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
 
 
-def optimize_params(
+def _optimize_params(
     X,
     y,
     cv,
@@ -53,7 +53,7 @@ def optimize_params(
     """
     model_name = get_model_name(model)
     logger.info(f"Performing grid search for {model_name}...")
-    param_space = process_param_space(model, search_type, param_space)
+    param_space = _process_param_space(model, search_type, param_space)
     search_type = search_type.lower()
 
     # random search
@@ -94,7 +94,7 @@ def optimize_params(
     return searcher.best_estimator_
 
 
-def process_param_space(model, search_type, param_space):
+def _process_param_space(model, search_type, param_space):
     """Process parameter grid for hyperparameter search.
     Gets the parameter grid for the model and adjusts it to include prefixes
     for pipelines / multioutput estimators.
@@ -120,13 +120,13 @@ def process_param_space(model, search_type, param_space):
     if param_space is None:
         param_space = get_model_param_space(model, search_type)
     else:
-        param_space = check_param_space(param_space, model)
+        param_space = _check_param_space(param_space, model)
     # include prefixes for pipelines / multioutput estimators
-    param_space = adjust_param_space(model, param_space)
+    param_space = _adjust_param_space(model, param_space)
     return param_space
 
 
-def check_param_space(param_space, model):
+def _check_param_space(param_space, model):
     """Checks that the parameter grid is valid.
 
     Parameters

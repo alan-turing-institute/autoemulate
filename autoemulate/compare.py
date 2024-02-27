@@ -1,24 +1,26 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 
-from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import update_scores_df
+from autoemulate.cross_validate import _run_cv
+from autoemulate.cross_validate import _update_scores_df
 from autoemulate.cv import CV_REGISTRY
-from autoemulate.data_splitting import split_data
+from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import MODEL_REGISTRY
-from autoemulate.hyperparam_searching import optimize_params
-from autoemulate.logging_config import configure_logging
+from autoemulate.hyperparam_searching import _optimize_params
+from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import get_and_process_models
+from autoemulate.model_processing import _get_and_process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
@@ -101,10 +103,10 @@ class AutoEmulate:
             Whether to log to file.
         """
         self.X, self.y = self._check_input(X, y)
-        self.train_idxs, self.test_idxs = split_data(
+        self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
-        self.models = get_and_process_models(
+        self.models = _get_and_process_models(
             MODEL_REGISTRY,
             model_subset,
             self.y,
@@ -121,7 +123,7 @@ class AutoEmulate:
         self.scale = scale
         self.scaler = scaler
         self.n_jobs = n_jobs
-        self.logger = configure_logging(log_to_file=log_to_file)
+        self.logger = _configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
         self.cv_results = {}
 
@@ -200,36 +202,41 @@ class AutoEmulate:
         )
 
         for i in range(len(self.models)):
-            # hyperparameter search
-            if self.param_search:
-                self.models[i] = optimize_params(
+            try:
+                # hyperparameter search
+                if self.param_search:
+                    self.models[i] = _optimize_params(
+                        X=self.X[self.train_idxs],
+                        y=self.y[self.train_idxs],
+                        cv=self.cv,
+                        model=self.models[i],
+                        search_type=self.search_type,
+                        niter=self.param_search_iters,
+                        param_space=None,
+                        n_jobs=self.n_jobs,
+                        logger=self.logger,
+                    )
+
+                # run cross validation
+                fitted_model, cv_results = _run_cv(
                     X=self.X[self.train_idxs],
                     y=self.y[self.train_idxs],
                     cv=self.cv,
                     model=self.models[i],
-                    search_type=self.search_type,
-                    niter=self.param_search_iters,
-                    param_space=None,
+                    metrics=self.metrics,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
-
-            # run cross validation
-            fitted_model, cv_results = run_cv(
-                X=self.X[self.train_idxs],
-                y=self.y[self.train_idxs],
-                cv=self.cv,
-                model=self.models[i],
-                metrics=self.metrics,
-                n_jobs=self.n_jobs,
-                logger=self.logger,
-            )
+            except Exception as e:
+                print(f"Error fitting model {get_model_name(self.models[i])}")
+                print(e)  # should be replaced with logging
+                continue
 
             self.models[i] = fitted_model
             self.cv_results[get_model_name(self.models[i])] = cv_results
 
             # update scores dataframe
-            self.scores_df = update_scores_df(
+            self.scores_df = _update_scores_df(
                 self.scores_df,
                 self.models[i],
                 self.cv_results[get_model_name(self.models[i])],
@@ -304,26 +311,62 @@ class AutoEmulate:
         model.fit(self.X, self.y)
         return model
 
-    def save_model(self, model=None, filepath=None):
-        """Saves the best model to disk."""
+    def refit_models(self):
+        """(Re-) fits all models on the full data.
+
+        Returns
+        -------
+        models : list
+            List of refitted models.
+        """
+        if not hasattr(self, "X"):
+            raise RuntimeError("Must run setup() before refit_models()")
+        for i in range(len(self.models)):
+            self.models[i] = self.refit_model(self.models[i])
+        return self.models
+
+    def save_model(self, model=None, path=None):
+        """Saves model to disk.
+
+        Parameters
+        ----------
+        model : object, optional
+            Model to save. If None, saves the best model.
+            If "all", saves all models.
+        path : str
+            Path to save the model.
+        """
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save_model()")
         serialiser = ModelSerialiser()
 
-        if model is None:
-            model = self.best_model
-        if filepath is None:
-            raise ValueError("Filepath must be provided")
+        if model is None or not isinstance(model, (Pipeline, BaseEstimator)):
+            raise ValueError(
+                "Model must be provided and should be a scikit-learn pipeline or model"
+            )
+        serialiser._save_model(model, path)
 
-        serialiser.save_model(model, filepath)
+    def save_models(self, path=None):
+        """Saves all models to disk.
 
-    def load_model(self, filepath=None):
+        Parameters
+        ----------
+        path : str
+            Directory to save the models.
+            If None, saves to the current working directory.
+        """
+        if not hasattr(self, "best_model"):
+            raise RuntimeError("Must run compare() before save_models()")
+        serialiser = ModelSerialiser()
+        serialiser._save_models(self.models, path)
+
+    def load_model(self, path=None):
         """Loads a model from disk."""
         serialiser = ModelSerialiser()
-        if filepath is None:
+        if path is None:
             raise ValueError("Filepath must be provided")
 
-        return serialiser.load_model(filepath)
+        return serialiser._load_model(path)
 
     def print_results(self, model=None, sort_by="r2"):
         """Print cv results.

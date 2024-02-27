@@ -1,9 +1,11 @@
 """Functions for getting and processing models."""
+from copy import deepcopy
+
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
 
-def get_models(model_registry, model_subset=None):
+def _get_models(model_registry, model_subset=None):
     """Get models from REGISTRY.
     Takes a subset of models if model_subset argument was used in setup().
 
@@ -19,15 +21,16 @@ def get_models(model_registry, model_subset=None):
     list
         List of model instances.
     """
+    # TODO replace deepcopy with a proper model register
     if model_subset is not None:
-        check_model_names(model_subset, model_registry)
-        models = [model_registry[model]() for model in model_subset]
+        _check_model_names(model_subset, model_registry)
+        models = [deepcopy(model_registry)[model] for model in model_subset]
     else:
-        models = [model() for model in model_registry.values()]
+        models = [deepcopy(model) for model in model_registry.values()]
     return models
 
 
-def check_model_names(model_names, model_registry):
+def _check_model_names(model_names, model_registry):
     """Check whether model_names are in MODEL_REGISTRY
 
     Parameters
@@ -49,7 +52,7 @@ def check_model_names(model_names, model_registry):
             )
 
 
-def turn_models_into_multioutput(models, y):
+def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models if y is 2D.
 
     Parameters
@@ -65,15 +68,17 @@ def turn_models_into_multioutput(models, y):
         List of model instances, with single output models wrapped in MultiOutputRegressor.
     """
     models_multi = [
-        MultiOutputRegressor(model)
-        if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
-        else model
+        (
+            MultiOutputRegressor(model)
+            if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
+            else model
+        )
         for model in models
     ]
     return models_multi
 
 
-def wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
+def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     """Wrap models in a pipeline if scale is True.
 
     Parameters
@@ -110,7 +115,7 @@ def wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     return models_piped
 
 
-def get_and_process_models(
+def _get_and_process_models(
     model_registry, model_subset, y, scale, scaler, reduce_dim, dim_reducer
 ):
     """Get and process models.
@@ -133,9 +138,9 @@ def get_and_process_models(
     models : list
         List of model instances.
     """
-    models = get_models(model_registry, model_subset)
-    models_multi = turn_models_into_multioutput(models, y)
-    models_scaled = wrap_models_in_pipeline(
+    models = _get_models(model_registry, model_subset)
+    models_multi = _turn_models_into_multioutput(models, y)
+    models_scaled = _wrap_models_in_pipeline(
         models_multi, scale, scaler, reduce_dim, dim_reducer
     )
     return models_scaled

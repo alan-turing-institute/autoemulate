@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 
-def split_data(X, test_size=0.2, random_state=None):
+def _split_data(X, test_size=0.2, random_state=None):
     """Splits the data into training and testing sets.
 
     Parameters

@@ -20,6 +20,10 @@ chapters:
   sections:
   - file: community/contributing
   - file: community/code-of-conduct
+  - file: community/faq/index
+    sections:
+    - file: community/faq/faq-users
+    - file: community/faq/faq-contributors
 
 - file: reference/index
   sections:

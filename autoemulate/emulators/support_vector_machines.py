@@ -11,8 +11,8 @@ from skopt.space import Categorical
 from skopt.space import Integer
 from skopt.space import Real
 
-from autoemulate.utils import denormalise_y
-from autoemulate.utils import normalise_y
+from autoemulate.utils import _denormalise_y
+from autoemulate.utils import _normalise_y
 
 
 class SupportVectorMachines(BaseEstimator, RegressorMixin):
@@ -78,7 +78,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
 
         if self.normalise_y:
-            y, self.y_mean_, self.y_std_ = normalise_y(y)
+            y, self.y_mean_, self.y_std_ = _normalise_y(y)
         else:
             y = y
             self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
@@ -119,7 +119,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
         y_pred = self.model_.predict(X)
 
         if self.normalise_y:
-            y_pred = denormalise_y(y_pred, self.y_mean_, self.y_std_)
+            y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
 
         return y_pred
 

@@ -5,9 +5,9 @@ from sklearn.datasets import make_regression
 from sklearn.pipeline import Pipeline
 
 from autoemulate.emulators import RandomForest
-from autoemulate.hyperparam_searching import check_param_space
-from autoemulate.hyperparam_searching import optimize_params
-from autoemulate.hyperparam_searching import process_param_space
+from autoemulate.hyperparam_searching import _check_param_space
+from autoemulate.hyperparam_searching import _optimize_params
+from autoemulate.hyperparam_searching import _process_param_space
 from autoemulate.utils import get_model_name
 
 
@@ -35,7 +35,7 @@ def param_space():
 def test_optimize_params(Xy, model):
     X, y = Xy
     #    print(f"this is the model name: {get_model_name(model)}")
-    best_estimator = optimize_params(
+    best_estimator = _optimize_params(
         X,
         y,
         cv=3,
@@ -51,14 +51,14 @@ def test_optimize_params(Xy, model):
 
 def test_process_param_space_none(model, param_space):
     search_type = "random"
-    param_space = process_param_space(model, search_type, param_space=None)
+    param_space = _process_param_space(model, search_type, param_space=None)
     # check that param_space has been populated
     assert type(param_space) == dict
 
 
 def test_process_param_space(model, param_space):
     search_type = "random"
-    param_space = process_param_space(model, search_type, param_space)
+    param_space = _process_param_space(model, search_type, param_space)
     # check that param_space has been populated
     assert type(param_space) == dict
 
@@ -67,21 +67,21 @@ def test_process_param_space_invalid(model, param_space):
     search_type = "random"
     param_space = {"invalid_param": [1, 2]}
     with pytest.raises(ValueError):
-        param_space = process_param_space(model, search_type, param_space)
+        param_space = _process_param_space(model, search_type, param_space)
 
 
 def test_check_param_space(param_space, model):
     # param_space should be a dictionary
     with pytest.raises(TypeError):
-        check_param_space(model, [])
+        _check_param_space(model, [])
     # keys in param_space should be strings
     with pytest.raises(TypeError):
-        check_param_space({1: []}, model)
+        _check_param_space({1: []}, model)
     # values in param_space should be lists
     with pytest.raises(TypeError):
-        check_param_space({"n_estimators": 10}, model)
+        _check_param_space({"n_estimators": 10}, model)
     #     # model__ prefixed keys should be actual parameters in the model
     with pytest.raises(ValueError):
-        check_param_space({"model__invalid_param": [1, 2]}, model)
+        _check_param_space({"model__invalid_param": [1, 2]}, model)
     # check param_space returned if valid
-    assert check_param_space(param_space, model) == param_space
+    assert _check_param_space(param_space, model) == param_space

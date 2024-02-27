@@ -4,9 +4,9 @@ from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
+from autoemulate.plotting import _plot_single_fold
+from autoemulate.plotting import _validate_inputs
 from autoemulate.plotting import check_multioutput
-from autoemulate.plotting import plot_single_fold
-from autoemulate.plotting import validate_inputs
 
 
 # ------------------------------ test validate_inputs ------------------------------
@@ -14,7 +14,7 @@ def test_validate_inputs_with_empty_cv_results():
     cv_results = {}
     model_name = "model1"
     try:
-        validate_inputs(cv_results, model_name)
+        _validate_inputs(cv_results, model_name)
         assert False, "Expected ValueError to be raised"
     except ValueError as e:
         assert str(e) == "Run .compare() first."
@@ -24,7 +24,7 @@ def test_validate_inputs_with_invalid_model_name():
     cv_results = {"model1": {"test_r2": 0.8}}
     model_name = "model2"
     try:
-        validate_inputs(cv_results, model_name)
+        _validate_inputs(cv_results, model_name)
         assert False, "Expected ValueError to be raised"
     except ValueError as e:
         assert (
@@ -36,7 +36,7 @@ def test_validate_inputs_with_invalid_model_name():
 def test_validate_inputs_with_valid_inputs():
     cv_results = {"model1": {"test_r2": 0.8}}
     model_name = "model1"
-    validate_inputs(
+    _validate_inputs(
         cv_results, model_name
     )  # No exception should be raisedfrom autoemulate.plotting import check_multioutput
 
@@ -98,7 +98,7 @@ def test_plot_single_fold_with_single_output():
     fig, ax = plt.subplots()
 
     # Call the plot_single_fold function
-    plot_single_fold(
+    _plot_single_fold(
         cv_results=cv_results,
         X=X_test,
         y=y_test,
@@ -141,7 +141,7 @@ def test_plot_single_fold_with_multioutput():
     fig, ax = plt.subplots()
 
     # Call the plot_single_fold function
-    plot_single_fold(
+    _plot_single_fold(
         cv_results=cv_results,
         X=X_test,
         y=y_test,

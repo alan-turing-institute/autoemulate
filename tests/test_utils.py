@@ -7,14 +7,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GradientBoosting
-from autoemulate.utils import add_prefix_to_param_space
-from autoemulate.utils import add_prefix_to_single_grid
-from autoemulate.utils import adjust_param_space
-from autoemulate.utils import denormalise_y
+from autoemulate.utils import _add_prefix_to_param_space
+from autoemulate.utils import _add_prefix_to_single_grid
+from autoemulate.utils import _adjust_param_space
+from autoemulate.utils import _denormalise_y
+from autoemulate.utils import _normalise_y
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
-from autoemulate.utils import normalise_y
 
 
 # test retrieving model name ---------------------------------------------------
@@ -150,27 +150,27 @@ def test_param_multiout_pipe(model_multiout_pipe, param_space):
 
 # test adjust_param_space -------------------------------------------------------
 def test_adj_param_basic(model, param_space):
-    adjusted_param_space = adjust_param_space(model, param_space)
+    adjusted_param_space = _adjust_param_space(model, param_space)
     assert all(key in param_space.keys() for key in adjusted_param_space.keys())
 
 
 def test_adj_param_pipe(model_in_pipe, param_space):
-    adjusted_param_space = adjust_param_space(model_in_pipe, param_space)
+    adjusted_param_space = _adjust_param_space(model_in_pipe, param_space)
     assert all(key.startswith("model__") for key in adjusted_param_space.keys())
 
 
 def test_adj_param_pipe_scaler(model_in_pipe_w_scaler, param_space):
-    adjusted_param_space = adjust_param_space(model_in_pipe_w_scaler, param_space)
+    adjusted_param_space = _adjust_param_space(model_in_pipe_w_scaler, param_space)
     assert all(key.startswith("model__") for key in adjusted_param_space.keys())
 
 
 def test_adj_param_multiout(model_multiout, param_space):
-    adjusted_param_space = adjust_param_space(model_multiout, param_space)
+    adjusted_param_space = _adjust_param_space(model_multiout, param_space)
     assert all(key.startswith("estimator__") for key in adjusted_param_space.keys())
 
 
 def test_adj_param_multiout_pipe(model_multiout_pipe, param_space):
-    adjusted_param_space = adjust_param_space(model_multiout_pipe, param_space)
+    adjusted_param_space = _adjust_param_space(model_multiout_pipe, param_space)
     assert all(
         key.startswith("model__estimator__") for key in adjusted_param_space.keys()
     )
@@ -181,7 +181,7 @@ def test_adj_param_multiout_pipe(model_multiout_pipe, param_space):
 
 def test_normalise_1d():
     y = np.array([1, 2, 3, 4, 5])
-    y_norm, y_mean, y_std = normalise_y(y)
+    y_norm, y_mean, y_std = _normalise_y(y)
 
     assert np.isclose(np.mean(y_norm), 0, atol=1e-5)
     assert np.isclose(np.std(y_norm), 1, atol=1e-5)
@@ -189,7 +189,7 @@ def test_normalise_1d():
 
 def test_normalise_2d():
     y = np.array([[1, 2], [3, 4], [5, 6]])
-    y_norm, y_mean, y_std = normalise_y(y)
+    y_norm, y_mean, y_std = _normalise_y(y)
 
     for i in range(y_norm.shape[1]):
         assert np.isclose(np.mean(y_norm[:, i]), 0, atol=1e-5)
@@ -198,16 +198,16 @@ def test_normalise_2d():
 
 def test_denormalise_1d():
     y = np.array([1, 2, 3, 4, 5])
-    y_norm, y_mean, y_std = normalise_y(y)
-    y_denorm = denormalise_y(y_norm, y_mean, y_std)
+    y_norm, y_mean, y_std = _normalise_y(y)
+    y_denorm = _denormalise_y(y_norm, y_mean, y_std)
 
     np.testing.assert_array_almost_equal(y, y_denorm)
 
 
 def test_denormalise_2d():
     y = np.array([[1, 2], [3, 4], [5, 6]])
-    y_norm, y_mean, y_std = normalise_y(y)
-    y_denorm = denormalise_y(y_norm, y_mean, y_std)
+    y_norm, y_mean, y_std = _normalise_y(y)
+    y_denorm = _denormalise_y(y_norm, y_mean, y_std)
 
     np.testing.assert_array_almost_equal(y, y_denorm)
 
@@ -252,7 +252,7 @@ def test_add_prefix_to_param_space_dict(grid, prefix):
         "prefix_param3": [7, 8, 9],
     }
     assert (
-        add_prefix_to_param_space(grid, prefix) == expected_result
+        _add_prefix_to_param_space(grid, prefix) == expected_result
     ), "Prefix not correctly added to param grid dict"
 
 
@@ -266,7 +266,7 @@ def test_add_prefix_to_param_space_list(grid_list, prefix):
         {"prefix_param3": [7, 8, 9], "prefix_param4": [10, 11, 12]},
     ]
     assert (
-        add_prefix_to_param_space(grid_list, prefix) == expected_result
+        _add_prefix_to_param_space(grid_list, prefix) == expected_result
     ), "Prefix not correctly added to param grid list"
 
     # test add_prefix_to_single_grid ------------------------------------------------
@@ -282,7 +282,7 @@ def test_add_prefix_to_param_space_list_of_tuples(grid_list_of_tuples, prefix):
         ({"prefix_param2": [4, 5, 6]}, 1),
     ]
     assert (
-        add_prefix_to_param_space(grid_list_of_tuples, prefix) == expected_result
+        _add_prefix_to_param_space(grid_list_of_tuples, prefix) == expected_result
     ), "Prefix not correctly added to param grid list of tuples"
 
 
@@ -293,7 +293,7 @@ def test_add_prefix_to_single_grid(grid, prefix):
         "prefix_param3": [7, 8, 9],
     }
     assert (
-        add_prefix_to_single_grid(grid, prefix) == expected_result
+        _add_prefix_to_single_grid(grid, prefix) == expected_result
     ), "Prefix not correctly added to single grid dictionary"
 
 

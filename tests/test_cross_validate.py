@@ -12,9 +12,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
-from autoemulate.cross_validate import run_cv
-from autoemulate.cross_validate import update_scores_df
-from autoemulate.data_splitting import split_data
+from autoemulate.cross_validate import _run_cv
+from autoemulate.cross_validate import _update_scores_df
+from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import RandomForest
 from autoemulate.metrics import METRIC_REGISTRY
 
@@ -34,7 +34,7 @@ scores_df = pd.DataFrame(columns=["model", "metric", "fold", "score"]).astype(
 
 @pytest.fixture()
 def cv_output():
-    fitted_model, cv_results = run_cv(X, y, cv, model, metrics, n_jobs, logger)
+    fitted_model, cv_results = _run_cv(X, y, cv, model, metrics, n_jobs, logger)
     return fitted_model, cv_results
 
 
@@ -61,7 +61,7 @@ def test_fitted_model(cv_output):
 
 def test_update_scores_df(cv_output):
     _, cv_results = cv_output
-    scores_df_new = update_scores_df(scores_df, model, cv_results)
+    scores_df_new = _update_scores_df(scores_df, model, cv_results)
     assert isinstance(scores_df_new, pd.DataFrame)
 
     assert scores_df_new.shape[0] == 10

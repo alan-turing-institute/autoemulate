@@ -9,12 +9,17 @@ from autoemulate.utils import get_model_name
 
 
 class ModelSerialiser:
-    """
-    The ModelSerialiser class is responsible for saving and loading models to disk.
-    """
-
-    def save_model(self, model, path):
+    def _save_model(self, model, path):
         """Saves a model + metadata to disk."""
+
+        # check if path is directory
+        if path is not None and os.path.isdir(path):
+            model_name = get_model_name(model)
+            path = os.path.join(path, model_name)
+        # save with model name if path is None
+        if path is None:
+            path = get_model_name(model)
+
         # model
         joblib.dump(model, path)
 
@@ -24,14 +29,20 @@ class ModelSerialiser:
             "scikit-learn": sklearn.__version__,
             "numpy": np.__version__,
         }
-
-        with open(self.get_meta_path(path), "w") as f:
+        with open(self._get_meta_path(path), "w") as f:
             json.dump(meta, f)
 
-    def load_model(self, path):
+    def _save_models(self, models, path):
+        """Saves all models"""
+        if path is not None and not os.path.isdir(path):
+            raise ValueError("Path must be a directory")
+        for model in models:
+            self._save_model(model, path)
+
+    def _load_model(self, path):
         """Loads a model from disk and checks version."""
         model = joblib.load(path)
-        meta_path = self.get_meta_path(path)
+        meta_path = self._get_meta_path(path)
 
         if not os.path.exists(meta_path):
             raise FileNotFoundError(f"Metadata file {meta_path} not found.")
@@ -53,7 +64,7 @@ class ModelSerialiser:
 
         return model
 
-    def get_meta_path(self, path):
+    def _get_meta_path(self, path):
         """Returns the path to the metadata file.
 
         If the path has an extension, it is replaced with _meta.json.
