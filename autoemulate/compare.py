@@ -360,7 +360,7 @@ class AutoEmulate:
         if path is None:
             raise ValueError("Filepath must be provided")
 
-        return serialiser.load_model(path)
+        return serialiser._load_model(path)
 
     def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
