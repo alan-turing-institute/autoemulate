@@ -5,14 +5,14 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      133 |       23 |     83% |224-227, 303, 317, 333-341, 352-355, 359-363, 376, 409, 466 |
+| autoemulate/compare.py                                 |      133 |       23 |     83% |230-233, 309, 323, 339-347, 358-361, 365-369, 382, 415, 472 |
 | autoemulate/cross\_validate.py                         |       26 |        3 |     88% |     32-34 |
 | autoemulate/cv.py                                      |        5 |        0 |    100% |           |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py                  |       11 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py             |       36 |        8 |     78% | 71-83, 86 |
-| autoemulate/emulators/gaussian\_process\_sk.py         |       46 |        7 |     85% |    98-121 |
+| autoemulate/emulators/gaussian\_process\_sk.py         |       46 |        7 |     85% |    99-122 |
 | autoemulate/emulators/gradient\_boosting.py            |       46 |        0 |    100% |           |
 | autoemulate/emulators/neural\_net\_sk.py               |       45 |        7 |     84% |   101-135 |
 | autoemulate/emulators/neural\_net\_torch.py            |       95 |        1 |     99% |       121 |
@@ -26,15 +26,15 @@
 | autoemulate/emulators/rbf.py                           |       38 |        7 |     82% |    94-145 |
 | autoemulate/emulators/support\_vector\_machines.py     |       58 |       10 |     83% |83-85, 128-161 |
 | autoemulate/emulators/xgboost.py                       |       56 |        7 |     88% |   135-172 |
-| autoemulate/experimental\_design.py                    |       19 |        3 |     84% |18, 29, 40 |
+| autoemulate/experimental\_design.py                    |       19 |        3 |     84% |24, 35, 46 |
 | autoemulate/hyperparam\_searching.py                   |       45 |        8 |     82% |70-82, 87-91 |
 | autoemulate/logging\_config.py                         |       22 |        4 |     82% |     25-28 |
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                       |       32 |        0 |    100% |           |
-| autoemulate/plotting.py                                |       84 |       55 |     35% |128-151, 188-210, 247-262, 288-334 |
+| autoemulate/plotting.py                                |       91 |       57 |     37% |96-97, 137-160, 196-218, 255-270, 294-340 |
 | autoemulate/printing.py                                |       15 |        0 |    100% |           |
 | autoemulate/save.py                                    |       39 |        2 |     95% |    38, 61 |
-| autoemulate/utils.py                                   |      100 |        7 |     93% |32, 94, 99-104, 330-331 |
+| autoemulate/utils.py                                   |      100 |        7 |     93% |32, 94, 99-104, 350-351 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
 | tests/test\_compare.py                                 |      104 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                         |       48 |        0 |    100% |           |
@@ -50,7 +50,7 @@
 | tests/test\_save.py                                    |       88 |        0 |    100% |           |
 | tests/test\_torch.py                                   |       97 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      167 |        6 |     96% |58, 64, 69, 74, 79, 84 |
-|                                              **TOTAL** | **2076** |  **246** | **88%** |           |
+|                                              **TOTAL** | **2083** |  **248** | **88%** |           |
 
 
 ## Setup coverage badge
