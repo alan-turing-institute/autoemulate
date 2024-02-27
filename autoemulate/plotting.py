@@ -267,9 +267,7 @@ def _plot_results(
             output_index,
         )
     else:
-        _plot_best_fold_per_model(
-            cv_results, X, y, n_cols, plot_type, figsize, output_index
-        )
+        _plot_best_fold_per_model(cv_results, X, y, n_cols, plot, figsize, output_index)
 
 
 def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
