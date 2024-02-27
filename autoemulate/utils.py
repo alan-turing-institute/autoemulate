@@ -180,13 +180,14 @@ def _add_prefix_to_param_space(param_space, prefix):
     """Adds a prefix to all keys in a parameter grid.
 
     Works for three types of param_spaces:
-    * when param_space is a dict (standard case)
-    * when param_space is a list of dicts (when we only want
-    to iterate over certain parameter combinations, like in RBF)
-    * when param_space contains tuples of (dict, int) (when we want
-    to iterate a certain number of times over a parameter subspace
-    (only in BayesSearchCV). This can be used to prevent bayes search
-    from iterating many times using the same parameters.
+
+    - when param_space is a dict (standard case)
+    - when param_space is a list of dicts (when we only want
+      to iterate over certain parameter combinations, like in RBF)
+    - when param_space contains tuples of (dict, int) (when we want
+      to iterate a certain number of times over a parameter subspace
+      (only in BayesSearchCV). This can be used to prevent bayes search
+      from iterating many times using the same parameters.
 
     Parameters
     ----------
@@ -309,6 +310,21 @@ def get_mean_scores(scores_df, metric):
 
 
 def get_model_scores(scores_df, model_name):
+    """
+    Get the scores for a specific model.
+
+    Parameters
+    ----------
+    scores_df : pandas.DataFrame
+        DataFrame with columns "model", "metric", "fold", "score".
+    model_name : str
+        The name of the model for which to retrieve the scores.
+
+    Returns
+    -------
+    model_scores : pandas.DataFrame
+        DataFrame with columns "fold", "metric", "score".
+    """
     model_scores = scores_df[scores_df["model"] == model_name].pivot(
         index="fold", columns="metric", values="score"
     )
@@ -318,9 +334,13 @@ def get_model_scores(scores_df, model_name):
 
 def set_random_seed(seed: int, deterministic: bool = False):
     """Set random seed for Python, Numpy and PyTorch.
-    Args:
-        seed: int, the random seed to use.
-        deterministic: bool, use "deterministic" algorithms in PyTorch.
+
+    Parameters
+    ----------
+    seed : int
+        The random seed to use.
+    deterministic : bool
+        Use "deterministic" algorithms in PyTorch.
     """
     random.seed(seed)
     np.random.seed(seed)

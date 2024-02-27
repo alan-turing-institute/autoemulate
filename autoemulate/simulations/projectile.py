@@ -1,6 +1,5 @@
-# from https://github.com/alan-turing-institute/mogp-emulator/blob/main/mogp_emulator/demos/projectile.py
+# from https://github.com/alan-turing-institute/mogp-emulator/blob/main/mogp_emulator/simulations/projectile.py
 import numpy as np
-import scipy
 from scipy.integrate import solve_ivp
 
 # Create our simulator, which solves a nonlinear differential equation describing projectile
@@ -13,7 +12,18 @@ from scipy.integrate import solve_ivp
 
 
 def f(t, y, c):
-    "Compute RHS of system of differential equations, returning vector derivative"
+    """
+    Compute RHS of system of differential equations, returning vector derivative
+
+    Parameters
+    ----------
+    t : float
+        Time variable (not used).
+    y : array
+        Array of dependent variables (vx, vy, x, y).
+    c : float
+        Drag coefficient (non-negative).
+    """
 
     # check inputs and extract
 
@@ -36,7 +46,18 @@ def f(t, y, c):
 
 
 def event(t, y, c):
-    "event to trigger end of integration"
+    """
+    Event to trigger end of integration. Stops when projectile hits ground.
+
+    Parameters
+    ----------
+    t : float
+        Time variable (not used).
+    y : array
+        Array of dependent variables (vx, vy, x, y).
+    c : float
+        Drag coefficient (non-negative).
+    """
 
     assert len(y) == 4
     assert c >= 0.0
@@ -50,7 +71,19 @@ event.terminal = True
 
 
 def simulator_base(x):
-    "simulator to solve ODE system for projectile motion with drag. returns distance projectile travels"
+    """
+    Simulator to solve ODE system for projectile motion with drag. Returns distance projectile travels.
+
+    Parameters
+    ----------
+    x : array
+        Array of input parameters (c, v0).
+
+    Returns
+    -------
+    results : scipy.integrate.OdeResult
+        Results of ODE integration.
+    """
 
     # unpack values
 
@@ -76,7 +109,19 @@ def simulator_base(x):
 
 
 def simulator(x):
-    "simulator to solve ODE system for projectile motion with drag. returns distance projectile travels"
+    """
+    Simulator to solve ODE system for projectile motion with drag. Returns distance projectile travels.
+
+    Parameters
+    ----------
+    x : array
+        Array of input parameters (c, v0).
+
+    Returns
+    -------
+    distance : float
+        Distance travelled by projectile.
+    """
 
     results = simulator_base(x)
 
@@ -84,7 +129,21 @@ def simulator(x):
 
 
 def simulator_multioutput(x):
-    "simulator to solve ODE system with multiple outputs"
+    """
+    Simulator to solve ODE system with multiple outputs.
+
+    Parameters
+    ----------
+    x : array
+        Array of input parameters (c, v0).
+
+    Returns
+    -------
+    distance : float
+        Distance travelled by projectile.
+    velocity : float
+        Velocity of projectile at impact.
+    """
 
     results = simulator_base(x)
 
@@ -98,7 +157,22 @@ def simulator_multioutput(x):
 
 
 def print_results(inputs, arg, var):
-    "convenience function for printing out generic results"
+    """
+    Convenience function for printing out generic results.
+
+    Parameters
+    ----------
+    inputs : array
+        Array of input values.
+    arg : array
+        Array of mean values.
+    var : array
+        Array of variance values.
+
+    Returns
+    -------
+    None.
+    """
 
     print(
         "---------------------------------------------------------------------------------"
@@ -109,14 +183,40 @@ def print_results(inputs, arg, var):
 
 
 def print_predictions(inputs, pred, var):
-    "convenience function for printing predictions"
+    """
+    Convenience function for printing predictions.
+
+    Parameters
+    ----------
+    inputs : array
+        Array of input values.
+    pred : array
+        Array of mean values.
+    var : array
+        Array of variance values.
+    """
 
     print("Target Point                Predicted Mean             Predictive Variance")
     print_results(inputs, pred, var)
 
 
 def print_errors(inputs, errors, var):
-    "convenience function for printing out results and computing mean square error"
+    """
+    Convenience function for printing out results and computing mean square error.
+
+    Parameters
+    ----------
+    inputs : array
+        Array of input values.
+    errors : array
+        Array of errors.
+    var : array
+        Array of variance values.
+
+    Returns
+    -------
+    None.
+    """
 
     print("Target Point                Standard Error             Predictive Variance")
     print_results(inputs, errors, var)

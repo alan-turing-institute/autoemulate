@@ -44,7 +44,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
     def fit(self, X, y):
         """Fits the emulator to the data.
 
-         Parameters
+        Parameters
         ----------
         X : {array-like, sparse matrix}, shape (n_samples, n_features)
             The training input samples.
@@ -56,6 +56,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
         self : object
             Returns self.
         """
+
         X, y = check_X_y(X, y, multi_output=True, y_numeric=True)
         self.n_features_in_ = X.shape[1]
         self.model_ = GaussianProcessRegressor(
