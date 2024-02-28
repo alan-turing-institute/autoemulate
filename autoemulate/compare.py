@@ -130,7 +130,7 @@ class AutoEmulate:
         self.folds = folds
         self.cv_results = {}
 
-        self.print_settings()
+        self.print_setup()
 
     def _check_input(self, X, y):
         """Checks and possibly converts the input data.
@@ -378,10 +378,9 @@ class AutoEmulate:
 
         return serialiser._load_model(path)
 
-    def print_settings(self):
+    def print_setup(self):
         if not self.is_set_up:
-            raise RuntimeError("Must run setup() before print_settings()")
-            return
+            raise RuntimeError("Must run setup() before print_setup()")
 
         models = "\n- " + "\n- ".join(
             [
@@ -397,30 +396,32 @@ class AutoEmulate:
             [
                 str(self.X.shape),
                 str(self.y.shape),
-                str(self.train_idxs.shape),
-                str(self.test_idxs.shape),
+                str(self.train_idxs.shape[0]),
+                str(self.test_idxs.shape[0]),
                 str(self.param_search),
                 str(self.search_type),
                 str(self.param_search_iters),
                 str(self.scale),
                 str(
-                    self.scaler.__class__.__name__ if self.scaler is not None else None
+                    self.scaler.__class__.__name__
+                    if self.scaler is not None
+                    else "None"
                 ),
                 str(self.reduce_dim),
                 str(
                     self.dim_reducer.__class__.__name__
                     if self.dim_reducer is not None
-                    else None
+                    else "None"
                 ),
                 str(self.cv.__class__.__name__ if self.cv is not None else "None"),
                 str(self.folds),
-                str(self.n_jobs),
+                str(self.n_jobs if self.n_jobs is not None else "1"),
             ],
             index=[
                 "Simulation input shape (X)",
                 "Simulation output shape (y)",
-                "Training dataset shape (train_idxs)",
-                "Test dataset shape (test_idxs)",
+                "# training set samples (train_idxs)",
+                "# test set samples (test_idxs)",
                 "Do hyperparameter search (param_search)",
                 "Type of hyperparameter search (search_type)",
                 "# sampled parameter settings (param_search_iters)",
