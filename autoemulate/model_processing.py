@@ -17,14 +17,14 @@ def _get_models(model_registry, model_subset=None):
 
     Returns
     -------
-    list
-        List of model instances.
+    dict
+        Dictionary of models instances.
     """
     if model_subset is not None:
         _check_model_names(model_subset, model_registry)
-        models = [model_registry[model] for model in model_subset]
+        models = {model: model_registry[model] for model in model_subset}
     else:
-        models = [model for model in model_registry.values()]
+        models = model_registry
     return models
 
 
@@ -55,22 +55,23 @@ def _turn_models_into_multioutput(models, y):
 
     Parameters
     ----------
-    models : list
-        List of model instances.
+    models : dict
+        Dict of model instances.
     y : array-like, shape (n_samples, n_outputs)
         Simulation output.
 
     Returns
     -------
-    models_multi : list
-        List of model instances, with single output models wrapped in MultiOutputRegressor.
+    models_multi : dict
+        Dict with model instances, where single output models are now wrapped in MultiOutputRegressor.
     """
-    models_multi = [
-        MultiOutputRegressor(model)
+
+    models_multi = {
+        model_name: MultiOutputRegressor(model)
         if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
         else model
-        for model in models
-    ]
+        for model_name, model in models.items()
+    }
     return models_multi
 
 
@@ -79,8 +80,8 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
 
     Parameters
     ----------
-    models : list
-        List of model instances.
+    models : dict
+        dict of model instances.
     scale : bool
         Whether to scale the data.
     scaler : sklearn.preprocessing object
@@ -92,21 +93,21 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
 
     Returns
     -------
-    models_scaled : list
-        List of model instances, with scaled models wrapped in a pipeline.
+    models_scaled : dict
+        dict of model_names: model instances, with scaled models wrapped in a pipeline.
     """
 
-    models_piped = []
+    models_piped = {}
 
-    for model in models:
+    for model_name, model in models.items():
         steps = []
         if scale:
             steps.append(("scaler", scaler))
         if reduce_dim:
             steps.append(("dim_reducer", dim_reducer))
         steps.append(("model", model))
-
-        models_piped.append(Pipeline(steps))
+        # without scaling or dim reduction, the model is the only step
+        models_piped[model_name] = Pipeline(steps)
 
     return models_piped
 
@@ -140,23 +141,3 @@ def _get_and_process_models(
         models_multi, scale, scaler, reduce_dim, dim_reducer
     )
     return models_scaled
-
-
-def _get_model_name_dict(model_registry):
-    """Get a dictionary of short model names and their corresponding class names.
-
-    Parameters
-    ----------
-    MODEL_REGISTRY : dict
-        Dictionary of models.
-
-    Returns
-    -------
-    model_name_dict : dict
-        Dictionary model short names and corresponding class names.
-    """
-    model_name_dict = {
-        short_name: get_model_name(model)
-        for short_name, model in model_registry.items()
-    }
-    return model_name_dict
