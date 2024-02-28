@@ -39,7 +39,7 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     return fitted_model, cv_results
 
 
-def _update_scores_df(scores_df, model, cv_results):
+def _update_scores_df(scores_df, model_name, cv_results):
     """Updates the scores dataframe with the results of the cross-validation.
 
     Parameters
@@ -63,7 +63,7 @@ def _update_scores_df(scores_df, model, cv_results):
         if key.startswith("test_"):
             for fold, score in enumerate(cv_results[key]):
                 scores_df.loc[len(scores_df.index)] = {
-                    "model": get_model_name(model),
+                    "model": model_name,
                     "metric": key.split("test_", 1)[1],
                     "fold": fold,
                     "score": score,

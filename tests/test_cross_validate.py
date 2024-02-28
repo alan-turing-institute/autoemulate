@@ -24,6 +24,7 @@ from autoemulate.metrics import METRIC_REGISTRY
 X, y = make_regression(n_samples=20, n_features=2, random_state=0)
 cv = KFold(n_splits=5, shuffle=True)
 model = Pipeline([("scaler", StandardScaler()), ("model", RandomForest())])
+model_name = "rf"
 metrics = [metric for metric in METRIC_REGISTRY.values()]
 n_jobs = 1
 logger = logging.getLogger(__name__)
@@ -61,9 +62,9 @@ def test_fitted_model(cv_output):
 
 def test_update_scores_df(cv_output):
     _, cv_results = cv_output
-    scores_df_new = _update_scores_df(scores_df, model, cv_results)
+    scores_df_new = _update_scores_df(scores_df, model_name, cv_results)
     assert isinstance(scores_df_new, pd.DataFrame)
 
     assert scores_df_new.shape[0] == 10
     assert scores_df_new.shape[1] == 4
-    assert scores_df_new["model"][0] == "RandomForest"
+    assert scores_df_new["model"][0] == "rf"

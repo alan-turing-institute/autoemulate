@@ -21,7 +21,6 @@ from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _get_and_process_models
-from autoemulate.model_processing import _get_model_name_dict
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
@@ -101,7 +100,6 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
-        self.model_name_dict = _get_model_name_dict(MODEL_REGISTRY)
         self.models = _get_and_process_models(
             MODEL_REGISTRY,
             model_subset,
@@ -197,15 +195,15 @@ class AutoEmulate:
             {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
         )
 
-        for i in range(len(self.models)):
+        for model_name, model in self.models.items():
             try:
                 # hyperparameter search
                 if self.param_search:
-                    self.models[i] = _optimize_params(
+                    self.models[model_name] = _optimize_params(
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
                         cv=self.cv,
-                        model=self.models[i],
+                        model=model,
                         search_type=self.search_type,
                         niter=self.param_search_iters,
                         param_space=None,
@@ -218,31 +216,29 @@ class AutoEmulate:
                     X=self.X[self.train_idxs],
                     y=self.y[self.train_idxs],
                     cv=self.cv,
-                    model=self.models[i],
+                    model=model,
                     metrics=self.metrics,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
             except Exception as e:
-                print(f"Error fitting model {get_model_name(self.models[i])}")
+                print(f"Error fitting model {model_name}")
                 print(e)  # should be replaced with logging
                 continue
 
-            self.models[i] = fitted_model
-            self.cv_results[get_model_name(self.models[i])] = cv_results
+            self.models[model_name] = fitted_model
+            self.cv_results[model_name] = cv_results
 
             # update scores dataframe
             self.scores_df = _update_scores_df(
                 self.scores_df,
-                self.models[i],
-                self.cv_results[get_model_name(self.models[i])],
+                model_name,
+                self.cv_results[model_name],
             )
-
-        # returns best model fitted on full data
-        self.best_model = self.get_model(rank=1, metric="r2")
-
-        # print best model
-        best_model_name = get_model_name(self.best_model)
+        # get best model
+        best_model_name, self.best_model = self.get_model(
+            rank=1, metric="r2", name=True
+        )
         mean_scores = get_mean_scores(self.scores_df, "r2")
         self.logger.info(
             f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
@@ -250,7 +246,7 @@ class AutoEmulate:
 
         return self.best_model
 
-    def get_model(self, rank=1, metric="r2"):
+    def get_model(self, rank=1, metric="r2", name=False):
         """Get a fitted model based on it's rank in the comparison.
 
         Parameters
@@ -259,6 +255,8 @@ class AutoEmulate:
             Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
+        name : bool
+            If True, returns tuple of model name and model. If False, returns only the model.
 
         Returns
         -------
@@ -271,21 +269,23 @@ class AutoEmulate:
 
         # get average scores across folds
         means = get_mean_scores(self.scores_df, metric)
-
+        print(f"means: {means}")
         # get model by rank
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
         chosen_model_name = means.iloc[rank - 1]["model"]
 
         # get best model:
-        for model in self.models:
-            if get_model_name(model) == chosen_model_name:
+        for model_name, model in self.models.items():
+            if model_name == chosen_model_name:
                 chosen_model = model
                 break
 
         # check whether the model is fitted
         check_is_fitted(chosen_model)
 
+        if name:
+            return chosen_model_name, chosen_model
         return chosen_model
 
     def refit_model(self, model):
