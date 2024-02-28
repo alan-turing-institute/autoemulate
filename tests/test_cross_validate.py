@@ -35,7 +35,9 @@ scores_df = pd.DataFrame(columns=["model", "metric", "fold", "score"]).astype(
 
 @pytest.fixture()
 def cv_output():
-    fitted_model, cv_results = _run_cv(X, y, cv, model, metrics, n_jobs, logger)
+    fitted_model, cv_results = _run_cv(
+        X, y, cv, model, model_name, metrics, n_jobs, logger
+    )
     return fitted_model, cv_results
 
 

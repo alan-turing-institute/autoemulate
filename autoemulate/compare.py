@@ -217,6 +217,7 @@ class AutoEmulate:
                     y=self.y[self.train_idxs],
                     cv=self.cv,
                     model=model,
+                    model_name=model_name,
                     metrics=self.metrics,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
@@ -269,7 +270,6 @@ class AutoEmulate:
 
         # get average scores across folds
         means = get_mean_scores(self.scores_df, metric)
-        print(f"means: {means}")
         # get model by rank
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
@@ -312,13 +312,13 @@ class AutoEmulate:
 
         Returns
         -------
-        models : list
-            List of refitted models.
+        models : dict
+            dict with refitted models.
         """
         if not hasattr(self, "X"):
             raise RuntimeError("Must run setup() before refit_models()")
-        for i in range(len(self.models)):
-            self.models[i] = self.refit_model(self.models[i])
+        for model_name, model in self.models.items():
+            self.models[model_name] = self.refit_model(self.models[model_name])
         return self.models
 
     def save_model(self, model=None, path=None):

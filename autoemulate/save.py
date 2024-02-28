@@ -33,10 +33,18 @@ class ModelSerialiser:
             json.dump(meta, f)
 
     def _save_models(self, models, path):
-        """Saves all models"""
+        """Saves all models
+
+        Parameters
+        ----------
+        models : dict
+            Dictionary of models.
+        path : str
+            Path to save the models.
+        """
         if path is not None and not os.path.isdir(path):
             raise ValueError("Path must be a directory")
-        for model in models:
+        for model in models.values():
             self._save_model(model, path)
 
     def _load_model(self, path):

@@ -22,7 +22,7 @@ def model():
 
 @pytest.fixture
 def models():
-    return [RandomForest(), GaussianProcessSk()]
+    return {"rf": RandomForest(), "gp": GaussianProcessSk()}
 
 
 @pytest.fixture
@@ -75,7 +75,7 @@ def test_save_model_wo_path(model_serialiser, model):
 
 def test_save_models_wo_dir(model_serialiser, models):
     model_serialiser._save_models(models, None)
-    model_names = [get_model_name(model) for model in models]
+    model_names = [get_model_name(model) for model in models.values()]
     assert all([os.path.exists(model_name) for model_name in model_names])
     assert all(
         [
@@ -93,7 +93,7 @@ def test_save_models_w_dir(model_serialiser, models):
     test_dir = "test_dir"
     os.makedirs(test_dir, exist_ok=True)
     model_serialiser._save_models(models, test_dir)
-    model_names = [get_model_name(model) for model in models]
+    model_names = [get_model_name(model) for model in models.values()]
     assert all(
         [
             os.path.exists(os.path.join(test_dir, model_name))

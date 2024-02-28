@@ -8,9 +8,35 @@ from sklearn.model_selection import train_test_split
 from autoemulate.utils import get_model_name
 
 
-def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
-    model_name = get_model_name(model)
+def _run_cv(X, y, cv, model, model_name, metrics, n_jobs, logger):
+    """Runs cross-validation on a model.
 
+    Parameters
+    ----------
+        X : array-like
+            Features.
+        y : array-like
+            Target variable.
+        cv : int, cross-validation generator or an iterable, default=None
+            Determines the cross-validation splitting strategy.
+        model : scikit-learn model
+            Model to cross-validate.
+        model_name : str
+            Name of the model.
+        metrics : list
+            List of metrics to use for cross-validation.
+        n_jobs : int
+            Number of jobs to run in parallel.
+        logger : logging.Logger
+            Logger object.
+
+    Returns
+    -------
+        fitted_model : scikit-learn model
+            Fitted model.
+        cv_results : dict
+            Results of the cross-validation.
+    """
     # The metrics we want to use for cross-validation
     scorers = {metric.__name__: make_scorer(metric) for metric in metrics}
 
