@@ -24,6 +24,7 @@ from autoemulate.model_processing import _get_and_process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
+from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
@@ -378,74 +379,16 @@ class AutoEmulate:
 
         return serialiser._load_model(path)
 
-    def print_setup(self):
-        if not self.is_set_up:
-            raise RuntimeError("Must run setup() before print_setup()")
+    def print_setup(self) -> None:
+        """Print the setup of the AutoEmulate object.
 
-        models = "\n- " + "\n- ".join(
-            [
-                x[1].__class__.__name__
-                for pipeline in self.models
-                for x in pipeline.steps
-                if x[0] == "model"
-            ]
-        )
-        metrics = "\n- " + "\n- ".join([metric.__name__ for metric in self.metrics])
+        This method prints the setup of the AutoEmulate object, including the models and metrics used.
 
-        settings = pd.DataFrame(
-            [
-                str(self.X.shape),
-                str(self.y.shape),
-                str(self.train_idxs.shape[0]),
-                str(self.test_idxs.shape[0]),
-                str(self.param_search),
-                str(self.search_type),
-                str(self.param_search_iters),
-                str(self.scale),
-                str(
-                    self.scaler.__class__.__name__
-                    if self.scaler is not None
-                    else "None"
-                ),
-                str(self.reduce_dim),
-                str(
-                    self.dim_reducer.__class__.__name__
-                    if self.dim_reducer is not None
-                    else "None"
-                ),
-                str(self.cv.__class__.__name__ if self.cv is not None else "None"),
-                str(self.folds),
-                str(self.n_jobs if self.n_jobs is not None else "1"),
-            ],
-            index=[
-                "Simulation input shape (X)",
-                "Simulation output shape (y)",
-                "# training set samples (train_idxs)",
-                "# test set samples (test_idxs)",
-                "Do hyperparameter search (param_search)",
-                "Type of hyperparameter search (search_type)",
-                "# sampled parameter settings (param_search_iters)",
-                "Scale data before fitting (scale)",
-                "Scaler (scaler)",
-                "Dimensionality reduction before fitting (reduce_dim)",
-                "Dimensionality reduction method (dim_reducer)",
-                "Cross-validation strategy (cv)",
-                "# folds (folds)",
-                "# parallel jobs (n_jobs)",
-            ],
-            columns=["Values"],
-        )
-
-        settings_str = settings.to_string(index=True, header=False)
-        width = len(settings_str.split("\n")[0])
-
-        print("AutoEmulate is set up with the following settings:")
-        print("-" * width)
-        print(settings_str)
-        print("-" * width)
-        print("Models:" + models)
-        print("-" * width)
-        print("Metrics:" + metrics)
+        Returns
+        -------
+        None
+        """
+        _print_setup(self)
 
     def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
