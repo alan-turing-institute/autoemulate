@@ -4,8 +4,6 @@ from copy import deepcopy
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
-from autoemulate.utils import get_model_name
-
 
 def _get_models(model_registry, model_subset=None):
     """Get models from REGISTRY.

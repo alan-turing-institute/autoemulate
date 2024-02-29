@@ -5,15 +5,13 @@ import pytest
 from autoemulate.emulators import GaussianProcessSk
 from autoemulate.emulators import RandomForest
 from autoemulate.printing import _print_cv_results
-from autoemulate.utils import get_model_name
 
 # prep inputs
-MODEL_REGISTRY = {"GaussianProcessSk": GaussianProcessSk, "RandomForest": RandomForest}
-models = [MODEL_REGISTRY[model]() for model in MODEL_REGISTRY.keys()]
+models = {"GaussianProcesses": GaussianProcessSk, "RandomForest": RandomForest}
 
 # make scores_df
 metrics = ["rmse", "r2"]
-model_names = [get_model_name(model) for model in models]
+model_names = models.keys()
 data = []
 for model in model_names:
     for metric in metrics:
@@ -37,9 +35,9 @@ def test_print_results_all_models(capsys):
 
 
 def test_print_results_single_model(capsys):
-    _print_cv_results(models, scores_df, model="GaussianProcessSk")
+    _print_cv_results(models, scores_df, model="GaussianProcesses")
     captured = capsys.readouterr()
-    assert "Scores for GaussianProcessSk across all folds:" in captured.out
+    assert "Scores for GaussianProcesses across all folds:" in captured.out
     assert "fold" in captured.out
     assert "metric" in captured.out
 

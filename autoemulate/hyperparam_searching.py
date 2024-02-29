@@ -4,7 +4,6 @@ from sklearn.model_selection import RandomizedSearchCV
 from skopt import BayesSearchCV
 
 from autoemulate.utils import _adjust_param_space
-from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
 
@@ -14,6 +13,7 @@ def _optimize_params(
     y,
     cv,
     model,
+    model_name,
     search_type="random",
     niter=20,
     param_space=None,
@@ -31,6 +31,8 @@ def _optimize_params(
     cv : int, cross-validation generator or an iterable
         Determines the cross-validation splitting strategy.
     model : model instance to do hyperparameter search for.
+    model_name : str
+        Name of the model.
     search_type : str, default="random"
         Type of search to perform. Can be "random" or "bayes", "grid" not yet implemented.
     niter : int, default=20
@@ -51,7 +53,6 @@ def _optimize_params(
     -------
     Refitted estimator on the whole dataset with best parameters.
     """
-    model_name = get_model_name(model)
     logger.info(f"Performing grid search for {model_name}...")
     param_space = _process_param_space(model, search_type, param_space)
     search_type = search_type.lower()
@@ -85,9 +86,7 @@ def _optimize_params(
     try:
         searcher.fit(X, y)
     except Exception as e:
-        logger.info(
-            f"Failed to perform hyperparameter search on {get_model_name(model)}"
-        )
+        logger.info(f"Failed to perform hyperparameter search on {model_name}")
         logger.info(e)
     logger.info(f"Best parameters for {model_name}: {searcher.best_params_}")
 

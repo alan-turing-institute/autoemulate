@@ -5,8 +5,6 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
 
-from autoemulate.utils import get_model_name
-
 
 def _run_cv(X, y, cv, model, model_name, metrics, n_jobs, logger):
     """Runs cross-validation on a model.

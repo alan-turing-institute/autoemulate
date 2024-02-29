@@ -2,11 +2,14 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GradientBoosting
+from autoemulate.emulators import NeuralNetTorch
+from autoemulate.emulators import RandomForest
 from autoemulate.utils import _add_prefix_to_param_space
 from autoemulate.utils import _add_prefix_to_single_grid
 from autoemulate.utils import _adjust_param_space
@@ -20,34 +23,23 @@ from autoemulate.utils import get_model_param_space
 # test retrieving model name ---------------------------------------------------
 @pytest.fixture()
 def model_name():
-    return "GradientBoostingRegressor"
+    return "gb"
 
 
-def test_basic(model_name):
-    gb = GradientBoostingRegressor()
-    assert get_model_name(gb) == model_name
+@pytest.fixture
+def models():
+    return {"gb": GradientBoosting(), "rf": RandomForest(), "nn": NeuralNetTorch("mlp")}
 
 
-def test_multioutput(model_name):
-    gb = MultiOutputRegressor(GradientBoostingRegressor())
-    assert get_model_name(gb) == model_name
+def test_basic_models(model_name, models):
+    gb = GradientBoosting()
+    assert get_model_name(gb, models) == model_name
 
 
-def test_pipeline(model_name):
-    gb = Pipeline([("model", GradientBoostingRegressor())])
-    assert get_model_name(gb) == model_name
-
-
-def test_pipeline_multioutput():
-    gb = Pipeline([("model", MultiOutputRegressor(GradientBoostingRegressor()))])
-    assert get_model_name(gb) == "GradientBoostingRegressor"
-
-
-def test_pipeline_with_scaler(model_name):
-    gb = Pipeline(
-        [("scaler", StandardScaler()), ("model", GradientBoostingRegressor())]
-    )
-    assert get_model_name(gb) == model_name
+def test_torch_models(models):
+    nn = NeuralNetTorch("mlp")
+    print(nn.get_params())
+    assert get_model_name(nn, models) == "nn"
 
 
 # test retrieving and adjusting parameter grids ---------------------------------

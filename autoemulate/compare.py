@@ -210,6 +210,7 @@ class AutoEmulate:
                         y=self.y[self.train_idxs],
                         cv=self.cv,
                         model=model,
+                        model_name=model_name,
                         search_type=self.search_type,
                         niter=self.param_search_iters,
                         param_space=None,
@@ -346,7 +347,7 @@ class AutoEmulate:
             raise ValueError(
                 "Model must be provided and should be a scikit-learn pipeline or model"
             )
-        serialiser._save_model(model, path)
+        serialiser._save_model(model, self.models, path)
 
     def save_models(self, path=None):
         """Saves all models to disk.
@@ -449,7 +450,7 @@ class AutoEmulate:
 
         scores_df = pd.concat(
             [
-                pd.DataFrame({"model": [get_model_name(model)]}),
+                pd.DataFrame({"model": [get_model_name(model, self.models)]}),
                 pd.DataFrame(scores, index=[0]),
             ],
             axis=1,
@@ -472,5 +473,11 @@ class AutoEmulate:
             Number of columns in the plot grid for multi-output. Default is 2.
         """
         _plot_model(
-            model, self.X[self.test_idxs], self.y[self.test_idxs], plot, n_cols, figsize
+            model,
+            get_model_name(model, self.models),
+            self.X[self.test_idxs],
+            self.y[self.test_idxs],
+            plot,
+            n_cols,
+            figsize,
         )

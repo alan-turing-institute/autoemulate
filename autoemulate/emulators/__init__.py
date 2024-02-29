@@ -18,8 +18,8 @@ MODEL_REGISTRY = {
     "GaussianProcesses": GaussianProcessSk(),
     "SupportVectorMachines": SupportVectorMachines(),
     "XGBoost": XGBoost(),
-    # "MLPSk": NeuralNetSk(),
     "NeuralNet": NeuralNetTorch(module="mlp"),
     "RadialBasisNet": NeuralNetTorch(module="rbf"),
+    "NeuralNetSk": NeuralNetSk(),
     # "GaussianProcess": GaussianProcess,
 }
