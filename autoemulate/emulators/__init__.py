@@ -11,14 +11,15 @@ from .xgboost import XGBoost
 
 # REGISTRY keys are the class names (i.e. type(model).__name__)
 MODEL_REGISTRY = {
-    "poly": SecondOrderPolynomial(),
-    "rbf": RBF(),
-    "rf": RandomForest(),
-    "gb": GradientBoosting(),
-    "gp": GaussianProcessSk(),
-    "svm": SupportVectorMachines(),
-    "xgboost": XGBoost(),
-    "mlpsk": NeuralNetSk(),
-    "mlp": NeuralNetTorch(module="mlp"),
+    "SecondOrderPolynomial": SecondOrderPolynomial(),
+    "RadialBasisFunctions": RBF(),
+    "RandomForest": RandomForest(),
+    "GradientBoosting": GradientBoosting(),
+    "GaussianProcesses": GaussianProcessSk(),
+    "SupportVectorMachines": SupportVectorMachines(),
+    "XGBoost": XGBoost(),
+    # "MLPSk": NeuralNetSk(),
+    "NeuralNet": NeuralNetTorch(module="mlp"),
+    "RadialBasisNet": NeuralNetTorch(module="rbf"),
     # "GaussianProcess": GaussianProcess,
 }
