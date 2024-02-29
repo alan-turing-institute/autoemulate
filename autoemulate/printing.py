@@ -4,6 +4,15 @@ from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_scores
 
+try:
+    __IPYTHON__
+    _in_ipython_session = True
+except NameError:
+    _in_ipython_session = False
+
+if _in_ipython_session:
+    from IPython.display import display, HTML
+
 
 def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
     """Print cv results.
@@ -40,6 +49,8 @@ def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
 
 def _print_setup(cls):
     """Print the setup of the AutoEmulate object.
+
+    If in an IPython session, the setup will be displayed as an HTML table.
 
     Parameters
     ----------
@@ -101,6 +112,11 @@ def _print_setup(cls):
 
     settings_str = settings.to_string(index=True, header=False)
     width = len(settings_str.split("\n")[0])
+
+    if _in_ipython_session:
+        display(HTML("<p>AutoEmulate is set up with the following settings:</p>"))
+        display(HTML(settings.to_html()))
+        return
 
     print("AutoEmulate is set up with the following settings:")
     print("-" * width)
