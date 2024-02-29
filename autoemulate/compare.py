@@ -30,6 +30,12 @@ from autoemulate.utils import get_model_name
 
 
 class AutoEmulate:
+    """
+    The AutoEmulate class is the main class of the AutoEmulate package. It is used to set up and compare
+    different emulator models on a given dataset. It can also be used to save and load models, and to
+    print and plot the results of the comparison.
+    """
+
     def __init__(self):
         """Initializes an AutoEmulate object."""
         self.X = None
@@ -362,7 +368,7 @@ class AutoEmulate:
         if path is None:
             raise ValueError("Filepath must be provided")
 
-        return serialiser.load_model(path)
+        return serialiser._load_model(path)
 
     def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
@@ -385,7 +391,7 @@ class AutoEmulate:
     def plot_results(
         self,
         model=None,
-        plot_type="actual_vs_predicted",
+        plot="standard",
         n_cols=3,
         figsize=None,
         output_index=0,
@@ -399,8 +405,8 @@ class AutoEmulate:
             If a model name is specified, plots all folds of that model.
         plot_type : str, optional
             The type of plot to draw:
-            “actual_vs_predicted” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-            “residual_vs_predicted” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
         figsize : tuple, optional
@@ -414,7 +420,7 @@ class AutoEmulate:
             self.y,
             model_name=model,
             n_cols=n_cols,
-            plot_type=plot_type,
+            plot=plot,
             figsize=figsize,
             output_index=output_index,
         )

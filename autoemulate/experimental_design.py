@@ -5,16 +5,22 @@ import mogp_emulator
 
 
 class ExperimentalDesign(ABC):
-    def __init__(self, bounds_list):
-        """Initializes a Sampler object.
+    """
+    Abstract class for experimental design.
 
-        Parameters
-        ----------
-        bounds_list : list
-            List tuples with two numeric values.
-            Each tuple corresponds to the lower and
-            upper bounds of a parameter.
-        """
+    This class is used to sample points from the parameter space
+    to be used in the training of the emulator.
+
+    Attributes
+    ----------
+    bounds_list : list
+        List tuples with two numeric values.
+        Each tuple corresponds to the lower and
+        upper bounds of a parameter.
+    """
+
+    def __init__(self, bounds_list):
+        """Initializes a Sampler object."""
         pass
 
     @abstractmethod
@@ -41,16 +47,22 @@ class ExperimentalDesign(ABC):
 
 
 class LatinHypercube(ExperimentalDesign):
-    def __init__(self, bounds_list):
-        """Initializes a LatinHypercube object.
+    """
+    LatinHypercube class for experimental design.
 
-        Parameters
-        ----------
-        bounds_list : list
-            List tuples with two numeric values.
-            Each tuple corresponds to the lower and
-            upper bounds of a parameter.
-        """
+    This class is used to sample points from the parameter space
+    to be used in the training of the emulator.
+
+    Attributes
+    ----------
+    bounds_list : list
+        List tuples with two numeric values.
+        Each tuple corresponds to the lower and
+        upper bounds of a parameter.
+    """
+
+    def __init__(self, bounds_list):
+        """Initializes a LatinHypercube object."""
         self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
 
     def sample(self, n: int):

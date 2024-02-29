@@ -22,8 +22,13 @@ class TorchModule(nn.Module):
         self.module_name = module_name
         self.input_size = input_size
         self.output_size = output_size
+        self.initialized = False
 
-    def get_grid_params(self, search_type: str = "random"):
+    def initialize(self):
+        raise NotImplementedError("initialize method not implemented.")
+
+    @staticmethod
+    def get_grid_params(search_type: str = "random"):
         """Return the hyperparameter search space for the module"""
         raise NotImplementedError("get_grid_params method not implemented.")
 

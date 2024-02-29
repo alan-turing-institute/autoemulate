@@ -105,7 +105,7 @@ def test_plot_single_fold_with_single_output():
         model_name="model1",
         fold_index=0,
         ax=ax,
-        plot_type="actual_vs_predicted",
+        plot="standard",
         annotation="Test",
         output_index=0,
     )
@@ -148,7 +148,7 @@ def test_plot_single_fold_with_multioutput():
         model_name="model1",
         fold_index=0,
         ax=ax,
-        plot_type="residual_vs_predicted",
+        plot="residual",
         annotation="Test",
         output_index=1,
     )

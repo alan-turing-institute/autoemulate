@@ -37,7 +37,8 @@ class MLPModule(TorchModule):
         modules.append(nn.Linear(in_features=input_size, out_features=output_size))
         self.model = nn.Sequential(*modules)
 
-    def get_grid_params(self, search_type: str = "random"):
+    @staticmethod
+    def get_grid_params(search_type: str = "random"):
         param_space = {
             "max_epochs": np.arange(10, 110, 10).tolist(),
             "batch_size": np.arange(2, 128, 2).tolist(),

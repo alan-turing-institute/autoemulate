@@ -56,7 +56,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
             The target values (real numbers).
 
         Returns
-        -------
+        ----------
         self : object
             Returns self.
         """

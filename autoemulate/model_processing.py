@@ -1,3 +1,6 @@
+"""Functions for getting and processing models."""
+from copy import deepcopy
+
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
@@ -20,11 +23,12 @@ def _get_models(model_registry, model_subset=None):
     dict
         Dictionary of models instances.
     """
+    # TODO replace deepcopy with a proper model register
     if model_subset is not None:
         _check_model_names(model_subset, model_registry)
-        models = {model: model_registry[model] for model in model_subset}
+        models = {model: deepcopy(model_registry)[model] for model in model_subset}
     else:
-        models = model_registry
+        models = deepcopy(model_registry)
     return models
 
 

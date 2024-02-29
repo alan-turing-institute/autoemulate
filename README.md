@@ -36,7 +36,7 @@ poetry shell
 import numpy as np
 from autoemulate.compare import AutoEmulate
 from autoemulate.experimental_design import LatinHypercube
-from autoemulate.demos.projectile import simulator
+from autoemulate.simulations.projectile import simulator
 
 # sample from a simulation
 lhd = LatinHypercube([(-5., 1.), (0., 1000.)])

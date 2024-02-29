@@ -11,7 +11,6 @@ chapters:
   # - file: getting-started/data_requirements
   - file: getting-started/installation
   - file: getting-started/quickstart
-  - file: getting-started/choosing-design
 
 - file: tutorials/index
   sections:
@@ -21,10 +20,15 @@ chapters:
   sections:
   - file: community/contributing
   - file: community/code-of-conduct
+  - file: community/faq/index
+    sections:
+    - file: community/faq/faq-users
+    - file: community/faq/faq-contributors
 
 - file: reference/index
   sections:
   - file: reference/compare
+  - file: reference/cross_validate
   - file: reference/cv
   - file: reference/datasets
   - file: reference/experimental_design
@@ -36,9 +40,9 @@ chapters:
   - file: reference/printing
   - file: reference/save
   - file: reference/utils
-  - file: reference/demos/index
+  - file: reference/simulations/index
     sections:
-    - file: reference/demos/projectile
+    - file: reference/simulations/projectile
   - file: reference/emulators/index
     sections:
     - file: reference/emulators/gaussian_process_sk

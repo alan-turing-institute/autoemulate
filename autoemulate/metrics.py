@@ -29,6 +29,7 @@ def r2(y_true, y_pred):
     return r2_score(y_true, y_pred)
 
 
+#: A dictionary of available metrics.
 METRIC_REGISTRY = {
     "rmse": rmse,
     "r2": r2,
