@@ -24,6 +24,7 @@ from autoemulate.model_processing import _get_and_process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
+from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
@@ -125,7 +126,12 @@ class AutoEmulate:
         self.n_jobs = n_jobs
         self.logger = _configure_logging(log_to_file=log_to_file)
         self.is_set_up = True
+        self.dim_reducer = dim_reducer
+        self.reduce_dim = reduce_dim
+        self.folds = folds
         self.cv_results = {}
+
+        self.print_setup()
 
     def _check_input(self, X, y):
         """Checks and possibly converts the input data.
@@ -198,7 +204,12 @@ class AutoEmulate:
         self.scores_df = pd.DataFrame(
             columns=["model", "metric", "fold", "score"]
         ).astype(
-            {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
+            {
+                "model": "object",
+                "metric": "object",
+                "fold": "int64",
+                "score": "float64",
+            }
         )
 
         for i in range(len(self.models)):
@@ -368,6 +379,17 @@ class AutoEmulate:
 
         return serialiser._load_model(path)
 
+    def print_setup(self) -> None:
+        """Print the setup of the AutoEmulate object.
+
+        This method prints the setup of the AutoEmulate object, including the models and metrics used.
+
+        Returns
+        -------
+        None
+        """
+        _print_setup(self)
+
     def print_results(self, model=None, sort_by="r2"):
         """Print cv results.
 
@@ -470,5 +492,10 @@ class AutoEmulate:
             Number of columns in the plot grid for multi-output. Default is 2.
         """
         _plot_model(
-            model, self.X[self.test_idxs], self.y[self.test_idxs], plot, n_cols, figsize
+            model,
+            self.X[self.test_idxs],
+            self.y[self.test_idxs],
+            plot,
+            n_cols,
+            figsize,
         )
