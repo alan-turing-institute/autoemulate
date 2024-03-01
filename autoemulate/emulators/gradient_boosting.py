@@ -132,7 +132,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
 
     @property
     def model_name(self):
-        return "GradientBoosting"
+        return self.__class__.__name__
 
     def _more_tags(self):
         return {"multioutput": False}

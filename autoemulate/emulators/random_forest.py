@@ -127,7 +127,7 @@ class RandomForest(BaseEstimator, RegressorMixin):
 
     @property
     def model_name(self):
-        return "RandomForest"
+        return self.__class__.__name__
 
     def _more_tags(self):
         return {"multioutput": True}

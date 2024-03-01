@@ -85,7 +85,7 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     @property
     def model_name(self):
-        return f"NN{self.module_name.upper()}"
+        return f"NN{self.module_name.capitalize()}"
 
     def _more_tags(self):
         return {

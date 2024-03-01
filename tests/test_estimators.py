@@ -12,8 +12,8 @@ from autoemulate.emulators import GaussianProcessMOGP
 from autoemulate.emulators import GradientBoosting
 from autoemulate.emulators import NeuralNetSk
 from autoemulate.emulators import NeuralNetTorch
+from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.emulators import RandomForest
-from autoemulate.emulators import RBF
 from autoemulate.emulators import SecondOrderPolynomial
 from autoemulate.emulators import SupportVectorMachines
 from autoemulate.emulators import XGBoost

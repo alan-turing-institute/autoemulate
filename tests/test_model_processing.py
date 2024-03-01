@@ -7,8 +7,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.emulators import RandomForest
-from autoemulate.emulators import RBF
 from autoemulate.model_processing import _check_model_names
 from autoemulate.model_processing import _get_models
 from autoemulate.model_processing import _turn_models_into_multioutput
@@ -21,7 +21,7 @@ def model_registry():
     return {
         "GaussianProcess": GaussianProcess(),
         "RandomForest": RandomForest(),
-        "RadialBasisFunctions": RBF(),
+        "RadialBasisFunctions": RadialBasisFunctions(),
     }
 
 

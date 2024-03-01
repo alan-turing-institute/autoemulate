@@ -173,7 +173,7 @@ class XGBoost(BaseEstimator, RegressorMixin):
 
     @property
     def model_name(self):
-        return "XGBoost"
+        return self.__class__.__name__
 
     def _more_tags(self):
         return {"multioutput": True}
