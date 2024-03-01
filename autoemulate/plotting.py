@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import PredictionErrorDisplay
 
+from autoemulate.utils import get_model_name
+
 
 def _validate_inputs(cv_results, model_name):
     """Validates cv_results and model_name for plotting.
@@ -268,15 +270,13 @@ def _plot_results(
         _plot_best_fold_per_model(cv_results, X, y, n_cols, plot, figsize, output_index)
 
 
-def _plot_model(model, model_name, X, y, plot="standard", n_cols=2, figsize=None):
+def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
     """Plots the model predictions vs. the true values.
 
     Parameters
     ----------
     model : object
         A fitted model.
-    model_name : str
-        The name of the model.
     X : array-like, shape (n_samples, n_features)
         Simulation input.
     y : array-like, shape (n_samples, n_outputs)
@@ -315,7 +315,7 @@ def _plot_model(model, model_name, X, y, plot="standard", n_cols=2, figsize=None
         display = PredictionErrorDisplay.from_predictions(
             y_true=y, y_pred=y_pred, kind=plot_type, ax=ax
         )
-        ax.set_title(f"{model_name} - Test Set")
+        ax.set_title(f"{get_model_name(model)} - Test Set")
     else:  # Multi-output
         n_outputs = y.shape[1]
         n_rows = np.ceil(n_outputs / n_cols).astype(int)
@@ -331,7 +331,7 @@ def _plot_model(model, model_name, X, y, plot="standard", n_cols=2, figsize=None
                 display = PredictionErrorDisplay.from_predictions(
                     y_true=y[:, i], y_pred=y_pred[:, i], kind=plot_type, ax=axs[i]
                 )
-                axs[i].set_title(f"{model_name} - Test Set - Output {i+1}")
+                axs[i].set_title(f"{get_model_name(model)} - Test Set - Output {i+1}")
 
         # Hide any unused subplots if n_cols * n_rows > n_outputs
         for ax in axs[n_outputs:]:

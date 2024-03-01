@@ -473,7 +473,6 @@ class AutoEmulate:
         """
         _plot_model(
             model,
-            get_model_name(model),
             self.X[self.test_idxs],
             self.y[self.test_idxs],
             plot,
