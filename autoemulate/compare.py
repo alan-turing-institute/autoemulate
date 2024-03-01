@@ -98,7 +98,7 @@ class AutoEmulate:
         model_subset : list
             List of models to use. If None, uses all models in MODEL_REGISTRY.
             Currently, any of: SecondOrderPolynomial, RBF, RandomForest, GradientBoosting,
-            GaussianProcessSk, SupportVectorMachines, XGBoost
+            GaussianProcess, SupportVectorMachines, XGBoost
         log_to_file : bool
             Whether to log to file.
         """
