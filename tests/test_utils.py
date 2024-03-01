@@ -23,23 +23,26 @@ from autoemulate.utils import get_model_param_space
 # test retrieving model name ---------------------------------------------------
 @pytest.fixture()
 def model_name():
-    return "gb"
+    return "GradientBoosting"
 
 
 @pytest.fixture
 def models():
-    return {"gb": GradientBoosting(), "rf": RandomForest(), "nn": NeuralNetTorch("mlp")}
+    return {
+        "GradientBoosting": GradientBoosting(),
+        "RandomForest": RandomForest(),
+        "NNMLP": NeuralNetTorch("mlp"),
+    }
 
 
 def test_basic_models(model_name, models):
     gb = GradientBoosting()
-    assert get_model_name(gb, models) == model_name
+    assert get_model_name(gb) == model_name
 
 
 def test_torch_models(models):
     nn = NeuralNetTorch("mlp")
-    print(nn.get_params())
-    assert get_model_name(nn, models) == "nn"
+    assert get_model_name(nn) == "NNMLP"
 
 
 # test retrieving and adjusting parameter grids ---------------------------------

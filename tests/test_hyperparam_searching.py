@@ -39,7 +39,6 @@ def test_optimize_params(Xy, model):
         y,
         cv=3,
         model=model,
-        model_name="rf",
         search_type="random",
         niter=3,
         logger=logging.getLogger(__name__),

@@ -21,7 +21,7 @@ def _print_cv_results(models, scores_df, model=None, sort_by="r2"):
     """
     # check if model is in self.models
     if model is not None:
-        model_names = models.keys()
+        model_names = [get_model_name(model) for model in models]
         if model not in model_names:
             raise ValueError(
                 f"Model {model} not found. Available models are: {model_names}"

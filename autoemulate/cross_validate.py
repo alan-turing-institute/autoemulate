@@ -5,8 +5,10 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
 
+from autoemulate.utils import get_model_name
 
-def _run_cv(X, y, cv, model, model_name, metrics, n_jobs, logger):
+
+def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     """Runs cross-validation on a model.
 
     Parameters
@@ -19,8 +21,6 @@ def _run_cv(X, y, cv, model, model_name, metrics, n_jobs, logger):
             Determines the cross-validation splitting strategy.
         model : scikit-learn model
             Model to cross-validate.
-        model_name : str
-            Name of the model.
         metrics : list
             List of metrics to use for cross-validation.
         n_jobs : int
@@ -38,7 +38,7 @@ def _run_cv(X, y, cv, model, model_name, metrics, n_jobs, logger):
     # The metrics we want to use for cross-validation
     scorers = {metric.__name__: make_scorer(metric) for metric in metrics}
 
-    logger.info(f"Cross-validating {model_name}...")
+    logger.info(f"Cross-validating {get_model_name(model)}...")
     logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
 
     cv_results = None
@@ -54,7 +54,7 @@ def _run_cv(X, y, cv, model, model_name, metrics, n_jobs, logger):
             return_indices=True,
         )
     except Exception as e:
-        logger.error(f"Failed to cross-validate {model_name}")
+        logger.error(f"Failed to cross-validate {get_model_name(model)}")
         logger.error(e)
 
     # refit the model on the whole dataset

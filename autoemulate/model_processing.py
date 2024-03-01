@@ -4,6 +4,8 @@ from copy import deepcopy
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from autoemulate.utils import get_model_name
+
 
 def _get_models(model_registry, model_subset=None):
     """Get models from REGISTRY.
@@ -24,9 +26,9 @@ def _get_models(model_registry, model_subset=None):
     # TODO replace deepcopy with a proper model register
     if model_subset is not None:
         _check_model_names(model_subset, model_registry)
-        models = {model: deepcopy(model_registry)[model] for model in model_subset}
+        models = [deepcopy(model_registry)[model] for model in model_subset]
     else:
-        models = deepcopy(model_registry)
+        models = list(deepcopy(model_registry).values())
     return models
 
 
@@ -68,12 +70,12 @@ def _turn_models_into_multioutput(models, y):
         Dict with model instances, where single output models are now wrapped in MultiOutputRegressor.
     """
 
-    models_multi = {
-        model_name: MultiOutputRegressor(model)
+    models_multi = [
+        MultiOutputRegressor(model)
         if not model._more_tags()["multioutput"] and (y.ndim > 1 and y.shape[1] > 1)
         else model
-        for model_name, model in models.items()
-    }
+        for model in models
+    ]
     return models_multi
 
 
@@ -99,9 +101,9 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
         dict of model_names: model instances, with scaled models wrapped in a pipeline.
     """
 
-    models_piped = {}
+    models_piped = []
 
-    for model_name, model in models.items():
+    for model in models:
         steps = []
         if scale:
             steps.append(("scaler", scaler))
@@ -109,7 +111,7 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
             steps.append(("dim_reducer", dim_reducer))
         steps.append(("model", model))
         # without scaling or dim reduction, the model is the only step
-        models_piped[model_name] = Pipeline(steps)
+        models_piped.append(Pipeline(steps))
 
     return models_piped
 

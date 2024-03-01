@@ -34,71 +34,71 @@ def _suppress_convergence_warnings():
             del os.environ["PYTHONWARNINGS"]
 
 
-def get_model_name(model, models):
-    """Get the model name from the model registry.
-
-    Parameters
-    ----------
-    model : model instance
-        The model for which to retrieve the name.
-    models : dict
-        The model registry with model names as keys and model instances as values.
-
-    Returns
-    -------
-    str
-        The name of the model.
-    """
-    for model_name, model_object in models.items():
-        if model.get_params() == model_object.get_params():
-            return model_name
-        # check if model is a torch model by checking if it has a module attribute
-        # and if the module attribute is the same as the one in the model registry
-        if "module" in get_model_params(model) and "module" in get_model_params(
-            model_object
-        ):
-            if (
-                get_model_params(model)["module"]
-                == get_model_params(model_object)["module"]
-            ):
-                return model_name
-    return None
-
-
-# def get_model_name(model):
-#     """Get the name of the base model.
-
-#     This function handles standalone models, models wrapped in a MultiOutputRegressor,
-#     and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).
+# def get_model_name(model, models):
+#     """Get the model name from the model registry.
 
 #     Parameters
 #     ----------
-#     model : model instance or Pipeline
-#         The model or pipeline from which to retrieve the base model name.
+#     model : model instance
+#         The model for which to retrieve the name.
+#     models : dict
+#         The model registry with model names as keys and model instances as values.
 
 #     Returns
 #     -------
 #     str
-#         Name of the base model.
+#         The name of the model.
 #     """
-#     # If the model is a Pipeline
-#     if isinstance(model, Pipeline):
-#         # Extract the model step
-#         step = model.named_steps["model"]
+#     for model_name, model_object in models.items():
+#         if model.get_params() == model_object.get_params():
+#             return model_name
+#         # check if model is a torch model by checking if it has a module attribute
+#         # and if the module attribute is the same as the one in the model registry
+#         if "module" in get_model_params(model) and "module" in get_model_params(
+#             model_object
+#         ):
+#             if (
+#                 get_model_params(model)["module"]
+#                 == get_model_params(model_object)["module"]
+#             ):
+#                 return model_name
+#     return None
 
-#         # If the model step is a MultiOutputRegressor, get the estimator
-#         if isinstance(step, MultiOutputRegressor):
-#             return type(step.estimator).__name__
-#         else:
-#             return type(step).__name__
 
-#     # If the model is a MultiOutputRegressor but not in a pipeline
-#     elif isinstance(model, MultiOutputRegressor):
-#         return type(model.estimator).__name__
+def get_model_name(model):
+    """Get the name of the base model.
 
-#     # Otherwise, it's a standalone model
-#     else:
-#         return type(model).__name__
+    This function handles standalone models, models wrapped in a MultiOutputRegressor,
+    and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).
+
+    Parameters
+    ----------
+    model : model instance or Pipeline
+        The model or pipeline from which to retrieve the base model name.
+
+    Returns
+    -------
+    str
+        Name of the base model.
+    """
+    # If the model is a Pipeline
+    if isinstance(model, Pipeline):
+        # Extract the model step
+        step = model.named_steps["model"]
+
+        # If the model step is a MultiOutputRegressor, get the estimator
+        if isinstance(step, MultiOutputRegressor):
+            return step.estimator.model_name
+        else:
+            return step.model_name
+
+    # If the model is a MultiOutputRegressor but not in a pipeline
+    elif isinstance(model, MultiOutputRegressor):
+        return model.estimator.model_name
+
+    # Otherwise, it's a standalone model
+    else:
+        return model.model_name
 
 
 def get_model_params(model):

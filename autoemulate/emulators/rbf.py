@@ -144,5 +144,9 @@ class RBF(BaseEstimator, RegressorMixin):
 
         return param_space
 
+    @property
+    def model_name(self):
+        return "RadialBasisFunctions"
+
     def _more_tags(self):
         return {"multioutput": True}

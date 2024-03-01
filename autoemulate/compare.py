@@ -201,16 +201,16 @@ class AutoEmulate:
             {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
         )
 
-        for model_name, model in self.models.items():
+        for i in range(len(self.models)):
+            model_name = get_model_name(self.models[i])
             try:
                 # hyperparameter search
                 if self.param_search:
-                    self.models[model_name] = _optimize_params(
+                    self.models[i] = _optimize_params(
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
                         cv=self.cv,
-                        model=model,
-                        model_name=model_name,
+                        model=self.models[i],
                         search_type=self.search_type,
                         niter=self.param_search_iters,
                         param_space=None,
@@ -223,8 +223,7 @@ class AutoEmulate:
                     X=self.X[self.train_idxs],
                     y=self.y[self.train_idxs],
                     cv=self.cv,
-                    model=model,
-                    model_name=model_name,
+                    model=self.models[i],
                     metrics=self.metrics,
                     n_jobs=self.n_jobs,
                     logger=self.logger,
@@ -234,7 +233,7 @@ class AutoEmulate:
                 print(e)  # should be replaced with logging
                 continue
 
-            self.models[model_name] = fitted_model
+            self.models[i] = fitted_model
             self.cv_results[model_name] = cv_results
 
             # update scores dataframe
@@ -283,8 +282,8 @@ class AutoEmulate:
         chosen_model_name = means.iloc[rank - 1]["model"]
 
         # get best model:
-        for model_name, model in self.models.items():
-            if model_name == chosen_model_name:
+        for model in self.models:
+            if get_model_name(model) == chosen_model_name:
                 chosen_model = model
                 break
 
@@ -324,8 +323,8 @@ class AutoEmulate:
         """
         if not hasattr(self, "X"):
             raise RuntimeError("Must run setup() before refit_models()")
-        for model_name, model in self.models.items():
-            self.models[model_name] = self.refit_model(self.models[model_name])
+        for i in range(len(self.models)):
+            self.models[i] = self.refit_model(self.models[i])
         return self.models
 
     def save_model(self, model=None, path=None):
@@ -347,7 +346,7 @@ class AutoEmulate:
             raise ValueError(
                 "Model must be provided and should be a scikit-learn pipeline or model"
             )
-        serialiser._save_model(model, self.models, path)
+        serialiser._save_model(model, path)
 
     def save_models(self, path=None):
         """Saves all models to disk.
@@ -450,7 +449,7 @@ class AutoEmulate:
 
         scores_df = pd.concat(
             [
-                pd.DataFrame({"model": [get_model_name(model, self.models)]}),
+                pd.DataFrame({"model": [get_model_name(model)]}),
                 pd.DataFrame(scores, index=[0]),
             ],
             axis=1,
@@ -474,7 +473,7 @@ class AutoEmulate:
         """
         _plot_model(
             model,
-            get_model_name(model, self.models),
+            get_model_name(model),
             self.X[self.test_idxs],
             self.y[self.test_idxs],
             plot,

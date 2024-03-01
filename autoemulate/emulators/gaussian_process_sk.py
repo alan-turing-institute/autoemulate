@@ -121,5 +121,9 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
 
         return param_space
 
+    @property
+    def model_name(self):
+        return "GaussianProcesses"
+
     def _more_tags(self):
         return {"multioutput": True}

@@ -22,7 +22,7 @@ def model():
 
 @pytest.fixture
 def models():
-    return {"rf": RandomForest(), "gp": GaussianProcessSk()}
+    return {"RandomForest": RandomForest(), "GaussianProcesses": GaussianProcessSk()}
 
 
 @pytest.fixture
@@ -30,8 +30,8 @@ def test_path():
     return "test_model"
 
 
-def test_save_model_w_path(model_serialiser, model, models, test_path):
-    model_serialiser._save_model(model, models, test_path)
+def test_save_model_w_path(model_serialiser, model, test_path):
+    model_serialiser._save_model(model, test_path)
     assert os.path.exists(test_path)
     assert os.path.exists(model_serialiser._get_meta_path(test_path))
 
@@ -45,11 +45,11 @@ def test_save_model_w_path(model_serialiser, model, models, test_path):
     os.remove(model_serialiser._get_meta_path(test_path))
 
 
-def test_save_model_w_dir(model_serialiser, model, models):
+def test_save_model_w_dir(model_serialiser, model):
     test_dir = "test_dir"
     os.makedirs(test_dir, exist_ok=True)
-    model_serialiser._save_model(model, models, test_dir)
-    model_name = get_model_name(model, models)
+    model_serialiser._save_model(model, test_dir)
+    model_name = get_model_name(model)
     assert os.path.exists(os.path.join(test_dir, model_name))
 
     os.remove(os.path.join(test_dir, model_name))
@@ -57,9 +57,9 @@ def test_save_model_w_dir(model_serialiser, model, models):
     os.rmdir(test_dir)
 
 
-def test_save_model_wo_path(model_serialiser, model, models):
-    model_serialiser._save_model(model, models, None)
-    model_name = get_model_name(model, models)
+def test_save_model_wo_path(model_serialiser, model):
+    model_serialiser._save_model(model, None)
+    model_name = get_model_name(model)
     assert os.path.exists(model_name)
     assert os.path.exists(model_serialiser._get_meta_path(model_name))
 
@@ -115,16 +115,16 @@ def test_save_models_w_dir(model_serialiser, models):
     os.rmdir(test_dir)
 
 
-def test_load_model(model_serialiser, model, models, test_path):
-    model_serialiser._save_model(model, models, test_path)
+def test_load_model(model_serialiser, model, test_path):
+    model_serialiser._save_model(model, test_path)
     loaded_model = model_serialiser._load_model(test_path)
     assert isinstance(loaded_model, type(model))
     os.remove(test_path)
     os.remove(model_serialiser._get_meta_path(test_path))
 
 
-def test_load_model_with_missing_meta_file(model_serialiser, model, models, test_path):
-    model_serialiser._save_model(model, models, test_path)
+def test_load_model_with_missing_meta_file(model_serialiser, model, test_path):
+    model_serialiser._save_model(model, test_path)
     os.remove(model_serialiser._get_meta_path(test_path))
     with pytest.raises(FileNotFoundError):
         model_serialiser._load_model(test_path)

@@ -82,5 +82,9 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
 
         return param_space
 
+    @property
+    def model_name(self):
+        return "GaussianProcessesMOGP"
+
     def _more_tags(self):
         return {"multioutput": False}

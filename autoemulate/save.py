@@ -9,7 +9,7 @@ from autoemulate.utils import get_model_name
 
 
 class ModelSerialiser:
-    def _save_model(self, model, models, path):
+    def _save_model(self, model, path):
         """Saves a model + metadata to disk.
 
         Parameters
@@ -21,10 +21,9 @@ class ModelSerialiser:
         path : str
             Path to save the model.
         """
-        model_name = get_model_name(model, models)
+        model_name = get_model_name(model)
         # check if path is directory
         if path is not None and os.path.isdir(path):
-            print(path, model_name)
             path = os.path.join(path, model_name)
         # save with model name if path is None
         if path is None:
@@ -57,8 +56,7 @@ class ModelSerialiser:
             os.makedirs(path, exist_ok=True)
             raise ValueError("Path must be a directory")
         for model in models.values():
-            print(f"model: {model.get_params()}")
-            self._save_model(model, models, path)
+            self._save_model(model, path)
 
     def _load_model(self, path):
         """Loads a model from disk and checks version."""

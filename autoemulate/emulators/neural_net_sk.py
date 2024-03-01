@@ -134,6 +134,10 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
 
         return param_space
 
+    @property
+    def model_name(self):
+        return "SkMLP"
+
     def _more_tags(self):
         return {"multioutput": True}
 

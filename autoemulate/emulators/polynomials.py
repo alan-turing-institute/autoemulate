@@ -88,5 +88,9 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
 
         return param_space
 
+    @property
+    def model_name(self):
+        return "Polynomials"
+
     def _more_tags(self):
         return {"multioutput": True}
