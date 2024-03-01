@@ -74,7 +74,6 @@ def _print_setup(cls):
         [
             str(cls.X.shape),
             str(cls.y.shape),
-            str(cls.train_idxs.shape[0]),
             str(cls.test_idxs.shape[0]),
             str(cls.param_search),
             str(cls.search_type),
@@ -94,8 +93,7 @@ def _print_setup(cls):
         index=[
             "Simulation input shape (X)",
             "Simulation output shape (y)",
-            "# training set samples (train_idxs)",
-            "# test set samples (test_idxs)",
+            "# test set samples (test_set_size)",
             "Do hyperparameter search (param_search)",
             "Type of hyperparameter search (search_type)",
             "# sampled parameter settings (param_search_iters)",
@@ -103,7 +101,7 @@ def _print_setup(cls):
             "Scaler (scaler)",
             "Dimensionality reduction before fitting (reduce_dim)",
             "Dimensionality reduction method (dim_reducer)",
-            "Cross-validation strategy (cv)",
+            "Cross-validation strategy (fold_strategy)",
             "# folds (folds)",
             "# parallel jobs (n_jobs)",
         ],
