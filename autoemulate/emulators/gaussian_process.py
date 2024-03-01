@@ -9,7 +9,7 @@ from skopt.space import Categorical
 from skopt.space import Real
 
 
-class GaussianProcess(BaseEstimator, RegressorMixin):
+class GaussianProcessMOGP(BaseEstimator, RegressorMixin):
     """Gaussian Process Emulator.
 
     Wraps Gaussian Process Regression from the mogp_emulator package.
@@ -84,7 +84,7 @@ class GaussianProcess(BaseEstimator, RegressorMixin):
 
     @property
     def model_name(self):
-        return "GaussianProcessesMOGP"
+        return "GaussianProcessMOGP"
 
     def _more_tags(self):
         return {"multioutput": False}

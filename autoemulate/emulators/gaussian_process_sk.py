@@ -16,7 +16,7 @@ from skopt.space import Real
 from autoemulate.utils import _suppress_convergence_warnings
 
 
-class GaussianProcessSk(BaseEstimator, RegressorMixin):
+class GaussianProcess(BaseEstimator, RegressorMixin):
     """Gaussian Process Emulator.
 
     Wraps GaussianProcessRegressor from scikit-learn.
@@ -123,7 +123,7 @@ class GaussianProcessSk(BaseEstimator, RegressorMixin):
 
     @property
     def model_name(self):
-        return "GaussianProcesses"
+        return "GaussianProcess"
 
     def _more_tags(self):
         return {"multioutput": True}

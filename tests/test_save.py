@@ -4,7 +4,7 @@ import shutil
 
 import pytest
 
-from autoemulate.emulators import GaussianProcessSk
+from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_model_name
@@ -22,7 +22,7 @@ def model():
 
 @pytest.fixture
 def models():
-    return {"RandomForest": RandomForest(), "GaussianProcesses": GaussianProcessSk()}
+    return {"RandomForest": RandomForest(), "GaussianProcess": GaussianProcess()}
 
 
 @pytest.fixture

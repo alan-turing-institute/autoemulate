@@ -6,7 +6,7 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from autoemulate.emulators import GaussianProcessSk
+from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
 from autoemulate.emulators import RBF
 from autoemulate.model_processing import _check_model_names
@@ -19,7 +19,7 @@ from autoemulate.utils import get_model_name
 @pytest.fixture()
 def model_registry():
     return {
-        "GaussianProcesses": GaussianProcessSk(),
+        "GaussianProcess": GaussianProcess(),
         "RandomForest": RandomForest(),
         "RadialBasisFunctions": RBF(),
     }
@@ -44,7 +44,7 @@ def test_get_models(model_registry):
 
 def test_get_models_subset(model_registry):
     models = _get_models(
-        model_registry, model_subset=["GaussianProcesses", "RandomForest"]
+        model_registry, model_subset=["GaussianProcess", "RandomForest"]
     )
     assert len(models) == 2
     model_names = [get_model_name(model) for model in models]

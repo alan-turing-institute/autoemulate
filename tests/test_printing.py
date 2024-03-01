@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from autoemulate.emulators import GaussianProcessSk
+from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
 from autoemulate.printing import _print_cv_results
 
 # prep inputs
-models = {"GaussianProcesses": GaussianProcessSk, "RandomForest": RandomForest}
+models = {"GaussianProcess": GaussianProcess, "RandomForest": RandomForest}
 
 # make scores_df
 metrics = ["rmse", "r2"]
@@ -35,9 +35,9 @@ def test_print_results_all_models(capsys):
 
 
 def test_print_results_single_model(capsys):
-    _print_cv_results(models, scores_df, model="GaussianProcesses")
+    _print_cv_results(models, scores_df, model="GaussianProcess")
     captured = capsys.readouterr()
-    assert "Scores for GaussianProcesses across all folds:" in captured.out
+    assert "Scores for GaussianProcess across all folds:" in captured.out
     assert "fold" in captured.out
     assert "metric" in captured.out
 

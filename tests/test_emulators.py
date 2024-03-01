@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import GaussianProcessMOGP
 from autoemulate.emulators import NeuralNetSk
 from autoemulate.emulators import RandomForest
 from autoemulate.experimental_design import LatinHypercube
@@ -28,7 +28,7 @@ def simulation_io():
 def gp_model(simulation_io):
     """Setup for tests (Arrange)"""
     sim_in, sim_out = simulation_io
-    gp = GaussianProcess()
+    gp = GaussianProcessMOGP()
     gp.fit(sim_in, sim_out)
     return gp
 
@@ -54,7 +54,7 @@ def nn_sk_model(simulation_io):
 
 # Test Gaussian Process
 def test_gp_initialisation():
-    gp = GaussianProcess()
+    gp = GaussianProcessMOGP()
     assert gp is not None
 
 
