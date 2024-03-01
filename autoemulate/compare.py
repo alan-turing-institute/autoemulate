@@ -384,7 +384,7 @@ class AutoEmulate:
         _print_cv_results(
             self.models,
             self.scores_df,
-            model=model,
+            model_name=model,
             sort_by=sort_by,
         )
 
