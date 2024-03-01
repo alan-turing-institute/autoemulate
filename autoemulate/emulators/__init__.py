@@ -1,5 +1,5 @@
-from .gaussian_process import GaussianProcessMOGP
-from .gaussian_process_sk import GaussianProcess
+from .gaussian_process import GaussianProcess
+from .gaussian_process_mogp import GaussianProcessMOGP
 from .gradient_boosting import GradientBoosting
 from .neural_net_sk import NeuralNetSk
 from .neural_net_torch import NeuralNetTorch

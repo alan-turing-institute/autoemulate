@@ -7,11 +7,11 @@ from autoemulate.emulators import RandomForest
 from autoemulate.printing import _print_cv_results
 
 # prep inputs
-models = {"GaussianProcess": GaussianProcess, "RandomForest": RandomForest}
+models = [GaussianProcess(), RandomForest()]
 
 # make scores_df
 metrics = ["rmse", "r2"]
-model_names = models.keys()
+model_names = [model.model_name for model in models]
 data = []
 for model in model_names:
     for metric in metrics:
@@ -35,7 +35,7 @@ def test_print_results_all_models(capsys):
 
 
 def test_print_results_single_model(capsys):
-    _print_cv_results(models, scores_df, model="GaussianProcess")
+    _print_cv_results(models, scores_df, model_name="GaussianProcess")
     captured = capsys.readouterr()
     assert "Scores for GaussianProcess across all folds:" in captured.out
     assert "fold" in captured.out
@@ -44,4 +44,4 @@ def test_print_results_single_model(capsys):
 
 def test_print_results_invalid_model():
     with pytest.raises(ValueError):
-        _print_cv_results(models, scores_df, model="InvalidModel")
+        _print_cv_results(models, scores_df, model_name="InvalidModel")
