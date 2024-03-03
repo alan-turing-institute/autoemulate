@@ -51,8 +51,7 @@ def _optimize_params(
     -------
     Refitted estimator on the whole dataset with best parameters.
     """
-    model_name = get_model_name(model)
-    logger.info(f"Performing grid search for {model_name}...")
+    logger.info(f"Performing grid search for {get_model_name(model)}...")
     param_space = _process_param_space(model, search_type, param_space)
     search_type = search_type.lower()
 
@@ -89,7 +88,7 @@ def _optimize_params(
             f"Failed to perform hyperparameter search on {get_model_name(model)}"
         )
         logger.info(e)
-    logger.info(f"Best parameters for {model_name}: {searcher.best_params_}")
+    logger.info(f"Best parameters for {get_model_name(model)}: {searcher.best_params_}")
 
     return searcher.best_estimator_
 

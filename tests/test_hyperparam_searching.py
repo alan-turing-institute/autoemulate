@@ -4,11 +4,11 @@ import pytest
 from sklearn.datasets import make_regression
 from sklearn.pipeline import Pipeline
 
+from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
 from autoemulate.hyperparam_searching import _check_param_space
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.hyperparam_searching import _process_param_space
-from autoemulate.utils import get_model_name
 
 
 @pytest.fixture
@@ -34,7 +34,6 @@ def param_space():
 
 def test_optimize_params(Xy, model):
     X, y = Xy
-    #    print(f"this is the model name: {get_model_name(model)}")
     best_estimator = _optimize_params(
         X,
         y,

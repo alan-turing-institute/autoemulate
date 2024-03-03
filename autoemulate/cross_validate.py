@@ -9,12 +9,36 @@ from autoemulate.utils import get_model_name
 
 
 def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
-    model_name = get_model_name(model)
+    """Runs cross-validation on a model.
 
+    Parameters
+    ----------
+        X : array-like
+            Features.
+        y : array-like
+            Target variable.
+        cv : int, cross-validation generator or an iterable, default=None
+            Determines the cross-validation splitting strategy.
+        model : scikit-learn model
+            Model to cross-validate.
+        metrics : list
+            List of metrics to use for cross-validation.
+        n_jobs : int
+            Number of jobs to run in parallel.
+        logger : logging.Logger
+            Logger object.
+
+    Returns
+    -------
+        fitted_model : scikit-learn model
+            Fitted model.
+        cv_results : dict
+            Results of the cross-validation.
+    """
     # The metrics we want to use for cross-validation
     scorers = {metric.__name__: make_scorer(metric) for metric in metrics}
 
-    logger.info(f"Cross-validating {model_name}...")
+    logger.info(f"Cross-validating {get_model_name(model)}...")
     logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
 
     cv_results = None
@@ -30,7 +54,7 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
             return_indices=True,
         )
     except Exception as e:
-        logger.error(f"Failed to cross-validate {model_name}")
+        logger.error(f"Failed to cross-validate {get_model_name(model)}")
         logger.error(e)
 
     # refit the model on the whole dataset
@@ -39,7 +63,7 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     return fitted_model, cv_results
 
 
-def _update_scores_df(scores_df, model, cv_results):
+def _update_scores_df(scores_df, model_name, cv_results):
     """Updates the scores dataframe with the results of the cross-validation.
 
     Parameters
@@ -63,7 +87,7 @@ def _update_scores_df(scores_df, model, cv_results):
         if key.startswith("test_"):
             for fold, score in enumerate(cv_results[key]):
                 scores_df.loc[len(scores_df.index)] = {
-                    "model": get_model_name(model),
+                    "model": model_name,
                     "metric": key.split("test_", 1)[1],
                     "fold": fold,
                     "score": score,

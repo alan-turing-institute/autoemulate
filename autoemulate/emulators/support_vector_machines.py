@@ -160,5 +160,9 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
 
         return param_space
 
+    @property
+    def model_name(self):
+        return self.__class__.__name__
+
     def _more_tags(self):
         return {"multioutput": False}

@@ -99,7 +99,7 @@ class AutoEmulate:
         model_subset : list
             List of models to use. If None, uses all models in MODEL_REGISTRY.
             Currently, any of: SecondOrderPolynomial, RBF, RandomForest, GradientBoosting,
-            GaussianProcessSk, SupportVectorMachines, XGBoost
+            GaussianProcess, SupportVectorMachines, XGBoost
         log_to_file : bool
             Whether to log to file.
         """
@@ -213,6 +213,7 @@ class AutoEmulate:
         )
 
         for i in range(len(self.models)):
+            model_name = get_model_name(self.models[i])
             try:
                 # hyperparameter search
                 if self.param_search:
@@ -239,25 +240,23 @@ class AutoEmulate:
                     logger=self.logger,
                 )
             except Exception as e:
-                print(f"Error fitting model {get_model_name(self.models[i])}")
+                print(f"Error fitting model {model_name}")
                 print(e)  # should be replaced with logging
                 continue
 
             self.models[i] = fitted_model
-            self.cv_results[get_model_name(self.models[i])] = cv_results
+            self.cv_results[model_name] = cv_results
 
             # update scores dataframe
             self.scores_df = _update_scores_df(
                 self.scores_df,
-                self.models[i],
-                self.cv_results[get_model_name(self.models[i])],
+                model_name,
+                self.cv_results[model_name],
             )
-
-        # returns best model fitted on full data
-        self.best_model = self.get_model(rank=1, metric="r2")
-
-        # print best model
-        best_model_name = get_model_name(self.best_model)
+        # get best model
+        best_model_name, self.best_model = self.get_model(
+            rank=1, metric="r2", name=True
+        )
         mean_scores = get_mean_scores(self.scores_df, "r2")
         self.logger.info(
             f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
@@ -265,7 +264,7 @@ class AutoEmulate:
 
         return self.best_model
 
-    def get_model(self, rank=1, metric="r2"):
+    def get_model(self, rank=1, metric="r2", name=False):
         """Get a fitted model based on it's rank in the comparison.
 
         Parameters
@@ -274,6 +273,8 @@ class AutoEmulate:
             Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
+        name : bool
+            If True, returns tuple of model name and model. If False, returns only the model.
 
         Returns
         -------
@@ -286,7 +287,6 @@ class AutoEmulate:
 
         # get average scores across folds
         means = get_mean_scores(self.scores_df, metric)
-
         # get model by rank
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
@@ -301,6 +301,8 @@ class AutoEmulate:
         # check whether the model is fitted
         check_is_fitted(chosen_model)
 
+        if name:
+            return chosen_model_name, chosen_model
         return chosen_model
 
     def refit_model(self, model):
@@ -327,8 +329,8 @@ class AutoEmulate:
 
         Returns
         -------
-        models : list
-            List of refitted models.
+        models : dict
+            dict with refitted models.
         """
         if not hasattr(self, "X"):
             raise RuntimeError("Must run setup() before refit_models()")
@@ -404,7 +406,7 @@ class AutoEmulate:
         _print_cv_results(
             self.models,
             self.scores_df,
-            model=model,
+            model_name=model,
             sort_by=sort_by,
         )
 

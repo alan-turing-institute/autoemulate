@@ -4,7 +4,7 @@ import shutil
 
 import pytest
 
-from autoemulate.emulators import GaussianProcessSk
+from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_model_name
@@ -22,7 +22,7 @@ def model():
 
 @pytest.fixture
 def models():
-    return [RandomForest(), GaussianProcessSk()]
+    return {"RandomForest": RandomForest(), "GaussianProcess": GaussianProcess()}
 
 
 @pytest.fixture
@@ -63,19 +63,19 @@ def test_save_model_wo_path(model_serialiser, model):
     assert os.path.exists(model_name)
     assert os.path.exists(model_serialiser._get_meta_path(model_name))
 
-    with open(model_serialiser._get_meta_path(get_model_name(model)), "r") as f:
+    with open(model_serialiser._get_meta_path(model_name), "r") as f:
         meta = json.load(f)
     assert "model" in meta
     assert "scikit-learn" in meta
     assert "numpy" in meta
 
-    os.remove(get_model_name(model))
-    os.remove(model_serialiser._get_meta_path(get_model_name(model)))
+    os.remove(model_name)
+    os.remove(model_serialiser._get_meta_path(model_name))
 
 
 def test_save_models_wo_dir(model_serialiser, models):
     model_serialiser._save_models(models, None)
-    model_names = [get_model_name(model) for model in models]
+    model_names = models.keys()
     assert all([os.path.exists(model_name) for model_name in model_names])
     assert all(
         [
@@ -93,7 +93,7 @@ def test_save_models_w_dir(model_serialiser, models):
     test_dir = "test_dir"
     os.makedirs(test_dir, exist_ok=True)
     model_serialiser._save_models(models, test_dir)
-    model_names = [get_model_name(model) for model in models]
+    model_names = models.keys()
     assert all(
         [
             os.path.exists(os.path.join(test_dir, model_name))

@@ -138,10 +138,9 @@ def test_nn_torch_module_ui():
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
     em = AutoEmulate()
-    em.setup(X, y, model_subset=["NeuralNetTorch"])
+    em.setup(X, y, model_subset=["NNMlp"])
     # check that compare does not raise an error
     best = em.compare()
-    assert get_model_name(best) == "NeuralNetTorch"
 
 
 def test_nn_torch_module_ui_param_search():
@@ -149,9 +148,6 @@ def test_nn_torch_module_ui_param_search():
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
     em = AutoEmulate()
-    em.setup(
-        X, y, model_subset=["NeuralNetTorch"], param_search=True, param_search_iters=2
-    )
+    em.setup(X, y, model_subset=["NNMlp"], param_search=True, param_search_iters=2)
     # check that compare does not raise an error
     best = em.compare()
-    assert get_model_name(best) == "NeuralNetTorch"

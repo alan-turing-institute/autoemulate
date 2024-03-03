@@ -12,7 +12,7 @@ from skopt.space import Integer
 from skopt.space import Real
 
 
-class RBF(BaseEstimator, RegressorMixin):
+class RadialBasisFunctions(BaseEstimator, RegressorMixin):
     """Radial basis function Emulator.
 
     Wraps the RBF interpolator from scipy.
@@ -143,6 +143,10 @@ class RBF(BaseEstimator, RegressorMixin):
             param_space = param_space_bayes
 
         return param_space
+
+    @property
+    def model_name(self):
+        return self.__class__.__name__
 
     def _more_tags(self):
         return {"multioutput": True}

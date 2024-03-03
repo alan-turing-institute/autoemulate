@@ -10,22 +10,31 @@ from autoemulate.utils import get_model_name
 
 class ModelSerialiser:
     def _save_model(self, model, path):
-        """Saves a model + metadata to disk."""
+        """Saves a model + metadata to disk.
 
+        Parameters
+        ----------
+        model : scikit-learn model
+            Model to save.
+        models : dict
+            Dictionary of model_name: model.
+        path : str
+            Path to save the model.
+        """
+        model_name = get_model_name(model)
         # check if path is directory
         if path is not None and os.path.isdir(path):
-            model_name = get_model_name(model)
             path = os.path.join(path, model_name)
         # save with model name if path is None
         if path is None:
-            path = get_model_name(model)
+            path = model_name
 
         # model
         joblib.dump(model, path)
 
         # metadata
         meta = {
-            "model": get_model_name(model),
+            "model": model_name,
             "scikit-learn": sklearn.__version__,
             "numpy": np.__version__,
         }
@@ -33,10 +42,20 @@ class ModelSerialiser:
             json.dump(meta, f)
 
     def _save_models(self, models, path):
-        """Saves all models"""
+        """Saves all models
+
+        Parameters
+        ----------
+        models : dict
+            Dictionary of models.
+        path : str
+            Path to save the models.
+        """
         if path is not None and not os.path.isdir(path):
+            # create directory if it doesn't exist
+            os.makedirs(path, exist_ok=True)
             raise ValueError("Path must be a directory")
-        for model in models:
+        for model in models.values():
             self._save_model(model, path)
 
     def _load_model(self, path):

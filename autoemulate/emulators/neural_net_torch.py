@@ -41,6 +41,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         verbose: int = 0,
         **kwargs,
     ):
+        self.module_name = module
         if "random_state" in kwargs:
             setattr(self, "random_state", kwargs.pop("random_state"))
             set_random_seed(self.random_state)
@@ -81,6 +82,10 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     def __sklearn_is_fitted__(self):
         return hasattr(self, "n_features_in_")
+
+    @property
+    def model_name(self):
+        return f"NN{self.module_name.capitalize()}"
 
     def _more_tags(self):
         return {
