@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
+from tqdm.autonotebook import tqdm
 
 from autoemulate.cross_validate import _run_cv
 from autoemulate.cross_validate import _update_scores_df
@@ -59,6 +60,7 @@ class AutoEmulate:
         folds=5,
         n_jobs=None,
         model_subset=None,
+        verbose=0,
         log_to_file=False,
     ):
         """Sets up the automatic emulation.
@@ -124,7 +126,7 @@ class AutoEmulate:
         self.scale = scale
         self.scaler = scaler
         self.n_jobs = n_jobs
-        self.logger = _configure_logging(log_to_file=log_to_file)
+        self.logger = _configure_logging(log_to_file, verbose)
         self.is_set_up = True
         self.dim_reducer = dim_reducer
         self.reduce_dim = reduce_dim
@@ -212,8 +214,16 @@ class AutoEmulate:
             }
         )
 
+        if self.param_search:
+            pb_text = "Optimising and cross-validating"
+        else:
+            pb_text = "Cross-validating"
+
+        pbar = tqdm(total=len(self.models), desc="Initializing")
+
         for i in range(len(self.models)):
             model_name = get_model_name(self.models[i])
+            pbar.set_description(f"{pb_text} {model_name}")
             try:
                 # hyperparameter search
                 if self.param_search:
@@ -239,10 +249,11 @@ class AutoEmulate:
                     n_jobs=self.n_jobs,
                     logger=self.logger,
                 )
-            except Exception as e:
-                print(f"Error fitting model {model_name}")
-                print(e)  # should be replaced with logging
+            except Exception:
+                self.logger.exception(f"Error cross-validating model {model_name}")
                 continue
+            finally:
+                pbar.update(1)
 
             self.models[i] = fitted_model
             self.cv_results[model_name] = cv_results
@@ -253,12 +264,15 @@ class AutoEmulate:
                 model_name,
                 self.cv_results[model_name],
             )
+
+        # Close the progress bar when the loop is finished
+        pbar.close()
         # get best model
         best_model_name, self.best_model = self.get_model(
             rank=1, metric="r2", name=True
         )
         mean_scores = get_mean_scores(self.scores_df, "r2")
-        self.logger.info(
+        print(
             f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
         )
 

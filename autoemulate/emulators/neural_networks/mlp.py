@@ -22,7 +22,7 @@ class MLPModule(TorchModule):
         hidden_size: int = 100,
         hidden_activation: Tuple[callable] = nn.ReLU,
     ):
-        super(MLPModule, self).__init__(
+        super().__init__(
             module_name="mlp",
             input_size=input_size,
             output_size=output_size,
@@ -50,7 +50,7 @@ class MLPModule(TorchModule):
                 nn.Sigmoid,
                 nn.GELU,
             ],
-            "optimizer": [torch.optim.AdamW, torch.optim.SGD],
+            "optimizer": [torch.optim.AdamW, torch.optim.RMSprop],  #  torch.optim.SGD,
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
