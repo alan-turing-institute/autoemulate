@@ -36,4 +36,12 @@ def _configure_logging(log_to_file=False, verbose=0):
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
+    # Set up the warnings logger to suppress warnings from models we use
+    logging.captureWarnings(True)
+    warnings_logger = logging.getLogger("py.warnings")
+    warnings_logger.setLevel(logging.ERROR)  # Only log errors and above, not warnings
+    warnings_logger.addHandler(
+        ch
+    )  # Still use the console handler for error level warnings
+
     return logger

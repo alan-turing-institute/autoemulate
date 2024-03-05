@@ -272,9 +272,9 @@ class AutoEmulate:
             rank=1, metric="r2", name=True
         )
         mean_scores = get_mean_scores(self.scores_df, "r2")
-        print(
-            f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
-        )
+        # print(
+        #     f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
+        # )
 
         return self.best_model
 
