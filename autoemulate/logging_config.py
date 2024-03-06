@@ -47,10 +47,9 @@ def _configure_logging(log_to_file=False, verbose=0):
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    # Capture (model) warnings by redirecting them to the logging system
+    # Capture (model) warnings and redirect them to the logging system
     logging.captureWarnings(True)
 
-    # Redirect warnings to the logging system
     warnings_logger = logging.getLogger("py.warnings")
     for handler in logger.handlers:
         warnings_logger.addHandler(handler)
