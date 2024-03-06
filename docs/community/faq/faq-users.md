@@ -12,7 +12,7 @@
 
 3. What are the prerequisites for using `AutoEmulate`?
    <!-- Information on the knowledge or data required to effectively use AutoEmulate, such as familiarity with Python, machine learning concepts, or specific data formats. -->
-   - `AutoEmulate` is designed to be easy to use. The user has to first generat a dataset of simulation inputs `X` and outputs `y`, and optimally have a basic understanding of Python and machine learning concepts.
+   - `AutoEmulate` is designed to be easy to use. The user has to first generate a dataset of simulation inputs `X` and outputs `y`, and optimally have a basic understanding of Python and machine learning concepts.
 
 ## Usage Questions
 
@@ -29,7 +29,7 @@
 
 3. How do I interpret the results from `AutoEmulate`?
    <!-- Guidance on understanding the output of the software, including any metrics or visualizations it produces. -->
-   - See the [tutorial](../../tutorials/01_start.ipynb) for an example of how to interpret the results from `AutoEmulate`. Briefly, `X` and `y` are first split into training and test sets. Cross-validation and/or hyperparameter optimisation are performed on the training data. After comparing the results from different emulators, the user can evaluate the chosen emulator on the test set with `autoemulate.evaluate_model()`, and plot test set predictions with `autoemulate.plot_model()`. 
+   - See the [tutorial](../../tutorials/01_start.ipynb) for an example of how to interpret the results from `AutoEmulate`. Briefly, `X` and `y` are first split into training and test sets. Cross-validation and/or hyperparameter optimisation are performed on the training data. After comparing the results from different emulators, the user can evaluate the chosen emulator on the test set with `AutoEmulate.evaluate_model()`, and plot test set predictions with `AutoEmulate.plot_model()`, see [autoemulate.compare](../../reference/compare.rst) module for details.
 
    - An important thing to note is that the emulator can only be as good as the data it was trained on. Therefore, the experimental design (on which points the simulation was evaluated) is key to obtaining a good emulator.
 
@@ -41,7 +41,7 @@
 
 1. Does AutoEmulate support parallel processing or high-performance computing (HPC) environments?
    <!-- Details on the software's capabilities to leverage multi-threading, distributed computing, or HPC resources to speed up computations. -->
-   - Yes, `setup()` has an `n_jobs` parameter which allows to parallelise cross-validation and hyperparameter optimisation.
+   - Yes, [AutoEmulate.setup()](../../reference/compare.rst) has an `n_jobs` parameter which allows to parallelise cross-validation and hyperparameter optimisation.
 
 2. Can AutoEmulate be integrated with other data analysis or simulation tools?
    <!-- Information on APIs, file formats, or protocols that facilitate the integration of AutoEmulate with other software ecosystems. -->
@@ -61,21 +61,21 @@
 
 1. What common issues might I encounter when using `AutoEmulate`, and how can I solve them?
    <!-- A list of frequently encountered problems with suggested solutions, possibly linked to a more extensive troubleshooting guide. -->
-   - TODO
+   - `AutoEmulate.setup()` has a `log_to_file` option to log all warnings/errors to a file. It also has a `verbose` option to print more information to the console. If you encounter an error, please open an issue (see below).
 
 2. How can I report a bug or request a feature in `AutoEmulate`?
    <!-- Instructions on the proper channels for reporting issues or suggesting enhancements, including any templates or information to include. -->
-   - Please open an issue using the [bug issue template](https://github.com/alan-turing-institute/autoemulate/issues/new/choose).
+   - You can report a bug or request a new feature through the [issue templates](https://github.com/alan-turing-institute/autoemulate/issues/new/choose) in our GitHub repository. Head on over there and choose one of the templates for your purpose and get started.
 
 ## Community and Learning Resources
 
 1. Are there any community projects or collaborations using `AutoEmulate` I can join or learn from?
    <!-- Information on community-led projects, study groups, or collaborative research initiatives involving AutoEmulate. -->
-   - TODO
+   - Reach out to Martin ([email](mailto:mstoffel@turing.ac.uk)) or Kalle ([email](mailto:kwesterline@turing.ac.uk)) for more information.
 
 2. Where can I find tutorials or case studies on using `AutoEmulate`?
    <!-- Directions to comprehensive learning materials, such as video tutorials (if we want to record that), written guides, or published research papers using AutoEmulate. -->
-   - See the [tutorials](../../tutorials/01_start.ipynb) for a comprehensive guide on using the package.
+   - See the [tutorial](../../tutorials/01_start.ipynb) for a comprehensive guide on using the package.
 
 3. How can I stay updated on new releases or updates to AutoEmulate?
    <!-- Guidance on subscribing to newsletters when/if we will have that, community calls if we start that, following the project on social media if we want to create those platforms, or joining community forums/Slack once we have that ready... -->
@@ -83,4 +83,4 @@
 
 4. What support options are available if I need help with AutoEmulate?
    <!-- Overview of support resources, including documentation, community forums/Slack when we have that ready... -->
-   - Please open an issue or contact the maintainer at [email](mailto:mstoffel@turing.ac.uk) directly.
+   - Please open an issue or contact the maintainer ([email](mailto:mstoffel@turing.ac.uk)) directly.
