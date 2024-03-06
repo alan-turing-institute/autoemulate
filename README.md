@@ -32,7 +32,7 @@
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                       |       33 |        0 |    100% |           |
 | autoemulate/plotting.py                                |       91 |       57 |     37% |96-97, 137-160, 196-218, 255-270, 294-340 |
-| autoemulate/printing.py                                |       43 |        6 |     86% |9, 14, 61, 115-117 |
+| autoemulate/printing.py                                |       48 |        9 |     81% |9, 14, 22-25, 72, 126-128 |
 | autoemulate/save.py                                    |       40 |        3 |     92% | 56-57, 80 |
 | autoemulate/utils.py                                   |      100 |        9 |     91% |32, 91, 97, 125, 130-135, 381-382 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
@@ -50,7 +50,7 @@
 | tests/test\_save.py                                    |       88 |        0 |    100% |           |
 | tests/test\_torch.py                                   |       95 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      164 |        6 |     96% |53, 59, 64, 69, 74, 79 |
-|                                              **TOTAL** | **2154** |  **212** | **90%** |           |
+|                                              **TOTAL** | **2159** |  **215** | **90%** |           |
 
 
 ## Setup coverage badge
