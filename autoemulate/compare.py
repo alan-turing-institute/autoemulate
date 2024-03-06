@@ -219,59 +219,56 @@ class AutoEmulate:
         else:
             pb_text = "Cross-validating"
 
-        pbar = tqdm(total=len(self.models), desc="Initializing")
+        with tqdm(total=len(self.models), desc="Initializing") as pbar:
+            for i in range(len(self.models)):
+                model_name = get_model_name(self.models[i])
+                pbar.set_description(f"{pb_text} {model_name}")
+                try:
+                    # hyperparameter search
+                    if self.param_search:
+                        self.models[i] = _optimize_params(
+                            X=self.X[self.train_idxs],
+                            y=self.y[self.train_idxs],
+                            cv=self.cv,
+                            model=self.models[i],
+                            search_type=self.search_type,
+                            niter=self.param_search_iters,
+                            param_space=None,
+                            n_jobs=self.n_jobs,
+                            logger=self.logger,
+                        )
 
-        for i in range(len(self.models)):
-            model_name = get_model_name(self.models[i])
-            pbar.set_description(f"{pb_text} {model_name}")
-            try:
-                # hyperparameter search
-                if self.param_search:
-                    self.models[i] = _optimize_params(
+                    # run cross validation
+                    fitted_model, cv_results = _run_cv(
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
                         cv=self.cv,
                         model=self.models[i],
-                        search_type=self.search_type,
-                        niter=self.param_search_iters,
-                        param_space=None,
+                        metrics=self.metrics,
                         n_jobs=self.n_jobs,
                         logger=self.logger,
                     )
+                except Exception:
+                    self.logger.exception(f"Error cross-validating model {model_name}")
+                    continue
+                finally:
+                    pbar.update(1)
 
-                # run cross validation
-                fitted_model, cv_results = _run_cv(
-                    X=self.X[self.train_idxs],
-                    y=self.y[self.train_idxs],
-                    cv=self.cv,
-                    model=self.models[i],
-                    metrics=self.metrics,
-                    n_jobs=self.n_jobs,
-                    logger=self.logger,
+                self.models[i] = fitted_model
+                self.cv_results[model_name] = cv_results
+
+                # update scores dataframe
+                self.scores_df = _update_scores_df(
+                    self.scores_df,
+                    model_name,
+                    self.cv_results[model_name],
                 )
-            except Exception:
-                self.logger.exception(f"Error cross-validating model {model_name}")
-                continue
-            finally:
-                pbar.update(1)
 
-            self.models[i] = fitted_model
-            self.cv_results[model_name] = cv_results
-
-            # update scores dataframe
-            self.scores_df = _update_scores_df(
-                self.scores_df,
-                model_name,
-                self.cv_results[model_name],
-            )
-
-        # Close the progress bar when the loop is finished
-        pbar.close()
         # get best model
         best_model_name, self.best_model = self.get_model(
             rank=1, metric="r2", name=True
         )
-        mean_scores = get_mean_scores(self.scores_df, "r2")
+        # mean_scores = get_mean_scores(self.scores_df, "r2")
         # print(
         #     f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
         # )
