@@ -4,7 +4,16 @@ import warnings
 
 
 def _configure_logging(log_to_file=False, verbose=0):
-    # Create a logger
+    """Configures the logging system.
+
+    Parameters
+    ----------
+    log_to_file : bool, optional
+        If True, logs will be written to a file. Defaults to False.
+    verbose : int, optional
+        The verbosity level. Can be 0, 1, or 2. Defaults to 0.
+    """
+
     logger = logging.getLogger("autoemulate")
     logger.handlers = []  # Clear existing handlers
 
@@ -17,6 +26,8 @@ def _configure_logging(log_to_file=False, verbose=0):
             console_log_level = logging.WARNING
         case 2:
             console_log_level = logging.INFO
+        case _:
+            raise ValueError("verbose must be 0, 1, or 2")
 
     # Create console handler with a higher log level
     ch = logging.StreamHandler(sys.stdout)
@@ -36,12 +47,13 @@ def _configure_logging(log_to_file=False, verbose=0):
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    # Set up the warnings logger to suppress warnings from models we use
+    # Capture (model) warnings by redirecting them to the logging system
     logging.captureWarnings(True)
+
+    # Redirect warnings to the logging system
     warnings_logger = logging.getLogger("py.warnings")
-    warnings_logger.setLevel(logging.ERROR)  # Only log errors and above, not warnings
-    warnings_logger.addHandler(
-        ch
-    )  # Still use the console handler for error level warnings
+    for handler in logger.handlers:
+        warnings_logger.addHandler(handler)
+    warnings_logger.setLevel(logger.getEffectiveLevel())
 
     return logger

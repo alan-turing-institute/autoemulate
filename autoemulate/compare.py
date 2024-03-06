@@ -102,6 +102,8 @@ class AutoEmulate:
             List of models to use. If None, uses all models in MODEL_REGISTRY.
             Currently, any of: SecondOrderPolynomial, RBF, RandomForest, GradientBoosting,
             GaussianProcess, SupportVectorMachines, XGBoost
+        verbose : int
+            Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
             Whether to log to file.
         """
@@ -268,10 +270,6 @@ class AutoEmulate:
         best_model_name, self.best_model = self.get_model(
             rank=1, metric="r2", name=True
         )
-        # mean_scores = get_mean_scores(self.scores_df, "r2")
-        # print(
-        #     f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
-        # )
 
         return self.best_model
 
