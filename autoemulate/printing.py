@@ -97,8 +97,12 @@ def _print_setup(cls):
                 if cls.dim_reducer is not None
                 else "None"
             ),
-            str(cls.cv.__class__.__name__ if cls.cv is not None else "None"),
-            str(cls.cv.get_n_splits()),
+            str(
+                cls.cross_validator.__class__.__name__
+                if cls.cross_validator is not None
+                else "None"
+            ),
+            str(cls.cross_validator.get_n_splits()),
             str(cls.n_jobs if cls.n_jobs is not None else "1"),
         ],
         index=[
@@ -113,7 +117,7 @@ def _print_setup(cls):
             "Dimensionality reduction before fitting (reduce_dim)",
             "Dimensionality reduction method (dim_reducer)",
             "Cross-validation strategy (cross_validator)",
-            "# folds (folds)",
+            "# cv-folds",
             "# parallel jobs (n_jobs)",
         ],
         columns=["Values"],
