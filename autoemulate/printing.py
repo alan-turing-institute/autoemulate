@@ -102,7 +102,6 @@ def _print_setup(cls):
                 if cls.cross_validator is not None
                 else "None"
             ),
-            str(cls.cross_validator.get_n_splits()),
             str(cls.n_jobs if cls.n_jobs is not None else "1"),
         ],
         index=[
@@ -117,7 +116,6 @@ def _print_setup(cls):
             "Dimensionality reduction before fitting (reduce_dim)",
             "Dimensionality reduction method (dim_reducer)",
             "Cross-validation strategy (cross_validator)",
-            "# cv-folds",
             "# parallel jobs (n_jobs)",
         ],
         columns=["Values"],
