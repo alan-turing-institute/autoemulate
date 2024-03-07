@@ -96,8 +96,6 @@ class AutoEmulate:
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
         model_subset : list
             List of models to use. If None, uses all models in MODEL_REGISTRY.
-            Currently, any of: SecondOrderPolynomial, RBF, RandomForest, GradientBoosting,
-            GaussianProcess, SupportVectorMachines, XGBoost
         log_to_file : bool
             Whether to log to file.
         """
