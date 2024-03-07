@@ -25,10 +25,10 @@ class XGBoost(BaseEstimator, RegressorMixin):
         booster="gbtree",
         verbosity=0,
         # tree booster parameters
-        n_estimators=100,
-        max_depth=6,
+        n_estimators=500,
+        max_depth=8,
         max_leaves=0,  # no limit
-        learning_rate=0.3,
+        learning_rate=0.05,
         gamma=0,
         min_child_weight=1,
         max_delta_step=0,
@@ -41,7 +41,7 @@ class XGBoost(BaseEstimator, RegressorMixin):
         objective="reg:squarederror",
         tree_method="auto",
         random_state=None,
-        n_jobs=None,
+        n_jobs=1,
     ):
         """Initializes a XGBoost object."""
         self.booster = booster

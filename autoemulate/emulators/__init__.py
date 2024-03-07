@@ -1,6 +1,7 @@
 from .gaussian_process import GaussianProcess
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gradient_boosting import GradientBoosting
+from .lgbm import LightGBM
 from .neural_net_sk import NeuralNetSk
 from .neural_net_torch import NeuralNetTorch
 from .polynomials import SecondOrderPolynomial
@@ -20,4 +21,5 @@ MODEL_REGISTRY = {
     NeuralNetTorch(module="mlp").model_name: NeuralNetTorch(module="mlp"),
     NeuralNetTorch(module="rbf").model_name: NeuralNetTorch(module="rbf"),
     NeuralNetSk().model_name: NeuralNetSk(),
+    LightGBM().model_name: LightGBM(),
 }
