@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      139 |       22 |     84% |220-223, 300, 314, 330-338, 349-352, 356-360, 417, 474 |
+| autoemulate/compare.py                                 |      139 |       22 |     84% |218-221, 298, 312, 328-336, 347-350, 354-358, 415, 472 |
 | autoemulate/cross\_validate.py                         |       25 |        3 |     88% |     56-58 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
@@ -13,6 +13,7 @@
 | autoemulate/emulators/gaussian\_process.py             |       49 |        7 |     86% |    99-122 |
 | autoemulate/emulators/gaussian\_process\_mogp.py       |       39 |        9 |     77% |71-83, 87, 90 |
 | autoemulate/emulators/gradient\_boosting.py            |       49 |        0 |    100% |           |
+| autoemulate/emulators/light\_gbm.py                    |       59 |        7 |     88% |   110-137 |
 | autoemulate/emulators/neural\_net\_sk.py               |       48 |        7 |     85% |   101-135 |
 | autoemulate/emulators/neural\_net\_torch.py            |       99 |        1 |     99% |       126 |
 | autoemulate/emulators/neural\_networks/\_\_init\_\_.py |        2 |        0 |    100% |           |
@@ -24,7 +25,6 @@
 | autoemulate/emulators/random\_forest.py                |       46 |        2 |     96% |   123-124 |
 | autoemulate/emulators/rbf.py                           |       41 |        7 |     83% |    94-145 |
 | autoemulate/emulators/support\_vector\_machines.py     |       61 |       10 |     84% |83-85, 128-161 |
-| autoemulate/emulators/xgboost.py                       |       59 |        7 |     88% |   135-172 |
 | autoemulate/experimental\_design.py                    |       19 |        3 |     84% |24, 35, 46 |
 | autoemulate/hyperparam\_searching.py                   |       44 |        8 |     82% |69-81, 86-90 |
 | autoemulate/logging\_config.py                         |       22 |        4 |     82% |     25-28 |
