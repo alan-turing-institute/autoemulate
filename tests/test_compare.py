@@ -6,7 +6,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
-from autoemulate.cv import CV_REGISTRY
 from autoemulate.emulators import GaussianProcessMOGP
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.emulators import RandomForest

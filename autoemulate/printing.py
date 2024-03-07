@@ -97,14 +97,17 @@ def _print_setup(cls):
                 if cls.dim_reducer is not None
                 else "None"
             ),
-            str(cls.cv.__class__.__name__ if cls.cv is not None else "None"),
-            str(cls.folds),
+            str(
+                cls.cross_validator.__class__.__name__
+                if cls.cross_validator is not None
+                else "None"
+            ),
             str(cls.n_jobs if cls.n_jobs is not None else "1"),
         ],
         index=[
             "Simulation input shape (X)",
             "Simulation output shape (y)",
-            "# test set samples (test_set_size)",
+            "# hold-out set samples (test_set_size)",
             "Do hyperparameter search (param_search)",
             "Type of hyperparameter search (search_type)",
             "# sampled parameter settings (param_search_iters)",
@@ -112,8 +115,7 @@ def _print_setup(cls):
             "Scaler (scaler)",
             "Dimensionality reduction before fitting (reduce_dim)",
             "Dimensionality reduction method (dim_reducer)",
-            "Cross-validation strategy (fold_strategy)",
-            "# folds (folds)",
+            "Cross-validation strategy (cross_validator)",
             "# parallel jobs (n_jobs)",
         ],
         columns=["Values"],
