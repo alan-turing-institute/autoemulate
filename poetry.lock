@@ -1894,7 +1894,6 @@ files = [
 [[package]]
 name = "nvidia-nvjitlink-cu12"
 version = "12.4.99"
-version = "12.4.99"
 description = "Nvidia JIT LTO Library"
 optional = false
 python-versions = ">=3"
@@ -3718,4 +3717,4 @@ docs = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "d077f82ca97acba5d79b606df75914b00852406330da205e71d6c55be1679338"
+content-hash = "f4ca4812d6d1ba128e12e113cc8657e3d2f8a06d33ab9bd57b8ca2ee016c28e3"
