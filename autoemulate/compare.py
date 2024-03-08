@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import KFold
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -15,7 +16,6 @@ from tqdm.autonotebook import tqdm
 
 from autoemulate.cross_validate import _run_cv
 from autoemulate.cross_validate import _update_scores_df
-from autoemulate.cv import CV_REGISTRY
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.hyperparam_searching import _optimize_params
@@ -56,8 +56,7 @@ class AutoEmulate:
         scaler=StandardScaler(),
         reduce_dim=False,
         dim_reducer=PCA(),
-        fold_strategy="kfold",
-        folds=5,
+        cross_validator=KFold(n_splits=5, shuffle=True),
         n_jobs=None,
         model_subset=None,
         verbose=0,
@@ -92,16 +91,13 @@ class AutoEmulate:
             explain 95% of the variance. Other methods can have slightly different n_components
             parameter inputs, see the sklearn documentation for more details. Dimension reduction
             is always performed after scaling.
-        fold_strategy : str
-            Cross-validation strategy, currently either "kfold" or "stratified_kfold".
-        folds : int
-            Number of folds.
+        cross_validator : sklearn.model_selection object
+            Cross-validation strategy to use. Defaults to KFold with 5 splits and shuffle=True.
+            Can be any object in `sklearn.model_selection` that generates train/test indices.
         n_jobs : int
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
         model_subset : list
             List of models to use. If None, uses all models in MODEL_REGISTRY.
-            Currently, any of: SecondOrderPolynomial, RBF, RandomForest, GradientBoosting,
-            GaussianProcess, SupportVectorMachines, XGBoost
         verbose : int
             Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
@@ -121,7 +117,7 @@ class AutoEmulate:
             dim_reducer,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
-        self.cv = self._get_cv(CV_REGISTRY, fold_strategy, folds)
+        self.cross_validator = cross_validator
         self.param_search = param_search
         self.search_type = param_search_type
         self.param_search_iters = param_search_iters
@@ -132,7 +128,6 @@ class AutoEmulate:
         self.is_set_up = True
         self.dim_reducer = dim_reducer
         self.reduce_dim = reduce_dim
-        self.folds = folds
         self.cv_results = {}
 
         self.print_setup()
@@ -174,25 +169,6 @@ class AutoEmulate:
         """
         return [metric for metric in METRIC_REGISTRY.values()]
 
-    def _get_cv(self, CV_REGISTRY, fold_strategy, folds):
-        """Get cross-validation strategy from REGISTRY
-
-        Parameters
-        ----------
-        CV_REGISTRY : dict
-            Registry of cross-validation strategies.
-        fold_strategy : str
-            Name of the cross-validation strategy. Currently only "kfold" is supported.
-        folds : int
-            Number of folds.
-
-        Returns
-        -------
-        cv : sklearn.model_selection.KFold
-            An instance of the KFold class.
-        """
-        return CV_REGISTRY[fold_strategy](folds=folds, shuffle=True)
-
     def compare(self):
         """Compares the emulator models on the data. self.setup() must be run first.
 
@@ -231,7 +207,7 @@ class AutoEmulate:
                         self.models[i] = _optimize_params(
                             X=self.X[self.train_idxs],
                             y=self.y[self.train_idxs],
-                            cv=self.cv,
+                            cv=self.cross_validator,
                             model=self.models[i],
                             search_type=self.search_type,
                             niter=self.param_search_iters,
@@ -244,7 +220,7 @@ class AutoEmulate:
                     fitted_model, cv_results = _run_cv(
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
-                        cv=self.cv,
+                        cv=self.crposs_validator,
                         model=self.models[i],
                         metrics=self.metrics,
                         n_jobs=self.n_jobs,
