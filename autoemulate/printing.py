@@ -14,37 +14,48 @@ if _in_ipython_session:
     from IPython.display import display, HTML
 
 
+def _display_results(title, content):
+    """Helper function to display results based on environment."""
+    content = content.round(4)
+
+    if _in_ipython_session:
+        from IPython.display import display, HTML
+
+        display(HTML(f"<p>{title}</p>"))
+        display(HTML(content.to_html()))
+    else:
+        print(title)
+        print(content)
+
+
 def _print_cv_results(models, scores_df, model_name=None, sort_by="r2"):
-    """Print cv results.
+    """Improved print cv results function.
 
     Parameters
-    ----------
-    models : list
-        A list of models.
-    scores_df : pandas.DataFrame
-        A dataframe with scores for each model, metric, and fold.
-    model_name : str, optional
-        The name of the model to print. If None, the best fold from each model will be printed.
-        If a model name is provided, the scores for that model across all folds will be printed.
-    sort_by : str, optional
-        The metric to sort by. Default is "r2".
-
+        models : list
+            List of models.
+        scores_df : pandas.DataFrame
+            DataFrame with scores for each model, metric, and fold.
+        model_name : str, optional
+            Specific model name to print scores for. If None, prints best fold for each model.
+        sort_by : str, optional
+            Metric to sort by. Defaults to "r2".
     """
-    # check if model is in self.models
     if model_name is not None:
+        # Validate model_name against available models
         model_names = [get_model_name(mod) for mod in models]
         if model_name not in model_names:
             raise ValueError(
-                f"Model {model_name} not found. Available models are: {model_names}"
+                f"Model {model_name} not found. Available models: {', '.join(model_names)}"
             )
-    if model_name is None:
-        means = get_mean_scores(scores_df, metric=sort_by)
-        print("Average scores across all models:")
-        print(means)
-    else:
+
+        # Display scores for a specific model across CV folds
         scores = get_model_scores(scores_df, model_name)
-        print(f"Scores for {model_name} across all folds:")
-        print(scores)
+        _display_results(f"Scores for {model_name} across cv-folds:", scores)
+    else:
+        # Display average cross-validation scores for all models
+        means = get_mean_scores(scores_df, metric=sort_by)
+        _display_results("Average cross-validation scores:", means)
 
 
 def _print_setup(cls):
@@ -86,14 +97,17 @@ def _print_setup(cls):
                 if cls.dim_reducer is not None
                 else "None"
             ),
-            str(cls.cv.__class__.__name__ if cls.cv is not None else "None"),
-            str(cls.folds),
+            str(
+                cls.cross_validator.__class__.__name__
+                if cls.cross_validator is not None
+                else "None"
+            ),
             str(cls.n_jobs if cls.n_jobs is not None else "1"),
         ],
         index=[
             "Simulation input shape (X)",
             "Simulation output shape (y)",
-            "# test set samples (test_set_size)",
+            "# hold-out set samples (test_set_size)",
             "Do hyperparameter search (param_search)",
             "Type of hyperparameter search (search_type)",
             "# sampled parameter settings (param_search_iters)",
@@ -101,8 +115,7 @@ def _print_setup(cls):
             "Scaler (scaler)",
             "Dimensionality reduction before fitting (reduce_dim)",
             "Dimensionality reduction method (dim_reducer)",
-            "Cross-validation strategy (fold_strategy)",
-            "# folds (folds)",
+            "Cross-validation strategy (cross_validator)",
             "# parallel jobs (n_jobs)",
         ],
         columns=["Values"],

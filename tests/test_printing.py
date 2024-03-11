@@ -30,14 +30,14 @@ scores_df = pd.DataFrame(data)
 def test_print_results_all_models(capsys):
     _print_cv_results(models, scores_df)
     captured = capsys.readouterr()
-    assert "Average scores across all models:" in captured.out
+    assert "Average cross-validation scores:" in captured.out
     assert "model" in captured.out
 
 
 def test_print_results_single_model(capsys):
     _print_cv_results(models, scores_df, model_name="GaussianProcess")
     captured = capsys.readouterr()
-    assert "Scores for GaussianProcess across all folds:" in captured.out
+    assert "Scores for GaussianProcess across cv-folds:" in captured.out
     assert "fold" in captured.out
     assert "metric" in captured.out
 

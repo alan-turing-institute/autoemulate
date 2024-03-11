@@ -22,7 +22,7 @@ class MLPModule(TorchModule):
         hidden_size: int = 100,
         hidden_activation: Tuple[callable] = nn.ReLU,
     ):
-        super(MLPModule, self).__init__(
+        super().__init__(
             module_name="mlp",
             input_size=input_size,
             output_size=output_size,
