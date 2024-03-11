@@ -12,6 +12,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
+from tqdm.autonotebook import tqdm
 
 from autoemulate.cross_validate import _run_cv
 from autoemulate.cross_validate import _update_scores_df
@@ -58,6 +59,7 @@ class AutoEmulate:
         cross_validator=KFold(n_splits=5, shuffle=True),
         n_jobs=None,
         model_subset=None,
+        verbose=0,
         log_to_file=False,
     ):
         """Sets up the automatic emulation.
@@ -96,6 +98,8 @@ class AutoEmulate:
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
         model_subset : list
             List of models to use. If None, uses all models in MODEL_REGISTRY.
+        verbose : int
+            Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
             Whether to log to file.
         """
@@ -120,7 +124,7 @@ class AutoEmulate:
         self.scale = scale
         self.scaler = scaler
         self.n_jobs = n_jobs
-        self.logger = _configure_logging(log_to_file=log_to_file)
+        self.logger = _configure_logging(log_to_file, verbose)
         self.is_set_up = True
         self.dim_reducer = dim_reducer
         self.reduce_dim = reduce_dim
@@ -188,54 +192,59 @@ class AutoEmulate:
             }
         )
 
-        for i in range(len(self.models)):
-            model_name = get_model_name(self.models[i])
-            try:
-                # hyperparameter search
-                if self.param_search:
-                    self.models[i] = _optimize_params(
+        if self.param_search:
+            pb_text = "Optimising and cross-validating"
+        else:
+            pb_text = "Cross-validating"
+
+        with tqdm(total=len(self.models), desc="Initializing") as pbar:
+            for i, model in enumerate(self.models):
+                model_name = get_model_name(model)
+                pbar.set_description(f"{pb_text} {model_name}")
+                try:
+                    # hyperparameter search
+                    if self.param_search:
+                        self.models[i] = _optimize_params(
+                            X=self.X[self.train_idxs],
+                            y=self.y[self.train_idxs],
+                            cv=self.cross_validator,
+                            model=model,
+                            search_type=self.search_type,
+                            niter=self.param_search_iters,
+                            param_space=None,
+                            n_jobs=self.n_jobs,
+                            logger=self.logger,
+                        )
+
+                    # run cross validation
+                    fitted_model, cv_results = _run_cv(
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
                         cv=self.cross_validator,
-                        model=self.models[i],
-                        search_type=self.search_type,
-                        niter=self.param_search_iters,
-                        param_space=None,
+                        model=model,
+                        metrics=self.metrics,
                         n_jobs=self.n_jobs,
                         logger=self.logger,
                     )
+                except Exception:
+                    self.logger.exception(f"Error cross-validating model {model_name}")
+                    continue
+                finally:
+                    pbar.update(1)
 
-                # run cross validation
-                fitted_model, cv_results = _run_cv(
-                    X=self.X[self.train_idxs],
-                    y=self.y[self.train_idxs],
-                    cv=self.cross_validator,
-                    model=self.models[i],
-                    metrics=self.metrics,
-                    n_jobs=self.n_jobs,
-                    logger=self.logger,
+                self.models[i] = fitted_model
+                self.cv_results[model_name] = cv_results
+
+                # update scores dataframe
+                self.scores_df = _update_scores_df(
+                    self.scores_df,
+                    model_name,
+                    self.cv_results[model_name],
                 )
-            except Exception as e:
-                print(f"Error fitting model {model_name}")
-                print(e)  # should be replaced with logging
-                continue
 
-            self.models[i] = fitted_model
-            self.cv_results[model_name] = cv_results
-
-            # update scores dataframe
-            self.scores_df = _update_scores_df(
-                self.scores_df,
-                model_name,
-                self.cv_results[model_name],
-            )
         # get best model
         best_model_name, self.best_model = self.get_model(
             rank=1, metric="r2", name=True
-        )
-        mean_scores = get_mean_scores(self.scores_df, "r2")
-        self.logger.info(
-            f"{best_model_name} is the best model with R^2 = {mean_scores.loc[mean_scores['model']==best_model_name, 'r2'].item():.3f}"
         )
 
         return self.best_model

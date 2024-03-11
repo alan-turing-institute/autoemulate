@@ -64,6 +64,7 @@ def _optimize_params(
             cv=cv,
             n_jobs=n_jobs,
             refit=True,
+            verbose=0,
         )
     # Bayes search
     elif search_type == "bayes":
@@ -74,6 +75,7 @@ def _optimize_params(
             cv=cv,
             n_jobs=n_jobs,
             refit=True,
+            verbose=0,
         )
     elif search_type == "grid":
         raise NotImplementedError("Grid search not available yet.")
@@ -83,11 +85,10 @@ def _optimize_params(
     # run hyperparameter search
     try:
         searcher.fit(X, y)
-    except Exception as e:
-        logger.info(
+    except Exception:
+        logger.exception(
             f"Failed to perform hyperparameter search on {get_model_name(model)}"
         )
-        logger.info(e)
     logger.info(f"Best parameters for {get_model_name(model)}: {searcher.best_params_}")
 
     return searcher.best_estimator_
