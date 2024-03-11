@@ -198,8 +198,8 @@ class AutoEmulate:
             pb_text = "Cross-validating"
 
         with tqdm(total=len(self.models), desc="Initializing") as pbar:
-            for i in range(len(self.models)):
-                model_name = get_model_name(self.models[i])
+            for i, model in enumerate(self.models):
+                model_name = get_model_name(model)
                 pbar.set_description(f"{pb_text} {model_name}")
                 try:
                     # hyperparameter search
@@ -208,7 +208,7 @@ class AutoEmulate:
                             X=self.X[self.train_idxs],
                             y=self.y[self.train_idxs],
                             cv=self.cross_validator,
-                            model=self.models[i],
+                            model=model,
                             search_type=self.search_type,
                             niter=self.param_search_iters,
                             param_space=None,
@@ -221,7 +221,7 @@ class AutoEmulate:
                         X=self.X[self.train_idxs],
                         y=self.y[self.train_idxs],
                         cv=self.cross_validator,
-                        model=self.models[i],
+                        model=model,
                         metrics=self.metrics,
                         n_jobs=self.n_jobs,
                         logger=self.logger,
