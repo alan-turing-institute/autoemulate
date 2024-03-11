@@ -5,8 +5,8 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      139 |       22 |     84% |218-221, 298, 312, 328-336, 347-350, 354-358, 415, 472 |
-| autoemulate/cross\_validate.py                         |       25 |        3 |     88% |     56-58 |
+| autoemulate/compare.py                                 |      143 |       21 |     85% |229-231, 307, 321, 337-345, 356-359, 363-367, 424, 481 |
+| autoemulate/cross\_validate.py                         |       24 |        2 |     92% |     56-57 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py                  |       11 |        0 |    100% |           |
@@ -26,8 +26,8 @@
 | autoemulate/emulators/rbf.py                           |       41 |        7 |     83% |    94-145 |
 | autoemulate/emulators/support\_vector\_machines.py     |       61 |       10 |     84% |83-85, 128-161 |
 | autoemulate/experimental\_design.py                    |       19 |        3 |     84% |24, 35, 46 |
-| autoemulate/hyperparam\_searching.py                   |       44 |        8 |     82% |69-81, 86-90 |
-| autoemulate/logging\_config.py                         |       22 |        4 |     82% |     25-28 |
+| autoemulate/hyperparam\_searching.py                   |       43 |        7 |     84% |70-83, 88-89 |
+| autoemulate/logging\_config.py                         |       44 |        4 |     91% |29, 57, 64-65 |
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                       |       33 |        0 |    100% |           |
 | autoemulate/plotting.py                                |       91 |       57 |     37% |96-97, 137-160, 196-218, 255-270, 294-340 |
@@ -43,6 +43,7 @@
 | tests/test\_estimators.py                              |       16 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                    |       22 |        0 |    100% |           |
 | tests/test\_hyperparam\_searching.py                   |       48 |        0 |    100% |           |
+| tests/test\_logging\_config.py                         |       51 |        0 |    100% |           |
 | tests/test\_model\_processing.py                       |       67 |        0 |    100% |           |
 | tests/test\_plotting.py                                |       68 |        7 |     90% |18, 28, 50-51, 59-60, 68 |
 | tests/test\_printing.py                                |       30 |        0 |    100% |           |
@@ -50,7 +51,7 @@
 | tests/test\_torch.py                                   |       95 |        0 |    100% |           |
 | tests/test\_ui.py                                      |       39 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      164 |        6 |     96% |53, 59, 64, 69, 74, 79 |
-|                                              **TOTAL** | **2189** |  **214** | **90%** |           |
+|                                              **TOTAL** | **2264** |  **211** | **91%** |           |
 
 
 ## Setup coverage badge
