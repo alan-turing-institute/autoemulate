@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -23,13 +24,18 @@ class ModelSerialiser:
         """
         model_name = get_model_name(model)
         # check if path is directory
-        if path is not None and os.path.isdir(path):
-            path = os.path.join(path, model_name)
+        if path is not None and Path(path).is_dir():
+            path = Path(path) / model_name
         # save with model name if path is None
         if path is None:
-            path = model_name
+            path = Path(model_name)
+        else:
+            path = Path(path)
 
-        # model
+        # create directory if it doesn't exist
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        # save model
         joblib.dump(model, path)
 
         # metadata
@@ -51,19 +57,23 @@ class ModelSerialiser:
         path : str
             Path to save the models.
         """
-        if path is not None and not os.path.isdir(path):
+        if path is None:
+            save_dir = Path.cwd()
+        else:
+            save_dir = Path(path)
             # create directory if it doesn't exist
-            os.makedirs(path, exist_ok=True)
-            raise ValueError("Path must be a directory")
-        for model in models.values():
-            self._save_model(model, path)
+            save_dir.parent.mkdir(parents=True, exist_ok=True)
+        for model in models:
+            model_path = save_dir / get_model_name(model)
+            self._save_model(model, model_path)
 
     def _load_model(self, path):
         """Loads a model from disk and checks version."""
+        path = Path(path)
         model = joblib.load(path)
-        meta_path = self._get_meta_path(path)
+        meta_path = Path(self._get_meta_path(path))
 
-        if not os.path.exists(meta_path):
+        if not meta_path.exists():
             raise FileNotFoundError(f"Metadata file {meta_path} not found.")
 
         with open(meta_path, "r") as f:
@@ -89,6 +99,9 @@ class ModelSerialiser:
         If the path has an extension, it is replaced with _meta.json.
         Otherwise, _meta.json is appended to the path.
         """
-        base, ext = os.path.splitext(path)
-        meta_path = f"{base}_meta.json" if ext else f"{base}_meta{ext}.json"
+        path = Path(path)
+        if path.suffix:
+            meta_path = path.with_name(f"{path.stem}_meta.json")
+        else:
+            meta_path = path.with_name(path.name + "_meta.json")
         return meta_path
