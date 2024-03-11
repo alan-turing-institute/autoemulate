@@ -45,8 +45,8 @@ chapters:
     - file: reference/simulations/projectile
   - file: reference/emulators/index
     sections:
-    - file: reference/emulators/gaussian_process_sk
     - file: reference/emulators/gaussian_process
+    - file: reference/emulators/gaussian_process_mogp
     - file: reference/emulators/gradient_boosting
     - file: reference/emulators/neural_net_sk
     - file: reference/emulators/neural_net_torch
