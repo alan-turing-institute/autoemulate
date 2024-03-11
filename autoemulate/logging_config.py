@@ -1,6 +1,8 @@
 import logging
+import os
 import sys
 import warnings
+from pathlib import Path
 
 
 def _configure_logging(log_to_file=False, verbose=0):
@@ -8,8 +10,9 @@ def _configure_logging(log_to_file=False, verbose=0):
 
     Parameters
     ----------
-    log_to_file : bool, optional
-        If True, logs will be written to a file. Defaults to False.
+    log_to_file : bool or string, optional
+        If True, logs will be written to a file.
+        If a string, logs will be written to the specified file.
     verbose : int, optional
         The verbosity level. Can be 0, 1, or 2. Defaults to 0.
     """
@@ -40,12 +43,26 @@ def _configure_logging(log_to_file=False, verbose=0):
     # Add the handler to the logger
     logger.addHandler(ch)
 
-    # Optionally add a file handler
+    # Optionally log to a file
     if log_to_file:
-        fh = logging.FileHandler("autoemulate.log")
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+        if isinstance(log_to_file, bool):
+            log_file_path = Path.cwd() / "autoemulate.log"
+        else:
+            log_file_path = Path(log_to_file)
+        # Create the directory if it doesn't exist
+        log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        log_file_dir = os.path.dirname(log_file_path)
+        if log_file_dir and not os.path.exists(log_file_dir):
+            os.makedirs(log_file_dir)
+
+        try:
+            fh = logging.FileHandler(log_file_path)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
+        except Exception:
+            logger.exception(f"Failed to create log file at {log_file_path}")
 
     # Capture (model) warnings and redirect them to the logging system
     logging.captureWarnings(True)
