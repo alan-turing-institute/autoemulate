@@ -9,6 +9,7 @@ from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
 
+# TODO remove this when skopt update numpy https://github.com/scikit-optimize/scikit-optimize/issues/1171
 np.int = np.int64
 
 

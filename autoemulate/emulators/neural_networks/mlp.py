@@ -50,17 +50,17 @@ class MLPModule(TorchModule):
                 nn.Sigmoid,
                 nn.GELU,
             ],
+            "optimizer": [torch.optim.AdamW, torch.optim.SGD, torch.optim.LBFGS],
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
             case "random":
                 param_space |= {
-                    "optimizer": [torch.optim.AdamW, torch.optim.SGD],
                     "lr": loguniform(1e-06, 1e-2),
                 }
             case "bayes":
                 param_space |= {
-                    "optimizer": Categorical([torch.optim.AdamW, torch.optim.SGD]),
+                    "optimizer": Categorical(param_space["optimizer"]),
                     "lr": Real(1e-06, 1e-2, prior="log-uniform"),
                 }
             case _:

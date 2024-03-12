@@ -69,6 +69,14 @@ class NeuralNetTorch(NeuralNetRegressor):
             self.module__input_size is not None and self.module__output_size is not None
         )
 
+    def initialize_optimizer(self, triggered_directly=None):
+        if self.optimizer == torch.optim.LBFGS and hasattr(
+            self, "optimizer__weight_decay"
+        ):
+            # LBFGS does not support weight_decay
+            del self.optimizer__weight_decay
+        return super().initialize_optimizer(triggered_directly)
+
     def initialize_module(self, reason=None):
         kwargs = self.get_params_for("module")
         if hasattr(self, "random_state"):
