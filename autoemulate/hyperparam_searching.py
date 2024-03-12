@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 from skopt import BayesSearchCV
 
@@ -7,6 +8,8 @@ from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
+
+np.int = np.int64
 
 
 def _optimize_params(

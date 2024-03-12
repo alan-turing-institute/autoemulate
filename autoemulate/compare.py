@@ -201,6 +201,7 @@ class AutoEmulate:
             for i, model in enumerate(self.models):
                 model_name = get_model_name(model)
                 pbar.set_description(f"{pb_text} {model_name}")
+
                 try:
                     # hyperparameter search
                     if self.param_search:

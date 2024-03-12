@@ -1,11 +1,9 @@
 from typing import Callable
-from typing import Tuple
-from typing import Union
 
 import numpy as np
 import torch
 from scipy.stats import loguniform
-from skopt.space import Integer
+from skopt.space import Categorical
 from skopt.space import Real
 from torch import nn
 
@@ -326,14 +324,19 @@ class RBFModule(TorchModule):
                 rbf_inverse_quadratic,
                 rbf_inverse_multiquadric,
             ],
-            "optimizer": [torch.optim.AdamW, torch.optim.SGD],
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
             case "random":
-                param_space |= {"lr": loguniform(1e-06, 1e-2)}
+                param_space |= {
+                    "optimizer": [torch.optim.AdamW, torch.optim.SGD],
+                    "lr": loguniform(1e-06, 1e-2),
+                }
             case "bayes":
-                param_space |= {"lr": Real(1e-06, 1e-2, prior="log-uniform")}
+                param_space |= {
+                    "optimizer": Categorical([torch.optim.AdamW, torch.optim.SGD]),
+                    "lr": Real(1e-06, 1e-2, prior="log-uniform"),
+                }
             case _:
                 raise ValueError(f"Invalid search type: {search_type}")
 
