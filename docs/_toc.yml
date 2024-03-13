@@ -46,7 +46,6 @@ chapters:
   - file: reference/emulators/index
     sections:
     - file: reference/emulators/gaussian_process
-    - file: reference/emulators/gaussian_process_mogp
     - file: reference/emulators/gradient_boosting
     - file: reference/emulators/neural_net_sk
     - file: reference/emulators/neural_net_torch
@@ -54,4 +53,4 @@ chapters:
     - file: reference/emulators/random_forest
     - file: reference/emulators/rbf
     - file: reference/emulators/support_vector_machines
-    - file: reference/emulators/xgboost
+    - file: reference/emulators/light_gbm
