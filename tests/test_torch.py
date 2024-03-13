@@ -5,8 +5,6 @@ from autoemulate.compare import AutoEmulate
 from autoemulate.emulators import NeuralNetTorch
 from autoemulate.utils import set_random_seed
 
-set_random_seed(1234)
-
 
 def test_nn_torch_initialisation():
     nn_torch = NeuralNetTorch()
@@ -119,6 +117,7 @@ def test_nn_torch_module_ui():
 
 
 def test_nn_torch_module_ui_param_search_random():
+    set_random_seed(1234)
     input_size, output_size = 10, 2
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
@@ -136,6 +135,7 @@ def test_nn_torch_module_ui_param_search_random():
 
 
 def test_nn_torch_module_ui_param_search_bayes():
+    set_random_seed(1234)
     input_size, output_size = 10, 2
     X = np.random.rand(10, input_size)
     y = np.random.rand(10, output_size)
