@@ -151,3 +151,20 @@ def test_nn_torch_module_ui_param_search():
     em.setup(X, y, model_subset=["NNMlp"], param_search=True, param_search_iters=2)
     # check that compare does not raise an error
     best = em.compare()
+
+
+def test_nn_torch_module_ui_param_search_bayes():
+    input_size, output_size = 10, 2
+    X = np.random.rand(10, input_size)
+    y = np.random.rand(10, output_size)
+    em = AutoEmulate()
+    em.setup(
+        X,
+        y,
+        model_subset=["NNMlp"],
+        param_search=True,
+        param_search_type="bayes",
+        param_search_iters=20,
+    )
+    # check that compare does not raise an error
+    best = em.compare()
