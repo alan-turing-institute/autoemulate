@@ -56,12 +56,12 @@ class MLPModule(TorchModule):
         match search_type:
             case "random":
                 param_space |= {
-                    "lr": loguniform(1e-6, 1e-4),
+                    "lr": loguniform(1e-6, 1e-3),
                 }
             case "bayes":
                 param_space |= {
                     "optimizer": Categorical(param_space["optimizer"]),
-                    "lr": Real(1e-6, 1e-4, prior="log-uniform"),
+                    "lr": Real(1e-6, 1e-3, prior="log-uniform"),
                 }
             case _:
                 raise ValueError(f"Invalid search type: {search_type}")
