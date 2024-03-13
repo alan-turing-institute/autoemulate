@@ -30,7 +30,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         criterion=torch.nn.MSELoss,
         optimizer=torch.optim.AdamW,
         lr: float = 1e-3,
-        batch_size: int = 128,
+        batch_size: int = 32,
         max_epochs: int = 1,
         module__input_size: int = None,
         module__output_size: int = None,
