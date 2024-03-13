@@ -23,6 +23,8 @@ def _optimize_params(
     param_space=None,
     n_jobs=None,
     logger=None,
+    error_score=np.nan,
+    verbose=0,
 ):
     """Performs hyperparameter search for the provided model.
 
@@ -49,7 +51,11 @@ def _optimize_params(
     n_jobs : int
         Number of jobs to run in parallel.
     logger : logging.Logger
-        Logger instance.
+        Logger instance
+    error_score: 'raise' or numeric
+        Value to assign to the score if an error occurs in estimator fitting.
+    verbose: int
+        Verbosity level for the searcher
 
     Returns
     -------
@@ -68,7 +74,8 @@ def _optimize_params(
             cv=cv,
             n_jobs=n_jobs,
             refit=True,
-            verbose=0,
+            error_score=error_score,
+            verbose=verbose,
         )
     # Bayes search
     elif search_type == "bayes":
@@ -79,7 +86,8 @@ def _optimize_params(
             cv=cv,
             n_jobs=n_jobs,
             refit=True,
-            verbose=0,
+            error_score=error_score,
+            verbose=verbose,
         )
     elif search_type == "grid":
         raise NotImplementedError("Grid search not available yet.")
