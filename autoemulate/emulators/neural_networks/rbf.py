@@ -324,7 +324,7 @@ class RBFModule(TorchModule):
                 rbf_inverse_quadratic,
                 rbf_inverse_multiquadric,
             ],
-            "optimizer": [torch.optim.SGD, torch.optim.AdamW, torch.optim.LBFGS],
+            "optimizer": [torch.optim.AdamW, torch.optim.LBFGS],
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
