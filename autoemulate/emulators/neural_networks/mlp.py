@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 import torch
 from scipy.stats import loguniform
-from skopt.space import Integer
+from skopt.space import Categorical
 from skopt.space import Real
 from torch import nn
 
@@ -50,14 +50,19 @@ class MLPModule(TorchModule):
                 nn.Sigmoid,
                 nn.GELU,
             ],
-            "optimizer": [torch.optim.AdamW, torch.optim.SGD],
+            "optimizer": [torch.optim.AdamW, torch.optim.LBFGS],
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
             case "random":
-                param_space |= {"lr": loguniform(1e-06, 1e-2)}
+                param_space |= {
+                    "lr": loguniform(1e-6, 1e-4),
+                }
             case "bayes":
-                param_space |= {"lr": Real(1e-06, 1e-2, prior="log-uniform")}
+                param_space |= {
+                    "optimizer": Categorical(param_space["optimizer"]),
+                    "lr": Real(1e-6, 1e-4, prior="log-uniform"),
+                }
             case _:
                 raise ValueError(f"Invalid search type: {search_type}")
 

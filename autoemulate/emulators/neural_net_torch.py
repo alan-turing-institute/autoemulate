@@ -30,7 +30,7 @@ class NeuralNetTorch(NeuralNetRegressor):
         criterion=torch.nn.MSELoss,
         optimizer=torch.optim.AdamW,
         lr: float = 1e-3,
-        batch_size: int = 128,
+        batch_size: int = 32,
         max_epochs: int = 1,
         module__input_size: int = None,
         module__output_size: int = None,
@@ -68,6 +68,14 @@ class NeuralNetTorch(NeuralNetRegressor):
         return (
             self.module__input_size is not None and self.module__output_size is not None
         )
+
+    def initialize_optimizer(self, triggered_directly=None):
+        if self.optimizer == torch.optim.LBFGS and hasattr(
+            self, "optimizer__weight_decay"
+        ):
+            # LBFGS does not support weight_decay
+            del self.optimizer__weight_decay
+        return super().initialize_optimizer(triggered_directly)
 
     def initialize_module(self, reason=None):
         kwargs = self.get_params_for("module")

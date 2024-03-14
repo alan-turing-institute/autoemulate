@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 from skopt import BayesSearchCV
 
@@ -7,6 +8,9 @@ from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
+
+# TODO remove this when skopt update numpy https://github.com/scikit-optimize/scikit-optimize/issues/1171
+np.int = np.int64
 
 
 def _optimize_params(
@@ -19,6 +23,8 @@ def _optimize_params(
     param_space=None,
     n_jobs=None,
     logger=None,
+    error_score=np.nan,
+    verbose=0,
 ):
     """Performs hyperparameter search for the provided model.
 
@@ -45,7 +51,11 @@ def _optimize_params(
     n_jobs : int
         Number of jobs to run in parallel.
     logger : logging.Logger
-        Logger instance.
+        Logger instance
+    error_score: 'raise' or numeric
+        Value to assign to the score if an error occurs in estimator fitting.
+    verbose: int
+        Verbosity level for the searcher
 
     Returns
     -------
@@ -64,7 +74,8 @@ def _optimize_params(
             cv=cv,
             n_jobs=n_jobs,
             refit=True,
-            verbose=0,
+            error_score=error_score,
+            verbose=verbose,
         )
     # Bayes search
     elif search_type == "bayes":
@@ -75,7 +86,8 @@ def _optimize_params(
             cv=cv,
             n_jobs=n_jobs,
             refit=True,
-            verbose=0,
+            error_score=error_score,
+            verbose=verbose,
         )
     elif search_type == "grid":
         raise NotImplementedError("Grid search not available yet.")
