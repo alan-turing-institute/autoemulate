@@ -9,7 +9,7 @@
 
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or when they have to run thousands of times to do uncertainty quantification or sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
 
-The project is in very early development. 
+The project is in early development. 
 
 <img src="misc/robot2.png" alt="emulating simulations with ML" width="61.8%">
 
@@ -36,12 +36,12 @@ poetry shell
 import numpy as np
 from autoemulate.compare import AutoEmulate
 from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations.projectile import simulator
+from autoemulate.simulations.projectile import simulate_projectile
 
 # sample from a simulation
-lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
+lhd = LatinHypercube([(-5., 1.), (0., 1000.)]) # (lower, upper) bounds for parameters
 X = lhd.sample(100)
-y = np.array([simulator(x) for x in X])
+y = np.array([simulate_projectile(x) for x in X])
 
 # compare emulator models
 ae = AutoEmulate()
@@ -68,11 +68,7 @@ best_emulator.predict(X)
 
 ## documentation
 
-The documentation is currently created using JupyterBook. To build the documentation locally, run:
-
-```bash
-poetry run jupyter-book build docs
-```
+You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/), but the documentation is still work in progress.
 
 ## Contributors
 
