@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      143 |       21 |     85% |229-231, 307, 321, 337-345, 356-359, 363-367, 424, 481 |
+| autoemulate/compare.py                                 |      143 |       21 |     85% |230-232, 308, 322, 338-346, 357-360, 364-368, 425, 482 |
 | autoemulate/cross\_validate.py                         |       24 |        2 |     92% |     56-57 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
@@ -15,18 +15,18 @@
 | autoemulate/emulators/gradient\_boosting.py            |       49 |        0 |    100% |           |
 | autoemulate/emulators/light\_gbm.py                    |       59 |        7 |     88% |   110-137 |
 | autoemulate/emulators/neural\_net\_sk.py               |       48 |        7 |     85% |   101-135 |
-| autoemulate/emulators/neural\_net\_torch.py            |       99 |        1 |     99% |       126 |
+| autoemulate/emulators/neural\_net\_torch.py            |      103 |        1 |     99% |       134 |
 | autoemulate/emulators/neural\_networks/\_\_init\_\_.py |        2 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/base.py         |       19 |        3 |     84% |28, 33, 36 |
 | autoemulate/emulators/neural\_networks/get\_module.py  |       14 |        2 |     86% |     18-19 |
-| autoemulate/emulators/neural\_networks/mlp.py          |       32 |        4 |     88% |     59-62 |
-| autoemulate/emulators/neural\_networks/rbf.py          |       97 |       19 |     80% |24, 28, 32, 36, 138, 150, 160, 257, 262, 267, 318-340 |
+| autoemulate/emulators/neural\_networks/mlp.py          |       32 |        2 |     94% |     66-67 |
+| autoemulate/emulators/neural\_networks/rbf.py          |       95 |       19 |     80% |22, 26, 30, 34, 136, 148, 158, 255, 260, 265, 316-343 |
 | autoemulate/emulators/polynomials.py                   |       37 |        5 |     86% |     84-89 |
 | autoemulate/emulators/random\_forest.py                |       46 |        2 |     96% |   123-124 |
 | autoemulate/emulators/rbf.py                           |       41 |        7 |     83% |    94-145 |
 | autoemulate/emulators/support\_vector\_machines.py     |       61 |       10 |     84% |83-85, 128-161 |
 | autoemulate/experimental\_design.py                    |       19 |        3 |     84% |24, 35, 46 |
-| autoemulate/hyperparam\_searching.py                   |       43 |        7 |     84% |70-83, 88-89 |
+| autoemulate/hyperparam\_searching.py                   |       45 |        5 |     89% |92-95, 100-101 |
 | autoemulate/logging\_config.py                         |       44 |        4 |     91% |29, 57, 64-65 |
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                       |       33 |        0 |    100% |           |
@@ -48,10 +48,10 @@
 | tests/test\_plotting.py                                |       68 |        7 |     90% |18, 28, 50-51, 59-60, 68 |
 | tests/test\_printing.py                                |       30 |        0 |    100% |           |
 | tests/test\_save.py                                    |       85 |        1 |     99% |        32 |
-| tests/test\_torch.py                                   |       95 |        0 |    100% |           |
+| tests/test\_torch.py                                   |      103 |        0 |    100% |           |
 | tests/test\_ui.py                                      |       39 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      164 |        6 |     96% |53, 59, 64, 69, 74, 79 |
-|                                              **TOTAL** | **2269** |  **213** | **91%** |           |
+|                                              **TOTAL** | **2281** |  **209** | **91%** |           |
 
 
 ## Setup coverage badge
