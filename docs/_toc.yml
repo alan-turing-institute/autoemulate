@@ -43,6 +43,7 @@ chapters:
   - file: reference/simulations/index
     sections:
     - file: reference/simulations/projectile
+    - file: reference/simulations/epidemic
   - file: reference/emulators/index
     sections:
     - file: reference/emulators/gaussian_process

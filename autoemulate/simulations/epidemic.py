@@ -19,6 +19,15 @@ def simulate_epidemic(x, N=1000, I0=1):
     peak_infection_rate : float
         The peak infection rate as a fraction of the total population.
     """
+
+    # check inputs
+    assert len(x) == 2
+    assert N > 0
+    assert I0 > 0 and I0 < N
+    assert x[0] > 0
+    assert x[1] > 0
+
+    # unpack parameters
     beta = x[0]
     gamma = x[1]
 

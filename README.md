@@ -36,12 +36,12 @@ poetry shell
 import numpy as np
 from autoemulate.compare import AutoEmulate
 from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations.projectile import simulator
+from autoemulate.simulations.projectile import simulate_projectile
 
 # sample from a simulation
-lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
+lhd = LatinHypercube([(-5., 1.), (0., 1000.)]) # (lower, upper) bounds for parameters
 X = lhd.sample(100)
-y = np.array([simulator(x) for x in X])
+y = np.array([simulate_projectile(x) for x in X])
 
 # compare emulator models
 ae = AutoEmulate()

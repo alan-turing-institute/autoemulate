@@ -108,7 +108,7 @@ def simulator_base(x):
     return results
 
 
-def simulator(x):
+def simulate_projectile(x):
     """
     Simulator to solve ODE system for projectile motion with drag. Returns distance projectile travels.
 
@@ -128,7 +128,7 @@ def simulator(x):
     return results.y_events[0][0][2]
 
 
-def simulator_multioutput(x):
+def simulate_projectile_multioutput(x):
     """
     Simulator to solve ODE system with multiple outputs.
 
