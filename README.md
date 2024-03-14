@@ -9,7 +9,7 @@
 
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or when they have to run thousands of times to do uncertainty quantification or sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
 
-The project is in very early development. 
+The project is in early development. 
 
 <img src="misc/robot2.png" alt="emulating simulations with ML" width="61.8%">
 
@@ -68,11 +68,7 @@ best_emulator.predict(X)
 
 ## documentation
 
-The documentation is currently created using JupyterBook. To build the documentation locally, run:
-
-```bash
-poetry run jupyter-book build docs
-```
+You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/), but the documentation is still work in progress.
 
 ## Contributors
 
