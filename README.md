@@ -11,7 +11,7 @@ Simulations of physical systems are often slow and need lots of compute, which m
 
 The project is in early development. 
 
-<img src="misc/robot2.png" alt="emulating simulations with ML" width="61.8%">
+<img src="misc/robot2.png" alt="emulating simulations with ML" width="38.2%">
 
 ## installation
 
@@ -39,36 +39,26 @@ from autoemulate.experimental_design import LatinHypercube
 from autoemulate.simulations.projectile import simulate_projectile
 
 # sample from a simulation
-lhd = LatinHypercube([(-5., 1.), (0., 1000.)]) # (lower, upper) bounds for parameters
+lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
 X = lhd.sample(100)
 y = np.array([simulate_projectile(x) for x in X])
-
 # compare emulator models
 ae = AutoEmulate()
 ae.setup(X, y)
 best_model = ae.compare() 
-
-# training set cv results
-ae.print_results()
-ae.plot_results()
-
-# predict on test set
-ae.evaluate_model(best_model)
-
+# training set cross-validation results
+ae.print_results() 
+# test set results for the best model
+ae.evaluate_model(best_model) 
 # refit on full data
-best_emulator = ae.refit_model(best_model)
-
-# save & load best model
-ae.save_model("best_emulator")
-best_emulator = ae.load_model("best_emulator")
-
+best_emulator = ae.refit_model(best_model) 
 # emulate
 best_emulator.predict(X)
 ```
 
 ## documentation
 
-You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/), but the documentation is still work in progress.
+You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/). The documentation is still work in progress.
 
 ## Contributors
 
