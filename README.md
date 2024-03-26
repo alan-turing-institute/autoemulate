@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      143 |       21 |     85% |230-232, 308, 322, 338-346, 357-360, 364-368, 425, 482 |
+| autoemulate/compare.py                                 |      145 |       21 |     86% |232-236, 312, 326, 342-350, 361-364, 368-372, 429, 486 |
 | autoemulate/cross\_validate.py                         |       24 |        2 |     92% |     56-57 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
@@ -33,7 +33,7 @@
 | autoemulate/plotting.py                                |       91 |       57 |     37% |96-97, 137-160, 196-218, 255-270, 294-340 |
 | autoemulate/printing.py                                |       48 |        9 |     81% |9, 14, 22-25, 72, 128-130 |
 | autoemulate/save.py                                    |       48 |        4 |     92% |63-65, 90, 104 |
-| autoemulate/utils.py                                   |      100 |        9 |     91% |32, 91, 97, 125, 130-135, 381-382 |
+| autoemulate/utils.py                                   |      116 |       10 |     91% |52, 60, 119, 125, 153, 158-163, 409-410 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
 | tests/test\_compare.py                                 |      103 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                         |       49 |        0 |    100% |           |
@@ -51,7 +51,7 @@
 | tests/test\_torch.py                                   |      103 |        0 |    100% |           |
 | tests/test\_ui.py                                      |       39 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      164 |        6 |     96% |53, 59, 64, 69, 74, 79 |
-|                                              **TOTAL** | **2281** |  **209** | **91%** |           |
+|                                              **TOTAL** | **2299** |  **210** | **91%** |           |
 
 
 ## Setup coverage badge
