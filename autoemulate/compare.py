@@ -27,7 +27,7 @@ from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.utils import _suppress_all_warnings
+from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 
@@ -203,7 +203,7 @@ class AutoEmulate:
                 model_name = get_model_name(model)
                 pbar.set_description(f"{pb_text} {model_name}")
 
-                with _suppress_all_warnings(self.logger):
+                with _redirect_warnings(self.logger):
                     try:
                         # hyperparameter search
                         if self.param_search:
