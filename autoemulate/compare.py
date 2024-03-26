@@ -27,6 +27,7 @@ from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 
@@ -202,36 +203,39 @@ class AutoEmulate:
                 model_name = get_model_name(model)
                 pbar.set_description(f"{pb_text} {model_name}")
 
-                try:
-                    # hyperparameter search
-                    if self.param_search:
-                        self.models[i] = _optimize_params(
+                with _redirect_warnings(self.logger):
+                    try:
+                        # hyperparameter search
+                        if self.param_search:
+                            self.models[i] = _optimize_params(
+                                X=self.X[self.train_idxs],
+                                y=self.y[self.train_idxs],
+                                cv=self.cross_validator,
+                                model=model,
+                                search_type=self.search_type,
+                                niter=self.param_search_iters,
+                                param_space=None,
+                                n_jobs=self.n_jobs,
+                                logger=self.logger,
+                            )
+
+                        # run cross validation
+                        fitted_model, cv_results = _run_cv(
                             X=self.X[self.train_idxs],
                             y=self.y[self.train_idxs],
                             cv=self.cross_validator,
                             model=model,
-                            search_type=self.search_type,
-                            niter=self.param_search_iters,
-                            param_space=None,
+                            metrics=self.metrics,
                             n_jobs=self.n_jobs,
                             logger=self.logger,
                         )
-
-                    # run cross validation
-                    fitted_model, cv_results = _run_cv(
-                        X=self.X[self.train_idxs],
-                        y=self.y[self.train_idxs],
-                        cv=self.cross_validator,
-                        model=model,
-                        metrics=self.metrics,
-                        n_jobs=self.n_jobs,
-                        logger=self.logger,
-                    )
-                except Exception:
-                    self.logger.exception(f"Error cross-validating model {model_name}")
-                    continue
-                finally:
-                    pbar.update(1)
+                    except Exception:
+                        self.logger.exception(
+                            f"Error cross-validating model {model_name}"
+                        )
+                        continue
+                    finally:
+                        pbar.update(1)
 
                 self.models[i] = fitted_model
                 self.cv_results[model_name] = cv_results

@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import warnings
@@ -22,6 +23,33 @@ def _suppress_convergence_warnings():
     warnings.simplefilter("ignore", category=ConvergenceWarning)
     # ensures that warnings are also not shown in subprocesses
     os.environ["PYTHONWARNINGS"] = "ignore"
+
+    try:
+        yield
+    finally:
+        # revert the warning filters and environment variable to their original state
+        warnings.filters = original_filters
+        if original_env is not None:
+            os.environ["PYTHONWARNINGS"] = original_env
+        else:
+            del os.environ["PYTHONWARNINGS"]
+
+
+@contextmanager
+def _redirect_warnings(logger):
+    """Context manager to redirect sklearn convergence warnings."""
+    # store the current state of the warning filters and environment variable
+    original_filters = warnings.filters[:]
+    original_env = os.environ.get("PYTHONWARNINGS")
+
+    with warnings.catch_warnings(record=True) as captured_warnings:
+        # set the desired warning behavior
+        warnings.simplefilter("ignore")
+        # ensures that warnings are also not shown in subprocesses
+        os.environ["PYTHONWARNINGS"] = "ignore"
+        # redirect warnings to logger
+        for warning in captured_warnings:
+            logger.warning(f"{warning.category.__name__}: {warning.message}")
 
     try:
         yield

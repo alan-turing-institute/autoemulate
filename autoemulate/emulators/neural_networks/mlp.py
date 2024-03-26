@@ -50,7 +50,7 @@ class MLPModule(TorchModule):
                 nn.Sigmoid,
                 nn.GELU,
             ],
-            "optimizer": [torch.optim.AdamW, torch.optim.LBFGS],
+            "optimizer": [torch.optim.AdamW, torch.optim.LBFGS, torch.optim.SGD],  #
             "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
