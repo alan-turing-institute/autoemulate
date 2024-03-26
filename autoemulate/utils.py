@@ -62,57 +62,6 @@ def _redirect_warnings(logger):
             del os.environ["PYTHONWARNINGS"]
 
 
-@contextmanager
-def capture_and_log_warnings(logger, log_level=logging.WARNING, re_raise=False):
-    """
-    A context manager to capture and log warnings.
-
-    Parameters:
-    - logger: The logger object to which the warnings will be logged.
-    - log_level: The logging level at which the warnings should be logged.
-    - re_raise: Whether to re-raise the warnings after logging them.
-    """
-    try:
-        # Capture all warnings to a list
-        with warnings.catch_warnings(record=True) as captured_warnings:
-            warnings.simplefilter("always")
-            yield  # Allow code within the context to run
-
-        # Log each captured warning
-        for warning in captured_warnings:
-            confirmation_msg = (
-                f"Captured warning: {warning.category.__name__}: {warning.message}"
-            )
-            print(
-                confirmation_msg
-            )  # For debugging, to be removed or commented out in production
-            logger.log(
-                log_level,
-                f"{warning.category.__name__}: {warning.message}",
-                exc_info=(
-                    warning.category,
-                    warning.message,
-                    warning.filename,
-                    warning.lineno,
-                ),
-            )
-
-        # Optionally re-raise warnings
-        if re_raise:
-            for warning in captured_warnings:
-                warnings.warn_explicit(
-                    message=warning.message,
-                    category=warning.category,
-                    filename=warning.filename,
-                    lineno=warning.lineno,
-                )
-
-    except Exception as e:
-        logger.exception(
-            f"An error occurred in the capture_and_log_warnings context manager: {e}"
-        )
-
-
 # def get_model_name(model, models):
 #     """Get the model name from the model registry.
 
