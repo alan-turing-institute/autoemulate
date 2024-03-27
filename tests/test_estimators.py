@@ -28,8 +28,8 @@ from autoemulate.emulators import SupportVectorMachines
         GradientBoosting(random_state=42),
         SecondOrderPolynomial(),
         RadialBasisFunctions(),
-        NeuralNetTorch(module="mlp", random_state=42),
-        NeuralNetTorch(module="rbf", random_state=42),
+        NeuralNetTorch(module="MultiLayerPerceptron", random_state=42),
+        NeuralNetTorch(module="RadialBasisFunctionsNetwork", random_state=42),
         LightGBM(),
     ]
 )

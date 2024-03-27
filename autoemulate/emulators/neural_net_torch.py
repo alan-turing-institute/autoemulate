@@ -26,7 +26,7 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     def __init__(
         self,
-        module: str = "mlp",
+        module: str = "MultiLayerPerceptron",
         criterion=torch.nn.MSELoss,
         optimizer=torch.optim.AdamW,
         lr: float = 1e-3,
@@ -93,7 +93,7 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     @property
     def model_name(self):
-        return f"NN{self.module_name.capitalize()}"
+        return f"Torch{self.module_name}"
 
     def _more_tags(self):
         return {

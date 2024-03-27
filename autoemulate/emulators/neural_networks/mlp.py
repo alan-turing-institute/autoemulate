@@ -23,7 +23,7 @@ class MLPModule(TorchModule):
         hidden_activation: Tuple[callable] = nn.ReLU,
     ):
         super().__init__(
-            module_name="mlp",
+            module_name="MultiLayerPerceptron",
             input_size=input_size,
             output_size=output_size,
             random_state=random_state,

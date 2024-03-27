@@ -17,7 +17,11 @@ MODEL_REGISTRY = {
     GaussianProcess().model_name: GaussianProcess(),
     SupportVectorMachines().model_name: SupportVectorMachines(),
     LightGBM().model_name: LightGBM(),
-    NeuralNetTorch(module="mlp").model_name: NeuralNetTorch(module="mlp"),
-    NeuralNetTorch(module="rbf").model_name: NeuralNetTorch(module="rbf"),
+    NeuralNetTorch(module="MultiLayerPerceptron").model_name: NeuralNetTorch(
+        module="MultiLayerPerceptron"
+    ),
+    NeuralNetTorch(module="RadialBasisFunctionsNetwork").model_name: NeuralNetTorch(
+        module="RadialBasisFunctionsNetwork"
+    ),
     NeuralNetSk().model_name: NeuralNetSk(),
 }

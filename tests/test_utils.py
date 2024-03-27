@@ -31,7 +31,7 @@ def models():
     return {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "NNMlp": NeuralNetTorch("mlp"),
+        "TorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
 
 
@@ -41,8 +41,8 @@ def test_basic_models(model_name, models):
 
 
 def test_torch_models(models):
-    nn = NeuralNetTorch("mlp")
-    assert get_model_name(nn) == "NNMlp"
+    nn = NeuralNetTorch("MultiLayerPerceptron")
+    assert get_model_name(nn) == "TorchMultiLayerPerceptron"
 
 
 # test retrieving and adjusting parameter grids ---------------------------------
