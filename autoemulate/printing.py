@@ -3,6 +3,7 @@ import pandas as pd
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_scores
+from autoemulate.utils import get_short_model_name
 
 try:
     __IPYTHON__
@@ -137,3 +138,21 @@ def _print_setup(cls):
     print("-" * width)
     print("Metrics:" + metrics)
     print("-" * width)
+
+
+def _print_model_names(cls):
+    """Print available models, with name, short name and origin.
+
+    Parameters
+    ----------
+    cls : AutoEmulate
+        The AutoEmulate object.
+    """
+
+    model_names = [get_model_name(model) for model in cls.models]
+    model_names_short = [get_short_model_name(model) for model in cls.models]
+    df = pd.DataFrame({"model": model_names, "model_short": model_names_short})
+    if _in_ipython_session:
+        display(HTML(df.to_html()))
+    else:
+        print(df)

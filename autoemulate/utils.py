@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import re
 import warnings
 from contextlib import contextmanager
 
@@ -62,37 +63,6 @@ def _redirect_warnings(logger):
             del os.environ["PYTHONWARNINGS"]
 
 
-# def get_model_name(model, models):
-#     """Get the model name from the model registry.
-
-#     Parameters
-#     ----------
-#     model : model instance
-#         The model for which to retrieve the name.
-#     models : dict
-#         The model registry with model names as keys and model instances as values.
-
-#     Returns
-#     -------
-#     str
-#         The name of the model.
-#     """
-#     for model_name, model_object in models.items():
-#         if model.get_params() == model_object.get_params():
-#             return model_name
-#         # check if model is a torch model by checking if it has a module attribute
-#         # and if the module attribute is the same as the one in the model registry
-#         if "module" in get_model_params(model) and "module" in get_model_params(
-#             model_object
-#         ):
-#             if (
-#                 get_model_params(model)["module"]
-#                 == get_model_params(model_object)["module"]
-#             ):
-#                 return model_name
-#     return None
-
-
 def get_model_name(model):
     """Get the name of the base model.
 
@@ -127,6 +97,26 @@ def get_model_name(model):
     # Otherwise, it's a standalone model
     else:
         return model.model_name
+
+
+def get_short_model_name(model):
+    """Get the short name of the base model.
+
+    The short name is simply the uppercase letters from the model name in lowercase.
+
+    Parameters
+    ----------
+    model : model instance or Pipeline
+        The model or pipeline from which to retrieve the base model name.
+
+    Returns
+    -------
+    str
+        The short name of the base model.
+    """
+    model_name = get_model_name(model)
+    short_name = "".join(re.findall(r"[A-Z]", model_name)).lower()
+    return short_name
 
 
 def get_model_params(model):

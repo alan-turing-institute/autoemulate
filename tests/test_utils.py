@@ -18,6 +18,7 @@ from autoemulate.utils import _normalise_y
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
+from autoemulate.utils import get_short_model_name
 
 
 # test retrieving model name ---------------------------------------------------
@@ -356,3 +357,41 @@ def test_get_mean_scores_metric_not_found():
     )
     with pytest.raises(ValueError):
         get_mean_scores(scores_df, "rmse")
+
+
+# test model name getters
+def test_get_model_name():
+    model = RandomForest()
+    assert get_model_name(model) == "RandomForest"
+
+    model = GradientBoosting()
+    assert get_model_name(model) == "GradientBoosting"
+
+    model = NeuralNetTorch("MultiLayerPerceptron")
+    assert get_model_name(model) == "TorchMultiLayerPerceptron"
+
+
+def test_get_model_name_pipeline():
+    model = Pipeline([("model", RandomForest())])
+    assert get_model_name(model) == "RandomForest"
+
+
+def test_get_model_name_multiout():
+    model = MultiOutputRegressor(RandomForest())
+    assert get_model_name(model) == "RandomForest"
+
+
+def test_get_model_name_pipeline_multiout():
+    model = Pipeline([("model", MultiOutputRegressor(RandomForest()))])
+    assert get_model_name(model) == "RandomForest"
+
+
+def test_get_short_model_name():
+    model = RandomForest()
+    assert get_short_model_name(model) == "rf"
+
+    model = GradientBoosting()
+    assert get_short_model_name(model) == "gb"
+
+    model = NeuralNetTorch("MultiLayerPerceptron")
+    assert get_short_model_name(model) == "tmlp"

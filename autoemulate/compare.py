@@ -25,6 +25,7 @@ from autoemulate.model_processing import _get_and_process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
+from autoemulate.printing import _print_model_names
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import _redirect_warnings
@@ -371,7 +372,11 @@ class AutoEmulate:
 
         return serialiser._load_model(path)
 
-    def print_setup(self) -> None:
+    def print_model_names(self):
+        """Print available models"""
+        _print_model_names(self)
+
+    def print_setup(self):
         """Print the setup of the AutoEmulate object.
 
         This method prints the setup of the AutoEmulate object, including the models and metrics used.
