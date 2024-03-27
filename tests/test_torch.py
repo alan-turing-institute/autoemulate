@@ -111,7 +111,7 @@ def test_nn_torch_module_ui():
     X = np.random.rand(100, input_size)
     y = np.random.rand(100, output_size)
     em = AutoEmulate()
-    em.setup(X, y, model_subset=["TorchMultiLayerPerceptron"])
+    em.setup(X, y, model_subset=["PyTorchMultiLayerPerceptron"])
     # check that compare does not raise an error
     best = em.compare()
 
@@ -125,7 +125,7 @@ def test_nn_torch_module_ui_param_search_random():
     em.setup(
         X,
         y,
-        model_subset=["TorchMultiLayerPerceptron"],
+        model_subset=["PyTorchMultiLayerPerceptron"],
         param_search=True,
         param_search_type="random",
         param_search_iters=5,
@@ -143,7 +143,7 @@ def test_nn_torch_module_ui_param_search_bayes():
     em.setup(
         X,
         y,
-        model_subset=["TorchMultiLayerPerceptron"],
+        model_subset=["PyTorchMultiLayerPerceptron"],
         param_search=True,
         param_search_type="bayes",
         param_search_iters=5,

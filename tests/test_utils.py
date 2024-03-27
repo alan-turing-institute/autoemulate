@@ -32,7 +32,7 @@ def models():
     return {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "TorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
+        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
 
 
@@ -43,7 +43,7 @@ def test_basic_models(model_name, models):
 
 def test_torch_models(models):
     nn = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_model_name(nn) == "TorchMultiLayerPerceptron"
+    assert get_model_name(nn) == "PyTorchMultiLayerPerceptron"
 
 
 # test retrieving and adjusting parameter grids ---------------------------------
@@ -368,7 +368,7 @@ def test_get_model_name():
     assert get_model_name(model) == "GradientBoosting"
 
     model = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_model_name(model) == "TorchMultiLayerPerceptron"
+    assert get_model_name(model) == "PyTorchMultiLayerPerceptron"
 
 
 def test_get_model_name_pipeline():
@@ -394,4 +394,4 @@ def test_get_short_model_name():
     assert get_short_model_name(model) == "gb"
 
     model = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_short_model_name(model) == "tmlp"
+    assert get_short_model_name(model) == "ptmlp"

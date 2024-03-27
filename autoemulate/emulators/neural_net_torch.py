@@ -93,7 +93,7 @@ class NeuralNetTorch(NeuralNetRegressor):
 
     @property
     def model_name(self):
-        return f"Torch{self.module_name}"
+        return f"PyTorch{self.module_name}"
 
     def _more_tags(self):
         return {
