@@ -1,0 +1,938 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>autoemulate.utils &#8212; AutoEmulate: An emulator platform for Digital Twins</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/autoemulate/utils';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">AutoEmulate: An emulator platform for Digital Twins</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    AutoEmulate: An emulator platform for Digital Twins
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../getting-started/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../getting-started/installation.html">Installation instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting-started/quickstart.html">Quickstart</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/01_start.html">A deeper dive into <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/compare.html">autoemulate.compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/cross_validate.html">autoemulate.cross_validate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/datasets.html">autoemulate.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/experimental_design.html">autoemulate.experimental_design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/hyperparam_searching.html">autoemulate.hyperparam_searching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/logging_config.html">autoemulate.logging_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/metrics.html">autoemulate.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/model_processing.html">autoemulate.model_processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/plotting.html">autoemulate.plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/printing.html">autoemulate.printing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/save.html">autoemulate.save</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/utils.html">autoemulate.utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/simulations/index.html">autoemulate.simulations</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/emulators/index.html">autoemulate.emulators</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gaussian_process.html">autoemulate.emulators.gaussian_process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/neural_net_sk.html">autoemulate.emulators.neural_net_sk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/neural_net_torch.html">autoemulate.emulators.neural_net_torch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/rbf.html">autoemulate.emulators.rbf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/support_vector_machines.html">autoemulate.emulators.support_vector_machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/light_gbm.html">autoemulate.emulators.light_gbm</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2F_modules/autoemulate/utils.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for autoemulate.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">RegressorMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.exceptions</span> <span class="kn">import</span> <span class="n">ConvergenceWarning</span>
+<span class="kn">from</span> <span class="nn">sklearn.multioutput</span> <span class="kn">import</span> <span class="n">MultiOutputRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+
+
+<span class="c1"># manage warnings -------------------------------------------------------------</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">_suppress_convergence_warnings</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager to suppress sklearn convergence warnings.&quot;&quot;&quot;</span>
+    <span class="c1"># store the current state of the warning filters and environment variable</span>
+    <span class="n">original_filters</span> <span class="o">=</span> <span class="n">warnings</span><span class="o">.</span><span class="n">filters</span><span class="p">[:]</span>
+    <span class="n">original_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">)</span>
+
+    <span class="c1"># set the desired warning behavior</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">ConvergenceWarning</span><span class="p">)</span>
+    <span class="c1"># ensures that warnings are also not shown in subprocesses</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># revert the warning filters and environment variable to their original state</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="n">original_filters</span>
+        <span class="k">if</span> <span class="n">original_env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_env</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">_redirect_warnings</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager to redirect sklearn convergence warnings.&quot;&quot;&quot;</span>
+    <span class="c1"># store the current state of the warning filters and environment variable</span>
+    <span class="n">original_filters</span> <span class="o">=</span> <span class="n">warnings</span><span class="o">.</span><span class="n">filters</span><span class="p">[:]</span>
+    <span class="n">original_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">(</span><span class="n">record</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">captured_warnings</span><span class="p">:</span>
+        <span class="c1"># set the desired warning behavior</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="c1"># ensures that warnings are also not shown in subprocesses</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+        <span class="c1"># redirect warnings to logger</span>
+        <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">captured_warnings</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">warning</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">warning</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># revert the warning filters and environment variable to their original state</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="n">original_filters</span>
+        <span class="k">if</span> <span class="n">original_env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_env</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span>
+
+
+<span class="c1"># model names -----------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="get_model_name">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.get_model_name">[docs]</a>
+<span class="k">def</span> <span class="nf">get_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the name of the base model.</span>
+
+<span class="sd">    This function handles standalone models, models wrapped in a MultiOutputRegressor,</span>
+<span class="sd">    and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : model instance or Pipeline</span>
+<span class="sd">        The model or pipeline from which to retrieve the base model name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Name of the base model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If the model is a Pipeline</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+        <span class="c1"># Extract the model step</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+
+        <span class="c1"># If the model step is a MultiOutputRegressor, get the estimator</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">model_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">model_name</span>
+
+    <span class="c1"># If the model is a MultiOutputRegressor but not in a pipeline</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">model_name</span>
+
+    <span class="c1"># Otherwise, it&#39;s a standalone model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">model_name</span></div>
+
+
+
+<div class="viewcode-block" id="get_short_model_name">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.get_short_model_name">[docs]</a>
+<span class="k">def</span> <span class="nf">get_short_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the short name of the base model.</span>
+
+<span class="sd">    The short name is simply the uppercase letters from the model name in lowercase.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : model instance or Pipeline</span>
+<span class="sd">        The model or pipeline from which to retrieve the base model name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The short name of the base model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">get_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">short_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Z]&quot;</span><span class="p">,</span> <span class="n">model_name</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">short_name</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_get_model_names_dict</span><span class="p">(</span><span class="n">MODEL_REGISTRY</span><span class="p">,</span> <span class="n">model_subset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a dictionary of model names and their short names. Optionally subset the models.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    MODEL_REGISTRY : dict</span>
+<span class="sd">        Dictionary of model names and models.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary of model names and their short names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="n">get_short_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">MODEL_REGISTRY</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">model_subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># check that it is a list</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_subset</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;model_subset must be a list of model names. Got </span><span class="si">{</span><span class="n">model_subset</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model_subset</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># check that all model names in model_subset are in model_names either as key or value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">model_name</span> <span class="ow">in</span> <span class="n">model_names</span> <span class="ow">or</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">model_names</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">model_subset</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;One or more model names in </span><span class="si">{</span><span class="n">model_subset</span><span class="si">}</span><span class="s2"> not found. Available models: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_names</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2"> or short names: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_names</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># model_subset is a list with model names. They can be short or long names, so either key or value of model_names. Subset the model_names dict.</span>
+        <span class="n">model_names</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model_names</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">model_subset</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model_subset</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">model_names</span>
+
+
+<span class="k">def</span> <span class="nf">_get_full_model_name</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">model_names_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the full model name from the full name or short name.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_name : str</span>
+<span class="sd">        The full name or short name of the model.</span>
+<span class="sd">    model_names_dict : dict</span>
+<span class="sd">        Dictionary of model names and their short names.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The full name of the model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">model_names_dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">long_name</span><span class="p">,</span> <span class="n">short_name</span> <span class="ow">in</span> <span class="n">model_names_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">model_name</span> <span class="o">==</span> <span class="n">short_name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">long_name</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> not found. Available models: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_names_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2"> or short names: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_names_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_model_params">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.get_model_params">[docs]</a>
+<span class="k">def</span> <span class="nf">get_model_params</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the parameters of the base model, which are not prefixed with `model__` or `estimator__`.</span>
+
+<span class="sd">    This function handles standalone models, models wrapped in a MultiOutputRegressor,</span>
+<span class="sd">    and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : model instance or Pipeline and/or MultiOutputRegressor</span>
+<span class="sd">        The model or pipeline from which to retrieve the base model parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Parameters of the base model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+
+    <span class="c1"># If the model is a MultiOutputRegressor but not in a pipeline</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+
+    <span class="c1"># Otherwise, it&#39;s a standalone model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_model_param_space">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.get_model_param_space">[docs]</a>
+<span class="k">def</span> <span class="nf">get_model_param_space</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">search_type</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the parameter grid of the base model. This is used for hyperparameter search.</span>
+
+<span class="sd">    This function handles standalone models, models wrapped in a MultiOutputRegressor,</span>
+<span class="sd">    and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : model instance or Pipeline and/or MultiOutputRegressor</span>
+<span class="sd">        The model or pipeline from which to retrieve the base model parameter grid.</span>
+<span class="sd">    search_type : str</span>
+<span class="sd">        The type of hyperparameter search to be performed. Can be &quot;random&quot; or &quot;bayes&quot;.</span>
+<span class="sd">        Default is &quot;random&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Parameter grid of the base model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">get_grid_params</span><span class="p">(</span><span class="n">search_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="n">get_grid_params</span><span class="p">(</span><span class="n">search_type</span><span class="p">)</span>
+
+    <span class="c1"># If the model is a MultiOutputRegressor but not in a pipeline</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">get_grid_params</span><span class="p">(</span><span class="n">search_type</span><span class="p">)</span>
+
+    <span class="c1"># Otherwise, it&#39;s a standalone model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">get_grid_params</span><span class="p">(</span><span class="n">search_type</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_adjust_param_space</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">param_space</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjusts param grid to be compatible with the model.</span>
+<span class="sd">    Adds `model__` if model is a pipeline and</span>
+<span class="sd">    `estimator__` if model is a MultiOutputRegressor. Or `model__estimator__` if both,</span>
+<span class="sd">    or returns same param grid if model is a standalone model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : model instance or Pipeline</span>
+<span class="sd">        The pipeline, model or MultiOutputRegressor to which the param grid should be adjusted.</span>
+<span class="sd">    param_space : dict</span>
+<span class="sd">        The param grid to be adjusted. This is a dictionary with the parameter names as keys</span>
+<span class="sd">        which would work for GridSearchCv if the model wouldn&#39;t be wrapped in a pipeline or</span>
+<span class="sd">        MultiOutputRegressor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    param_space : dict</span>
+<span class="sd">        Adjusted param grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;model__estimator__&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;model__&quot;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">MultiOutputRegressor</span><span class="p">):</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;estimator__&quot;</span>
+    <span class="c1"># if model isn&#39;t wrapped in anything return param_space as is</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">param_space</span>
+
+    <span class="k">return</span> <span class="n">_add_prefix_to_param_space</span><span class="p">(</span><span class="n">param_space</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_add_prefix_to_param_space</span><span class="p">(</span><span class="n">param_space</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds a prefix to all keys in a parameter grid.</span>
+
+<span class="sd">    Works for three types of param_spaces:</span>
+
+<span class="sd">    - when param_space is a dict (standard case)</span>
+<span class="sd">    - when param_space is a list of dicts (when we only want</span>
+<span class="sd">      to iterate over certain parameter combinations, like in RBF)</span>
+<span class="sd">    - when param_space contains tuples of (dict, int) (when we want</span>
+<span class="sd">      to iterate a certain number of times over a parameter subspace</span>
+<span class="sd">      (only in BayesSearchCV). This can be used to prevent bayes search</span>
+<span class="sd">      from iterating many times using the same parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    param_space : dict or list of dicts</span>
+<span class="sd">        The parameter grid to which the prefix will be added.</span>
+<span class="sd">    prefix : str</span>
+<span class="sd">        The prefix to be added to each parameter name in the grid.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict or list of dicts</span>
+<span class="sd">        The parameter grid with the prefix added to each key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_space</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">new_param_space</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">param_space</span><span class="p">:</span>
+            <span class="c1"># Handle tuple (dict, int) used in BayesSearchCV</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="c1"># Reconstruct the tuple with the modified dictionary</span>
+                <span class="n">dict_with_prefix</span> <span class="o">=</span> <span class="n">_add_prefix_to_single_grid</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prefix</span><span class="p">)</span>
+                <span class="n">new_param_space</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">dict_with_prefix</span><span class="p">,)</span> <span class="o">+</span> <span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="c1"># Add prefix to the dictionary</span>
+                <span class="n">new_param_space</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_add_prefix_to_single_grid</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">prefix</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">new_param_space</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If param_space is a single dictionary, add the prefix directly</span>
+        <span class="k">return</span> <span class="n">_add_prefix_to_single_grid</span><span class="p">(</span><span class="n">param_space</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_add_prefix_to_single_grid</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds a prefix to all keys in a single parameter grid dictionary.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+
+<span class="k">def</span> <span class="nf">_normalise_y</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize the target values y.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : array-like, shape (n_samples,) or (n_samples, n_outputs)</span>
+<span class="sd">        The target values (real numbers).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y_norm : array-like, shape (n_samples,) or (n_samples, n_outputs)</span>
+<span class="sd">        The normalized target values.</span>
+<span class="sd">    y_mean : array-like, shape (n_outputs,)</span>
+<span class="sd">        The mean of the target values.</span>
+<span class="sd">    y_std : array-like, shape (n_outputs,)</span>
+<span class="sd">        The standard deviation of the target values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">y_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_std</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">,</span> <span class="n">y_std</span>
+
+
+<span class="k">def</span> <span class="nf">_denormalise_y</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">,</span> <span class="n">y_std</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Denormalize the predicted values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_pred : array-like, shape (n_samples,) or (n_samples, n_outputs)</span>
+<span class="sd">        The predicted target values.</span>
+<span class="sd">    y_mean : array-like, shape (n_outputs,)</span>
+<span class="sd">        The mean of the target values.</span>
+<span class="sd">    y_std : array-like, shape (n_outputs,)</span>
+<span class="sd">        The standard deviation of the target values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y_pred_denorm : array-like, shape (n_samples,) or (n_samples, n_outputs)</span>
+<span class="sd">        The denormalized predicted target values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">y_pred</span> <span class="o">*</span> <span class="n">y_std</span> <span class="o">+</span> <span class="n">y_mean</span>
+
+
+<div class="viewcode-block" id="get_mean_scores">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.get_mean_scores">[docs]</a>
+<span class="k">def</span> <span class="nf">get_mean_scores</span><span class="p">(</span><span class="n">scores_df</span><span class="p">,</span> <span class="n">metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the mean scores for each model and metric.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores_df : pandas.DataFrame</span>
+<span class="sd">        DataFrame with columns &quot;model&quot;, &quot;metric&quot;, &quot;fold&quot;, &quot;score&quot;.</span>
+<span class="sd">    metric : str</span>
+<span class="sd">        The metric for which to calculate the mean score. Currently supported are &quot;r2&quot; and &quot;rmse&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mean_scores_df : pandas.DataFrame</span>
+<span class="sd">        DataFrame with columns &quot;model&quot;, &quot;metric&quot;, &quot;mean_score&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># check if metric is in scores_df metric column</span>
+    <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scores_df</span><span class="p">[</span><span class="s2">&quot;metric&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Metric </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2"> not found. Available metrics are: </span><span class="si">{</span><span class="n">scores_df</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;r2&quot;</span><span class="p">:</span>
+        <span class="n">asc</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;rmse&quot;</span><span class="p">:</span>
+        <span class="n">asc</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metric </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2"> not supported.&quot;</span><span class="p">)</span>
+
+    <span class="n">means_df</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">scores_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;short&quot;</span><span class="p">,</span> <span class="s2">&quot;metric&quot;</span><span class="p">])[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="n">asc</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">rename_axis</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">means_df</span></div>
+
+
+
+<div class="viewcode-block" id="get_model_scores">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.get_model_scores">[docs]</a>
+<span class="k">def</span> <span class="nf">get_model_scores</span><span class="p">(</span><span class="n">scores_df</span><span class="p">,</span> <span class="n">model_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the scores for a specific model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores_df : pandas.DataFrame</span>
+<span class="sd">        DataFrame with columns &quot;model&quot;, &quot;metric&quot;, &quot;fold&quot;, &quot;score&quot;.</span>
+<span class="sd">    model_name : str</span>
+<span class="sd">        The name of the model for which to retrieve the scores.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model_scores : pandas.DataFrame</span>
+<span class="sd">        DataFrame with columns &quot;fold&quot;, &quot;metric&quot;, &quot;score&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_scores</span> <span class="o">=</span> <span class="n">scores_df</span><span class="p">[</span><span class="n">scores_df</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">model_name</span><span class="p">]</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span>
+        <span class="n">index</span><span class="o">=</span><span class="s2">&quot;fold&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s2">&quot;score&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_scores</span></div>
+
+
+
+<div class="viewcode-block" id="set_random_seed">
+<a class="viewcode-back" href="../../reference/utils.html#autoemulate.utils.set_random_seed">[docs]</a>
+<span class="k">def</span> <span class="nf">set_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set random seed for Python, Numpy and PyTorch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        The random seed to use.</span>
+<span class="sd">    deterministic : bool</span>
+<span class="sd">        Use &quot;deterministic&quot; algorithms in PyTorch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">deterministic</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">benchmark</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">use_deterministic_algorithms</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Martin Stoffel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
