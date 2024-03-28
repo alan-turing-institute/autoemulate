@@ -142,7 +142,7 @@ def test_evaluate_model(ae_run):
     model = ae_run.get_model(rank=1)
     scores_df = ae_run.evaluate_model(model=model)
     assert isinstance(scores_df, pd.DataFrame)
-    assert scores_df.shape == (1, len(ae_run.metrics) + 1)
+    assert scores_df.shape == (1, len(ae_run.metrics) + 2)
     assert "model" in scores_df.columns
     assert all(metric.__name__ in scores_df.columns for metric in ae_run.metrics)
 

@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,6 +9,7 @@ from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
 from autoemulate.printing import _print_cv_results
 from autoemulate.printing import _print_model_names
+from autoemulate.utils import get_short_model_name
 
 models = [GaussianProcess(), RandomForest()]
 
@@ -22,8 +25,15 @@ for model in model_names:
                 if metric == "rmse"
                 else np.random.uniform(-1, 1)
             )
+            short = "".join(re.findall(r"[A-Z]", model)).lower()
             data.append(
-                {"model": model, "metric": metric, "fold": fold, "score": score}
+                {
+                    "model": model,
+                    "short": short,
+                    "metric": metric,
+                    "fold": fold,
+                    "score": score,
+                }
             )
 scores_df = pd.DataFrame(data)
 
