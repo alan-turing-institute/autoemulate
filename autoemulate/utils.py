@@ -13,6 +13,9 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
 
+# manage warnings -------------------------------------------------------------
+
+
 @contextmanager
 def _suppress_convergence_warnings():
     """Context manager to suppress sklearn convergence warnings."""
@@ -61,6 +64,9 @@ def _redirect_warnings(logger):
             os.environ["PYTHONWARNINGS"] = original_env
         else:
             del os.environ["PYTHONWARNINGS"]
+
+
+# model names -----------------------------------------------------------------
 
 
 def get_model_name(model):
@@ -117,6 +123,60 @@ def get_short_model_name(model):
     model_name = get_model_name(model)
     short_name = "".join(re.findall(r"[A-Z]", model_name)).lower()
     return short_name
+
+
+def _get_model_names_dict(MODEL_REGISTRY, model_subset=None):
+    """Get a dictionary of model names and their short names. Optionally subset the models.
+
+    Parameters
+    ----------
+    MODEL_REGISTRY : dict
+        Dictionary of model names and models.
+
+    Returns
+    -------
+    dict
+        Dictionary of model names and their short names.
+    """
+    model_names = {
+        model_name: get_short_model_name(model)
+        for model_name, model in MODEL_REGISTRY.items()
+    }
+    if model_subset is not None:
+        # check that it is a list
+        if not isinstance(model_subset, list):
+            raise ValueError(
+                f"model_subset must be a list of model names. Got {model_subset} of type {type(model_subset)}"
+            )
+        # check that all model names in model_subset are in model_names either as key or value
+        if not all(
+            model_name in model_names or model_name in model_names.values()
+            for model_name in model_subset
+        ):
+            raise ValueError(
+                f"One or more model names in {model_subset} not found. Available models: {', '.join(model_names.keys())} or short names: {', '.join(model_names.values())}"
+            )
+        # model_subset is a list with model names. They can be short or long names, so either key or value of model_names. Subset the model_names dict.
+        model_names = {
+            k: v
+            for k, v in model_names.items()
+            if k in model_subset or v in model_subset
+        }
+    return model_names
+
+
+def get_full_model_name(model_name, model_names_dict):
+    """"""
+
+    if model_name in model_names_dict:
+        return model_name
+    else:
+        for long_name, short_name in model_names_dict.items():
+            if model_name == short_name:
+                return long_name
+    raise ValueError(
+        f"Model {model_name} not found. Available models: {', '.join(model_names_dict.keys())} or short names: {', '.join(model_names_dict.values())}"
+    )
 
 
 def get_model_params(model):

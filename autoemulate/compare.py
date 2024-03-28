@@ -29,6 +29,7 @@ from autoemulate.printing import _print_cv_results
 from autoemulate.printing import _print_model_names
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
@@ -110,6 +111,8 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
+        self.model_names = _get_model_names_dict(MODEL_REGISTRY, model_subset)
+        model_subset = list(self.model_names.keys())
         self.models = _get_and_process_models(
             MODEL_REGISTRY,
             model_subset,
@@ -379,14 +382,7 @@ class AutoEmulate:
         _print_model_names(self)
 
     def print_setup(self):
-        """Print the setup of the AutoEmulate object.
-
-        This method prints the setup of the AutoEmulate object, including the models and metrics used.
-
-        Returns
-        -------
-        None
-        """
+        """Print the setup of the AutoEmulate object."""
         _print_setup(self)
 
     def print_results(self, model=None, sort_by="r2"):

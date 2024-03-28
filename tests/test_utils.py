@@ -265,7 +265,8 @@ def test_add_prefix_to_param_space_list(grid_list, prefix):
         _add_prefix_to_param_space(grid_list, prefix) == expected_result
     ), "Prefix not correctly added to param grid list"
 
-    # test add_prefix_to_single_grid ------------------------------------------------
+
+# test add_prefix_to_single_grid ------------------------------------------------
 
 
 def test_add_prefix_to_param_space_list_of_tuples(grid_list_of_tuples, prefix):
@@ -293,13 +294,7 @@ def test_add_prefix_to_single_grid(grid, prefix):
     ), "Prefix not correctly added to single grid dictionary"
 
 
-import pandas as pd
-import pytest
-
-from autoemulate.utils import get_mean_scores
-
-
-# Test case for calculating mean scores with metric "r2"
+# mean scores -------------------------------------------------------------------
 def test_get_mean_scores_r2():
     scores_df = pd.DataFrame(
         {
@@ -315,7 +310,6 @@ def test_get_mean_scores_r2():
     assert get_mean_scores(scores_df, "r2").equals(expected_result)
 
 
-# Test case for calculating mean scores with metric "rmse"
 def test_get_mean_scores_rmse():
     scores_df = pd.DataFrame(
         {
@@ -331,7 +325,6 @@ def test_get_mean_scores_rmse():
     assert get_mean_scores(scores_df, "rmse").equals(expected_result)
 
 
-# Test case for unsupported metric
 def test_get_mean_scores_unsupported_metric():
     scores_df = pd.DataFrame(
         {
@@ -345,7 +338,6 @@ def test_get_mean_scores_unsupported_metric():
         get_mean_scores(scores_df, "mae")
 
 
-# Test case for metric not found in scores_df
 def test_get_mean_scores_metric_not_found():
     scores_df = pd.DataFrame(
         {
@@ -359,7 +351,9 @@ def test_get_mean_scores_metric_not_found():
         get_mean_scores(scores_df, "rmse")
 
 
-# test model name getters
+# test model name getters ------------------------------------------------------
+
+
 def test_get_model_name():
     model = RandomForest()
     assert get_model_name(model) == "RandomForest"
