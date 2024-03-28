@@ -5,8 +5,8 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      145 |       21 |     86% |232-236, 312, 326, 342-350, 361-364, 368-372, 429, 486 |
-| autoemulate/cross\_validate.py                         |       24 |        2 |     92% |     56-57 |
+| autoemulate/compare.py                                 |      154 |       23 |     85% |238-242, 318, 332, 348-356, 367-370, 374-378, 382, 435-438, 496 |
+| autoemulate/cross\_validate.py                         |       25 |        2 |     92% |     58-59 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py                  |       11 |        0 |    100% |           |
@@ -29,11 +29,11 @@
 | autoemulate/hyperparam\_searching.py                   |       45 |        5 |     89% |92-95, 100-101 |
 | autoemulate/logging\_config.py                         |       44 |        4 |     91% |29, 57, 64-65 |
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
-| autoemulate/model\_processing.py                       |       33 |        0 |    100% |           |
+| autoemulate/model\_processing.py                       |       34 |        0 |    100% |           |
 | autoemulate/plotting.py                                |       91 |       57 |     37% |96-97, 137-160, 196-218, 255-270, 294-340 |
-| autoemulate/printing.py                                |       48 |        9 |     81% |9, 14, 22-25, 72, 128-130 |
+| autoemulate/printing.py                                |       54 |       10 |     81% |10, 15, 23-26, 73, 129-131, 154 |
 | autoemulate/save.py                                    |       48 |        4 |     92% |63-65, 90, 104 |
-| autoemulate/utils.py                                   |      116 |       10 |     91% |52, 60, 119, 125, 153, 158-163, 409-410 |
+| autoemulate/utils.py                                   |      138 |        9 |     93% |56, 64, 148, 216, 221-226, 472-473 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
 | tests/test\_compare.py                                 |      103 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                         |       49 |        0 |    100% |           |
@@ -46,12 +46,12 @@
 | tests/test\_logging\_config.py                         |       51 |        0 |    100% |           |
 | tests/test\_model\_processing.py                       |       67 |        0 |    100% |           |
 | tests/test\_plotting.py                                |       68 |        7 |     90% |18, 28, 50-51, 59-60, 68 |
-| tests/test\_printing.py                                |       30 |        0 |    100% |           |
+| tests/test\_printing.py                                |       46 |        0 |    100% |           |
 | tests/test\_save.py                                    |       85 |        1 |     99% |        32 |
 | tests/test\_torch.py                                   |      103 |        0 |    100% |           |
 | tests/test\_ui.py                                      |       39 |        0 |    100% |           |
-| tests/test\_utils.py                                   |      164 |        6 |     96% |53, 59, 64, 69, 74, 79 |
-|                                              **TOTAL** | **2299** |  **210** | **91%** |           |
+| tests/test\_utils.py                                   |      203 |        6 |     97% |56, 62, 67, 72, 77, 82 |
+|                                              **TOTAL** | **2393** |  **212** | **91%** |           |
 
 
 ## Setup coverage badge

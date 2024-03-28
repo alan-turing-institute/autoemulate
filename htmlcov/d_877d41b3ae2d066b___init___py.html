@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_gaussian_process_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.4">coverage.py v7.4.4</a>,
-            created at 2024-03-26 14:19 +0000
+            created at 2024-03-28 12:58 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -99,10 +99,14 @@
     <p class="pln"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">    <span class="nam">GaussianProcess</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">GaussianProcess</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">    <span class="nam">SupportVectorMachines</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">SupportVectorMachines</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">    <span class="nam">LightGBM</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">LightGBM</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">NeuralNetTorch</span><span class="op">(</span><span class="nam">module</span><span class="op">=</span><span class="str">"mlp"</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">NeuralNetTorch</span><span class="op">(</span><span class="nam">module</span><span class="op">=</span><span class="str">"mlp"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="nam">NeuralNetTorch</span><span class="op">(</span><span class="nam">module</span><span class="op">=</span><span class="str">"rbf"</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">NeuralNetTorch</span><span class="op">(</span><span class="nam">module</span><span class="op">=</span><span class="str">"rbf"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="nam">NeuralNetSk</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">NeuralNetSk</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">NeuralNetTorch</span><span class="op">(</span><span class="nam">module</span><span class="op">=</span><span class="str">"MultiLayerPerceptron"</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">NeuralNetTorch</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">        <span class="nam">module</span><span class="op">=</span><span class="str">"MultiLayerPerceptron"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">NeuralNetTorch</span><span class="op">(</span><span class="nam">module</span><span class="op">=</span><span class="str">"RadialBasisFunctionsNetwork"</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">NeuralNetTorch</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">        <span class="nam">module</span><span class="op">=</span><span class="str">"RadialBasisFunctionsNetwork"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="nam">NeuralNetSk</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">model_name</span><span class="op">:</span> <span class="nam">NeuralNetSk</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t"><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -112,7 +116,7 @@
             <a id="nextFileLink" class="nav" href="d_877d41b3ae2d066b_gaussian_process_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.4">coverage.py v7.4.4</a>,
-            created at 2024-03-26 14:19 +0000
+            created at 2024-03-28 12:58 +0000
         </p>
     </div>
 </footer>
