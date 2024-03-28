@@ -22,6 +22,7 @@ from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _get_and_process_models
+from autoemulate.model_processing import _get_model_names
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
@@ -118,6 +119,7 @@ class AutoEmulate:
             reduce_dim,
             dim_reducer,
         )
+        self.model_names = _get_model_names(self.models)
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = cross_validator
         self.param_search = param_search

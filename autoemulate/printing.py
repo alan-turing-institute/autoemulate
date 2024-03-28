@@ -149,9 +149,7 @@ def _print_model_names(cls):
         The AutoEmulate object.
     """
 
-    model_names = [get_model_name(model) for model in cls.models]
-    model_names_short = [get_short_model_name(model) for model in cls.models]
-    df = pd.DataFrame({"model": model_names, "model_short": model_names_short})
+    df = pd.DataFrame.from_dict(cls.model_names, orient="index", columns=["short name"])
     if _in_ipython_session:
         display(HTML(df.to_html()))
     else:
