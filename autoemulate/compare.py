@@ -28,6 +28,7 @@ from autoemulate.printing import _print_cv_results
 from autoemulate.printing import _print_model_names
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_mean_scores
@@ -393,10 +394,13 @@ class AutoEmulate:
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
         """
+        model_name = (
+            _get_full_model_name(model, self.model_names) if model is not None else None
+        )
         _print_cv_results(
             self.models,
             self.scores_df,
-            model_name=model,
+            model_name=model_name,
             sort_by=sort_by,
         )
 
@@ -426,11 +430,14 @@ class AutoEmulate:
         output_index : int
             Index of the output to plot. Default is 0.
         """
+        model_name = (
+            _get_full_model_name(model, self.model_names) if model is not None else None
+        )
         _plot_results(
             self.cv_results,
             self.X,
             self.y,
-            model_name=model,
+            model_name=model_name,
             n_cols=n_cols,
             plot=plot,
             figsize=figsize,

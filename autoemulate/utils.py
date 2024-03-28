@@ -165,9 +165,22 @@ def _get_model_names_dict(MODEL_REGISTRY, model_subset=None):
     return model_names
 
 
-def get_full_model_name(model_name, model_names_dict):
+def _get_full_model_name(model_name, model_names_dict):
     """"""
-
+    """Returns the full model name from the full name or short name.
+    
+    Parameters
+    ----------
+    model_name : str
+        The full name or short name of the model.
+    model_names_dict : dict
+        Dictionary of model names and their short names.
+        
+    Returns
+    -------
+    str
+        The full name of the model.
+    """
     if model_name in model_names_dict:
         return model_name
     else:
