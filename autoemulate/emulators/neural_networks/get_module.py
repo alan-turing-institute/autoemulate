@@ -11,9 +11,9 @@ def get_module(module: str | TorchModule) -> TorchModule:
     if not isinstance(module, str):
         return module
     match module:
-        case "mlp":
+        case "MultiLayerPerceptron":
             module = MLPModule
-        case "rbf":
+        case "RadialBasisFunctionsNetwork":
             module = RBFModule
         case _:
             raise NotImplementedError(f"Module {module} not implemented.")

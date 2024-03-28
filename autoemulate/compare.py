@@ -25,11 +25,15 @@ from autoemulate.model_processing import _get_and_process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
+from autoemulate.printing import _print_model_names
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _get_full_model_name
+from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
+from autoemulate.utils import get_short_model_name
 
 
 class AutoEmulate:
@@ -108,14 +112,15 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
+        self.model_names = _get_model_names_dict(MODEL_REGISTRY, model_subset)
         self.models = _get_and_process_models(
             MODEL_REGISTRY,
-            model_subset,
-            self.y,
-            scale,
-            scaler,
-            reduce_dim,
-            dim_reducer,
+            model_subset=list(self.model_names.keys()),
+            y=self.y,
+            scale=scale,
+            scaler=scaler,
+            reduce_dim=reduce_dim,
+            dim_reducer=dim_reducer,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = cross_validator
@@ -183,10 +188,11 @@ class AutoEmulate:
 
         # Freshly initialise scores dataframe when running compare()
         self.scores_df = pd.DataFrame(
-            columns=["model", "metric", "fold", "score"]
+            columns=["model", "short", "metric", "fold", "score"]
         ).astype(
             {
                 "model": "object",
+                "short": "object",
                 "metric": "object",
                 "fold": "int64",
                 "score": "float64",
@@ -371,15 +377,12 @@ class AutoEmulate:
 
         return serialiser._load_model(path)
 
-    def print_setup(self) -> None:
-        """Print the setup of the AutoEmulate object.
+    def print_model_names(self):
+        """Print available models"""
+        _print_model_names(self)
 
-        This method prints the setup of the AutoEmulate object, including the models and metrics used.
-
-        Returns
-        -------
-        None
-        """
+    def print_setup(self):
+        """Print the setup of the AutoEmulate object."""
         _print_setup(self)
 
     def print_results(self, model=None, sort_by="r2"):
@@ -393,10 +396,13 @@ class AutoEmulate:
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
         """
+        model_name = (
+            _get_full_model_name(model, self.model_names) if model is not None else None
+        )
         _print_cv_results(
             self.models,
             self.scores_df,
-            model_name=model,
+            model_name=model_name,
             sort_by=sort_by,
         )
 
@@ -426,11 +432,14 @@ class AutoEmulate:
         output_index : int
             Index of the output to plot. Default is 0.
         """
+        model_name = (
+            _get_full_model_name(model, self.model_names) if model is not None else None
+        )
         _plot_results(
             self.cv_results,
             self.X,
             self.y,
-            model_name=model,
+            model_name=model_name,
             n_cols=n_cols,
             plot=plot,
             figsize=figsize,
@@ -462,6 +471,7 @@ class AutoEmulate:
         scores_df = pd.concat(
             [
                 pd.DataFrame({"model": [get_model_name(model)]}),
+                pd.DataFrame({"short": [get_short_model_name(model)]}),
                 pd.DataFrame(scores, index=[0]),
             ],
             axis=1,

@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import make_scorer
@@ -87,6 +89,7 @@ def _update_scores_df(scores_df, model_name, cv_results):
             for fold, score in enumerate(cv_results[key]):
                 scores_df.loc[len(scores_df.index)] = {
                     "model": model_name,
+                    "short": "".join(re.findall(r"[A-Z]", model_name)).lower(),
                     "metric": key.split("test_", 1)[1],
                     "fold": fold,
                     "score": score,
