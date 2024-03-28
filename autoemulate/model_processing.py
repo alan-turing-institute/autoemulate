@@ -146,22 +146,3 @@ def _get_and_process_models(
         models_multi, scale, scaler, reduce_dim, dim_reducer
     )
     return models_scaled
-
-
-def _get_model_names(models):
-    """Get model names (short and long) from models.
-
-    Parameters
-    ----------
-    models : list
-        List of model instances.
-
-    Returns
-    -------
-    model_names_dict : dict
-        Dictionary of model names (long and short).
-    """
-    model_names = [get_model_name(model) for model in models]
-    model_names_short = [get_short_model_name(model) for model in models]
-    model_names_dict = dict(zip(model_names, model_names_short))
-    return model_names_dict
