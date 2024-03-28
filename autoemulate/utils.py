@@ -419,7 +419,7 @@ def get_mean_scores(scores_df, metric):
         raise RuntimeError(f"Metric {metric} not supported.")
 
     means_df = (
-        scores_df.groupby(["model", "metric"])["score"]
+        scores_df.groupby(["model", "short", "metric"])["score"]
         .mean()
         .unstack()
         .reset_index()

@@ -33,6 +33,7 @@ from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
+from autoemulate.utils import get_short_model_name
 
 
 class AutoEmulate:
@@ -187,10 +188,11 @@ class AutoEmulate:
 
         # Freshly initialise scores dataframe when running compare()
         self.scores_df = pd.DataFrame(
-            columns=["model", "metric", "fold", "score"]
+            columns=["model", "short", "metric", "fold", "score"]
         ).astype(
             {
                 "model": "object",
+                "short": "object",
                 "metric": "object",
                 "fold": "int64",
                 "score": "float64",
@@ -469,6 +471,7 @@ class AutoEmulate:
         scores_df = pd.concat(
             [
                 pd.DataFrame({"model": [get_model_name(model)]}),
+                pd.DataFrame({"short": [get_short_model_name(model)]}),
                 pd.DataFrame(scores, index=[0]),
             ],
             axis=1,
