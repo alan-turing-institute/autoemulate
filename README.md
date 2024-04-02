@@ -11,9 +11,13 @@ Simulations of physical systems are often slow and need lots of compute, which m
 
 The project is in early development. 
 
-<img src="misc/robot2.png" alt="emulating simulations with ML" width="38.2%">
+<img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/main/misc/robot2.png" alt="" width="38.2%">
 
 ## installation
+
+```bash
+pip install autoemulate
+```
 
 development version from GitHub:
 
@@ -27,7 +31,6 @@ or for contributors using [Poetry](https://python-poetry.org/):
 git clone https://github.com/alan-turing-institute/autoemulate.git
 cd autoemulate
 poetry install
-poetry shell
 ```
 
 ## quick start
