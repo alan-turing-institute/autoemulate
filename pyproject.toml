@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.1.0"
+version = "0.1.0.post1"
 description = "An emulator platform for Digital Twins"
 license = "MIT"
 authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
