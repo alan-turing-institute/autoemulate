@@ -3,7 +3,11 @@ name = "autoemulate"
 version = "0.1.0"
 description = "An emulator platform for Digital Twins"
 license = "MIT"
-authors = ["martin stoffel <martin.adam.stoffel@gmail.com>"]
+authors = ["Martin Stoffel <mstoffel@turing.ac.uk> (Maintainer)",
+           "Kalle Westerling <https://github.com/kallewesterling>",
+           "Bryan Li <https://github.com/bryanlimy>",
+           "Eric Daub <https://github.com/edaub>",
+           "Steve Niederer <https://github.com/snie007>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
