@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![All Contributors](https://img.shields.io/github/all-contributors/alan-turing-institute/autoemulate?color=ee8449&style=flat-square)](#contributors)
+[![Documentation](https://img.shields.io/badge/documentation-blue)](https://alan-turing-institute.github.io/autoemulate/)
 
 <!-- SPHINX-START -->
 
