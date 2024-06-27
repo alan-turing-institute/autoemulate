@@ -1,10 +1,12 @@
 import numpy as np
 import torch
+from scipy.stats import loguniform
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
+from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 
@@ -17,8 +19,8 @@ class CNP(BaseEstimator, RegressorMixin):
         self,
         hidden_dim=64,
         latent_dim=64,
-        context_points=5,
-        max_epochs=100,
+        context_points=16,
+        max_epochs=500,
         lr=0.001,
         batch_size=32,
         device="cpu",
@@ -84,9 +86,41 @@ class CNP(BaseEstimator, RegressorMixin):
         else:
             return mean
 
+    @staticmethod
+    def get_grid_params(search_type: str = "random"):
+        param_space = {
+            "max_epochs": np.arange(10, 500, 10).tolist(),
+            "batch_size": np.arange(2, 128, 2).tolist(),
+            # "module__hidden_layers": np.arange(1, 4).tolist(),
+            # "module__hidden_dim": np.arange(50, 500, 50).tolist(),
+            # "module__latent_dim": np.arange(50, 500, 50).tolist(),
+            # "module__hidden_activation": [
+            #     nn.ReLU,
+            #     nn.Tanh,
+            #     nn.Sigmoid,
+            #     nn.GELU,
+            # ],
+            # "optimizer": [torch.optim.AdamW, torch.optim.LBFGS, torch.optim.SGD],  #
+            # "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
+        }
+        match search_type:
+            case "random":
+                param_space |= {
+                    "lr": loguniform(1e-6, 1e-4),
+                }
+            case "bayes":
+                param_space |= {
+                    # "optimizer": Categorical(param_space["optimizer"]),
+                    "lr": Real(1e-6, 1e-4, prior="log-uniform"),
+                }
+            case _:
+                raise ValueError(f"Invalid search type: {search_type}")
+
+        return param_space
+
     @property
     def model_name(self):
-        return self.module_name
+        return self.__class__.__name__
 
     def _more_tags(self):
         return {

@@ -76,34 +76,3 @@ class CNPModule(nn.Module):
         # Decode for all target points
         mean, logvar = self.decoder(r, X_data)
         return mean, logvar
-
-    @staticmethod
-    def get_grid_params(search_type: str = "random"):
-        param_space = {
-            "max_epochs": np.arange(10, 110, 10).tolist(),
-            "batch_size": np.arange(2, 128, 2).tolist(),
-            # "module__hidden_layers": np.arange(1, 4).tolist(),
-            # "module__hidden_size": np.arange(50, 250, 50).tolist(),
-            # "module__hidden_activation": [
-            #     nn.ReLU,
-            #     nn.Tanh,
-            #     nn.Sigmoid,
-            #     nn.GELU,
-            # ],
-            # "optimizer": [torch.optim.AdamW, torch.optim.LBFGS, torch.optim.SGD],  #
-            # "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
-        }
-        match search_type:
-            case "random":
-                param_space |= {
-                    "lr": loguniform(1e-6, 1e-4),
-                }
-            case "bayes":
-                param_space |= {
-                    # "optimizer": Categorical(param_space["optimizer"]),
-                    "lr": Real(1e-6, 1e-4, prior="log-uniform"),
-                }
-            case _:
-                raise ValueError(f"Invalid search type: {search_type}")
-
-        return param_space
