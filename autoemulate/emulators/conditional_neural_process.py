@@ -11,7 +11,7 @@ from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
-from autoemulate.emulators.neural_networks.cnp_module import GaussianNLLLoss
+from autoemulate.emulators.neural_networks.cnp_module import RobustGaussianNLLLoss
 from autoemulate.utils import set_random_seed
 
 
@@ -112,7 +112,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             lr=self.lr,
             batch_size=self.batch_size,
             device=self.device,
-            criterion=GaussianNLLLoss,
+            criterion=RobustGaussianNLLLoss,
             train_split=None,
             verbose=1,
         )
