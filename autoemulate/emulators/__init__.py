@@ -1,4 +1,4 @@
-from .cnp import CNP
+from .conditional_neural_process import ConditionalNeuralProcess
 from .gaussian_process import GaussianProcess
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gradient_boosting import GradientBoosting
@@ -25,5 +25,5 @@ MODEL_REGISTRY = {
         module="RadialBasisFunctionsNetwork"
     ),
     NeuralNetSk().model_name: NeuralNetSk(),
-    CNP().model_name: CNP(),
+    ConditionalNeuralProcess().model_name: ConditionalNeuralProcess(),
 }
