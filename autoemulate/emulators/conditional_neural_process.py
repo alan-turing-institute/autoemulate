@@ -71,9 +71,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
     def __init__(
         self,
-        hidden_dim=64,
-        latent_dim=64,
-        n_context_points=16,
+        hidden_dim=32,
+        latent_dim=32,
+        n_context_points=24,
         max_epochs=100,
         lr=1e-3,
         batch_size=32,
@@ -117,6 +117,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             verbose=1,
         )
         X_dict = {"X": X, "y": y}
+        # CNPModule forward needs X and y and y is provided to train
         self.model_.fit(X_dict, y)
         self.X_train_ = X
         self.y_train_ = y
@@ -128,13 +129,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         X = check_array(X, dtype=np.float32)
 
         X_dict = {
-            "X": torch.cat([torch.from_numpy(self.X_train_), torch.from_numpy(X)]),
-            "y": torch.cat(
-                [
-                    torch.from_numpy(self.y_train_),
-                    torch.zeros((X.shape[0], self.output_dim_), dtype=torch.float32),
-                ]
-            ),
+            "X": torch.from_numpy(self.X_train_),
+            "y": torch.from_numpy(self.y_train_),
+            "X_target": torch.from_numpy(X),
         }
 
         with torch.no_grad():

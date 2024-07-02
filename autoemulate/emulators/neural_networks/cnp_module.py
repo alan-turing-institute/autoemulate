@@ -93,17 +93,21 @@ class CNPModule(nn.Module):
 
     def forward(self, X, y, X_target=None):
         # X is expected to be a dict containing 'X' and 'y'
-        X_data, y_data = X, y
-        batch_size = X_data.shape[0]
-        # Randomly select context points
-        context_idx = torch.randperm(batch_size)[: self.n_context_points]
+        batch_size = X.shape[0]
+        # if X_target, we predict
+        if X_target is not None:
+            context_x = X
+            context_y = y
+        # if not, we train
+        else:
+            context_idx = torch.randperm(batch_size)[: self.n_context_points]
+            context_x = X[context_idx]
+            context_y = y[context_idx]
+            X_target = X
         # print(f"context idx shape: {context_idx.shape}")
-        # print(f"context_idx: {context_idx}")
-        context_x = X_data[context_idx]
-        context_y = y_data[context_idx]
         # Encode context points
         r = self.encoder(context_x, context_y).mean(dim=0, keepdim=True)
 
         # Decode for all target points
-        mean, logvar = self.decoder(r, X_data)
+        mean, logvar = self.decoder(r, X_target)
         return mean, logvar
