@@ -84,24 +84,23 @@ class Decoder(nn.Module):
 
 class CNPModule(nn.Module):
     def __init__(
-        self, input_dim, output_dim, hidden_dim, latent_dim=64, context_proportion=0.5
+        self, input_dim, output_dim, hidden_dim, latent_dim=64, n_context_points=16
     ):
         super().__init__()
         self.encoder = Encoder(input_dim, output_dim, hidden_dim, latent_dim)
         self.decoder = Decoder(input_dim, latent_dim, hidden_dim, output_dim)
-        self.context_proportion = context_proportion
+        self.n_context_points = n_context_points
 
     def forward(self, X, y, X_target=None):
         # X is expected to be a dict containing 'X' and 'y'
         X_data, y_data = X, y
         batch_size = X_data.shape[0]
-        num_context = max(1, int(batch_size * self.context_proportion))
         # Randomly select context points
-        # context_idx = torch.randperm(batch_size)[:context_points]
+        context_idx = torch.randperm(batch_size)[: self.n_context_points]
         # print(f"context idx shape: {context_idx.shape}")
         # print(f"context_idx: {context_idx}")
-        context_x = X_data[:num_context]
-        context_y = y_data[:num_context]
+        context_x = X_data[context_idx]
+        context_y = y_data[context_idx]
         # Encode context points
         r = self.encoder(context_x, context_y).mean(dim=0, keepdim=True)
 
