@@ -12,6 +12,7 @@ from skorch.callbacks import Callback
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
 from autoemulate.emulators.neural_networks.cnp_module import GaussianNLLLoss
+from autoemulate.utils import set_random_seed
 
 
 class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
@@ -74,10 +75,14 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         latent_dim=64,
         context_points=16,
         max_epochs=100,
-        lr=0.001,
+        lr=1e-3,
         batch_size=32,
         device="cpu",
+        **kwargs,
     ):
+        if "random_state" in kwargs:
+            setattr(self, "random_state", kwargs.pop("random_state"))
+            set_random_seed(self.random_state)
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
         self.context_points = context_points
@@ -108,12 +113,14 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             batch_size=self.batch_size,
             device=self.device,
             criterion=GaussianNLLLoss,
+            train_split=None,
             verbose=0,
         )
         X_dict = {"X": X, "y": y}
         self.model_.fit(X_dict, y)
         self.X_train_ = X
         self.y_train_ = y
+        self.n_features_in_ = X.shape[1]
         return self
 
     def predict(self, X, return_std=False):
@@ -135,8 +142,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
         # Extract predictions for new data points
         mean, logvar = predictions
-        mean = mean[-X.shape[0] :]
-        logvar = logvar[-X.shape[0] :]
+        mean = mean[-X.shape[0] :].numpy()
+        logvar = logvar[-X.shape[0] :].numpy()
 
         if return_std:
             std = np.exp(0.5 * logvar)

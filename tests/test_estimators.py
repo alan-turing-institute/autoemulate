@@ -32,7 +32,7 @@ from autoemulate.emulators import SupportVectorMachines
         # NeuralNetTorch(module="MultiLayerPerceptron", random_state=42),
         # NeuralNetTorch(module="RadialBasisFunctionsNetwork", random_state=42),
         # LightGBM(),
-        ConditionalNeuralProcess(),
+        ConditionalNeuralProcess(random_state=42),
     ]
 )
 def test_check_estimator(estimator, check):

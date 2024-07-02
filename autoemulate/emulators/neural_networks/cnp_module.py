@@ -67,6 +67,7 @@ class CNPModule(nn.Module):
         X_data, y_data = X, y
         # Randomly select context points
         context_idx = torch.randperm(X_data.shape[0])[: self.context_points]
+        # print(f"context_idx: {context_idx}")
         context_x = X_data[context_idx]
         context_y = y_data[context_idx]
         # Encode context points
