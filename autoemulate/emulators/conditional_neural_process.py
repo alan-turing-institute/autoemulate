@@ -80,11 +80,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         lr=1e-3,
         batch_size=32,
         device="cpu",
+        random_state=None,
         **kwargs,
     ):
-        if "random_state" in kwargs:
-            setattr(self, "random_state", kwargs.pop("random_state"))
-            set_random_seed(self.random_state)
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
         self.n_context_points = n_context_points
@@ -92,15 +90,15 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self.lr = lr
         self.batch_size = batch_size
         self.device = device
+        self.random_state = random_state
+        if self.random_state is not None:
+            set_random_seed(self.random_state)
 
     def fit(self, X, y):
         X, y = check_X_y(
             X, y, multi_output=True, y_numeric=True, dtype=np.float32, copy=True
         )
         y = y.astype(np.float32)
-
-        print("Fit: X shape:", X.shape)
-        print("Fit: y shape:", y.shape)
         # store y dim to shape predicted y
         self.y_dim_ = y.ndim
         # convert y to 2d if its 1d
@@ -108,6 +106,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             y = y.reshape(-1, 1)
         self.input_dim_ = X.shape[1]
         self.output_dim_ = y.shape[1] if len(y.shape) > 1 else 1
+
+        if self.random_state is not None:
+            set_random_seed(self.random_state)
 
         self.model_ = NeuralNetRegressor(
             CNPModule,
@@ -137,10 +138,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         check_is_fitted(self)
 
         X = check_array(X, dtype=np.float32)  # dtype=np.float32
-
-        X_context = torch.from_numpy(self.X_train_)
-        y_context = torch.from_numpy(self.y_train_)
-        X_target = torch.from_numpy(X)
+        X_context = torch.from_numpy(self.X_train_).float()
+        y_context = torch.from_numpy(self.y_train_).float()
+        X_target = torch.from_numpy(X).float()
 
         with torch.no_grad():
             predictions = self.model_.module_.forward(X_context, y_context, X_target)
@@ -150,9 +150,6 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         mean, logvar = predictions
         mean = mean[-X.shape[0] :].numpy().astype(np.float64)
         logvar = logvar[-X.shape[0] :].numpy().astype(np.float64)
-
-        # print("Predictions shape:", mean.shape)
-        # print("Predictions mean:", mean)
 
         # if y is 1d, make predictions same shape
         if self.y_dim_ == 1:

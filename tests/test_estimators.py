@@ -5,6 +5,7 @@
 from functools import partial
 
 from sklearn.utils.estimator_checks import _yield_all_checks
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from autoemulate.emulators import ConditionalNeuralProcess
