@@ -114,7 +114,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             device=self.device,
             criterion=RobustGaussianNLLLoss,
             train_split=None,
-            verbose=1,
+            verbose=0,
         )
         X_dict = {"X": X, "y": y}
         # CNPModule forward needs X and y and y is provided to train
@@ -139,8 +139,10 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
         # Extract predictions for new data points
         mean, logvar = predictions
-        mean = mean[-X.shape[0] :].numpy()
-        logvar = logvar[-X.shape[0] :].numpy()
+        mean = (
+            mean[-X.shape[0] :].numpy().astype(np.float64)
+        )  # need to be float64 to pass test
+        logvar = logvar[-X.shape[0] :].numpy().astype(np.float64)
 
         if return_std:
             std = np.exp(0.5 * logvar)
@@ -189,12 +191,6 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             "multioutput": True,
             "poor_score": True,
             # "_xfail_checks": {
-            #     "check_no_attributes_set_in_init": "skorch initialize attributes in __init__.",
-            #     "check_regressors_no_decision_function": "skorch NeuralNetRegressor class implements the predict_proba.",
-            #     "check_parameters_default_constructible": "skorch NeuralNet class callbacks parameter expects a list of callables.",
-            #     "check_dont_overwrite_parameters": "the change of public attribute module__input_size is needed to support dynamic input size.",
-            #     "check_estimators_overwrite_params": "in order to support dynamic input and output size, we have to overwrite module__input_size and module__output_size during fit.",
-            #     "check_estimators_empty_data_messages": "the error message cannot print module__input_size the module has not been initialized",
-            #     "check_set_params": "_params_to_validate must be a list or set, while check_set_params set it to a float which causes AttributeError",
+            #     "check_fit_idempotent": "Checks that est.fit(X) is the same as est.fit(X).fit(X) which it isn't for meta-models",
             # },
         }
