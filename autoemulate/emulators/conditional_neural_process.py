@@ -96,11 +96,16 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             X, y, multi_output=True, y_numeric=True, dtype=np.float32, copy=True
         )
         y = y.astype(np.float32)
+        # store y dim to shape predicted y
+        self.y_dim_ = y.ndim
         # convert y to 2d if its 1d
         if len(y.shape) == 1:
             y = y.reshape(-1, 1)
         self.input_dim_ = X.shape[1]
         self.output_dim_ = y.shape[1] if len(y.shape) > 1 else 1
+
+        print(f"Fit: X {X.shape}, y {y.shape}")
+
         self.model_ = NeuralNetRegressor(
             CNPModule,
             module__input_dim=self.input_dim_,
@@ -143,6 +148,11 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             mean[-X.shape[0] :].numpy().astype(np.float64)
         )  # need to be float64 to pass test
         logvar = logvar[-X.shape[0] :].numpy().astype(np.float64)
+
+        # if y is 1d, make predictions same shape
+        if self.y_dim_ == 1:
+            mean = mean.ravel()
+            logvar = logvar.ravel()
 
         if return_std:
             std = np.exp(0.5 * logvar)
