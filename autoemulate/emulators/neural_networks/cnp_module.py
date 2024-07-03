@@ -92,7 +92,6 @@ class CNPModule(nn.Module):
         self.n_context_points = n_context_points
 
     def forward(self, X, y, X_target=None):
-        # X is expected to be a dict containing 'X' and 'y'
         batch_size = X.shape[0]
         # if X_target, we predict
         if X_target is not None:
@@ -104,7 +103,6 @@ class CNPModule(nn.Module):
             context_x = X[context_idx]
             context_y = y[context_idx]
             X_target = X
-        # print(f"context idx shape: {context_idx.shape}")
         # Encode context points
         r = self.encoder(context_x, context_y).mean(dim=0, keepdim=True)
 

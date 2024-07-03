@@ -9,6 +9,8 @@ from sklearn.utils.validation import check_X_y
 from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
+from skorch.dataset import Dataset
+from skorch.helper import SliceDict
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
 from autoemulate.emulators.neural_networks.cnp_module import RobustGaussianNLLLoss
@@ -73,8 +75,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self,
         hidden_dim=32,
         latent_dim=32,
-        n_context_points=24,
-        max_epochs=100,
+        n_context_points=16,
+        max_epochs=500,
         lr=1e-3,
         batch_size=32,
         device="cpu",
@@ -96,6 +98,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             X, y, multi_output=True, y_numeric=True, dtype=np.float32, copy=True
         )
         y = y.astype(np.float32)
+
+        print("Fit: X shape:", X.shape)
+        print("Fit: y shape:", y.shape)
         # store y dim to shape predicted y
         self.y_dim_ = y.ndim
         # convert y to 2d if its 1d
@@ -103,8 +108,6 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             y = y.reshape(-1, 1)
         self.input_dim_ = X.shape[1]
         self.output_dim_ = y.shape[1] if len(y.shape) > 1 else 1
-
-        print(f"Fit: X {X.shape}, y {y.shape}")
 
         self.model_ = NeuralNetRegressor(
             CNPModule,
@@ -122,6 +125,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             verbose=0,
         )
         X_dict = {"X": X, "y": y}
+        X_dict = SliceDict(**X_dict)
         # CNPModule forward needs X and y and y is provided to train
         self.model_.fit(X_dict, y)
         self.X_train_ = X
@@ -131,23 +135,24 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
     def predict(self, X, return_std=False):
         check_is_fitted(self)
-        X = check_array(X, dtype=np.float32)
 
-        X_dict = {
-            "X": torch.from_numpy(self.X_train_),
-            "y": torch.from_numpy(self.y_train_),
-            "X_target": torch.from_numpy(X),
-        }
+        X = check_array(X, dtype=np.float32)  # dtype=np.float32
+
+        X_context = torch.from_numpy(self.X_train_)
+        y_context = torch.from_numpy(self.y_train_)
+        X_target = torch.from_numpy(X)
 
         with torch.no_grad():
-            predictions = self.model_.forward(X_dict)
+            predictions = self.model_.module_.forward(X_context, y_context, X_target)
 
         # Extract predictions for new data points
+        # need to be float64 to pass test
         mean, logvar = predictions
-        mean = (
-            mean[-X.shape[0] :].numpy().astype(np.float64)
-        )  # need to be float64 to pass test
+        mean = mean[-X.shape[0] :].numpy().astype(np.float64)
         logvar = logvar[-X.shape[0] :].numpy().astype(np.float64)
+
+        # print("Predictions shape:", mean.shape)
+        # print("Predictions mean:", mean)
 
         # if y is 1d, make predictions same shape
         if self.y_dim_ == 1:
@@ -199,7 +204,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     def _more_tags(self):
         return {
             "multioutput": True,
-            "poor_score": True,
+            "poor_score": True,  # can be removed when max_epochs are ~1000 by default
+            "non_deterministic": True,
             # "_xfail_checks": {
             #     "check_fit_idempotent": "Checks that est.fit(X) is the same as est.fit(X).fit(X) which it isn't for meta-models",
             # },
