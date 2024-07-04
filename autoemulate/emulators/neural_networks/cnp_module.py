@@ -7,15 +7,15 @@ from skopt.space import Categorical
 from skopt.space import Real
 
 
-class RobustGaussianNLLLoss(nn.Module):
-    def forward(self, y_pred, y_true):
-        mean, logvar = y_pred
-        variance = torch.exp(logvar.clamp(min=-20, max=20)) + 1e-6
-        return 0.5 * torch.mean(
-            logvar
-            + torch.clamp((y_true - mean) ** 2 / variance, max=1e6)
-            + torch.log(torch.tensor(2 * np.pi))
-        )
+# class RobustGaussianNLLLoss(nn.Module):
+#     def forward(self, y_pred, y_true):
+#         mean, logvar = y_pred
+#         variance = torch.exp(logvar.clamp(min=-20, max=20)) + 1e-6
+#         return 0.5 * torch.mean(
+#             logvar
+#             + torch.clamp((y_true - mean) ** 2 / variance, max=1e6)
+#             + torch.log(torch.tensor(2 * np.pi))
+#         )
 
 
 # def sum_log_prob(prob, sample):
@@ -79,6 +79,13 @@ class Decoder(nn.Module):
         hidden = self.network(input)
         mean = self.mean_head(hidden)
         logvar = self.logvar_head(hidden)
+
+        # Debug prints
+        if torch.isnan(mean).any() or torch.isnan(logvar).any():
+            print("NaN detected in mean or logvar")
+            print(f"mean: {mean}")
+            print(f"logvar: {logvar}")
+
         return mean, logvar
 
 

@@ -9,11 +9,12 @@ from sklearn.utils.validation import check_X_y
 from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback
+from skorch.callbacks import GradientNormClipping
 from skorch.dataset import Dataset
 from skorch.helper import SliceDict
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
-from autoemulate.emulators.neural_networks.cnp_module import RobustGaussianNLLLoss
+from autoemulate.emulators.neural_networks.losses import CNPLoss
 from autoemulate.utils import set_random_seed
 
 
@@ -75,7 +76,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self,
         hidden_dim=32,
         latent_dim=32,
-        n_context_points=16,
+        n_context_points=24,
         max_epochs=500,
         lr=1e-3,
         batch_size=32,
@@ -121,9 +122,10 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             lr=self.lr,
             batch_size=self.batch_size,
             device=self.device,
-            criterion=RobustGaussianNLLLoss,
-            train_split=None,
-            verbose=0,
+            criterion=CNPLoss,
+            callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
+            # train_split=None,
+            verbose=1,
         )
         X_dict = {"X": X, "y": y}
         X_dict = SliceDict(**X_dict)
