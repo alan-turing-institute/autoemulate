@@ -99,9 +99,10 @@ class Decoder(nn.Module):
         b, n, di = x_target.shape  # batch_size, n_points, input_dim
         r_expanded = r.unsqueeze(1).expand(-1, n, -1)
         dec_inp = torch.cat([r_expanded, x_target], dim=-1)
-        hidden = self.net(dec_inp)
-        mean = self.mean_head(hidden)
-        logvar = self.logvar_head(hidden)
+        x = dec_inp.view(b * n, -1)
+        hidden = self.net(x)
+        mean = self.mean_head(hidden).view(b, n, -1)
+        logvar = self.logvar_head(hidden).view(b, n, -1)
         # Debug prints
         if torch.isnan(mean).any() or torch.isnan(logvar).any():
             print("NaN detected in mean or logvar")
