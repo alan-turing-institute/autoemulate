@@ -7,15 +7,15 @@ from skopt.space import Categorical
 from skopt.space import Real
 
 
-# class RobustGaussianNLLLoss(nn.Module):
-#     def forward(self, y_pred, y_true):
-#         mean, logvar = y_pred
-#         variance = torch.exp(logvar.clamp(min=-20, max=20)) + 1e-6
-#         return 0.5 * torch.mean(
-#             logvar
-#             + torch.clamp((y_true - mean) ** 2 / variance, max=1e6)
-#             + torch.log(torch.tensor(2 * np.pi))
-#         )
+class RobustGaussianNLLLoss(nn.Module):
+    def forward(self, y_pred, y_true):
+        mean, logvar = y_pred
+        variance = torch.exp(logvar.clamp(min=-20, max=20)) + 1e-6
+        return 0.5 * torch.mean(
+            logvar
+            + torch.clamp((y_true - mean) ** 2 / variance, max=1e6)
+            + torch.log(torch.tensor(2 * np.pi))
+        )
 
 
 # def sum_log_prob(prob, sample):
@@ -49,7 +49,7 @@ from skopt.space import Real
 class Encoder(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_dim, latent_dim):
         super().__init__()
-        self.network = nn.Sequential(
+        self.net = nn.Sequential(
             nn.Linear(input_dim + output_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
@@ -57,15 +57,28 @@ class Encoder(nn.Module):
             nn.Linear(hidden_dim, latent_dim),
         )
 
-    def forward(self, x, y):
-        input_pairs = torch.cat([x, y], dim=-1)
-        return self.network(input_pairs)
+    def forward(self, x_context, y_context):
+        """
+        Encode
+
+        Parameters
+        ----------
+        x_context: batch_size x n_points x input_dim (b, n, di)
+        y_context: batch_size x n_points x output_dim (b, n, do)
+        """
+        x = torch.cat([x_context, y_context], dim=-1)
+        b, n, _ = x.shape
+        x = x.view(b * n, -1)  # stretch samples out
+        x = self.net(x)
+        x = x.view(b, n, -1)  # reshape to b, n, latent_dim
+        r = x.mean(dim=1)  # mean over n
+        return r
 
 
 class Decoder(nn.Module):
     def __init__(self, input_dim, latent_dim, hidden_dim, output_dim):
         super().__init__()
-        self.network = nn.Sequential(
+        self.net = nn.Sequential(
             nn.Linear(latent_dim + input_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
@@ -75,11 +88,20 @@ class Decoder(nn.Module):
         self.logvar_head = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, r, x_target):
-        input = torch.cat([r.expand(x_target.shape[0], -1), x_target], dim=-1)
-        hidden = self.network(input)
+        """
+        Decode using representation r and target points x_target
+
+        Parameters
+        ----------
+        r: b x latent_dim
+        x_target: b x n x di
+        """
+        b, n, di = x_target.shape  # batch_size, n_points, input_dim
+        r_expanded = r.unsqueeze(1).expand(-1, n, -1)
+        dec_inp = torch.cat([r_expanded, x_target], dim=-1)
+        hidden = self.net(dec_inp)
         mean = self.mean_head(hidden)
         logvar = self.logvar_head(hidden)
-
         # Debug prints
         if torch.isnan(mean).any() or torch.isnan(logvar).any():
             print("NaN detected in mean or logvar")

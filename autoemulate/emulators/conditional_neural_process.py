@@ -14,6 +14,8 @@ from skorch.dataset import Dataset
 from skorch.helper import SliceDict
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
+from autoemulate.emulators.neural_networks.cnp_module import RobustGaussianNLLLoss
+from autoemulate.emulators.neural_networks.datasets import CNPDataset
 from autoemulate.emulators.neural_networks.losses import CNPLoss
 from autoemulate.utils import set_random_seed
 
@@ -74,9 +76,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
     def __init__(
         self,
-        hidden_dim=32,
-        latent_dim=32,
-        n_context_points=24,
+        hidden_dim=64,
+        latent_dim=64,
+        n_context_points=16,
         max_epochs=500,
         lr=1e-3,
         batch_size=32,
@@ -122,15 +124,15 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             lr=self.lr,
             batch_size=self.batch_size,
             device=self.device,
-            criterion=CNPLoss,
-            callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
+            criterion=RobustGaussianNLLLoss,
+            dataset=CNPDataset,
+            # dataset__n_context_points=self.n_context_points,
+            # callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
             # train_split=None,
             verbose=1,
         )
-        X_dict = {"X": X, "y": y}
-        X_dict = SliceDict(**X_dict)
         # CNPModule forward needs X and y and y is provided to train
-        self.model_.fit(X_dict, y)
+        self.model_.fit(X, y)
         self.X_train_ = X
         self.y_train_ = y
         self.n_features_in_ = X.shape[1]
