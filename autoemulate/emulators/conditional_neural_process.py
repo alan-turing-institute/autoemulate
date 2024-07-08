@@ -15,6 +15,7 @@ from skorch.helper import SliceDict
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
 from autoemulate.emulators.neural_networks.cnp_module import RobustGaussianNLLLoss
+from autoemulate.emulators.neural_networks.datasets import cnp_collate_fn
 from autoemulate.emulators.neural_networks.datasets import CNPDataset
 from autoemulate.emulators.neural_networks.losses import CNPLoss
 from autoemulate.utils import set_random_seed
@@ -79,8 +80,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         hidden_dim=64,
         latent_dim=64,
         n_context_points=16,
-        max_epochs=10,
-        lr=1e-3,
+        max_epochs=100,
+        lr=1e-2,
         batch_size=32,
         device="cpu",
         random_state=None,
@@ -127,6 +128,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             criterion=RobustGaussianNLLLoss,
             dataset=CNPDataset,
             dataset__max_context_points=self.n_context_points,
+            iterator_train__collate_fn=cnp_collate_fn,
+            iterator_valid__collate_fn=cnp_collate_fn,
+            train_split=None,
             # dataset__n_context_points=self.n_context_points,
             # callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
             # train_split=None,
@@ -151,7 +155,6 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         with torch.no_grad():
             predictions = self.model_.module_.forward(X_context, y_context, X_target)
 
-        # Extract predictions for new data points
         # need to be float64 to pass test
         # need to squeeze out batch dimension again so that score() etc. runs
         mean, logvar = predictions

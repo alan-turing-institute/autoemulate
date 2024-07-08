@@ -131,7 +131,7 @@ class CNPModule(nn.Module):
         self.decoder = Decoder(input_dim, latent_dim, hidden_dim, output_dim)
         self.n_context_points = n_context_points
 
-    def forward(self, X_context, y_context, X_target=None):
+    def forward(self, X_context, y_context, X_target=None, context_mask=None):
         """
 
         Parameters
@@ -147,8 +147,8 @@ class CNPModule(nn.Module):
         mean: (batch_size, n_sample, output_dim)
         logvar: (batch_size, n_sample, output_dim)
         """
-        # Encode context points
-        r = self.encoder(X_context, y_context)  # (batch x latent_dim)
+        # Encode con
+        r = self.encoder(X_context, y_context)
         # Decode for all target points
         mean, logvar = self.decoder(r, X_target)
         return mean, logvar
