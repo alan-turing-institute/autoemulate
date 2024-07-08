@@ -79,7 +79,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self,
         hidden_dim=64,
         latent_dim=64,
-        n_context_points=16,
+        max_context_points=16,
         max_epochs=100,
         lr=1e-2,
         batch_size=32,
@@ -89,7 +89,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     ):
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
-        self.n_context_points = n_context_points
+        self.max_context_points = max_context_points
         self.max_epochs = max_epochs
         self.lr = lr
         self.batch_size = batch_size
@@ -120,14 +120,13 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             module__output_dim=self.output_dim_,
             module__hidden_dim=self.hidden_dim,
             module__latent_dim=self.latent_dim,
-            module__n_context_points=self.n_context_points,
             max_epochs=self.max_epochs,
             lr=self.lr,
             batch_size=self.batch_size,
             device=self.device,
             criterion=RobustGaussianNLLLoss,
             dataset=CNPDataset,
-            dataset__max_context_points=self.n_context_points,
+            dataset__max_context_points=self.max_context_points,
             iterator_train__collate_fn=cnp_collate_fn,
             iterator_valid__collate_fn=cnp_collate_fn,
             train_split=None,
