@@ -2,6 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 
+from autoemulate.emulators.neural_networks.cnp_module import CNPModule
 from autoemulate.emulators.neural_networks.cnp_module import Decoder
 from autoemulate.emulators.neural_networks.cnp_module import Encoder
 
@@ -126,3 +127,45 @@ def test_decoder_different_batch_sizes(decoder):
 
             assert mean.shape == (batch_size, n_points, 1)
             assert logvar.shape == (batch_size, n_points, 1)
+
+
+# cnp ----------------------------
+
+
+@pytest.fixture
+def cnp_module():
+    return CNPModule(
+        input_dim=2, output_dim=1, hidden_dim=32, latent_dim=64, n_context_points=16
+    )
+
+
+def test_cnp_module_init(cnp_module):
+    assert isinstance(cnp_module, CNPModule)
+    assert isinstance(cnp_module.encoder, Encoder)
+    assert isinstance(cnp_module.decoder, Decoder)
+
+
+def test_cnp_module_forward_train(cnp_module):
+    b, n, dx = 32, 24, 2
+    dy = 1
+    X = torch.randn(b, n, dx)
+    y = torch.randn(b, n, dy)
+
+    mean, logvar = cnp_module(X, y)
+
+    assert mean.shape == (b, n, dy)
+    assert logvar.shape == (b, n, dy)
+
+
+def test_cnp_module_forward_train_2d(cnp_module):
+    b, n, dx = 32, 24, 2
+    dy = 2
+    X = torch.randn(b, n, dx)
+    y = torch.randn(b, n, dy)
+    # re-initialise with 2 output dims
+    cnp_module = CNPModule(
+        input_dim=2, output_dim=2, hidden_dim=32, latent_dim=64, n_context_points=16
+    )
+    mean, logvar = cnp_module(X, y)
+    assert mean.shape == (b, n, dy)
+    assert logvar.shape == (b, n, dy)

@@ -129,20 +129,19 @@ class CNPModule(nn.Module):
         self.n_context_points = n_context_points
 
     def forward(self, X, y, X_target=None):
-        batch_size = X.shape[0]
+        batch_size, n_points, _ = X.shape
         # if X_target, we predict
         if X_target is not None:
-            context_x = X
-            context_y = y
+            context_x = X  # (batch_size, n_points, input_dim)
+            context_y = y  # (batch_size, n_points, output_dim)
         # if not, we train
         else:
-            context_idx = torch.randperm(batch_size)[: self.n_context_points]
-            context_x = X[context_idx]
-            context_y = y[context_idx]
+            context_idx = torch.randperm(n_points)[: self.n_context_points]
+            context_x = X[:, context_idx, :]
+            context_y = y[:, context_idx, :]
             X_target = X
         # Encode context points
-        r = self.encoder(context_x, context_y).mean(dim=0, keepdim=True)
-
+        r = self.encoder(context_x, context_y)
         # Decode for all target points
         mean, logvar = self.decoder(r, X_target)
         return mean, logvar
