@@ -72,7 +72,7 @@ class Encoder(nn.Module):
         """
         x = torch.cat([x_context, y_context], dim=-1)
         x = self.net(x)
-        r = x.mean(dim=1)  # mean over context points
+        r = x.mean(dim=1, keepdim=True)  # mean over context points
         return r
 
 
@@ -94,7 +94,7 @@ class Decoder(nn.Module):
 
         Parameters
         ----------
-        r: (batch_size, latent_dim)
+        r: (batch_size, 1, latent_dim)
         x_target: (batch_size, n_points, input_dim)
 
         Returns
@@ -103,11 +103,14 @@ class Decoder(nn.Module):
         logvar: (batch_size, n_points, output_dim)
         """
         _, n, _ = x_target.shape  # batch_size, n_points, input_dim
-        r_expanded = r.unsqueeze(1).expand(-1, n, -1)
+        r_expanded = r.expand(-1, n, -1)
         x = torch.cat([r_expanded, x_target], dim=-1)
         hidden = self.net(x)
         mean = self.mean_head(hidden)
         logvar = self.logvar_head(hidden)
+        # print(f"mean: {mean.shape}")
+        # print(f"logvar: {logvar.shape}")
+        # print(f"hidden: {hidden.shape}")
         # sigma = 0.1 + 0.9 * torch.nn.functional.softplus(logvar)
         # dist = torch.distributions.Normal(mean, sigma)
         # Debug prints
@@ -128,20 +131,24 @@ class CNPModule(nn.Module):
         self.decoder = Decoder(input_dim, latent_dim, hidden_dim, output_dim)
         self.n_context_points = n_context_points
 
-    def forward(self, X, y, X_target=None):
-        batch_size, n_points, _ = X.shape
-        # if X_target, we predict
-        if X_target is not None:
-            context_x = X  # (batch_size, n_points, input_dim)
-            context_y = y  # (batch_size, n_points, output_dim)
-        # if not, we train
-        else:
-            context_idx = torch.randperm(n_points)[: self.n_context_points]
-            context_x = X[:, context_idx, :]
-            context_y = y[:, context_idx, :]
-            X_target = X
+    def forward(self, X_context, y_context, X_target=None):
+        """
+
+        Parameters
+        ----------
+        X_context: (batch_size, n_points, input_dim)
+        y_context: (batch_size, n_points, output_dim)
+        X_target: (batch_size, n_sample, input_dim)
+
+        X_target uses all points, as this has shown to be more effect for training
+
+        Returns
+        -------
+        mean: (batch_size, n_sample, output_dim)
+        logvar: (batch_size, n_sample, output_dim)
+        """
         # Encode context points
-        r = self.encoder(context_x, context_y)
+        r = self.encoder(X_context, y_context)  # (batch x latent_dim)
         # Decode for all target points
         mean, logvar = self.decoder(r, X_target)
         return mean, logvar

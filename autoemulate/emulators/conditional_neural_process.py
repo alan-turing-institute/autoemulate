@@ -79,7 +79,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         hidden_dim=64,
         latent_dim=64,
         n_context_points=16,
-        max_epochs=500,
+        max_epochs=10,
         lr=1e-3,
         batch_size=32,
         device="cpu",
@@ -126,6 +126,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             device=self.device,
             criterion=RobustGaussianNLLLoss,
             dataset=CNPDataset,
+            dataset__max_context_points=self.n_context_points,
             # dataset__n_context_points=self.n_context_points,
             # callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
             # train_split=None,
@@ -141,19 +142,21 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     def predict(self, X, return_std=False):
         check_is_fitted(self)
 
+        # need to add batch dimension to run through forward
         X = check_array(X, dtype=np.float32)  # dtype=np.float32
-        X_context = torch.from_numpy(self.X_train_).float()
-        y_context = torch.from_numpy(self.y_train_).float()
-        X_target = torch.from_numpy(X).float()
+        X_context = torch.from_numpy(self.X_train_).float().unsqueeze(0)
+        y_context = torch.from_numpy(self.y_train_).float().unsqueeze(0)
+        X_target = torch.from_numpy(X).float().unsqueeze(0)
 
         with torch.no_grad():
             predictions = self.model_.module_.forward(X_context, y_context, X_target)
 
         # Extract predictions for new data points
         # need to be float64 to pass test
+        # need to squeeze out batch dimension again so that score() etc. runs
         mean, logvar = predictions
-        mean = mean[-X.shape[0] :].numpy().astype(np.float64)
-        logvar = logvar[-X.shape[0] :].numpy().astype(np.float64)
+        mean = mean[-X.shape[0] :].numpy().astype(np.float64).squeeze()
+        logvar = logvar[-X.shape[0] :].numpy().astype(np.float64).squeeze()
 
         # if y is 1d, make predictions same shape
         if self.y_dim_ == 1:

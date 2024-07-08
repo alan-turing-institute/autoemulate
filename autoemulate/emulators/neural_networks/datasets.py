@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from skorch.dataset import Dataset
 
 
 class CNPDataset(Dataset):
@@ -17,9 +17,10 @@ class CNPDataset(Dataset):
 
     def __getitem__(self, idx):
         # sample context points
-        num_context = np.random.randint(
-            self.min_context_points, self.max_context_points
-        )
+        # num_context = np.random.randint(
+        #     self.min_context_points, self.max_context_points
+        # )
+        num_context = 10
 
         # randomly select context
         perm = torch.randperm(self.n_samples)
