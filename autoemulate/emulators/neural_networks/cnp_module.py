@@ -59,19 +59,20 @@ class Encoder(nn.Module):
 
     def forward(self, x_context, y_context):
         """
-        Encode
+        Encode context
 
         Parameters
         ----------
-        x_context: batch_size x n_points x input_dim (b, n, di)
-        y_context: batch_size x n_points x output_dim (b, n, do)
+        x_context: (batch_size, n_points, input_dim)
+        y_context: (batch_size, n_points, output_dim)
+
+        Returns
+        -------
+        r: (batch_size, latent_dim)
         """
         x = torch.cat([x_context, y_context], dim=-1)
-        b, n, _ = x.shape
-        x = x.view(b * n, -1)  # stretch samples out
         x = self.net(x)
-        x = x.view(b, n, -1)  # reshape to b, n, latent_dim
-        r = x.mean(dim=1)  # mean over n
+        r = x.mean(dim=1)  # mean over context points
         return r
 
 
@@ -93,21 +94,27 @@ class Decoder(nn.Module):
 
         Parameters
         ----------
-        r: b x latent_dim
-        x_target: b x n x di
+        r: (batch_size, latent_dim)
+        x_target: (batch_size, n_points, input_dim)
+
+        Returns
+        -------
+        mean: (batch_size, n_points, output_dim)
+        logvar: (batch_size, n_points, output_dim)
         """
-        b, n, di = x_target.shape  # batch_size, n_points, input_dim
+        _, n, _ = x_target.shape  # batch_size, n_points, input_dim
         r_expanded = r.unsqueeze(1).expand(-1, n, -1)
-        dec_inp = torch.cat([r_expanded, x_target], dim=-1)
-        x = dec_inp.view(b * n, -1)
+        x = torch.cat([r_expanded, x_target], dim=-1)
         hidden = self.net(x)
-        mean = self.mean_head(hidden).view(b, n, -1)
-        logvar = self.logvar_head(hidden).view(b, n, -1)
+        mean = self.mean_head(hidden)
+        logvar = self.logvar_head(hidden)
+        # sigma = 0.1 + 0.9 * torch.nn.functional.softplus(logvar)
+        # dist = torch.distributions.Normal(mean, sigma)
         # Debug prints
-        if torch.isnan(mean).any() or torch.isnan(logvar).any():
-            print("NaN detected in mean or logvar")
-            print(f"mean: {mean}")
-            print(f"logvar: {logvar}")
+        # if torch.isnan(mean).any() or torch.isnan(logvar).any():
+        #     print("NaN detected in mean or logvar")
+        #     print(f"mean: {mean}")
+        #     print(f"logvar: {logvar}")
 
         return mean, logvar
 
