@@ -12,9 +12,9 @@ from skorch.callbacks import Callback
 from skorch.callbacks import GradientNormClipping
 from skorch.dataset import Dataset
 from skorch.helper import SliceDict
+from torch import nn
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
-from autoemulate.emulators.neural_networks.cnp_module import RobustGaussianNLLLoss
 from autoemulate.emulators.neural_networks.datasets import cnp_collate_fn
 from autoemulate.emulators.neural_networks.datasets import CNPDataset
 from autoemulate.emulators.neural_networks.losses import CNPLoss
@@ -77,22 +77,28 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
     def __init__(
         self,
-        hidden_dim=64,
-        latent_dim=64,
+        hidden_dim=32,
+        latent_dim=32,
+        hidden_layers=2,
         max_context_points=16,
-        max_epochs=100,
+        max_epochs=50,
         lr=1e-2,
-        batch_size=32,
+        batch_size=16,
+        activation=nn.ReLU,
+        # optimizer=torch.optim.AdamW,
         device="cpu",
         random_state=None,
         **kwargs,
     ):
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
+        self.hidden_layers = hidden_layers
         self.max_context_points = max_context_points
         self.max_epochs = max_epochs
         self.lr = lr
         self.batch_size = batch_size
+        # self.optimizer = optimizer
+        self.activation = activation
         self.device = device
         self.random_state = random_state
         if self.random_state is not None:
@@ -120,6 +126,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             module__output_dim=self.output_dim_,
             module__hidden_dim=self.hidden_dim,
             module__latent_dim=self.latent_dim,
+            module__hidden_layers=self.hidden_layers,
+            module__activation=self.activation,
             max_epochs=self.max_epochs,
             lr=self.lr,
             batch_size=self.batch_size,
@@ -129,7 +137,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             dataset__max_context_points=self.max_context_points,
             iterator_train__collate_fn=cnp_collate_fn,
             iterator_valid__collate_fn=cnp_collate_fn,
-            train_split=None,
+            train_split=False,
             # callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
             verbose=1,
         )
@@ -175,7 +183,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             "max_epochs": np.arange(10, 500, 10).tolist(),
             "batch_size": np.arange(2, 128, 2).tolist(),
             # "module__hidden_layers": np.arange(1, 4).tolist(),
-            # "module__hidden_dim": np.arange(50, 500, 50).tolist(),
+            "hidden_dim": [32, 64, 128, 256, 512],
+            "latent_dim": [32, 64, 128, 256, 512],
             # "module__latent_dim": np.arange(50, 500, 50).tolist(),
             # "module__hidden_activation": [
             #     nn.ReLU,
@@ -183,18 +192,18 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             #     nn.Sigmoid,
             #     nn.GELU,
             # ],
-            # "optimizer": [torch.optim.AdamW, torch.optim.LBFGS, torch.optim.SGD],  #
+            "optimizer": [torch.optim.AdamW, torch.optim.LBFGS, torch.optim.SGD],  #
             # "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
             case "random":
                 param_space |= {
-                    "lr": loguniform(1e-6, 1e-4),
+                    "lr": loguniform(1e-4, 1e-2),
                 }
             case "bayes":
                 param_space |= {
                     # "optimizer": Categorical(param_space["optimizer"]),
-                    "lr": Real(1e-6, 1e-4, prior="log-uniform"),
+                    "lr": Real(1e-4, 1e-2, prior="log-uniform"),
                 }
             case _:
                 raise ValueError(f"Invalid search type: {search_type}")

@@ -8,15 +8,15 @@ from skopt.space import Real
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_dim, latent_dim):
+    def __init__(
+        self, input_dim, output_dim, hidden_dim, latent_dim, hidden_layers, activation
+    ):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim + output_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, latent_dim),
-        )
+        layers = [nn.Linear(input_dim + output_dim, hidden_dim), activation()]
+        for _ in range(hidden_layers):
+            layers.extend([nn.Linear(hidden_dim, hidden_dim), activation()])
+        layers.append(nn.Linear(hidden_dim, latent_dim))
+        self.net = nn.Sequential(*layers)
 
     def forward(self, x_context, y_context):
         """
@@ -38,14 +38,14 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_dim, latent_dim, hidden_dim, output_dim):
+    def __init__(
+        self, input_dim, latent_dim, hidden_dim, output_dim, hidden_layers, activation
+    ):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(latent_dim + input_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-        )
+        layers = [nn.Linear(latent_dim + input_dim, hidden_dim), activation()]
+        for _ in range(hidden_layers):
+            layers.extend([nn.Linear(hidden_dim, hidden_dim), activation()])
+        self.net = nn.Sequential(*layers)
         self.mean_head = nn.Linear(hidden_dim, output_dim)
         self.logvar_head = nn.Linear(hidden_dim, output_dim)
 
@@ -85,11 +85,22 @@ class Decoder(nn.Module):
 
 class CNPModule(nn.Module):
     def __init__(
-        self, input_dim, output_dim, hidden_dim, latent_dim=64, n_context_points=16
+        self,
+        input_dim,
+        output_dim,
+        hidden_dim,
+        latent_dim=64,
+        n_context_points=16,
+        hidden_layers=2,
+        activation=nn.ReLU,
     ):
         super().__init__()
-        self.encoder = Encoder(input_dim, output_dim, hidden_dim, latent_dim)
-        self.decoder = Decoder(input_dim, latent_dim, hidden_dim, output_dim)
+        self.encoder = Encoder(
+            input_dim, output_dim, hidden_dim, latent_dim, hidden_layers, activation
+        )
+        self.decoder = Decoder(
+            input_dim, latent_dim, hidden_dim, output_dim, hidden_layers, activation
+        )
         self.n_context_points = n_context_points
 
     def forward(self, X_context, y_context, X_target=None, context_mask=None):
