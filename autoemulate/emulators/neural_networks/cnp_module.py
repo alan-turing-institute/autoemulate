@@ -8,6 +8,10 @@ from skopt.space import Real
 
 
 class Encoder(nn.Module):
+    """
+    Deterministic encoder for conditional neural process model.
+    """
+
     def __init__(
         self, input_dim, output_dim, hidden_dim, latent_dim, hidden_layers, activation
     ):
@@ -24,12 +28,12 @@ class Encoder(nn.Module):
 
         Parameters
         ----------
-        x_context: (batch_size, n_points, input_dim)
-        y_context: (batch_size, n_points, output_dim)
+        x_context: (batch_size, n_context_points, input_dim)
+        y_context: (batch_size, n_context_points, output_dim)
 
         Returns
         -------
-        r: (batch_size, latent_dim)
+        r: (batch_size, 1, latent_dim)
         """
         x = torch.cat([x_context, y_context], dim=-1)
         x = self.net(x)
@@ -69,16 +73,6 @@ class Decoder(nn.Module):
         hidden = self.net(x)
         mean = self.mean_head(hidden)
         logvar = self.logvar_head(hidden)
-        # print(f"mean: {mean.shape}")
-        # print(f"logvar: {logvar.shape}")
-        # print(f"hidden: {hidden.shape}")
-        # sigma = 0.1 + 0.9 * torch.nn.functional.softplus(logvar)
-        # dist = torch.distributions.Normal(mean, sigma)
-        # Debug prints
-        # if torch.isnan(mean).any() or torch.isnan(logvar).any():
-        #     print("NaN detected in mean or logvar")
-        #     print(f"mean: {mean}")
-        #     print(f"logvar: {logvar}")
 
         return mean, logvar
 
@@ -90,7 +84,6 @@ class CNPModule(nn.Module):
         output_dim,
         hidden_dim,
         latent_dim=64,
-        n_context_points=16,
         hidden_layers=2,
         activation=nn.ReLU,
     ):
@@ -101,23 +94,22 @@ class CNPModule(nn.Module):
         self.decoder = Decoder(
             input_dim, latent_dim, hidden_dim, output_dim, hidden_layers, activation
         )
-        self.n_context_points = n_context_points
 
     def forward(self, X_context, y_context, X_target=None, context_mask=None):
         """
 
         Parameters
         ----------
-        X_context: (batch_size, n_points, input_dim)
-        y_context: (batch_size, n_points, output_dim)
-        X_target: (batch_size, n_sample, input_dim)
+        X_context: (batch_size, n_context_points, input_dim)
+        y_context: (batch_size, n_context_points, output_dim)
+        X_target: (batch_size, n_points, input_dim)
 
         X_target uses all points, as this has shown to be more effect for training
 
         Returns
         -------
-        mean: (batch_size, n_sample, output_dim)
-        logvar: (batch_size, n_sample, output_dim)
+        mean: (batch_size, n_points, output_dim)
+        logvar: (batch_size, n_points, output_dim)
         """
         # Encode con
         r = self.encoder(X_context, y_context)

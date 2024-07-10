@@ -80,10 +80,10 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         hidden_dim=32,
         latent_dim=32,
         hidden_layers=2,
-        max_context_points=16,
+        max_context_points=32,
         max_epochs=50,
-        lr=1e-2,
-        batch_size=16,
+        lr=1e-3,
+        batch_size=32,
         activation=nn.ReLU,
         # optimizer=torch.optim.AdamW,
         device="cpu",
@@ -137,7 +137,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             dataset__max_context_points=self.max_context_points,
             iterator_train__collate_fn=cnp_collate_fn,
             iterator_valid__collate_fn=cnp_collate_fn,
-            train_split=False,
+            # train_split=None,
             # callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
             verbose=1,
         )
@@ -181,18 +181,20 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     def get_grid_params(search_type: str = "random"):
         param_space = {
             "max_epochs": np.arange(10, 500, 10).tolist(),
-            "batch_size": np.arange(2, 128, 2).tolist(),
+            "batch_size": np.arange(2, 64, 2).tolist(),
             # "module__hidden_layers": np.arange(1, 4).tolist(),
-            "hidden_dim": [32, 64, 128, 256, 512],
-            "latent_dim": [32, 64, 128, 256, 512],
-            # "module__latent_dim": np.arange(50, 500, 50).tolist(),
-            # "module__hidden_activation": [
-            #     nn.ReLU,
-            #     nn.Tanh,
-            #     nn.Sigmoid,
-            #     nn.GELU,
+            "hidden_dim": [32, 64, 128],
+            "latent_dim": [32, 64, 128],
+            "max_context_points": [16, 32, 64],
+            "hidden_layers": [1, 2, 3, 4, 5],
+            "activation": [
+                nn.ReLU,
+                nn.Tanh,
+                nn.GELU,
+                nn.Sigmoid,
+            ],
             # ],
-            "optimizer": [torch.optim.AdamW, torch.optim.LBFGS, torch.optim.SGD],  #
+            "optimizer": [torch.optim.AdamW, torch.optim.SGD],  #
             # "optimizer__weight_decay": (1 / 10 ** np.arange(1, 9)).tolist(),
         }
         match search_type:
@@ -219,7 +221,4 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             "multioutput": True,
             "poor_score": True,  # can be removed when max_epochs are ~1000 by default
             "non_deterministic": True,
-            # "_xfail_checks": {
-            #     "check_fit_idempotent": "Checks that est.fit(X) is the same as est.fit(X).fit(X) which it isn't for meta-models",
-            # },
         }
