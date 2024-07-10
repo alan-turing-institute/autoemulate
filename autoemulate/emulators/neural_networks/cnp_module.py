@@ -7,45 +7,6 @@ from skopt.space import Categorical
 from skopt.space import Real
 
 
-class RobustGaussianNLLLoss(nn.Module):
-    def forward(self, y_pred, y_true):
-        mean, logvar = y_pred
-        variance = torch.exp(logvar.clamp(min=-20, max=20)) + 1e-6
-        return 0.5 * torch.mean(
-            logvar
-            + torch.clamp((y_true - mean) ** 2 / variance, max=1e6)
-            + torch.log(torch.tensor(2 * np.pi))
-        )
-
-
-# def sum_log_prob(prob, sample):
-#     """Compute log probability then sum all but the z_samples and batch."""
-#     log_p = prob.log_prob(sample)
-#     sum_log_p = log_p.sum(dim=tuple(range(2, log_p.dim())))
-#     return sum_log_p
-
-# class CNPLoss(nn.Module):
-#     def __init__(self, reduction='mean'):
-#         super().__init__()
-#         self.reduction = reduction
-
-#     def forward(self, y_pred, y_true):
-#         mean, logvar = y_pred
-
-#         # Create a Normal distribution with the predicted mean and variance
-#         p_yCc = torch.distributions.Normal(mean, torch.exp(0.5 * logvar))
-
-#         # Calculate the negative log-likelihood
-#         nll = -sum_log_prob(p_yCc, y_true)
-
-#         if self.reduction == 'mean':
-#             return nll.mean()
-#         elif self.reduction == 'sum':
-#             return nll.sum()
-#         else:
-#             return nll
-
-
 class Encoder(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_dim, latent_dim):
         super().__init__()

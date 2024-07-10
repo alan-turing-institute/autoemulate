@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -5,15 +6,14 @@ import torch.nn.functional as F
 
 class CNPLoss(nn.Module):
     """
-    Improved loss function for Conditional Neural Processes (CNP).
+    Loss function for Conditional Neural Processes (CNP).
 
-    This loss function creates a Normal distribution using the predicted mean and
-    log standard deviation, then calculates the negative log-likelihood of the true
-    values under this distribution.
+    This loss function calculates the negative log-likelihood of the true values
+    under a Normal distribution parameterized by the predicted mean and log variance.
 
     Methods:
     --------
-    forward(y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
+    forward(y_pred: tuple, y_true: torch.Tensor) -> torch.Tensor:
         Calculate the loss given predictions and true values.
     """
 
@@ -27,7 +27,7 @@ class CNPLoss(nn.Module):
         Parameters:
         -----------
         y_pred : tuple
-            Output of the CNP model, mean and log standard deviation.
+            Output of the CNP model, mean and log variance.
             Both are tensors, Shape: [batch_size, output_dim]
         y_true : torch.Tensor
             True target values.
@@ -38,19 +38,12 @@ class CNPLoss(nn.Module):
         torch.Tensor
             The calculated loss (negative log-likelihood), averaged over the batch.
         """
-        # mean, log_sigma = torch.chunk(y_pred, 2, dim=-1)
-        mean, log_sigma = y_pred
 
-        # print(f"mean: {mean[:5]}, log_sigma: {log_sigma[:5]}")
-        # print(log_sigma)
-        # Bound the variance
-        sigma = 0.1 + 0.9 * F.softplus(log_sigma)
-        # sigma = torch.exp(log_sigma)
-
-        # Create a Normal distribution with the predicted mean and variance
-        dist = torch.distributions.Normal(mean.squeeze(-1), sigma.squeeze(-1))
-
-        # Calculate the negative log-likelihood
-        nll = -dist.log_prob(y_true).sum(dim=-1)
-
-        return nll.mean()
+        mean, logvar = y_pred
+        variance = torch.exp(logvar.clamp(min=-20, max=20)) + 1e-6
+        nll = 0.5 * torch.mean(
+            logvar
+            + torch.clamp((y_true - mean) ** 2 / variance, max=1e6)
+            + torch.log(torch.tensor(2 * np.pi))
+        )
+        return nll

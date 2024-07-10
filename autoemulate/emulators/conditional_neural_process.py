@@ -124,15 +124,13 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             lr=self.lr,
             batch_size=self.batch_size,
             device=self.device,
-            criterion=RobustGaussianNLLLoss,
+            criterion=CNPLoss,
             dataset=CNPDataset,
             dataset__max_context_points=self.max_context_points,
             iterator_train__collate_fn=cnp_collate_fn,
             iterator_valid__collate_fn=cnp_collate_fn,
             train_split=None,
-            # dataset__n_context_points=self.n_context_points,
             # callbacks=[("grad_norm", GradientNormClipping(gradient_clip_value=1.0))],
-            # train_split=None,
             verbose=1,
         )
         # CNPModule forward needs X and y and y is provided to train
