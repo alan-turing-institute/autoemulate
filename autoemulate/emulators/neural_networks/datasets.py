@@ -4,12 +4,15 @@ from skorch.dataset import Dataset
 
 
 class CNPDataset(Dataset):
-    def __init__(self, X, y, max_context_points, min_context_points=3):
+    def __init__(self, X, y, max_context_points, min_context_points, n_episode):
         self.X = torch.tensor(X, dtype=torch.float32)
         self.y = torch.tensor(y, dtype=torch.float32)
+        if max_context_points >= n_episode:
+            raise ValueError("max_context_points must be less than n_episode")
         self.max_context_points = max_context_points
         self.min_context_points = min_context_points
         self.n_samples, self.x_dim = X.shape
+        self.n_episode = n_episode
         self.y_dim = y.shape[1] if len(y.shape) > 1 else 1
 
     def __len__(self):
@@ -20,12 +23,13 @@ class CNPDataset(Dataset):
         num_context = np.random.randint(
             self.min_context_points, self.max_context_points + 1
         )
-        # num_context = 16
 
         # randomly select context
         perm = torch.randperm(self.n_samples)
         context_idxs = perm[:num_context]
-        target_idxs = perm  # including context points in targets helps with training
+        target_idxs = perm[
+            : self.n_episode
+        ]  # including context points in targets helps with training
 
         X_context = self.X[context_idxs]
         y_context = self.y[context_idxs]
