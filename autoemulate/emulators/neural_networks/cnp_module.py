@@ -83,8 +83,8 @@ class CNPModule(nn.Module):
         input_dim,
         output_dim,
         hidden_dim,
-        latent_dim=64,
-        hidden_layers=2,
+        latent_dim,
+        hidden_layers,
         activation=nn.ReLU,
     ):
         super().__init__()
@@ -103,16 +103,14 @@ class CNPModule(nn.Module):
         X_context: (batch_size, n_context_points, input_dim)
         y_context: (batch_size, n_context_points, output_dim)
         X_target: (batch_size, n_points, input_dim)
-
-        X_target uses all points, as this has shown to be more effect for training
+        context_mask: (batch_size, n_context_points), currently unused,
+        as we pad with 0's and don't have attention, layernorm yet.
 
         Returns
         -------
         mean: (batch_size, n_points, output_dim)
         logvar: (batch_size, n_points, output_dim)
         """
-        # Encode con
         r = self.encoder(X_context, y_context)
-        # Decode for all target points
         mean, logvar = self.decoder(r, X_target)
         return mean, logvar

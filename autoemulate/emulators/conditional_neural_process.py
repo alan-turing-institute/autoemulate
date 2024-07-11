@@ -88,13 +88,13 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         # architecture
         hidden_dim=64,
         latent_dim=64,
-        hidden_layers=2,
+        hidden_layers=3,
         # data per episode
         min_context_points=3,
-        max_context_points=16,
-        n_episode=24,
+        max_context_points=10,
+        n_episode=32,
         # training
-        max_epochs=100,
+        max_epochs=50,
         lr=1e-2,
         batch_size=16,
         activation=nn.ReLU,
@@ -124,11 +124,10 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             X,
             y,
             multi_output=True,
-            y_numeric=True,
             dtype=np.float32,
             copy=True,
             ensure_2d=True,
-            ensure_min_samples=self.n_episode,
+            # ensure_min_samples=self.n_episode,
             y_numeric=True,
         )
         # y also needs to be float32 and 2d
