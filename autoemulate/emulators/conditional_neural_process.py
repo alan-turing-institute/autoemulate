@@ -267,4 +267,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         }
 
     def __repr__(self):
-        return self.model_.__repr__()
+        # show architecture once fitted
+        if hasattr(self, "model_"):
+            return self.model_.__repr__()
+        else:
+            return super().__repr__()
