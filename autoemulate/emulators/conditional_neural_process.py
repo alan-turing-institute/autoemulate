@@ -39,16 +39,33 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         The number of hidden units in the neural network layers.
     latent_dim : int, default=64
         The dimensionality of the latent space.
-    context_points : int, default=16
-        The number of context points to use during training.
+    hidden_layers : int, default=3
+        The number of hidden layers in the neural network.
+    min_context_points : int, default=3
+        The minimum number of context points to use during training.
+    max_context_points : int, default=10
+        The maximum number of context points to use during training.
+    n_episode : int, default=32
+        The number of episodes to sample during each epoch.
     max_epochs : int, default=100
         The maximum number of epochs to train the model.
-    lr : float, default=0.001
+    lr : float, default=0.01
         The learning rate for the optimizer.
-    batch_size : int, default=32
+    batch_size : int, default=16
         The number of samples per batch.
+    activation : callable, default=torch.nn.ReLU
+        The activation function to use in the neural network layers.
+    optimizer : callable, default=torch.optim.AdamW
+        The optimizer to use for training the model.
     device : str, default="cpu"
         The device to use for training. Options are "cpu" or "cuda".
+    random_state : int, default=None
+        The seed used by the random number generator.
+
+    References
+    ----------
+    [1] Garnelo, M., Rosenbaum, D., Maddison, C., Ramalho, T., Saxton, D., Shanahan, M., Teh, Y.W., Rezende, D., & Eslami, S.M.A. (2018).
+           Conditional Neural Processes. In International Conference on Machine Learning (pp. 1704-1713). PMLR.
 
     Attributes
     ----------
@@ -76,7 +93,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     >>> from autoemulate.emulators.cnp import ConditionalNeuralProcess
     >>> X = np.random.rand(100, 10)
     >>> y = np.random.rand(100, 1)
-    >>> cnp = ConditionalNeuralProcess(hidden_dim=32, latent_dim=32, context_points=10, max_epochs=50, lr=0.01, batch_size=16, device="cpu")
+    >>> cnp = ConditionalNeuralProcess(hidden_dim=128, latent_dim=128, hidden_layers=4, min_context_points=3, max_context_points=10, n_episode=32, max_epochs=100, lr=0.01, batch_size=16, activation=torch.nn.ReLU, optimizer=torch.optim.AdamW, device="cpu", random_state=42)
     >>> cnp.fit(X, y)
     >>> y_pred = cnp.predict(X)
     >>> y_pred.shape
@@ -94,7 +111,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         max_context_points=10,
         n_episode=32,
         # training
-        max_epochs=50,
+        max_epochs=100,
         lr=1e-2,
         batch_size=16,
         activation=nn.ReLU,
