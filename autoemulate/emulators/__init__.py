@@ -6,8 +6,8 @@ from .light_gbm import LightGBM
 from .neural_net_sk import NeuralNetSk
 from .neural_net_torch import NeuralNetTorch
 from .polynomials import SecondOrderPolynomial
+from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
-from .rbf import RadialBasisFunctions
 from .support_vector_machines import SupportVectorMachines
 
 MODEL_REGISTRY = {
