@@ -22,7 +22,7 @@ class Encoder(nn.Module):
         layers.append(nn.Linear(hidden_dim, latent_dim))
         self.net = nn.Sequential(*layers)
 
-    def forward(self, x_context, y_context):
+    def forward(self, x_context, y_context, context_mask=None):
         """
         Encode context
 
@@ -30,6 +30,7 @@ class Encoder(nn.Module):
         ----------
         x_context: (batch_size, n_context_points, input_dim)
         y_context: (batch_size, n_context_points, output_dim)
+        context_mask: (batch_size, n_context_points)
 
         Returns
         -------
@@ -37,7 +38,16 @@ class Encoder(nn.Module):
         """
         x = torch.cat([x_context, y_context], dim=-1)
         x = self.net(x)
-        r = x.mean(dim=1, keepdim=True)  # mean over context points
+
+        if context_mask is not None:
+            masked_x = x * context_mask.unsqueeze(-1)
+            r = masked_x.sum(dim=1, keepdim=True) / context_mask.sum(
+                dim=1, keepdim=True
+            ).unsqueeze(
+                -1
+            )  # mean over valid context points
+        else:
+            r = x.mean(dim=1, keepdim=True)  # mean over context points
         return r
 
 
@@ -111,6 +121,6 @@ class CNPModule(nn.Module):
         mean: (batch_size, n_points, output_dim)
         logvar: (batch_size, n_points, output_dim)
         """
-        r = self.encoder(X_context, y_context)
+        r = self.encoder(X_context, y_context, context_mask)
         mean, logvar = self.decoder(r, X_target)
         return mean, logvar
