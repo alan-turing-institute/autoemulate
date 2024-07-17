@@ -83,7 +83,7 @@ class AutoEmulate:
             Number of parameter settings that are sampled. Only used if
             param_search=True and param_search_type="random".
         scale : bool, default=True
-            Whether to scale the data before fitting the models using a scaler.
+            Whether to scale features/parameters in X before fitting the models using a scaler.
         scaler : sklearn.preprocessing.StandardScaler
             Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.
         reduce_dim : bool, default=False

@@ -3,6 +3,7 @@ import torch
 from scipy.stats import loguniform
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
+from sklearn.preprocessing._data import _handle_zeros_in_scale
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
@@ -116,6 +117,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         batch_size=16,
         activation=nn.ReLU,
         optimizer=torch.optim.AdamW,
+        normalize_y=True,
         # misc
         device="cpu",
         random_state=None,
@@ -131,6 +133,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self.batch_size = batch_size
         self.activation = activation
         self.optimizer = optimizer
+        self.normalize_y = normalize_y
         self.device = device
         self.random_state = random_state
         if self.random_state is not None:
@@ -155,6 +158,15 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
         self.input_dim_ = X.shape[1]
         self.output_dim_ = y.shape[1]
+
+        # Normalize target value
+        # the zero handler is from sklearn
+        if self.normalize_y:
+            self._y_train_mean = np.mean(y, axis=0)
+            self._y_train_std = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
+
+            # Remove mean and make unit variance
+            y = (y - self._y_train_mean) / self._y_train_std
 
         if self.random_state is not None:
             set_random_seed(self.random_state)
@@ -211,6 +223,12 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         mean, logvar = predictions
         mean = mean[-X.shape[0] :].numpy().astype(np.float64).squeeze()
         logvar = logvar[-X.shape[0] :].numpy().astype(np.float64).squeeze()
+
+        # undo normalization
+        if self.normalize_y:
+            mean = mean * self._y_train_std + self._y_train_mean
+            var = np.exp(logvar) * (self._y_train_std**2)
+            logvar = np.log(var)
 
         # if y is 1d, make predictions same shape
         if self.y_dim_ == 1:
