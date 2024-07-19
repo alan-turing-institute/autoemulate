@@ -200,7 +200,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
                 ("grad_norm", GradientNormClipping(gradient_clip_value=1.0)),
             ],
             # train_split=None,
-            verbose=1,
+            verbose=0,
         )
         self.model_.fit(X, y)
         self.X_train_ = X
@@ -244,32 +244,32 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     @staticmethod
     def get_grid_params(search_type: str = "random"):
         param_space = {
-            "max_epochs": np.arange(10, 500, 10).tolist(),
-            "batch_size": np.arange(2, 64, 2).tolist(),
+            "max_epochs": [100, 200, 300],
+            "batch_size": [16, 32, 64],
             "hidden_dim": [32, 64, 128],
             "latent_dim": [32, 64, 128],
-            "max_context_points": [16, 32, 64],
+            "max_context_points": [10, 20, 30],
             "hidden_layers": [1, 2, 3, 4, 5],
             "activation": [
                 nn.ReLU,
-                nn.Tanh,
+                # nn.Tanh,
                 nn.GELU,
-                nn.Sigmoid,
+                # nn.Sigmoid,
             ],
             # ],
             "optimizer": [torch.optim.AdamW, torch.optim.SGD],  #
         }
-        match search_type:
-            case "random":
-                param_space |= {
-                    "lr": loguniform(1e-4, 1e-2),
-                }
-            case "bayes":
-                param_space |= {
-                    "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-                }
-            case _:
-                raise ValueError(f"Invalid search type: {search_type}")
+        # match search_type:
+        #     case "random":
+        #         param_space |= {
+        #             "lr": loguniform(1e-4, 1e-2),
+        #         }
+        #     case "bayes":
+        #         param_space |= {
+        #             "lr": Real(1e-4, 1e-2, prior="log-uniform"),
+        #         }
+        #     case _:
+        #         raise ValueError(f"Invalid search type: {search_type}")
 
         return param_space
 
