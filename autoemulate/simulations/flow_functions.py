@@ -143,6 +143,6 @@ class FlowProblem:
         ax[0].set_xlabel('Time (s)')
         ax[1].set_xlabel('Time (s)')
         ax[0].set_ylabel('mmHg')
-        ax[1].set_ylabel('ml\cdot s^{-1}$')
+        ax[1].set_ylabel('$ml\cdot s^{-1}$')
         
         return (fig, ax)
