@@ -283,7 +283,10 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
 
     @property
     def model_name(self):
-        return self.__class__.__name__
+        if self.attention:
+            return "AttentiveConditionalNeuralProcess"
+        else:
+            return "ConditionalNeuralProcess"
 
     def _more_tags(self):
         return {

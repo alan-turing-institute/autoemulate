@@ -26,4 +26,7 @@ MODEL_REGISTRY = {
     ),
     NeuralNetSk().model_name: NeuralNetSk(),
     ConditionalNeuralProcess().model_name: ConditionalNeuralProcess(),
+    ConditionalNeuralProcess(attention=True).model_name: ConditionalNeuralProcess(
+        attention=True
+    ),
 }
