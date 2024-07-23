@@ -23,16 +23,24 @@ class Encoder(nn.Module):
         context_mask=None,
     ):
         super().__init__()
-        layers = [nn.Linear(input_dim + output_dim, hidden_dim), activation()]
-        for _ in range(hidden_layers):
-            layers.extend([nn.Linear(hidden_dim, hidden_dim), activation()])
-        layers.append(nn.Linear(hidden_dim, latent_dim))
-        self.net = nn.Sequential(*layers)
+        # layers = [nn.Linear(input_dim + output_dim, hidden_dim), activation()]
+        # for _ in range(hidden_layers):
+        #     layers.extend([nn.Linear(hidden_dim, hidden_dim), activation()])
+        # layers.append(nn.Linear(hidden_dim, latent_dim))
+        # self.net = nn.Sequential(*layers)
+
+        self.net = nn.Sequential(
+            nn.Linear(input_dim + output_dim, hidden_dim),
+            activation(),
+            nn.Linear(hidden_dim, hidden_dim),
+            activation(),
+            nn.Linear(hidden_dim, latent_dim),
+        )
         self.x_encoder = nn.Linear(input_dim, latent_dim)
 
         self.crossattn = nn.MultiheadAttention(
-            embed_dim=latent_dim, num_heads=1, batch_first=True
-        )  #  key_padding_mask=context_mask
+            embed_dim=latent_dim, num_heads=4, batch_first=True
+        )
 
     def forward(self, x_context, y_context, x_target, context_mask=None):
         """
@@ -54,8 +62,16 @@ class Encoder(nn.Module):
         # q, k, v
         x_target_enc = self.x_encoder(x_target)
         x_context_enc = self.x_encoder(x_context)
-        r, _ = self.crossattn(x_target_enc, x_context_enc, r, need_weights=False)
-        print(f"r.shape: {r.shape}")
+        if context_mask is not None:
+            r, _ = self.crossattn(
+                x_target_enc,
+                x_context_enc,
+                r,
+                need_weights=False,
+                key_padding_mask=context_mask,
+            )
+        else:
+            r, _ = self.crossattn(x_target_enc, x_context_enc, r, need_weights=False)
         return r
 
 
@@ -129,6 +145,9 @@ class AttnCNPModule(nn.Module):
         mean: (batch_size, n_points, output_dim)
         logvar: (batch_size, n_points, output_dim)
         """
-        r = self.encoder(X_context, y_context, X_target, context_mask)
+        # inverse context_mask
+        if context_mask is not None:
+            context_mask = ~context_mask
+        r = self.encoder(X_context, y_context, X_target)
         mean, logvar = self.decoder(r, X_target)
         return mean, logvar

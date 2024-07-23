@@ -14,6 +14,7 @@ from skorch.callbacks import GradientNormClipping
 from skorch.callbacks import LRScheduler
 from torch import nn
 
+from autoemulate.emulators.neural_networks.attn_cnp_module import AttnCNPModule
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
 from autoemulate.emulators.neural_networks.datasets import cnp_collate_fn
 from autoemulate.emulators.neural_networks.datasets import CNPDataset
@@ -121,6 +122,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         # misc
         device="cpu",
         random_state=None,
+        attention=False,
     ):
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
@@ -134,6 +136,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self.activation = activation
         self.optimizer = optimizer
         self.normalize_y = normalize_y
+        self.attention = attention
         self.device = device
         self.random_state = random_state
         if self.random_state is not None:
@@ -171,8 +174,13 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         if self.random_state is not None:
             set_random_seed(self.random_state)
 
+        if self.attention:
+            cnp = AttnCNPModule
+        else:
+            cnp = CNPModule
+
         self.model_ = NeuralNetRegressor(
-            CNPModule,
+            cnp,
             module__input_dim=self.input_dim_,
             module__output_dim=self.output_dim_,
             module__hidden_dim=self.hidden_dim,
