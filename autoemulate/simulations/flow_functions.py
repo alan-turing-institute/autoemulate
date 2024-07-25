@@ -29,7 +29,7 @@ class FlowProblem:
         R (float): tube average impedance (default 0.06)
         L (float): hydraulic impedance, inertia (default 0.0017)
         R_o (float) : outflow resistance
-        p_o (float) : initial pressure
+        p_o (float) : outflow pressure
         '''
         
         assert td < T, f'td should be smaller than T but {td} >= {T}.'
