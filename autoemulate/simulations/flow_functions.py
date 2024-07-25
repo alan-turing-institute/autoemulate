@@ -24,7 +24,7 @@ class FlowProblem:
         T (float): cycle length (default 1.0)
         td (float): pulse duration, make sure to make this less than T (default 0.2)
         amp (float): inflow amplitude (default 1.0)
-        dt (float): temporal discreatisation resolution (default 0.001)
+        dt (float): temporal discretisation resolution (default 0.001)
         C (float): tube average compliance (default 38.)
         R (float): tube average impedance (default 0.06)
         L (float): hydraulic impedance, inertia (default 0.0017)
