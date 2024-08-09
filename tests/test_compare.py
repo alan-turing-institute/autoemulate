@@ -175,6 +175,7 @@ def test_param_search_updates_models(ae, Xy):
     params_after = ae.models[0].get_params()
     assert params_before != params_after
 
+
 def test_model_params_equal_wo_param_search(ae, Xy):
     X, y = Xy
     ae.setup(X, y, model_subset=["RandomForest"])
