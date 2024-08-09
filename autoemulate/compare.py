@@ -224,17 +224,28 @@ class AutoEmulate:
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
                             )
+                             # run cross validation with model that uses the optimized hyperparameters
+                            fitted_model, cv_results = _run_cv(
+                                X=self.X[self.train_idxs],
+                                y=self.y[self.train_idxs],
+                                cv=self.cross_validator,
+                                model=self.models[i],
+                                metrics=self.metrics,
+                                n_jobs=self.n_jobs,
+                                logger=self.logger,
+                            )
+                        else:
 
-                        # run cross validation
-                        fitted_model, cv_results = _run_cv(
-                            X=self.X[self.train_idxs],
-                            y=self.y[self.train_idxs],
-                            cv=self.cross_validator,
-                            model=model,
-                            metrics=self.metrics,
-                            n_jobs=self.n_jobs,
-                            logger=self.logger,
-                        )
+                            # run cross validation
+                            fitted_model, cv_results = _run_cv(
+                                X=self.X[self.train_idxs],
+                                y=self.y[self.train_idxs],
+                                cv=self.cross_validator,
+                                model=model,
+                                metrics=self.metrics,
+                                n_jobs=self.n_jobs,
+                                logger=self.logger,
+                            )
                     except Exception:
                         self.logger.exception(
                             f"Error cross-validating model {model_name}"
