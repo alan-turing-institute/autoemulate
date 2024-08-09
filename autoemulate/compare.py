@@ -224,7 +224,7 @@ class AutoEmulate:
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
                             )
-                             # run cross validation with model that uses the optimized hyperparameters
+                            # run cross validation with model that uses the optimized hyperparameters
                             fitted_model, cv_results = _run_cv(
                                 X=self.X[self.train_idxs],
                                 y=self.y[self.train_idxs],
