@@ -230,7 +230,7 @@ class AutoEmulate:
                             X=self.X[self.train_idxs],
                             y=self.y[self.train_idxs],
                             cv=self.cross_validator,
-                            model=model,
+                            model=self.models[i],
                             metrics=self.metrics,
                             n_jobs=self.n_jobs,
                             logger=self.logger,

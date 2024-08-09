@@ -162,3 +162,24 @@ def test_refit_models(ae_run):
     models = ae_run.refit_models()
     assert models is not None
     assert len(models) == len(ae_run.models)
+
+
+# --------------- test correct hyperparameter updating ------------------
+def test_param_search_updates_models(ae, Xy):
+    X, y = Xy
+    ae.setup(
+        X, y, model_subset=["RandomForest"], param_search=True, param_search_iters=5
+    )
+    params_before = ae.models[0].get_params()  # just one model, so index with 0
+    ae.compare()
+    params_after = ae.models[0].get_params()
+    assert params_before != params_after
+
+
+def test_model_params_equal_wo_param_search(ae, Xy):
+    X, y = Xy
+    ae.setup(X, y, model_subset=["RandomForest"])
+    params_before = ae.models[0].get_params()
+    ae.compare()
+    params_after = ae.models[0].get_params()
+    assert params_before == params_after
