@@ -163,6 +163,7 @@ def test_refit_models(ae_run):
     assert models is not None
     assert len(models) == len(ae_run.models)
 
+
 # --------------- test correct hyperparameter updating ------------------
 def test_param_search_updates_models(ae, Xy):
     X, y = Xy
