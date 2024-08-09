@@ -235,7 +235,6 @@ class AutoEmulate:
                                 logger=self.logger,
                             )
                         else:
-
                             # run cross validation
                             fitted_model, cv_results = _run_cv(
                                 X=self.X[self.train_idxs],
