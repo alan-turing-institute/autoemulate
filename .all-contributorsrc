@@ -64,6 +64,16 @@
         "content",
         "projectManagement"
       ]
+    },
+    {
+      "login": "MaxBalmus",
+      "name": "Maximilian Balmus",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34339336?v=4",
+      "profile": "https://github.com/MaxBalmus",
+      "contributions": [
+        "code",
+        "bug"
+      ]
     }
   ]
 }
