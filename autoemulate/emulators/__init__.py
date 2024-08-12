@@ -1,3 +1,4 @@
+from .conditional_neural_process import ConditionalNeuralProcess
 from .gaussian_process import GaussianProcess
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gradient_boosting import GradientBoosting
@@ -5,8 +6,8 @@ from .light_gbm import LightGBM
 from .neural_net_sk import NeuralNetSk
 from .neural_net_torch import NeuralNetTorch
 from .polynomials import SecondOrderPolynomial
+from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
-from .rbf import RadialBasisFunctions
 from .support_vector_machines import SupportVectorMachines
 
 MODEL_REGISTRY = {
@@ -24,4 +25,5 @@ MODEL_REGISTRY = {
         module="RadialBasisFunctionsNetwork"
     ),
     NeuralNetSk().model_name: NeuralNetSk(),
+    ConditionalNeuralProcess().model_name: ConditionalNeuralProcess(),
 }

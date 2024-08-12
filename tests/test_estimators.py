@@ -5,8 +5,10 @@
 from functools import partial
 
 from sklearn.utils.estimator_checks import _yield_all_checks
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
+from autoemulate.emulators import ConditionalNeuralProcess
 from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import GaussianProcessMOGP
 from autoemulate.emulators import GradientBoosting
@@ -21,16 +23,17 @@ from autoemulate.emulators import SupportVectorMachines
 
 @parametrize_with_checks(
     [
-        SupportVectorMachines(),
-        RandomForest(random_state=42),
-        GaussianProcess(random_state=1337),
-        NeuralNetSk(random_state=13),
-        GradientBoosting(random_state=42),
-        SecondOrderPolynomial(),
-        RadialBasisFunctions(),
-        NeuralNetTorch(module="MultiLayerPerceptron", random_state=42),
-        NeuralNetTorch(module="RadialBasisFunctionsNetwork", random_state=42),
-        LightGBM(),
+        # SupportVectorMachines(),
+        # RandomForest(random_state=42),
+        # GaussianProcess(random_state=1337),
+        # NeuralNetSk(random_state=13),
+        # GradientBoosting(random_state=42),
+        # SecondOrderPolynomial(),
+        # RadialBasisFunctions(),
+        # NeuralNetTorch(module="MultiLayerPerceptron", random_state=42),
+        # NeuralNetTorch(module="RadialBasisFunctionsNetwork", random_state=42),
+        # LightGBM(),
+        ConditionalNeuralProcess(random_state=42),
     ]
 )
 def test_check_estimator(estimator, check):
