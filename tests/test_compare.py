@@ -12,6 +12,7 @@ from autoemulate.emulators import RandomForest
 from autoemulate.experimental_design import ExperimentalDesign
 from autoemulate.experimental_design import LatinHypercube
 from autoemulate.metrics import METRIC_REGISTRY
+from autoemulate.utils import get_model_name
 
 
 @pytest.fixture()
@@ -114,14 +115,27 @@ def test__get_metrics(ae):
 
 
 # -----------------------test get_model-------------------#
-def test_get_model(ae_run):
-    # Test getting the best model
+def test_get_model_by_name(ae_run):
+    model = ae_run.get_model(name="RandomForest")
+    assert get_model_name(model) == "RandomForest"
+
+
+def test_get_model_by_short_name(ae_run):
+    model = ae_run.get_model(name="rf")
+    assert get_model_name(model) == "RandomForest"
+
+
+def test_get_model_by_invalid_name(ae_run):
+    with pytest.raises(ValueError):
+        ae_run.get_model(name="invalid_name")
+
+
+def test_get_model_by_rank(ae_run):
     model = ae_run.get_model(rank=1)
     assert model is not None
 
 
 def test_get_model_with_invalid_rank(ae_run):
-    # Test getting a model with an invalid rank
     with pytest.raises(RuntimeError):
         ae_run.get_model(rank=0)
 

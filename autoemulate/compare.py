@@ -254,14 +254,12 @@ class AutoEmulate:
                 )
 
         # get best model
-        best_model_name, self.best_model = self.get_model(
-            rank=1, metric="r2", name=True
-        )
+        self.best_model = self.get_model(rank=1, metric="r2")
 
         return self.best_model
 
-    def get_model(self, rank=1, metric="r2", name=False):
-        """Get a fitted model based on it's rank in the comparison.
+    def get_model(self, rank=1, metric="r2", name=None):
+        """Get a fitted model based on it rank in the comparison or its name.
 
         Parameters
         ----------
@@ -269,8 +267,8 @@ class AutoEmulate:
             Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
-        name : bool
-            If True, returns tuple of model name and model. If False, returns only the model.
+        name : str
+            Name of the model to return.
 
         Returns
         -------
@@ -278,27 +276,32 @@ class AutoEmulate:
             Model fitted on full data.
         """
 
-        if not hasattr(self, "scores_df"):
+        # get model by name
+        if name is not None:
+            if not isinstance(name, str):
+                raise ValueError("Name must be a string")
+            for model in self.models:
+                if get_model_name(model) == name or get_short_model_name(model) == name:
+                    return model
+            raise ValueError(f"Model {name} not found")
+
+        # check that comparison has been run
+        if not hasattr(self, "scores_df") and name is None:
             raise RuntimeError("Must run compare() before get_model()")
 
-        # get average scores across folds
-        means = get_mean_scores(self.scores_df, metric)
         # get model by rank
+        means = get_mean_scores(self.scores_df, metric)
+
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
         chosen_model_name = means.iloc[rank - 1]["model"]
 
-        # get best model:
         for model in self.models:
             if get_model_name(model) == chosen_model_name:
                 chosen_model = model
                 break
 
-        # check whether the model is fitted
-        check_is_fitted(chosen_model)
-
-        if name:
-            return chosen_model_name, chosen_model
+        # check_is_fitted(chosen_model)
         return chosen_model
 
     def refit_model(self, model):
