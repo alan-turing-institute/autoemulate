@@ -766,6 +766,31 @@ sphinx = ">=6.0,<8.0"
 sphinx-basic-ng = "*"
 
 [[package]]
+name = "gpytorch"
+version = "1.12"
+description = "An implementation of Gaussian Processes in Pytorch"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "gpytorch-1.12-py3-none-any.whl", hash = "sha256:cee9da2dc53642a7aaba3da443b14f762dd07655a926920f5c8a4e5c54d39a8a"},
+    {file = "gpytorch-1.12.tar.gz", hash = "sha256:dc2c160af72364189f5b1fd7c804f69bdbcd8c65bfd3da5c9c2fc34029639adf"},
+]
+
+[package.dependencies]
+linear-operator = ">=0.5.2"
+mpmath = ">=0.19,<=1.3"
+scikit-learn = "*"
+scipy = "*"
+
+[package.extras]
+dev = ["pre-commit", "setuptools-scm", "twine", "ufmt"]
+docs = ["ipykernel (<=6.17.1)", "ipython (<=8.6.0)", "lxml-html-clean", "m2r2 (<=0.3.3.post2)", "nbclient (<=0.7.3)", "nbformat (<=5.8.0)", "nbsphinx (<=0.9.1)", "platformdirs (<=3.2.0)", "setuptools-scm (<=7.1.0)", "sphinx (<=6.2.1)", "sphinx-autodoc-typehints (<=1.23.0)", "sphinx-rtd-theme (<0.5)"]
+examples = ["ipython", "jupyter", "matplotlib", "scipy", "torchvision", "tqdm"]
+keops = ["pykeops (>=1.1.1)"]
+pyro = ["pyro-ppl (>=1.8)"]
+test = ["flake8 (==4.0.1)", "flake8-print (==4.0.0)", "nbval", "pytest"]
+
+[[package]]
 name = "greenlet"
 version = "3.0.3"
 description = "Lightweight in-process concurrent programming"
@@ -1005,6 +1030,20 @@ widgetsnbextension = ">=4.0.10,<4.1.0"
 
 [package.extras]
 test = ["ipykernel", "jsonschema", "pytest (>=3.6.0)", "pytest-cov", "pytz"]
+
+[[package]]
+name = "jaxtyping"
+version = "0.2.33"
+description = "Type annotations and runtime checking for shape and dtype of JAX arrays, and PyTrees."
+optional = false
+python-versions = "~=3.9"
+files = [
+    {file = "jaxtyping-0.2.33-py3-none-any.whl", hash = "sha256:918d6094c73f28d3196185ef55d1832cbcd2804d1d388f180060c4366a9e2107"},
+    {file = "jaxtyping-0.2.33.tar.gz", hash = "sha256:9a9cfccae4fe05114b9fb27a5ea5440be4971a5a075bbd0526f6dd7d2730f83e"},
+]
+
+[package.dependencies]
+typeguard = "2.13.3"
 
 [[package]]
 name = "jedi"
@@ -1352,6 +1391,28 @@ arrow = ["cffi (>=1.15.1)", "pyarrow (>=6.0.1)"]
 dask = ["dask[array,dataframe,distributed] (>=2.0.0)", "pandas (>=0.24.0)"]
 pandas = ["pandas (>=0.24.0)"]
 scikit-learn = ["scikit-learn (!=0.22.0)"]
+
+[[package]]
+name = "linear-operator"
+version = "0.5.2"
+description = "A linear operator implementation, primarily designed for finite-dimensional positive definite operators (i.e. kernel matrices)."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "linear_operator-0.5.2-py3-none-any.whl", hash = "sha256:26defe85e3c924f24d49117bf78afaf0207f6847877903309dc9bf40a46d08a7"},
+    {file = "linear_operator-0.5.2.tar.gz", hash = "sha256:5cd9099bca5b9f1e57017a4153526df7410561a46aedd47096c8da642159b90d"},
+]
+
+[package.dependencies]
+jaxtyping = ">=0.2.9"
+scipy = "*"
+torch = ">=1.11"
+typeguard = ">=2.13.3,<2.14.0"
+
+[package.extras]
+dev = ["pre-commit", "setuptools-scm", "twine", "ufmt"]
+docs = ["myst-parser", "setuptools-scm", "six", "sphinx", "sphinx-autodoc-typehints", "sphinx-rtd-theme", "uncompyle6"]
+test = ["flake8 (==5.0.4)", "flake8-print (==5.0.0)", "pytest"]
 
 [[package]]
 name = "linkify-it-py"
@@ -3715,6 +3776,21 @@ tests = ["autopep8", "flake8", "isort", "numpy", "pytest", "scipy (>=1.7.1)", "t
 tutorials = ["matplotlib", "pandas", "tabulate", "torch"]
 
 [[package]]
+name = "typeguard"
+version = "2.13.3"
+description = "Run-time type checker for Python"
+optional = false
+python-versions = ">=3.5.3"
+files = [
+    {file = "typeguard-2.13.3-py3-none-any.whl", hash = "sha256:5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1"},
+    {file = "typeguard-2.13.3.tar.gz", hash = "sha256:00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4"},
+]
+
+[package.extras]
+doc = ["sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme"]
+test = ["mypy", "pytest", "typing-extensions"]
+
+[[package]]
 name = "typing-extensions"
 version = "4.10.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -3844,4 +3920,4 @@ docs = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "f881ab9e378719e272d37027019b7136d86fa6c38e04c43a804c3a2fe91dae6b"
+content-hash = "4ca19f29dda8b99a25194547084293b75b74107e44e6b43663104cbf1ab18ba9"
