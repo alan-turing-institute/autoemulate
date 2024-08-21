@@ -81,13 +81,11 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             dtype=np.float32,
             copy=True,
             ensure_2d=True,
-        )  # multi-output = True
+        )
         self.y_dim_ = y.ndim
-        y = y.astype(np.float32)
         self.n_features_in_ = X.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-        if len(y.shape) == 1:
-            y = y.reshape(-1, 1)
+        y = y.astype(np.float32)
 
         # Normalize target value
         # the zero handler is from sklearn
@@ -134,9 +132,19 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
 
         # predict
         mean, std = self.model_.predict(X, return_std=True)
-        # regression models should return float64
+
+        print(f"mean shape: {mean.shape}")
+        print(f"std shape: {std.shape}")
+
+        # sklearn: regression models should return float64
         mean = mean.astype(np.float64)
         std = std.astype(np.float64)
+
+        # output shape should be same as input shape
+        # when input dim is 1D, make sure output is 1D
+        if mean.ndim == 2 and self.y_dim_ == 1:
+            mean = mean.squeeze()
+            std = std.squeeze()
 
         # undo normalization
         if self.normalize_y:
@@ -156,4 +164,4 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         return self.__class__.__name__
 
     def _more_tags(self):
-        return {"multioutput": True}
+        return {"multioutput": True, "non_deterministic": True}
