@@ -14,6 +14,7 @@ from skorch.callbacks import EarlyStopping
 from skorch.callbacks import LRScheduler
 from skorch.probabilistic import ExactGPRegressor
 
+from autoemulate.emulators.neural_networks.gp_module import BatchIndependentGP
 from autoemulate.emulators.neural_networks.gp_module import GPModule
 from autoemulate.utils import set_random_seed
 
@@ -24,11 +25,10 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         # architecture
         mean_module=None,
         covar_module=None,
-        likelihood_module=None,
         # training
-        lr=1e-2,
-        optimizer=torch.optim.SGD,
-        max_epochs=10,
+        lr=2e-1,
+        optimizer=torch.optim.AdamW,
+        max_epochs=30,
         normalize_y=True,
         # misc
         device="cpu",
@@ -36,7 +36,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
     ):
         self.mean_module = mean_module
         self.covar_module = covar_module
-        self.likelihood_module = likelihood_module
         self.lr = lr
         self.optimizer = optimizer
         self.max_epochs = max_epochs
@@ -96,6 +95,12 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
 
         self.model_ = ExactGPRegressor(
             GPModule,
+            module__mean=self._get_module(
+                self.mean_module, gpytorch.means.ConstantMean()
+            ),
+            module__covar=self._get_module(
+                self.covar_module, gpytorch.kernels.RBFKernel()
+            ),
             likelihood=gpytorch.likelihoods.MultitaskGaussianLikelihood(
                 num_tasks=self.n_outputs_
             ),
@@ -103,6 +108,12 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             lr=self.lr,
             optimizer=self.optimizer,
             # callbacks=[EarlyStopping(patience=5)],
+            callbacks=[
+                (
+                    "lr_scheduler",
+                    LRScheduler(policy="ReduceLROnPlateau", patience=3, factor=0.5),
+                )
+            ],
             verbose=1,
             device=self.device,
         )
@@ -133,9 +144,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         # predict
         mean, std = self.model_.predict(X, return_std=True)
 
-        print(f"mean shape: {mean.shape}")
-        print(f"std shape: {std.shape}")
-
         # sklearn: regression models should return float64
         mean = mean.astype(np.float64)
         std = std.astype(np.float64)
@@ -157,11 +165,20 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters for the emulator."""
-        pass
+        param_space = {
+            "covar_module": [
+                gpytorch.kernels.RBFKernel(),
+                gpytorch.kernels.MaternKernel(),
+                gpytorch.kernels.PeriodicKernel(),
+                gpytorch.kernels.RQKernel(),
+            ]
+        }
+        return param_space
 
     @property
     def model_name(self):
         return self.__class__.__name__
 
     def _more_tags(self):
+        # TODO: is it really non-deterministic?
         return {"multioutput": True, "non_deterministic": True}
