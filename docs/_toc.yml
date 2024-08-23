@@ -15,6 +15,7 @@ chapters:
 - file: tutorials/index
   sections:
   - file: tutorials/01_start
+  - file: tutorials/02_speed
 
 - file: community/index
   sections:

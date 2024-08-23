@@ -66,6 +66,7 @@ class AutoEmulate:
         model_subset=None,
         verbose=0,
         log_to_file=False,
+        print_setup=True,
     ):
         """Sets up the automatic emulation.
 
@@ -107,6 +108,8 @@ class AutoEmulate:
             Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
             Whether to log to file.
+        print_setup : bool
+            Whether to print the setup of the AutoEmulate object.
         """
         self.X, self.y = self._check_input(X, y)
         self.train_idxs, self.test_idxs = _split_data(
@@ -136,7 +139,8 @@ class AutoEmulate:
         self.reduce_dim = reduce_dim
         self.cv_results = {}
 
-        self.print_setup()
+        if print_setup:
+            self.print_setup()
 
     def _check_input(self, X, y):
         """Checks and possibly converts the input data.
