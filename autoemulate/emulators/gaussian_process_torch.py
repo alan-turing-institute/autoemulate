@@ -31,7 +31,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         max_epochs=30,
         normalize_y=True,
         # misc
-        device="cpu",
+        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
         random_state=None,
     ):
         self.mean_module = mean_module

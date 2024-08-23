@@ -121,7 +121,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         optimizer=torch.optim.AdamW,
         normalize_y=True,
         # misc
-        device="cpu",
+        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
         random_state=None,
         attention=False,
     ):
