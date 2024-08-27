@@ -3,6 +3,8 @@ from copy import deepcopy
 import gpytorch
 import numpy as np
 import torch
+from scipy.stats import loguniform
+from scipy.stats import randint
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import DataConversionWarning
@@ -14,24 +16,38 @@ from skorch.callbacks import EarlyStopping
 from skorch.callbacks import LRScheduler
 from skorch.probabilistic import ExactGPRegressor
 
-from autoemulate.emulators.neural_networks.gp_module import BatchIndependentGP
-from autoemulate.emulators.neural_networks.gp_module import GPModule
+from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
+from autoemulate.emulators.neural_networks.gp_module import IndepGPModule
 from autoemulate.utils import set_random_seed
 
 
 class GaussianProcessTorch(RegressorMixin, BaseEstimator):
+    """Exact Gaussian Process emulator build with GPyTorch.
+
+    Parameters
+    ----------
+    mean_module : GP mean, defaults to gpytorch.means.ConstantMean() when None
+    covar_module : GP covariance, defaults to gpytorch.kernels.RBFKernel() when None
+    lr : learning rate, default=1e-1
+    optimizer : optimizer, default=torch.optim.AdamW
+    max_epochs : maximum number of epochs, default=30
+    normalize_y : whether to normalize the target values, default=True
+    device : device to use, defaults to "cuda" if available, otherwise "cpu"
+    random_state : random seed, default=None
+    """
+
     def __init__(
         self,
         # architecture
         mean_module=None,
         covar_module=None,
         # training
-        lr=2e-1,
+        lr=1e-1,
         optimizer=torch.optim.AdamW,
         max_epochs=30,
         normalize_y=True,
         # misc
-        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        device=None,
         random_state=None,
     ):
         self.mean_module = mean_module
@@ -45,7 +61,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
 
     def _get_module(self, module, default_class):
         """
-        Get mean and covar module.
+        Get mean and kernel modules.
 
         We can't default the modules in the constructor because 'fit' modifies them which
         fails scikit-learn estimator tests. Therefore, we deepcopy if module is given or return the default class
@@ -94,7 +110,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             y = (y - self._y_train_mean) / self._y_train_std
 
         self.model_ = ExactGPRegressor(
-            GPModule,
+            CorrGPModule,
             module__mean=self._get_module(
                 self.mean_module, gpytorch.means.ConstantMean()
             ),
@@ -115,7 +131,11 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                 )
             ],
             verbose=1,
-            device=self.device,
+            device=self.device
+            if self.device is not None
+            else "cuda"
+            if torch.cuda.is_available()
+            else "cpu",
         )
         self.model_.fit(X, y)
         self.is_fitted_ = True
@@ -168,10 +188,16 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         param_space = {
             "covar_module": [
                 gpytorch.kernels.RBFKernel(),
-                gpytorch.kernels.MaternKernel(),
+                gpytorch.kernels.MaternKernel(nu=2.5),
+                gpytorch.kernels.MaternKernel(nu=1.5),
                 gpytorch.kernels.PeriodicKernel(),
                 gpytorch.kernels.RQKernel(),
-            ]
+            ],
+            "mean_module": [gpytorch.means.ConstantMean(), gpytorch.means.ZeroMean()],
+            "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
+            "lr": loguniform(1e-3, 5e-1),
+            "max_epochs": [50, 100, 150],
+            "normalize_y": [True, False],
         }
         return param_space
 

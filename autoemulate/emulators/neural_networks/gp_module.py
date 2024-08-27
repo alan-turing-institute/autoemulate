@@ -5,7 +5,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class GPModule(gpytorch.models.ExactGP):
+class CorrGPModule(gpytorch.models.ExactGP):
+    """
+    Multioutput GP module for correlated outputs, see Bonilla et al. 2008.
+    """
+
     def __init__(
         self,
         train_inputs=None,
@@ -14,8 +18,6 @@ class GPModule(gpytorch.models.ExactGP):
         mean=None,
         covar=None,
     ):
-        """Multioutput GP module for correlated outputs, see Bonilla et al. 2008."""
-
         super().__init__(train_inputs=None, train_targets=None, likelihood=likelihood)
         self.mean_module = gpytorch.means.MultitaskMean(
             # gpytorch.means.ConstantMean(),
@@ -30,25 +32,55 @@ class GPModule(gpytorch.models.ExactGP):
         )
 
     def forward(self, x):
+        """
+        Forward pass of the GP module.
+
+        Parameters
+        ----------
+        x: (batch_size, n_points, input_dim)
+
+        Returns
+        -------
+        gpytorch.distributions.MultitaskMultivariateNormal
+        """
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultitaskMultivariateNormal(mean_x, covar_x)
 
 
-class BatchIndependentGP(gpytorch.models.ExactGP):
-    """Multioutput GP for independent outputs."""
+class IndepGPModule(gpytorch.models.ExactGP):
+    """
+    Multioutput GP for independent outputs. Fits one GP per output.
+    """
 
-    def __init__(self, train_inputs=None, train_targets=None, likelihood=None):
+    def __init__(
+        self,
+        train_inputs=None,
+        train_targets=None,
+        likelihood=None,
+        mean=None,
+        covar=None,
+    ):
         super().__init__(train_inputs=None, train_targets=None, likelihood=likelihood)
-        self.mean_module = gpytorch.means.ConstantMean(
-            batch_shape=torch.Size([likelihood.num_tasks])
-        )
-        self.covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel() * gpytorch.kernels.ConstantKernel(),
-            batch_shape=torch.Size([likelihood.num_tasks]),
-        )
+        num_tasks = likelihood.num_tasks
+        # create multioutput through batch shape
+        self.mean_module = mean
+        self.mean_module.batch_shape = torch.Size([num_tasks])
+        self.covar_module = covar
+        self.covar_module.batch_shape = torch.Size([num_tasks])
 
     def forward(self, x):
+        """
+        Forward pass of the GP module.
+
+        Parameters
+        ----------
+        x: (batch_size, n_points, input_dim)
+
+        Returns
+        -------
+        gpytorch.distributions.MultitaskMultivariateNormal
+        """
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
