@@ -121,7 +121,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         optimizer=torch.optim.AdamW,
         normalize_y=True,
         # misc
-        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        device=None,
         random_state=None,
         attention=False,
     ):
@@ -193,7 +193,11 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             lr=self.lr,
             batch_size=self.batch_size,
             optimizer=self.optimizer,
-            device=self.device,
+            device=self.device
+            if self.device is not None
+            else "cuda"
+            if torch.cuda.is_available()
+            else "cpu",
             dataset=CNPDataset,  # special dataset to sample context and target sets
             criterion=CNPLoss,
             iterator_train__collate_fn=cnp_collate_fn,  # special collate to different n in episodes

@@ -14,6 +14,7 @@ from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted
 from skorch.callbacks import EarlyStopping
 from skorch.callbacks import LRScheduler
+from skorch.callbacks import ProgressBar
 from skorch.probabilistic import ExactGPRegressor
 
 from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
@@ -42,9 +43,9 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         mean_module=None,
         covar_module=None,
         # training
-        lr=1e-1,
+        lr=2e-1,
         optimizer=torch.optim.AdamW,
-        max_epochs=30,
+        max_epochs=50,
         normalize_y=True,
         # misc
         device=None,
@@ -115,7 +116,9 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                 self.mean_module, gpytorch.means.ConstantMean()
             ),
             module__covar=self._get_module(
-                self.covar_module, gpytorch.kernels.RBFKernel()
+                self.covar_module,
+                gpytorch.kernels.RBFKernel().initialize(lengthscale=1.0)
+                + gpytorch.kernels.ConstantKernel(),
             ),
             likelihood=gpytorch.likelihoods.MultitaskGaussianLikelihood(
                 num_tasks=self.n_outputs_
@@ -127,8 +130,12 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             callbacks=[
                 (
                     "lr_scheduler",
-                    LRScheduler(policy="ReduceLROnPlateau", patience=3, factor=0.5),
-                )
+                    LRScheduler(policy="ReduceLROnPlateau", patience=5, factor=0.5),
+                ),
+                (
+                    "early_stopping",
+                    EarlyStopping(monitor="train_loss", patience=10, threshold=1e-3),
+                ),
             ],
             verbose=1,
             device=self.device
@@ -187,7 +194,8 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         """Returns the grid parameters for the emulator."""
         param_space = {
             "covar_module": [
-                gpytorch.kernels.RBFKernel(),
+                # TODO: initialize lengthscale for other kernels?
+                gpytorch.kernels.RBFKernel().initialize(lengthscale=1.0),
                 gpytorch.kernels.MaternKernel(nu=2.5),
                 gpytorch.kernels.MaternKernel(nu=1.5),
                 gpytorch.kernels.PeriodicKernel(),
@@ -195,8 +203,8 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             ],
             "mean_module": [gpytorch.means.ConstantMean(), gpytorch.means.ZeroMean()],
             "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
-            "lr": loguniform(1e-3, 5e-1),
-            "max_epochs": [50, 100, 150],
+            "lr": [5e-1, 1e-1, 5e-2, 1e-2],
+            "max_epochs": [50, 100, 200],
             "normalize_y": [True, False],
         }
         return param_space
