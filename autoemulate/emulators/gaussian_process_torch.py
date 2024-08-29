@@ -137,7 +137,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                     EarlyStopping(monitor="train_loss", patience=10, threshold=1e-3),
                 ),
             ],
-            verbose=1,
+            verbose=0,
             device=self.device
             if self.device is not None
             else "cuda"
