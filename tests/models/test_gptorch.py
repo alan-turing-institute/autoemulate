@@ -33,3 +33,12 @@ def test_predict_with_uncertainty(sample_data_y1d):
     y_pred, y_std = gp.predict(X, return_std=True)
     assert y_pred.shape == y_shape
     assert y_std.shape == y_shape
+
+
+def test_multitask(sample_data_y2d):
+    X, y = sample_data_y2d
+    gp = GaussianProcessTorch(multitask=True, random_state=42)
+    gp.fit(X, y)
+    y_pred, y_std = gp.predict(X, return_std=True)
+    assert y_pred.shape == y.shape
+    assert y_std.shape == y.shape

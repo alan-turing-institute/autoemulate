@@ -18,7 +18,6 @@ from skorch.callbacks import ProgressBar
 from skorch.probabilistic import ExactGPRegressor
 
 from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
-from autoemulate.emulators.neural_networks.gp_module import IndepGPModule
 from autoemulate.utils import set_random_seed
 
 
@@ -29,6 +28,8 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
     ----------
     mean_module : GP mean, defaults to gpytorch.means.ConstantMean() when None
     covar_module : GP covariance, defaults to gpytorch.kernels.RBFKernel() when None
+    multitask : whether to use multitask GP, which models correlations between outputs. If False,
+    each output is modeled independently, default=True
     lr : learning rate, default=1e-1
     optimizer : optimizer, default=torch.optim.AdamW
     max_epochs : maximum number of epochs, default=30
