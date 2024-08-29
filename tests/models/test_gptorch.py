@@ -37,7 +37,7 @@ def test_predict_with_uncertainty(sample_data_y1d):
 
 def test_multitask(sample_data_y2d):
     X, y = sample_data_y2d
-    gp = GaussianProcessTorch(multitask=True, random_state=42)
+    gp = GaussianProcessTorch(random_state=42)
     gp.fit(X, y)
     y_pred, y_std = gp.predict(X, return_std=True)
     assert y_pred.shape == y.shape
