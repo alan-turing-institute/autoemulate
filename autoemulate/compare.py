@@ -212,7 +212,6 @@ class AutoEmulate:
             for i, model in enumerate(self.models):
                 model_name = get_model_name(model)
                 pbar.set_description(f"{pb_text} {model_name}")
-
                 with _redirect_warnings(self.logger):
                     try:
                         # hyperparameter search
@@ -228,7 +227,6 @@ class AutoEmulate:
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
                             )
-
                         # run cross validation
                         fitted_model, cv_results = _run_cv(
                             X=self.X[self.train_idxs],

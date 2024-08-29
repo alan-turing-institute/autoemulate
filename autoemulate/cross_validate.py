@@ -56,7 +56,24 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
             return_indices=True,
         )
     except Exception as e:
-        logger.exception(f"Failed to cross-validate {get_model_name(model)}")
+        # sometimes pickling etc. fails so a model can't be parallelized
+        # this is a workaround
+        logger.warning(
+            f"Parallelized cross-validation failed for {get_model_name(model)}, trying single-threaded cross-validation..."
+        )
+        try:
+            cv_results = cross_validate(
+                model,
+                X,
+                y,
+                cv=cv,
+                scoring=scorers,
+                n_jobs=1,
+                return_estimator=True,
+                return_indices=True,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to cross-validate {get_model_name(model)}")
 
     # refit the model on the whole dataset
     fitted_model = model.fit(X, y)

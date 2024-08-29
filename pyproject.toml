@@ -26,6 +26,7 @@ tqdm = "^4.66.2"
 iprogress = "^0.4"
 lightgbm = "^4.3.0"
 ipywidgets = "^8.1.2"
+gpytorch = "^1.12"
 
 
 [tool.poetry.group.dev.dependencies]
