@@ -5,14 +5,15 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      159 |       24 |     85% |242-246, 286, 325, 339, 355-363, 374-377, 381-385, 389, 442-445, 503 |
-| autoemulate/cross\_validate.py                         |       25 |        2 |     92% |     58-59 |
+| autoemulate/compare.py                                 |      159 |       24 |     85% |240-244, 284, 323, 337, 353-361, 372-375, 379-383, 387, 440-443, 501 |
+| autoemulate/cross\_validate.py                         |       29 |        6 |     79% |     58-76 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
-| autoemulate/emulators/\_\_init\_\_.py                  |       12 |        0 |    100% |           |
-| autoemulate/emulators/conditional\_neural\_process.py  |      100 |        8 |     92% |141-142, 246-247, 253-281, 286, 300 |
+| autoemulate/emulators/\_\_init\_\_.py                  |       13 |        0 |    100% |           |
+| autoemulate/emulators/conditional\_neural\_process.py  |      100 |       12 |     88% |141-142, 147, 179, 250-251, 257-285, 290, 303-306 |
 | autoemulate/emulators/gaussian\_process.py             |       49 |        7 |     86% |    99-122 |
 | autoemulate/emulators/gaussian\_process\_mogp.py       |       39 |        9 |     77% |71-83, 87, 90 |
+| autoemulate/emulators/gaussian\_process\_torch.py      |       72 |        3 |     96% |72, 194-209 |
 | autoemulate/emulators/gradient\_boosting.py            |       49 |        0 |    100% |           |
 | autoemulate/emulators/light\_gbm.py                    |       59 |        7 |     88% |   110-137 |
 | autoemulate/emulators/neural\_net\_sk.py               |       48 |        7 |     85% |   101-135 |
@@ -22,6 +23,7 @@
 | autoemulate/emulators/neural\_networks/cnp\_module.py  |       49 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/datasets.py     |       49 |        1 |     98% |        11 |
 | autoemulate/emulators/neural\_networks/get\_module.py  |       14 |        2 |     86% |     18-19 |
+| autoemulate/emulators/neural\_networks/gp\_module.py   |       14 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/losses.py       |       12 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/mlp.py          |       32 |        2 |     94% |     66-67 |
 | autoemulate/emulators/neural\_networks/rbf.py          |       95 |       19 |     80% |22, 26, 30, 34, 136, 148, 158, 255, 260, 265, 316-343 |
@@ -39,14 +41,15 @@
 | autoemulate/save.py                                    |       48 |        4 |     92% |63-65, 90, 104 |
 | autoemulate/utils.py                                   |      138 |        9 |     93% |56, 64, 148, 216, 221-226, 472-473 |
 | tests/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
-| tests/test\_cnp.py                                     |      108 |        0 |    100% |           |
-| tests/test\_cnp\_dataset.py                            |       74 |        0 |    100% |           |
+| tests/models/test\_cnp.py                              |      108 |        0 |    100% |           |
+| tests/models/test\_cnp\_dataset.py                     |       74 |        0 |    100% |           |
+| tests/models/test\_gptorch.py                          |       33 |        0 |    100% |           |
 | tests/test\_compare.py                                 |      127 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                         |       49 |        0 |    100% |           |
 | tests/test\_data\_splitting.py                         |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                |       13 |        0 |    100% |           |
 | tests/test\_emulators.py                               |       86 |        0 |    100% |           |
-| tests/test\_estimators.py                              |       18 |        0 |    100% |           |
+| tests/test\_estimators.py                              |       24 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                    |       22 |        0 |    100% |           |
 | tests/test\_hyperparam\_searching.py                   |       48 |        0 |    100% |           |
 | tests/test\_logging\_config.py                         |       51 |        0 |    100% |           |
@@ -57,7 +60,7 @@
 | tests/test\_torch.py                                   |      103 |        0 |    100% |           |
 | tests/test\_ui.py                                      |       39 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      203 |        6 |     97% |56, 62, 67, 72, 77, 82 |
-|                                              **TOTAL** | **2817** |  **238** | **92%** |           |
+|                                              **TOTAL** | **2947** |  **249** | **92%** |           |
 
 
 ## Setup coverage badge
