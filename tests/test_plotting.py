@@ -4,6 +4,8 @@ from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
+from autoemulate.emulators import RadialBasisFunctions
+from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_single_fold
 from autoemulate.plotting import _validate_inputs
 from autoemulate.plotting import check_multioutput
@@ -156,3 +158,11 @@ def test_plot_single_fold_with_multioutput():
     # Assert that the plot is displayed correctly
     assert ax.get_title() == "model1 - Test: 0"
     # assert ax.texts[0].get_text() == "$R^2$ = 0.900"
+
+
+def test__plot_model_Xy():
+    X, y = make_regression(n_samples=30, n_features=1, n_targets=1)
+    model = RadialBasisFunctions()
+    model.fit(X, y)
+    # assert that plot_model runs
+    # _plot_model(model, X, y, plot="Xy")

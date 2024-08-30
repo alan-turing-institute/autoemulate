@@ -414,7 +414,7 @@ class AutoEmulate:
     def plot_results(
         self,
         model=None,
-        plot="standard",
+        plot="Xy",
         n_cols=3,
         figsize=None,
         output_index=0,
@@ -428,7 +428,8 @@ class AutoEmulate:
             If a model name is specified, plots all folds of that model.
         plot_type : str, optional
             The type of plot to draw:
-            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
+            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis).
             “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
@@ -484,7 +485,15 @@ class AutoEmulate:
 
         return scores_df
 
-    def plot_model(self, model, plot="standard", n_cols=2, figsize=None):
+    def plot_model(
+        self,
+        model,
+        plot="standard",
+        n_cols=2,
+        figsize=None,
+        input_index=0,
+        output_index=0,
+    ):
         """Plots the model predictions vs. the true values.
 
         Parameters
@@ -497,6 +506,10 @@ class AutoEmulate:
             “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
             Number of columns in the plot grid for multi-output. Default is 2.
+        input_index : int
+            Index of the input to plot. Default is 0. Only used if plot_type="Xy".
+        output_index : int
+            Index of the output to plot. Default is 0. Only used if plot_type="Xy".
         """
         _plot_model(
             model,
@@ -505,4 +518,6 @@ class AutoEmulate:
             plot,
             n_cols,
             figsize,
+            input_index=input_index,
+            output_index=output_index,
         )
