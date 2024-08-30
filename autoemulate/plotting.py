@@ -1,3 +1,5 @@
+import inspect
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import PredictionErrorDisplay
@@ -48,6 +50,7 @@ def _plot_single_fold(
     plot="standard",
     annotation=" ",
     output_index=0,
+    input_index=0,
 ):
     """Plots a single cv fold for a given model.
 
@@ -74,34 +77,59 @@ def _plot_single_fold(
         The annotation to add to the plot title. Default is an empty string.
     output_index : int, optional
         The index of the output to plot. Default is 0.
+    input_index : int, optional
+        The index of the input variable to plot. Default is 0.
     """
+    # get cv fold test indices
     test_indices = cv_results[model_name]["indices"]["test"][fold_index]
-
-    true_values = y[test_indices]
-
-    predicted_values = cv_results[model_name]["estimator"][fold_index].predict(
-        X[test_indices]
-    )
+    X_test = X[test_indices]
+    y_test = y[test_indices]
+    # get model trained on cv fold train indices
+    model = cv_results[model_name]["estimator"][fold_index]
+    # should we return and plot uncertainty?
+    predict_params = inspect.signature(model.named_steps["model"].predict).parameters
+    if "return_std" in predict_params:
+        y_test_pred, y_test_std = model.predict(X_test, return_std=True)
+    else:
+        y_test_pred = model.predict(X_test)
+        y_test_std = None
 
     # if y is multi-output, we need to select the correct column
     if y.ndim > 1:
-        true_values = true_values[:, output_index]
-        predicted_values = predicted_values[:, output_index]
+        y_test = y_test[:, output_index]
+        y_test_pred = y_test_pred[:, output_index]
+        if y_test_std is not None:
+            y_test_std = y_test_std[:, output_index]
 
     match plot:
         case "standard":
             plot_type = "actual_vs_predicted"
         case "residual":
             plot_type = "residual_vs_predicted"
+        case "Xy":
+            plot_type = "Xy"
         case _:
             ValueError(f"Invalid plot type: {plot}")
 
-    # plot
-    display = PredictionErrorDisplay.from_predictions(
-        y_true=true_values, y_pred=predicted_values, kind=plot_type, ax=ax
-    )
-    title_suffix = f"{annotation}: {fold_index}"
-    ax.set_title(f"{model_name} - {title_suffix}")
+    if plot_type == "Xy":
+        # if X is multi-dimensional, we need to select the correct column
+        if X.ndim > 1:
+            X_test = X_test[:, input_index]
+        title_suffix = f"{annotation}: {fold_index}"
+        _plot_Xy(
+            X_test,
+            y_test,
+            y_test_pred,
+            y_test_std,
+            ax,
+            title=f"{model_name} - {title_suffix}",
+        )
+    else:
+        display = PredictionErrorDisplay.from_predictions(
+            y_true=y_test, y_pred=y_test_pred, kind=plot_type, ax=ax
+        )
+        title_suffix = f"{annotation}: {fold_index}"
+        ax.set_title(f"{model_name} - {title_suffix}")
 
 
 def _plot_best_fold_per_model(
@@ -338,3 +366,57 @@ def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
             ax.set_visible(False)
 
     plt.show()
+
+
+def _plot_Xy(X, y, y_pred, y_std=None, ax=None, title="Xy"):
+    # Sort the data
+    sort_idx = np.argsort(X).flatten()
+    X_sorted = X[sort_idx]
+    y_sorted = y[sort_idx]
+    y_pred_sorted = y_pred[sort_idx]
+    if y_std is not None:
+        y_std_sorted = y_std[sort_idx]
+
+    org_points_color = "#4B0082"
+    pred_points_color = "#00CED1"
+    pred_line_color = "#00CED1"
+    ci_color = "#9DC183"
+
+    ax.scatter(
+        X_sorted, y_sorted, color=org_points_color, alpha=0.7, label="data", s=50
+    )
+    ax.scatter(
+        X_sorted, y_pred_sorted, color=pred_points_color, alpha=1, label="pred.", s=10
+    )
+    if y_std is not None:
+        ax.fill_between(
+            X_sorted,
+            y_pred_sorted - 2 * y_std_sorted,
+            y_pred_sorted + 2 * y_std_sorted,
+            color=ci_color,
+            alpha=0.5,
+            label="95% Confidence Interval",
+        )
+    ax.plot(X_sorted, y_pred_sorted, color=pred_line_color, label="pred.")
+
+    ax.set_xlabel("X")
+    ax.set_ylabel("y")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+
+    # Add legend
+    if y_std is not None:
+        ax.legend(["data", "pred.(±2σ)"], loc="best")
+    else:
+        ax.legend(["data", "pred."], loc="best")
+    # Calculate R2 score
+    r2 = 1 - np.sum((y_sorted - y_pred_sorted) ** 2) / np.sum(
+        (y_sorted - np.mean(y_sorted)) ** 2
+    )
+    ax.text(
+        0.05,
+        0.95,
+        f"R2 score: {r2:.3f}",
+        transform=ax.transAxes,
+        verticalalignment="top",
+    )
