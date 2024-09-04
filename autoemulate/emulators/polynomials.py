@@ -67,7 +67,7 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
         predictions = self.model_.predict(X)
         return predictions
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(self, search_type="random", input_dim=1):
         """Get the parameter grid for the model.
 
         Parameters

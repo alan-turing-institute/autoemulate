@@ -123,7 +123,7 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
 
         return y_pred
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(self, search_type="random", input_dim=1):
         """Returns the grid paramaters for the emulator."""
         param_space_random = {
             "kernel": ["rbf", "linear", "poly", "sigmoid"],

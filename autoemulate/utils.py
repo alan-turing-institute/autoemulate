@@ -226,7 +226,7 @@ def get_model_params(model):
         return model.get_params()
 
 
-def get_model_param_space(model, search_type="random"):
+def get_model_param_space(model, search_type="random", input_dim=1):
     """Get the parameter grid of the base model. This is used for hyperparameter search.
 
     This function handles standalone models, models wrapped in a MultiOutputRegressor,
@@ -249,17 +249,17 @@ def get_model_param_space(model, search_type="random"):
         step = model.named_steps["model"]
 
         if isinstance(step, MultiOutputRegressor):
-            return step.estimator.get_grid_params(search_type)
+            return step.estimator.get_grid_params(search_type, input_dim)
         else:
-            return step.get_grid_params(search_type)
+            return step.get_grid_params(search_type, input_dim)
 
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
-        return model.estimator.get_grid_params(search_type)
+        return model.estimator.get_grid_params(search_type, input_dim)
 
     # Otherwise, it's a standalone model
     else:
-        return model.get_grid_params(search_type)
+        return model.get_grid_params(search_type, input_dim)
 
 
 def _adjust_param_space(model, param_space):

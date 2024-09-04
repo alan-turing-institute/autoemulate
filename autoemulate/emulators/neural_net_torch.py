@@ -85,7 +85,7 @@ class NeuralNetTorch(NeuralNetRegressor):
             self.module_ = self.initialized_instance(self.module, kwargs)
         return self
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(self, search_type="random", input_dim=1):
         return self.module.get_grid_params(search_type)
 
     def __sklearn_is_fitted__(self):

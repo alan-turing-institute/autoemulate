@@ -66,7 +66,7 @@ class GaussianProcessMOGP(BaseEstimator, RegressorMixin):
         else:
             return np.asarray(self.model_.predict(X).mean)
 
-    def get_grid_params(self, search_type="random"):
+    def get_grid_params(self, search_type="random", input_dim=1):
         """Returns the grid parameters of the emulator."""
         param_space_random = {
             "nugget": ["fit", "adaptive", "pivot"],

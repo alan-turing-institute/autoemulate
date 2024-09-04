@@ -253,7 +253,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             return mean
 
     @staticmethod
-    def get_grid_params(search_type: str = "random"):
+    def get_grid_params(search_type: str = "random", input_dim=1):
         param_space = {
             "max_epochs": [100, 200, 300],
             "batch_size": [16, 32, 64],
