@@ -15,22 +15,22 @@ from autoemulate.plotting import _validate_inputs
 from autoemulate.plotting import check_multioutput
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def ae_single_output():
     X, y = make_regression(n_samples=50, n_features=2, noise=0.5, random_state=42)
     em = AutoEmulate()
-    em.setup(X, y, model_subset=["gpt", "rbf"])
+    em.setup(X, y, model_subset=["gpt", "rbf", "sop"])
     em.compare()
     return em
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def ae_multi_output():
     X, y = make_regression(
         n_samples=50, n_features=2, n_targets=2, noise=0.5, random_state=42
     )
     em = AutoEmulate()
-    em.setup(X, y, model_subset=["gpt", "rbf"])
+    em.setup(X, y, model_subset=["gpt", "rbf", "sop"])
     em.compare()
     return em
 
@@ -201,27 +201,145 @@ def test_plot_single_fold_with_multioutput():
     # assert ax.texts[0].get_text() == "$R^2$ = 0.900"
 
 
-# ------------------------------ test cv plotting full ------------------------------
-# def test_cv_plotting_full_single_output(ae_single_output):
-#     ae_single_output.plot_results()
+# ------------------------------ test _plot_results ------------------------------
 
 
-def test_cv_plotting_full_single_output(ae_single_output, monkeypatch):
+def test__plot_results(ae_single_output, monkeypatch):
     # Mock plt.show to do nothing
     monkeypatch.setattr(plt, "show", lambda: None)
 
     cv_results = ae_single_output.cv_results
-    X = ae_single_output.X
-    y = ae_single_output.y
+    X, y = ae_single_output.X, ae_single_output.y
 
+    # without model name
     fig = _plot_results(cv_results, X, y)
-    print(fig.axes)
     assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 3
+
+    # with model name
+    fig = _plot_results(cv_results, X, y, model_name="RadialBasisFunctions")
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
 
 
-def test__plot_model_Xy():
-    X, y = make_regression(n_samples=30, n_features=1, n_targets=1)
-    model = RadialBasisFunctions()
-    model.fit(X, y)
-    # assert that plot_model runs
-    # _plot_model(model, X, y, plot="Xy")
+def test__plot_results_output_range(ae_multi_output, monkeypatch):
+    # Mock plt.show to do nothing
+    monkeypatch.setattr(plt, "show", lambda: None)
+    cv_results = ae_multi_output.cv_results
+    X, y = ae_multi_output.X, ae_multi_output.y
+
+    # check that output index 1 works
+    fig_0 = _plot_results(cv_results, X, y, output_index=0)
+    fig_1 = _plot_results(cv_results, X, y, output_index=1)
+    assert isinstance(fig_1, plt.Figure)
+    assert len(fig_1.axes) == 3
+
+    # check that fig_0 and fig_1 are different
+    assert fig_0 != fig_1
+
+    # check that output index 2 raises an error
+    with pytest.raises(ValueError):
+        _plot_results(cv_results, X, y, output_index=2)
+
+
+def test__plot_results_input_range(ae_multi_output, monkeypatch):
+    # Mock plt.show to do nothing
+    monkeypatch.setattr(plt, "show", lambda: None)
+    cv_results = ae_multi_output.cv_results
+    X, y = ae_multi_output.X, ae_multi_output.y
+
+    # check that input index 1 works
+    fig_0 = _plot_results(cv_results, X, y, input_index=0)
+    fig_1 = _plot_results(cv_results, X, y, input_index=1)
+    assert isinstance(fig_0, plt.Figure)
+    assert isinstance(fig_1, plt.Figure)
+    assert len(fig_1.axes) == 3
+
+    # check that fig_0 and fig_1 are different
+    assert fig_0 != fig_1
+
+    # check that input index 2 raises an error (2 features)
+    with pytest.raises(ValueError):
+        _plot_results(cv_results, X, y, input_index=2)
+
+
+# ------------------------------ most important tests, does it work? ----------------
+# ------------------------------ test plot_results ----------------------------------
+
+# test Xy plots
+
+
+# test plots with best cv per model, Xy plot
+def test_plot_results(ae_single_output):
+    fig = ae_single_output.plot_results(plot="Xy")
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 3
+
+
+def test_plot_results_input_index(ae_single_output):
+    fig = ae_single_output.plot_results(input_index=1)
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 3
+
+
+def test_plot_results_input_index_out_of_range(ae_single_output):
+    with pytest.raises(ValueError):
+        ae_single_output.plot_results(input_index=2)
+
+
+def test_plot_results_output_index(ae_multi_output):
+    fig = ae_multi_output.plot_results(output_index=1)
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 3
+
+
+def test_plot_results_output_index_out_of_range(ae_multi_output):
+    with pytest.raises(ValueError):
+        ae_multi_output.plot_results(output_index=2)
+
+
+# test plots with best cv per model, standard [;pt]
+def test_plot_results_standard(ae_single_output):
+    fig = ae_single_output.plot_results(plot="standard")
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 3
+
+
+def test_plot_results_output_index_standard(ae_multi_output):
+    fig = ae_multi_output.plot_results(plot="standard", output_index=1)
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 3
+
+
+def test_plot_results_output_index_standard_out_of_range(ae_multi_output):
+    with pytest.raises(ValueError):
+        ae_multi_output.plot_results(plot="standard", output_index=2)
+
+
+# test plots with all cv folds for a single model
+def test_plot_results_model(ae_single_output):
+    fig = ae_single_output.plot_results(model="gpt")
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
+
+
+def test_plot_results_model_input_index(ae_single_output):
+    fig = ae_single_output.plot_results(model="gpt", input_index=1)
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 6
+
+
+def test_plot_results_model_output_index(ae_multi_output):
+    fig = ae_multi_output.plot_results(model="gpt", output_index=1)
+    assert isinstance(fig, plt.Figure)
+    assert len(fig.axes) == 6
+
+
+def test_plot_results_model_input_index_out_of_range(ae_single_output):
+    with pytest.raises(ValueError):
+        ae_single_output.plot_results(model="gpt", input_index=2)
+
+
+def test_plot_results_model_output_index_out_of_range(ae_multi_output):
+    with pytest.raises(ValueError):
+        ae_multi_output.plot_results(model="gpt", output_index=2)

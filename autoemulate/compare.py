@@ -418,6 +418,7 @@ class AutoEmulate:
         n_cols=3,
         figsize=None,
         output_index=0,
+        input_index=0,
     ):
         """Plots the results of the cross-validation.
 
@@ -437,6 +438,8 @@ class AutoEmulate:
             Overrides the default figure size.
         output_index : int
             Index of the output to plot. Default is 0.
+        input_index : int
+            Index of the input to plot. Default is 0.
         """
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
@@ -450,6 +453,7 @@ class AutoEmulate:
             plot=plot,
             figsize=figsize,
             output_index=output_index,
+            input_index=input_index,
         )
         return figure
 

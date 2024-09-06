@@ -1,4 +1,5 @@
 import inspect
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -67,7 +68,7 @@ def _plot_single_fold(
     model_name,
     fold_index,
     ax,
-    plot="standard",
+    plot="Xy",
     annotation=" ",
     output_index=0,
     input_index=0,
@@ -90,6 +91,7 @@ def _plot_single_fold(
         The axes on which to plot the results.
     plot : str, optional
         The type of plot to draw:
+        "Xy" draws the input features vs. the output variables, including predictions.
         “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
         “residual” draws the residuals, i.e. difference between observed and predicted values,
         (y-axis) vs. the predicted values (x-axis).
@@ -109,8 +111,16 @@ def _plot_single_fold(
     model = cv_results[model_name]["estimator"][fold_index]
     y_test_pred, y_test_std = _predict_with_optional_std(model, X_test)
 
+    # check output_index is valid and select the correct column
+    if y.ndim == 1:
+        if output_index > 0:
+            raise ValueError("output_index must be 0 for single-output data.")
     # if y is multi-output, we need to select the correct column
     if y.ndim > 1:
+        if output_index >= y.shape[1]:
+            raise ValueError(
+                f"output_index {output_index} is out of range. The index should be between 0 and {y.shape[1] - 1}."
+            )
         y_test = y_test[:, output_index]
         y_test_pred = y_test_pred[:, output_index]
         if y_test_std is not None:
@@ -127,6 +137,10 @@ def _plot_single_fold(
             ValueError(f"Invalid plot type: {plot}")
 
     if plot_type == "Xy":
+        if input_index >= X.shape[1]:
+            raise ValueError(
+                f"input_index {input_index} is out of range. The index should be between 0 and {X.shape[1] - 1}."
+            )
         # if X is multi-dimensional, we need to select the correct column
         if X.ndim > 1:
             X_test = X_test[:, input_index]
@@ -157,9 +171,10 @@ def _plot_best_fold_per_model(
     X,
     y,
     n_cols=3,
-    plot="standard",
+    plot="Xy",
     figsize=None,
     output_index=0,
+    input_index=0,
 ):
     """Plots results of the best (highest R^2) cv-fold for each model in cv_results.
 
@@ -180,6 +195,8 @@ def _plot_best_fold_per_model(
         Width, height in inches. Overrides the default figure size.
     output_index : int, optional
         The index of the output to plot. Default is 0.
+    input_index : int, optional
+        The index of the input to plot. Default is 0.
     """
 
     n_models = len(cv_results)
@@ -188,10 +205,10 @@ def _plot_best_fold_per_model(
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
 
+    plt.ioff()
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
     # plt.figure(figsize=figsize)
-
     for i, model_name in enumerate(cv_results):
         best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
         _plot_single_fold(
@@ -204,15 +221,15 @@ def _plot_best_fold_per_model(
             plot=plot,
             annotation="Best CV-fold",
             output_index=output_index,
+            input_index=input_index,
         )
 
     # hide unused subplots
     for j in range(i + 1, len(axs)):
         axs[j].set_visible(False)
-
     plt.tight_layout()
-    plt.show()
-
+    plt.ion()
+    # plt.show()
     return fig
 
 
@@ -222,9 +239,10 @@ def _plot_model_folds(
     y,
     model_name,
     n_cols=3,
-    plot="standard",
+    plot="Xy",
     figsize=None,
     output_index=0,
+    input_index=0,
 ):
     """Plots all the folds for a given model.
 
@@ -247,6 +265,8 @@ def _plot_model_folds(
         Overrides the default figure size.
     output_index : int, optional
         The index of the output to plot. Default is 0.
+    input_index : int, optional
+        The index of the input to plot. Default is 0.
     """
 
     n_folds = len(cv_results[model_name]["estimator"])
@@ -255,9 +275,9 @@ def _plot_model_folds(
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
 
+    plt.ioff()
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
-    # plt.figure(figsize=figsize)
 
     for i in range(n_folds):
         _plot_single_fold(
@@ -270,14 +290,14 @@ def _plot_model_folds(
             plot,
             annotation="CV-fold",
             output_index=output_index,
+            input_index=input_index,
         )
     # hide unused subplots
     for j in range(i + 1, len(axs)):
         axs[j].set_visible(False)
 
     plt.tight_layout()
-    plt.show()
-
+    plt.ion()
     return fig
 
 
@@ -287,9 +307,10 @@ def _plot_results(
     y,
     model_name=None,
     n_cols=3,
-    plot="standard",
+    plot="Xy",
     figsize=None,
     output_index=0,
+    input_index=0,
 ):
     """Plots the results of cross-validation.
 
@@ -313,6 +334,8 @@ def _plot_results(
         Overrides the default figure size.
     output_index : int, optional
         For multi-output: Index of the output variable to plot.
+    input_index : int, optional
+        For multi-output: Index of the input variable to plot.
     """
 
     _validate_inputs(cv_results, model_name)
@@ -328,10 +351,11 @@ def _plot_results(
             plot,
             figsize,
             output_index,
+            input_index,
         )
     else:
         figure = _plot_best_fold_per_model(
-            cv_results, X, y, n_cols, plot, figsize, output_index
+            cv_results, X, y, n_cols, plot, figsize, output_index, input_index
         )
 
     return figure
@@ -341,7 +365,7 @@ def _plot_model(
     model,
     X,
     y,
-    plot="standard",
+    plot="Xy",
     n_cols=2,
     figsize=None,
     input_index=None,
@@ -457,7 +481,9 @@ def _plot_model(
         ax.set_visible(False)
 
     plt.tight_layout()
-    plt.show()
+
+
+# plt.show()
 
 
 # def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
