@@ -441,7 +441,7 @@ class AutoEmulate:
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
-        _plot_results(
+        figure = _plot_results(
             self.cv_results,
             self.X,
             self.y,
@@ -451,6 +451,7 @@ class AutoEmulate:
             figsize=figsize,
             output_index=output_index,
         )
+        return figure
 
     def evaluate_model(self, model=None):
         """

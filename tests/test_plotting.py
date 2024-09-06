@@ -215,6 +215,7 @@ def test_cv_plotting_full_single_output(ae_single_output, monkeypatch):
     y = ae_single_output.y
 
     fig = _plot_results(cv_results, X, y)
+    print(fig.axes)
     assert isinstance(fig, plt.Figure)
 
 

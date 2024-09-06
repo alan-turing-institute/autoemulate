@@ -42,22 +42,7 @@ To plot other outputs, set `output_index` argument to the desired index."""
 
 
 def _predict_with_optional_std(model, X_test):
-    """Predicts the output of the model with or without uncertainty.
-
-    Parameters
-    ----------
-    model : object
-        A fitted model.
-    X_test : array-like, shape (n_samples, n_features)
-        Simulation input.
-
-    Returns
-    -------
-    y_test_pred : array-like, shape (n_samples, n_outputs)
-        Simulation output.
-    y_test_std : array-like, shape (n_samples, n_outputs)
-        Standard deviation of the simulation output.
-    """
+    """Predicts the output of the model with or without uncertainty."""
     # see whether the model is a pipeline or not
     if isinstance(model, Pipeline):
         predict_params = inspect.signature(
@@ -122,7 +107,6 @@ def _plot_single_fold(
 
     # get model trained on cv fold train indices
     model = cv_results[model_name]["estimator"][fold_index]
-    # predict
     y_test_pred, y_test_std = _predict_with_optional_std(model, X_test)
 
     # if y is multi-output, we need to select the correct column
@@ -204,24 +188,32 @@ def _plot_best_fold_per_model(
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
 
-    plt.figure(figsize=figsize)
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+    axs = axs.flatten()
+    # plt.figure(figsize=figsize)
 
     for i, model_name in enumerate(cv_results):
         best_fold_index = np.argmax(cv_results[model_name]["test_r2"])
-        ax = plt.subplot(n_rows, n_cols, i + 1)
         _plot_single_fold(
             cv_results,
             X,
             y,
             model_name,
             best_fold_index,
-            ax,
+            axs[i],
             plot=plot,
             annotation="Best CV-fold",
             output_index=output_index,
         )
+
+    # hide unused subplots
+    for j in range(i + 1, len(axs)):
+        axs[j].set_visible(False)
+
     plt.tight_layout()
     plt.show()
+
+    return fig
 
 
 def _plot_model_folds(
@@ -263,23 +255,30 @@ def _plot_model_folds(
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
 
-    plt.figure(figsize=figsize)
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+    axs = axs.flatten()
+    # plt.figure(figsize=figsize)
 
     for i in range(n_folds):
-        ax = plt.subplot(n_rows, n_cols, i + 1)
         _plot_single_fold(
             cv_results,
             X,
             y,
             model_name,
             i,
-            ax,
+            axs[i],
             plot,
             annotation="CV-fold",
             output_index=output_index,
         )
+    # hide unused subplots
+    for j in range(i + 1, len(axs)):
+        axs[j].set_visible(False)
+
     plt.tight_layout()
     plt.show()
+
+    return fig
 
 
 def _plot_results(
@@ -320,7 +319,7 @@ def _plot_results(
     check_multioutput(y, output_index)
 
     if model_name:
-        _plot_model_folds(
+        figure = _plot_model_folds(
             cv_results,
             X,
             y,
@@ -331,7 +330,11 @@ def _plot_results(
             output_index,
         )
     else:
-        _plot_best_fold_per_model(cv_results, X, y, n_cols, plot, figsize, output_index)
+        figure = _plot_best_fold_per_model(
+            cv_results, X, y, n_cols, plot, figsize, output_index
+        )
+
+    return figure
 
 
 def _plot_model(
