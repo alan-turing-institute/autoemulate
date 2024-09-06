@@ -1,14 +1,38 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
+from autoemulate.compare import AutoEmulate
 from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.plotting import _plot_model
+from autoemulate.plotting import _plot_results
 from autoemulate.plotting import _plot_single_fold
+from autoemulate.plotting import _predict_with_optional_std
 from autoemulate.plotting import _validate_inputs
 from autoemulate.plotting import check_multioutput
+
+
+@pytest.fixture
+def ae_single_output():
+    X, y = make_regression(n_samples=50, n_features=2, noise=0.5, random_state=42)
+    em = AutoEmulate()
+    em.setup(X, y, model_subset=["gpt", "rbf"])
+    em.compare()
+    return em
+
+
+@pytest.fixture
+def ae_multi_output():
+    X, y = make_regression(
+        n_samples=50, n_features=2, n_targets=2, noise=0.5, random_state=42
+    )
+    em = AutoEmulate()
+    em.setup(X, y, model_subset=["gpt", "rbf"])
+    em.compare()
+    return em
 
 
 # ------------------------------ test validate_inputs ------------------------------
@@ -73,6 +97,23 @@ def test_check_multioutput_with_invalid_output_index():
             str(e)
             == "Output index 3 is out of range. The index should be between 0 and 2."
         )
+
+
+# ------------------------------ test _predict_with_optional_std --------------------
+def test_predict_with_optional_std(ae_single_output):
+    # test whether the function correctly returns None for rbf's std
+    rbf = ae_single_output.get_model(name="rbf")
+    X = ae_single_output.X
+    y_pred, y_std = _predict_with_optional_std(rbf, X)
+    assert y_pred.shape == (X.shape[0],)
+    assert y_std is None
+
+    # test whether the function correctly returns the std for gpt
+    gpt = ae_single_output.get_model(name="gpt")
+    y_pred, y_std = _predict_with_optional_std(gpt, X)
+    assert y_pred.shape == (X.shape[0],)
+    assert y_std.shape == (X.shape[0],)
+    assert np.all(y_std >= 0)
 
 
 # ------------------------------ test plot_single_fold ------------------------------
@@ -158,6 +199,23 @@ def test_plot_single_fold_with_multioutput():
     # Assert that the plot is displayed correctly
     assert ax.get_title() == "model1 - Test: 0"
     # assert ax.texts[0].get_text() == "$R^2$ = 0.900"
+
+
+# ------------------------------ test cv plotting full ------------------------------
+# def test_cv_plotting_full_single_output(ae_single_output):
+#     ae_single_output.plot_results()
+
+
+def test_cv_plotting_full_single_output(ae_single_output, monkeypatch):
+    # Mock plt.show to do nothing
+    monkeypatch.setattr(plt, "show", lambda: None)
+
+    cv_results = ae_single_output.cv_results
+    X = ae_single_output.X
+    y = ae_single_output.y
+
+    fig = _plot_results(cv_results, X, y)
+    assert isinstance(fig, plt.Figure)
 
 
 def test__plot_model_Xy():

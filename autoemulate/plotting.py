@@ -41,6 +41,40 @@ To plot other outputs, set `output_index` argument to the desired index."""
         )
 
 
+def _predict_with_optional_std(model, X_test):
+    """Predicts the output of the model with or without uncertainty.
+
+    Parameters
+    ----------
+    model : object
+        A fitted model.
+    X_test : array-like, shape (n_samples, n_features)
+        Simulation input.
+
+    Returns
+    -------
+    y_test_pred : array-like, shape (n_samples, n_outputs)
+        Simulation output.
+    y_test_std : array-like, shape (n_samples, n_outputs)
+        Standard deviation of the simulation output.
+    """
+    # see whether the model is a pipeline or not
+    if isinstance(model, Pipeline):
+        predict_params = inspect.signature(
+            model.named_steps["model"].predict
+        ).parameters
+    else:
+        predict_params = inspect.signature(model.predict).parameters
+    # see whether the model has return_std in its predict parameters
+    if "return_std" in predict_params:
+        y_test_pred, y_test_std = model.predict(X_test, return_std=True)
+    else:
+        y_test_pred = model.predict(X_test)
+        y_test_std = None
+
+    return y_test_pred, y_test_std
+
+
 def _plot_single_fold(
     cv_results,
     X,
@@ -85,15 +119,11 @@ def _plot_single_fold(
     test_indices = cv_results[model_name]["indices"]["test"][fold_index]
     X_test = X[test_indices]
     y_test = y[test_indices]
+
     # get model trained on cv fold train indices
     model = cv_results[model_name]["estimator"][fold_index]
-    # should we return and plot uncertainty?
-    predict_params = inspect.signature(model.named_steps["model"].predict).parameters
-    if "return_std" in predict_params:
-        y_test_pred, y_test_std = model.predict(X_test, return_std=True)
-    else:
-        y_test_pred = model.predict(X_test)
-        y_test_std = None
+    # predict
+    y_test_pred, y_test_std = _predict_with_optional_std(model, X_test)
 
     # if y is multi-output, we need to select the correct column
     if y.ndim > 1:
