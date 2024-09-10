@@ -266,8 +266,6 @@ def test__plot_results_input_range(ae_multi_output, monkeypatch):
 # ------------------------------ most important tests, does it work? ----------------
 # ------------------------------ test plot_results ----------------------------------
 
-# test Xy plots
-
 
 # test plots with best cv per model, Xy plot
 def test_plot_results(ae_single_output):
@@ -343,3 +341,17 @@ def test_plot_results_model_input_index_out_of_range(ae_single_output):
 def test_plot_results_model_output_index_out_of_range(ae_multi_output):
     with pytest.raises(ValueError):
         ae_multi_output.plot_results(model="gpt", output_index=2)
+
+
+# test _plot_model
+def test__plot_model_int(ae_single_output):
+    fig = _plot_model(
+        ae_single_output.get_model(name="gpt"),
+        ae_single_output.X,
+        ae_single_output.y,
+        plot="standard",
+        input_index=0,
+        output_index=0,
+    )
+    assert isinstance(fig, plt.Figure)
+    print(fig.axes)

@@ -493,11 +493,11 @@ class AutoEmulate:
     def plot_model(
         self,
         model,
-        plot="standard",
-        n_cols=2,
+        plot="Xy",
+        n_cols=3,
         figsize=None,
-        input_index=0,
         output_index=0,
+        input_index=0,
     ):
         """Plots the model predictions vs. the true values.
 
@@ -511,12 +511,12 @@ class AutoEmulate:
             “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
             Number of columns in the plot grid for multi-output. Default is 2.
+        output_index : int
+            Index of the output to plot. Default is 0..
         input_index : int
             Index of the input to plot. Default is 0. Only used if plot_type="Xy".
-        output_index : int
-            Index of the output to plot. Default is 0. Only used if plot_type="Xy".
         """
-        _plot_model(
+        fig = _plot_model(
             model,
             self.X[self.test_idxs],
             self.y[self.test_idxs],
@@ -526,3 +526,5 @@ class AutoEmulate:
             input_index=input_index,
             output_index=output_index,
         )
+
+        return fig

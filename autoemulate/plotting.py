@@ -205,7 +205,6 @@ def _plot_best_fold_per_model(
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
 
-    plt.ioff()
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
     # plt.figure(figsize=figsize)
@@ -228,8 +227,8 @@ def _plot_best_fold_per_model(
     for j in range(i + 1, len(axs)):
         axs[j].set_visible(False)
     plt.tight_layout()
-    plt.ion()
-    # plt.show()
+    # prevent double plotting in notebooks
+    plt.close(fig)
     return fig
 
 
@@ -275,7 +274,6 @@ def _plot_model_folds(
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
 
-    plt.ioff()
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
 
@@ -297,7 +295,8 @@ def _plot_model_folds(
         axs[j].set_visible(False)
 
     plt.tight_layout()
-    plt.ion()
+    # prevent double plotting in notebooks
+    plt.close(fig)
     return fig
 
 
@@ -366,7 +365,7 @@ def _plot_model(
     X,
     y,
     plot="Xy",
-    n_cols=2,
+    n_cols=3,
     figsize=None,
     input_index=None,
     output_index=None,
@@ -395,29 +394,11 @@ def _plot_model(
     output_index : int or list of int, optional
         The index(es) of the output variable(s) to plot. If None, all outputs are used.
     """
-
     # Get predictions, with uncertainty if available
-    if isinstance(model, Pipeline):
-        predict_params = inspect.signature(
-            model.named_steps["model"].predict
-        ).parameters
-    else:
-        predict_params = inspect.signature(model.predict).parameters
-
-    if "return_std" in predict_params:
-        y_pred, y_std = model.predict(X, return_std=True)
-    else:
-        y_pred = model.predict(X)
-        y_std = None
-
-    # Ensure y and y_pred are 2D
-    y = np.atleast_2d(y)
-    y_pred = np.atleast_2d(y_pred)
-    if y_std is not None:
-        y_std = np.atleast_2d(y_std)
+    y_pred, y_std = _predict_with_optional_std(model, X)
 
     n_samples, n_features = X.shape
-    n_outputs = y.shape[1]
+    n_outputs = y.shape[1] if y.ndim > 1 else 1
 
     # Handle input and output indices
     if input_index is None:
@@ -429,6 +410,16 @@ def _plot_model(
         output_index = list(range(n_outputs))
     elif isinstance(output_index, int):
         output_index = [output_index]
+
+    # check that input_index and output_index are valid
+    if any(idx >= n_features for idx in input_index):
+        raise ValueError(
+            f"input_index {input_index} is out of range. The index should be between 0 and {n_features - 1}."
+        )
+    if any(idx >= n_outputs for idx in output_index):
+        raise ValueError(
+            f"output_index {output_index} is out of range. The index should be between 0 and {n_outputs - 1}."
+        )
 
     # Calculate number of subplots
     if plot == "Xy":
@@ -445,12 +436,20 @@ def _plot_model(
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
 
+    # if y is 1d, we need to make it 2d
+    if y.ndim == 1:
+        y = y.reshape(-1, 1)
+    if y_pred.ndim == 1:
+        y_pred = y_pred.reshape(-1, 1)
+    if y_std is not None and y_std.ndim == 1:
+        y_std = y_std.reshape(-1, 1)
+
     plot_index = 0
     for out_idx in output_index:
         if plot == "Xy":
             for in_idx in input_index:
                 if plot_index < len(axs):
-                    _plot_Xy(
+                    a = _plot_Xy(
                         X[:, in_idx],
                         y[:, out_idx],
                         y_pred[:, out_idx],
@@ -469,7 +468,7 @@ def _plot_model(
                     else "residual_vs_predicted",
                     ax=axs[plot_index],
                     scatter_kwargs={"edgecolor": "black", "alpha": 0.7},
-                    line_kwargs={"color": "red"},
+                    # line_kwargs={"color": "red"},
                 )
                 axs[plot_index].set_title(
                     f"{plot.capitalize()} Plot - Output {out_idx+1}"
@@ -479,126 +478,11 @@ def _plot_model(
     # Hide any unused subplots
     for ax in axs[plot_index:]:
         ax.set_visible(False)
-
     plt.tight_layout()
 
-
-# plt.show()
-
-
-# def _plot_model(model, X, y, plot="standard", n_cols=2, figsize=None):
-#     """Plots the model predictions vs. the true values.
-
-#     Parameters
-#     ----------
-#     model : object
-#         A fitted model.
-#     X : array-like, shape (n_samples, n_features)
-#         Simulation input.
-#     y : array-like, shape (n_samples, n_outputs)
-#         Simulation output.
-#     plot : str, optional
-#         The type of plot to draw:
-#         “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-#         “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
-#     n_cols : int, optional
-#         The number of columns in the plot. Default is 2.
-#     figsize : tuple, optional
-#         Overrides the default figure size.
-#     """
-
-#     match plot:
-#         case "standard":
-#             plot_type = "actual_vs_predicted"
-#         case "residual":
-#             plot_type = "residual_vs_predicted"
-#         case "Xy":
-#             plot_type = "Xy"
-#         case _:
-#             ValueError(f"Invalid plot type: {plot}")
-
-#     # get predictions, with uncertainty if available
-#     # check if model is a pipeline
-#     if isinstance(model, Pipeline):
-#         predict_params = inspect.signature(model.named_steps["model"].predict).parameters
-#     else:
-#         predict_params = inspect.signature(model.predict).parameters
-
-#     if "return_std" in predict_params:
-#         y_pred, y_std = model.predict(X, return_std=True)
-#     else:
-#         y_pred = model.predict(X)
-#         y_std = None
-
-#     print(f"X: {X.shape}, y: {y.shape}, y_pred: {y_pred.shape}, y_std: {y_std}")
-
-#     if plot_type == "Xy":
-#         # check if y dim an x dim are 1
-#         n_outputs = y.shape[1] if y.ndim > 1 else 1
-#         n_inputs = X.shape[1] if X.ndim > 1 else 1
-
-#         if n_outputs == 1 and n_inputs == 1:
-#             print(f"X: {X.shape}, y: {y.shape}, y_pred: {y_pred.shape}, y_std: {y_std.shape}")
-#             fig, ax = plt.subplots(figsize=(6, 4))
-#             _plot_Xy(X, y, y_pred, y_std, ax, title=f"{get_model_name(model)} - Test Set")
-#             plt.show()
-
-#         # limit to max 3 x 3 scatter plot matrix
-#         n_inputs = min(n_inputs, 3)
-#         n_outputs = min(n_outputs, 3)
-
-
-#         # else:
-#         #     figsize = (3 * n_inputs, 3 * n_outputs)
-#         #     fig, axs = plt.subplots(nrows = n_outputs, ncols = n_inputs, figsize=figsize, constrained_layout=True)
-#         #     axs = np.atleast_2d(axs)
-#         #     for i in range(n_outputs):
-#         #         for j in range(n_inputs):
-#         #             ax = axs[i * n_inputs + j]
-#         #             _plot_Xy(X[:, j], y[:, i], y_pred[:, i], y_std[:, i], ax, title=f"X{j+1} vs. y{i+1}")
-#         # fig.suptitle(f"{get_model_name(model)} - Test Set Predictions", fontsize=32)
-#         # plt.show()
-#         # return
-
-
-#     # # figsize
-#     # if figsize is None:
-#     #     if y.ndim == 1 or y.shape[1] == 1:
-#     #         figsize = (6, 4)
-#     #     else:  # Dynamic calculation for multi-output
-#     #         n_outputs = y.shape[1]
-#     #         n_rows = np.ceil(n_outputs / n_cols).astype(int)
-#     #         figsize = (4 * n_cols, 4 * n_rows)
-
-
-#     # if y.ndim == 1 or y.shape[1] == 1:  # single output
-#     #     _, ax = plt.subplots(figsize=figsize)
-#     #     display = PredictionErrorDisplay.from_predictions(
-#     #         y_true=y, y_pred=y_pred, kind=plot_type, ax=ax
-#     #     )
-#     #     ax.set_title(f"{get_model_name(model)} - Test Set")
-#     # else:  # Multi-output
-#     #     n_outputs = y.shape[1]
-#     #     n_rows = np.ceil(n_outputs / n_cols).astype(int)
-#     #     fig, axs = plt.subplots(
-#     #         n_rows, n_cols, figsize=figsize, constrained_layout=True
-#     #     )
-#     #     axs = axs.flatten()
-
-#     #     for i in range(n_outputs):
-#     #         if i < len(
-#     #             axs
-#     #         ):
-#     #             display = PredictionErrorDisplay.from_predictions(
-#     #                 y_true=y[:, i], y_pred=y_pred[:, i], kind=plot_type, ax=axs[i]
-#     #             )
-#     #             axs[i].set_title(f"{get_model_name(model)} - Test Set - Output {i+1}")
-
-#     #     # Hide any unused subplots if n_cols * n_rows > n_outputs
-#     #     for ax in axs[n_outputs:]:
-#     #         ax.set_visible(False)
-
-#     # plt.show()
+    # prevent double plotting in notebooks
+    plt.close(fig)
+    return fig
 
 
 def _plot_Xy(X, y, y_pred, y_std=None, ax=None, title="Xy"):
