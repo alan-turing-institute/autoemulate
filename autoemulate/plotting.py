@@ -455,7 +455,7 @@ def _plot_model(
                         y_pred[:, out_idx],
                         y_std[:, out_idx] if y_std is not None else None,
                         ax=axs[plot_index],
-                        title=f"X{in_idx+1} vs. y{out_idx+1}",
+                        title=f"X{in_idx} vs. y{out_idx}",
                     )
                     plot_index += 1
         else:
@@ -471,7 +471,7 @@ def _plot_model(
                     # line_kwargs={"color": "red"},
                 )
                 axs[plot_index].set_title(
-                    f"{plot.capitalize()} Plot - Output {out_idx+1}"
+                    f"{plot.capitalize()} Plot - Output {out_idx}"
                 )
                 plot_index += 1
 

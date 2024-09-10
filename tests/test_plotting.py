@@ -343,8 +343,46 @@ def test_plot_results_model_output_index_out_of_range(ae_multi_output):
         ae_multi_output.plot_results(model="gpt", output_index=2)
 
 
-# test _plot_model
+# ------------------------------ test _plot_model ------------------------------
 def test__plot_model_int(ae_single_output):
+    fig = _plot_model(
+        ae_single_output.get_model(name="gpt"),
+        ae_single_output.X,
+        ae_single_output.y,
+        plot="Xy",
+        input_index=0,
+        output_index=0,
+    )
+    assert isinstance(fig, plt.Figure)
+    assert fig.axes[0].get_title() == "X0 vs. y0"
+
+
+def test__plot_model_list(ae_single_output):
+    fig = _plot_model(
+        ae_single_output.get_model(name="gpt"),
+        ae_single_output.X,
+        ae_single_output.y,
+        plot="Xy",
+        input_index=[0, 1],
+        output_index=[0],
+    )
+    assert isinstance(fig, plt.Figure)
+    assert fig.axes[1].get_title() == "X1 vs. y0"
+
+
+def test__plot_model_int_out_of_range(ae_single_output):
+    with pytest.raises(ValueError):
+        _plot_model(
+            ae_single_output.get_model(name="gpt"),
+            ae_single_output.X,
+            ae_single_output.y,
+            plot="Xy",
+            input_index=3,
+            output_index=2,
+        )
+
+
+def test__plot_model_standard(ae_single_output):
     fig = _plot_model(
         ae_single_output.get_model(name="gpt"),
         ae_single_output.X,
@@ -354,4 +392,4 @@ def test__plot_model_int(ae_single_output):
         output_index=0,
     )
     assert isinstance(fig, plt.Figure)
-    print(fig.axes)
+    assert fig.axes[0].get_title() == "Standard Plot - Output 0"
