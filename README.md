@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      159 |       24 |     85% |240-244, 284, 323, 337, 353-361, 372-375, 379-383, 387, 440-443, 501 |
+| autoemulate/compare.py                                 |      161 |       23 |     86% |240-244, 284, 323, 337, 353-361, 372-375, 379-383, 387, 519-530 |
 | autoemulate/cross\_validate.py                         |       29 |        6 |     79% |     58-76 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
@@ -36,7 +36,7 @@
 | autoemulate/logging\_config.py                         |       44 |        4 |     91% |29, 57, 64-65 |
 | autoemulate/metrics.py                                 |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                       |       34 |        0 |    100% |           |
-| autoemulate/plotting.py                                |       91 |       57 |     37% |96-97, 137-160, 196-218, 255-270, 294-340 |
+| autoemulate/plotting.py                                |      170 |        8 |     95% |117, 121, 136-137, 228, 405, 410, 420 |
 | autoemulate/printing.py                                |       54 |       10 |     81% |10, 15, 23-26, 73, 129-131, 154 |
 | autoemulate/save.py                                    |       48 |        4 |     92% |63-65, 90, 104 |
 | autoemulate/utils.py                                   |      138 |        9 |     93% |56, 64, 148, 216, 221-226, 472-473 |
@@ -54,13 +54,13 @@
 | tests/test\_hyperparam\_searching.py                   |       48 |        0 |    100% |           |
 | tests/test\_logging\_config.py                         |       51 |        0 |    100% |           |
 | tests/test\_model\_processing.py                       |       67 |        0 |    100% |           |
-| tests/test\_plotting.py                                |       68 |        7 |     90% |18, 28, 50-51, 59-60, 68 |
+| tests/test\_plotting.py                                |      194 |        7 |     96% |44, 54, 76-77, 85-86, 94 |
 | tests/test\_printing.py                                |       46 |        0 |    100% |           |
 | tests/test\_save.py                                    |       85 |        1 |     99% |        32 |
 | tests/test\_torch.py                                   |      103 |        0 |    100% |           |
 | tests/test\_ui.py                                      |       39 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      203 |        6 |     97% |56, 62, 67, 72, 77, 82 |
-|                                              **TOTAL** | **2947** |  **249** | **92%** |           |
+|                                              **TOTAL** | **3154** |  **199** | **94%** |           |
 
 
 ## Setup coverage badge
