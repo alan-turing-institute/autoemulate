@@ -1,15 +1,14 @@
 from .conditional_neural_process import ConditionalNeuralProcess
+from .gaussian_process import GaussianProcess
+from .gaussian_process_mogp import GaussianProcessMOGP
 from .gaussian_process_torch import GaussianProcessTorch
 from .gradient_boosting import GradientBoosting
 from .light_gbm import LightGBM
+from .neural_net_sk import NeuralNetSk
 from .polynomials import SecondOrderPolynomial
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
 from .support_vector_machines import SupportVectorMachines
-
-# from .gaussian_process_mogp import GaussianProcessMOGP
-# from .gaussian_process import GaussianProcess
-# from .neural_net_sk import NeuralNetSk
 
 MODEL_REGISTRY = {
     SecondOrderPolynomial().model_name: SecondOrderPolynomial(),
