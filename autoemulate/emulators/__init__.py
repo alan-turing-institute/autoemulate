@@ -5,7 +5,6 @@ from .gaussian_process_torch import GaussianProcessTorch
 from .gradient_boosting import GradientBoosting
 from .light_gbm import LightGBM
 from .neural_net_sk import NeuralNetSk
-from .neural_net_torch import NeuralNetTorch
 from .polynomials import SecondOrderPolynomial
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
@@ -16,15 +15,9 @@ MODEL_REGISTRY = {
     RadialBasisFunctions().model_name: RadialBasisFunctions(),
     RandomForest().model_name: RandomForest(),
     GradientBoosting().model_name: GradientBoosting(),
-    GaussianProcess().model_name: GaussianProcess(),
-    SupportVectorMachines().model_name: SupportVectorMachines(),
     LightGBM().model_name: LightGBM(),
-    NeuralNetTorch(module="MultiLayerPerceptron").model_name: NeuralNetTorch(
-        module="MultiLayerPerceptron"
-    ),
-    NeuralNetTorch(module="RadialBasisFunctionsNetwork").model_name: NeuralNetTorch(
-        module="RadialBasisFunctionsNetwork"
-    ),
+    SupportVectorMachines().model_name: SupportVectorMachines(),
+    GaussianProcess().model_name: GaussianProcess(),
     NeuralNetSk().model_name: NeuralNetSk(),
     ConditionalNeuralProcess().model_name: ConditionalNeuralProcess(),
     GaussianProcessTorch().model_name: GaussianProcessTorch(),

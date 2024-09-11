@@ -8,7 +8,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GradientBoosting
-from autoemulate.emulators import NeuralNetTorch
 from autoemulate.emulators import RandomForest
 from autoemulate.utils import _add_prefix_to_param_space
 from autoemulate.utils import _add_prefix_to_single_grid
@@ -34,18 +33,12 @@ def models():
     return {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
 
 
 def test_basic_models(model_name, models):
     gb = GradientBoosting()
     assert get_model_name(gb) == model_name
-
-
-def test_torch_models(models):
-    nn = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_model_name(nn) == "PyTorchMultiLayerPerceptron"
 
 
 # test retrieving and adjusting parameter grids ---------------------------------
@@ -363,9 +356,6 @@ def test_get_model_name():
     model = GradientBoosting()
     assert get_model_name(model) == "GradientBoosting"
 
-    model = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_model_name(model) == "PyTorchMultiLayerPerceptron"
-
 
 def test_get_model_name_pipeline():
     model = Pipeline([("model", RandomForest())])
@@ -389,9 +379,6 @@ def test_get_short_model_name():
     model = GradientBoosting()
     assert get_short_model_name(model) == "gb"
 
-    model = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_short_model_name(model) == "ptmlp"
-
 
 def test__get_full_model_name():
     model_names_dict = {"GradientBoosting": "gb", "RandomForest": "rf"}
@@ -409,12 +396,10 @@ def test__get_model_names_dict():
     models = {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
     model_names_dict = {
         "GradientBoosting": "gb",
         "RandomForest": "rf",
-        "PyTorchMultiLayerPerceptron": "ptmlp",
     }
     assert _get_model_names_dict(models) == model_names_dict
 
@@ -423,7 +408,6 @@ def test__get_model_names_dict_w_subset():
     models = {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
     model_names_dict = {
         "GradientBoosting": "gb",
