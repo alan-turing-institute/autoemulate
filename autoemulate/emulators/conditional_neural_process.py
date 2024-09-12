@@ -232,6 +232,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         # needs to be float64 to pass estimator tests
         # squeeze out batch dimension again so that score() etc. runs
         mean, logvar = predictions
+
         mean = mean[-X.shape[0] :].numpy().astype(np.float64).squeeze()
         logvar = logvar[-X.shape[0] :].numpy().astype(np.float64).squeeze()
 
@@ -241,10 +242,13 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             var = np.exp(logvar) * (self._y_train_std**2)
             logvar = np.log(var)
 
-        # if y is 1d, make predictions same shape
+        # make sure predictions have the same shape as y
         if self.y_dim_ == 1:
             mean = mean.ravel()
             logvar = logvar.ravel()
+        else:
+            mean = mean.reshape(-1, self.output_dim_)
+            logvar = logvar.reshape(-1, self.output_dim_)
 
         if return_std:
             std = np.exp(0.5 * logvar)

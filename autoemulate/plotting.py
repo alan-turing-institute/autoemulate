@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.pipeline import Pipeline
 
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import get_model_name
 
 
@@ -111,20 +112,21 @@ def _plot_single_fold(
     model = cv_results[model_name]["estimator"][fold_index]
     y_test_pred, y_test_std = _predict_with_optional_std(model, X_test)
 
+    # make sure everything is 2D
+    y_test = _ensure_2d(y_test)
+    y_test_pred = _ensure_2d(y_test_pred)
+    if y_test_std is not None:
+        y_test_std = _ensure_2d(y_test_std)
+
     # check output_index is valid and select the correct column
-    if y.ndim == 1:
-        if output_index > 0:
-            raise ValueError("output_index must be 0 for single-output data.")
-    # if y is multi-output, we need to select the correct column
-    if y.ndim > 1:
-        if output_index >= y.shape[1]:
-            raise ValueError(
-                f"output_index {output_index} is out of range. The index should be between 0 and {y.shape[1] - 1}."
-            )
-        y_test = y_test[:, output_index]
-        y_test_pred = y_test_pred[:, output_index]
-        if y_test_std is not None:
-            y_test_std = y_test_std[:, output_index]
+    if output_index >= y_test.shape[1]:
+        raise ValueError(
+            f"output_index {output_index} is out of range. The index should be between 0 and {y.shape[1] - 1}."
+        )
+    y_test = y_test[:, output_index]
+    y_test_pred = y_test_pred[:, output_index]
+    if y_test_std is not None:
+        y_test_std = y_test_std[:, output_index]
 
     match plot:
         case "standard":
@@ -437,12 +439,18 @@ def _plot_model(
     axs = axs.flatten()
 
     # if y is 1d, we need to make it 2d
-    if y.ndim == 1:
-        y = y.reshape(-1, 1)
-    if y_pred.ndim == 1:
-        y_pred = y_pred.reshape(-1, 1)
-    if y_std is not None and y_std.ndim == 1:
-        y_std = y_std.reshape(-1, 1)
+    # if y.ndim == 1:
+    #     y = y.reshape(-1, 1)
+    # if y_pred.ndim == 1:
+    #     y_pred = y_pred.reshape(-1, 1)
+    # if y_std is not None and y_std.ndim == 1:
+    #     y_std = y_std.reshape(-1, 1)
+
+    # make sure everything is 2D
+    y = _ensure_2d(y)
+    y_pred = _ensure_2d(y_pred)
+    if y_std is not None:
+        y_std = _ensure_2d(y_std)
 
     plot_index = 0
     for out_idx in output_index:
