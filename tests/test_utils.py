@@ -13,6 +13,7 @@ from autoemulate.utils import _add_prefix_to_param_space
 from autoemulate.utils import _add_prefix_to_single_grid
 from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _denormalise_y
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _normalise_y
@@ -420,3 +421,16 @@ def test__get_model_names_dict_w_subset():
         _get_model_names_dict(
             models, ["GradientBoosting", "RandomForest", "GaussianProcess"]
         )
+
+
+# test _ensure_2d -------------------------------------------------------------
+def test_ensure_2d():
+    y = np.array([1, 2, 3, 4, 5])
+    y_2d = _ensure_2d(y)
+    assert y_2d.ndim == 2
+
+
+def test_ensure_2d_2d():
+    y = np.array([[1, 2], [3, 4], [5, 6]])
+    y_2d = _ensure_2d(y)
+    assert y_2d.ndim == 2
