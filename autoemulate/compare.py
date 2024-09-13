@@ -79,7 +79,7 @@ class AutoEmulate:
         param_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
         param_search_type : str
-            Type of hyperparameter search to perform. Can be "grid", "random", or "bayes".
+            Type of hyperparameter search to perform. Currently only "random".
         param_search_iters : int
             Number of parameter settings that are sampled. Only used if
             param_search=True and param_search_type="random".
