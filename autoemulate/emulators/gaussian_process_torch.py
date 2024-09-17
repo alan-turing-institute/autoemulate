@@ -212,16 +212,38 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             param_space = {
                 "covar_module": [
                     # TODO: initialize lengthscale for other kernels?
-                    gpytorch.kernels.RBFKernel().initialize(lengthscale=1.0),
-                    gpytorch.kernels.MaternKernel(nu=2.5),
-                    gpytorch.kernels.MaternKernel(nu=1.5),
+                    gpytorch.kernels.RBFKernel(ard_num_dims=input_dim).initialize(lengthscale=1.0),
+                    gpytorch.kernels.MaternKernel(nu=2.5, ard_num_dims=input_dim),
+                    gpytorch.kernels.MaternKernel(nu=1.5, ard_num_dims=input_dim),
                     gpytorch.kernels.PeriodicKernel(),
-                    gpytorch.kernels.RQKernel(),
+                    gpytorch.kernels.RQKernel(ard_num_dims=input_dim),
+                    gpytorch.kernels.ScaleKernel(
+                        gpytorch.kernels.MaternKernel(ard_num_dims=input_dim)
+                    ) + gpytorch.kernels.ConstantKernel()
                 ],
-                "mean_module": [gpytorch.means.ConstantMean(), gpytorch.means.ZeroMean()],
-                "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
-                "lr": [5e-1, 1e-1, 5e-2, 1e-2],
-                "max_epochs": [50, 100, 200],
+                "mean_module": [
+                    # gpytorch.means.ConstantMean(), 
+                    # gpytorch.means.ZeroMean(),
+                    gpytorch.means.LinearMean(input_size=input_dim),
+                    PolyMean(degree=2, input_size=input_dim)
+                    ],
+                "optimizer": [
+                    torch.optim.AdamW, 
+                    torch.optim.Adam, 
+                    torch.optim.SGD
+                    ],
+                "lr": [
+                    5e-1, 
+                    1e-1, 
+                    5e-2, 
+                    1e-2],
+                "max_epochs": [
+                    50, 
+                    100, 
+                    200,
+                    400,
+                    800,
+                    ],
                 "normalize_y": [True, False],
             }
         else:
