@@ -33,91 +33,7 @@ from sklearn.metrics import r2_score
 from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
 from autoemulate.utils import set_random_seed
 
-import itertools
-class PolynomialFeatures:
-    def __init__(self, degree):
-        self.degree = degree
-        self.indices = None
-
-    def fit(self, input_size):
-        x = list(range(input_size))
-
-        d = self.degree
-        L = []
-        while d > 1:
-            l = [list(p) for p in itertools.product(x, repeat=d)]
-            for li in l:
-                li.sort()
-            L += list(map(list, np.unique(l, axis=0)))
-            d -= 1
-        L += [[i] for i in x]
-
-        Ls = []
-        for d in range(1, self.degree + 1):
-            ld = []
-            for l in L:
-                if len(l) == d:
-                    ld.append(l)
-            ld.sort()
-            Ls += ld
-        self.indices = Ls
-
-    def transform(self, x):
-        if not self.indices:
-            raise ValueError(
-                "self.indices is set to None. Did you forget to call 'fit'?"
-            )
-
-        x_ = torch.stack([torch.prod(x[..., i], dim=-1) for i in self.indices], dim=-1)
-        return x_
-
-class PolyMean(gpytorch.means.Mean):
-    def __init__(self, degree, input_size, batch_shape=torch.Size(), bias=True):
-        super().__init__()
-        self.degree = degree
-        self.input_size = input_size
-
-        poly = PolynomialFeatures(self.degree)
-        poly.fit(self.input_size)
-
-        n_weights = len(poly.indices)
-        self.register_parameter(
-            name="weights",
-            parameter=torch.nn.Parameter(torch.randn(*batch_shape, n_weights, 1)),
-        )
-
-        if bias:
-            self.register_parameter(
-                name="bias", parameter=torch.nn.Parameter(torch.randn(*batch_shape, 1))
-            )
-        else:
-            self.bias = None
-
-    def forward(self, x):
-        poly = PolynomialFeatures(self.degree)
-        poly.fit(self.input_size)
-        x_ = poly.transform(x)
-        res = x_.matmul(self.weights).squeeze(-1)
-        if self.bias is not None:
-            res = res + self.bias
-        return res
-    
-    def __repr__(self):
-        return f'Polymean(degree={self.degree}, input_size={self.input_size})'
-
-class EarlyStoppingMax(EarlyStopping):
-    def _calc_new_threshold(self, score):
-        """Determine threshold based on score."""
-        if self.threshold_mode == 'rel':
-            abs_threshold_change = self.threshold * abs(score)
-        else:
-            abs_threshold_change = self.threshold
-
-        if self.lower_is_better:
-            new_threshold = score - abs_threshold_change
-        else:
-            new_threshold = score + abs_threshold_change
-        return new_threshold
+from autoemulate.emulators.gaussian_processs_utils import PolyMean, EarlyStoppingMax
     
 class GaussianProcessTorch(RegressorMixin, BaseEstimator):
     """Exact Gaussian Process emulator build with GPyTorch.
@@ -236,10 +152,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                     "early_stopping",
                     EarlyStoppingMax(monitor="valid_loss", patience=10, threshold=1e-3, load_best=True),
                 ),
-                # (
-                #     'additional_socre',
-                #     EpochScoring(r2_score, lower_is_better=False, name='r2_valid')
-                # )
             ],
             verbose=0,
             device=self.device
@@ -339,14 +251,14 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                 "lr": Categorical([
                      5e-1, 
                      1e-1, 
-                    #  5e-2, 
-                    #  1e-2
+                     5e-2, 
+                     1e-2
                      ]),
                 "max_epochs": Categorical([
-                    # 50, 
-                    # 100, 
-                    # 200,
-                    # 400,
+                    50, 
+                    100, 
+                    200,
+                    400,
                     800,
                     ]),
                 "normalize_y": Categorical([
