@@ -110,7 +110,7 @@ def _optimize_params(
     return searcher.best_estimator_
 
 
-def _process_param_space(model, search_type, param_space, input_dim):
+def _process_param_space(model, search_type, param_space, input_dim=1):
     """Process parameter grid for hyperparameter search.
     Gets the parameter grid for the model and adjusts it to include prefixes
     for pipelines / multioutput estimators.
