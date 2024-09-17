@@ -4,7 +4,7 @@ import pytest
 from sklearn.datasets import make_regression
 from sklearn.pipeline import Pipeline
 
-from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import RandomForest
 from autoemulate.hyperparam_searching import _check_param_space
 from autoemulate.hyperparam_searching import _optimize_params

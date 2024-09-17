@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import RandomForest
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_model_name
@@ -24,7 +24,7 @@ def model():
 
 @pytest.fixture
 def models():
-    return [RandomForest(), GaussianProcess()]
+    return [RandomForest(), GaussianProcessSklearn()]
 
 
 @pytest.fixture

@@ -14,8 +14,8 @@ from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.estimator_checks import set_random_state
 
 from autoemulate.emulators import ConditionalNeuralProcess
-from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import GaussianProcessMOGP
+from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import GaussianProcessTorch
 from autoemulate.emulators import GradientBoosting
 from autoemulate.emulators import LightGBM
@@ -30,7 +30,7 @@ from autoemulate.emulators import SupportVectorMachines
     [
         SupportVectorMachines(),
         RandomForest(random_state=42),
-        GaussianProcess(random_state=1337),
+        GaussianProcessSklearn(random_state=1337),
         NeuralNetSk(random_state=13),
         GradientBoosting(random_state=42),
         SecondOrderPolynomial(),

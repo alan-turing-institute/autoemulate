@@ -1,5 +1,5 @@
 from .conditional_neural_process import ConditionalNeuralProcess
-from .gaussian_process import GaussianProcess
+from .gaussian_process import GaussianProcessSklearn
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gaussian_process_torch import GaussianProcessTorch
 from .gradient_boosting import GradientBoosting
