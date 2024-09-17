@@ -3,6 +3,7 @@ import torch
 
 from .polynomial_features import PolynomialFeatures
 
+
 class PolyMean(gpytorch.means.Mean):
     def __init__(self, degree, input_size, batch_shape=torch.Size(), bias=True):
         super().__init__()
@@ -33,6 +34,6 @@ class PolyMean(gpytorch.means.Mean):
         if self.bias is not None:
             res = res + self.bias
         return res
-    
+
     def __repr__(self):
-        return f'Polymean(degree={self.degree}, input_size={self.input_size})'
+        return f"Polymean(degree={self.degree}, input_size={self.input_size})"
