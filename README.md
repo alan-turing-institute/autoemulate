@@ -8,7 +8,7 @@
 
 <!-- SPHINX-START -->
 
-Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for applications like digital twins, or when they have to run thousands of times to do uncertainty quantification or sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares lots of models, like *Radial Basis Functions*, *Gaussian Processes* or *Neural Networks* to find the best emulator for a simulation.
+Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various models, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines, Gaussian Processes and Conditional Neural Processes to find the best emulator for a simulation. 
 
 The project is in early development. 
 
@@ -16,17 +16,18 @@ The project is in early development.
 
 ## installation
 
-```bash
-pip install autoemulate
-```
-
-development version from GitHub:
+There's currently a lot of development, so we recommend installing the most current version from GitHub:
 
 ```bash
 pip install git+https://github.com/alan-turing-institute/autoemulate.git
 ```
 
-or for contributors using [Poetry](https://python-poetry.org/):
+There's also a release available on PyPI (will not contain the most recent features and models)
+```bash
+pip install autoemulate
+```
+
+For contributors using [Poetry](https://python-poetry.org/):
 
 ```bash
 git clone https://github.com/alan-turing-institute/autoemulate.git
@@ -52,6 +53,8 @@ ae.setup(X, y)
 best_model = ae.compare() 
 # training set cross-validation results
 ae.print_results() 
+# plot cv results
+ae.plot_results()
 # test set results for the best model
 ae.evaluate_model(best_model) 
 # refit on full data
