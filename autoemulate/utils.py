@@ -471,3 +471,10 @@ def set_random_seed(seed: int, deterministic: bool = False):
     if deterministic:
         torch.backends.cudnn.benchmark = False
         torch.use_deterministic_algorithms(True)
+
+
+def _ensure_2d(arr):
+    """Ensure that arr is a 2D."""
+    if arr.ndim == 1:
+        arr = arr.reshape(-1, 1)
+    return arr

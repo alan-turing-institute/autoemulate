@@ -8,12 +8,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.emulators import GradientBoosting
-from autoemulate.emulators import NeuralNetTorch
 from autoemulate.emulators import RandomForest
 from autoemulate.utils import _add_prefix_to_param_space
 from autoemulate.utils import _add_prefix_to_single_grid
 from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _denormalise_y
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _normalise_y
@@ -34,18 +34,12 @@ def models():
     return {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
 
 
 def test_basic_models(model_name, models):
     gb = GradientBoosting()
     assert get_model_name(gb) == model_name
-
-
-def test_torch_models(models):
-    nn = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_model_name(nn) == "PyTorchMultiLayerPerceptron"
 
 
 # test retrieving and adjusting parameter grids ---------------------------------
@@ -363,9 +357,6 @@ def test_get_model_name():
     model = GradientBoosting()
     assert get_model_name(model) == "GradientBoosting"
 
-    model = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_model_name(model) == "PyTorchMultiLayerPerceptron"
-
 
 def test_get_model_name_pipeline():
     model = Pipeline([("model", RandomForest())])
@@ -389,9 +380,6 @@ def test_get_short_model_name():
     model = GradientBoosting()
     assert get_short_model_name(model) == "gb"
 
-    model = NeuralNetTorch("MultiLayerPerceptron")
-    assert get_short_model_name(model) == "ptmlp"
-
 
 def test__get_full_model_name():
     model_names_dict = {"GradientBoosting": "gb", "RandomForest": "rf"}
@@ -409,12 +397,10 @@ def test__get_model_names_dict():
     models = {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
     model_names_dict = {
         "GradientBoosting": "gb",
         "RandomForest": "rf",
-        "PyTorchMultiLayerPerceptron": "ptmlp",
     }
     assert _get_model_names_dict(models) == model_names_dict
 
@@ -423,7 +409,6 @@ def test__get_model_names_dict_w_subset():
     models = {
         "GradientBoosting": GradientBoosting(),
         "RandomForest": RandomForest(),
-        "PyTorchMultiLayerPerceptron": NeuralNetTorch("MultiLayerPerceptron"),
     }
     model_names_dict = {
         "GradientBoosting": "gb",
@@ -436,3 +421,16 @@ def test__get_model_names_dict_w_subset():
         _get_model_names_dict(
             models, ["GradientBoosting", "RandomForest", "GaussianProcess"]
         )
+
+
+# test _ensure_2d -------------------------------------------------------------
+def test_ensure_2d():
+    y = np.array([1, 2, 3, 4, 5])
+    y_2d = _ensure_2d(y)
+    assert y_2d.ndim == 2
+
+
+def test_ensure_2d_2d():
+    y = np.array([[1, 2], [3, 4], [5, 6]])
+    y_2d = _ensure_2d(y)
+    assert y_2d.ndim == 2
