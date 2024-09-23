@@ -261,17 +261,17 @@ class AutoEmulate:
 
         return self.best_model
 
-    def get_model(self, rank=1, metric="r2", name=None):
-        """Get a fitted model based on it rank in the comparison or its name.
+    def get_model(self, name=None, rank=1, metric="r2"):
+        """Get a fitted model based on its name or rank in the comparison.
 
         Parameters
         ----------
+        name : str
+            Name of the model to return.
         rank : int
             Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
-        name : str
-            Name of the model to return.
 
         Returns
         -------
