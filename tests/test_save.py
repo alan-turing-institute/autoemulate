@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -11,10 +12,12 @@ from autoemulate.emulators import RandomForest
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import get_model_name
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture
 def model_serialiser():
-    return ModelSerialiser()
+    return ModelSerialiser(logger=logger)
 
 
 @pytest.fixture
