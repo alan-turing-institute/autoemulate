@@ -116,7 +116,9 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
-        self.model_names = self.model_registry.get_model_names(model_subset)
+        self.model_names = self.model_registry.get_model_names(
+            model_subset, is_core=True
+        )
         self.models = _process_models(
             model_registry=self.model_registry,
             model_subset=list(self.model_names.keys()),

@@ -15,7 +15,7 @@ class ModelRegistry:
         if is_core:
             self.core_model_names.append(model_name)
 
-    def get_model_names(self, model_subset=None):
+    def get_model_names(self, model_subset=None, is_core=False):
         """Get a dictionary of (all) model names and their short names
 
         Parameters
@@ -60,6 +60,12 @@ class ModelRegistry:
                 for k, v in model_names.items()
                 if k in model_subset or v in model_subset
             }
+
+        if is_core:
+            model_names = {
+                k: v for k, v in model_names.items() if k in self.core_model_names
+            }
+
         return model_names
 
     def get_core_models(self):

@@ -90,6 +90,13 @@ def test_get_model_names_invalid_str(model_registry):
         model_registry.get_model_names(model_subset="invalid")
 
 
+def test_get_model_names_is_core(model_registry):
+    model_names = model_registry.get_model_names(is_core=True)
+    assert isinstance(model_names, dict)
+    assert len(model_names) == 2
+    assert model_names["RadialBasisFunctions"] == "rbf"
+
+
 # check get_models -------------------------------------------
 def test_get_models(model_registry):
     models = model_registry.get_models()
