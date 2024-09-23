@@ -17,11 +17,11 @@ from tqdm.autonotebook import tqdm
 from autoemulate.cross_validate import _run_cv
 from autoemulate.cross_validate import _update_scores_df
 from autoemulate.data_splitting import _split_data
-from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import _get_and_process_models
+from autoemulate.model_processing import _process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
@@ -111,13 +111,14 @@ class AutoEmulate:
         print_setup : bool
             Whether to print the setup of the AutoEmulate object.
         """
+        self.model_registry = model_registry
         self.X, self.y = self._check_input(X, y)
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
-        self.model_names = _get_model_names_dict(MODEL_REGISTRY, model_subset)
-        self.models = _get_and_process_models(
-            MODEL_REGISTRY,
+        self.model_names = self.model_registry.get_model_names(model_subset)
+        self.models = _process_models(
+            model_registry=self.model_registry,
             model_subset=list(self.model_names.keys()),
             y=self.y,
             scale=scale,

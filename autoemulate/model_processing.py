@@ -1,58 +1,9 @@
 """Functions for getting and processing models."""
-from copy import deepcopy
-
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
-
-
-def _get_models(model_registry, model_subset=None):
-    """Get models from REGISTRY.
-    Takes a subset of models if model_subset argument was used in setup().
-
-    Parameters
-    ----------
-    model_registry : dict
-        Dictionary of models.
-    model_subset : list
-        List of model names.
-
-    Returns
-    -------
-    dict
-        Dictionary of models instances.
-    """
-    # TODO replace deepcopy with a proper model register
-    if model_subset is not None:
-        _check_model_names(model_subset, model_registry)
-        models = [deepcopy(model_registry)[model] for model in model_subset]
-    else:
-        models = list(deepcopy(model_registry).values())
-    return models
-
-
-def _check_model_names(model_names, model_registry):
-    """Check whether model_names are in MODEL_REGISTRY
-
-    Parameters
-    ----------
-    model_names : list
-        List of model names.
-    model_registry : dict
-        Dictionary of models.
-
-    Returns
-    -------
-    None
-        Raises ValueError if a model in chosen_models is not in MODEL_REGISTRY.
-    """
-    for model in model_names:
-        if model not in model_registry:
-            raise ValueError(
-                f"Model {model} not found. Available models are: {model_registry.keys()}"
-            )
 
 
 def _turn_models_into_multioutput(models, y):
@@ -117,15 +68,15 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     return models_piped
 
 
-def _get_and_process_models(
+def _process_models(
     model_registry, model_subset, y, scale, scaler, reduce_dim, dim_reducer
 ):
     """Get and process models.
 
     Parameters
     ----------
-    model_registry : dict
-        Dictionary of models.
+    model_registry : ModelRegistry
+        An instance of the ModelRegistry class.
     model_subset : list
         List of model names.
     y : array-like, shape (n_samples, n_outputs)
@@ -140,7 +91,7 @@ def _get_and_process_models(
     models : list
         List of model instances.
     """
-    models = _get_models(model_registry, model_subset)
+    models = model_registry.get_models(model_subset)
     models_multi = _turn_models_into_multioutput(models, y)
     models_scaled = _wrap_models_in_pipeline(
         models_multi, scale, scaler, reduce_dim, dim_reducer
