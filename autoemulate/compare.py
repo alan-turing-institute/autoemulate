@@ -321,6 +321,30 @@ class AutoEmulate:
         model.fit(self.X, self.y)
         return model
 
+    def save(self, model=None, path=None):
+        """Saves model to disk.
+
+        Parameters
+        ----------
+        model : sklearn model, optional
+            Model to save. If None, saves the model with the best
+            average cv score.
+        path : str
+            Path to save the model.
+        """
+        if not hasattr(self, "best_model"):
+            raise RuntimeError("Must run compare() before save()")
+
+        serialiser = ModelSerialiser()
+        if model is None:
+            serialiser._save_model(self.best_model, path)
+        else:
+            if not isinstance(model, BaseEstimator):
+                raise ValueError(
+                    "Model must be provided and should be a scikit-learn estimator"
+                )
+        serialiser._save_model(model, path)
+
     def save_model(self, model=None, path=None):
         """Saves model to disk.
 
