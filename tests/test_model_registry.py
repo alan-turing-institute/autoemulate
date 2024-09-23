@@ -106,3 +106,16 @@ def test_get_models_subset(model_registry):
     assert len(models) == 2
     assert models[0].__class__ == GaussianProcessSklearn
     assert models[1].__class__ == ConditionalNeuralProcess
+
+
+def test_get_models_invalid(model_registry):
+    with pytest.raises(ValueError):
+        model_registry.get_models(model_subset=["cnp", "gps", "rbf", "invalid"])
+
+
+def test_get_models_mix(model_registry):
+    models = model_registry.get_models(model_subset=["cnp", "RadialBasisFunctions"])
+    assert isinstance(models, list)
+    assert len(models) == 2
+    assert models[0].__class__ == RadialBasisFunctions
+    assert models[1].__class__ == ConditionalNeuralProcess

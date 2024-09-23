@@ -7,7 +7,6 @@ from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
 from autoemulate.emulators import GaussianProcessMOGP
-from autoemulate.emulators import MODEL_REGISTRY
 from autoemulate.emulators import RandomForest
 from autoemulate.experimental_design import ExperimentalDesign
 from autoemulate.experimental_design import LatinHypercube
