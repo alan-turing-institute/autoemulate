@@ -58,7 +58,7 @@ ae.plot_results()
 # test set results for the best model
 ae.evaluate_model(best_model) 
 # refit on full data
-best_emulator = ae.refit_model(best_model) 
+best_emulator = ae.refit(best_model) 
 # emulate
 best_emulator.predict(X)
 ```

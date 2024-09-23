@@ -103,7 +103,7 @@ class AutoEmulate:
         n_jobs : int
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
         models : list
-            str or list of models to use. If None, uses a set of core models.
+            str or list of model names. If None, uses a set of core models.
         verbose : int
             Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
@@ -307,38 +307,19 @@ class AutoEmulate:
         # check_is_fitted(chosen_model)
         return chosen_model
 
-    def refit_model(self, model):
-        """Refits a model on the full data.
-
-        Parameters
-        ----------
-        model : object
-            Usually a fitted model.
-
-        Returns
-        -------
-        model : object
-            Refitted model.
-        """
+    def refit(self, model=None):
+        """Refits model on full data."""
         if not hasattr(self, "X"):
-            raise RuntimeError("Must run setup() before refit_model()")
-
+            raise RuntimeError("Must run setup() before refit()")
+        if model is None:
+            raise ValueError("Model must be provided")
+        else:
+            if not isinstance(model, BaseEstimator):
+                raise ValueError(
+                    "Model must be provided and should be a scikit-learn estimator"
+                )
         model.fit(self.X, self.y)
         return model
-
-    def refit_models(self):
-        """(Re-) fits all models on the full data.
-
-        Returns
-        -------
-        models : dict
-            dict with refitted models.
-        """
-        if not hasattr(self, "X"):
-            raise RuntimeError("Must run setup() before refit_models()")
-        for i in range(len(self.models)):
-            self.models[i] = self.refit_model(self.models[i])
-        return self.models
 
     def save_model(self, model=None, path=None):
         """Saves model to disk.

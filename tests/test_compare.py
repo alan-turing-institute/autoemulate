@@ -165,16 +165,10 @@ def test_score_without_model(ae_run):
         ae_run.evaluate_model()
 
 
-def test_refit_model(ae_run):
+def test_refit(ae_run):
     model = ae_run.get_model(rank=1)
-    refitted_model = ae_run.refit_model(model)
+    refitted_model = ae_run.refit(model)
     assert refitted_model is not None
-
-
-def test_refit_models(ae_run):
-    models = ae_run.refit_models()
-    assert models is not None
-    assert len(models) == len(ae_run.models)
 
 
 # --------------- test correct hyperparameter updating ------------------
