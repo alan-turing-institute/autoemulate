@@ -63,7 +63,7 @@ class AutoEmulate:
         dim_reducer=PCA(),
         cross_validator=KFold(n_splits=5, shuffle=True),
         n_jobs=None,
-        model_subset=None,
+        models=None,
         verbose=0,
         log_to_file=False,
         print_setup=True,
@@ -102,8 +102,8 @@ class AutoEmulate:
             Can be any object in `sklearn.model_selection` that generates train/test indices.
         n_jobs : int
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
-        model_subset : list
-            List of models to use. If None, uses all models in MODEL_REGISTRY.
+        models : list
+            str or list of models to use. If None, uses a set of core models.
         verbose : int
             Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
@@ -116,12 +116,10 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=test_set_size, random_state=42
         )
-        self.model_names = self.model_registry.get_model_names(
-            model_subset, is_core=True
-        )
+        self.model_names = self.model_registry.get_model_names(models, is_core=True)
         self.models = _process_models(
             model_registry=self.model_registry,
-            model_subset=list(self.model_names.keys()),
+            models=list(self.model_names.keys()),
             y=self.y,
             scale=scale,
             scaler=scaler,

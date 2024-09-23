@@ -15,13 +15,15 @@ class ModelRegistry:
         if is_core:
             self.core_model_names.append(model_name)
 
-    def get_model_names(self, model_subset=None, is_core=False):
+    def get_model_names(self, models=None, is_core=False):
         """Get a dictionary of (all) model names and their short names
 
         Parameters
         ----------
-        model_subset : str or list of str
+        models : str or list of str
             The name(s) of the model(s) to get long and short names for.
+        is_core : bool
+            Whether to return only core model names.
 
         Returns
         -------
@@ -34,31 +36,29 @@ class ModelRegistry:
             for model_name, model in self.models.items()
         }
 
-        if model_subset is not None:
-            # if model_subset is a string, convert it to a list
-            if isinstance(model_subset, str):
-                model_subset = [model_subset]
+        if models is not None:
+            # if models is a string, convert it to a list
+            if isinstance(models, str):
+                models = [models]
 
             # if not, check that it is a list
-            if not isinstance(model_subset, list):
+            if not isinstance(models, list):
                 raise ValueError(
-                    f"model_subset must be a list of model names. Got {model_subset} of type {type(model_subset)}"
+                    f"models must be a list of model names. Got {models} of type {type(models)}"
                 )
             # check that all model names are valid, either as key (long name) or value (short name) of model_names
             if not all(
                 model_name in model_names or model_name in model_names.values()
-                for model_name in model_subset
+                for model_name in models
             ):
                 raise ValueError(
-                    f"One or more model names in {model_subset} not found. Available models: {', '.join(model_names.keys())} or short names: {', '.join(model_names.values())}"
+                    f"One or more model names in {models} not found. Available models: {', '.join(model_names.keys())} or short names: {', '.join(model_names.values())}"
                 )
-            # model_subset is a list with model names.
+            # models is a list with model names.
             # They can be short or long names, so either key or value of model_names.
             # Subset the model_names dict.
             model_names = {
-                k: v
-                for k, v in model_names.items()
-                if k in model_subset or v in model_subset
+                k: v for k, v in model_names.items() if k in models or v in models
             }
 
         if is_core:
@@ -76,18 +76,18 @@ class ModelRegistry:
         """Get a list of all models, and initialize them"""
         return [self.models[model_name]() for model_name in self.models.keys()]
 
-    def get_models(self, model_subset=None):
+    def get_models(self, models=None):
         """Get a list of subset of models, default is core models
 
         Parameters
         ----------
-        model_subset : str or list of str
+        models : str or list of str
             The name(s) of the model(s) to get. Can be long or short names.
         """
-        if model_subset is None:
+        if models is None:
             return self.get_core_models()
         else:
-            model_names = self.get_model_names(model_subset)
+            model_names = self.get_model_names(models)
             return [
                 self.models[model_name]()
                 for model_name in model_names or model_names.values()

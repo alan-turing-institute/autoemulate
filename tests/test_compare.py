@@ -180,9 +180,7 @@ def test_refit_models(ae_run):
 # --------------- test correct hyperparameter updating ------------------
 def test_param_search_updates_models(ae, Xy):
     X, y = Xy
-    ae.setup(
-        X, y, model_subset=["RandomForest"], param_search=True, param_search_iters=5
-    )
+    ae.setup(X, y, models=["RandomForest"], param_search=True, param_search_iters=5)
     params_before = ae.models[0].get_params()  # just one model, so index with 0
     ae.compare()
     params_after = ae.models[0].get_params()
@@ -191,7 +189,7 @@ def test_param_search_updates_models(ae, Xy):
 
 def test_model_params_equal_wo_param_search(ae, Xy):
     X, y = Xy
-    ae.setup(X, y, model_subset=["RandomForest"])
+    ae.setup(X, y, models=["RandomForest"])
     params_before = ae.models[0].get_params()
     ae.compare()
     params_after = ae.models[0].get_params()

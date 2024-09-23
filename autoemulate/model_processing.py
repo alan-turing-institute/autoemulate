@@ -68,16 +68,14 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     return models_piped
 
 
-def _process_models(
-    model_registry, model_subset, y, scale, scaler, reduce_dim, dim_reducer
-):
+def _process_models(model_registry, models, y, scale, scaler, reduce_dim, dim_reducer):
     """Get and process models.
 
     Parameters
     ----------
     model_registry : ModelRegistry
         An instance of the ModelRegistry class.
-    model_subset : list
+    models : list
         List of model names.
     y : array-like, shape (n_samples, n_outputs)
         Simulation output.
@@ -91,7 +89,7 @@ def _process_models(
     models : list
         List of model instances.
     """
-    models = model_registry.get_models(model_subset)
+    models = model_registry.get_models(models)
     models_multi = _turn_models_into_multioutput(models, y)
     models_scaled = _wrap_models_in_pipeline(
         models_multi, scale, scaler, reduce_dim, dim_reducer

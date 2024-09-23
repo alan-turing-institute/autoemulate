@@ -19,7 +19,7 @@ from autoemulate.plotting import check_multioutput
 def ae_single_output():
     X, y = make_regression(n_samples=50, n_features=2, noise=0.5, random_state=42)
     em = AutoEmulate()
-    em.setup(X, y, model_subset=["gpt", "rbf", "sop"])
+    em.setup(X, y, models=["gpt", "rbf", "sop"])
     em.compare()
     return em
 
@@ -30,7 +30,7 @@ def ae_multi_output():
         n_samples=50, n_features=2, n_targets=2, noise=0.5, random_state=42
     )
     em = AutoEmulate()
-    em.setup(X, y, model_subset=["gpt", "rbf", "sop"])
+    em.setup(X, y, models=["gpt", "rbf", "sop"])
     em.compare()
     return em
 

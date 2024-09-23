@@ -125,7 +125,7 @@ def get_short_model_name(model):
     return short_name
 
 
-def _get_model_names_dict(MODEL_REGISTRY, model_subset=None):
+def _get_model_names_dict(MODEL_REGISTRY, models=None):
     """Get a dictionary of model names and their short names. Optionally subset the models.
 
     Parameters
@@ -142,25 +142,23 @@ def _get_model_names_dict(MODEL_REGISTRY, model_subset=None):
         model_name: get_short_model_name(model)
         for model_name, model in MODEL_REGISTRY.items()
     }
-    if model_subset is not None:
+    if models is not None:
         # check that it is a list
-        if not isinstance(model_subset, list):
+        if not isinstance(models, list):
             raise ValueError(
-                f"model_subset must be a list of model names. Got {model_subset} of type {type(model_subset)}"
+                f"models must be a list of model names. Got {models} of type {type(models)}"
             )
-        # check that all model names in model_subset are in model_names either as key or value
+        # check that all model names in models are in model_names either as key or value
         if not all(
             model_name in model_names or model_name in model_names.values()
-            for model_name in model_subset
+            for model_name in models
         ):
             raise ValueError(
-                f"One or more model names in {model_subset} not found. Available models: {', '.join(model_names.keys())} or short names: {', '.join(model_names.values())}"
+                f"One or more model names in {models} not found. Available models: {', '.join(model_names.keys())} or short names: {', '.join(model_names.values())}"
             )
-        # model_subset is a list with model names. They can be short or long names, so either key or value of model_names. Subset the model_names dict.
+        # models is a list with model names. They can be short or long names, so either key or value of model_names. Subset the model_names dict.
         model_names = {
-            k: v
-            for k, v in model_names.items()
-            if k in model_subset or v in model_subset
+            k: v for k, v in model_names.items() if k in models or v in models
         }
     return model_names
 
