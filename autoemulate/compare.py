@@ -14,6 +14,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 from tqdm.autonotebook import tqdm
 
+from autoemulate.cross_validate import _get_cv_results
 from autoemulate.cross_validate import _run_cv
 from autoemulate.cross_validate import _update_scores_df
 from autoemulate.data_splitting import _split_data
@@ -26,10 +27,8 @@ from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.utils import _get_cv_results
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _get_mean_scores
-from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
