@@ -1,8 +1,7 @@
 import pandas as pd
 
-from autoemulate.utils import get_mean_scores
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_model_scores
+from autoemulate.utils import _get_mean_scores
+from autoemulate.utils import _get_model_scores
 from autoemulate.utils import get_short_model_name
 
 try:
@@ -27,36 +26,6 @@ def _display_results(title, content):
     else:
         print(title)
         print(content)
-
-
-def _print_cv_results(models, scores_df, model_name=None, sort_by="r2"):
-    """Improved print cv results function.
-
-    Parameters
-        models : list
-            List of models.
-        scores_df : pandas.DataFrame
-            DataFrame with scores for each model, metric, and fold.
-        model_name : str, optional
-            Specific model name to print scores for. If None, prints best fold for each model.
-        sort_by : str, optional
-            Metric to sort by. Defaults to "r2".
-    """
-    if model_name is not None:
-        # Validate model_name against available models
-        model_names = [get_model_name(mod) for mod in models]
-        if model_name not in model_names:
-            raise ValueError(
-                f"Model {model_name} not found. Available models: {', '.join(model_names)}"
-            )
-
-        # Display scores for a specific model across CV folds
-        scores = get_model_scores(scores_df, model_name)
-        _display_results(f"Scores for {model_name} across cv-folds:", scores)
-    else:
-        # Display average cross-validation scores for all models
-        means = get_mean_scores(scores_df, metric=sort_by)
-        _display_results("Average cross-validation scores:", means)
 
 
 def _print_setup(cls):

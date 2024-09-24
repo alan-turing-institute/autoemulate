@@ -24,13 +24,13 @@ from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
-from autoemulate.printing import _print_cv_results
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _get_cv_results
 from autoemulate.utils import _get_full_model_name
+from autoemulate.utils import _get_mean_scores
 from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
-from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
 
@@ -293,7 +293,7 @@ class AutoEmulate:
             raise RuntimeError("Must run compare() before get_model()")
 
         # get model by rank
-        means = get_mean_scores(self.scores_df, metric)
+        means = _get_mean_scores(self.scores_df, metric)
 
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
@@ -362,26 +362,32 @@ class AutoEmulate:
         """Print the setup of the AutoEmulate object."""
         _print_setup(self)
 
-    def print_results(self, model=None, sort_by="r2"):
-        """Print cv results.
+    def get_results(self, model=None, sort_by="r2"):
+        """Get cv results.
 
         Parameters
         ----------
         model : str, optional
-            The name of the model to print. If None, the best fold from each model will be printed.
-            If a model name is provided, the scores for that model across all folds will be printed.
+            Name of the model to get cv results for. If None, gets results for all models.
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with summary of cv results.
         """
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
-        _print_cv_results(
+
+        out = _get_cv_results(
             self.models,
             self.scores_df,
             model_name=model_name,
             sort_by=sort_by,
         )
+        return out
 
     def plot_results(
         self,

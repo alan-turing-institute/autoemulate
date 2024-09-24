@@ -7,7 +7,6 @@ import pytest
 from autoemulate.compare import AutoEmulate
 from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import RandomForest
-from autoemulate.printing import _print_cv_results
 from autoemulate.utils import get_short_model_name
 
 models = [GaussianProcessSklearn(), RandomForest()]
@@ -35,23 +34,3 @@ for model in model_names:
                 }
             )
 scores_df = pd.DataFrame(data)
-
-
-def test_print_results_all_models(capsys):
-    _print_cv_results(models, scores_df)
-    captured = capsys.readouterr()
-    assert "Average cross-validation scores:" in captured.out
-    assert "model" in captured.out
-
-
-def test_print_results_single_model(capsys):
-    _print_cv_results(models, scores_df, model_name="GaussianProcessSklearn")
-    captured = capsys.readouterr()
-    assert "Scores for GaussianProcessSklearn across cv-folds:" in captured.out
-    assert "fold" in captured.out
-    assert "metric" in captured.out
-
-
-def test_print_results_invalid_model():
-    with pytest.raises(ValueError):
-        _print_cv_results(models, scores_df, model_name="InvalidModel")

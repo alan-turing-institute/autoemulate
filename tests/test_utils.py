@@ -15,9 +15,9 @@ from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _denormalise_y
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
+from autoemulate.utils import _get_mean_scores
 from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _normalise_y
-from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_short_model_name
@@ -304,7 +304,7 @@ def test_get_mean_scores_r2():
     expected_result = pd.DataFrame(
         {"model": ["ModelA", "ModelB"], "short": ["ma", "mb"], "r2": [0.75, 0.75]}
     )
-    assert get_mean_scores(scores_df, "r2").equals(expected_result)
+    assert _get_mean_scores(scores_df, "r2").equals(expected_result)
 
 
 def test_get_mean_scores_rmse():
@@ -320,7 +320,7 @@ def test_get_mean_scores_rmse():
     expected_result = pd.DataFrame(
         {"model": ["ModelB", "ModelA"], "short": ["mb", "ma"], "rmse": [0.55, 0.9]}
     )
-    assert get_mean_scores(scores_df, "rmse").equals(expected_result)
+    assert _get_mean_scores(scores_df, "rmse").equals(expected_result)
 
 
 def test_get_mean_scores_unsupported_metric():
@@ -333,7 +333,7 @@ def test_get_mean_scores_unsupported_metric():
         }
     )
     with pytest.raises(RuntimeError):
-        get_mean_scores(scores_df, "mae")
+        _get_mean_scores(scores_df, "mae")
 
 
 def test_get_mean_scores_metric_not_found():
@@ -346,7 +346,7 @@ def test_get_mean_scores_metric_not_found():
         }
     )
     with pytest.raises(ValueError):
-        get_mean_scores(scores_df, "rmse")
+        _get_mean_scores(scores_df, "rmse")
 
 
 # test model name getters ------------------------------------------------------

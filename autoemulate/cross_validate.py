@@ -112,3 +112,34 @@ def _update_scores_df(scores_df, model_name, cv_results):
                     "score": score,
                 }
     return scores_df
+
+
+def _get_cv_results(models, scores_df, model_name=None, sort_by="r2"):
+    """Improved print cv results function.
+
+    Parameters
+        models : list
+            List of models.
+        scores_df : pandas.DataFrame
+            DataFrame with scores for each model, metric, and fold.
+        model_name : str, optional
+            Specific model name to print scores for. If None, prints best fold for each model.
+        sort_by : str, optional
+            Metric to sort by. Defaults to "r2".
+    """
+    if model_name is not None:
+        # Validate model_name against available models
+        model_names = [get_model_name(mod) for mod in models]
+        if model_name not in model_names:
+            raise ValueError(
+                f"Model {model_name} not found. Available models: {', '.join(model_names)}"
+            )
+
+        # Display scores for a specific model across CV folds
+        df = get_model_scores(scores_df, model_name)
+        # _display_results(f"Scores for {model_name} across cv-folds:", df)
+    else:
+        # Display average cross-validation scores for all models
+        df = get_mean_scores(scores_df, metric=sort_by)
+        # _display_results("Average cross-validation scores:", df)
+    return df

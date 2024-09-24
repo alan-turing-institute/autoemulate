@@ -387,7 +387,33 @@ def _denormalise_y(y_pred, y_mean, y_std):
     return y_pred * y_std + y_mean
 
 
-def get_mean_scores(scores_df, metric):
+def set_random_seed(seed: int, deterministic: bool = False):
+    """Set random seed for Python, Numpy and PyTorch.
+
+    Parameters
+    ----------
+    seed : int
+        The random seed to use.
+    deterministic : bool
+        Use "deterministic" algorithms in PyTorch.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    if deterministic:
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)
+
+
+def _ensure_2d(arr):
+    """Ensure that arr is a 2D."""
+    if arr.ndim == 1:
+        arr = arr.reshape(-1, 1)
+    return arr
+
+
+def _get_mean_scores(scores_df, metric):
     """Get the mean scores for each model and metric.
 
     Parameters
@@ -429,7 +455,7 @@ def get_mean_scores(scores_df, metric):
     return means_df
 
 
-def get_model_scores(scores_df, model_name):
+def _get_model_scores(scores_df, model_name):
     """
     Get the scores for a specific model.
 
@@ -452,27 +478,32 @@ def get_model_scores(scores_df, model_name):
     return model_scores
 
 
-def set_random_seed(seed: int, deterministic: bool = False):
-    """Set random seed for Python, Numpy and PyTorch.
+def _get_cv_results(models, scores_df, model_name=None, sort_by="r2"):
+    """Improved print cv results function.
 
     Parameters
     ----------
-    seed : int
-        The random seed to use.
-    deterministic : bool
-        Use "deterministic" algorithms in PyTorch.
+    models : list
+        List of models.
+    scores_df : pandas.DataFrame
+        DataFrame with scores for each model, metric, and fold.
+    model_name : str, optional
+        Specific model name to print scores for. If None, prints best fold for each model.
+    sort_by : str, optional
+        Metric to sort by. Defaults to "r2".
+
+    Returns
+    -------
+    out : pandas.DataFrame
+        DataFrame with summary of cv results.
     """
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    if deterministic:
-        torch.backends.cudnn.benchmark = False
-        torch.use_deterministic_algorithms(True)
-
-
-def _ensure_2d(arr):
-    """Ensure that arr is a 2D."""
-    if arr.ndim == 1:
-        arr = arr.reshape(-1, 1)
-    return arr
+    if model_name is not None:
+        model_names = [get_model_name(mod) for mod in models]
+        if model_name not in model_names:
+            raise ValueError(
+                f"Model {model_name} not found. Available models: {', '.join(model_names)}"
+            )
+        df = _get_model_scores(scores_df, model_name)
+    else:
+        df = _get_mean_scores(scores_df, metric=sort_by)
+    return df
