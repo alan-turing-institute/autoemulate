@@ -47,18 +47,16 @@ def cv():
 
 
 @pytest.fixture()
-def cv_output():
-    cv_folds = 5
-    X, y = make_regression(n_samples=20, n_features=2, random_state=0)
-    cv = KFold(n_splits=cv_folds, shuffle=True)
-    model = RandomForest()
-    metrics = [metric for metric in METRIC_REGISTRY.values()]
+def scores_df():
     scores_df = pd.DataFrame(columns=["model", "metric", "fold", "score"]).astype(
         {"model": "object", "metric": "object", "fold": "int64", "score": "float64"}
     )
-    # run cv
-    fitted_model, cv_results = _run_cv(X, y, cv, model, metrics)
-    return fitted_model, cv_results
+    return scores_df
+
+
+@pytest.fixture()
+def model_name():
+    return "rf"
 
 
 def test_run_cv(Xy, cv, metrics, model):
@@ -90,14 +88,23 @@ def test_fitted_model(Xy, cv, model, metrics):
     fitted_model.score(X, y)
 
 
-def test_update_scores_df(cv_output):
-    _, cv_results = cv_output
-    scores_df_new = _update_scores_df(scores_df, model_name, cv_results)
-    assert isinstance(scores_df_new, pd.DataFrame)
+def test_update_scores_df(Xy, cv, model, metrics, scores_df, model_name):
+    X, y = Xy
+    _, cv_results = _run_cv(X, y, cv, model, metrics)
+    scores_df_updated = _update_scores_df(scores_df, model_name, cv_results)
+    assert isinstance(scores_df_updated, pd.DataFrame)
 
-    assert scores_df_new.shape[0] == 10
-    assert scores_df_new.shape[1] == 4
-    assert scores_df_new["model"][0] == "rf"
+    # 5 columns: model, short, metric, fold, score
+    assert scores_df_updated.shape[1] == 4
+    assert all(scores_df_updated["model"] == "rf")
+    # check that all metrics are present
+    assert set(scores_df_updated["metric"]) == set(
+        [metric.__name__ for metric in metrics]
+    )
+    # check that score is numeric
+    assert pd.api.types.is_numeric_dtype(scores_df_updated["score"])
+    # check that fold contains all values from 0 to 4
+    assert set(scores_df_updated["fold"]) == set(range(5))
 
 
 # mean scores -------------------------------------------------------------------
