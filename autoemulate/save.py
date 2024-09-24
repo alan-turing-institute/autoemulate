@@ -28,9 +28,9 @@ class ModelSerialiser:
 
         try:
             joblib.dump(model, full_path)
-            self.logger.info(f"Model saved to {full_path}")
+            self.logger.info(f"{model_name} saved to {full_path}")
         except Exception as e:
-            self.logger.error(f"Failed to save model to {full_path}: {e}")
+            self.logger.error(f"Failed to save {model_name} to {full_path}: {e}")
             raise
 
     def _load_model(self, path):
