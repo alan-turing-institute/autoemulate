@@ -72,26 +72,16 @@ def _print_setup(cls):
     if not cls.is_set_up:
         raise RuntimeError("Must run setup() before print_setup()")
 
-    models = "\n- " + "\n- ".join(
-        [
-            x[1].__class__.__name__
-            for pipeline in cls.models
-            for x in pipeline.steps
-            if x[0] == "model"
-        ]
-    )
-    metrics = "\n- " + "\n- ".join([metric.__name__ for metric in cls.metrics])
-
     settings = pd.DataFrame(
         [
             str(cls.X.shape),
             str(cls.y.shape),
-            str(cls.test_idxs.shape[0]),
+            str(cls.test_set_size),
+            str(cls.scale),
+            str(cls.scaler.__class__.__name__ if cls.scaler is not None else "None"),
             str(cls.param_search),
             str(cls.search_type),
             str(cls.param_search_iters),
-            str(cls.scale),
-            str(cls.scaler.__class__.__name__ if cls.scaler is not None else "None"),
             str(cls.reduce_dim),
             str(
                 cls.dim_reducer.__class__.__name__
@@ -108,19 +98,36 @@ def _print_setup(cls):
         index=[
             "Simulation input shape (X)",
             "Simulation output shape (y)",
-            "# hold-out set samples (test_set_size)",
+            "Proportion of data for testing (test_set_size)",
+            "Scale input data (scale)",
+            "Scaler (scaler)",
             "Do hyperparameter search (param_search)",
             "Type of hyperparameter search (search_type)",
-            "# sampled parameter settings (param_search_iters)",
-            "Scale data before fitting (scale)",
-            "Scaler (scaler)",
-            "Dimensionality reduction before fitting (reduce_dim)",
+            "Number of sampled parameter settings (param_search_iters)",
+            "Reduce dimensionality (reduce_dim)",
             "Dimensionality reduction method (dim_reducer)",
-            "Cross-validation strategy (cross_validator)",
-            "# parallel jobs (n_jobs)",
+            "Cross validator (cross_validator)",
+            "Parallel jobs (n_jobs)",
         ],
         columns=["Values"],
     )
+
+    # if cls.param_search == False, remove the search_type and param_search_iters rows
+    if not cls.param_search:
+        settings = settings.drop(
+            [
+                "Type of hyperparameter search (search_type)",
+                "Number of sampled parameter settings (param_search_iters)",
+            ]
+        )
+
+    # if cls.reduce_dim == False, remove the dim_reducer row
+    if not cls.reduce_dim:
+        settings = settings.drop(["Dimensionality reduction method (dim_reducer)"])
+
+    # if cls.scale == False, remove the scaler row
+    if not cls.scale:
+        settings = settings.drop(["Scaler (scaler)"])
 
     settings_str = settings.to_string(index=True, header=False)
     width = len(settings_str.split("\n")[0])
@@ -130,27 +137,8 @@ def _print_setup(cls):
         display(HTML(settings.to_html()))
         return
 
+    # when not in a notebook, print the settings in a table
     print("AutoEmulate is set up with the following settings:")
     print("-" * width)
     print(settings_str)
     print("-" * width)
-    print("Models:" + models)
-    print("-" * width)
-    print("Metrics:" + metrics)
-    print("-" * width)
-
-
-def _print_model_names(cls):
-    """Print available models, with name, short name and origin.
-
-    Parameters
-    ----------
-    cls : AutoEmulate
-        The AutoEmulate object.
-    """
-
-    df = pd.DataFrame.from_dict(cls.model_names, orient="index", columns=["short name"])
-    if _in_ipython_session:
-        display(HTML(df.to_html()))
-    else:
-        print(df)

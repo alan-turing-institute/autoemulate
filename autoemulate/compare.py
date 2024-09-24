@@ -25,7 +25,6 @@ from autoemulate.model_processing import _process_models
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_cv_results
-from autoemulate.printing import _print_model_names
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import _get_full_model_name
@@ -113,8 +112,9 @@ class AutoEmulate:
         """
         self.model_registry = model_registry
         self.X, self.y = self._check_input(X, y)
+        self.test_set_size = test_set_size
         self.train_idxs, self.test_idxs = _split_data(
-            self.X, test_size=test_set_size, random_state=42
+            self.X, test_size=self.test_set_size, random_state=42
         )
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
         self.models = _process_models(
@@ -357,10 +357,6 @@ class AutoEmulate:
             raise ValueError("Path must be provided")
         serialiser = ModelSerialiser(self.logger)
         return serialiser._load_model(path)
-
-    def print_model_names(self):
-        """Print available models"""
-        _print_model_names(self)
 
     def print_setup(self):
         """Print the setup of the AutoEmulate object."""
