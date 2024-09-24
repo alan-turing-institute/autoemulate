@@ -335,7 +335,7 @@ class AutoEmulate:
         if not hasattr(self, "best_model"):
             raise RuntimeError("Must run compare() before save()")
 
-        serialiser = ModelSerialiser()
+        serialiser = ModelSerialiser(self.logger)
         if model is None:
             serialiser._save_model(self.best_model, path)
         else:
@@ -345,47 +345,17 @@ class AutoEmulate:
                 )
         serialiser._save_model(model, path)
 
-    def save_model(self, model=None, path=None):
-        """Saves model to disk.
-
-        Parameters
-        ----------
-        model : object, optional
-            Model to save. If None, saves the best model.
-            If "all", saves all models.
-        path : str
-            Path to save the model.
-        """
-        if not hasattr(self, "best_model"):
-            raise RuntimeError("Must run compare() before save_model()")
-        serialiser = ModelSerialiser()
-
-        if model is None or not isinstance(model, (Pipeline, BaseEstimator)):
-            raise ValueError(
-                "Model must be provided and should be a scikit-learn pipeline or model"
-            )
-        serialiser._save_model(model, path)
-
-    def save_models(self, path=None):
-        """Saves all models to disk.
+    def load(self, path=None):
+        """Loads a model from disk.
 
         Parameters
         ----------
         path : str
-            Directory to save the models.
-            If None, saves to the current working directory.
+            Path to model.
         """
-        if not hasattr(self, "best_model"):
-            raise RuntimeError("Must run compare() before save_models()")
-        serialiser = ModelSerialiser()
-        serialiser._save_models(self.models, path)
-
-    def load_model(self, path=None):
-        """Loads a model from disk."""
-        serialiser = ModelSerialiser()
         if path is None:
-            raise ValueError("Filepath must be provided")
-
+            raise ValueError("Path must be provided")
+        serialiser = ModelSerialiser(self.logger)
         return serialiser._load_model(path)
 
     def print_model_names(self):

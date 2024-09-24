@@ -42,7 +42,7 @@ def test_save_model_wo_path(model_serialiser, model):
 
         try:
             model_serialiser._save_model(model, None)
-            model_name = get_model_name(model)
+            model_name = model_serialiser._get_model_name(model)
             expected_path = Path(model_name)
             assert expected_path.exists()
         finally:
@@ -61,7 +61,8 @@ def test_save_model_w_dir(model_serialiser, model):
         test_path = Path(temp_dir)
         model_serialiser._save_model(model, test_path)
         assert test_path.exists()
-        assert (test_path / "RandomForest").exists()
+        model_name = model_serialiser._get_model_name(model)
+        assert (test_path / model_name).exists()
 
 
 def test_load_model(model_serialiser, model):
