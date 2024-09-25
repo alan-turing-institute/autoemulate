@@ -6,6 +6,8 @@ import pandas as pd
 import pytest
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_regression
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
 from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
@@ -14,6 +16,7 @@ from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
 from autoemulate.cross_validate import _get_cv_results
+from autoemulate.cross_validate import _get_cv_sum
 from autoemulate.cross_validate import _get_mean_scores
 from autoemulate.cross_validate import _get_model_scores
 from autoemulate.cross_validate import _run_cv
@@ -41,6 +44,11 @@ def metrics():
 
 
 @pytest.fixture(scope="module")
+def scorers(metrics):
+    return {metric.__name__: make_scorer(metric) for metric in metrics}
+
+
+@pytest.fixture(scope="module")
 def cv():
     cv = KFold(n_splits=5, shuffle=True)
     return cv
@@ -57,6 +65,15 @@ def scores_df():
 @pytest.fixture()
 def model_name():
     return "rf"
+
+
+@pytest.fixture()
+def cv_result(Xy, model, cv, scorers):
+    X, y = Xy
+    cv_result = cross_validate(
+        model, X, y, scoring=scorers, cv=cv, return_estimator=True, return_indices=True
+    )
+    return cv_result
 
 
 def test_run_cv(Xy, cv, metrics, model):
@@ -86,6 +103,19 @@ def test_fitted_model(Xy, cv, model, metrics):
     assert isinstance(fitted_model, BaseEstimator)
     # check that score does not raise an error (i.e. model is fitted)
     fitted_model.score(X, y)
+
+
+def test_get_cv_sum(cv_result, metrics):
+    print(cv_result)
+    print(_get_cv_sum(cv_result))
+    cv_sum = _get_cv_sum(cv_result)
+    assert isinstance(cv_sum, pd.DataFrame)
+    assert cv_sum.shape[1] == 3
+    # check that all metrics are present
+    assert all(metric.__name__ in cv_sum.columns for metric in metrics)
+    # check that metrics are numeric
+    assert pd.api.types.is_numeric_dtype(cv_sum.iloc[:, 1]), "Column 1 is not numeric"
+    assert pd.api.types.is_numeric_dtype(cv_sum.iloc[:, 2]), "Column 2 is not numeric"
 
 
 def test_update_scores_df(Xy, cv, model, metrics, scores_df, model_name):

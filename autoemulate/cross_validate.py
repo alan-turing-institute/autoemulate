@@ -86,6 +86,43 @@ def _run_cv(X, y, cv, model, metrics, n_jobs=None, logger=None):
     return fitted_model, cv_results
 
 
+def _get_cv_sum(cv_result):
+    """summarises the cv results for a single mode
+
+    Parameters
+    ----------
+        cv_result : dict
+            Results of the cross-validation, output of scikit-learn's `cross_validate`.
+
+    Returns
+    -------
+        cv_sum : pandas.DataFrame
+            DataFrame with columns "fold" plus one column per metric.
+    """
+    # get test scores
+    cv_sum = {
+        k.split("test_", 1)[1]: v for k, v in cv_result.items() if k.startswith("test_")
+    }
+    cv_sum = pd.DataFrame(cv_sum).reset_index(names=["fold"])
+    return cv_sum
+
+
+def _get_cv_sum_all(cv_results):
+    """summarises the cv results for all models
+
+    Parameters
+    ----------
+        cv_results : dict
+            model_name: cv_result
+
+    Returns
+    -------
+        cv_sum : pandas.DataFrame
+            DataFrame with columns "model", "short", and one column per metric, showing
+            the mean score across all folds for each model.
+    """
+
+
 def _update_scores_df(scores_df, model_name, cv_results):
     """Updates the scores dataframe with the results of the cross-validation.
 
