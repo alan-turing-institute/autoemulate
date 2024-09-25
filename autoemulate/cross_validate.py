@@ -141,6 +141,7 @@ def _get_mean_scores(scores_df, metric):
             f"Metric {metric} not found. Available metrics are: {scores_df['metric'].unique()}"
         )
 
+    # TODO: make this work for more metrics
     if metric == "r2":
         asc = False
     elif metric == "rmse":

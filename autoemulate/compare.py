@@ -184,8 +184,8 @@ class AutoEmulate:
 
         Returns
         -------
-        scores_df : pandas.DataFrame
-            Dataframe containing the scores for each model, metric and fold.
+        self.best_model : object
+            Best performing model fitted on full data.
         """
         if not self.is_set_up:
             raise RuntimeError("Must run setup() before compare()")
