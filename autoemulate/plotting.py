@@ -302,7 +302,7 @@ def _plot_model_folds(
     return fig
 
 
-def _plot_results(
+def _plot_cv(
     cv_results,
     X,
     y,

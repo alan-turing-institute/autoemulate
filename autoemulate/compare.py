@@ -23,8 +23,8 @@ from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _process_models
+from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
-from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import _get_full_model_name
@@ -381,7 +381,7 @@ class AutoEmulate:
 
     summarize_cv = summarise_cv  # alias
 
-    def plot_results(
+    def plot_cv(
         self,
         model=None,
         plot="Xy",
@@ -414,7 +414,7 @@ class AutoEmulate:
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
-        figure = _plot_results(
+        figure = _plot_cv(
             self.cv_results,
             self.X,
             self.y,
