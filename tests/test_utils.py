@@ -15,7 +15,6 @@ from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _denormalise_y
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
-from autoemulate.utils import _get_mean_scores
 from autoemulate.utils import _normalise_y
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
@@ -327,7 +326,7 @@ def test__get_full_model_name():
     assert _get_full_model_name("RandomForest", model_names_dict) == "RandomForest"
     # test that it raises an error if the model name is not in the dictionary
     with pytest.raises(ValueError):
-        _get_full_model_name("GaussianProcess", model_names_dict)
+        _get_full_model_name("InvalidMod", model_names_dict)
 
 
 # test _ensure_2d -------------------------------------------------------------

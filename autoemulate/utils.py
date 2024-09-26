@@ -141,12 +141,9 @@ def _get_full_model_name(model_name, model_names_dict):
     str
         The full name of the model.
     """
-    if model_name in model_names_dict:
-        return model_name
-    else:
-        for long_name, short_name in model_names_dict.items():
-            if model_name == short_name:
-                return long_name
+    for long_name, short_name in model_names_dict.items():
+        if model_name == short_name or model_name == long_name:
+            return long_name
     raise ValueError(
         f"Model {model_name} not found. Available models: {', '.join(model_names_dict.keys())} or short names: {', '.join(model_names_dict.values())}"
     )
@@ -373,99 +370,3 @@ def _ensure_2d(arr):
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
     return arr
-
-
-def _get_mean_scores(scores_df, metric):
-    """Get the mean scores for each model and metric.
-
-    Parameters
-    ----------
-    scores_df : pandas.DataFrame
-        DataFrame with columns "model", "metric", "fold", "score".
-    metric : str
-        The metric for which to calculate the mean score. Currently supported are "r2" and "rmse".
-
-    Returns
-    -------
-    mean_scores_df : pandas.DataFrame
-        DataFrame with columns "model", "metric", "mean_score".
-    """
-
-    # check if metric is in scores_df metric column
-    if metric not in scores_df["metric"].unique():
-        raise ValueError(
-            f"Metric {metric} not found. Available metrics are: {scores_df['metric'].unique()}"
-        )
-
-    if metric == "r2":
-        asc = False
-    elif metric == "rmse":
-        asc = True
-    else:
-        raise RuntimeError(f"Metric {metric} not supported.")
-
-    means_df = (
-        scores_df.groupby(["model", "short", "metric"])["score"]
-        .mean()
-        .unstack()
-        .reset_index()
-        .sort_values(by=metric, ascending=asc)
-        .rename_axis(None, axis=1)
-        .reset_index(drop=True)
-    )
-
-    return means_df
-
-
-def _get_model_scores(scores_df, model_name):
-    """
-    Get the scores for a specific model.
-
-    Parameters
-    ----------
-    scores_df : pandas.DataFrame
-        DataFrame with columns "model", "metric", "fold", "score".
-    model_name : str
-        The name of the model for which to retrieve the scores.
-
-    Returns
-    -------
-    model_scores : pandas.DataFrame
-        DataFrame with columns "fold", "metric", "score".
-    """
-    model_scores = scores_df[scores_df["model"] == model_name].pivot(
-        index="fold", columns="metric", values="score"
-    )
-
-    return model_scores
-
-
-def _get_cv_results(models, scores_df, model_name=None, sort_by="r2"):
-    """Improved print cv results function.
-
-    Parameters
-    ----------
-    models : list
-        List of models.
-    scores_df : pandas.DataFrame
-        DataFrame with scores for each model, metric, and fold.
-    model_name : str, optional
-        Specific model name to print scores for. If None, prints best fold for each model.
-    sort_by : str, optional
-        Metric to sort by. Defaults to "r2".
-
-    Returns
-    -------
-    out : pandas.DataFrame
-        DataFrame with summary of cv results.
-    """
-    if model_name is not None:
-        model_names = [get_model_name(mod) for mod in models]
-        if model_name not in model_names:
-            raise ValueError(
-                f"Model {model_name} not found. Available models: {', '.join(model_names)}"
-            )
-        df = _get_model_scores(scores_df, model_name)
-    else:
-        df = _get_mean_scores(scores_df, metric=sort_by)
-    return df
