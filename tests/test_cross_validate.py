@@ -15,12 +15,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
-from autoemulate.cross_validate import _get_cv_results
-from autoemulate.cross_validate import _get_cv_sum
-from autoemulate.cross_validate import _get_mean_scores
-from autoemulate.cross_validate import _get_model_scores
 from autoemulate.cross_validate import _run_cv
-from autoemulate.cross_validate import _update_scores_df
+from autoemulate.cross_validate import _sum_cv
+from autoemulate.cross_validate import _sum_cvs
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import RandomForest
 from autoemulate.metrics import METRIC_REGISTRY
@@ -76,6 +73,15 @@ def cv_result(Xy, model, cv, scorers):
     return cv_result
 
 
+@pytest.fixture()
+def cv_results(Xy):
+    X, y = Xy
+    em = AutoEmulate()
+    em.setup(X, y, models=["rbf", "rf"])
+    em.compare()
+    return em.cv_results
+
+
 def test_run_cv(Xy, cv, metrics, model):
     X, y = Xy
     _run_cv(X, y, cv, model, metrics)
@@ -105,10 +111,10 @@ def test_fitted_model(Xy, cv, model, metrics):
     fitted_model.score(X, y)
 
 
-def test_get_cv_sum(cv_result, metrics):
+def test_sum_cv(cv_result, metrics):
     print(cv_result)
-    print(_get_cv_sum(cv_result))
-    cv_sum = _get_cv_sum(cv_result)
+    print(_sum_cv(cv_result))
+    cv_sum = _sum_cv(cv_result)
     assert isinstance(cv_sum, pd.DataFrame)
     assert cv_sum.shape[1] == 3
     # check that all metrics are present
@@ -118,91 +124,24 @@ def test_get_cv_sum(cv_result, metrics):
     assert pd.api.types.is_numeric_dtype(cv_sum.iloc[:, 2]), "Column 2 is not numeric"
 
 
-def test_update_scores_df(Xy, cv, model, metrics, scores_df, model_name):
-    X, y = Xy
-    _, cv_results = _run_cv(X, y, cv, model, metrics)
-    scores_df_updated = _update_scores_df(scores_df, model_name, cv_results)
-    assert isinstance(scores_df_updated, pd.DataFrame)
-
-    # 5 columns: model, short, metric, fold, score
-    assert scores_df_updated.shape[1] == 4
-    assert all(scores_df_updated["model"] == "rf")
-    # check that all metrics are present
-    assert set(scores_df_updated["metric"]) == set(
-        [metric.__name__ for metric in metrics]
-    )
-    # check that score is numeric
-    assert pd.api.types.is_numeric_dtype(scores_df_updated["score"])
-    # check that fold contains all values from 0 to 4
-    assert set(scores_df_updated["fold"]) == set(range(5))
+def test_sum_cvs(cv_results):
+    cv_all = _sum_cvs(cv_results)
+    assert isinstance(cv_all, pd.DataFrame)
+    assert all(col in cv_all.columns for col in ["model", "short", "r2", "rmse"])
+    assert pd.api.types.is_numeric_dtype(cv_all["r2"]), "r2 column is not numeric"
+    assert pd.api.types.is_numeric_dtype(cv_all["rmse"]), "rmse column is not numeric"
+    assert cv_all.shape[0] == 2, "Should be one row per model"
+    print(cv_all)
 
 
-# mean scores -------------------------------------------------------------------
-def test_get_mean_scores_r2():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["ModelA", "ModelB", "ModelA", "ModelB"],
-            "short": ["ma", "mb", "ma", "mb"],
-            "metric": ["r2", "r2", "r2", "r2"],
-            "fold": [1, 2, 1, 2],
-            "score": [0.8, 0.9, 0.7, 0.6],
-        }
-    )
-    expected_result = pd.DataFrame(
-        {"model": ["ModelA", "ModelB"], "short": ["ma", "mb"], "r2": [0.75, 0.75]}
-    )
-    assert _get_mean_scores(scores_df, "r2").equals(expected_result)
-
-
-def test_get_mean_scores_rmse():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["ModelA", "ModelB", "ModelA", "ModelB"],
-            "short": ["ma", "mb", "ma", "mb"],
-            "metric": ["rmse", "rmse", "rmse", "rmse"],
-            "fold": [1, 2, 1, 2],
-            "score": [1.0, 0.5, 0.8, 0.6],
-        }
-    )
-    expected_result = pd.DataFrame(
-        {"model": ["ModelB", "ModelA"], "short": ["mb", "ma"], "rmse": [0.55, 0.9]}
-    )
-    assert _get_mean_scores(scores_df, "rmse").equals(expected_result)
-
-
-def test_get_mean_scores_unsupported_metric():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["Model A", "Model B"],
-            "metric": ["mae", "mae"],
-            "fold": [1, 2],
-            "score": [0.5, 0.6],
-        }
-    )
-    with pytest.raises(RuntimeError):
-        _get_mean_scores(scores_df, "mae")
-
-
-def test_get_mean_scores_metric_not_found():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["Model A", "Model B"],
-            "metric": ["r2", "r2"],
-            "fold": [1, 2],
-            "score": [0.8, 0.9],
-        }
-    )
+def test_sum_cvs_invalid_sort_by(cv_results):
     with pytest.raises(ValueError):
-        _get_mean_scores(scores_df, "rmse")
+        _sum_cvs(cv_results, sort_by="invalid_metric")
 
 
-# test _get_model_scores ------------------------------------------------------
-def test_get_model_scores():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["Model A", "Model B"],
-            "metric": ["r2", "r2"],
-            "fold": [1, 2],
-            "score": [0.8, 0.9],
-        }
-    )
+def test_sum_cvs_sorted_correctly(cv_results):
+    cv_all = _sum_cvs(cv_results, sort_by="r2")
+    # check that the r2 column is sorted in descending order
+    assert np.all(np.diff(cv_all["r2"]) <= 0)
+    # check that the rmse column is sorted in ascending order
+    assert np.all(np.diff(cv_all["rmse"]) >= 0)

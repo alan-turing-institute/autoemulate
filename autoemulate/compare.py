@@ -16,7 +16,7 @@ from tqdm.autonotebook import tqdm
 
 from autoemulate.cross_validate import _get_cv_results
 from autoemulate.cross_validate import _run_cv
-from autoemulate.cross_validate import _update_scores_df
+from autoemulate.cross_validate import _sum_cvs
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
@@ -28,7 +28,6 @@ from autoemulate.plotting import _plot_results
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.utils import _get_full_model_name
-from autoemulate.utils import _get_mean_scores
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
@@ -248,13 +247,6 @@ class AutoEmulate:
                 self.models[i] = fitted_model
                 self.cv_results[model_name] = cv_results
 
-                # update scores dataframe
-                self.scores_df = _update_scores_df(
-                    self.scores_df,
-                    model_name,
-                    self.cv_results[model_name],
-                )
-
         # get best model
         self.best_model = self.get_model(rank=1, metric="r2")
 
@@ -288,11 +280,11 @@ class AutoEmulate:
             raise ValueError(f"Model {name} not found")
 
         # check that comparison has been run
-        if not hasattr(self, "scores_df") and name is None:
+        if not hasattr(self, "cv_results") and name is None:
             raise RuntimeError("Must run compare() before get_model()")
 
         # get model by rank
-        means = _get_mean_scores(self.scores_df, metric)
+        means = _sum_cvs(self.cv_results, metric)
 
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
@@ -382,7 +374,7 @@ class AutoEmulate:
 
         out = _get_cv_results(
             self.models,
-            self.scores_df,
+            self.cv_results,
             model_name=model_name,
             sort_by=sort_by,
         )

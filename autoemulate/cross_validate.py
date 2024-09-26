@@ -86,8 +86,8 @@ def _run_cv(X, y, cv, model, metrics, n_jobs=None, logger=None):
     return fitted_model, cv_results
 
 
-def _get_cv_sum(cv_result):
-    """summarises the cv results for a single mode
+def _sum_cv(cv_result):
+    """summarises the cv result for a single model
 
     Parameters
     ----------
@@ -107,13 +107,13 @@ def _get_cv_sum(cv_result):
     return cv_sum
 
 
-def _get_cv_sum_all(cv_results):
-    """summarises the cv results for all models
+def _sum_cvs(cv_results, sort_by="r2"):
+    """summarises the cv results for all models, averaging over folds within each model
 
     Parameters
     ----------
         cv_results : dict
-            model_name: cv_result
+            model_name: cv_result, where cv_result is the output of scikit-learn's `cross_validate`.
 
     Returns
     -------
@@ -121,108 +121,41 @@ def _get_cv_sum_all(cv_results):
             DataFrame with columns "model", "short", and one column per metric, showing
             the mean score across all folds for each model.
     """
+    cv_all = []
 
+    # concat all cv result df's
+    for model_name, cv_result in cv_results.items():
+        df = _sum_cv(cv_result)
+        df.insert(0, "short", "".join(re.findall(r"[A-Z]", model_name)).lower())
+        df.insert(0, "model", model_name)
+        cv_all.append(df)
 
-def _update_scores_df(scores_df, model_name, cv_results):
-    """Updates the scores dataframe with the results of the cross-validation.
+    # mean over folds
+    cv_all = (
+        pd.concat(cv_all, axis=0)
+        .groupby(["model", "short"])
+        .mean()
+        .drop(columns=["fold"])
+        .reset_index()
+    )
 
-    Parameters
-    ----------
-        scores_df : pandas.DataFrame
-            DataFrame with columns "model", "metric", "fold", "score".
-        model_name : str
-            Name of the model.
-        cv_results : dict
-            Results of the cross-validation.
-
-    Returns
-    -------
-        None
-            Modifies the self.scores_df DataFrame in-place.
-
-    """
-    # Gather scores from each metric
-    # Initialise scores dataframe
-    for key in cv_results.keys():
-        if key.startswith("test_"):
-            for fold, score in enumerate(cv_results[key]):
-                scores_df.loc[len(scores_df.index)] = {
-                    "model": model_name,
-                    "short": "".join(re.findall(r"[A-Z]", model_name)).lower(),
-                    "metric": key.split("test_", 1)[1],
-                    "fold": fold,
-                    "score": score,
-                }
-    return scores_df
-
-
-def _get_mean_scores(scores_df, metric):
-    """Get the mean scores for each model and metric.
-
-    Parameters
-    ----------
-    scores_df : pandas.DataFrame
-        DataFrame with columns "model", "metric", "fold", "score".
-    metric : str
-        The metric for which to calculate the mean score. Currently supported are "r2" and "rmse".
-
-    Returns
-    -------
-    mean_scores_df : pandas.DataFrame
-        DataFrame with columns "model", "metric", "mean_score".
-    """
-
-    # check if metric is in scores_df metric column
-    if metric not in scores_df["metric"].unique():
+    # sort by the metric
+    if sort_by not in cv_all.columns:
         raise ValueError(
-            f"Metric {metric} not found. Available metrics are: {scores_df['metric'].unique()}"
+            f"Metric {sort_by} not found. Available metrics are: {cv_all.columns.drop('model').drop('short').to_list()}"
         )
 
-    # TODO: make this work for more metrics
-    if metric == "r2":
+    # TODO: make this work properly for different metrics
+    if sort_by == "r2":
         asc = False
-    elif metric == "rmse":
-        asc = True
     else:
-        raise RuntimeError(f"Metric {metric} not supported.")
+        asc = True
+    cv_all = cv_all.sort_values(by=sort_by, ascending=asc)
 
-    means_df = (
-        scores_df.groupby(["model", "short", "metric"])["score"]
-        .mean()
-        .unstack()
-        .reset_index()
-        .sort_values(by=metric, ascending=asc)
-        .rename_axis(None, axis=1)
-        .reset_index(drop=True)
-    )
-
-    return means_df
+    return cv_all
 
 
-def _get_model_scores(scores_df, model_name):
-    """
-    Get the scores for a specific model.
-
-    Parameters
-    ----------
-    scores_df : pandas.DataFrame
-        DataFrame with columns "model", "metric", "fold", "score".
-    model_name : str
-        The name of the model for which to retrieve the scores.
-
-    Returns
-    -------
-    model_scores : pandas.DataFrame
-        DataFrame with columns "fold", "metric", "score".
-    """
-    model_scores = scores_df[scores_df["model"] == model_name].pivot(
-        index="fold", columns="metric", values="score"
-    )
-
-    return model_scores
-
-
-def _get_cv_results(models, scores_df, model_name=None, sort_by="r2"):
+def _get_cv_results(models, cv_results, model_name=None, sort_by="r2"):
     """Improved print cv results function.
 
     Parameters
@@ -247,7 +180,7 @@ def _get_cv_results(models, scores_df, model_name=None, sort_by="r2"):
             raise ValueError(
                 f"Model {model_name} not found. Available models: {', '.join(model_names)}"
             )
-        df = _get_model_scores(scores_df, model_name)
+        df = _sum_cv(cv_results, model_name)
     else:
-        df = _get_mean_scores(scores_df, metric=sort_by)
+        df = _sum_cvs(cv_results, sort_by)
     return df
