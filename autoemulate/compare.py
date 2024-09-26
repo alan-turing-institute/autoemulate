@@ -353,7 +353,7 @@ class AutoEmulate:
         """Print the setup of the AutoEmulate object."""
         _print_setup(self)
 
-    def summarize_cv(self, model=None, sort_by="r2"):
+    def summarise_cv(self, model=None, sort_by="r2"):
         """Summarise cv results.
 
         Parameters
@@ -378,6 +378,8 @@ class AutoEmulate:
             cv = _sum_cv(self.cv_results[model_name])
 
         return cv
+
+    summarize_cv = summarise_cv  # alias
 
     def plot_results(
         self,

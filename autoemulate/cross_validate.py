@@ -151,6 +151,6 @@ def _sum_cvs(cv_results, sort_by="r2"):
     else:
         asc = True
 
-    cv_all = cv_all.sort_values(by=sort_by, ascending=asc).reset_index()
+    cv_all = cv_all.sort_values(by=sort_by, ascending=asc).reset_index(drop=True)
 
     return cv_all
