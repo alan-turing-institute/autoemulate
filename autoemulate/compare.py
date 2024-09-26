@@ -14,8 +14,8 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 from tqdm.autonotebook import tqdm
 
-from autoemulate.cross_validate import _get_cv_results
 from autoemulate.cross_validate import _run_cv
+from autoemulate.cross_validate import _sum_cv
 from autoemulate.cross_validate import _sum_cvs
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import model_registry
@@ -353,32 +353,31 @@ class AutoEmulate:
         """Print the setup of the AutoEmulate object."""
         _print_setup(self)
 
-    def get_results(self, model=None, sort_by="r2"):
-        """Get cv results.
+    def summarize_cv(self, model=None, sort_by="r2"):
+        """Summarise cv results.
 
         Parameters
         ----------
         model : str, optional
-            Name of the model to get cv results for. If None, gets results for all models.
+            Name of the model to get cv results for. If None, summarises results for all models.
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
 
         Returns
         -------
         pandas.DataFrame
-            DataFrame with summary of cv results.
+            DataFrame summarising cv results.
         """
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
 
-        out = _get_cv_results(
-            self.models,
-            self.cv_results,
-            model_name=model_name,
-            sort_by=sort_by,
-        )
-        return out
+        if model_name is None:
+            cv = _sum_cvs(self.cv_results, sort_by)
+        else:
+            cv = _sum_cv(self.cv_results[model_name])
+
+        return cv
 
     def plot_results(
         self,
@@ -433,7 +432,7 @@ class AutoEmulate:
         Parameters
         ----------
         model : object
-            Fitted model.
+            Fitted model
 
         Returns
         -------

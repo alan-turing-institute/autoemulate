@@ -135,8 +135,8 @@ def _sum_cvs(cv_results, sort_by="r2"):
         pd.concat(cv_all, axis=0)
         .groupby(["model", "short"])
         .mean()
-        .drop(columns=["fold"])
         .reset_index()
+        .drop(columns=["fold"])
     )
 
     # sort by the metric
@@ -150,37 +150,7 @@ def _sum_cvs(cv_results, sort_by="r2"):
         asc = False
     else:
         asc = True
-    cv_all = cv_all.sort_values(by=sort_by, ascending=asc)
+
+    cv_all = cv_all.sort_values(by=sort_by, ascending=asc).reset_index()
 
     return cv_all
-
-
-def _get_cv_results(models, cv_results, model_name=None, sort_by="r2"):
-    """Improved print cv results function.
-
-    Parameters
-    ----------
-    models : list
-        List of models.
-    scores_df : pandas.DataFrame
-        DataFrame with scores for each model, metric, and fold.
-    model_name : str, optional
-        Specific model name to print scores for. If None, prints best fold for each model.
-    sort_by : str, optional
-        Metric to sort by. Defaults to "r2".
-
-    Returns
-    -------
-    out : pandas.DataFrame
-        DataFrame with summary of cv results.
-    """
-    if model_name is not None:
-        model_names = [get_model_name(mod) for mod in models]
-        if model_name not in model_names:
-            raise ValueError(
-                f"Model {model_name} not found. Available models: {', '.join(model_names)}"
-            )
-        df = _sum_cv(cv_results, model_name)
-    else:
-        df = _sum_cvs(cv_results, sort_by)
-    return df

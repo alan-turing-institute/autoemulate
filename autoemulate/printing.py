@@ -1,7 +1,5 @@
 import pandas as pd
 
-from autoemulate.utils import _get_mean_scores
-from autoemulate.utils import _get_model_scores
 from autoemulate.utils import get_short_model_name
 
 try:

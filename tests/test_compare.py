@@ -182,3 +182,16 @@ def test_model_params_equal_wo_param_search(ae, Xy):
     ae.compare()
     params_after = ae.models[0].get_params()
     assert params_before == params_after
+
+
+# -----------------------test summarize_cv-------------------#
+def test_cv_summary_all_models(ae_run):
+    summary = ae_run.summarize_cv()
+    assert isinstance(summary, pd.DataFrame)
+    assert summary.shape[0] == len(ae_run.model_names)
+
+
+def test_cv_summary_one_model(ae_run):
+    summary = ae_run.summarize_cv(model="RandomForest")
+    assert isinstance(summary, pd.DataFrame)
+    assert summary.shape[0] == 5  # for 5 folds

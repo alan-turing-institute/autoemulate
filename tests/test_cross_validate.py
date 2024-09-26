@@ -112,8 +112,6 @@ def test_fitted_model(Xy, cv, model, metrics):
 
 
 def test_sum_cv(cv_result, metrics):
-    print(cv_result)
-    print(_sum_cv(cv_result))
     cv_sum = _sum_cv(cv_result)
     assert isinstance(cv_sum, pd.DataFrame)
     assert cv_sum.shape[1] == 3
@@ -131,7 +129,6 @@ def test_sum_cvs(cv_results):
     assert pd.api.types.is_numeric_dtype(cv_all["r2"]), "r2 column is not numeric"
     assert pd.api.types.is_numeric_dtype(cv_all["rmse"]), "rmse column is not numeric"
     assert cv_all.shape[0] == 2, "Should be one row per model"
-    print(cv_all)
 
 
 def test_sum_cvs_invalid_sort_by(cv_results):
