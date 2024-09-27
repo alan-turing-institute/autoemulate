@@ -27,6 +27,7 @@ from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
@@ -299,7 +300,17 @@ class AutoEmulate:
         return chosen_model
 
     def refit(self, model=None):
-        """Refits model on full data."""
+        """Refits model on full data.
+
+        Parameters
+        ----------
+        model : model to refit.
+
+        Returns
+        -------
+        model : object
+            Refitted model.
+        """
         if not hasattr(self, "X"):
             raise RuntimeError("Must run setup() before refit()")
         if model is None:
@@ -427,14 +438,19 @@ class AutoEmulate:
         )
         return figure
 
-    def evaluate_model(self, model=None):
+    def evaluate_model(self, model=None, multioutput="uniform_average"):
         """
-        Evaluates the model on the hold-out set.
+        Evaluates the model on the test set.
 
         Parameters
         ----------
         model : object
             Fitted model
+        multioutput : str, optional
+            Defines aggregating of multiple output scores.
+            'raw_values' : returns scores for each target
+            'uniform_average' : scores are averaged uniformly
+            'variance_weighted' : scores are averaged weighted by their individual variances
 
         Returns
         -------
@@ -443,20 +459,31 @@ class AutoEmulate:
         """
         if model is None:
             raise ValueError("Model must be provided")
+        if not isinstance(model, BaseEstimator):
+            raise ValueError("Model should be a fitted model")
 
         y_pred = model.predict(self.X[self.test_idxs])
+        y_true = self.y[self.test_idxs]
+
         scores = {}
         for metric in self.metrics:
-            scores[metric.__name__] = metric(self.y[self.test_idxs], y_pred)
+            scores[metric.__name__] = metric(y_true, y_pred, multioutput=multioutput)
 
-        scores_df = pd.concat(
-            [
-                pd.DataFrame({"model": [get_model_name(model)]}),
-                pd.DataFrame({"short": [get_short_model_name(model)]}),
-                pd.DataFrame(scores, index=[0]),
-            ],
-            axis=1,
-        ).round(3)
+        # make sure scores are lists/arrays
+        scores = {
+            k: [v] if not isinstance(v, (list, np.ndarray)) else v
+            for k, v in scores.items()
+        }
+
+        scores_df = (
+            pd.DataFrame(scores)
+            .assign(
+                target=[f"target_{i}" for i in range(len(scores[next(iter(scores))]))]
+            )
+            .assign(short=get_short_model_name(model))
+            .assign(model=get_model_name(model))
+            .reindex(columns=["model", "short", "target"] + list(scores.keys()))
+        ).round(4)
 
         return scores_df
 
@@ -469,7 +496,7 @@ class AutoEmulate:
         output_index=0,
         input_index=0,
     ):
-        """Plots the model predictions vs. the true values.
+        """Plots the model predictions vs. the true values for the test set.
 
         Parameters
         ----------
