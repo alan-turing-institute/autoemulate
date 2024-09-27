@@ -2,15 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
 from autoemulate.compare import AutoEmulate
-from autoemulate.emulators import GaussianProcessMOGP
-from autoemulate.emulators import MODEL_REGISTRY
-from autoemulate.emulators import RandomForest
-from autoemulate.experimental_design import ExperimentalDesign
-from autoemulate.experimental_design import LatinHypercube
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.utils import get_model_name
 
@@ -28,8 +21,23 @@ def Xy():
 
 
 @pytest.fixture()
+def Xy_multioutput():
+    X = np.random.rand(20, 5)
+    y = np.random.rand(20, 2)
+    return X, y
+
+
+@pytest.fixture()
 def ae_run(ae, Xy):
     X, y = Xy
+    ae.setup(X, y)
+    ae.compare()
+    return ae
+
+
+@pytest.fixture()
+def ae_run_multioutput(ae, Xy_multioutput):
+    X, y = Xy_multioutput
     ae.setup(X, y)
     ae.compare()
     return ae
@@ -152,38 +160,59 @@ def test_get_model_with_invalid_metric(ae_run):
         ae_run.get_model(metric="invalid_metric")
 
 
-def test_evaluate_model(ae_run):
+# -----------------------test evaluate-------------------#
+
+
+def test_evaluate_singleoutput(ae_run):
     model = ae_run.get_model(rank=1)
-    scores_df = ae_run.evaluate_model(model=model)
+    scores_df = ae_run.evaluate(model=model, multioutput="uniform_average")
     assert isinstance(scores_df, pd.DataFrame)
-    assert scores_df.shape == (1, len(ae_run.metrics) + 2)
-    assert "model" in scores_df.columns
+    assert scores_df.shape == (
+        1,
+        len(ae_run.metrics) + 3,
+    )  # 3 columns: model, short, target
     assert all(metric.__name__ in scores_df.columns for metric in ae_run.metrics)
+
+
+def test_evaluate_multioutput(ae_run_multioutput):
+    model = ae_run_multioutput.get_model(rank=1)
+    scores_df = ae_run_multioutput.evaluate(model=model, multioutput="uniform_average")
+    assert isinstance(scores_df, pd.DataFrame)
+    assert scores_df.shape == (1, len(ae_run_multioutput.metrics) + 3)
+
+
+def test_evaluate_singleoutput_raw(ae_run):
+    model = ae_run.get_model(rank=1)
+    scores_df = ae_run.evaluate(model=model, multioutput="raw_values")
+    assert isinstance(scores_df, pd.DataFrame)
+    assert scores_df.shape == (1, len(ae_run.metrics) + 3)
+
+
+def test_evaluate_multioutput_raw(ae_run_multioutput):
+    model = ae_run_multioutput.get_model(rank=1)
+    scores_df = ae_run_multioutput.evaluate(model=model, multioutput="raw_values")
+    assert isinstance(scores_df, pd.DataFrame)
+    assert scores_df.shape == (2, len(ae_run_multioutput.metrics) + 3)
 
 
 def test_score_without_model(ae_run):
     with pytest.raises(ValueError):
-        ae_run.evaluate_model()
+        ae_run.evaluate()
 
 
-def test_refit_model(ae_run):
+# -----------------------test refit-------------------#
+
+
+def test_refit(ae_run):
     model = ae_run.get_model(rank=1)
-    refitted_model = ae_run.refit_model(model)
+    refitted_model = ae_run.refit(model)
     assert refitted_model is not None
-
-
-def test_refit_models(ae_run):
-    models = ae_run.refit_models()
-    assert models is not None
-    assert len(models) == len(ae_run.models)
 
 
 # --------------- test correct hyperparameter updating ------------------
 def test_param_search_updates_models(ae, Xy):
     X, y = Xy
-    ae.setup(
-        X, y, model_subset=["RandomForest"], param_search=True, param_search_iters=5
-    )
+    ae.setup(X, y, models=["RandomForest"], param_search=True, param_search_iters=5)
     params_before = ae.models[0].get_params()  # just one model, so index with 0
     ae.compare()
     params_after = ae.models[0].get_params()
@@ -192,8 +221,21 @@ def test_param_search_updates_models(ae, Xy):
 
 def test_model_params_equal_wo_param_search(ae, Xy):
     X, y = Xy
-    ae.setup(X, y, model_subset=["RandomForest"])
+    ae.setup(X, y, models=["RandomForest"])
     params_before = ae.models[0].get_params()
     ae.compare()
     params_after = ae.models[0].get_params()
     assert params_before == params_after
+
+
+# -----------------------test summarize_cv-------------------#
+def test_cv_summary_all_models(ae_run):
+    summary = ae_run.summarize_cv()
+    assert isinstance(summary, pd.DataFrame)
+    assert summary.shape[0] == len(ae_run.model_names)
+
+
+def test_cv_summary_one_model(ae_run):
+    summary = ae_run.summarize_cv(model="RandomForest")
+    assert isinstance(summary, pd.DataFrame)
+    assert summary.shape[0] == 5  # for 5 folds

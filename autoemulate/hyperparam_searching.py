@@ -83,16 +83,17 @@ def _optimize_params(
         )
     # Bayes search
     elif search_type == "bayes":
-        searcher = BayesSearchCV(
-            model,
-            param_space,
-            n_iter=niter,
-            cv=cv,
-            n_jobs=n_jobs,
-            refit=True,
-            error_score=error_score,
-            verbose=verbose,
-        )
+        raise NotImplementedError("Bayes search not available yet.")
+        # searcher = BayesSearchCV(
+        #     model,
+        #     param_space,
+        #     n_iter=niter,
+        #     cv=cv,
+        #     n_jobs=n_jobs,
+        #     refit=True,
+        #     error_score=error_score,
+        #     verbose=verbose,
+        # )
     elif search_type == "grid":
         raise NotImplementedError("Grid search not available yet.")
     else:

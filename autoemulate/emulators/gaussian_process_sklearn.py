@@ -16,7 +16,7 @@ from skopt.space import Real
 from autoemulate.utils import _suppress_convergence_warnings
 
 
-class GaussianProcess(BaseEstimator, RegressorMixin):
+class GaussianProcessSklearn(BaseEstimator, RegressorMixin):
     """Gaussian Process Emulator.
 
     Wraps GaussianProcessRegressor from scikit-learn.

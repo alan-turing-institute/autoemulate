@@ -10,98 +10,60 @@ from autoemulate.utils import get_model_name
 
 
 class ModelSerialiser:
+    def __init__(self, logger):
+        self.logger = logger
+
     def _save_model(self, model, path):
-        """Saves a model + metadata to disk.
+        """Saves a model to disk.
 
         Parameters
         ----------
         model : scikit-learn model
             Model to save.
-        models : dict
-            Dictionary of model_name: model.
-        path : str
-            Path to save the model.
+        path : str, Path or None, optional
+            Path to save the model. If None, the model will be saved with the model name.
         """
-        model_name = get_model_name(model)
-        # check if path is directory
-        if path is not None and Path(path).is_dir():
-            path = Path(path) / model_name
-        # save with model name if path is None
-        if path is None:
-            path = Path(model_name)
-        else:
-            path = Path(path)
+        model_name = self._get_model_name(model)
+        full_path = self._prepare_path(path, model_name)
 
-        # create directory if it doesn't exist
-        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            joblib.dump(model, full_path)
+            self.logger.info(f"{model_name} saved to {full_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to save {model_name} to {full_path}: {e}")
+            raise
 
-        # save model
-        joblib.dump(model, path)
-
-        # metadata
-        meta = {
-            "model": model_name,
-            "scikit-learn": sklearn.__version__,
-            "numpy": np.__version__,
-        }
-        with open(self._get_meta_path(path), "w") as f:
-            json.dump(meta, f)
-
-    def _save_models(self, models, path):
-        """Saves all models
+    def _load_model(self, path):
+        """Loads a model from disk.
 
         Parameters
         ----------
-        models : dict
-            Dictionary of models.
-        path : str
-            Path to save the models.
+        path : str or Path
+            Path to load the model.
         """
+        path = Path(path)
+        try:
+            model = joblib.load(path)
+            self.logger.info(f"Model loaded from {path}")
+            return model
+        except Exception as e:
+            self.logger.error(f"Failed to load model from {path}: {e}")
+            raise
+
+    def _prepare_path(self, path, model_name):
+        """Prepares path for saving model."""
         if path is None:
-            save_dir = Path.cwd()
+            full_path = Path(model_name)
         else:
-            save_dir = Path(path)
-            # create directory if it doesn't exist
-            save_dir.parent.mkdir(parents=True, exist_ok=True)
-        for model in models:
-            model_path = save_dir / get_model_name(model)
-            self._save_model(model, model_path)
+            full_path = Path(path)
+            if full_path.is_dir():
+                full_path = full_path / model_name
 
-    def _load_model(self, path):
-        """Loads a model from disk and checks version."""
-        path = Path(path)
-        model = joblib.load(path)
-        meta_path = Path(self._get_meta_path(path))
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        return full_path
 
-        if not meta_path.exists():
-            raise FileNotFoundError(f"Metadata file {meta_path} not found.")
-
-        with open(meta_path, "r") as f:
-            meta = json.load(f)
-
-        sklearn_version = meta.get("scikit-learn", None)
-        numpy_version = meta.get("numpy", None)
-
-        for module, version, actual_version in [
-            ("scikit-learn", sklearn_version, sklearn.__version__),
-            ("numpy", numpy_version, np.__version__),
-        ]:
-            if version and version != actual_version:
-                print(
-                    f"Warning: {module} version mismatch. Expected {version}, found {actual_version}"
-                )
-
-        return model
-
-    def _get_meta_path(self, path):
-        """Returns the path to the metadata file.
-
-        If the path has an extension, it is replaced with _meta.json.
-        Otherwise, _meta.json is appended to the path.
-        """
-        path = Path(path)
-        if path.suffix:
-            meta_path = path.with_name(f"{path.stem}_meta.json")
-        else:
-            meta_path = path.with_name(path.name + "_meta.json")
-        return meta_path
+    @staticmethod
+    def _get_model_name(model):
+        """Gets the name of the model to save."""
+        model_name = get_model_name(model)
+        return f"{model_name}.joblib"

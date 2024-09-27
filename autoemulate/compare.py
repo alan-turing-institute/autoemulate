@@ -15,23 +15,21 @@ from sklearn.utils.validation import check_X_y
 from tqdm.autonotebook import tqdm
 
 from autoemulate.cross_validate import _run_cv
-from autoemulate.cross_validate import _update_scores_df
+from autoemulate.cross_validate import _sum_cv
+from autoemulate.cross_validate import _sum_cvs
 from autoemulate.data_splitting import _split_data
-from autoemulate.emulators import MODEL_REGISTRY
+from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import _get_and_process_models
+from autoemulate.model_processing import _process_models
+from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
-from autoemulate.plotting import _plot_results
-from autoemulate.printing import _print_cv_results
-from autoemulate.printing import _print_model_names
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
-from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _redirect_warnings
-from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
 
@@ -63,7 +61,7 @@ class AutoEmulate:
         dim_reducer=PCA(),
         cross_validator=KFold(n_splits=5, shuffle=True),
         n_jobs=None,
-        model_subset=None,
+        models=None,
         verbose=0,
         log_to_file=False,
         print_setup=True,
@@ -79,7 +77,7 @@ class AutoEmulate:
         param_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
         param_search_type : str
-            Type of hyperparameter search to perform. Can be "grid", "random", or "bayes".
+            Type of hyperparameter search to perform. Currently only "random".
         param_search_iters : int
             Number of parameter settings that are sampled. Only used if
             param_search=True and param_search_type="random".
@@ -102,8 +100,8 @@ class AutoEmulate:
             Can be any object in `sklearn.model_selection` that generates train/test indices.
         n_jobs : int
             Number of jobs to run in parallel. `None` means 1, `-1` means using all processors.
-        model_subset : list
-            List of models to use. If None, uses all models in MODEL_REGISTRY.
+        models : list
+            str or list of model names. If None, uses a set of core models.
         verbose : int
             Verbosity level. Can be 0, 1, or 2.
         log_to_file : bool
@@ -111,14 +109,16 @@ class AutoEmulate:
         print_setup : bool
             Whether to print the setup of the AutoEmulate object.
         """
+        self.model_registry = model_registry
         self.X, self.y = self._check_input(X, y)
+        self.test_set_size = test_set_size
         self.train_idxs, self.test_idxs = _split_data(
-            self.X, test_size=test_set_size, random_state=42
+            self.X, test_size=self.test_set_size, random_state=42
         )
-        self.model_names = _get_model_names_dict(MODEL_REGISTRY, model_subset)
-        self.models = _get_and_process_models(
-            MODEL_REGISTRY,
-            model_subset=list(self.model_names.keys()),
+        self.model_names = self.model_registry.get_model_names(models, is_core=True)
+        self.models = _process_models(
+            model_registry=self.model_registry,
+            models=list(self.model_names.keys()),
             y=self.y,
             scale=scale,
             scaler=scaler,
@@ -184,8 +184,8 @@ class AutoEmulate:
 
         Returns
         -------
-        scores_df : pandas.DataFrame
-            Dataframe containing the scores for each model, metric and fold.
+        self.best_model : object
+            Best performing model fitted on full data.
         """
         if not self.is_set_up:
             raise RuntimeError("Must run setup() before compare()")
@@ -248,29 +248,22 @@ class AutoEmulate:
                 self.models[i] = fitted_model
                 self.cv_results[model_name] = cv_results
 
-                # update scores dataframe
-                self.scores_df = _update_scores_df(
-                    self.scores_df,
-                    model_name,
-                    self.cv_results[model_name],
-                )
-
         # get best model
         self.best_model = self.get_model(rank=1, metric="r2")
 
         return self.best_model
 
-    def get_model(self, rank=1, metric="r2", name=None):
-        """Get a fitted model based on it rank in the comparison or its name.
+    def get_model(self, name=None, rank=1, metric="r2"):
+        """Get a fitted model based on its name or rank in the comparison.
 
         Parameters
         ----------
+        name : str
+            Name of the model to return.
         rank : int
             Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
             Metric to use for determining the best model.
-        name : str
-            Name of the model to return.
 
         Returns
         -------
@@ -288,11 +281,11 @@ class AutoEmulate:
             raise ValueError(f"Model {name} not found")
 
         # check that comparison has been run
-        if not hasattr(self, "scores_df") and name is None:
+        if not hasattr(self, "cv_results") and name is None:
             raise RuntimeError("Must run compare() before get_model()")
 
         # get model by rank
-        means = get_mean_scores(self.scores_df, metric)
+        means = _sum_cvs(self.cv_results, metric)
 
         if (rank > len(means)) or (rank < 1):
             raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
@@ -306,13 +299,12 @@ class AutoEmulate:
         # check_is_fitted(chosen_model)
         return chosen_model
 
-    def refit_model(self, model):
-        """Refits a model on the full data.
+    def refit(self, model=None):
+        """Refits model on full data.
 
         Parameters
         ----------
-        model : object
-            Usually a fitted model.
+        model : model to refit.
 
         Returns
         -------
@@ -320,101 +312,90 @@ class AutoEmulate:
             Refitted model.
         """
         if not hasattr(self, "X"):
-            raise RuntimeError("Must run setup() before refit_model()")
-
+            raise RuntimeError("Must run setup() before refit()")
+        if model is None:
+            raise ValueError("Model must be provided")
+        else:
+            if not isinstance(model, BaseEstimator):
+                raise ValueError(
+                    "Model must be provided and should be a scikit-learn estimator"
+                )
         model.fit(self.X, self.y)
         return model
 
-    def refit_models(self):
-        """(Re-) fits all models on the full data.
-
-        Returns
-        -------
-        models : dict
-            dict with refitted models.
-        """
-        if not hasattr(self, "X"):
-            raise RuntimeError("Must run setup() before refit_models()")
-        for i in range(len(self.models)):
-            self.models[i] = self.refit_model(self.models[i])
-        return self.models
-
-    def save_model(self, model=None, path=None):
+    def save(self, model=None, path=None):
         """Saves model to disk.
 
         Parameters
         ----------
-        model : object, optional
-            Model to save. If None, saves the best model.
-            If "all", saves all models.
+        model : sklearn model, optional
+            Model to save. If None, saves the model with the best
+            average cv score.
         path : str
             Path to save the model.
         """
         if not hasattr(self, "best_model"):
-            raise RuntimeError("Must run compare() before save_model()")
-        serialiser = ModelSerialiser()
+            raise RuntimeError("Must run compare() before save()")
 
-        if model is None or not isinstance(model, (Pipeline, BaseEstimator)):
-            raise ValueError(
-                "Model must be provided and should be a scikit-learn pipeline or model"
-            )
+        serialiser = ModelSerialiser(self.logger)
+        if model is None:
+            serialiser._save_model(self.best_model, path)
+        else:
+            if not isinstance(model, BaseEstimator):
+                raise ValueError(
+                    "Model must be provided and should be a scikit-learn estimator"
+                )
         serialiser._save_model(model, path)
 
-    def save_models(self, path=None):
-        """Saves all models to disk.
+    def load(self, path=None):
+        """Loads a model from disk.
 
         Parameters
         ----------
         path : str
-            Directory to save the models.
-            If None, saves to the current working directory.
+            Path to model.
         """
-        if not hasattr(self, "best_model"):
-            raise RuntimeError("Must run compare() before save_models()")
-        serialiser = ModelSerialiser()
-        serialiser._save_models(self.models, path)
-
-    def load_model(self, path=None):
-        """Loads a model from disk."""
-        serialiser = ModelSerialiser()
         if path is None:
-            raise ValueError("Filepath must be provided")
-
+            raise ValueError("Path must be provided")
+        serialiser = ModelSerialiser(self.logger)
         return serialiser._load_model(path)
-
-    def print_model_names(self):
-        """Print available models"""
-        _print_model_names(self)
 
     def print_setup(self):
         """Print the setup of the AutoEmulate object."""
         _print_setup(self)
 
-    def print_results(self, model=None, sort_by="r2"):
-        """Print cv results.
+    def summarise_cv(self, model=None, sort_by="r2"):
+        """Summarise cv results.
 
         Parameters
         ----------
         model : str, optional
-            The name of the model to print. If None, the best fold from each model will be printed.
-            If a model name is provided, the scores for that model across all folds will be printed.
+            Name of the model to get cv results for. If None, summarises results for all models.
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame summarising cv results.
         """
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
-        _print_cv_results(
-            self.models,
-            self.scores_df,
-            model_name=model_name,
-            sort_by=sort_by,
-        )
 
-    def plot_results(
+        if model_name is None:
+            cv = _sum_cvs(self.cv_results, sort_by)
+        else:
+            cv = _sum_cv(self.cv_results[model_name])
+
+        return cv
+
+    summarize_cv = summarise_cv  # alias
+
+    def plot_cv(
         self,
         model=None,
-        plot="Xy",
+        style="Xy",
         n_cols=3,
         figsize=None,
         output_index=0,
@@ -427,11 +408,11 @@ class AutoEmulate:
         model : str
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
-        plot_type : str, optional
+        style : str, optional
             The type of plot to draw:
             "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
-            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis).
-            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
         figsize : tuple, optional
@@ -444,27 +425,32 @@ class AutoEmulate:
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
-        figure = _plot_results(
+        figure = _plot_cv(
             self.cv_results,
             self.X,
             self.y,
             model_name=model_name,
             n_cols=n_cols,
-            plot=plot,
+            style=style,
             figsize=figsize,
             output_index=output_index,
             input_index=input_index,
         )
         return figure
 
-    def evaluate_model(self, model=None):
+    def evaluate(self, model=None, multioutput="uniform_average"):
         """
-        Evaluates the model on the hold-out set.
+        Evaluates the model on the test set.
 
         Parameters
         ----------
         model : object
-            Fitted model.
+            Fitted model
+        multioutput : str, optional
+            Defines aggregating of multiple output scores.
+            'raw_values' : returns scores for each target
+            'uniform_average' : scores are averaged uniformly
+            'variance_weighted' : scores are averaged weighted by their individual variances
 
         Returns
         -------
@@ -473,42 +459,54 @@ class AutoEmulate:
         """
         if model is None:
             raise ValueError("Model must be provided")
+        if not isinstance(model, BaseEstimator):
+            raise ValueError("Model should be a fitted model")
 
         y_pred = model.predict(self.X[self.test_idxs])
+        y_true = self.y[self.test_idxs]
+
         scores = {}
         for metric in self.metrics:
-            scores[metric.__name__] = metric(self.y[self.test_idxs], y_pred)
+            scores[metric.__name__] = metric(y_true, y_pred, multioutput=multioutput)
 
-        scores_df = pd.concat(
-            [
-                pd.DataFrame({"model": [get_model_name(model)]}),
-                pd.DataFrame({"short": [get_short_model_name(model)]}),
-                pd.DataFrame(scores, index=[0]),
-            ],
-            axis=1,
-        ).round(3)
+        # make sure scores are lists/arrays
+        scores = {
+            k: [v] if not isinstance(v, (list, np.ndarray)) else v
+            for k, v in scores.items()
+        }
+
+        scores_df = (
+            pd.DataFrame(scores)
+            .assign(
+                target=[f"target_{i}" for i in range(len(scores[next(iter(scores))]))]
+            )
+            .assign(short=get_short_model_name(model))
+            .assign(model=get_model_name(model))
+            .reindex(columns=["model", "short", "target"] + list(scores.keys()))
+        ).round(4)
 
         return scores_df
 
-    def plot_model(
+    def plot_eval(
         self,
         model,
-        plot="Xy",
+        style="Xy",
         n_cols=3,
         figsize=None,
         output_index=0,
         input_index=0,
     ):
-        """Plots the model predictions vs. the true values.
+        """Visualise different model evaluations on the test set.
 
         Parameters
         ----------
         model : object
             Fitted model.
-        plot : str, optional
+        plot_type : str, optional
             The type of plot to draw:
-            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
+            "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
             Number of columns in the plot grid for multi-output. Default is 2.
         output_index : int
@@ -520,7 +518,7 @@ class AutoEmulate:
             model,
             self.X[self.test_idxs],
             self.y[self.test_idxs],
-            plot,
+            style,
             n_cols,
             figsize,
             input_index=input_index,
