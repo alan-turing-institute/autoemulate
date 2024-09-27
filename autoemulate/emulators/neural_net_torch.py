@@ -190,4 +190,3 @@ class NeuralNetTorch(NeuralNetRegressor):
         if self.module__output_size == 1 and y_pred.shape[-1] == 1:
             y_pred = np.squeeze(y_pred, axis=-1)
         return y_pred
-

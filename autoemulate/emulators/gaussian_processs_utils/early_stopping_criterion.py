@@ -47,6 +47,7 @@ class EarlyStoppingCustom(EarlyStopping):
       argument set to ``True`` if you need to restore the whole object.
 
     """
+
     def _calc_new_threshold(self, score):
         """Determine threshold based on score."""
         if self.threshold_mode == "rel":

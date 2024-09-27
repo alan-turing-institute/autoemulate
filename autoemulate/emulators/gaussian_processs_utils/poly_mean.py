@@ -5,12 +5,12 @@ from .polynomial_features import PolynomialFeatures
 
 
 class PolyMean(gpytorch.means.Mean):
-    """A geneneral polynomial mean module to be used to construct 
+    """A geneneral polynomial mean module to be used to construct
     `guassian_process_torch` emulators.
 
     Parameters
     --------
-    degree : int 
+    degree : int
         The degree of the polynomial for which we are defining
         the mapping.
     input_size : int
@@ -20,6 +20,7 @@ class PolyMean(gpytorch.means.Mean):
         Flag for including a bias in the defnition of the polymial.
         If set to `False` polynomial includes weights only.
     """
+
     def __init__(self, degree, input_size, batch_shape=torch.Size(), bias=True):
         super().__init__()
         self.degree = degree
