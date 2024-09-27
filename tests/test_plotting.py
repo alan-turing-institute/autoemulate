@@ -148,7 +148,7 @@ def test_plot_single_fold_with_single_output():
         model_name="model1",
         fold_index=0,
         ax=ax,
-        plot="standard",
+        style="actual_vs_predicted",
         annotation="Test",
         output_index=0,
     )
@@ -191,7 +191,7 @@ def test_plot_single_fold_with_multioutput():
         model_name="model1",
         fold_index=0,
         ax=ax,
-        plot="residual",
+        style="residual_vs_predicted",
         annotation="Test",
         output_index=1,
     )
@@ -269,7 +269,7 @@ def test__plot_cv_input_range(ae_multi_output, monkeypatch):
 
 # test plots with best cv per model, Xy plot
 def test_plot_cv(ae_single_output):
-    fig = ae_single_output.plot_cv(plot="Xy")
+    fig = ae_single_output.plot_cv(style="Xy")
     assert isinstance(fig, plt.Figure)
     assert len(fig.axes) == 3
 
@@ -297,21 +297,21 @@ def test_plot_cv_output_index_out_of_range(ae_multi_output):
 
 
 # test plots with best cv per model, standard [;pt]
-def test_plot_cv_standard(ae_single_output):
-    fig = ae_single_output.plot_cv(plot="standard")
+def test_plot_cv_actual_vs_predicted(ae_single_output):
+    fig = ae_single_output.plot_cv(style="actual_vs_predicted")
     assert isinstance(fig, plt.Figure)
     assert len(fig.axes) == 3
 
 
-def test_plot_cv_output_index_standard(ae_multi_output):
-    fig = ae_multi_output.plot_cv(plot="standard", output_index=1)
+def test_plot_cv_output_index_actual_vs_predicted(ae_multi_output):
+    fig = ae_multi_output.plot_cv(style="actual_vs_predicted", output_index=1)
     assert isinstance(fig, plt.Figure)
     assert len(fig.axes) == 3
 
 
-def test_plot_cv_output_index_standard_out_of_range(ae_multi_output):
+def test_plot_cv_output_index_actual_vs_predicted_out_of_range(ae_multi_output):
     with pytest.raises(ValueError):
-        ae_multi_output.plot_cv(plot="standard", output_index=2)
+        ae_multi_output.plot_cv(style="actual_vs_predicted", output_index=2)
 
 
 # test plots with all cv folds for a single model
@@ -349,7 +349,7 @@ def test__plot_model_int(ae_single_output):
         ae_single_output.get_model(name="gpt"),
         ae_single_output.X,
         ae_single_output.y,
-        plot="Xy",
+        style="Xy",
         input_index=0,
         output_index=0,
     )
@@ -362,7 +362,7 @@ def test__plot_model_list(ae_single_output):
         ae_single_output.get_model(name="gpt"),
         ae_single_output.X,
         ae_single_output.y,
-        plot="Xy",
+        style="Xy",
         input_index=[0, 1],
         output_index=[0],
     )
@@ -376,20 +376,20 @@ def test__plot_model_int_out_of_range(ae_single_output):
             ae_single_output.get_model(name="gpt"),
             ae_single_output.X,
             ae_single_output.y,
-            plot="Xy",
+            style="Xy",
             input_index=3,
             output_index=2,
         )
 
 
-def test__plot_model_standard(ae_single_output):
+def test__plot_model_actual_vs_predicted(ae_single_output):
     fig = _plot_model(
         ae_single_output.get_model(name="gpt"),
         ae_single_output.X,
         ae_single_output.y,
-        plot="standard",
+        style="actual_vs_predicted",
         input_index=0,
         output_index=0,
     )
     assert isinstance(fig, plt.Figure)
-    assert fig.axes[0].get_title() == "Standard Plot - Output 0"
+    assert fig.axes[0].get_title() == "Actual vs predicted - Output 0"

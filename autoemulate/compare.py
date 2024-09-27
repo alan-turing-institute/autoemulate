@@ -395,7 +395,7 @@ class AutoEmulate:
     def plot_cv(
         self,
         model=None,
-        plot="Xy",
+        style="Xy",
         n_cols=3,
         figsize=None,
         output_index=0,
@@ -408,11 +408,11 @@ class AutoEmulate:
         model : str
             Name of the model to plot. If None, plots best folds of each models.
             If a model name is specified, plots all folds of that model.
-        plot_type : str, optional
+        style : str, optional
             The type of plot to draw:
             "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
-            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis).
-            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
         figsize : tuple, optional
@@ -431,7 +431,7 @@ class AutoEmulate:
             self.y,
             model_name=model_name,
             n_cols=n_cols,
-            plot=plot,
+            style=style,
             figsize=figsize,
             output_index=output_index,
             input_index=input_index,
@@ -490,7 +490,7 @@ class AutoEmulate:
     def plot_eval(
         self,
         model,
-        plot="Xy",
+        style="Xy",
         n_cols=3,
         figsize=None,
         output_index=0,
@@ -502,10 +502,11 @@ class AutoEmulate:
         ----------
         model : object
             Fitted model.
-        plot : str, optional
+        plot_type : str, optional
             The type of plot to draw:
-            “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-            “residual” draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
+            "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
+            "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
             Number of columns in the plot grid for multi-output. Default is 2.
         output_index : int
@@ -517,7 +518,7 @@ class AutoEmulate:
             model,
             self.X[self.test_idxs],
             self.y[self.test_idxs],
-            plot,
+            style,
             n_cols,
             figsize,
             input_index=input_index,
