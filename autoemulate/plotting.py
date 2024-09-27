@@ -438,14 +438,6 @@ def _plot_model(
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
 
-    # if y is 1d, we need to make it 2d
-    # if y.ndim == 1:
-    #     y = y.reshape(-1, 1)
-    # if y_pred.ndim == 1:
-    #     y_pred = y_pred.reshape(-1, 1)
-    # if y_std is not None and y_std.ndim == 1:
-    #     y_std = y_std.reshape(-1, 1)
-
     # make sure everything is 2D
     y = _ensure_2d(y)
     y_pred = _ensure_2d(y_pred)

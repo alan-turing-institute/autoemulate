@@ -438,7 +438,7 @@ class AutoEmulate:
         )
         return figure
 
-    def evaluate_model(self, model=None, multioutput="uniform_average"):
+    def evaluate(self, model=None, multioutput="uniform_average"):
         """
         Evaluates the model on the test set.
 
@@ -487,7 +487,7 @@ class AutoEmulate:
 
         return scores_df
 
-    def plot_model(
+    def plot_eval(
         self,
         model,
         plot="Xy",
@@ -496,7 +496,7 @@ class AutoEmulate:
         output_index=0,
         input_index=0,
     ):
-        """Plots the model predictions vs. the true values for the test set.
+        """Visualise different model evaluations on the test set.
 
         Parameters
         ----------

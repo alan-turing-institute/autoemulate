@@ -160,12 +160,12 @@ def test_get_model_with_invalid_metric(ae_run):
         ae_run.get_model(metric="invalid_metric")
 
 
-# -----------------------test evaluate_model-------------------#
+# -----------------------test evaluate-------------------#
 
 
-def test_evaluate_model_singleoutput(ae_run):
+def test_evaluate_singleoutput(ae_run):
     model = ae_run.get_model(rank=1)
-    scores_df = ae_run.evaluate_model(model=model, multioutput="uniform_average")
+    scores_df = ae_run.evaluate(model=model, multioutput="uniform_average")
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (
         1,
@@ -174,32 +174,30 @@ def test_evaluate_model_singleoutput(ae_run):
     assert all(metric.__name__ in scores_df.columns for metric in ae_run.metrics)
 
 
-def test_evaluate_model_multioutput(ae_run_multioutput):
+def test_evaluate_multioutput(ae_run_multioutput):
     model = ae_run_multioutput.get_model(rank=1)
-    scores_df = ae_run_multioutput.evaluate_model(
-        model=model, multioutput="uniform_average"
-    )
+    scores_df = ae_run_multioutput.evaluate(model=model, multioutput="uniform_average")
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (1, len(ae_run_multioutput.metrics) + 3)
 
 
-def test_evaluate_model_singleoutput_raw(ae_run):
+def test_evaluate_singleoutput_raw(ae_run):
     model = ae_run.get_model(rank=1)
-    scores_df = ae_run.evaluate_model(model=model, multioutput="raw_values")
+    scores_df = ae_run.evaluate(model=model, multioutput="raw_values")
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (1, len(ae_run.metrics) + 3)
 
 
-def test_evaluate_model_multioutput_raw(ae_run_multioutput):
+def test_evaluate_multioutput_raw(ae_run_multioutput):
     model = ae_run_multioutput.get_model(rank=1)
-    scores_df = ae_run_multioutput.evaluate_model(model=model, multioutput="raw_values")
+    scores_df = ae_run_multioutput.evaluate(model=model, multioutput="raw_values")
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (2, len(ae_run_multioutput.metrics) + 3)
 
 
 def test_score_without_model(ae_run):
     with pytest.raises(ValueError):
-        ae_run.evaluate_model()
+        ae_run.evaluate()
 
 
 # -----------------------test refit-------------------#
