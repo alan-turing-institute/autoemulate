@@ -105,7 +105,7 @@ class LightGBM(BaseEstimator, RegressorMixin):
         y_pred = self.model_.predict(X)
         return y_pred
 
-    def get_grid_params(self, search_type="random", input_dim=1):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
         param_space_random = {
             "boosting_type": ["gbdt", "dart"],

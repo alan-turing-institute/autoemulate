@@ -94,7 +94,7 @@ class GaussianProcessSklearn(BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         return self.model_.predict(X, return_std=return_std)
 
-    def get_grid_params(self, search_type="random", input_dim=1):
+    def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
         param_space_random = {
             "kernel": [

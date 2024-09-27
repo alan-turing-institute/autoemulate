@@ -206,17 +206,17 @@ def get_model_param_space(model, search_type="random", input_dim=1):
         step = model.named_steps["model"]
 
         if isinstance(step, MultiOutputRegressor):
-            return step.estimator.get_grid_params(search_type, input_dim)
+            return step.estimator.get_grid_params(search_type)
         else:
-            return step.get_grid_params(search_type, input_dim)
+            return step.get_grid_params(search_type)
 
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
-        return model.estimator.get_grid_params(search_type, input_dim)
+        return model.estimator.get_grid_params(search_type)
 
     # Otherwise, it's a standalone model
     else:
-        return model.get_grid_params(search_type, input_dim)
+        return model.get_grid_params(search_type)
 
 
 def _adjust_param_space(model, param_space):
