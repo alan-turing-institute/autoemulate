@@ -52,15 +52,14 @@ ae = AutoEmulate()
 ae.setup(X, y)
 best_model = ae.compare() 
 # training set cross-validation results
-ae.print_results() 
-# plot cv results
-ae.plot_results()
+ae.summarise_cv() 
+ae.plot_cv()
 # test set results for the best model
-ae.evaluate_model(best_model) 
-# refit on full data
-best_emulator = ae.refit_model(best_model) 
-# emulate
-best_emulator.predict(X)
+ae.evaluate(best_model) 
+ae.plot_eval(best_model)
+# refit on full data and emulate!
+best_model = ae.refit(best_model) 
+best_model.predict(X)
 ```
 
 ## documentation

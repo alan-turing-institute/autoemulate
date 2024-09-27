@@ -69,7 +69,7 @@ def _plot_single_fold(
     model_name,
     fold_index,
     ax,
-    plot="Xy",
+    style="Xy",
     annotation=" ",
     output_index=0,
     input_index=0,
@@ -128,16 +128,11 @@ def _plot_single_fold(
     if y_test_std is not None:
         y_test_std = y_test_std[:, output_index]
 
-    match plot:
-        case "standard":
-            plot_type = "actual_vs_predicted"
-        case "residual":
-            plot_type = "residual_vs_predicted"
-        case "Xy":
-            plot_type = "Xy"
-        case _:
-            ValueError(f"Invalid plot type: {plot}")
+    plot_types = ["actual_vs_predicted", "residual_vs_predicted", "Xy"]
+    if style not in plot_types:
+        raise ValueError(f"Invalid plot type: {style}, must be one of {plot_types}")
 
+    plot_type = style
     if plot_type == "Xy":
         if input_index >= X.shape[1]:
             raise ValueError(
@@ -173,7 +168,7 @@ def _plot_best_fold_per_model(
     X,
     y,
     n_cols=3,
-    plot="Xy",
+    style="Xy",
     figsize=None,
     output_index=0,
     input_index=0,
@@ -219,7 +214,7 @@ def _plot_best_fold_per_model(
             model_name,
             best_fold_index,
             axs[i],
-            plot=plot,
+            style=style,
             annotation="Best CV-fold",
             output_index=output_index,
             input_index=input_index,
@@ -240,7 +235,7 @@ def _plot_model_folds(
     y,
     model_name,
     n_cols=3,
-    plot="Xy",
+    style="Xy",
     figsize=None,
     output_index=0,
     input_index=0,
@@ -287,7 +282,7 @@ def _plot_model_folds(
             model_name,
             i,
             axs[i],
-            plot,
+            style,
             annotation="CV-fold",
             output_index=output_index,
             input_index=input_index,
@@ -302,13 +297,13 @@ def _plot_model_folds(
     return fig
 
 
-def _plot_results(
+def _plot_cv(
     cv_results,
     X,
     y,
     model_name=None,
     n_cols=3,
-    plot="Xy",
+    style="Xy",
     figsize=None,
     output_index=0,
     input_index=0,
@@ -349,14 +344,14 @@ def _plot_results(
             y,
             model_name,
             n_cols,
-            plot,
+            style,
             figsize,
             output_index,
             input_index,
         )
     else:
         figure = _plot_best_fold_per_model(
-            cv_results, X, y, n_cols, plot, figsize, output_index, input_index
+            cv_results, X, y, n_cols, style, figsize, output_index, input_index
         )
 
     return figure
@@ -366,7 +361,7 @@ def _plot_model(
     model,
     X,
     y,
-    plot="Xy",
+    style="Xy",
     n_cols=3,
     figsize=None,
     input_index=None,
@@ -424,7 +419,7 @@ def _plot_model(
         )
 
     # Calculate number of subplots
-    if plot == "Xy":
+    if style == "Xy":
         n_plots = len(input_index) * len(output_index)
     else:
         n_plots = len(output_index)
@@ -438,14 +433,6 @@ def _plot_model(
     fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
     axs = axs.flatten()
 
-    # if y is 1d, we need to make it 2d
-    # if y.ndim == 1:
-    #     y = y.reshape(-1, 1)
-    # if y_pred.ndim == 1:
-    #     y_pred = y_pred.reshape(-1, 1)
-    # if y_std is not None and y_std.ndim == 1:
-    #     y_std = y_std.reshape(-1, 1)
-
     # make sure everything is 2D
     y = _ensure_2d(y)
     y_pred = _ensure_2d(y_pred)
@@ -454,7 +441,7 @@ def _plot_model(
 
     plot_index = 0
     for out_idx in output_index:
-        if plot == "Xy":
+        if style == "Xy":
             for in_idx in input_index:
                 if plot_index < len(axs):
                     a = _plot_Xy(
@@ -472,14 +459,14 @@ def _plot_model(
                     y_true=y[:, out_idx],
                     y_pred=y_pred[:, out_idx],
                     kind="actual_vs_predicted"
-                    if plot == "standard"
+                    if style == "actual_vs_predicted"
                     else "residual_vs_predicted",
                     ax=axs[plot_index],
                     scatter_kwargs={"edgecolor": "black", "alpha": 0.7},
                     # line_kwargs={"color": "red"},
                 )
                 axs[plot_index].set_title(
-                    f"{plot.capitalize()} Plot - Output {out_idx}"
+                    f"{style.capitalize().replace('_', ' ')} - Output {out_idx}"
                 )
                 plot_index += 1
 

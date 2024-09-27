@@ -20,9 +20,8 @@ def test_scalers():
 
     for scaler in scalers:
         ae = AutoEmulate()
-        ae.setup(X, y, scaler=scaler, model_subset=model_subset)
+        ae.setup(X, y, scaler=scaler, models=model_subset)
         ae.compare()
-        ae.print_results()
 
         assert ae.best_model is not None
 
@@ -35,11 +34,8 @@ def test_dimension_reducers():
 
     for dim_reducer in dim_reducers:
         ae = AutoEmulate()
-        ae.setup(
-            X, y, reduce_dim=True, dim_reducer=dim_reducer, model_subset=model_subset
-        )
+        ae.setup(X, y, reduce_dim=True, dim_reducer=dim_reducer, models=model_subset)
         ae.compare()
-        ae.print_results()
 
         assert ae.best_model is not None
 
@@ -52,8 +48,7 @@ def test_cross_validators():
 
     for cross_validator in cross_validators:
         ae = AutoEmulate()
-        ae.setup(X, y, cross_validator=cross_validator, model_subset=model_subset)
+        ae.setup(X, y, cross_validator=cross_validator, models=model_subset)
         ae.compare()
-        ae.print_results()
 
         assert ae.best_model is not None

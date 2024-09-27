@@ -15,9 +15,7 @@ from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _denormalise_y
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
-from autoemulate.utils import _get_model_names_dict
 from autoemulate.utils import _normalise_y
-from autoemulate.utils import get_mean_scores
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_short_model_name
@@ -290,65 +288,6 @@ def test_add_prefix_to_single_grid(grid, prefix):
     ), "Prefix not correctly added to single grid dictionary"
 
 
-# mean scores -------------------------------------------------------------------
-def test_get_mean_scores_r2():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["ModelA", "ModelB", "ModelA", "ModelB"],
-            "short": ["ma", "mb", "ma", "mb"],
-            "metric": ["r2", "r2", "r2", "r2"],
-            "fold": [1, 2, 1, 2],
-            "score": [0.8, 0.9, 0.7, 0.6],
-        }
-    )
-    expected_result = pd.DataFrame(
-        {"model": ["ModelA", "ModelB"], "short": ["ma", "mb"], "r2": [0.75, 0.75]}
-    )
-    assert get_mean_scores(scores_df, "r2").equals(expected_result)
-
-
-def test_get_mean_scores_rmse():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["ModelA", "ModelB", "ModelA", "ModelB"],
-            "short": ["ma", "mb", "ma", "mb"],
-            "metric": ["rmse", "rmse", "rmse", "rmse"],
-            "fold": [1, 2, 1, 2],
-            "score": [1.0, 0.5, 0.8, 0.6],
-        }
-    )
-    expected_result = pd.DataFrame(
-        {"model": ["ModelB", "ModelA"], "short": ["mb", "ma"], "rmse": [0.55, 0.9]}
-    )
-    assert get_mean_scores(scores_df, "rmse").equals(expected_result)
-
-
-def test_get_mean_scores_unsupported_metric():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["Model A", "Model B"],
-            "metric": ["mae", "mae"],
-            "fold": [1, 2],
-            "score": [0.5, 0.6],
-        }
-    )
-    with pytest.raises(RuntimeError):
-        get_mean_scores(scores_df, "mae")
-
-
-def test_get_mean_scores_metric_not_found():
-    scores_df = pd.DataFrame(
-        {
-            "model": ["Model A", "Model B"],
-            "metric": ["r2", "r2"],
-            "fold": [1, 2],
-            "score": [0.8, 0.9],
-        }
-    )
-    with pytest.raises(ValueError):
-        get_mean_scores(scores_df, "rmse")
-
-
 # test model name getters ------------------------------------------------------
 def test_get_model_name():
     model = RandomForest()
@@ -387,40 +326,7 @@ def test__get_full_model_name():
     assert _get_full_model_name("RandomForest", model_names_dict) == "RandomForest"
     # test that it raises an error if the model name is not in the dictionary
     with pytest.raises(ValueError):
-        _get_full_model_name("GaussianProcess", model_names_dict)
-
-
-# test _get_model_names_dict ---------------------------------------------------
-
-
-def test__get_model_names_dict():
-    models = {
-        "GradientBoosting": GradientBoosting(),
-        "RandomForest": RandomForest(),
-    }
-    model_names_dict = {
-        "GradientBoosting": "gb",
-        "RandomForest": "rf",
-    }
-    assert _get_model_names_dict(models) == model_names_dict
-
-
-def test__get_model_names_dict_w_subset():
-    models = {
-        "GradientBoosting": GradientBoosting(),
-        "RandomForest": RandomForest(),
-    }
-    model_names_dict = {
-        "GradientBoosting": "gb",
-        "RandomForest": "rf",
-    }
-    # test that it works with short names and full names
-    assert _get_model_names_dict(models, ["GradientBoosting", "rf"]) == model_names_dict
-    # test that it raises an error if the model name is not in the dictionary
-    with pytest.raises(ValueError):
-        _get_model_names_dict(
-            models, ["GradientBoosting", "RandomForest", "GaussianProcess"]
-        )
+        _get_full_model_name("InvalidMod", model_names_dict)
 
 
 # test _ensure_2d -------------------------------------------------------------

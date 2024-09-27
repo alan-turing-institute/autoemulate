@@ -1,3 +1,4 @@
+import logging
 import re
 
 import numpy as np
@@ -8,9 +9,10 @@ from sklearn.model_selection import PredefinedSplit
 from sklearn.model_selection import train_test_split
 
 from autoemulate.utils import get_model_name
+from autoemulate.utils import get_model_params
 
 
-def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
+def _run_cv(X, y, cv, model, metrics, n_jobs=None, logger=None):
     """Runs cross-validation on a model.
 
     Parameters
@@ -40,8 +42,11 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     # The metrics we want to use for cross-validation
     scorers = {metric.__name__: make_scorer(metric) for metric in metrics}
 
+    # if logger is None, create a new logger
+    if logger is None:
+        logger = logging.getLogger(__name__)
     logger.info(f"Cross-validating {get_model_name(model)}...")
-    logger.info(f"Parameters: {model.named_steps['model'].get_params()}")
+    logger.info(f"Parameters: {get_model_params(model)}")
 
     cv_results = None
     try:
@@ -81,34 +86,71 @@ def _run_cv(X, y, cv, model, metrics, n_jobs, logger):
     return fitted_model, cv_results
 
 
-def _update_scores_df(scores_df, model_name, cv_results):
-    """Updates the scores dataframe with the results of the cross-validation.
+def _sum_cv(cv_result):
+    """summarises the cv result for a single model
 
     Parameters
     ----------
-        scores_df : pandas.DataFrame
-            DataFrame with columns "model", "metric", "fold", "score".
-        model_name : str
-            Name of the model.
-        cv_results : dict
-            Results of the cross-validation.
+        cv_result : dict
+            Results of the cross-validation, output of scikit-learn's `cross_validate`.
 
     Returns
     -------
-        None
-            Modifies the self.scores_df DataFrame in-place.
-
+        cv_sum : pandas.DataFrame
+            DataFrame with columns "fold" plus one column per metric.
     """
-    # Gather scores from each metric
-    # Initialise scores dataframe
-    for key in cv_results.keys():
-        if key.startswith("test_"):
-            for fold, score in enumerate(cv_results[key]):
-                scores_df.loc[len(scores_df.index)] = {
-                    "model": model_name,
-                    "short": "".join(re.findall(r"[A-Z]", model_name)).lower(),
-                    "metric": key.split("test_", 1)[1],
-                    "fold": fold,
-                    "score": score,
-                }
-    return scores_df
+    # get test scores
+    cv_sum = {
+        k.split("test_", 1)[1]: v for k, v in cv_result.items() if k.startswith("test_")
+    }
+    cv_sum = pd.DataFrame(cv_sum).reset_index(names=["fold"])
+    return cv_sum
+
+
+def _sum_cvs(cv_results, sort_by="r2"):
+    """summarises the cv results for all models, averaging over folds within each model
+
+    Parameters
+    ----------
+        cv_results : dict
+            model_name: cv_result, where cv_result is the output of scikit-learn's `cross_validate`.
+
+    Returns
+    -------
+        cv_sum : pandas.DataFrame
+            DataFrame with columns "model", "short", and one column per metric, showing
+            the mean score across all folds for each model.
+    """
+    cv_all = []
+
+    # concat all cv result df's
+    for model_name, cv_result in cv_results.items():
+        df = _sum_cv(cv_result)
+        df.insert(0, "short", "".join(re.findall(r"[A-Z]", model_name)).lower())
+        df.insert(0, "model", model_name)
+        cv_all.append(df)
+
+    # mean over folds
+    cv_all = (
+        pd.concat(cv_all, axis=0)
+        .groupby(["model", "short"])
+        .mean()
+        .reset_index()
+        .drop(columns=["fold"])
+    )
+
+    # sort by the metric
+    if sort_by not in cv_all.columns:
+        raise ValueError(
+            f"Metric {sort_by} not found. Available metrics are: {cv_all.columns.drop('model').drop('short').to_list()}"
+        )
+
+    # TODO: make this work properly for different metrics
+    if sort_by == "r2":
+        asc = False
+    else:
+        asc = True
+
+    cv_all = cv_all.sort_values(by=sort_by, ascending=asc).reset_index(drop=True)
+
+    return cv_all

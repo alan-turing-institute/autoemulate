@@ -58,14 +58,14 @@ def test_get_model_names_all(model_registry):
 
 
 def test_get_model_names_subset(model_registry):
-    model_names = model_registry.get_model_names(model_subset=["cnp", "gps"])
+    model_names = model_registry.get_model_names(models=["cnp", "gps"])
     assert isinstance(model_names, dict)
     assert len(model_names) == 2
 
 
 def test_get_model_names_mix(model_registry):
     model_names = model_registry.get_model_names(
-        model_subset=["ConditionalNeuralProcess", "rbf"]
+        models=["ConditionalNeuralProcess", "rbf"]
     )
     assert isinstance(model_names, dict)
     assert len(model_names) == 2
@@ -74,7 +74,7 @@ def test_get_model_names_mix(model_registry):
 
 
 def test_get_model_names_str(model_registry):
-    model_names = model_registry.get_model_names(model_subset="cnp")
+    model_names = model_registry.get_model_names(models="cnp")
     assert isinstance(model_names, dict)
     assert len(model_names) == 1
     assert model_names["ConditionalNeuralProcess"] == "cnp"
@@ -82,12 +82,12 @@ def test_get_model_names_str(model_registry):
 
 def test_get_model_names_invalid(model_registry):
     with pytest.raises(ValueError):
-        model_registry.get_model_names(model_subset=["cnp", "gps", "rbf", "invalid"])
+        model_registry.get_model_names(models=["cnp", "gps", "rbf", "invalid"])
 
 
 def test_get_model_names_invalid_str(model_registry):
     with pytest.raises(ValueError):
-        model_registry.get_model_names(model_subset="invalid")
+        model_registry.get_model_names(models="invalid")
 
 
 def test_get_model_names_is_core(model_registry):
@@ -108,7 +108,7 @@ def test_get_models(model_registry):
 
 
 def test_get_models_subset(model_registry):
-    models = model_registry.get_models(model_subset=["cnp", "gps"])
+    models = model_registry.get_models(models=["cnp", "gps"])
     assert isinstance(models, list)
     assert len(models) == 2
     assert models[0].__class__ == GaussianProcessSklearn
@@ -117,11 +117,11 @@ def test_get_models_subset(model_registry):
 
 def test_get_models_invalid(model_registry):
     with pytest.raises(ValueError):
-        model_registry.get_models(model_subset=["cnp", "gps", "rbf", "invalid"])
+        model_registry.get_models(models=["cnp", "gps", "rbf", "invalid"])
 
 
 def test_get_models_mix(model_registry):
-    models = model_registry.get_models(model_subset=["cnp", "RadialBasisFunctions"])
+    models = model_registry.get_models(models=["cnp", "RadialBasisFunctions"])
     assert isinstance(models, list)
     assert len(models) == 2
     assert models[0].__class__ == RadialBasisFunctions
