@@ -43,8 +43,6 @@ class PolyMean(gpytorch.means.Mean):
             self.bias = None
 
     def forward(self, x):
-        # poly = PolynomialFeatures(self.degree)
-        # poly.fit(self.input_size)
         x_ = self.poly.transform(x)
         res = x_.matmul(self.weights).squeeze(-1)
         if self.bias is not None:

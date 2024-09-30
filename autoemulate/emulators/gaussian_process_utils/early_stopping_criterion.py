@@ -11,6 +11,8 @@ class EarlyStoppingCustom(EarlyStopping):
     with the difference being that the method `_calc_new_threshold`,
     is corrected to ensure monotonicity.
 
+    also see https://github.com/skorch-dev/skorch/pull/1065
+
     Parameters
     ----------
     monitor : str (default='valid_loss')
