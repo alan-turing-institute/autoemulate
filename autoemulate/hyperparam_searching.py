@@ -62,11 +62,7 @@ def _optimize_params(
     Refitted estimator on the whole dataset with best parameters.
     """
     logger.info(f"Performing grid search for {get_model_name(model)}...")
-    if len(X.shape) == 1:
-        input_dim = 1
-    else:
-        input_dim = X.shape[1]
-    param_space = _process_param_space(model, search_type, param_space, input_dim)
+    param_space = _process_param_space(model, search_type, param_space)
     search_type = search_type.lower()
 
     # random search
@@ -111,7 +107,7 @@ def _optimize_params(
     return searcher.best_estimator_
 
 
-def _process_param_space(model, search_type, param_space, input_dim=1):
+def _process_param_space(model, search_type, param_space):
     """Process parameter grid for hyperparameter search.
     Gets the parameter grid for the model and adjusts it to include prefixes
     for pipelines / multioutput estimators.
@@ -127,8 +123,6 @@ def _process_param_space(model, search_type, param_space, input_dim=1):
         in which case the grids spanned by each dictionary in the list are
         explored. This enables searching over any sequence of parameter
         settings.
-    input_dim : int, default=1
-        The number of inputs, i.e. X.shape[1]
 
     Returns
     -------
@@ -137,7 +131,7 @@ def _process_param_space(model, search_type, param_space, input_dim=1):
     """
     # get param_space if not provided
     if param_space is None:
-        param_space = get_model_param_space(model, search_type, input_dim)
+        param_space = get_model_param_space(model, search_type)
     else:
         param_space = _check_param_space(param_space, model)
     # include prefixes for pipelines / multioutput estimators
