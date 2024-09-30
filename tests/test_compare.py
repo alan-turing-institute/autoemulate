@@ -169,7 +169,7 @@ def test_evaluate_singleoutput(ae_run):
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (
         1,
-        len(ae_run.metrics) + 3,
+        len(ae_run.metrics) + 2,
     )  # 3 columns: model, short, target
     assert all(metric.__name__ in scores_df.columns for metric in ae_run.metrics)
 
@@ -178,7 +178,7 @@ def test_evaluate_multioutput(ae_run_multioutput):
     model = ae_run_multioutput.get_model(rank=1)
     scores_df = ae_run_multioutput.evaluate(model=model, multioutput="uniform_average")
     assert isinstance(scores_df, pd.DataFrame)
-    assert scores_df.shape == (1, len(ae_run_multioutput.metrics) + 3)
+    assert scores_df.shape == (1, len(ae_run_multioutput.metrics) + 2)
 
 
 def test_evaluate_singleoutput_raw(ae_run):
