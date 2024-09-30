@@ -27,8 +27,8 @@ from skorch.dataset import ValidSplit
 from skorch.helper import predefined_split
 from skorch.probabilistic import ExactGPRegressor
 
-from autoemulate.emulators.gaussian_processs_utils import EarlyStoppingCustom
-from autoemulate.emulators.gaussian_processs_utils import PolyMean
+from autoemulate.emulators.gaussian_process_utils import EarlyStoppingCustom
+from autoemulate.emulators.gaussian_process_utils import PolyMean
 from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
 from autoemulate.utils import set_random_seed
 
