@@ -121,9 +121,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             self._y_train_std = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
             y = (y - self._y_train_mean) / self._y_train_std
 
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
-        train_split = predefined_split(Dataset(X_val, y_val))
-
         mean_module = (
             self.mean_module(self.n_features_in_)
             if callable(self.mean_module)
@@ -150,7 +147,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             max_epochs=self.max_epochs,
             lr=self.lr,
             optimizer=self.optimizer,
-            train_split=train_split,
             callbacks=[
                 (
                     "lr_scheduler",
@@ -173,7 +169,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             if torch.cuda.is_available()
             else "cpu",
         )
-        self.model_.fit(X_train, y_train)
+        self.model_.fit(X, y)
         self.is_fitted_ = True
         return self
 
