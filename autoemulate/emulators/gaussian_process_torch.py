@@ -223,7 +223,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                     # TODO: initialize lengthscale for other kernels?
                     lambda n_features: gpytorch.kernels.RBFKernel(
                         ard_num_dims=n_features
-                    ).initialize(lengthscale=1.0),
+                    ).initialize(lengthscale=torch.ones(n_features) * 1.0),
                     lambda n_features: gpytorch.kernels.MaternKernel(
                         nu=2.5, ard_num_dims=n_features
                     ),
@@ -259,7 +259,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                         # TODO: initialize lengthscale for other kernels?
                         lambda n_features: gpytorch.kernels.RBFKernel(
                             ard_num_dims=n_features
-                        ).initialize(lengthscale=1.0),
+                        ).initialize(lengthscale=torch.ones(n_features) * 1.0),
                         lambda n_features: gpytorch.kernels.MaternKernel(
                             nu=2.5, ard_num_dims=n_features
                         ),
