@@ -8,15 +8,27 @@ from scipy.stats import randint
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import DataConversionWarning
+from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing._data import _handle_zeros_in_scale
 from sklearn.utils import check_array
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted
+from skopt.space import Categorical
+from skopt.space import Integer
+from skopt.space import Real
+from skorch.callbacks import Checkpoint
 from skorch.callbacks import EarlyStopping
+from skorch.callbacks import EpochScoring
 from skorch.callbacks import LRScheduler
 from skorch.callbacks import ProgressBar
+from skorch.dataset import Dataset
+from skorch.dataset import ValidSplit
+from skorch.helper import predefined_split
 from skorch.probabilistic import ExactGPRegressor
 
+from autoemulate.emulators.gaussian_process_utils import EarlyStoppingCustom
+from autoemulate.emulators.gaussian_process_utils import PolyMean
 from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
 from autoemulate.utils import set_random_seed
 
@@ -109,6 +121,16 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             self._y_train_std = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
             y = (y - self._y_train_mean) / self._y_train_std
 
+        mean_module = (
+            self.mean_module(self.n_features_in_)
+            if callable(self.mean_module)
+            else self.mean_module
+        )
+        covar_module = (
+            self.covar_module(self.n_features_in_)
+            if callable(self.covar_module)
+            else self.covar_module
+        )
         self.model_ = ExactGPRegressor(
             CorrGPModule,
             module__mean=self._get_module(
@@ -125,7 +147,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             max_epochs=self.max_epochs,
             lr=self.lr,
             optimizer=self.optimizer,
-            # callbacks=[EarlyStopping(patience=5)],
             callbacks=[
                 (
                     "lr_scheduler",
@@ -133,7 +154,12 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                 ),
                 (
                     "early_stopping",
-                    EarlyStopping(monitor="train_loss", patience=10, threshold=1e-3),
+                    EarlyStoppingCustom(
+                        monitor="train_loss",
+                        patience=10,
+                        threshold=1e-3,
+                        load_best=True,
+                    ),
                 ),
             ],
             verbose=0,
@@ -191,21 +217,94 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters for the emulator."""
-        param_space = {
-            "covar_module": [
-                # TODO: initialize lengthscale for other kernels?
-                gpytorch.kernels.RBFKernel().initialize(lengthscale=1.0),
-                gpytorch.kernels.MaternKernel(nu=2.5),
-                gpytorch.kernels.MaternKernel(nu=1.5),
-                gpytorch.kernels.PeriodicKernel(),
-                gpytorch.kernels.RQKernel(),
-            ],
-            "mean_module": [gpytorch.means.ConstantMean(), gpytorch.means.ZeroMean()],
-            "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
-            "lr": [5e-1, 1e-1, 5e-2, 1e-2],
-            "max_epochs": [50, 100, 200],
-            "normalize_y": [True, False],
-        }
+        if search_type == "random":
+            param_space = {
+                "covar_module": [
+                    # TODO: initialize lengthscale for other kernels?
+                    lambda n_features: gpytorch.kernels.RBFKernel(
+                        ard_num_dims=n_features
+                    ).initialize(lengthscale=torch.ones(n_features) * 1.0),
+                    lambda n_features: gpytorch.kernels.MaternKernel(
+                        nu=2.5, ard_num_dims=n_features
+                    ),
+                    lambda n_features: gpytorch.kernels.MaternKernel(
+                        nu=1.5, ard_num_dims=n_features
+                    ),
+                    gpytorch.kernels.PeriodicKernel(),
+                    lambda n_features: gpytorch.kernels.RQKernel(
+                        ard_num_dims=n_features
+                    ),
+                ],
+                "mean_module": [
+                    gpytorch.means.ConstantMean(),
+                    gpytorch.means.ZeroMean(),
+                    lambda n_features: gpytorch.means.LinearMean(input_size=n_features),
+                    lambda n_features: PolyMean(degree=2, input_size=n_features),
+                ],
+                "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
+                "lr": [5e-1, 1e-1, 5e-2, 1e-2],
+                "max_epochs": [
+                    50,
+                    100,
+                    200,
+                    400,
+                    800,
+                ],
+                "normalize_y": [True, False],
+            }
+        else:
+            param_space = {
+                "covar_module": Categorical(
+                    [
+                        # TODO: initialize lengthscale for other kernels?
+                        lambda n_features: gpytorch.kernels.RBFKernel(
+                            ard_num_dims=n_features
+                        ).initialize(lengthscale=torch.ones(n_features) * 1.0),
+                        lambda n_features: gpytorch.kernels.MaternKernel(
+                            nu=2.5, ard_num_dims=n_features
+                        ),
+                        lambda n_features: gpytorch.kernels.MaternKernel(
+                            nu=1.5, ard_num_dims=n_features
+                        ),
+                        gpytorch.kernels.PeriodicKernel(),
+                        lambda n_features: gpytorch.kernels.RQKernel(
+                            ard_num_dims=n_features
+                        ),
+                    ]
+                ),
+                "mean_module": Categorical(
+                    [
+                        gpytorch.means.ConstantMean(),
+                        gpytorch.means.ZeroMean(),
+                        lambda n_features: gpytorch.means.LinearMean(
+                            input_size=n_features
+                        ),
+                        lambda n_features: PolyMean(degree=2, input_size=n_features),
+                    ]
+                ),
+                "optimizer": Categorical(
+                    [
+                        # torch.optim.AdamW,
+                        torch.optim.Adam,
+                        # torch.optim.SGD,
+                    ]
+                ),
+                "lr": Categorical([5e-1, 1e-1, 5e-2, 1e-2]),
+                "max_epochs": Categorical(
+                    [
+                        50,
+                        100,
+                        200,
+                        400,
+                        800,
+                    ]
+                ),
+                "normalize_y": Categorical(
+                    [
+                        True,
+                    ]
+                ),
+            }
         return param_space
 
     @property
