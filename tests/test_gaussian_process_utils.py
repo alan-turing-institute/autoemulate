@@ -3,8 +3,12 @@ import pytest
 import torch
 
 from autoemulate.emulators.gaussian_process_utils.poly_mean import PolyMean
+from autoemulate.emulators.gaussian_process_utils.polynomial_features import (
+    PolynomialFeatures,
+)
 
 
+# -------------------test PolyMean--------------------------------
 @pytest.fixture
 def poly_mean():
     return PolyMean(degree=2, input_size=3, bias=True)
@@ -57,3 +61,62 @@ def test_poly_mean_gradients():
     assert x.grad is not None
     assert poly_mean.weights.grad is not None
     assert poly_mean.bias.grad is not None
+
+
+# ------------------------test PolynomialFeatures--------------------------------
+
+
+def test_initialization():
+    pf = PolynomialFeatures(degree=2, input_size=3)
+    assert pf.degree == 2
+    assert pf.input_size == 3
+    assert pf.indices is None
+
+
+def test_fit():
+    pf = PolynomialFeatures(degree=2, input_size=2)
+    pf.fit()
+    expected_indices = [[0], [1], [0, 0], [0, 1], [1, 1]]
+    assert pf.indices == expected_indices
+
+
+def test_transform():
+    pf = PolynomialFeatures(degree=2, input_size=2)
+    pf.fit()
+    x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+    result = pf.transform(x)
+    expected = torch.tensor([[1.0, 2.0, 1.0, 2.0, 4.0], [3.0, 4.0, 9.0, 12.0, 16.0]])
+    assert torch.allclose(result, expected)
+
+
+def test_higher_degree():
+    pf = PolynomialFeatures(degree=3, input_size=2)
+    pf.fit()
+    x = torch.tensor([[2.0, 3.0], [3.0, 4.0]])
+    result = pf.transform(x)
+    print(f"this is the result: {result}")
+    expected = torch.tensor(
+        [
+            [2.0, 3.0, 4.0, 6.0, 9.0, 8.0, 12.0, 18.0, 27.0],
+            [3.0, 4.0, 9.0, 12.0, 16.0, 27.0, 36.0, 48.0, 64.0],
+        ]
+    )
+    assert torch.allclose(result, expected)
+
+
+def test_transform_without_fit():
+    pf = PolynomialFeatures(degree=2, input_size=2)
+    x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+    with pytest.raises(ValueError, match="Did you forget to call 'fit'?"):
+        pf.transform(x)
+
+
+def test_invalid_inputs():
+    with pytest.raises(AssertionError, match="`degree` input must be greater than 0."):
+        PolynomialFeatures(degree=0, input_size=2)
+
+    with pytest.raises(
+        AssertionError,
+        match="`input_size`, which defines the number of features, for has to be greate than 0",
+    ):
+        PolynomialFeatures(degree=2, input_size=0)
