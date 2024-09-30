@@ -155,7 +155,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                 (
                     "early_stopping",
                     EarlyStoppingCustom(
-                        monitor="valid_loss",
+                        monitor="train_loss",
                         patience=10,
                         threshold=1e-3,
                         load_best=True,
