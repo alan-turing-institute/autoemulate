@@ -5,7 +5,7 @@
 | Name                                                   |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                 |      161 |       22 |     86% |240-244, 277, 315, 317, 320, 337-348, 358-361, 463, 517-528 |
+| autoemulate/compare.py                                 |      163 |       22 |     87% |240-244, 277, 315, 317, 320, 337-348, 358-361, 463, 521-532 |
 | autoemulate/cross\_validate.py                         |       46 |        7 |     85% |63-81, 152 |
 | autoemulate/data\_splitting.py                         |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                |       12 |        0 |    100% |           |
@@ -55,7 +55,7 @@
 | tests/test\_save.py                                    |       62 |        2 |     97% |    30, 35 |
 | tests/test\_ui.py                                      |       36 |        0 |    100% |           |
 | tests/test\_utils.py                                   |      176 |        6 |     97% |48, 54, 59, 64, 69, 74 |
-|                                              **TOTAL** | **2755** |  **170** | **94%** |           |
+|                                              **TOTAL** | **2757** |  **170** | **94%** |           |
 
 
 ## Setup coverage badge
