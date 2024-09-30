@@ -485,6 +485,10 @@ class AutoEmulate:
             .reindex(columns=["model", "short", "target"] + list(scores.keys()))
         ).round(4)
 
+        # if multioutput is not raw_values, drop the target column
+        if multioutput != "raw_values":
+            scores_df = scores_df.drop(columns=["target"])
+
         return scores_df
 
     def plot_eval(
