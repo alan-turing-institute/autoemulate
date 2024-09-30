@@ -183,7 +183,7 @@ def get_model_params(model):
         return model.get_params()
 
 
-def get_model_param_space(model, search_type="random", input_dim=1):
+def get_model_param_space(model, search_type="random"):
     """Get the parameter grid of the base model. This is used for hyperparameter search.
 
     This function handles standalone models, models wrapped in a MultiOutputRegressor,
