@@ -108,7 +108,7 @@ class LightGBM(BaseEstimator, RegressorMixin):
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
         param_space_random = {
-            "boosting_type": ["gbdt", "dart"],
+            "boosting_type": ["gbdt"],
             "num_leaves": randint(10, 100),
             "max_depth": randint(-1, 12),
             "learning_rate": loguniform(0.001, 0.1),
@@ -119,7 +119,7 @@ class LightGBM(BaseEstimator, RegressorMixin):
         }
 
         param_space_bayes = {
-            "boosting_type": Categorical(["gbdt", "dart"]),
+            "boosting_type": Categorical(["gbdt"]),
             "num_leaves": Integer(10, 100),
             "max_depth": Integer(-1, 12),
             "learning_rate": Real(0.001, 0.1, prior="log-uniform"),

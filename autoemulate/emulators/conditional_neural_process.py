@@ -42,8 +42,10 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         The number of hidden units in the neural network layers.
     latent_dim : int, default=64
         The dimensionality of the latent space.
-    hidden_layers : int, default=3
-        The number of hidden layers in the neural network.
+    hidden_layers_enc : int, default=3
+        The number of hidden layers in the encoder.
+    hidden_layers_dec : int, default=3
+        The number of hidden layers in the decoder.
     min_context_points : int, default=3
         The minimum number of context points to use during training.
     max_context_points : int, default=10
@@ -108,14 +110,15 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         # architecture
         hidden_dim=64,
         latent_dim=64,
-        hidden_layers=3,
+        hidden_layers_enc=3,
+        hidden_layers_dec=3,
         # data per episode
         min_context_points=3,
         max_context_points=10,
         n_episode=32,
         # training
         max_epochs=100,
-        lr=1e-2,
+        lr=5e-2,
         batch_size=16,
         activation=nn.ReLU,
         optimizer=torch.optim.AdamW,
@@ -127,7 +130,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     ):
         self.hidden_dim = hidden_dim
         self.latent_dim = latent_dim
-        self.hidden_layers = hidden_layers
+        self.hidden_layers_enc = hidden_layers_enc
+        self.hidden_layers_dec = hidden_layers_dec
         self.min_context_points = min_context_points
         self.max_context_points = max_context_points
         self.n_episode = n_episode
@@ -184,7 +188,8 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             module__output_dim=self.output_dim_,
             module__hidden_dim=self.hidden_dim,
             module__latent_dim=self.latent_dim,
-            module__hidden_layers=self.hidden_layers,
+            module__hidden_layers_enc=self.hidden_layers_enc,
+            module__hidden_layers_dec=self.hidden_layers_dec,
             module__activation=self.activation,
             dataset__min_context_points=self.min_context_points,
             dataset__max_context_points=self.max_context_points,
@@ -193,11 +198,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             lr=self.lr,
             batch_size=self.batch_size,
             optimizer=self.optimizer,
-            device=self.device
-            if self.device is not None
-            else "cuda"
-            if torch.cuda.is_available()
-            else "cpu",
+            device=self.device,
             dataset=CNPDataset,  # special dataset to sample context and target sets
             criterion=CNPLoss,
             iterator_train__collate_fn=cnp_collate_fn,  # special collate to different n in episodes
@@ -260,31 +261,30 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     def get_grid_params(search_type: str = "random"):
         param_space = {
             "max_epochs": [100, 200, 300],
-            "batch_size": [16, 32, 64],
+            "batch_size": [16, 32],
             "hidden_dim": [32, 64, 128],
             "latent_dim": [32, 64, 128],
-            "max_context_points": [10, 20, 30],
-            "hidden_layers": [1, 2, 3, 4, 5],
+            "max_context_points": [5, 10, 15],
+            "hidden_layers_enc": [2, 3, 4],
+            "hidden_layers_dec": [2, 3, 4],
             "activation": [
                 nn.ReLU,
-                # nn.Tanh,
                 nn.GELU,
-                # nn.Sigmoid,
             ],
-            # ],
-            "optimizer": [torch.optim.AdamW, torch.optim.SGD],  #
+            "optimizer": [torch.optim.AdamW],  #
+            "lr": loguniform(1e-3, 2e-1),
         }
-        # match search_type:
-        #     case "random":
-        #         param_space |= {
-        #             "lr": loguniform(1e-4, 1e-2),
-        #         }
-        #     case "bayes":
-        #         param_space |= {
-        #             "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-        #         }
-        #     case _:
-        #         raise ValueError(f"Invalid search type: {search_type}")
+        # # match search_type:
+        # case "random":
+        #     param_space |= {
+        #         "lr": loguniform(1e-4, 1e-2),
+        #     }
+        # case "bayes":
+        #     param_space |= {
+        #         "lr": Real(1e-4, 1e-2, prior="log-uniform"),
+        #     }
+        # case _:
+        #     raise ValueError(f"Invalid search type: {search_type}")
 
         return param_space
 
