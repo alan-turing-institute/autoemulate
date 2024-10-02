@@ -71,7 +71,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         self.device = device
         self.random_state = random_state
 
-    def _get_module(self, module, default_class):
+    def _get_module(self, module, default_module, n_features):
         """
         Get mean and kernel modules.
 
@@ -80,8 +80,11 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         if not.
         """
         if module is None:
-            return default_class
-        return deepcopy(module)
+            return default_module
+        if callable(module):
+            return module(n_features)
+        else:
+            ValueError("module must be callable or None")
 
     def fit(self, X, y):
         """Fit the emulator to the data.
@@ -121,26 +124,27 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             self._y_train_std = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
             y = (y - self._y_train_mean) / self._y_train_std
 
-        mean_module = (
-            self.mean_module(self.n_features_in_)
-            if callable(self.mean_module)
-            else self.mean_module
+        # mean and covar modules
+        default_mean_module = gpytorch.means.ConstantMean()
+        default_covar_module = (
+            gpytorch.kernels.RBFKernel(ard_num_dims=self.n_features_in_).initialize(
+                lengthscale=torch.ones(self.n_features_in_) * 1.5
+            )
+            + gpytorch.kernels.ConstantKernel()
         )
-        covar_module = (
-            self.covar_module(self.n_features_in_)
-            if callable(self.covar_module)
-            else self.covar_module
+
+        mean_module = self._get_module(
+            self.mean_module, default_mean_module, self.n_features_in_
         )
+        covar_module = self._get_module(
+            self.covar_module, default_covar_module, self.n_features_in_
+        )
+
+        # model
         self.model_ = ExactGPRegressor(
             CorrGPModule,
-            module__mean=self._get_module(
-                self.mean_module, gpytorch.means.ConstantMean()
-            ),
-            module__covar=self._get_module(
-                self.covar_module,
-                gpytorch.kernels.RBFKernel().initialize(lengthscale=1.0)
-                + gpytorch.kernels.ConstantKernel(),
-            ),
+            module__mean=mean_module,
+            module__covar=covar_module,
             likelihood=gpytorch.likelihoods.MultitaskGaussianLikelihood(
                 num_tasks=self.n_outputs_
             ),
@@ -217,94 +221,80 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters for the emulator."""
+
+        # wrapper functions for kernel initialization at fit time (to provide ard_num_dims)
+        # kernels
+        def rbf_kernel(n_features):
+            return gpytorch.kernels.RBFKernel(ard_num_dims=n_features).initialize(
+                lengthscale=torch.ones(n_features) * 1.5
+            )
+
+        def matern_5_2_kernel(n_features):
+            return gpytorch.kernels.MaternKernel(nu=2.5, ard_num_dims=n_features)
+
+        def matern_3_2_kernel(n_features):
+            return gpytorch.kernels.MaternKernel(nu=1.5, ard_num_dims=n_features)
+
+        def rq_kernel(n_features):
+            return gpytorch.kernels.RQKernel(ard_num_dims=n_features)
+
+        # combinations
+        def rbf_plus_linear(n_features):
+            return gpytorch.kernels.RBFKernel(
+                ard_num_dims=n_features
+            ) + gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
+
+        def matern_5_2_plus_rq(n_features):
+            return gpytorch.kernels.MaternKernel(
+                nu=2.5, ard_num_dims=n_features
+            ) + gpytorch.kernels.RQKernel(ard_num_dims=n_features)
+
+        def rbf_times_linear(n_features):
+            return gpytorch.kernels.RBFKernel(
+                ard_num_dims=n_features
+            ) * gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
+
+        # means
+        def constant_mean(n_features):
+            return gpytorch.means.ConstantMean()
+
+        def zero_mean(n_features):
+            return gpytorch.means.ZeroMean()
+
+        def linear_mean(n_features):
+            return gpytorch.means.LinearMean(input_size=n_features)
+
+        def poly_mean(n_features):
+            return PolyMean(degree=2, input_size=n_features)
+
         if search_type == "random":
             param_space = {
                 "covar_module": [
-                    # TODO: initialize lengthscale for other kernels?
-                    lambda n_features: gpytorch.kernels.RBFKernel(
-                        ard_num_dims=n_features
-                    ).initialize(lengthscale=torch.ones(n_features) * 1.0),
-                    lambda n_features: gpytorch.kernels.MaternKernel(
-                        nu=2.5, ard_num_dims=n_features
-                    ),
-                    lambda n_features: gpytorch.kernels.MaternKernel(
-                        nu=1.5, ard_num_dims=n_features
-                    ),
-                    gpytorch.kernels.PeriodicKernel(),
-                    lambda n_features: gpytorch.kernels.RQKernel(
-                        ard_num_dims=n_features
-                    ),
+                    rbf_kernel,
+                    matern_5_2_kernel,
+                    matern_3_2_kernel,
+                    rq_kernel,
+                    rbf_plus_linear,
+                    matern_5_2_plus_rq,
+                    rbf_times_linear,
                 ],
                 "mean_module": [
-                    gpytorch.means.ConstantMean(),
-                    gpytorch.means.ZeroMean(),
-                    lambda n_features: gpytorch.means.LinearMean(input_size=n_features),
-                    lambda n_features: PolyMean(degree=2, input_size=n_features),
+                    constant_mean,
+                    zero_mean,
+                    linear_mean,
+                    poly_mean,
                 ],
-                "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
+                "optimizer": [torch.optim.AdamW, torch.optim.Adam],
                 "lr": [5e-1, 1e-1, 5e-2, 1e-2],
                 "max_epochs": [
                     50,
                     100,
                     200,
-                    400,
-                    800,
                 ],
-                "normalize_y": [True, False],
             }
         else:
-            param_space = {
-                "covar_module": Categorical(
-                    [
-                        # TODO: initialize lengthscale for other kernels?
-                        lambda n_features: gpytorch.kernels.RBFKernel(
-                            ard_num_dims=n_features
-                        ).initialize(lengthscale=torch.ones(n_features) * 1.0),
-                        lambda n_features: gpytorch.kernels.MaternKernel(
-                            nu=2.5, ard_num_dims=n_features
-                        ),
-                        lambda n_features: gpytorch.kernels.MaternKernel(
-                            nu=1.5, ard_num_dims=n_features
-                        ),
-                        gpytorch.kernels.PeriodicKernel(),
-                        lambda n_features: gpytorch.kernels.RQKernel(
-                            ard_num_dims=n_features
-                        ),
-                    ]
-                ),
-                "mean_module": Categorical(
-                    [
-                        gpytorch.means.ConstantMean(),
-                        gpytorch.means.ZeroMean(),
-                        lambda n_features: gpytorch.means.LinearMean(
-                            input_size=n_features
-                        ),
-                        lambda n_features: PolyMean(degree=2, input_size=n_features),
-                    ]
-                ),
-                "optimizer": Categorical(
-                    [
-                        # torch.optim.AdamW,
-                        torch.optim.Adam,
-                        # torch.optim.SGD,
-                    ]
-                ),
-                "lr": Categorical([5e-1, 1e-1, 5e-2, 1e-2]),
-                "max_epochs": Categorical(
-                    [
-                        50,
-                        100,
-                        200,
-                        400,
-                        800,
-                    ]
-                ),
-                "normalize_y": Categorical(
-                    [
-                        True,
-                    ]
-                ),
-            }
+            raise ValueError("search_type must be 'random'")
+
         return param_space
 
     @property
