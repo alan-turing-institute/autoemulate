@@ -10,26 +10,26 @@
 | autoemulate/data\_splitting.py                                               |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                                      |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py                                        |       23 |        0 |    100% |           |
-| autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        8 |     92% |141-142, 254-255, 261-289, 294, 308 |
+| autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        6 |     94% |141-142, 254-255, 294, 308 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       39 |       22 |     44% |20, 37-42, 61-67, 71-83, 87, 90 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       49 |        7 |     86% |    99-122 |
-| autoemulate/emulators/gaussian\_process\_torch.py                            |      114 |       29 |     75% |84-87, 227-298 |
+| autoemulate/emulators/gaussian\_process\_torch.py                            |      114 |       10 |     91% |87, 228, 239, 243, 248, 253, 259, 262, 268, 296 |
 | autoemulate/emulators/gaussian\_process\_utils/\_\_init\_\_.py               |        3 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/early\_stopping\_criterion.py |       11 |        2 |     82% |    58, 63 |
 | autoemulate/emulators/gaussian\_process\_utils/poly\_mean.py                 |       23 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/polynomial\_features.py       |       35 |        0 |    100% |           |
 | autoemulate/emulators/gradient\_boosting.py                                  |       49 |        0 |    100% |           |
-| autoemulate/emulators/light\_gbm.py                                          |       59 |        7 |     88% |   110-137 |
+| autoemulate/emulators/light\_gbm.py                                          |       59 |        2 |     97% |   134-135 |
 | autoemulate/emulators/neural\_net\_sk.py                                     |       48 |        7 |     85% |   101-135 |
 | autoemulate/emulators/neural\_networks/\_\_init\_\_.py                       |        0 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/cnp\_module.py                        |       49 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/datasets.py                           |       49 |        1 |     98% |        11 |
 | autoemulate/emulators/neural\_networks/gp\_module.py                         |       14 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/losses.py                             |       12 |        0 |    100% |           |
-| autoemulate/emulators/polynomials.py                                         |       37 |        5 |     86% |     84-89 |
-| autoemulate/emulators/radial\_basis\_functions.py                            |       41 |        7 |     83% |    94-145 |
+| autoemulate/emulators/polynomials.py                                         |       37 |        2 |     95% |     86-87 |
+| autoemulate/emulators/radial\_basis\_functions.py                            |       41 |        2 |     95% |   142-143 |
 | autoemulate/emulators/random\_forest.py                                      |       46 |        2 |     96% |   123-124 |
-| autoemulate/emulators/support\_vector\_machines.py                           |       61 |       10 |     84% |83-85, 128-161 |
+| autoemulate/emulators/support\_vector\_machines.py                           |       61 |        5 |     92% |83-85, 158-159 |
 | autoemulate/experimental\_design.py                                          |       19 |        3 |     84% |24, 35, 46 |
 | autoemulate/hyperparam\_searching.py                                         |       45 |        7 |     84% |81-96, 101-102 |
 | autoemulate/logging\_config.py                                               |       44 |        4 |     91% |29, 57, 64-65 |
@@ -48,6 +48,7 @@
 | tests/test\_cross\_validate.py                                               |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                               |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                      |       13 |        0 |    100% |           |
+| tests/test\_end\_to\_end.py                                                  |       39 |        0 |    100% |           |
 | tests/test\_estimators.py                                                    |       23 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                                          |       22 |        0 |    100% |           |
 | tests/test\_gaussian\_process\_utils.py                                      |       76 |        0 |    100% |           |
@@ -60,7 +61,7 @@
 | tests/test\_save.py                                                          |       62 |        2 |     97% |    30, 35 |
 | tests/test\_ui.py                                                            |       36 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      176 |        6 |     97% |48, 54, 59, 64, 69, 74 |
-|                                                                    **TOTAL** | **2947** |  **198** | **93%** |           |
+|                                                                    **TOTAL** | **2986** |  **159** | **95%** |           |
 
 
 ## Setup coverage badge
