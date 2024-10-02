@@ -121,6 +121,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             self._y_train_std = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
             y = (y - self._y_train_mean) / self._y_train_std
 
+        # mean and covar modules
         mean_module = (
             self.mean_module(self.n_features_in_)
             if callable(self.mean_module)
@@ -131,14 +132,16 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
             if callable(self.covar_module)
             else self.covar_module
         )
+
+        # model
         self.model_ = ExactGPRegressor(
             CorrGPModule,
-            module__mean=self._get_module(
-                self.mean_module, gpytorch.means.ConstantMean()
-            ),
+            module__mean=self._get_module(mean_module, gpytorch.means.ConstantMean()),
             module__covar=self._get_module(
-                self.covar_module,
-                gpytorch.kernels.RBFKernel().initialize(lengthscale=1.0)
+                covar_module,
+                gpytorch.kernels.RBFKernel(ard_num_dims=self.n_features_in_).initialize(
+                    lengthscale=torch.ones(self.n_features_in_) * 1.5
+                )
                 + gpytorch.kernels.ConstantKernel(),
             ),
             likelihood=gpytorch.likelihoods.MultitaskGaussianLikelihood(
@@ -220,37 +223,37 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         if search_type == "random":
             param_space = {
                 "covar_module": [
-                    # TODO: initialize lengthscale for other kernels?
+                    # initializing lengthscale to 1.5 seems to be important
+                    # for RBF, needs further research
                     lambda n_features: gpytorch.kernels.RBFKernel(
                         ard_num_dims=n_features
-                    ).initialize(lengthscale=torch.ones(n_features) * 1.0),
+                    ).initialize(lengthscale=torch.ones(n_features) * 1.5),
                     lambda n_features: gpytorch.kernels.MaternKernel(
                         nu=2.5, ard_num_dims=n_features
                     ),
                     lambda n_features: gpytorch.kernels.MaternKernel(
                         nu=1.5, ard_num_dims=n_features
                     ),
-                    gpytorch.kernels.PeriodicKernel(),
+                    lambda n_features: gpytorch.kernels.PeriodicKernel(
+                        ard_num_dims=n_features
+                    ),
                     lambda n_features: gpytorch.kernels.RQKernel(
                         ard_num_dims=n_features
                     ),
                 ],
                 "mean_module": [
-                    gpytorch.means.ConstantMean(),
-                    gpytorch.means.ZeroMean(),
+                    lambda _: gpytorch.means.ConstantMean(),
+                    lambda _: gpytorch.means.ZeroMean(),
                     lambda n_features: gpytorch.means.LinearMean(input_size=n_features),
                     lambda n_features: PolyMean(degree=2, input_size=n_features),
                 ],
-                "optimizer": [torch.optim.AdamW, torch.optim.Adam, torch.optim.SGD],
+                "optimizer": [torch.optim.AdamW, torch.optim.Adam],
                 "lr": [5e-1, 1e-1, 5e-2, 1e-2],
                 "max_epochs": [
                     50,
                     100,
                     200,
-                    400,
-                    800,
                 ],
-                "normalize_y": [True, False],
             }
         else:
             param_space = {
@@ -266,7 +269,6 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                         lambda n_features: gpytorch.kernels.MaternKernel(
                             nu=1.5, ard_num_dims=n_features
                         ),
-                        gpytorch.kernels.PeriodicKernel(),
                         lambda n_features: gpytorch.kernels.RQKernel(
                             ard_num_dims=n_features
                         ),
