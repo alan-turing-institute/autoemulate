@@ -13,7 +13,7 @@
 | autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        8 |     92% |141-142, 254-255, 261-289, 294, 308 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       39 |       22 |     44% |20, 37-42, 61-67, 71-83, 87, 90 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       49 |        7 |     86% |    99-122 |
-| autoemulate/emulators/gaussian\_process\_torch.py                            |       88 |        5 |     94% |84, 220-308 |
+| autoemulate/emulators/gaussian\_process\_torch.py                            |      114 |       29 |     75% |84-87, 227-298 |
 | autoemulate/emulators/gaussian\_process\_utils/\_\_init\_\_.py               |        3 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/early\_stopping\_criterion.py |       11 |        2 |     82% |    58, 63 |
 | autoemulate/emulators/gaussian\_process\_utils/poly\_mean.py                 |       23 |        0 |    100% |           |
@@ -60,7 +60,7 @@
 | tests/test\_save.py                                                          |       62 |        2 |     97% |    30, 35 |
 | tests/test\_ui.py                                                            |       36 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      176 |        6 |     97% |48, 54, 59, 64, 69, 74 |
-|                                                                    **TOTAL** | **2921** |  **174** | **94%** |           |
+|                                                                    **TOTAL** | **2947** |  **198** | **93%** |           |
 
 
 ## Setup coverage badge
