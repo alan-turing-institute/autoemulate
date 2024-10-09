@@ -118,13 +118,13 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         n_episode=32,
         # training
         max_epochs=100,
-        lr=5e-2,
+        lr=5e-3,
         batch_size=16,
         activation=nn.ReLU,
         optimizer=torch.optim.AdamW,
         normalize_y=True,
         # misc
-        device=None,
+        device="cpu",
         random_state=None,
         attention=False,
     ):
@@ -272,7 +272,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
                 nn.GELU,
             ],
             "optimizer": [torch.optim.AdamW],  #
-            "lr": loguniform(1e-3, 2e-1),
+            "lr": loguniform(5e-4, 1e-3, 5e-3, 1e-2),
         }
         # # match search_type:
         # case "random":
