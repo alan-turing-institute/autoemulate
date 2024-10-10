@@ -16,8 +16,9 @@ from autoemulate.emulators.neural_networks.gp_module import CorrGPModule
 from autoemulate.utils import set_random_seed
 
 
-class GaussianProcessTorch(RegressorMixin, BaseEstimator):
-    """Exact Gaussian Process emulator build with GPyTorch.
+class GaussianProcessMT(RegressorMixin, BaseEstimator):
+    """Exact Multi-task Gaussian Process emulator build with GPyTorch. This
+    emulator is useful to model correlated outputs.
 
     Parameters
     ----------

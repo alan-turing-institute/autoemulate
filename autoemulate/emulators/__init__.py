@@ -3,7 +3,7 @@ from .conditional_neural_process import ConditionalNeuralProcess
 from .gaussian_process import GaussianProcess
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gaussian_process_sklearn import GaussianProcessSklearn
-from .gaussian_process_torch import GaussianProcessTorch
+from .gaussian_process_torch import GaussianProcessMT
 from .gradient_boosting import GradientBoosting
 from .light_gbm import LightGBM
 from .neural_net_sk import NeuralNetSk
@@ -30,14 +30,15 @@ model_registry.register_model(
     SupportVectorMachines().model_name, SupportVectorMachines, is_core=True
 )
 model_registry.register_model(
-    GaussianProcessTorch().model_name, GaussianProcessTorch, is_core=True
+    GaussianProcess().model_name, GaussianProcess, is_core=True
+)
+model_registry.register_model(
+    GaussianProcessMT().model_name, GaussianProcessMT, is_core=True
 )
 model_registry.register_model(
     ConditionalNeuralProcess().model_name, ConditionalNeuralProcess, is_core=True
 )
-model_registry.register_model(
-    GaussianProcess().model_name, GaussianProcess, is_core=True
-)
+
 
 # non-core models
 model_registry.register_model(
