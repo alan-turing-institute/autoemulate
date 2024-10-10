@@ -9,7 +9,6 @@ from sklearn.preprocessing._data import _handle_zeros_in_scale
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Real
 from skorch import NeuralNetRegressor
 from skorch.callbacks import EarlyStopping
 from skorch.callbacks import GradientNormClipping

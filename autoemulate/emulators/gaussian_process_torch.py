@@ -1,30 +1,13 @@
-from copy import deepcopy
-
 import gpytorch
 import numpy as np
 import torch
-from scipy.stats import loguniform
-from scipy.stats import randint
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
-from sklearn.exceptions import DataConversionWarning
-from sklearn.metrics import r2_score
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing._data import _handle_zeros_in_scale
 from sklearn.utils import check_array
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted
-from skopt.space import Categorical
-from skopt.space import Integer
-from skopt.space import Real
-from skorch.callbacks import Checkpoint
-from skorch.callbacks import EarlyStopping
-from skorch.callbacks import EpochScoring
 from skorch.callbacks import LRScheduler
-from skorch.callbacks import ProgressBar
-from skorch.dataset import Dataset
-from skorch.dataset import ValidSplit
-from skorch.helper import predefined_split
 from skorch.probabilistic import ExactGPRegressor
 
 from autoemulate.emulators.gaussian_process_utils import EarlyStoppingCustom

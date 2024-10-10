@@ -8,7 +8,6 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 from skopt.space import Categorical
-from skopt.space import Integer
 
 
 class SecondOrderPolynomial(BaseEstimator, RegressorMixin):

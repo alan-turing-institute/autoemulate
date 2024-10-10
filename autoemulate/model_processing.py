@@ -2,9 +2,6 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_short_model_name
-
 
 def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models if y is 2D.
