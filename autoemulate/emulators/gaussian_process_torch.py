@@ -59,7 +59,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
         max_epochs=50,
         normalize_y=True,
         # misc
-        device=None,
+        device="cpu",
         random_state=None,
     ):
         self.mean_module = mean_module
@@ -167,11 +167,7 @@ class GaussianProcessTorch(RegressorMixin, BaseEstimator):
                 ),
             ],
             verbose=0,
-            device=self.device
-            if self.device is not None
-            else "cuda"
-            if torch.cuda.is_available()
-            else "cpu",
+            device=self.device,
         )
         self.model_.fit(X, y)
         self.is_fitted_ = True
