@@ -100,18 +100,18 @@ class RandomForest(BaseEstimator, RegressorMixin):
             "n_estimators": randint(50, 500),
             "min_samples_split": randint(2, 20),
             "min_samples_leaf": randint(1, 10),
-            "max_features": [None, "sqrt", "log2"],
+            "max_features": ["sqrt", "log2", None, 1.0],
             "bootstrap": [True, False],
             "oob_score": [True, False],
-            # # "max_depth": [None] + list(range(3, 20)),  # None plus a range of depths
-            "max_samples": [None, 0.5, 0.75],
+            "max_depth": [None] + list(range(5, 30, 5)),  # None plus a range of depths
+            "max_samples": [None, 0.5, 0.7, 0.9],
         }
 
         param_space_bayes = {
             "n_estimators": Integer(50, 500),
             "min_samples_split": Integer(2, 20),
             "min_samples_leaf": Integer(1, 10),
-            "max_features": Categorical([None, "sqrt", "log2"]),
+            "max_features": ["sqrt", "log2", 1.0, None],
             "bootstrap": Categorical([True, False]),
             "oob_score": Categorical([True, False]),
             # "max_depth": Categorical([None] + list(range(3, 20))),  # None plus a range of depths
@@ -131,27 +131,3 @@ class RandomForest(BaseEstimator, RegressorMixin):
 
     def _more_tags(self):
         return {"multioutput": True}
-
-    # def score(self, X, y, metric):
-    #     """Returns the score of the emulator.
-
-    #     Parameters
-    #     ----------
-    #     X : array-like, shape (n_samples, n_features)
-    #         Simulation input.
-    #     y : array-like, shape (n_samples, n_outputs)
-    #         Simulation output.
-    #     metric : str
-    #         Name of the metric to use, currently either rsme or r2.
-    #     Returns
-    #     -------
-    #     metric : float
-    #         Metric of the emulator.
-
-    #     """
-    #     predictions = self.predict(X)
-    #     return metric(y, predictions)
-
-    # def _more_tags(self):
-    #     return {'non_deterministic': True,
-    #             'multioutput': True}
