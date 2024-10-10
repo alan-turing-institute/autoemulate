@@ -109,7 +109,7 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
             "min_samples_leaf": randint(1, 6),
             "subsample": uniform(0.6, 0.4),  # 0.4 is the range width (1.0 - 0.6)
             "max_features": ["sqrt", "log2", None],
-            "ccp_alpha": loguniform(0.01, 0.1),
+            "ccp_alpha": loguniform(0.001, 0.1),
         }
 
         param_space_bayes = {
