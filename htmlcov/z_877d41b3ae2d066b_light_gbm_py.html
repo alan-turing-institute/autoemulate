@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_877d41b3ae2d066b_neural_net_sk_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.1">coverage.py v7.6.1</a>,
-            created at 2024-10-02 10:46 +0000
+            created at 2024-10-10 12:41 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -190,7 +190,7 @@
     <p class="run"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_grid_params</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">search_type</span><span class="op">=</span><span class="str">"random"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">        <span class="str">"""Returns the grid parameters of the emulator."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">        <span class="nam">param_space_random</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">            <span class="str">"boosting_type"</span><span class="op">:</span> <span class="op">[</span><span class="str">"gbdt"</span><span class="op">,</span> <span class="str">"dart"</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">            <span class="str">"boosting_type"</span><span class="op">:</span> <span class="op">[</span><span class="str">"gbdt"</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="str">"num_leaves"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="num">10</span><span class="op">,</span> <span class="num">100</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">            <span class="str">"max_depth"</span><span class="op">:</span> <span class="nam">randint</span><span class="op">(</span><span class="op">-</span><span class="num">1</span><span class="op">,</span> <span class="num">12</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">            <span class="str">"learning_rate"</span><span class="op">:</span> <span class="nam">loguniform</span><span class="op">(</span><span class="num">0.001</span><span class="op">,</span> <span class="num">0.1</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -201,7 +201,7 @@
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">        <span class="nam">param_space_bayes</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="str">"boosting_type"</span><span class="op">:</span> <span class="nam">Categorical</span><span class="op">(</span><span class="op">[</span><span class="str">"gbdt"</span><span class="op">,</span> <span class="str">"dart"</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="str">"boosting_type"</span><span class="op">:</span> <span class="nam">Categorical</span><span class="op">(</span><span class="op">[</span><span class="str">"gbdt"</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">            <span class="str">"num_leaves"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="num">10</span><span class="op">,</span> <span class="num">100</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">            <span class="str">"max_depth"</span><span class="op">:</span> <span class="nam">Integer</span><span class="op">(</span><span class="op">-</span><span class="num">1</span><span class="op">,</span> <span class="num">12</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">            <span class="str">"learning_rate"</span><span class="op">:</span> <span class="nam">Real</span><span class="op">(</span><span class="num">0.001</span><span class="op">,</span> <span class="num">0.1</span><span class="op">,</span> <span class="nam">prior</span><span class="op">=</span><span class="str">"log-uniform"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -233,7 +233,7 @@
             <a class="nav" href="z_877d41b3ae2d066b_neural_net_sk_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.1">coverage.py v7.6.1</a>,
-            created at 2024-10-02 10:46 +0000
+            created at 2024-10-10 12:41 +0000
         </p>
     </div>
 </footer>
