@@ -1,5 +1,6 @@
 from ..model_registry import ModelRegistry
 from .conditional_neural_process import ConditionalNeuralProcess
+from .gaussian_process import GaussianProcess
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gaussian_process_sklearn import GaussianProcessSklearn
 from .gaussian_process_torch import GaussianProcessTorch
@@ -33,6 +34,9 @@ model_registry.register_model(
 )
 model_registry.register_model(
     ConditionalNeuralProcess().model_name, ConditionalNeuralProcess, is_core=True
+)
+model_registry.register_model(
+    GaussianProcess().model_name, GaussianProcess, is_core=True
 )
 
 # non-core models
