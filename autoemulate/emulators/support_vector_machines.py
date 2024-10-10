@@ -134,8 +134,6 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
             "C": uniform(1.0, 3.0),
             "epsilon": uniform(0.1, 0.3),
             "shrinking": [True, False],
-            "cache_size": randint(200, 401),
-            "verbose": [False],
             "max_iter": [-1],
         }
 

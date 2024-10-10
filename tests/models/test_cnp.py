@@ -16,10 +16,10 @@ def encoder():
     output_dim = 2
     hidden_dim = 64
     latent_dim = 32
-    hidden_layers = 3
+    hidden_layers_enc = 3
     activation = nn.ReLU
     return Encoder(
-        input_dim, output_dim, hidden_dim, latent_dim, hidden_layers, activation
+        input_dim, output_dim, hidden_dim, latent_dim, hidden_layers_enc, activation
     )
 
 
@@ -96,10 +96,10 @@ def decoder():
     latent_dim = 64
     hidden_dim = 128
     output_dim = 1
-    hidden_layers = 3
+    hidden_layers_dec = 5
     activation = nn.ReLU
     return Decoder(
-        input_dim, latent_dim, hidden_dim, output_dim, hidden_layers, activation
+        input_dim, latent_dim, hidden_dim, output_dim, hidden_layers_dec, activation
     )
 
 
@@ -150,7 +150,8 @@ def cnp_module():
         output_dim=1,
         hidden_dim=32,
         latent_dim=64,
-        hidden_layers=2,
+        hidden_layers_enc=2,
+        hidden_layers_dec=2,
         activation=nn.ReLU,
     )
 

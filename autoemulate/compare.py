@@ -1,16 +1,9 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
-from sklearn.metrics import make_scorer
-from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
-from sklearn.model_selection import PredefinedSplit
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 from tqdm.autonotebook import tqdm
 
@@ -27,7 +20,6 @@ from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name

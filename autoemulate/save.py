@@ -1,10 +1,6 @@
-import json
-import os
 from pathlib import Path
 
 import joblib
-import numpy as np
-import sklearn
 
 from autoemulate.utils import get_model_name
 

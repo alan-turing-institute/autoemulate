@@ -10,7 +10,6 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 from skopt.space import Categorical
-from skopt.space import Integer
 from skopt.space import Real
 
 from autoemulate.utils import _suppress_convergence_warnings
