@@ -85,12 +85,7 @@ class RadialBasisFunctions(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        # param_space_random = {
-        #     #"smoothing": uniform(0.0, 1.0),
-        #     "kernel": ["linear", "thin_plate_spline", "cubic", "quintic", "multiquadric", "inverse_multiquadric", "gaussian"],
-        #     #"epsilon": uniform(0.0, 1.0),
-        #     "degree": randint(0, 5),
-        # }
+
         param_space_random = [
             {
                 "kernel": ["linear", "multiquadric"],
