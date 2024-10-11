@@ -49,42 +49,39 @@ class CorrGPModule(gpytorch.models.ExactGP):
 # gaussian_process_torch.py without arguments, but then we can't run the code below.
 # also, needs a ScaleKernel too
 
-# class IndepGPModule(gpytorch.models.ExactGP):
-#     """
-#     Multioutput GP for independent outputs. Fits one GP per output.
-#     """
 
-#     def __init__(
-#         self,
-#         likelihood=None,
-#         mean=None,
-#         covar=None,
-#     ):
-#         super().__init__(train_inputs=None, train_targets=None, likelihood=likelihood)
-#         num_tasks = likelihood.num_tasks
-#         # create multioutput through batch shape
-#         # TODO: this might need a ScaleKernel too
-#         self.mean_module = mean.initialize(batch_shape=torch.Size([num_tasks]))
-#         #self.mean_module.batch_shape = torch.Size([num_tasks])
-#         self.covar_module = covar
-#         self.covar_module.initialize(batch_shape=torch.Size([num_tasks]))
+class GPModule(gpytorch.models.ExactGP):
+    """
+    Multioutput GP for independent outputs. Fits one GP per output.
+    """
 
-#     def forward(self, x):
-#         """
-#         Forward pass of the GP module.
+    def __init__(
+        self,
+        likelihood=None,
+        mean=None,
+        covar=None,
+    ):
+        super().__init__(train_inputs=None, train_targets=None, likelihood=likelihood)
+        # create multioutput through batch shape
+        # TODO: this might need a ScaleKernel too
+        self.mean_module = mean
+        # self.mean_module.batch_shape = torch.Size([num_tasks])
+        self.covar_module = covar
 
-#         Parameters
-#         ----------
-#         x: (batch_size, n_points, input_dim)
+    def forward(self, x):
+        """
+        Forward pass of the GP module.
 
-#         Returns
-#         -------
-#         gpytorch.distributions.MultitaskMultivariateNormal
-#         """
-#         print(f"x.shape: {x.shape}")
-#         mean_x = self.mean_module(x)
-#         print(f"mean_x.shape: {mean_x.shape}")
-#         covar_x = self.covar_module(x)
-#         return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
-#             gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
-#         )
+        Parameters
+        ----------
+        x: (batch_size, n_points, input_dim)
+
+        Returns
+        -------
+        gpytorch.distributions.MultitaskMultivariateNormal
+        """
+        mean_x = self.mean_module(x)
+        covar_x = self.covar_module(x)
+        return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
+            gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+        )

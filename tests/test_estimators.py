@@ -15,8 +15,8 @@ from sklearn.utils.estimator_checks import set_random_state
 
 from autoemulate.emulators import ConditionalNeuralProcess
 from autoemulate.emulators import GaussianProcessMOGP
+from autoemulate.emulators import GaussianProcessMT
 from autoemulate.emulators import GaussianProcessSklearn
-from autoemulate.emulators import GaussianProcessTorch
 from autoemulate.emulators import GradientBoosting
 from autoemulate.emulators import LightGBM
 from autoemulate.emulators import NeuralNetSk
@@ -37,7 +37,7 @@ from autoemulate.emulators import SupportVectorMachines
         RadialBasisFunctions(),
         LightGBM(),
         ConditionalNeuralProcess(random_state=42),
-        GaussianProcessTorch(random_state=42),
+        GaussianProcessMT(random_state=42),
     ]
 )
 def test_check_estimator(estimator, check):
