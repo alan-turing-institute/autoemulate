@@ -33,14 +33,14 @@ model_registry.register_model(
     GaussianProcess().model_name, GaussianProcess, is_core=True
 )
 model_registry.register_model(
-    GaussianProcessMT().model_name, GaussianProcessMT, is_core=True
-)
-model_registry.register_model(
     ConditionalNeuralProcess().model_name, ConditionalNeuralProcess, is_core=True
 )
 
 
 # non-core models
+model_registry.register_model(
+    GaussianProcessMT().model_name, GaussianProcessMT, is_core=False
+)
 model_registry.register_model(
     GaussianProcessSklearn().model_name, GaussianProcessSklearn, is_core=False
 )
