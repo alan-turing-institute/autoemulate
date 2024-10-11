@@ -3,7 +3,7 @@ import pytest
 import torch
 from sklearn.datasets import make_regression
 
-from autoemulate.emulators.gaussian_process_torch import GaussianProcessMT
+from autoemulate.emulators.gaussian_process_mt import GaussianProcessMT
 
 
 @pytest.fixture

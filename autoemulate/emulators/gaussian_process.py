@@ -19,6 +19,8 @@ from autoemulate.utils import set_random_seed
 class GaussianProcess(RegressorMixin, BaseEstimator):
     """Exact Gaussian Process emulator build with GPyTorch.
 
+    Batched Multi-Output GP, treating outputs independently.
+
     Parameters
     ----------
     mean_module : GP mean, defaults to gpytorch.means.ConstantMean() when None
@@ -65,7 +67,8 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
         if module is None:
             return default_module
         if callable(module):
-            return module(n_features, n_outputs)
+            # torch.Size is needed to specify the batch shape
+            return module(n_features, torch.Size([n_outputs]))
         else:
             ValueError("module must be callable or None")
 
@@ -100,23 +103,28 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
         y = y.astype(np.float32)
 
-        # Normalize target value
-        # the zero handler is from sklearn
+        # GP's work better when the target values are normalized
         if self.normalize_y:
             self._y_train_mean = np.mean(y, axis=0)
             self._y_train_std = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
             y = (y - self._y_train_mean) / self._y_train_std
 
-        # mean and covar modules
+        # default modules
         default_mean_module = gpytorch.means.ConstantMean(
             batch_shape=torch.Size([self.n_outputs_])
         )
+
+        # combined RBF + constant kernel works well in a lot of cases
+        rbf = gpytorch.kernels.RBFKernel(
+            ard_num_dims=self.n_features_in_,  # different lengthscale for each feature
+            batch_shape=torch.Size([self.n_outputs_]),  # batched multioutput
+            # seems to work better when we initialize the lengthscale
+        ).initialize(lengthscale=torch.ones(self.n_features_in_) * 1.5)
+        constant = gpytorch.kernels.ConstantKernel()
+        combined = rbf + constant
+
         default_covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel(
-                ard_num_dims=self.n_features_in_,
-                batch_shape=torch.Size([self.n_outputs_]),
-            ).initialize(lengthscale=torch.ones(self.n_features_in_) * 1.5),
-            batch_shape=torch.Size([self.n_outputs_]),
+            combined, batch_shape=torch.Size([self.n_outputs_])
         )
 
         mean_module = self._get_module(
@@ -128,6 +136,12 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
             self.n_features_in_,
             self.n_outputs_,
         )
+
+        # wrapping in ScaleKernel is generally good, as it adds an outputscale parameter
+        if not isinstance(covar_module, gpytorch.kernels.ScaleKernel):
+            covar_module = gpytorch.kernels.ScaleKernel(
+                covar_module, batch_shape=torch.Size([self.n_outputs_])
+            )
 
         # model
         self.model_ = ExactGPRegressor(
@@ -207,75 +221,96 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters for the emulator."""
 
-        # wrapper functions for kernel initialization at fit time (to provide ard_num_dims)
-        # kernels
-        def rbf_kernel(n_features, n_outputs):
+        def rbf(n_features, n_outputs):
             return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features, batch_shape=torch.Size([n_outputs])
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
             ).initialize(lengthscale=torch.ones(n_features) * 1.5)
 
         def matern_5_2_kernel(n_features, n_outputs):
             return gpytorch.kernels.MaternKernel(
-                nu=2.5, ard_num_dims=n_features, batch_shape=torch.Size([n_outputs])
+                nu=2.5,
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
             )
 
         def matern_3_2_kernel(n_features, n_outputs):
             return gpytorch.kernels.MaternKernel(
-                nu=1.5, ard_num_dims=n_features, batch_shape=torch.Size([n_outputs])
+                nu=1.5,
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
             )
 
         def rq_kernel(n_features, n_outputs):
             return gpytorch.kernels.RQKernel(
-                ard_num_dims=n_features, batch_shape=torch.Size([n_outputs])
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
+            )
+
+        def rbf_plus_constant(n_features, n_outputs):
+            return (
+                gpytorch.kernels.RBFKernel(
+                    ard_num_dims=n_features,
+                    batch_shape=n_outputs,
+                ).initialize(lengthscale=torch.ones(n_features) * 1.5)
+                + gpytorch.kernels.ConstantKernel()
             )
 
         # combinations
         def rbf_plus_linear(n_features, n_outputs):
             return gpytorch.kernels.RBFKernel(
                 ard_num_dims=n_features,
-                batch_shape=torch.Size([n_outputs]),
+                batch_shape=n_outputs,
             ) + gpytorch.kernels.LinearKernel(
                 ard_num_dims=n_features,
-                batch_shape=torch.Size([n_outputs]),
+                batch_shape=n_outputs,
             )
 
         def matern_5_2_plus_rq(n_features, n_outputs):
             return gpytorch.kernels.MaternKernel(
-                nu=2.5, ard_num_dims=n_features, batch_shape=torch.Size([n_outputs])
-            ) + gpytorch.kernels.RQKernel(ard_num_dims=n_features)
+                nu=2.5,
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
+            ) + gpytorch.kernels.RQKernel(
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
+            )
 
         def rbf_times_linear(n_features, n_outputs):
             return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features, batch_shape=torch.Size([n_outputs])
-            ) * gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
+            ) * gpytorch.kernels.LinearKernel(
+                ard_num_dims=n_features,
+                batch_shape=n_outputs,
+            )
 
-        # # means
+        # means
         def constant_mean(n_features, n_outputs):
-            return gpytorch.means.ConstantMean(batch_shape=torch.Size([n_outputs]))
+            return gpytorch.means.ConstantMean(batch_shape=n_outputs)
 
         def zero_mean(n_features, n_outputs):
-            return gpytorch.means.ZeroMean(batch_shape=torch.Size([n_outputs]))
+            return gpytorch.means.ZeroMean(batch_shape=n_outputs)
 
         def linear_mean(n_features, n_outputs):
             return gpytorch.means.LinearMean(
-                input_size=n_features, batch_shape=torch.Size([n_outputs])
+                input_size=n_features, batch_shape=n_outputs
             )
 
         def poly_mean(n_features, n_outputs):
-            return PolyMean(
-                degree=2, input_size=n_features, batch_shape=torch.Size([n_outputs])
-            )
+            return PolyMean(degree=2, input_size=n_features, batch_shape=n_outputs)
 
         if search_type == "random":
             param_space = {
                 "covar_module": [
-                    rbf_kernel,
+                    rbf,
                     matern_5_2_kernel,
                     matern_3_2_kernel,
                     rq_kernel,
+                    rbf_plus_constant,
                     rbf_plus_linear,
-                    matern_5_2_plus_rq,
                     rbf_times_linear,
+                    matern_5_2_plus_rq,
                 ],
                 "mean_module": [
                     constant_mean,
