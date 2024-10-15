@@ -108,9 +108,10 @@ class AutoEmulate:
             self.X, test_size=self.test_set_size, random_state=42
         )
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
+        print(self.model_registry.get_model_names(models))
         self.models = _process_models(
             model_registry=self.model_registry,
-            models=list(self.model_names.keys()),
+            model_names=list(self.model_names.keys()),
             y=self.y,
             scale=scale,
             scaler=scaler,
