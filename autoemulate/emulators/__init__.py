@@ -1,5 +1,6 @@
 from ..model_registry import ModelRegistry
 from .conditional_neural_process import ConditionalNeuralProcess
+from .conditional_neural_process_attn import AttentiveConditionalNeuralProcess
 from .gaussian_process import GaussianProcess
 from .gaussian_process_mogp import GaussianProcessMOGP
 from .gaussian_process_mt import GaussianProcessMT
@@ -38,6 +39,11 @@ model_registry.register_model(
 
 
 # non-core models
+model_registry.register_model(
+    AttentiveConditionalNeuralProcess().model_name,
+    AttentiveConditionalNeuralProcess,
+    is_core=False,
+)
 model_registry.register_model(
     GaussianProcessMT().model_name, GaussianProcessMT, is_core=False
 )

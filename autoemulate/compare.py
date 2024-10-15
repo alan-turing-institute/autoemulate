@@ -110,7 +110,7 @@ class AutoEmulate:
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
         self.models = _process_models(
             model_registry=self.model_registry,
-            models=list(self.model_names.keys()),
+            model_names=list(self.model_names.keys()),
             y=self.y,
             scale=scale,
             scaler=scaler,

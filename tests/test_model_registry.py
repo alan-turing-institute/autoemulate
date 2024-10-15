@@ -126,3 +126,12 @@ def test_get_models_mix(model_registry):
     assert len(models) == 2
     assert models[0].__class__ == RadialBasisFunctions
     assert models[1].__class__ == ConditionalNeuralProcess
+
+
+def test_get_noncore_model_w_is_core_true(model_registry):
+    # this should retrieve gps, a non-core model, despite the is_core=True flag
+    # only needed in compare.py
+    model_names = model_registry.get_model_names(models="gps", is_core=True)
+    assert isinstance(model_names, dict)
+    assert len(model_names) == 1
+    assert model_names["GaussianProcessSklearn"] == "gps"
