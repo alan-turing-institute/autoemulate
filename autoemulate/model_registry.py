@@ -23,7 +23,7 @@ class ModelRegistry:
         models : str or list of str
             The name(s) of the model(s) to get long and short names for.
         is_core : bool
-            Whether to return only core model names.
+            Whether to return only core model names in case `models` is None.
 
         Returns
         -------
@@ -61,7 +61,7 @@ class ModelRegistry:
                 k: v for k, v in model_names.items() if k in models or v in models
             }
 
-        if is_core:
+        if models is None and is_core:
             model_names = {
                 k: v for k, v in model_names.items() if k in self.core_model_names
             }

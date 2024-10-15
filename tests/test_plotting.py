@@ -19,7 +19,7 @@ from autoemulate.plotting import check_multioutput
 def ae_single_output():
     X, y = make_regression(n_samples=50, n_features=2, noise=0.5, random_state=42)
     em = AutoEmulate()
-    em.setup(X, y, models=["gpt", "rbf", "sop"])
+    em.setup(X, y, models=["gp", "rbf", "sop"])
     em.compare()
     return em
 
@@ -30,7 +30,7 @@ def ae_multi_output():
         n_samples=50, n_features=2, n_targets=2, noise=0.5, random_state=42
     )
     em = AutoEmulate()
-    em.setup(X, y, models=["gpt", "rbf", "sop"])
+    em.setup(X, y, models=["gp", "rbf", "sop"])
     em.compare()
     return em
 
@@ -108,9 +108,9 @@ def test_predict_with_optional_std(ae_single_output):
     assert y_pred.shape == (X.shape[0],)
     assert y_std is None
 
-    # test whether the function correctly returns the std for gpt
-    gpt = ae_single_output.get_model(name="gpt")
-    y_pred, y_std = _predict_with_optional_std(gpt, X)
+    # test whether the function correctly returns the std for gp
+    gp = ae_single_output.get_model(name="gp")
+    y_pred, y_std = _predict_with_optional_std(gp, X)
     assert y_pred.shape == (X.shape[0],)
     assert y_std.shape == (X.shape[0],)
     assert np.all(y_std >= 0)
@@ -316,37 +316,37 @@ def test_plot_cv_output_index_actual_vs_predicted_out_of_range(ae_multi_output):
 
 # test plots with all cv folds for a single model
 def test_plot_cv_model(ae_single_output):
-    fig = ae_single_output.plot_cv(model="gpt")
+    fig = ae_single_output.plot_cv(model="gp")
     assert isinstance(fig, plt.Figure)
     assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
 
 
 def test_plot_cv_model_input_index(ae_single_output):
-    fig = ae_single_output.plot_cv(model="gpt", input_index=1)
+    fig = ae_single_output.plot_cv(model="gp", input_index=1)
     assert isinstance(fig, plt.Figure)
     assert len(fig.axes) == 6
 
 
 def test_plot_cv_model_output_index(ae_multi_output):
-    fig = ae_multi_output.plot_cv(model="gpt", output_index=1)
+    fig = ae_multi_output.plot_cv(model="gp", output_index=1)
     assert isinstance(fig, plt.Figure)
     assert len(fig.axes) == 6
 
 
 def test_plot_cv_model_input_index_out_of_range(ae_single_output):
     with pytest.raises(ValueError):
-        ae_single_output.plot_cv(model="gpt", input_index=2)
+        ae_single_output.plot_cv(model="gp", input_index=2)
 
 
 def test_plot_cv_model_output_index_out_of_range(ae_multi_output):
     with pytest.raises(ValueError):
-        ae_multi_output.plot_cv(model="gpt", output_index=2)
+        ae_multi_output.plot_cv(model="gp", output_index=2)
 
 
 # ------------------------------ test _plot_model ------------------------------
 def test__plot_model_int(ae_single_output):
     fig = _plot_model(
-        ae_single_output.get_model(name="gpt"),
+        ae_single_output.get_model(name="gp"),
         ae_single_output.X,
         ae_single_output.y,
         style="Xy",
@@ -359,7 +359,7 @@ def test__plot_model_int(ae_single_output):
 
 def test__plot_model_list(ae_single_output):
     fig = _plot_model(
-        ae_single_output.get_model(name="gpt"),
+        ae_single_output.get_model(name="gp"),
         ae_single_output.X,
         ae_single_output.y,
         style="Xy",
@@ -373,7 +373,7 @@ def test__plot_model_list(ae_single_output):
 def test__plot_model_int_out_of_range(ae_single_output):
     with pytest.raises(ValueError):
         _plot_model(
-            ae_single_output.get_model(name="gpt"),
+            ae_single_output.get_model(name="gp"),
             ae_single_output.X,
             ae_single_output.y,
             style="Xy",
@@ -384,7 +384,7 @@ def test__plot_model_int_out_of_range(ae_single_output):
 
 def test__plot_model_actual_vs_predicted(ae_single_output):
     fig = _plot_model(
-        ae_single_output.get_model(name="gpt"),
+        ae_single_output.get_model(name="gp"),
         ae_single_output.X,
         ae_single_output.y,
         style="actual_vs_predicted",

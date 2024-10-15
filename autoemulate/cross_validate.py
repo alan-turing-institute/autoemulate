@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
-from sklearn.model_selection import PredefinedSplit
-from sklearn.model_selection import train_test_split
 
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_params

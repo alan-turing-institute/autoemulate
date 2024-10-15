@@ -150,7 +150,8 @@ def cnp_module():
         output_dim=1,
         hidden_dim=32,
         latent_dim=64,
-        hidden_layers=2,
+        hidden_layers_enc=2,
+        hidden_layers_dec=2,
         activation=nn.ReLU,
     )
 

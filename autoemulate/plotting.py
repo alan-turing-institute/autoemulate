@@ -1,5 +1,4 @@
 import inspect
-import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +6,6 @@ from sklearn.metrics import PredictionErrorDisplay
 from sklearn.pipeline import Pipeline
 
 from autoemulate.utils import _ensure_2d
-from autoemulate.utils import get_model_name
 
 
 def _validate_inputs(cv_results, model_name):

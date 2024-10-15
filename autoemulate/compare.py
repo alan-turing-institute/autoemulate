@@ -1,16 +1,9 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
-from sklearn.metrics import make_scorer
-from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
-from sklearn.model_selection import PredefinedSplit
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 from tqdm.autonotebook import tqdm
 
@@ -120,7 +113,7 @@ class AutoEmulate:
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
         self.models = _process_models(
             model_registry=self.model_registry,
-            models=list(self.model_names.keys()),
+            model_names=list(self.model_names.keys()),
             y=self.y,
             scale=scale,
             scaler=scaler,
