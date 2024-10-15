@@ -16,6 +16,7 @@ from skorch.callbacks import LRScheduler
 from torch import nn
 
 from autoemulate.emulators.neural_networks.cnp_module import CNPModule
+from autoemulate.emulators.neural_networks.cnp_module_attn import AttnCNPModule
 from autoemulate.emulators.neural_networks.datasets import cnp_collate_fn
 from autoemulate.emulators.neural_networks.datasets import CNPDataset
 from autoemulate.emulators.neural_networks.losses import CNPLoss
@@ -140,9 +141,6 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         self.activation = activation
         self.optimizer = optimizer
         self.normalize_y = normalize_y
-        if attention:
-            warnings.warn("Attention is not implemented yet, setting to False.")
-            attention = False
         self.attention = attention
         self.device = device
         self.random_state = random_state
@@ -181,8 +179,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
         if self.random_state is not None:
             set_random_seed(self.random_state)
 
+        module = CNPModule if not self.attention else AttnCNPModule
         self.model_ = NeuralNetRegressor(
-            CNPModule,
+            module,
             module__input_dim=self.input_dim_,
             module__output_dim=self.output_dim_,
             module__hidden_dim=self.hidden_dim,

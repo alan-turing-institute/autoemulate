@@ -13,7 +13,9 @@ from sklearn.utils.estimator_checks import check_estimators_dtypes
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.estimator_checks import set_random_state
 
+from autoemulate.emulators import AttentiveConditionalNeuralProcess
 from autoemulate.emulators import ConditionalNeuralProcess
+from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import GaussianProcessMOGP
 from autoemulate.emulators import GaussianProcessMT
 from autoemulate.emulators import GaussianProcessSklearn
@@ -38,6 +40,8 @@ from autoemulate.emulators import SupportVectorMachines
         LightGBM(),
         ConditionalNeuralProcess(random_state=42),
         GaussianProcessMT(random_state=42),
+        AttentiveConditionalNeuralProcess(random_state=42),
+        GaussianProcess(random_state=42),
     ]
 )
 def test_check_estimator(estimator, check):

@@ -42,7 +42,7 @@ model_registry.register_model(
 model_registry.register_model(
     AttentiveConditionalNeuralProcess().model_name,
     AttentiveConditionalNeuralProcess,
-    is_core=True,
+    is_core=False,
 )
 model_registry.register_model(
     GaussianProcessMT().model_name, GaussianProcessMT, is_core=False

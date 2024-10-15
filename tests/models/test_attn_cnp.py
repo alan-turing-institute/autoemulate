@@ -1,7 +1,12 @@
 import pytest
 import torch
 import torch.nn as nn
+from sklearn.datasets import make_regression
+from sklearn.model_selection import RandomizedSearchCV
 
+from autoemulate.emulators.conditional_neural_process_attn import (
+    AttentiveConditionalNeuralProcess,
+)
 from autoemulate.emulators.neural_networks.cnp_module_attn import AttnCNPModule
 from autoemulate.emulators.neural_networks.cnp_module_attn import Decoder
 from autoemulate.emulators.neural_networks.cnp_module_attn import Encoder
@@ -218,3 +223,22 @@ def test_attn_cnp_module_forward_shape_2d(attn_cnp_module_2d):
 
     assert mean.shape == (b, n, dy)
     assert logvar.shape == (b, n, dy)
+
+
+# test whether param search works
+def test_attn_cnp_param_search():
+    X, y = make_regression(n_samples=30, n_features=5, n_targets=2, random_state=0)
+    param_grid = {
+        "hidden_dim": [16, 32],
+        "latent_dim": [16, 32],
+    }
+
+    mod = AttentiveConditionalNeuralProcess()
+
+    grid_search = RandomizedSearchCV(
+        estimator=mod, param_distributions=param_grid, cv=3, n_iter=3
+    )
+    grid_search.fit(X, y)
+
+    assert grid_search.best_score_ > 0.3
+    assert grid_search.best_params_["hidden_dim"] in [16, 32]
