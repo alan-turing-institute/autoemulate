@@ -2,9 +2,9 @@ import pytest
 import torch
 import torch.nn as nn
 
-from autoemulate.emulators.neural_networks.attn_cnp_module import AttnCNPModule
-from autoemulate.emulators.neural_networks.attn_cnp_module import Decoder
-from autoemulate.emulators.neural_networks.attn_cnp_module import Encoder
+from autoemulate.emulators.neural_networks.cnp_module_attn import AttnCNPModule
+from autoemulate.emulators.neural_networks.cnp_module_attn import Decoder
+from autoemulate.emulators.neural_networks.cnp_module_attn import Encoder
 
 
 # encoder ----------------------------
@@ -173,6 +173,19 @@ def attn_cnp_module():
     )
 
 
+@pytest.fixture
+def attn_cnp_module_2d():
+    return AttnCNPModule(
+        input_dim=2,
+        output_dim=2,
+        hidden_dim=32,
+        latent_dim=64,
+        hidden_layers_enc=2,
+        hidden_layers_dec=2,
+        activation=nn.ReLU,
+    )
+
+
 def test_attn_cnp_module_initialization(attn_cnp_module):
     assert isinstance(attn_cnp_module, AttnCNPModule)
     assert isinstance(attn_cnp_module.encoder, Encoder)
@@ -193,15 +206,15 @@ def test_attn_cnp_module_forward_shape(attn_cnp_module):
     assert logvar.shape == (b, n, dy)
 
 
-def test_attn_cnp_module_forward_shape_2d(attn_cnp_module):
-    b, n, dx = 32, 24, 2
+def test_attn_cnp_module_forward_shape_2d(attn_cnp_module_2d):
+    n_points = 16
+    b, n, dx = 32, n_points, 2
     dy = 2
-    X = torch.randn(b, n, dx)
-    y = torch.randn(b, n, dy)
-    # re-initialise with 2 output dims
-    attn_cnp_module = AttnCNPModule(
-        input_dim=2, output_dim=2, hidden_dim=32, latent_dim=64, n_context_points=16
-    )
-    mean, logvar = attn_cnp_module(X, y)
+    X_context = torch.randn(b, n_points, dx)
+    y_context = torch.randn(b, n_points, dy)
+    X_target = torch.randn(b, n, dx)
+
+    mean, logvar = attn_cnp_module_2d(X_context, y_context, X_target)
+
     assert mean.shape == (b, n, dy)
     assert logvar.shape == (b, n, dy)
