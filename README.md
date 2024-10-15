@@ -9,8 +9,9 @@
 | autoemulate/cross\_validate.py                                               |       44 |        7 |     84% |61-79, 150 |
 | autoemulate/data\_splitting.py                                               |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                                      |       12 |        0 |    100% |           |
-| autoemulate/emulators/\_\_init\_\_.py                                        |       25 |        0 |    100% |           |
-| autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        6 |     94% |144-145, 254-255, 293, 307 |
+| autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
+| autoemulate/emulators/conditional\_neural\_process.py                        |      101 |        3 |     97% |253-254, 306 |
+| autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py                                   |      105 |       11 |     90% |73, 225, 231, 245, 251, 261, 280, 290, 293, 301, 330 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       39 |       22 |     44% |20, 37-42, 61-67, 71-83, 87, 90 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       98 |       29 |     70% |68-71, 207-278 |
@@ -24,6 +25,7 @@
 | autoemulate/emulators/neural\_net\_sk.py                                     |       48 |        7 |     85% |   101-135 |
 | autoemulate/emulators/neural\_networks/\_\_init\_\_.py                       |        0 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/cnp\_module.py                        |       49 |        0 |    100% |           |
+| autoemulate/emulators/neural\_networks/cnp\_module\_attn.py                  |       52 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/datasets.py                           |       49 |        1 |     98% |        11 |
 | autoemulate/emulators/neural\_networks/gp\_module.py                         |       23 |        0 |    100% |           |
 | autoemulate/emulators/neural\_networks/losses.py                             |       12 |        0 |    100% |           |
@@ -42,6 +44,7 @@
 | autoemulate/save.py                                                          |       36 |        3 |     92% |     28-30 |
 | autoemulate/utils.py                                                         |      118 |        6 |     95% |37, 56, 64, 179, 364-365 |
 | tests/\_\_init\_\_.py                                                        |        0 |        0 |    100% |           |
+| tests/models/test\_attn\_cnp.py                                              |      147 |        0 |    100% |           |
 | tests/models/test\_cnp.py                                                    |      108 |        0 |    100% |           |
 | tests/models/test\_cnp\_dataset.py                                           |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                |       66 |        4 |     94% |     62-65 |
@@ -50,19 +53,19 @@
 | tests/test\_data\_splitting.py                                               |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                      |       13 |        0 |    100% |           |
 | tests/test\_end\_to\_end.py                                                  |       39 |        0 |    100% |           |
-| tests/test\_estimators.py                                                    |       23 |        0 |    100% |           |
+| tests/test\_estimators.py                                                    |       25 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                                          |       22 |        0 |    100% |           |
 | tests/test\_gaussian\_process\_utils.py                                      |       76 |        0 |    100% |           |
 | tests/test\_hyperparam\_searching.py                                         |       48 |        0 |    100% |           |
 | tests/test\_logging\_config.py                                               |       51 |        0 |    100% |           |
 | tests/test\_model\_processing.py                                             |       54 |        0 |    100% |           |
-| tests/test\_model\_registry.py                                               |       81 |        0 |    100% |           |
+| tests/test\_model\_registry.py                                               |       86 |        0 |    100% |           |
 | tests/test\_plotting.py                                                      |      194 |        7 |     96% |44, 54, 76-77, 85-86, 94 |
 | tests/test\_printing.py                                                      |       19 |        0 |    100% |           |
 | tests/test\_save.py                                                          |       62 |        2 |     97% |    30, 35 |
 | tests/test\_ui.py                                                            |       36 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      176 |        6 |     97% |48, 54, 59, 64, 69, 74 |
-|                                                                    **TOTAL** | **3097** |  **193** | **94%** |           |
+|                                                                    **TOTAL** | **3313** |  **190** | **94%** |           |
 
 
 ## Setup coverage badge
