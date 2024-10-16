@@ -525,30 +525,3 @@ class AutoEmulate:
         )
 
         return fig
-
-    def sensitivity_analysis(self, model, problem, N=1000, plot=True):
-        """
-        Perform sensitivity analysis on a fitted emulator.
-
-        Parameters:
-        -----------
-        model_name : str
-            The name of the fitted model to analyze.
-        problem : dict
-            The problem definition, including 'num_vars', 'names', and 'bounds'.
-        N : int, optional
-            The number of samples to generate (default is 1000).
-        plot : bool, optional
-            Whether to plot the results (default is True).
-
-        Returns:
-        --------
-        dict
-            A dictionary containing the Sobol indices.
-        """
-        Si = perform_sobol_analysis(model, problem, N)
-
-        if plot:
-            plot_sensitivity_indices(Si, problem)
-
-        return Si

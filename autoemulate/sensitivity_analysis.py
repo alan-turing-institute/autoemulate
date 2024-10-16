@@ -1,9 +1,19 @@
 import numpy as np
-from SALib.analyze import sobol
-from SALib.sample import saltelli
+import pandas as pd
+from SALib.analyze.sobol import analyze
+from SALib.sample.sobol import sample
 
 
-def perform_sobol_analysis(model, problem, N=1000):
+def sensitivity_analysis(model, problem, N=1000, as_df=False):
+    Si = sobol_analysis(model, problem, N)
+
+    if as_df:
+        return sobol_results_to_df(Si)
+    else:
+        return Si
+
+
+def sobol_analysis(model, problem, N=1024):
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -21,39 +31,98 @@ def perform_sobol_analysis(model, problem, N=1000):
     dict
         A dictionary containing the Sobol indices.
     """
-    # Generate samples
-    param_values = saltelli.sample(problem, N)
+    # samples
+    param_values = sample(problem, N)
 
-    # Evaluate model
+    # evaluate
     Y = model.predict(param_values)
 
-    # Perform analysis
-    Si = sobol.analyze(problem, Y)
+    # multiple outputs
+    if Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
+    num_outputs = Y.shape[1]
+    output_names = [f"y{i}" for i in range(num_outputs)]
 
-    return Si
+    results = {}
+    for i in range(num_outputs):
+        Si = analyze(problem, Y[:, i])
+        results[output_names[i]] = Si
+
+    return results
 
 
-def plot_sensitivity_indices(Si, problem):
+def sobol_results_to_df(results):
     """
-    Plot the Sobol sensitivity indices.
+    Convert Sobol results to a pandas DataFrame.
 
     Parameters:
     -----------
-    Si : dict
-        The Sobol indices returned by perform_sobol_analysis.
-    problem : dict
-        The problem definition used in the analysis.
+    results : dict
+        The Sobol indices returned by sobol_analysis.
+
+    Returns:
+    --------
+    pd.DataFrame
     """
-    import matplotlib.pyplot as plt
+    rows = []
+    for output, indices in results.items():
+        for index_type in ["S1", "ST", "S2"]:
+            values = indices.get(index_type)
+            conf_values = indices.get(f"{index_type}_conf")
+            if values is None or conf_values is None:
+                continue
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+            if index_type in ["S1", "ST"]:
+                rows.extend(
+                    {
+                        "output": output,
+                        "parameter": f"X{i+1}",
+                        "index": index_type,
+                        "value": value,
+                        "confidence": conf,
+                    }
+                    for i, (value, conf) in enumerate(zip(values, conf_values))
+                )
 
-    indices = Si["S1"]
-    names = problem["names"]
+            elif index_type == "S2":
+                n = values.shape[0]
+                rows.extend(
+                    {
+                        "output": output,
+                        "parameter": f"X{i+1}-X{j+1}",
+                        "index": index_type,
+                        "value": values[i, j],
+                        "confidence": conf_values[i, j],
+                    }
+                    for i in range(n)
+                    for j in range(i + 1, n)
+                    if not np.isnan(values[i, j])
+                )
 
-    ax.bar(names, indices)
-    ax.set_ylabel("First-order Sobol index")
-    ax.set_title("Sensitivity Analysis Results")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+    return pd.DataFrame(rows)
+
+
+# def plot_sensitivity_indices(Si, problem):
+#     """
+#     Plot the Sobol sensitivity indices.
+
+#     Parameters:
+#     -----------
+#     Si : dict
+#         The Sobol indices returned by perform_sobol_analysis.
+#     problem : dict
+#         The problem definition used in the analysis.
+#     """
+#     import matplotlib.pyplot as plt
+
+#     fig, ax = plt.subplots(figsize=(10, 6))
+
+#     indices = Si["S1"]
+#     names = problem["names"]
+
+#     ax.bar(names, indices)
+#     ax.set_ylabel("First-order Sobol index")
+#     ax.set_title("Sensitivity Analysis Results")
+#     plt.xticks(rotation=45)
+#     plt.tight_layout()
+#     plt.show()
