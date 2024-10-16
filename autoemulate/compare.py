@@ -20,6 +20,9 @@ from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.sensitivity_analysis import perform_sobol_analysis
+from autoemulate.sensitivity_analysis import plot_sensitivity_indices
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
