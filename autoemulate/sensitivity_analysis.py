@@ -104,7 +104,7 @@ def sobol_results_to_df(results):
     return pd.DataFrame(rows)
 
 
-def plot_sensitivity_analysis(results, type="bar"):
+def plot_sensitivity_analysis(results, index="S1"):
     """
     Plot the sensitivity analysis results.
 
@@ -112,40 +112,42 @@ def plot_sensitivity_analysis(results, type="bar"):
     -----------
     results : pd.DataFrame
         The results from sobol_results_to_df.
+    type : str, optional
+        The type of plot to create. Options are "S1", "S2", or "ST"
+        for first-order, second-order/interaction, and total-order indices.
+
     """
 
     if not isinstance(results, pd.DataFrame):
         results = sobol_results_to_df(results)
 
-    if type == "bar":
-        # filter S1 and ST
-        results = results[results["index"].isin(["S1", "ST"])]
+    index_names = {
+        "S1": "First-Order",
+        "S2": "Second-order/Interaction",
+        "ST": "Total-Order",
+    }
 
-        p = (
-            p9.ggplot(results, p9.aes(x="parameter", y="value", fill="index"))
-            + p9.geom_bar(stat="identity", position="dodge")
-            + p9.facet_wrap("~output")
-            + p9.theme_538()
-            + p9.scale_fill_manual(values=["#5386E4", "#4C4B63"])
-            + p9.labs(y="Sobol Index")
-            + p9.geom_errorbar(
-                p9.aes(ymin="value-confidence/2", ymax="value+confidence/2"),
-                position=p9.position_dodge(width=0.9),
-                width=0.25,
-            )
-            + p9.ggtitle(
-                "Sensitivity Analysis: First-Order (S1) and \n Total-Order (ST) Indices and 95% CI"
-            )
-            + p9.theme(plot_title=p9.element_text(hjust=0.5))  # Center the title
+    # filter
+    if index not in ["S1", "S2", "ST"]:
+        raise ValueError(f"Invalid index type: {index}. Must be 'S1', 'S2', or 'ST'.")
+
+    results = results[results["index"].isin([index])]
+
+    p = (
+        p9.ggplot(results, p9.aes(x="parameter", y="value"))
+        + p9.geom_bar(stat="identity", fill="#4C4B63")
+        + p9.facet_wrap("~output")
+        + p9.theme_538()
+        # + p9.scale_fill_manual(values=["#5386E4", "#4C4B63"])
+        + p9.labs(y="Sobol Index")
+        + p9.geom_errorbar(
+            p9.aes(ymin="value-confidence/2", ymax="value+confidence/2"),
+            position=p9.position_dodge(width=0.9),
+            width=0.25,
         )
-    elif type == "heatmap":
-        results = results[results["index"].isin(["S2"])]
-        results[["param1", "param2"]] = results["parameter"].str.split("-", expand=True)
-        p = (
-            p9.ggplot(results, p9.aes("param1", "param2", fill="value"))
-            + p9.geom_tile()
-            + p9.scale_fill_gradient(low="#33658A", high="#9B1D20", limits=(0, 1))
-            + p9.facet_wrap("~output")
-            + p9.theme_classic()
-        )
+        + p9.ggtitle(f"{index_names[index]} Indices and 95% CI")
+        + p9.theme(plot_title=p9.element_text(hjust=0.5))  # Center the title
+        + p9.theme(figure_size=(5, 3))
+    )
+
     return p

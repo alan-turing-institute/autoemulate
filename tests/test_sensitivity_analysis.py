@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn.datasets import make_regression
 
@@ -42,13 +43,52 @@ def model_2d(Xy_2d):
     return rf
 
 
-def test_sensitivity_analysis(model_2d):
+def test_sobol_analysis(model_1d):
     problem = {
         "num_vars": 2,
         "names": ["c", "v0"],
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
     }
 
+    Si = sobol_analysis(model_1d, problem)
+    assert isinstance(Si, dict)
+    assert "y1" in Si
+    assert all(
+        key in Si["y1"] for key in ["S1", "S1_conf", "S2", "S2_conf", "ST", "ST_conf"]
+    )
+
+
+def test_sobol_analysis_2d(model_2d):
+    problem = {
+        "num_vars": 2,
+        "names": ["c", "v0"],
+        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
+    }
     Si = sobol_analysis(model_2d, problem)
-    df = sobol_results_to_df(Si)
-    print(df)
+    assert isinstance(Si, dict)
+    assert ["y1", "y2"] == list(Si.keys())
+
+
+@pytest.fixture
+def sobol_results_1d(model_1d):
+    problem = {
+        "num_vars": 2,
+        "names": ["c", "v0"],
+        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
+    }
+    return sobol_analysis(model_1d, problem)
+
+
+def test_sobol_results_to_df(sobol_results_1d):
+    df = sobol_results_to_df(sobol_results_1d)
+    assert isinstance(df, pd.DataFrame)
+    assert df.columns.tolist() == [
+        "output",
+        "parameter",
+        "index",
+        "value",
+        "confidence",
+    ]
+    assert ["X1", "X2", "X1-X2"] in df["parameter"].unique()
+    assert all(isinstance(x, float) for x in df["value"])
+    assert all(isinstance(x, float) for x in df["confidence"])
