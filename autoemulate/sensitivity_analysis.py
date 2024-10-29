@@ -1,12 +1,45 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plotnine as p9
 from SALib.analyze.sobol import analyze
 from SALib.sample.sobol import sample
 
+from autoemulate.utils import _ensure_2d
 
-def sensitivity_analysis(model, problem, N=1000, as_df=False):
-    Si = sobol_analysis(model, problem, N)
+
+def sensitivity_analysis(model, problem, N=1024, conf_level=0.95, as_df=True):
+    """Perform Sobol sensitivity analysis on a fitted emulator.
+
+    Parameters:
+    -----------
+    model : fitted emulator model
+        The emulator model to analyze.
+    problem : dict
+        The problem definition, including 'num_vars', 'names', and 'bounds', optional 'output_names'.
+        Example:
+        ```python
+        problem = {
+            "num_vars": 2,
+            "names": ["x1", "x2"],
+            "bounds": [[0, 1], [0, 1]],
+        }
+        ```
+    N : int, optional
+        The number of samples to generate (default is 1024).
+    conf_level : float, optional
+        The confidence level for the confidence intervals (default is 0.95).
+    as_df : bool, optional
+        If True, return a pandas DataFrame (default is True).
+
+    Returns:
+    --------
+    pd.DataFrame or dict
+        If as_df is True, returns a long-format DataFrame with the sensitivity indices.
+        Otherwise, returns a dictionary where each key is the name of an output variable and each value is a dictionary
+        containing the Sobol indices keys ‘S1’, ‘S1_conf’, ‘ST’, and ‘ST_conf’, where each entry
+        is a list of length corresponding to the number of parameters.
+    """
+    Si = sobol_analysis(model, problem, N, conf_level)
 
     if as_df:
         return sobol_results_to_df(Si)
@@ -14,7 +47,45 @@ def sensitivity_analysis(model, problem, N=1000, as_df=False):
         return Si
 
 
-def sobol_analysis(model, problem, N=1024):
+def _check_problem(problem):
+    """
+    Check that the problem definition is valid.
+    """
+    if not isinstance(problem, dict):
+        raise ValueError("problem must be a dictionary.")
+
+    if "num_vars" not in problem:
+        raise ValueError("problem must contain 'num_vars'.")
+    if "names" not in problem:
+        raise ValueError("problem must contain 'names'.")
+    if "bounds" not in problem:
+        raise ValueError("problem must contain 'bounds'.")
+
+    if len(problem["names"]) != problem["num_vars"]:
+        raise ValueError("Length of 'names' must match 'num_vars'.")
+    if len(problem["bounds"]) != problem["num_vars"]:
+        raise ValueError("Length of 'bounds' must match 'num_vars'.")
+
+    return problem
+
+
+def _get_output_names(problem, num_outputs):
+    """
+    Get the output names from the problem definition or generate default names.
+    """
+    # check if output_names is given
+    if "output_names" not in problem:
+        output_names = [f"y{i+1}" for i in range(num_outputs)]
+    else:
+        if isinstance(problem["output_names"], list):
+            output_names = problem["output_names"]
+        else:
+            raise ValueError("'output_names' must be a list of strings.")
+
+    return output_names
+
+
+def sobol_analysis(model, problem, N=1024, conf_level=0.95):
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -30,23 +101,27 @@ def sobol_analysis(model, problem, N=1024):
     Returns:
     --------
     dict
-        A dictionary containing the Sobol indices.
+        A dictionary where each key is the name of an output variable and each value is a dictionary
+        containing the Sobol indices keys ‘S1’, ‘S1_conf’, ‘ST’, and ‘ST_conf’, where each entry
+        is a list of length corresponding to the number of parameters.
     """
-    # samples
+    # correctly defined?
+    problem = _check_problem(problem)
+
+    # saltelli sampling
     param_values = sample(problem, N)
 
     # evaluate
     Y = model.predict(param_values)
+    Y = _ensure_2d(Y)
 
-    # multiple outputs
-    if Y.ndim == 1:
-        Y = Y.reshape(-1, 1)
     num_outputs = Y.shape[1]
-    output_names = [f"y{i+1}" for i in range(num_outputs)]
+    output_names = _get_output_names(problem, num_outputs)
 
+    # single or multiple output sobol analysis
     results = {}
     for i in range(num_outputs):
-        Si = analyze(problem, Y[:, i])
+        Si = analyze(problem, Y[:, i], conf_level=conf_level)
         results[output_names[i]] = Si
 
     return results
@@ -54,7 +129,7 @@ def sobol_analysis(model, problem, N=1024):
 
 def sobol_results_to_df(results):
     """
-    Convert Sobol results to a pandas DataFrame.
+    Convert Sobol results to a (long-format)pandas DataFrame.
 
     Parameters:
     -----------
@@ -104,7 +179,48 @@ def sobol_results_to_df(results):
     return pd.DataFrame(rows)
 
 
-def plot_sensitivity_analysis(results, index="S1"):
+# plotting --------------------------------------------------------------------
+
+
+def _validate_input(results, index):
+    if not isinstance(results, pd.DataFrame):
+        results = sobol_results_to_df(results)
+        # we only want to plot one index type at a time
+    valid_indices = ["S1", "S2", "ST"]
+    if index not in valid_indices:
+        raise ValueError(
+            f"Invalid index type: {index}. Must be one of {valid_indices}."
+        )
+    return results[results["index"].isin([index])]
+
+
+def _calculate_layout(n_outputs, n_cols=None):
+    if n_cols is None:
+        n_cols = 3 if n_outputs >= 3 else n_outputs
+    n_rows = int(np.ceil(n_outputs / n_cols))
+    return n_rows, n_cols
+
+
+def _create_bar_plot(ax, output_data, output_name):
+    """Create a bar plot for a single output."""
+    bar_color = "#4C4B63"
+    x_pos = np.arange(len(output_data))
+
+    bars = ax.bar(
+        x_pos,
+        output_data["value"],
+        color=bar_color,
+        yerr=output_data["confidence"].values / 2,
+        capsize=3,
+    )
+
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(output_data["parameter"], rotation=45, ha="right")
+    ax.set_ylabel("Sobol Index")
+    ax.set_title(f"Output: {output_name}")
+
+
+def plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
     """
     Plot the sensitivity analysis results.
 
@@ -112,42 +228,54 @@ def plot_sensitivity_analysis(results, index="S1"):
     -----------
     results : pd.DataFrame
         The results from sobol_results_to_df.
-    type : str, optional
-        The type of plot to create. Options are "S1", "S2", or "ST"
-        for first-order, second-order/interaction, and total-order indices.
+    index : str, default "S1"
+        The type of sensitivity index to plot.
+        - "S1": first-order indices
+        - "S2": second-order/interaction indices
+        - "ST": total-order indices
+    n_cols : int, optional
+        The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
+        otherwise the number of outputs.
+    figsize : tuple, optional
+        Figure size as (width, height) in inches.If None, automatically calculated.
 
     """
+    with plt.style.context("seaborn-v0_8-whitegrid"):
+        # prepare data
+        results = _validate_input(results, index)
+        unique_outputs = results["output"].unique()
+        n_outputs = len(unique_outputs)
 
-    if not isinstance(results, pd.DataFrame):
-        results = sobol_results_to_df(results)
+        # layout
+        n_rows, n_cols = _calculate_layout(n_outputs, n_cols)
+        figsize = figsize or (4.5 * n_cols, 4 * n_rows)
 
-    index_names = {
-        "S1": "First-Order",
-        "S2": "Second-order/Interaction",
-        "ST": "Total-Order",
-    }
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        if isinstance(axes, np.ndarray):
+            axes = axes.flatten()
+        elif n_outputs == 1:
+            axes = [axes]
 
-    # filter
-    if index not in ["S1", "S2", "ST"]:
-        raise ValueError(f"Invalid index type: {index}. Must be 'S1', 'S2', or 'ST'.")
+        for ax, output in zip(axes, unique_outputs):
+            output_data = results[results["output"] == output]
+            _create_bar_plot(ax, output_data, output)
 
-    results = results[results["index"].isin([index])]
+        # remove any empty subplots
+        for idx in range(len(unique_outputs), len(axes)):
+            fig.delaxes(axes[idx])
 
-    p = (
-        p9.ggplot(results, p9.aes(x="parameter", y="value"))
-        + p9.geom_bar(stat="identity", fill="#4C4B63")
-        + p9.facet_wrap("~output")
-        + p9.theme_538()
-        # + p9.scale_fill_manual(values=["#5386E4", "#4C4B63"])
-        + p9.labs(y="Sobol Index")
-        + p9.geom_errorbar(
-            p9.aes(ymin="value-confidence/2", ymax="value+confidence/2"),
-            position=p9.position_dodge(width=0.9),
-            width=0.25,
+        index_names = {
+            "S1": "First-Order",
+            "S2": "Second-order/Interaction",
+            "ST": "Total-Order",
+        }
+
+        # title
+        fig.suptitle(
+            f"{index_names[index]} indices and 95% CI",
+            fontsize=14,
         )
-        + p9.ggtitle(f"{index_names[index]} Indices and 95% CI")
-        + p9.theme(plot_title=p9.element_text(hjust=0.5))  # Center the title
-        + p9.theme(figure_size=(5, 3))
-    )
 
-    return p
+        plt.tight_layout()
+
+    return fig
