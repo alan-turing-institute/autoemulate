@@ -7,6 +7,7 @@ from autoemulate.emulators import RandomForest
 from autoemulate.experimental_design import LatinHypercube
 from autoemulate.sensitivity_analysis import _calculate_layout
 from autoemulate.sensitivity_analysis import _check_problem
+from autoemulate.sensitivity_analysis import _generate_problem
 from autoemulate.sensitivity_analysis import _get_output_names
 from autoemulate.sensitivity_analysis import _validate_input
 from autoemulate.sensitivity_analysis import sobol_analysis
@@ -192,3 +193,14 @@ def test_calculate_layout_custom():
     n_rows, n_cols = _calculate_layout(3, 2)
     assert n_rows == 2
     assert n_cols == 2
+
+
+# test _generate_problem -----------------------------------------------------
+
+
+def test_generate_problem():
+    X = np.array([[0, 0], [1, 1], [2, 2]])
+    problem = _generate_problem(X)
+    assert problem["num_vars"] == 2
+    assert problem["names"] == ["x1", "x2"]
+    assert problem["bounds"] == [[0, 2], [0, 2]]

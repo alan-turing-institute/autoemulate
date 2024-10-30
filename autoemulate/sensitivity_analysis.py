@@ -7,7 +7,9 @@ from SALib.sample.sobol import sample
 from autoemulate.utils import _ensure_2d
 
 
-def sensitivity_analysis(model, problem, N=1024, conf_level=0.95, as_df=True):
+def sensitivity_analysis(
+    model, problem=None, X=None, N=1024, conf_level=0.95, as_df=True
+):
     """Perform Sobol sensitivity analysis on a fitted emulator.
 
     Parameters:
@@ -39,7 +41,7 @@ def sensitivity_analysis(model, problem, N=1024, conf_level=0.95, as_df=True):
         containing the Sobol indices keys ‘S1’, ‘S1_conf’, ‘ST’, and ‘ST_conf’, where each entry
         is a list of length corresponding to the number of parameters.
     """
-    Si = sobol_analysis(model, problem, N, conf_level)
+    Si = sobol_analysis(model, problem, X, N, conf_level)
 
     if as_df:
         return sobol_results_to_df(Si)
@@ -85,7 +87,21 @@ def _get_output_names(problem, num_outputs):
     return output_names
 
 
-def sobol_analysis(model, problem, N=1024, conf_level=0.95):
+def _generate_problem(X):
+    """
+    Generate a problem definition from a design matrix.
+    """
+    if X.ndim == 1:
+        raise ValueError("X must be a 2D array.")
+
+    return {
+        "num_vars": X.shape[1],
+        "names": [f"x{i+1}" for i in range(X.shape[1])],
+        "bounds": [[X[:, i].min(), X[:, i].max()] for i in range(X.shape[1])],
+    }
+
+
+def sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -105,8 +121,13 @@ def sobol_analysis(model, problem, N=1024, conf_level=0.95):
         containing the Sobol indices keys ‘S1’, ‘S1_conf’, ‘ST’, and ‘ST_conf’, where each entry
         is a list of length corresponding to the number of parameters.
     """
-    # correctly defined?
-    problem = _check_problem(problem)
+    # get problem
+    if problem is not None:
+        problem = _check_problem(problem)
+    elif X is not None:
+        problem = _generate_problem(X)
+    else:
+        raise ValueError("Either problem or X must be provided.")
 
     # saltelli sampling
     param_values = sample(problem, N)
@@ -240,7 +261,7 @@ def plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
         Figure size as (width, height) in inches.If None, automatically calculated.
 
     """
-    with plt.style.context("seaborn-v0_8-whitegrid"):
+    with plt.style.context("fast"):
         # prepare data
         results = _validate_input(results, index)
         unique_outputs = results["output"].unique()
