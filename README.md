@@ -27,6 +27,7 @@ There's also a release available on PyPI (will not contain the most recent featu
 pip install autoemulate
 ```
 
+TEST
 For contributors using [Poetry](https://python-poetry.org/):
 
 ```bash
