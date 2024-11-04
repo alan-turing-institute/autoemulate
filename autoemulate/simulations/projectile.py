@@ -1,4 +1,4 @@
-# from https://github.com/alan-turing-institute/mogp-emulator/blob/main/mogp_emulator/simulations/projectile.py
+# from https://github.com/alan-turing-institute/mogp-emulator/blob/main/mogp_emulator/demos/projectile.py
 import numpy as np
 from scipy.integrate import solve_ivp
 
