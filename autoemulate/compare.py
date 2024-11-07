@@ -557,9 +557,9 @@ class AutoEmulate:
         if model is None:
             if not hasattr(self, "best_model"):
                 raise RuntimeError("Must run compare() before sensitivity_analysis()")
-            model = self.best_model
+            model = self.refit(self.best_model)
             self.logger.info(
-                f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score."
+                f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
             )
 
         Si = sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)

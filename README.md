@@ -22,7 +22,7 @@ There's currently a lot of development, so we recommend installing the most curr
 pip install git+https://github.com/alan-turing-institute/autoemulate.git
 ```
 
-There's also a release available on PyPI (will not contain the most recent features and models)
+There's also a release available on PyPI (note: currently and older version and out of date with the documentation)
 ```bash
 pip install autoemulate
 ```
@@ -47,19 +47,27 @@ from autoemulate.simulations.projectile import simulate_projectile
 lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
 X = lhd.sample(100)
 y = np.array([simulate_projectile(x) for x in X])
+
 # compare emulator models
 ae = AutoEmulate()
 ae.setup(X, y)
-best_model = ae.compare() 
+best_emulator = ae.compare() 
+
 # training set cross-validation results
 ae.summarise_cv() 
 ae.plot_cv()
+
 # test set results for the best model
-ae.evaluate(best_model) 
-ae.plot_eval(best_model)
+ae.evaluate(best_emulator) 
+ae.plot_eval(best_emulator)
+
 # refit on full data and emulate!
-best_model = ae.refit(best_model) 
-best_model.predict(X)
+emulator = ae.refit(best_emulator) 
+emulator.predict(X)
+
+# global sensitivity analysis
+si = ae.sensitivity_analysis(emulator)
+ae.plot_sensitivity_analysis(si)
 ```
 
 ## documentation
