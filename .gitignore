@@ -28,3 +28,7 @@ Thumbs.db
 
 # VScode settings
 .vscode/
+
+# Quarto
+README.html
+README_files/

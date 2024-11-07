@@ -27,6 +27,7 @@ iprogress = "^0.4"
 lightgbm = "^4.3.0"
 ipywidgets = "^8.1.2"
 gpytorch = "^1.12"
+salib = "^1.5.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -41,7 +42,7 @@ black = "^23.10.1"
 pre-commit = "^3.5.0"
 jupyter-book = "^1.0.0"
 pytest-cov = "^4.1.0"
-coverage = "^7.3.1"
+coverage = "^7.6.4"
 plotnine = "^0.13.6"
 
 
@@ -56,3 +57,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
 relative_files = true
+source = [
+    ".",
+    "/tmp"
+]

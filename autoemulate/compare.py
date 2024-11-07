@@ -20,6 +20,9 @@ from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
+from autoemulate.sensitivity_analysis import plot_sensitivity_analysis
+from autoemulate.sensitivity_analysis import sensitivity_analysis
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
@@ -522,3 +525,64 @@ class AutoEmulate:
         )
 
         return fig
+
+    def sensitivity_analysis(
+        self, model=None, problem=None, N=1024, conf_level=0.95, as_df=True
+    ):
+        """Perform Sobol sensitivity analysis on a fitted emulator.
+
+        Parameters
+        ----------
+        model : object, optional
+            Fitted model. If None, uses the best model from cross-validation.
+        problem : dict, optional
+            The problem definition, including 'num_vars', 'names', and 'bounds', optional 'output_names'.
+            If None, the problem is generated from X using minimum and maximum values of the features as bounds.
+
+            Example:
+                ```python
+                problem = {
+                    "num_vars": 2,
+                    "names": ["x1", "x2"],
+                    "bounds": [[0, 1], [0, 1]],
+                }
+                ```
+        N : int, optional
+            Number of samples to generate. Default is 1024.
+        conf_level : float, optional
+            Confidence level for the confidence intervals. Default is 0.95.
+        as_df : bool, optional
+            If True, return a long-format pandas DataFrame (default is True).
+        """
+        if model is None:
+            if not hasattr(self, "best_model"):
+                raise RuntimeError("Must run compare() before sensitivity_analysis()")
+            model = self.refit(self.best_model)
+            self.logger.info(
+                f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
+            )
+
+        Si = sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
+        return Si
+
+    def plot_sensitivity_analysis(self, results, index="S1", n_cols=None, figsize=None):
+        """
+        Plot the sensitivity analysis results.
+
+        Parameters:
+        -----------
+        results : pd.DataFrame
+            The results from sobol_results_to_df.
+        index : str, default "S1"
+            The type of sensitivity index to plot.
+            - "S1": first-order indices
+            - "S2": second-order/interaction indices
+            - "ST": total-order indices
+        n_cols : int, optional
+            The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
+            otherwise the number of outputs.
+        figsize : tuple, optional
+            Figure size as (width, height) in inches.If None, automatically calculated.
+
+        """
+        return plot_sensitivity_analysis(results, index, n_cols, figsize)
