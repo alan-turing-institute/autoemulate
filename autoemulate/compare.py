@@ -559,7 +559,7 @@ class AutoEmulate:
                 raise RuntimeError("Must run compare() before sensitivity_analysis()")
             model = self.best_model
             self.logger.info(
-                f"No model provided, using best model {get_model_name(model)} from cross-validation for sensitivity analysis"
+                f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score."
             )
 
         Si = sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
