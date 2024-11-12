@@ -3,6 +3,7 @@ import inspect
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import PredictionErrorDisplay
+from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
 from autoemulate.utils import _ensure_2d
@@ -482,6 +483,7 @@ def _plot_Xy(X, y, y_pred, y_std=None, ax=None, title="Xy"):
     """
     Plots observed and predicted values vs. features, including 2σ error bands where available.
     """
+
     # Sort the data
     sort_idx = np.argsort(X).flatten()
     X_sorted = X[sort_idx]
@@ -558,10 +560,10 @@ def _plot_Xy(X, y, y_pred, y_std=None, ax=None, title="Xy"):
             columnspacing=0,
             ncol=2,
         )
+
     # Calculate R2 score
-    r2 = 1 - np.sum((y_sorted - y_pred_sorted) ** 2) / np.sum(
-        (y_sorted - np.mean(y_sorted)) ** 2
-    )
+    r2 = r2_score(y, y_pred)
+
     ax.text(
         0.05,
         0.05,

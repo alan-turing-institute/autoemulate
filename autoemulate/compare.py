@@ -422,8 +422,8 @@ class AutoEmulate:
         )
         figure = _plot_cv(
             self.cv_results,
-            self.X,
-            self.y,
+            self.X[self.train_idxs],
+            self.y[self.train_idxs],
             model_name=model_name,
             n_cols=n_cols,
             style=style,
