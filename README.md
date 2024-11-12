@@ -22,7 +22,7 @@ There's currently a lot of development, so we recommend installing the most curr
 pip install git+https://github.com/alan-turing-institute/autoemulate.git
 ```
 
-There's also a release available on PyPI (note: currently and older version and out of date with the documentation)
+There's also a release available on PyPI (note: currently an older version and out of date with the documentation)
 ```bash
 pip install autoemulate
 ```
