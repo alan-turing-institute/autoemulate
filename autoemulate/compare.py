@@ -22,6 +22,7 @@ from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import plot_sensitivity_analysis
 from autoemulate.sensitivity_analysis import sensitivity_analysis
+from autoemulate.utils import _check_cv
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
@@ -54,7 +55,9 @@ class AutoEmulate:
         scaler=StandardScaler(),
         reduce_dim=False,
         dim_reducer=PCA(),
-        cross_validator=KFold(n_splits=5, shuffle=True),
+        cross_validator=KFold(
+            n_splits=5, shuffle=True, random_state=np.random.randint(1e5)
+        ),
         n_jobs=None,
         models=None,
         verbose=0,
@@ -121,7 +124,7 @@ class AutoEmulate:
             dim_reducer=dim_reducer,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
-        self.cross_validator = cross_validator
+        self.cross_validator = _check_cv(cross_validator)
         self.param_search = param_search
         self.search_type = param_search_type
         self.param_search_iters = param_search_iters

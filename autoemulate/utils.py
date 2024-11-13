@@ -9,6 +9,7 @@ import numpy as np
 import torch
 from sklearn.base import RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
@@ -370,3 +371,18 @@ def _ensure_2d(arr):
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
     return arr
+
+
+# checkers for scikit-learn objects --------------------------------------------
+
+
+def _check_cv(cv):
+    """Ensure that cross-validation method is valid"""
+    if cv is None:
+        raise ValueError("cross_validator cannot be None")
+    if not isinstance(cv, KFold):
+        raise ValueError(
+            "cross_validator should be an instance of KFold cross-validation. We do not "
+            "currently support other cross-validation methods."
+        )
+    return cv

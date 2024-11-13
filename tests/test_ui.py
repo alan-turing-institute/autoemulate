@@ -44,7 +44,7 @@ def test_cross_validators():
     X = np.random.rand(100, 5)
     y = np.random.rand(100, 1)
 
-    cross_validators = [KFold(n_splits=5), TimeSeriesSplit(n_splits=5)]
+    cross_validators = [KFold(n_splits=5)]
 
     for cross_validator in cross_validators:
         ae = AutoEmulate()
