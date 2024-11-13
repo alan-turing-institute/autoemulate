@@ -3,6 +3,8 @@ import pandas as pd
 import pytest
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import KFold
+from sklearn.model_selection import LeaveOneOut
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -12,6 +14,7 @@ from autoemulate.emulators import RandomForest
 from autoemulate.utils import _add_prefix_to_param_space
 from autoemulate.utils import _add_prefix_to_single_grid
 from autoemulate.utils import _adjust_param_space
+from autoemulate.utils import _check_cv
 from autoemulate.utils import _denormalise_y
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
@@ -340,3 +343,14 @@ def test_ensure_2d_2d():
     y = np.array([[1, 2], [3, 4], [5, 6]])
     y_2d = _ensure_2d(y)
     assert y_2d.ndim == 2
+
+
+# test checkers for scikit-learn objects --------------------------------------
+def test_check_cv():
+    cv = KFold(n_splits=5, shuffle=True, random_state=np.random.randint(1e5))
+    _check_cv(cv)
+
+
+def test_check_cv_error():
+    with pytest.raises(ValueError):
+        _check_cv(LeaveOneOut())
