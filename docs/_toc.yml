@@ -29,17 +29,8 @@ chapters:
 - file: reference/index
   sections:
   - file: reference/compare
-  - file: reference/cross_validate
   - file: reference/datasets
-  - file: reference/experimental_design
-  - file: reference/hyperparam_searching
-  - file: reference/logging_config
-  - file: reference/metrics
-  - file: reference/model_processing
-  - file: reference/plotting
-  - file: reference/printing
-  - file: reference/save
-  - file: reference/utils
+  - file: reference/sensitivity_analysis
   - file: reference/simulations/index
     sections:
     - file: reference/simulations/projectile
@@ -53,6 +44,7 @@ chapters:
     - file: reference/emulators/gradient_boosting
     - file: reference/emulators/light_gbm
     - file: reference/emulators/conditional_neural_process
+    - file: reference/emulators/conditional_neural_process_attn
     - file: reference/emulators/gaussian_process
     - file: reference/emulators/gaussian_process_mt
     - file: reference/emulators/neural_net_sk
