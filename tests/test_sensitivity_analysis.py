@@ -9,9 +9,9 @@ from autoemulate.sensitivity_analysis import _calculate_layout
 from autoemulate.sensitivity_analysis import _check_problem
 from autoemulate.sensitivity_analysis import _generate_problem
 from autoemulate.sensitivity_analysis import _get_output_names
+from autoemulate.sensitivity_analysis import _sobol_analysis
+from autoemulate.sensitivity_analysis import _sobol_results_to_df
 from autoemulate.sensitivity_analysis import _validate_input
-from autoemulate.sensitivity_analysis import sobol_analysis
-from autoemulate.sensitivity_analysis import sobol_results_to_df
 from autoemulate.simulations.projectile import simulate_projectile
 from autoemulate.simulations.projectile import simulate_projectile_multioutput
 
@@ -117,7 +117,7 @@ def test_sobol_analysis(model_1d):
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
     }
 
-    Si = sobol_analysis(model_1d, problem)
+    Si = _sobol_analysis(model_1d, problem)
     assert isinstance(Si, dict)
     assert "y1" in Si
     assert all(
@@ -131,7 +131,7 @@ def test_sobol_analysis_2d(model_2d):
         "names": ["c", "v0"],
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
     }
-    Si = sobol_analysis(model_2d, problem)
+    Si = _sobol_analysis(model_2d, problem)
     assert isinstance(Si, dict)
     assert ["y1", "y2"] == list(Si.keys())
 
@@ -143,12 +143,12 @@ def sobol_results_1d(model_1d):
         "names": ["c", "v0"],
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
     }
-    return sobol_analysis(model_1d, problem)
+    return _sobol_analysis(model_1d, problem)
 
 
 # test conversion to DataFrame --------------------------------------------------
 def test_sobol_results_to_df(sobol_results_1d):
-    df = sobol_results_to_df(sobol_results_1d)
+    df = _sobol_results_to_df(sobol_results_1d)
     assert isinstance(df, pd.DataFrame)
     assert df.columns.tolist() == [
         "output",

@@ -20,8 +20,8 @@ from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.sensitivity_analysis import plot_sensitivity_analysis
-from autoemulate.sensitivity_analysis import sensitivity_analysis
+from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
+from autoemulate.sensitivity_analysis import _sensitivity_analysis
 from autoemulate.utils import _check_cv
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
@@ -33,8 +33,8 @@ from autoemulate.utils import get_short_model_name
 class AutoEmulate:
     """
     The AutoEmulate class is the main class of the AutoEmulate package. It is used to set up and compare
-    different emulator models on a given dataset. It can also be used to save and load models, and to
-    print and plot the results of the comparison.
+    different emulator models on a given dataset. It can also be used to summarise and visualise results,
+    to save and load models and to run sensitivity analysis.
     """
 
     def __init__(self):
@@ -178,12 +178,13 @@ class AutoEmulate:
         return [metric for metric in METRIC_REGISTRY.values()]
 
     def compare(self):
-        """Compares the emulator models on the data. self.setup() must be run first.
+        """Compares models using cross-validation, with the option
+        to perform hyperparameter search. self.setup() must be run first.
 
         Returns
         -------
         self.best_model : object
-            Best performing model fitted on full data.
+            Emulator with the highest cross-validation R2 score.
         """
         if not self.is_set_up:
             raise RuntimeError("Must run setup() before compare()")
@@ -257,7 +258,8 @@ class AutoEmulate:
         Parameters
         ----------
         name : str
-            Name of the model to return.
+            Name of the model to return. Can be full name or short name, e.g. "GaussianProcess" or "gp".
+            Short name abbreviations are the uppercase first letter of each word in the full name (e.g. "GaussianProcess" -> "gp").
         rank : int
             Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
         metric : str
@@ -298,8 +300,7 @@ class AutoEmulate:
         return chosen_model
 
     def refit(self, model=None):
-        """Refits model on full data.
-
+        """Refits model on full data. This is useful, as `compare()` runs only on the training data.
         Parameters
         ----------
         model : model to refit.
@@ -359,7 +360,7 @@ class AutoEmulate:
         return serialiser._load_model(path)
 
     def print_setup(self):
-        """Print the setup of the AutoEmulate object."""
+        """Print the parameters of the AutoEmulate object."""
         _print_setup(self)
 
     def summarise_cv(self, model=None, sort_by="r2"):
@@ -408,17 +409,17 @@ class AutoEmulate:
             If a model name is specified, plots all folds of that model.
         style : str, optional
             The type of plot to draw:
-            "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
-            "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
-            "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            "Xy" for plotting observed and predicted values vs. features, including 2σ error bands where available (default).
+            "actual_vs_predicted" for plotting observed values (y-axis) vs. the predicted values (x-axis).
+            "residual_vs_predicted" for plotting the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
             Number of columns in the plot grid.
         figsize : tuple, optional
-            Overrides the default figure size.
+            Overrides the default figure size, in inches, e.g. (6, 4).
         output_index : int
-            Index of the output to plot. Default is 0.
+            Index of the output to plot. Default is 0. Can be a single index or a list of indices.
         input_index : int
-            Index of the input to plot. Default is 0.
+            Index of the input to plot. Default is 0. Can be a single index or a list of indices.
         """
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
@@ -439,6 +440,8 @@ class AutoEmulate:
     def evaluate(self, model=None, multioutput="uniform_average"):
         """
         Evaluates the model on the test set.
+
+        Test set size can be specified in `setup()` with `test_set_size`.
 
         Parameters
         ----------
@@ -498,7 +501,7 @@ class AutoEmulate:
         output_index=0,
         input_index=0,
     ):
-        """Visualise different model evaluations on the test set.
+        """Visualise model predictive performance on the test set.
 
         Parameters
         ----------
@@ -534,28 +537,60 @@ class AutoEmulate:
     ):
         """Perform Sobol sensitivity analysis on a fitted emulator.
 
+        Sobol sensitivity analysis is a variance-based method that decomposes the variance of the model
+        output into contributions from individual input parameters and their interactions. It calculates:
+        - First-order indices (S1): Direct contribution of each input parameter
+        - Second-order indices (S2): Contribution from pairwise interactions between parameters
+        - Total-order indices (ST): Total contribution of a parameter, including all its interactions
+
         Parameters
         ----------
         model : object, optional
             Fitted model. If None, uses the best model from cross-validation.
         problem : dict, optional
-            The problem definition, including 'num_vars', 'names', and 'bounds', optional 'output_names'.
-            If None, the problem is generated from X using minimum and maximum values of the features as bounds.
+            The problem definition dictionary. If None, the problem is generated from X using
+            minimum and maximum values of the features as bounds. The dictionary should contain:
 
-            Example:
-                ```python
+            - 'num_vars': Number of input variables (int)
+            - 'names': List of variable names (list of str)
+            - 'bounds': List of [min, max] bounds for each variable (list of lists)
+            - 'output_names': Optional list of output names (list of str)
+
+            Example::
+
                 problem = {
                     "num_vars": 2,
                     "names": ["x1", "x2"],
                     "bounds": [[0, 1], [0, 1]],
+                    "output_names": ["y1", "y2"]  # optional
                 }
-                ```
         N : int, optional
-            Number of samples to generate. Default is 1024.
+            Number of samples to generate for the analysis. Higher values give more accurate
+            results but increase computation time. Default is 1024.
         conf_level : float, optional
-            Confidence level for the confidence intervals. Default is 0.95.
+            Confidence level (between 0 and 1) for calculating confidence intervals of the
+            sensitivity indices. Default is 0.95 (95% confidence).
         as_df : bool, optional
-            If True, return a long-format pandas DataFrame (default is True).
+            If True, returns results as a long-format pandas DataFrame with columns for
+            parameters, sensitivity indices, and confidence intervals. If False, returns
+            the raw SALib results dictionary. Default is True.
+
+        Returns
+        -------
+        pandas.DataFrame or dict
+            If as_df=True (default), returns a DataFrame with columns:
+
+            - 'parameter': Input parameter name
+            - 'output': Output variable name
+            - 'S1', 'S2', 'ST': First, second, and total order sensitivity indices
+            - 'S1_conf', 'S2_conf', 'ST_conf': Confidence intervals for each index
+
+            If as_df=False, returns the raw SALib results dictionary.
+
+        Notes
+        -----
+        The analysis requires N * (2D + 2) model evaluations, where D is the number of input
+        parameters. For example, with N=1024 and 5 parameters, this requires 12,288 evaluations.
         """
         if model is None:
             if not hasattr(self, "best_model"):
@@ -565,7 +600,7 @@ class AutoEmulate:
                 f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
             )
 
-        Si = sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
+        Si = _sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
         return Si
 
     def plot_sensitivity_analysis(self, results, index="S1", n_cols=None, figsize=None):
@@ -588,4 +623,4 @@ class AutoEmulate:
             Figure size as (width, height) in inches.If None, automatically calculated.
 
         """
-        return plot_sensitivity_analysis(results, index, n_cols, figsize)
+        return _plot_sensitivity_analysis(results, index, n_cols, figsize)
