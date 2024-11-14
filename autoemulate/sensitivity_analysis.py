@@ -7,7 +7,7 @@ from SALib.sample.sobol import sample
 from autoemulate.utils import _ensure_2d
 
 
-def sensitivity_analysis(
+def _sensitivity_analysis(
     model, problem=None, X=None, N=1024, conf_level=0.95, as_df=True
 ):
     """Perform Sobol sensitivity analysis on a fitted emulator.
@@ -41,10 +41,10 @@ def sensitivity_analysis(
         containing the Sobol indices keys ‘S1’, ‘S1_conf’, ‘ST’, and ‘ST_conf’, where each entry
         is a list of length corresponding to the number of parameters.
     """
-    Si = sobol_analysis(model, problem, X, N, conf_level)
+    Si = _sobol_analysis(model, problem, X, N, conf_level)
 
     if as_df:
-        return sobol_results_to_df(Si)
+        return _sobol_results_to_df(Si)
     else:
         return Si
 
@@ -101,7 +101,7 @@ def _generate_problem(X):
     }
 
 
-def sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
+def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -148,7 +148,7 @@ def sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
     return results
 
 
-def sobol_results_to_df(results):
+def _sobol_results_to_df(results):
     """
     Convert Sobol results to a (long-format)pandas DataFrame.
 
@@ -205,7 +205,7 @@ def sobol_results_to_df(results):
 
 def _validate_input(results, index):
     if not isinstance(results, pd.DataFrame):
-        results = sobol_results_to_df(results)
+        results = _sobol_results_to_df(results)
         # we only want to plot one index type at a time
     valid_indices = ["S1", "S2", "ST"]
     if index not in valid_indices:
@@ -241,7 +241,7 @@ def _create_bar_plot(ax, output_data, output_name):
     ax.set_title(f"Output: {output_name}")
 
 
-def plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
+def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
     """
     Plot the sensitivity analysis results.
 

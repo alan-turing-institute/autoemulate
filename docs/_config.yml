@@ -38,6 +38,7 @@ sphinx:
   config:
     add_module_names: False
     autodoc_typehints: none
+    autodoc_member_order: 'bysource'
     autoclass_content: class
     bibtex_reference_style: author_year
     intersphinx_mapping:

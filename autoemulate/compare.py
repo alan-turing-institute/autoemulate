@@ -20,8 +20,8 @@ from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.sensitivity_analysis import plot_sensitivity_analysis
-from autoemulate.sensitivity_analysis import sensitivity_analysis
+from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
+from autoemulate.sensitivity_analysis import _sensitivity_analysis
 from autoemulate.utils import _check_cv
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
@@ -550,20 +550,20 @@ class AutoEmulate:
         problem : dict, optional
             The problem definition dictionary. If None, the problem is generated from X using
             minimum and maximum values of the features as bounds. The dictionary should contain:
+
             - 'num_vars': Number of input variables (int)
             - 'names': List of variable names (list of str)
             - 'bounds': List of [min, max] bounds for each variable (list of lists)
             - 'output_names': Optional list of output names (list of str)
 
-            Example:
-                ```python
+            Example::
+
                 problem = {
                     "num_vars": 2,
                     "names": ["x1", "x2"],
                     "bounds": [[0, 1], [0, 1]],
                     "output_names": ["y1", "y2"]  # optional
                 }
-                ```
         N : int, optional
             Number of samples to generate for the analysis. Higher values give more accurate
             results but increase computation time. Default is 1024.
@@ -579,10 +579,12 @@ class AutoEmulate:
         -------
         pandas.DataFrame or dict
             If as_df=True (default), returns a DataFrame with columns:
+
             - 'parameter': Input parameter name
             - 'output': Output variable name
             - 'S1', 'S2', 'ST': First, second, and total order sensitivity indices
             - 'S1_conf', 'S2_conf', 'ST_conf': Confidence intervals for each index
+
             If as_df=False, returns the raw SALib results dictionary.
 
         Notes
@@ -598,7 +600,7 @@ class AutoEmulate:
                 f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
             )
 
-        Si = sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
+        Si = _sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
         return Si
 
     def plot_sensitivity_analysis(self, results, index="S1", n_cols=None, figsize=None):
@@ -621,4 +623,4 @@ class AutoEmulate:
             Figure size as (width, height) in inches.If None, automatically calculated.
 
         """
-        return plot_sensitivity_analysis(results, index, n_cols, figsize)
+        return _plot_sensitivity_analysis(results, index, n_cols, figsize)
