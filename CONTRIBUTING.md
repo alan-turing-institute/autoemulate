@@ -2,8 +2,6 @@
 
 💫⚙️🤖 We're excited that you're here and want to contribute. 🤖⚙️💫
 
-By joining our efforts, you will be helping to democratise emulation for Digital Twins and beyond.
-
 We want to ensure that every user and contributor feels welcome, included and supported to participate in the AutoEmulate community. Whether you're a seasoned developer, a machine learning researcher, a data scientist, or just someone eager to learn and contribute, **you are welcome here**. We value every contribution, be it big or small, and we appreciate the unique perspectives you bring to the project.
 
 We hope that the information provided in this document will make it as easy as possible for you to get involved. If you find that you have questions that are not discussed below, please let us know through one of the many ways to [get in touch](#get-in-touch).
@@ -14,21 +12,14 @@ If you'd like to find out more about AutoEmulate, make sure to check out:
 
 1. **README**: For a high-level overview of the project, please refer to our README.
 2. **Documentation**: For more detailed information about the project, please refer to our [documentation](https://alan-turing-institute.github.io/autoemulate).
-3. **Project Roadmap**: Familiarise yourself with our direction and goals by checking out [the project's project board](https://github.com/orgs/alan-turing-institute/projects/185/views/4) in lieu of a formal product roadmap.
-
-## Get in touch
-
-The easiest way to get involved with the active development of AutoEmulate is to join our sprints. If you are looking to become part of the core development team in this way, reach out to Research Application Manager Kalle Westerling via email kwesterling@turing.ac.uk to request an invite.
-
-<!-- The easiest way to get involved with the active development of AutoEmulate is to join our regular community calls. The community calls are currently on a hiatus but if you are interested in participating in the forthcoming community calls, which will start in 2024, you should join our Slack workspace, where conversation about when to hold the community calls in the future will take place. -->
-
-<!--
-**Slack Workspace**: Join our [AutoEmulate Slack channel](<LINK TO SIGN-UP OR TO THE SLACK TEAM>) for discussions, queries, and community interactions. Send us an email at kwesterling@turing.ac.uk to request an invite.
--->
-
-**Email**: If you prefer a formal communication method or have specific concerns, please reach us via lead Research Software Engineer Martin Stoffel, mstoffel@turing.ac.uk.
 
 ## How to Contribute
+
+This section is intended to provide a high level overview of how to contribute to AutoEmulate if you don't have a lot of experience in contributing to open source projects. For more detailed information, please refer the docs for:
+
+* [contributing emulators](contributing-emulators.md)
+* [contributing to the docs](contributing-docs.md)
+
 
 We welcome contributions of all kinds, be it code, documentation, or community engagement. We encourage you to read through the following sections to learn more about how you can contribute to the package.
 
@@ -39,9 +30,9 @@ We are always interested in adding more simulations or simulation input/output d
 We follow the same instructions for submitting changes to the project as those developed by [The Turing Way](https://github.com/the-turing-way/the-turing-way/blob/main/CONTRIBUTING.md#making-a-change-with-a-pull-request). In short, there are five steps to adding changes to this repository:
 
 1. **Fork the Repository**: Start by [forking the AutoEmulate repository](https://github.com/alan-turing-institute/autoemulate/fork).
-1. **Make Changes**: Ensure your code adheres to the style guidelines and passes all tests.
-2. **Commit and Push**: Use clear commit messages.
-3. **Open a Pull Request**: Ensure you describe the changes made and any additional details.
+2. **Make Changes**: Ensure your code adheres to the style guidelines and passes all tests.
+3. **Commit and Push**: Use clear commit messages.
+4. **Open a Pull Request**: Ensure you describe the changes made and any additional details.
 
 ### 1. Fork the Repository
 
@@ -56,6 +47,8 @@ If you prefer working with GitHub in the browser, [these instructions](https://g
 Try to keep the changes focused. If you submit a large amount of work all in one go it will be much more work for whoever is reviewing your pull request. Help them help you! :wink:
 
 Are you new to Git and GitHub or just want a detailed guide on getting started with version control? Check out the [Version Control chapter](https://the-turing-way.netlify.com/version_control/version_control.html) in _The Turing Way_ Book!
+
+For code changes, it would be great if you could add tests for the changes you make. We use [pytest](https://docs.pytest.org/en/7.4.x/), and our tests are located in the `tests/` folder. If you're not sure how to write tests for your changes, please reach out to us via email.
 
 ### 3. Commit and Push
 
@@ -82,10 +75,10 @@ If you feel ready for it, you can also open a new issue. Before you open a new i
 
 Found a bug? Please open an issue here on GitHub to report it. We have a template for opening issues, so make sure you follow the correct format and ensure you include:
 
-- A clear title.
-- A detailed description of the bug.
-- Steps to reproduce it.
-- Expected versus actual behavior.
+* A clear title.
+* A detailed description of the bug.
+* Steps to reproduce it.
+* Expected versus actual behavior.
 
 ## Recognising Contributions
 
@@ -122,3 +115,13 @@ Every contributor is expected to adhere to our Code of Conduct. It outlines our 
 ----
 
 These Contributing Guidelines have been adapted from the [Contributing Guidelines](https://github.com/the-turing-way/the-turing-way/blob/main/CONTRIBUTING.md#recognising-contributions) of [The Turing Way](https://github.com/the-turing-way/the-turing-way)! (License: CC-BY)
+
+## Get in touch
+
+**Email**: For any inquiries, please reach out to lead Developer Martin Stoffel, mstoffel@turing.ac.uk.
+
+<!-- The easiest way to get involved with the active development of AutoEmulate is to join our regular community calls. The community calls are currently on a hiatus but if you are interested in participating in the forthcoming community calls, which will start in 2024, you should join our Slack workspace, where conversation about when to hold the community calls in the future will take place. -->
+
+<!--
+**Slack Workspace**: Join our [AutoEmulate Slack channel](<LINK TO SIGN-UP OR TO THE SLACK TEAM>) for discussions, queries, and community interactions. Send us an email at kwesterling@turing.ac.uk to request an invite.
+-->

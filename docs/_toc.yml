@@ -20,6 +20,8 @@ chapters:
 - file: community/index
   sections:
   - file: community/contributing
+  - file: community/contributing-emulators
+  - file: community/contributing-docs
   - file: community/code-of-conduct
   - file: community/faq/index
     sections:
