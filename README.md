@@ -12,7 +12,7 @@ Simulations of physical systems are often slow and need lots of compute, which m
 
 The project is in early development. 
 
-<img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/main/misc/robot2.png" alt="" width="38.2%">
+<img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/main/misc/AE_logo_final.png" alt="" width="38.2%">
 
 ## installation
 
