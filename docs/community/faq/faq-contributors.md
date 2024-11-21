@@ -1,45 +1,65 @@
 # First-Time Contributors' Frequently Asked Questions
 
-**TODO**
-
-## Getting Started
-
-1. How can I contribute to AutoEmulate?
-   <!-- Overview of the ways to contribute, from code to documentation, and how to get started. -->
-
-2. What are the guidelines for contributing code?
-   <!-- Information on coding standards, the pull request process, and how contributions are reviewed. -->
-
-3. How do I choose what to work on for my first contribution?
-   <!-- Guidance on identifying beginner-friendly issues, selecting tasks based on personal expertise, or areas of the project that need the most help. -->
-
-4. What coding standards and practices does AutoEmulate follow?
-   <!-- Information on coding conventions, documentation standards, and testing practices contributors should adhere to. -->
-
-5. Are there any specific development tools or environments recommended for working on AutoEmulate?
-   <!-- Suggestions for IDEs, code editors, version control systems, or other tools that facilitate development and contribute to the project. -->
-
-## Making Contributions
-
-1. How do I submit a contribution, and what is the review process?
-   <!-- Step-by-step guide on creating pull requests, what happens after submission, how contributions are reviewed, and typical timelines for feedback. -->
-
-2. Can I contribute by writing documentation or tutorials, and how?
-   <!-- Details on how to contribute to the project's documentation, tutorial creation, or translation efforts, including style guides or templates to follow. -->
-
-3. What should I do if my pull request gets rejected or needs revision?
-   <!-- Advice on how to handle feedback on contributions, including how to make requested changes and resubmit for review. -->
-
 ## Technical Questions
 
 1. How is the AutoEmulate project structured?
    <!-- An introduction to the project's architecture and where contributors can find key components. -->
+   * The key component is the `AutoEmulate` class in `autoemulate/compare.py`, which is the main class for setting up and comparing emulators, visualising and summarising results, saving models, and applications such as sensitivity analysis.
+   * All other modules in `autoemulate/` are supporting modules for the main class, such as data splitting, model processing, hyperparameter searching, plotting, saving, etc.
+   * `autoemulate/emulators/` contains the emulator models, which are implemented as [scikit-learn estimators](https://scikit-learn.org/1.5/developers/develop.html). Architectures for deep learning models are in `autoemulate/emulators/neural_networks/`, which feed into the emulators via [skorch](https://skorch.readthedocs.io/en/latest/?badge=latest).
+   * Emulators need to be registered in the model registry in `autoemulate/emulators/__init__.py` to be available in `AutoEmulate`.
+   * `autoemulate/simulations/` contains simple example simulations.
+   * `tests/` contains tests for the package.
+   * `data/` contains example datasets.
+   * `docs/` contains the documentation source files. We use `jupyter-book` to build the documentation.
 
 2. How do I set up my development environment for AutoEmulate?
    <!-- Steps to configure a local development environment, including any necessary tools or dependencies. -->
+   * Ensure have poetry installed. If not, install it following the [official instructions](https://python-poetry.org/docs/).
+   * Fork and clone the repository.
+
+   ```bash
+   git clone https://github.com/alan-turing-institute/autoemulate.git
+   cd autoemulate
+   ```
+
+   * Install the dependencies:
+
+   ```bash
+   poetry install
+   ```
+
+   * If needed, enter the shell (optional when working using an IDE which recognises poetry environments):
+
+   ```bash
+   poetry shell
+   ```
 
 3. How do I run tests for AutoEmulate?
    <!-- Instructions on how to execute the project's test suite to ensure changes do not introduce regressions. -->
+   * We use `pytest` to run the tests. To run all tests:
+
+   ```bash
+   pytest
+   ```
+
+   * To run tests with print statements:
+
+   ```bash
+   pytest -s
+   ```
+
+   * To run a specific test module:
+
+   ```bash
+   pytest tests/test_example.py
+   ```
+
+   * To run a specific test:
+
+   ```bash
+   pytest tests/test_example.py::test_function
+   ```
 
 ## Community and Support
 
