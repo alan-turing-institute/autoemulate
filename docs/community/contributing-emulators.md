@@ -6,6 +6,7 @@ This guide explains how to contribute new emulator models to `AutoEmulate`.
 
 All emulators in AutoEmulate are implemented as `scikit-learn` estimators, making them compatible with scikit-learn's cross-validation, grid-search, and pipeline functionality. Have a look at the [scikit-learn estimator developer guide](https://scikit-learn.org/1.5/developers/develop.html#rolling-your-own-estimator) for more details on how to implement a new estimator.
 
+**Note**: AutoEmulate is designed primarily for static data analysis, leveraging its integration with scikit-learn. If you are contributing an emulator for time-series data, keep in mind that it may not perform optimally without additional handling of temporal dependencies, particularly during cross-validation and evaluation.
 ### Core Requirements
 
 Each emulator class must:
@@ -44,9 +45,9 @@ Make sure your chosen class name:
 
 We use two types of tests:
 
-1. **Scikit-learn Test Suite**: Add your emulator to `tests/test_estimators.py` to verify scikit-learn compatibility. Not all tests need to pass - use `_more_tags()` to skip incompatible tests. See the[estimator tags overview](https://scikit-learn.org/1.5/developers/develop.html#estimator-tags) for details.
+1. **Scikit-learn Test Suite**: Add your emulator to `tests/test_estimators.py` to verify scikit-learn compatibility. Not all tests need to pass - use `_more_tags()` to skip incompatible tests. See the [estimator tags overview](https://scikit-learn.org/1.5/developers/develop.html#estimator-tags) for details.
 
-2. **Custom Tests**: Add specific tests for your emulator in `tests/models/` to verify its core functionality.
+2. **Custom Tests**: Add specific tests for your emulator in `tests/models/` to verify its core functionality (e.g., confirming output shapes, validating end-to-end functionality of components such as parameter search etc).
 
 ## Registering an emulator
 
@@ -60,7 +61,7 @@ After your emulator passes tests:
 PyTorch emulators require special handling:
 
 1. Put the model architecture in `autoemulate/emulators/neural_networks/`
-2. Put themain emulator class in `autoemulate/emulators/`
+2. Put the main emulator class in `autoemulate/emulators/`
 3. Use [skorch](https://skorch.readthedocs.io/) for scikit-learn compatibility:
    - Create `self.model_` as `NeuralNetRegressor` instance
    - Pass model architecture as first argument
