@@ -89,7 +89,7 @@ What happens if you accidentally run the bot before the previous run was merged 
 If you're stuck or need assistance:
 
 <!-- #TODO #148 - Check our [FAQ](<ADD LINK TO FAQ DOCUMENT>) section first. -->
-* Reach out <!-- on Slack or --> via email for personalised assistance. (See ["Get in touch"](#get-in-touch) above for links.)
+* Reach out <!-- on Slack or --> via email for personalised assistance. (See [Get in touch](#get-in-touch) above for links.)
 * Consider pairing up with a another contributor for guidance. <!-- You can always find us in the Slack channel and we're happy to chat! -->Contact us for guidance on this topic
 
 **Once again, thank you for considering contributing to AutoEmulate! We hope you enjoy your contributing experience.**
