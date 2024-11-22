@@ -1,3 +1,4 @@
+# end-to-end tests
 import numpy as np
 from sklearn.decomposition import KernelPCA
 from sklearn.decomposition import PCA
@@ -52,3 +53,14 @@ def test_cross_validators():
         ae.compare()
 
         assert ae.best_model is not None
+
+
+def test_param_search():
+    X = np.random.rand(100, 5)
+    y = np.random.rand(100, 1)
+
+    ae = AutoEmulate()
+    ae.setup(X, y, param_search_type="random", param_search=True, param_search_iters=2)
+    ae.compare()
+
+    assert ae.best_model is not None

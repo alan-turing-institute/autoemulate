@@ -3,8 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from scipy.stats import loguniform
-from skopt.space import Categorical
-from skopt.space import Real
 
 
 class Encoder(nn.Module):

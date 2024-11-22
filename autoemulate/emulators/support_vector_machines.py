@@ -7,9 +7,6 @@ from sklearn.svm import SVR
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Integer
-from skopt.space import Real
 
 from autoemulate.utils import _denormalise_y
 from autoemulate.utils import _normalise_y
@@ -125,37 +122,18 @@ class SupportVectorMachines(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid paramaters for the emulator."""
-        param_space_random = {
-            "kernel": ["rbf", "linear", "poly", "sigmoid"],
-            "degree": randint(2, 6),
-            "gamma": ["scale", "auto"],
-            "coef0": uniform(0.0, 1.0),
-            "tol": uniform(1e-5, 1e-3),
-            "C": uniform(1.0, 3.0),
-            "epsilon": uniform(0.1, 0.3),
-            "shrinking": [True, False],
-            "max_iter": [-1],
-        }
-
-        param_space_bayes = {
-            "kernel": Categorical(["rbf", "linear", "poly", "sigmoid"]),
-            "degree": Integer(2, 5),
-            "gamma": Categorical(["scale", "auto"]),
-            "coef0": Real(0.0, 1.0),
-            "tol": Real(1e-5, 1e-3),
-            "C": Real(1.0, 4.0),
-            "epsilon": Real(0.1, 0.4),
-            "shrinking": Categorical([True, False]),
-            "cache_size": Integer(200, 400),
-            "verbose": Categorical([False]),
-            "max_iter": Categorical([-1]),
-        }
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "kernel": ["rbf", "linear", "poly", "sigmoid"],
+                "degree": randint(2, 6),
+                "gamma": ["scale", "auto"],
+                "coef0": uniform(0.0, 1.0),
+                "tol": uniform(1e-5, 1e-3),
+                "C": uniform(1.0, 3.0),
+                "epsilon": uniform(0.1, 0.3),
+                "shrinking": [True, False],
+                "max_iter": [-1],
+            }
         return param_space
 
     @property
