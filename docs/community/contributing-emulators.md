@@ -4,9 +4,10 @@ This guide explains how to contribute new emulator models to `AutoEmulate`.
 
 ## Emulator structure
 
-All emulators in AutoEmulate are implemented as `scikit-learn` estimators, making them compatible with scikit-learn's cross-validation, grid-search, and pipeline functionality. Have a look at the [scikit-learn estimator developer guide](https://scikit-learn.org/1.5/developers/develop.html#rolling-your-own-estimator) for more details on how to implement a new estimator.
+All emulators in AutoEmulate are implemented as `scikit-learn` estimators, making them compatible with scikit-learn's cross-validation, grid-search, and pipeline functionality. Have a look at the [scikit-learn estimator developer guide](https://scikit-learn.org/1.5/developers/develop.html#rolling-your-own-estimator) for more details on how to implement a new emulator.
 
-**Note**: AutoEmulate is designed primarily for static data analysis, leveraging its integration with scikit-learn. If you are contributing an emulator for time-series data, keep in mind that it may not perform optimally without additional handling of temporal dependencies, particularly during cross-validation and evaluation.
+**Note**: Keep in mind when contributing emuulators that AutoEmulate doesn't currently support time-series or spatial data.
+
 ### Core Requirements
 
 Each emulator class must:
@@ -32,7 +33,7 @@ The easiest way to create a new emulator is to:
 
 The `model_name` property allows the emulator to be accessed with both long and short names:
 
-- Long name: The class name (e.g., "RadialBasisFunctions") 
+- Long name: The class name (e.g., "RadialBasisFunctions")
 - Short name: Uppercase letters from long name (e.g., "rbf")
 
 Make sure your chosen class name:
@@ -47,7 +48,7 @@ We use two types of tests:
 
 1. **Scikit-learn Test Suite**: Add your emulator to `tests/test_estimators.py` to verify scikit-learn compatibility. Not all tests need to pass - use `_more_tags()` to skip incompatible tests. See the [estimator tags overview](https://scikit-learn.org/1.5/developers/develop.html#estimator-tags) for details.
 
-2. **Custom Tests**: Add specific tests for your emulator in `tests/models/` to verify its core functionality (e.g., confirming output shapes, validating end-to-end functionality of components such as parameter search etc).
+2. **Custom Tests**: Add specific tests for your emulator in `tests/models/` to verify its core functionality (e.g., validating end-to-end functionality of components such as parameter search etc).
 
 ## Registering an emulator
 

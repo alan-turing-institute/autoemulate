@@ -20,7 +20,6 @@ This section provides a high-level guide to contributing to AutoEmulate, designe
 * [contributing emulators](contributing-emulators.md)
 * [contributing to the docs](contributing-docs.md)
 
-
 We welcome contributions of all kinds, be it code, documentation, or community engagement. We encourage you to read through the following sections to learn more about how you can contribute to the package.
 
 ## How to Submit Changes
@@ -41,6 +40,7 @@ Make sure to [keep your fork up to date](https://docs.github.com/en/pull-request
 ### 2. Make Changes
 
 After writing new code or modifying existing code, please make sure to:
+
 * write [numpy-style docstrings](https://numpydoc.readthedocs.io/en/latest/format.html).
 * write tests in the `tests/` directory using [pytest](https://docs.pytest.org/en/7.4.x/).
 * format the code using [black](https://github.com/psf/black)
@@ -70,7 +70,7 @@ Found a bug? Please open an issue here on GitHub to report it. We have a templat
 
 ## Recognising Contributions
 
-All contributors will be acknowledged in the [contributors](https://github.com/alan-turing-institute/autoemulate/tree/main#contributors) section of the README. 
+All contributors will be acknowledged in the [contributors](https://github.com/alan-turing-institute/autoemulate/tree/main#contributors) section of the README.
 
 AutoEmulate follows the [all-contributors](https://github.com/kentcdodds/all-contributors#emoji-key) specifications. The all-contributors bot usage is described [here](https://allcontributors.org/docs/en/bot/usage).
 
@@ -89,8 +89,8 @@ What happens if you accidentally run the bot before the previous run was merged 
 If you're stuck or need assistance:
 
 <!-- #TODO #148 - Check our [FAQ](<ADD LINK TO FAQ DOCUMENT>) section first. -->
-- Reach out <!-- on Slack or --> via email for personalised assistance. (See ["Get in touch"](#get-in-touch) above for links.)
-- Consider pairing up with a another contributor for guidance. <!-- You can always find us in the Slack channel and we're happy to chat! -->Contact us for guidance on this topic
+* Reach out <!-- on Slack or --> via email for personalised assistance. (See ["Get in touch"](#get-in-touch) above for links.)
+* Consider pairing up with a another contributor for guidance. <!-- You can always find us in the Slack channel and we're happy to chat! -->Contact us for guidance on this topic
 
 **Once again, thank you for considering contributing to AutoEmulate! We hope you enjoy your contributing experience.**
 
@@ -106,7 +106,7 @@ These Contributing Guidelines have been adapted from the [Contributing Guideline
 
 ## Get in touch
 
-**Email**: For any inquiries, please reach out to lead Developer Martin Stoffel, mstoffel@turing.ac.uk.
+**Email**: For any inquiries, please reach out to lead Developer Martin Stoffel, <mstoffel@turing.ac.uk>.
 
 <!-- The easiest way to get involved with the active development of AutoEmulate is to join our regular community calls. The community calls are currently on a hiatus but if you are interested in participating in the forthcoming community calls, which will start in 2024, you should join our Slack workspace, where conversation about when to hold the community calls in the future will take place. -->
 
