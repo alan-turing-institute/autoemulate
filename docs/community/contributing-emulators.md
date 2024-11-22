@@ -26,7 +26,7 @@ Each emulator class must:
 The easiest way to create a new emulator is to:
 
 1. Look at existing emulators in `autoemulate/emulators/` as templates
-2. Run the scikit-learn estimator tests early to catch any implementation issues
+2. Run the scikit-learn estimator tests `tests/test_estimators.py` early to catch any implementation issues
 3. Add your own tests in `tests/models/`
 
 ### Naming Conventions
