@@ -18,7 +18,7 @@ Before contributing, please read our [contributing guide](contributing.md) to se
    jupyter-book build docs --all
    ```
 
-4. Open the generated HTML in your browser to preview
+4. Open the generated file `docs/_build/html/index.html` in your browser to preview.
 
 ### 2. Adding tutorials
 
