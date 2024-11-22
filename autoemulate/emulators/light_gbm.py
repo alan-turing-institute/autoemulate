@@ -8,9 +8,6 @@ from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Integer
-from skopt.space import Real
 
 
 class LightGBM(BaseEstimator, RegressorMixin):
@@ -107,33 +104,17 @@ class LightGBM(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_space_random = {
-            "boosting_type": ["gbdt"],
-            "num_leaves": randint(10, 100),
-            "max_depth": randint(-1, 12),
-            "learning_rate": loguniform(0.001, 0.1),
-            "n_estimators": randint(50, 1000),
-            # "colsample_bytree": uniform(0.5, 1.0),
-            "reg_alpha": loguniform(0.001, 1),
-            "reg_lambda": loguniform(0.001, 1),
-        }
-
-        param_space_bayes = {
-            "boosting_type": Categorical(["gbdt"]),
-            "num_leaves": Integer(10, 100),
-            "max_depth": Integer(-1, 12),
-            "learning_rate": Real(0.001, 0.1, prior="log-uniform"),
-            "n_estimators": Integer(50, 1000),
-            # "colsample_bytree": Real(0.5, 1.0),
-            "reg_alpha": Real(0.001, 1, prior="log-uniform"),
-            "reg_lambda": Real(0.001, 1, prior="log-uniform"),
-        }
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "boosting_type": ["gbdt"],
+                "num_leaves": randint(10, 100),
+                "max_depth": randint(-1, 12),
+                "learning_rate": loguniform(0.001, 0.1),
+                "n_estimators": randint(50, 1000),
+                # "colsample_bytree": uniform(0.5, 1.0),
+                "reg_alpha": loguniform(0.001, 1),
+                "reg_lambda": loguniform(0.001, 1),
+            }
         return param_space
 
     @property

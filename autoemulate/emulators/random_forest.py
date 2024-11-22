@@ -5,8 +5,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Integer
 
 
 class RandomForest(BaseEstimator, RegressorMixin):
@@ -94,34 +92,18 @@ class RandomForest(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-
-        param_space_random = {
-            "n_estimators": randint(50, 500),
-            "min_samples_split": randint(2, 20),
-            "min_samples_leaf": randint(1, 10),
-            "max_features": ["sqrt", "log2", None, 1.0],
-            "bootstrap": [True, False],
-            "oob_score": [True, False],
-            "max_depth": [None] + list(range(5, 30, 5)),  # None plus a range of depths
-            "max_samples": [None, 0.5, 0.7, 0.9],
-        }
-
-        param_space_bayes = {
-            "n_estimators": Integer(50, 500),
-            "min_samples_split": Integer(2, 20),
-            "min_samples_leaf": Integer(1, 10),
-            "max_features": ["sqrt", "log2", 1.0, None],
-            "bootstrap": Categorical([True, False]),
-            "oob_score": Categorical([True, False]),
-            # "max_depth": Categorical([None] + list(range(3, 20))),  # None plus a range of depths
-            "max_samples": Categorical([None, 0.5, 0.75]),
-        }
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "n_estimators": randint(50, 500),
+                "min_samples_split": randint(2, 20),
+                "min_samples_leaf": randint(1, 10),
+                "max_features": ["sqrt", "log2", None, 1.0],
+                "bootstrap": [True, False],
+                "oob_score": [True, False],
+                "max_depth": [None]
+                + list(range(5, 30, 5)),  # None plus a range of depths
+                "max_samples": [None, 0.5, 0.7, 0.9],
+            }
         return param_space
 
     @property

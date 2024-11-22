@@ -75,10 +75,11 @@ class AutoEmulate:
         param_search : bool
             Whether to perform hyperparameter search over predifined parameter grids.
         param_search_type : str
-            Type of hyperparameter search to perform. Currently only "random".
+            Type of hyperparameter search to perform. Currently only "random", which picks random parameter settings
+            from a grid param_search_iters times.
         param_search_iters : int
             Number of parameter settings that are sampled. Only used if
-            param_search=True and param_search_type="random".
+            param_search=True.
         scale : bool, default=True
             Whether to scale features/parameters in X before fitting the models using a scaler.
         scaler : sklearn.preprocessing.StandardScaler

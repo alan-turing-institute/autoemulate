@@ -320,15 +320,8 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
                 ],
                 "optimizer": [torch.optim.AdamW, torch.optim.Adam],
                 "lr": [5e-1, 1e-1, 5e-2, 1e-2],
-                "max_epochs": [
-                    50,
-                    100,
-                    200,
-                ],
+                "max_epochs": [50, 100, 200],
             }
-        else:
-            raise ValueError("search_type must be 'random'")
-
         return param_space
 
     @property

@@ -5,8 +5,6 @@ from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Real
 
 
 class GaussianProcessMOGP(BaseEstimator, RegressorMixin):
@@ -67,19 +65,13 @@ class GaussianProcessMOGP(BaseEstimator, RegressorMixin):
             return np.asarray(self.model_.predict(X).mean)
 
     def get_grid_params(self, search_type="random"):
-        """Returns the grid parameters of the emulator."""
-        param_space_random = {
-            "nugget": ["fit", "adaptive", "pivot"],
-        }
-        param_space_bayes = {
-            "nugget": Categorical(["fit", "adaptive", "pivot"]),
-        }
-
+        """
+        Get the parameter space.
+        """
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "nugget": ["fit", "adaptive", "pivot"],
+            }
         return param_space
 
     @property

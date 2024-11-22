@@ -195,8 +195,7 @@ def get_model_param_space(model, search_type="random"):
     model : model instance or Pipeline and/or MultiOutputRegressor
         The model or pipeline from which to retrieve the base model parameter grid.
     search_type : str
-        The type of hyperparameter search to be performed. Can be "random" or "bayes".
-        Default is "random".
+        The type of hyperparameter search to be performed. Only "random" is currently supported.
 
     Returns
     -------
@@ -265,9 +264,7 @@ def _add_prefix_to_param_space(param_space, prefix):
     - when param_space is a list of dicts (when we only want
       to iterate over certain parameter combinations, like in RBF)
     - when param_space contains tuples of (dict, int) (when we want
-      to iterate a certain number of times over a parameter subspace
-      (only in BayesSearchCV). This can be used to prevent bayes search
-      from iterating many times using the same parameters.
+      to iterate a certain number of times over a parameter subspace.
 
     Parameters
     ----------
@@ -373,7 +370,7 @@ def _ensure_2d(arr):
     return arr
 
 
-# checkers for scikit-learn objects --------------------------------------------
+# checkers --------------------------------------------
 
 
 def _check_cv(cv):

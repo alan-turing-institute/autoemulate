@@ -7,9 +7,6 @@ from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Integer
-from skopt.space import Real
 
 
 class RadialBasisFunctions(BaseEstimator, RegressorMixin):
@@ -85,58 +82,29 @@ class RadialBasisFunctions(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-
-        param_space_random = [
-            {
-                "kernel": ["linear", "multiquadric"],
-                "degree": randint(0, 3),  # Degrees valid for these kernels
-                "smoothing": uniform(0.0, 1.0),
-            },
-            {
-                "kernel": ["thin_plate_spline", "cubic"],
-                "degree": randint(1, 3),  # Degrees valid for the 'quintic' kernel
-                "smoothing": uniform(0.0, 1.0),
-            },
-            {
-                "kernel": ["quintic"],
-                "degree": randint(2, 3),
-                "smoothing": uniform(0.0, 1.0),
-            },
-            {
-                "kernel": ["gaussian"],
-                "degree": randint(-1, 3),
-                "smoothing": uniform(0.0, 1.0),
-            },
-        ]
-
-        param_space_bayes = [
-            {
-                "kernel": Categorical(["linear", "multiquadric"]),
-                "degree": Integer(0, 4),  # Degrees valid for these kernels
-                "smoothing": Real(0.0, 1.0),
-            },
-            {
-                "kernel": Categorical(["thin_plate_spline", "cubic"]),
-                "degree": Integer(1, 4),  # Degrees valid for the 'quintic' kernel
-                "smoothing": Real(0.0, 1.0),
-            },
-            {
-                "kernel": Categorical(["quintic"]),
-                "degree": Integer(2, 4),
-                "smoothing": Real(0.0, 1.0),
-            },
-            {
-                "kernel": Categorical(["gaussian"]),
-                "degree": Integer(-1, 4),
-                "smoothing": Real(0.0, 1.0),
-            },
-        ]
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = [
+                {
+                    "kernel": ["linear", "multiquadric"],
+                    "degree": randint(0, 3),  # Degrees valid for these kernels
+                    "smoothing": uniform(0.0, 1.0),
+                },
+                {
+                    "kernel": ["thin_plate_spline", "cubic"],
+                    "degree": randint(1, 3),  # Degrees valid for the 'quintic' kernel
+                    "smoothing": uniform(0.0, 1.0),
+                },
+                {
+                    "kernel": ["quintic"],
+                    "degree": randint(2, 3),
+                    "smoothing": uniform(0.0, 1.0),
+                },
+                {
+                    "kernel": ["gaussian"],
+                    "degree": randint(-1, 3),
+                    "smoothing": uniform(0.0, 1.0),
+                },
+            ]
         return param_space
 
     @property

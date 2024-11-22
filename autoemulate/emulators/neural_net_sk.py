@@ -6,8 +6,6 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Real
 
 from autoemulate.utils import _suppress_convergence_warnings
 
@@ -98,40 +96,20 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_space_random = {
-            "hidden_layer_sizes": [
-                (50,),
-                (100,),
-                (100, 50),
-                (100, 100),
-                (100, 100, 100),
-            ],
-            "activation": ["relu"],  # "tanh", "logistic"
-            "solver": ["adam", "lbfgs"],  # "sgd",
-            "alpha": loguniform(1e-5, 1e-1),
-            "learning_rate_init": loguniform(1e-4, 1e-2),
-        }
-
-        param_space_bayes = {
-            # doesn't work with bayes
-            # "hidden_layer_sizes": Categorical([
-            #     (50,),
-            #     (100,),
-            #     (100, 50),
-            #     (100, 100),
-            #     (100, 100, 100),
-            # ]),
-            "activation": Categorical(["relu"]),  # Add "tanh", "logistic" if needed
-            "solver": Categorical(["adam", "lbfgs"]),  # Add "sgd" if needed
-            "alpha": Real(1e-5, 1e-1, prior="log-uniform"),
-            "learning_rate_init": Real(1e-4, 1e-2, prior="log-uniform"),
-        }
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "hidden_layer_sizes": [
+                    (50,),
+                    (100,),
+                    (100, 50),
+                    (100, 100),
+                    (100, 100, 100),
+                ],
+                "activation": ["relu"],
+                "solver": ["adam", "lbfgs"],
+                "alpha": loguniform(1e-5, 1e-1),
+                "learning_rate_init": loguniform(1e-4, 1e-2),
+            }
         return param_space
 
     @property
@@ -140,24 +118,3 @@ class NeuralNetSk(BaseEstimator, RegressorMixin):
 
     def _more_tags(self):
         return {"multioutput": True}
-
-    # def score(self, X, y, metric):
-    #     """Returns the score of the emulator.
-
-    #     Parameters
-    #     ----------
-    #     X : array-like, shape (n_samples, n_features)
-    #         Simulation input.
-    #     y : array-like, shape (n_samples, n_outputs)
-    #         Simulation output.
-    #     metric : str
-    #         Name of the metric to use, currently either rsme or r2.
-
-    #     Returns
-    #     -------
-    #     metric : float
-    #         Metric of the emulator.
-    #     """
-
-    #     predictions = self.predict(X)
-    #     return metric(y, predictions)
