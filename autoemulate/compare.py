@@ -508,17 +508,17 @@ class AutoEmulate:
         ----------
         model : object
             Fitted model.
-        plot_type : str, optional
+        style : str, optional
             The type of plot to draw:
             "Xy" observed and predicted values vs. features, including 2σ error bands where available (default).
             "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
             "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
             Number of columns in the plot grid for multi-output. Default is 2.
-        output_index : int
-            Index of the output to plot. Default is 0..
-        input_index : int
-            Index of the input to plot. Default is 0. Only used if plot_type="Xy".
+        output_index : list, int
+            Index of the output to plot. Either a single index or a list of indices.
+        input_index : list, int
+            Index of the input to plot. Either a single index or a list of indices. Only used if style="Xy".
         """
         fig = _plot_model(
             model,
