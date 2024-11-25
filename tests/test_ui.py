@@ -13,6 +13,29 @@ from sklearn.preprocessing import RobustScaler
 from autoemulate.compare import AutoEmulate
 from autoemulate.emulators import model_registry
 
+
+@pytest.fixture
+def param_search_ae():
+    X = np.random.rand(50, 2)
+    y = np.random.rand(50, 1)
+
+    # names of all models
+    all_models = list(model_registry.get_model_names().keys())
+
+    ae = AutoEmulate()
+    ae.setup(
+        X,
+        y,
+        cross_validator=KFold(n_splits=2),
+        param_search_type="random",
+        param_search=True,
+        param_search_iters=2,
+        models=all_models,
+    )
+    ae.compare()
+    return ae
+
+
 # take fast fitting models for testing
 model_subset = ["SecondOrderPolynomial", "RadialBasisFunctions"]
 
@@ -59,28 +82,6 @@ def test_cross_validators():
         assert ae.best_model is not None
 
 
-@pytest.fixture
-def param_search_ae():
-    X = np.random.rand(50, 2)
-    y = np.random.rand(50, 1)
-
-    # names of all models
-    all_models = list(model_registry.get_model_names().keys())
-
-    ae = AutoEmulate()
-    ae.setup(
-        X,
-        y,
-        cross_validator=KFold(n_splits=2),
-        param_search_type="random",
-        param_search=True,
-        param_search_iters=2,
-        models=all_models,
-    )
-    ae.compare()
-    return ae
-
-
 def test_param_search(param_search_ae):
     assert param_search_ae.best_model is not None
 
@@ -89,8 +90,6 @@ def test_save_load_with_param_search(param_search_ae):
     with TemporaryDirectory() as temp_dir:
         for name in param_search_ae.model_names:
             save_path = Path(temp_dir) / f"test_model_{name}"
-            # assert that saving doesn't fail
             param_search_ae.save(param_search_ae.get_model(name), save_path)
-            # assert that loading doesn't fail
             loaded_model = param_search_ae.load(save_path)
             assert loaded_model is not None
