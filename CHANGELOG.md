@@ -10,4 +10,5 @@
   - evaluate_model() is now evaluate()
   - plot_model() is now plot_eval()
 - Added Global Sensitivity Analysis
-- Removed Bayesian Hyperparameter Optimization
+- New visualisation: Xy plot with confidence bands
+- Bayesian Hyperparameter Optimization has been removed

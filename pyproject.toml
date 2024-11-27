@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.1.0.post1"
+version = "0.2.0"
 description = "An package for semi-automated emulation"
 license = "MIT"
 authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
