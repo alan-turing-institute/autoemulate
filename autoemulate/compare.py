@@ -479,9 +479,7 @@ class AutoEmulate:
 
         scores_df = (
             pd.DataFrame(scores)
-            .assign(
-                target=[f"target_{i}" for i in range(len(scores[next(iter(scores))]))]
-            )
+            .assign(target=[f"y{i}" for i in range(len(scores[next(iter(scores))]))])
             .assign(short=get_short_model_name(model))
             .assign(model=get_model_name(model))
             .reindex(columns=["model", "short", "target"] + list(scores.keys()))
