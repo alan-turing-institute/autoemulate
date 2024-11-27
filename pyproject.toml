@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.2.0"
+version = "0.2.2"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
@@ -11,6 +11,7 @@ authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
            "Eric Daub <edaub@turing.ac.uk>",
            "Steve Niederer <sniederer@turing.ac.uk>"]
 readme = "README.md"
+include = ["misc/AE_logo_final.png"]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"

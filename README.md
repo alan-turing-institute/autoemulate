@@ -1,4 +1,4 @@
-# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="misc/AE_logo_final.png" align="right" height="138" /></a>
+# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/logo/misc/AE_logo_final.png" align="right" height="138" /></a>
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
@@ -19,7 +19,7 @@ There's lots of development at the moment, so we recommend installing the most c
 pip install git+https://github.com/alan-turing-institute/autoemulate.git
 ```
 
-There's also a release onPyPI:
+There's also a release on PyPI:
 
 ```bash
 pip install autoemulate
@@ -46,16 +46,16 @@ lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
 X = lhd.sample(100)
 y = np.array([simulate_projectile(x) for x in X])
 
-# compare emulator models
+# compare emulators
 ae = AutoEmulate()
 ae.setup(X, y)
 best_emulator = ae.compare() 
 
-# training set cross-validation results
+# cross-validation results
 ae.summarise_cv() 
 ae.plot_cv()
 
-# test set results for the best model
+# test set results for the best emulator
 ae.evaluate(best_emulator) 
 ae.plot_eval(best_emulator)
 
