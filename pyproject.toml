@@ -6,6 +6,7 @@ license = "MIT"
 authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
            "Kalle Westerling <kwesterling@turing.ac.uk>",
            "Bryan Li <bli@turing.ac.uk>",
+           "Max Balmus <mbalmus@turing.ac.uk>",
            "Sophie Arana <sarana@turing.ac.uk>",
            "Eric Daub <edaub@turing.ac.uk>",
            "Steve Niederer <sniederer@turing.ac.uk>"]
