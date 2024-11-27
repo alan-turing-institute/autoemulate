@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.1.0.post1"
-description = "An package for semi-automated emulation"
+version = "0.2.0"
+description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
            "Kalle Westerling <kwesterling@turing.ac.uk>",
            "Bryan Li <bli@turing.ac.uk>",
+           "Max Balmus <mbalmus@turing.ac.uk>",
            "Sophie Arana <sarana@turing.ac.uk>",
            "Eric Daub <edaub@turing.ac.uk>",
            "Steve Niederer <sniederer@turing.ac.uk>"]

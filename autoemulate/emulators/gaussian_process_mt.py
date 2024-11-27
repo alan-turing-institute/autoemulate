@@ -202,51 +202,6 @@ class GaussianProcessMT(RegressorMixin, BaseEstimator):
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters for the emulator."""
 
-        # wrapper functions for kernel initialization at fit time (to provide ard_num_dims)
-        # kernels
-        def rbf_kernel(n_features):
-            return gpytorch.kernels.RBFKernel(ard_num_dims=n_features).initialize(
-                lengthscale=torch.ones(n_features) * 1.5
-            )
-
-        def matern_5_2_kernel(n_features):
-            return gpytorch.kernels.MaternKernel(nu=2.5, ard_num_dims=n_features)
-
-        def matern_3_2_kernel(n_features):
-            return gpytorch.kernels.MaternKernel(nu=1.5, ard_num_dims=n_features)
-
-        def rq_kernel(n_features):
-            return gpytorch.kernels.RQKernel(ard_num_dims=n_features)
-
-        # combinations
-        def rbf_plus_linear(n_features):
-            return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features
-            ) + gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
-
-        def matern_5_2_plus_rq(n_features):
-            return gpytorch.kernels.MaternKernel(
-                nu=2.5, ard_num_dims=n_features
-            ) + gpytorch.kernels.RQKernel(ard_num_dims=n_features)
-
-        def rbf_times_linear(n_features):
-            return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features
-            ) * gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
-
-        # means
-        def constant_mean(n_features):
-            return gpytorch.means.ConstantMean()
-
-        def zero_mean(n_features):
-            return gpytorch.means.ZeroMean()
-
-        def linear_mean(n_features):
-            return gpytorch.means.LinearMean(input_size=n_features)
-
-        def poly_mean(n_features):
-            return PolyMean(degree=2, input_size=n_features)
-
         if search_type == "random":
             param_space = {
                 "covar_module": [
@@ -277,3 +232,59 @@ class GaussianProcessMT(RegressorMixin, BaseEstimator):
     def _more_tags(self):
         # TODO: is it really non-deterministic?
         return {"multioutput": True, "non_deterministic": True}
+
+
+# wrapper functions for kernel initialization at fit time (to provide ard_num_dims)
+# move outside class to allow pickling
+def rbf_kernel(n_features):
+    return gpytorch.kernels.RBFKernel(ard_num_dims=n_features).initialize(
+        lengthscale=torch.ones(n_features) * 1.5
+    )
+
+
+def matern_5_2_kernel(n_features):
+    return gpytorch.kernels.MaternKernel(nu=2.5, ard_num_dims=n_features)
+
+
+def matern_3_2_kernel(n_features):
+    return gpytorch.kernels.MaternKernel(nu=1.5, ard_num_dims=n_features)
+
+
+def rq_kernel(n_features):
+    return gpytorch.kernels.RQKernel(ard_num_dims=n_features)
+
+
+# combinations
+def rbf_plus_linear(n_features):
+    return gpytorch.kernels.RBFKernel(
+        ard_num_dims=n_features
+    ) + gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
+
+
+def matern_5_2_plus_rq(n_features):
+    return gpytorch.kernels.MaternKernel(
+        nu=2.5, ard_num_dims=n_features
+    ) + gpytorch.kernels.RQKernel(ard_num_dims=n_features)
+
+
+def rbf_times_linear(n_features):
+    return gpytorch.kernels.RBFKernel(
+        ard_num_dims=n_features
+    ) * gpytorch.kernels.LinearKernel(ard_num_dims=n_features)
+
+
+# means
+def constant_mean(n_features):
+    return gpytorch.means.ConstantMean()
+
+
+def zero_mean(n_features):
+    return gpytorch.means.ZeroMean()
+
+
+def linear_mean(n_features):
+    return gpytorch.means.LinearMean(input_size=n_features)
+
+
+def poly_mean(n_features):
+    return PolyMean(degree=2, input_size=n_features)

@@ -13,13 +13,14 @@ The project is in early development.
 
 ## Installation
 
-There's currently a lot of development, so we recommend installing the most current version from GitHub:
+There's lots of development at the moment, so we recommend installing the most current version from GitHub:
 
 ```bash
 pip install git+https://github.com/alan-turing-institute/autoemulate.git
 ```
 
-There's also a release available on PyPI (note: currently an older version and out of date with the documentation)
+There's also a release onPyPI:
+
 ```bash
 pip install autoemulate
 ```
