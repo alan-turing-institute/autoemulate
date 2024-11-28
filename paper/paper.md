@@ -39,7 +39,7 @@ affiliations:
     - name: Imperial College London, London, United Kingdom
       index: 3
 date: 28 November 2024
-bibliography: paper.bib
+bibliography: paper/paper.bib
 ---
 
 # Summary
