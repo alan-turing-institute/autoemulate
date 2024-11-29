@@ -44,7 +44,7 @@ bibliography: paper.bib
 
 # Summary
 
-Simulations are ubiquitous in research and application, but are often too slow and computationally expensive to deeply explore the underlying system. One solution is to create efficient emulators (also surrogate- or meta-models) to approximate simulations, but this requires substantial expertise. Here, we present AutoEmulate, a low-code, AutoML-style python package for emulation. AutoEmulate makes it easy to fit and compare emulators, abstracting away the need for extensive machine learning (ML) experimentation. The package includes a range of emulators, from Gaussian Processes, Support Vector Machines and Gradient Boosting Models to novel, experimental deep learning emulators such as Neural Processes [@garnelo_conditional_2018]. AutoEmulate also implements global sensitivity analysis as a common emulator application, and we aim to add other applications in the future. Finally, AutoEmulate is designed to be easy to contribute to by being modular, integrated with the scikit-learn ecosystem [@pedregosa_scikit-learn_2011], and well documented. We aim to iterate based on user feedback to make AutoEmulate a tool for end-to-end emulation across fields.
+Simulations are ubiquitous in research and application, but are often too slow and computationally expensive to deeply explore the underlying system. One solution is to create efficient emulators (also surrogate- or meta-models) to approximate simulations, but this requires substantial expertise. Here, we present AutoEmulate, a low-code, AutoML-style python package for emulation. AutoEmulate makes it easy to fit and compare emulators, abstracting away the need for extensive machine learning (ML) experimentation. The package includes a range of emulators, from Gaussian Processes, Support Vector Machines and Gradient Boosting Models to novel, experimental deep learning emulators such as Neural Processes [@garnelo_conditional_2018]. It also implements global sensitivity analysis as a common emulator application, which quantifies the relative contribution of different inputs to the output variance. In the future, with user feedback and contributions, we aim to organically grow AutoEmulate into an end-to-end tool for most emulation problems.
 
 # Statement of need
 
@@ -54,7 +54,7 @@ AutoEmulate automates emulator building, with the goal to eventually streamline 
 
 # Pipeline
 
-The minimal input for AutoEmulate are X, y, where X is a 2D array (e.g. numpy-array, Pandas DataFrame) containing one simulation parameter per column and their values in rows, and y is an array containing the corresponding simulation outputs, where y can be either single or multi-output. After a dataset X, y has been constructed by evaluating the original simulation, we can create an emulator with AutoEmulate in just three lines of code:
+The inputs for AutoEmulate are X and y, where X is a 2D array (e.g. numpy-array, Pandas DataFrame) containing one simulation parameter per column and their values in rows, and y is an array containing the corresponding simulation outputs. A dataset X, y is usually constructed by sampling input parameters X using Latin Hypercube Sampling (McKay et al., 1979) and evaluating the simulation on these inputs to obtain outputs y. With X and y, we can create an emulator with AutoEmulate in just a few lines of code.
 
 ```python
 from autoemulate.compare import AutoEmulate
@@ -62,28 +62,43 @@ from autoemulate.compare import AutoEmulate
 # creating an emulator
 ae = AutoEmulate()
 ae.setup(X, y)                    # allows to customise pipeline 
-emulator = ae.compare()           # compares emulators & returns 
+ae.compare()                      # compares emulators
 ```
 
-Under the hood, AutoEmulate runs a complete ML pipeline. It splits the data into training and test sets, standardises inputs, fits a set of user-specified emulators, compares them using cross-validation and optionally optimises hyperparameters using pre-defined search spaces. It then returns the emulator with the highest average cross-validation R^2 score. The results can then easily be summarised and visualised.
+Under the hood, AutoEmulate runs a complete ML pipeline. It splits the data into training and test sets, standardises inputs, fits a set of user-specified emulators, compares them using cross-validation and optionally optimises hyperparameters using pre-defined search spaces. The cross-validation results can then easily be summarised and visualised.
 
 ```python
 # cross-validation results
-ae.summarise_cv()                 # cv metrics for each model
-ae.plot_cv()                      # visualise best cv fold per model
+# ae.plot_cv()                      # visualise cv results
+ae.summarise_cv()                   # cv metrics for each model
 ```
 
-After choosing an emulator based on its cross-validation performance, it can be evaluated on the test set, which by default is 20% of the original dataset. If the test-set performance is acceptable, the emulator can be refitted on the combined training and test data before applying it.
+| Model | Short Name | RMSE | R² |
+|-------|------------|------|-----|
+| Gaussian Process | gp | 0.1027 | 0.9851 |
+| Random Forest | rf | 0.1511 | 0.9677 |
+| Gradient Boosting | gb | 0.1566 | 0.9642 |
+| Conditional Neural Process | cnp | 0.1915 | 0.9465 |
+| Radial Basis Functions | rbf | 0.3518 | 0.7670 |
+| Support Vector Machines | svm | 0.4924 | 0.6635 |
+| LightGBM | lgbm | 0.6044 | 0.4930 |
+| Second Order Polynomial | sop | 0.8378 | 0.0297 |
+
+After choosing an emulator based on its cross-validation performance, it can be evaluated on the test set, which by default is 20% of the original dataset.
 
 ```python
 # evaluating the emulator
-ae.evaluate(emulator)             # test set scores
-emulator = ae.refit(emulator)     # refit using full data
+emulator = ae.get_model("GaussianProcess")
+ae.evaluate(emulator)             # get test set scores
+ae.plot_eval(emulator)            # visualise test set predictions
 ```
 
-The emulator can now be used as an efficient replacement for the original simulation by generating tens of thousands of new data points in milliseconds using predict(). We’ve also implemented global sensitivity analysis, a common use-case for emulators, which decomposes the variance in the output(s) into the contributions of the various simulation parameters and their interactions.
+![Test set predictions](eval.png)
+
+If the test-set performance is acceptable, the emulator can be refitted on the combined training and test data before applying it. The emulator can now be used as an efficient replacement for the original simulation by generating tens of thousands of new data points in milliseconds using predict(). We’ve also implemented global sensitivity analysis, a common use-case for emulators, which decomposes the variance in the outputs into the contributions of the various simulation parameters and their interactions.
 
 ```python
+emulator = ae.refit(emulator)     # refit using full data
 # application
 emulator.predict(X)               # generate new samples
 ae.sensitivity_analysis(emulator) # global SA with Sobol indices
