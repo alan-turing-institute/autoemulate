@@ -73,6 +73,8 @@ Under the hood, AutoEmulate runs a complete ML pipeline. It splits the data into
 ae.summarise_cv()                   # cv metrics for each model
 ```
 
+: Average cross-validation scores
+
 | Model | Short Name | RMSE | R² |
 |-------|------------|------|-----|
 | Gaussian Process | gp | 0.1027 | 0.9851 |
