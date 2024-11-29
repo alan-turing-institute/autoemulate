@@ -59,18 +59,17 @@ The inputs for AutoEmulate are X and y, where X is a 2D array (e.g. numpy-array,
 ```python
 from autoemulate.compare import AutoEmulate
 
-# creating an emulator
 ae = AutoEmulate()
-ae.setup(X, y)                    # allows to customise pipeline 
-ae.compare()                      # compares emulators
+ae.setup(X, y)                     # allows to customise pipeline 
+ae.compare()                       # runs the pipeline
 ```
 
-Under the hood, AutoEmulate runs a complete ML pipeline. It splits the data into training and test sets, standardises inputs, fits a set of user-specified emulators, compares them using cross-validation and optionally optimises hyperparameters using pre-defined search spaces. The cross-validation results can then easily be summarised and visualised.
+Under the hood, AutoEmulate runs a complete ML pipeline. It splits the data into training and test sets, standardises inputs, fits a set of user-specified emulators, compares them using cross-validation and optionally optimises hyperparameters using pre-defined search spaces. The cross-validation results can then be visualised and summarised.
+.
 
 ```python
-# cross-validation results
-# ae.plot_cv()                      # visualise cv results
-ae.summarise_cv()                   # cv metrics for each model
+ae.plot_cv()                        # visualise results
+ae.summarise_cv()                   # metrics for each model
 ```
 
 : Average cross-validation scores
@@ -86,23 +85,21 @@ ae.summarise_cv()                   # cv metrics for each model
 | LightGBM | lgbm | 0.6044 | 0.4930 |
 | Second Order Polynomial | sop | 0.8378 | 0.0297 |
 
-After choosing an emulator based on its cross-validation performance, it can be evaluated on the test set, which by default is 20% of the original dataset.
+After choosing an emulator based on cross-validation metrics and visualisations, it can be evaluated on the test set, which defaults to be 20% of the original dataset. 
 
 ```python
-# evaluating the emulator
 emulator = ae.get_model("GaussianProcess")
-ae.evaluate(emulator)             # get test set scores
+ae.evaluate(emulator)             # calculate test set scores
 ae.plot_eval(emulator)            # visualise test set predictions
 ```
 
-![Test set predictions](eval.png)
+![Test set predictions](eval_3.png)
 
-If the test-set performance is acceptable, the emulator can be refitted on the combined training and test data before applying it. The emulator can now be used as an efficient replacement for the original simulation by generating tens of thousands of new data points in milliseconds using predict(). We’ve also implemented global sensitivity analysis, a common use-case for emulators, which decomposes the variance in the outputs into the contributions of the various simulation parameters and their interactions.
+If the test-set performance is acceptable, the emulator can be refitted on the combined training and test data before applying it. It's now ready to be used as an efficient replacement for the original simulation by generating tens of thousands of new data points in seconds using predict(). We have also implemented global sensitivity analysis, a common use-case for emulators, which decomposes the variance in the outputs into the contributions of the various simulation parameters and their interactions.
 
 ```python
 emulator = ae.refit(emulator)     # refit using full data
-# application
-emulator.predict(X)               # generate new samples
+emulator.predict(X)               # efficiently generate new samples
 ae.sensitivity_analysis(emulator) # global SA with Sobol indices
 ```
 
