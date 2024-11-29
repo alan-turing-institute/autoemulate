@@ -84,7 +84,7 @@ ae.summarise_cv()                     # metrics for each model
 | LightGBM | lgbm | 0.6044 | 0.4930 |
 | Second Order Polynomial | sop | 0.8378 | 0.0297 |
 
-After choosing an emulator based on cross-validation metrics and visualisations, it can be evaluated on the test set, with a default size of 20% of the original dataset.
+After choosing an emulator based on its cross-validation performance, it can be evaluated on the test set, which by default is 20% of the original dataset. AutoEmulate provides various visualisations in addition to the metrics.
 
 ```python
 emulator = ae.get_model("GaussianProcess")
@@ -94,7 +94,7 @@ ae.plot_eval(emulator)                 # visualise test set predictions
 
 ![Test set predictions](eval_2.png)
 
-If the test-set performance is acceptable, the emulator can be refitted on the combined training and test data before applying it. It's now ready to be used as an efficient replacement for the original simulation, allowing to generate tens of thousands of new data points in seconds using predict(). We implemented global sensitivity analysis as a common use-case, which decomposes the variance in the outputs into the contributions of the various simulation parameters and their interactions.
+If the test-set performance is acceptable, the emulator can be refitted on the combined training and test data before applying it. It's now ready to be used as an efficient replacement for the original simulation, and is able to generate tens of thousands of new data points in seconds using predict(). We implemented global sensitivity analysis as a common use-case, which decomposes the variance in the outputs into the contributions of the various simulation parameters and their interactions.
 
 ```python
 emulator = ae.refit(emulator)           # refit using full data
