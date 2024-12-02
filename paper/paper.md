@@ -42,7 +42,7 @@ date: 28 November 2024
 bibliography: paper.bib
 ---
 
-# Summary <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/logo/misc/AE_logo_final.png" align="right" height="138" /></a>
+# Summary <img src="../misc/AE_logo_final.png" style="width:100px; float:right; margin-left:10px;">
 
 Simulations are ubiquitous in research and application, but are often too slow and computationally expensive to deeply explore the underlying system. One solution is to create efficient emulators (also surrogate- or meta-models) to approximate simulations, but this requires substantial expertise. Here, we present AutoEmulate, a low-code, AutoML-style python package for emulation. AutoEmulate makes it easy to fit and compare emulators, abstracting away the need for extensive machine learning (ML) experimentation. The package includes a range of emulators, from Gaussian Processes, Support Vector Machines and Gradient Boosting Models to novel, experimental deep learning emulators such as Neural Processes [@garnelo_conditional_2018]. It also implements global sensitivity analysis as a common emulator application, which quantifies the relative contribution of different inputs to the output variance. In the future, with user feedback and contributions, we aim to organically grow AutoEmulate into an end-to-end tool for most emulation problems.
 
