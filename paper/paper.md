@@ -44,7 +44,7 @@ bibliography: paper.bib
 
 # Summary
 
-Simulations are ubiquitous in research and application, but are often too slow and computationally expensive to deeply explore the underlying system. One solution is to create efficient emulators (also surrogate- or meta-models) to approximate simulations, but this requires substantial expertise. Here, we present AutoEmulate, a low-code, AutoML-style python package for emulation. AutoEmulate makes it easy to fit and compare emulators, abstracting away the need for extensive machine learning (ML) experimentation. The package includes a range of emulators, from Gaussian Processes, Support Vector Machines and Gradient Boosting Models to novel, experimental deep learning emulators such as Neural Processes [@garnelo_conditional_2018]. It also implements global sensitivity analysis as a common emulator application, which quantifies the relative contribution of different inputs to the output variance. In the future, with user feedback and contributions, we aim to organically grow AutoEmulate into an end-to-end tool for most emulation problems.
+Simulations are ubiquitous in research and application, but are often too slow and computationally expensive to deeply explore the underlying system. One solution is to create efficient emulators (also surrogate- or meta-models) to approximate simulations, but this requires substantial expertise. Here, we present AutoEmulate, a low-code, AutoML-style python package for emulation. AutoEmulate makes it easy to fit and compare emulators, abstracting away the need for extensive machine learning (ML) experimentation. The package includes a range of emulators, from Gaussian Processes, Support Vector Machines and Gradient Boosting Models to novel, experimental deep learning emulators such as Neural Processes [@garnelo_conditional_2018]. It also implements global sensitivity analysis as a common emulator application, which quantifies the relative contribution of different inputs to the output variance. Through community feedback and collaboration, we aim for AutoEmulate to evolve into an end-to-end tool for most emulation problems.
 
 # Statement of need
 
@@ -58,7 +58,7 @@ AutoEmulate fills a gap in the current landscape of surrogate modeling tools as 
 
 # Pipeline
 
-The inputs for AutoEmulate are `X` and `y`, where `X` is a 2D array (e.g. numpy-array, Pandas DataFrame) containing one simulation parameter per column and their values in rows, and `y` is an array containing the corresponding simulation outputs. A dataset `X`, `y` is usually obtained by constructing a set of parameters `X` using sampling techniques like Latin Hypercube Sampling [@mckay_comparison_1979] and evaluating the simulation on these inputs to obtain outputs `y`. With `X` and `y`, we can create an emulator with AutoEmulate in just a few lines of code.
+The inputs for AutoEmulate are `X` and `y`, where `X` is a 2D array (e.g. numpy-array, Pandas DataFrame) containing simulation parameters in columns and their values in rows, and `y` is an array containing the corresponding simulation outputs. A dataset `X`, `y` is usually obtained by constructing a set of parameters `X` using sampling techniques like Latin Hypercube Sampling [@mckay_comparison_1979] and evaluating the simulation on these inputs to obtain outputs `y`. With `X` and `y`, we can create an emulator with AutoEmulate in just a few lines of code.
 
 ```python
 from autoemulate.compare import AutoEmulate
@@ -88,17 +88,17 @@ ae.summarise_cv()                         # cv scores for each model
 | LightGBM | lgbm | 0.6044 | 0.4930 |
 | Second Order Polynomial | sop | 0.8378 | 0.0297 |
 
-After comparing cross-validation metrics and plots, an emulator can be selected and evaluated on the held-out test set.
+After comparing cross-validation metrics and plots, an emulator can be selected and evaluated on the held-out test set (defaults to 20% of the data).
 
 ```python
-emulator = ae.get_model("GaussianProcess") # select fitted emulator
+emulator = ae.get_model("GaussianProcess") # get fitted emulator
 ae.evaluate(emulator)                      # calculate test set scores
 ae.plot_eval(emulator, input_index=[0, 1]) # plot predictions
 ```
 
-![Test set predictions for each input](eval_2.png)
+![Test set predictions](eval_2.png)
 
-Finally, the emulator can be refitted on the combined training and test set data before applying it. It's now ready to be used as an efficient replacement for the original simulation, being able to generate tens of thousands of new data points in negligible time using `predict()`. Lastly, we implemented global sensitivity analysis, which requires a large number of samples from the emulator, and quantifies how each simulation parameter and their interactions contribute to the output variance.
+Finally, the emulator can be refitted on the combined training and test set data before applying it. It's now ready to be used as an efficient replacement for the original simulation, being able to generate tens of thousands of new data points in negligible time using `predict()`. Lastly, we implemented global sensitivity analysis, which requires a large number of samples from the emulator to quantify how each simulation parameter and their interactions contribute to the output variance.
 
 ```python
 emulator = ae.refit(emulator)               # refit using full data
@@ -108,6 +108,6 @@ ae.sensitivity_analysis(emulator)           # global SA with Sobol indices
 
 # Acknowledgements
 
-We thank the Turing Research and Innovation Cluster in Digital Twins for supporting this work. We also thank Keith Worden, Ieva Kazlauskaite, Rosie Williams, Robert Arthern, Peter Yatsyshin, Christopher Burr, James Byrne for discussions and Marina Strocci, Zack Xuereb Conti, Richard Wilkinson for also providing datasets.
+We thank the Turing Research and Innovation Cluster in Digital Twins for supporting this work. We also thank Keith Worden, Ieva Kazlauskaite, Rosie Williams, Robert Arthern, Peter Yatsyshin, Christopher Burr and James Byrne for discussions and Marina Strocci, Zack Xuereb Conti, Richard Wilkinson for discussions and providing datasets.
 
 # References
