@@ -15,10 +15,13 @@ chapters:
 - file: tutorials/index
   sections:
   - file: tutorials/01_start
+  - file: tutorials/02_speed
 
 - file: community/index
   sections:
   - file: community/contributing
+  - file: community/contributing-emulators
+  - file: community/contributing-docs
   - file: community/code-of-conduct
   - file: community/faq/index
     sections:
@@ -28,29 +31,23 @@ chapters:
 - file: reference/index
   sections:
   - file: reference/compare
-  - file: reference/cross_validate
   - file: reference/datasets
-  - file: reference/experimental_design
-  - file: reference/hyperparam_searching
-  - file: reference/logging_config
-  - file: reference/metrics
-  - file: reference/model_processing
-  - file: reference/plotting
-  - file: reference/printing
-  - file: reference/save
-  - file: reference/utils
+  - file: reference/sensitivity_analysis
   - file: reference/simulations/index
     sections:
     - file: reference/simulations/projectile
     - file: reference/simulations/epidemic
   - file: reference/emulators/index
     sections:
-    - file: reference/emulators/gaussian_process
-    - file: reference/emulators/gradient_boosting
-    - file: reference/emulators/neural_net_sk
-    - file: reference/emulators/neural_net_torch
+    - file: reference/emulators/rbf
     - file: reference/emulators/polynomials
     - file: reference/emulators/random_forest
-    - file: reference/emulators/rbf
     - file: reference/emulators/support_vector_machines
+    - file: reference/emulators/gradient_boosting
     - file: reference/emulators/light_gbm
+    - file: reference/emulators/conditional_neural_process
+    - file: reference/emulators/conditional_neural_process_attn
+    - file: reference/emulators/gaussian_process
+    - file: reference/emulators/gaussian_process_mt
+    - file: reference/emulators/neural_net_sk
+    - file: reference/emulators/gaussian_process_sklearn

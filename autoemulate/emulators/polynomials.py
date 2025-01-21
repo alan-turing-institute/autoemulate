@@ -7,8 +7,6 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Integer
 
 
 class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
@@ -68,24 +66,9 @@ class SecondOrderPolynomial(BaseEstimator, RegressorMixin):
         return predictions
 
     def get_grid_params(self, search_type="random"):
-        """Get the parameter grid for the model.
-
-        Parameters
-        ----------
-        search_type : str, optional
-            The type of parameter search to perform. Can be either 'random' or 'grid'.
-            Defaults to 'random'.
-
-        Returns
-        -------
-        dict
-            The parameter grid for the model.
-        """
+        """Returns the grid parameters of the emulator."""
         if search_type == "random":
             param_space = {}
-        elif search_type == "bayes":
-            param_space = [({"degree": Categorical([2])}, 1)]
-
         return param_space
 
     @property

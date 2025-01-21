@@ -7,9 +7,6 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Integer
-from skopt.space import Real
 
 
 class GradientBoosting(BaseEstimator, RegressorMixin):
@@ -101,33 +98,17 @@ class GradientBoosting(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_space_random = {
-            "learning_rate": loguniform(0.01, 0.2),
-            "n_estimators": randint(100, 500),
-            "max_depth": randint(3, 8),
-            "min_samples_split": randint(2, 20),
-            "min_samples_leaf": randint(1, 6),
-            "subsample": uniform(0.6, 0.4),  # 0.4 is the range width (1.0 - 0.6)
-            "max_features": ["sqrt", "log2", None],
-            "ccp_alpha": loguniform(0.01, 0.1),
-        }
-
-        param_space_bayes = {
-            "learning_rate": Real(0.01, 0.2, prior="log-uniform"),
-            "n_estimators": Integer(100, 500),
-            "max_depth": Integer(3, 8),
-            "min_samples_split": Integer(2, 20),
-            "min_samples_leaf": Integer(1, 6),
-            "subsample": Real(0.6, 1.0),
-            "max_features": Categorical(["sqrt", "log2", None]),
-            "ccp_alpha": Real(0.01, 0.1, prior="log-uniform"),
-        }
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "learning_rate": loguniform(0.01, 0.2),
+                "n_estimators": randint(100, 500),
+                "max_depth": randint(3, 8),
+                "min_samples_split": randint(2, 20),
+                "min_samples_leaf": randint(1, 6),
+                "subsample": uniform(0.6, 0.4),  # 0.4 is the range width (1.0 - 0.6)
+                "max_features": ["sqrt", "log2", None],
+                "ccp_alpha": loguniform(0.001, 0.1),
+            }
         return param_space
 
     @property

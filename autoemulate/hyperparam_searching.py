@@ -2,15 +2,11 @@ import logging
 
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
-from skopt import BayesSearchCV
 
 from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
-
-# TODO remove this when skopt update numpy https://github.com/scikit-optimize/scikit-optimize/issues/1171
-np.int = np.int64
 
 
 def _optimize_params(
@@ -38,7 +34,7 @@ def _optimize_params(
         Determines the cross-validation splitting strategy.
     model : model instance to do hyperparameter search for.
     search_type : str, default="random"
-        Type of search to perform. Can be "random" or "bayes", "grid" not yet implemented.
+        Type of search to perform. Only "random" is supported.
     niter : int, default=20
         Number of parameter settings that are sampled. Trades off runtime vs quality of the solution.
         param_space : dict, default=None
@@ -77,20 +73,6 @@ def _optimize_params(
             error_score=error_score,
             verbose=verbose,
         )
-    # Bayes search
-    elif search_type == "bayes":
-        searcher = BayesSearchCV(
-            model,
-            param_space,
-            n_iter=niter,
-            cv=cv,
-            n_jobs=n_jobs,
-            refit=True,
-            error_score=error_score,
-            verbose=verbose,
-        )
-    elif search_type == "grid":
-        raise NotImplementedError("Grid search not available yet.")
     else:
         raise ValueError(f"Invalid search type: {search_type}")
 
@@ -115,7 +97,7 @@ def _process_param_space(model, search_type, param_space):
     ----------
     model : model instance to do hyperparameter search for.
     search_type : str, default="random"
-        Type of search to perform. Can be "random" or "bayes", "grid" not yet implemented.
+        Type of search to perform. Only "random" is currently supported.
     param_space : dict, default=None
         Dictionary with parameters names (string) as keys and lists of
         parameter settings to try as values, or a list of such dictionaries,

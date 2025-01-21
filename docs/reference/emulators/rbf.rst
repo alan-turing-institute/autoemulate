@@ -1,6 +1,6 @@
-autoemulate.emulators.rbf
-=========================
+autoemulate.emulators.radial_basis_functions
+============================================
 
-.. automodule:: autoemulate.emulators.rbf
+.. automodule:: autoemulate.emulators.radial_basis_functions
    :members:
    :show-inheritance:

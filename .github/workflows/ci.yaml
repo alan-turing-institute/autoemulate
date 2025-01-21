@@ -25,6 +25,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+        # Clean python cache files
+      - name: Clean cache files
+        run: |
+          find . -type f -name "*.pyc" -delete
+          find . -type d -name "__pycache__" -delete
+          rm -f .coverage* coverage.xml
       # Cache Poetry dependencies
       # - name: Cache dependencies
       #   uses: actions/cache@v2
@@ -56,10 +62,15 @@ jobs:
         run: |
           poetry run python -c "import torch; print(torch.__version__); print('CUDA available:', torch.cuda.is_available())"
       
+      - name: Debug Coverage Config
+        run: |
+          cat pyproject.toml
+          poetry run coverage debug config
+
       - name: Run Tests with Coverage
         run: |
-          poetry run coverage run -m pytest
-          poetry run coverage xml -o coverage.xml
+          poetry run coverage run --source=. -m pytest
+          poetry run coverage xml -i -o coverage.xml
         env: 
           COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
 
@@ -69,12 +80,17 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}  # Required for private repos
           file: ./coverage.xml  # Specify the coverage report file
           fail_ci_if_error: true
-              
+          verbose: true
+
+      
       - name: Store coverage file
         uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: .coverage.${{ matrix.python-version }}
+          include-hidden-files: true
+          
+      
 
   # Coverage job to comment on PRs and update README badge
   coverage:
@@ -90,7 +106,7 @@ jobs:
       - name: Download coverage artifact
         uses: actions/download-artifact@v3
         with:
-          name: 'coverage'
+          name: coverage
       
       # Comment coverage details on PR
       - name: Coverage comment
