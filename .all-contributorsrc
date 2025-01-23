@@ -85,6 +85,17 @@
         "doc",
         "projectManagement"
       ]
+    },
+    {
+      "login": "marjanfamili",
+      "name": "Marjan Famili",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44607686?v=4",
+      "profile": "https://github.com/marjanfamili",
+      "contributions": [
+        "code",
+        "ideas",
+        "doc"
+      ]
     }
   ]
 }
