@@ -88,6 +88,9 @@ You can find tutorials, FAQs and the API reference [here](https://alan-turing-in
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MaxBalmus"><img src="https://avatars.githubusercontent.com/u/34339336?v=4?s=100" width="100px;" alt="Maximilian Balmus"/><br /><sub><b>Maximilian Balmus</b></sub></a><br /><a href="#code-MaxBalmus" title="Code">💻</a> <a href="#bug-MaxBalmus" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/aranas"><img src="https://avatars.githubusercontent.com/u/6906140?v=4?s=100" width="100px;" alt="Sophie Arana"/><br /><sub><b>Sophie Arana</b></sub></a><br /><a href="#content-aranas" title="Content">🖋</a> <a href="#doc-aranas" title="Documentation">📖</a> <a href="#projectManagement-aranas" title="Project Management">📆</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/radka-j"><img src="https://avatars.githubusercontent.com/u/29207091?v=4?s=100" width="100px;" alt="Radka Jersakova"/><br /><sub><b>Radka Jersakova</b></sub></a><br /><a href="#code-radka-j" title="Code">💻</a> <a href="#projectManagement-radka-j" title="Project Management">📆</a> <a href="#maintenance-radka-j" title="Maintenance">🚧</a> <a href="#ideas-radka-j" title="Ideas, Planning, & Feedback">🤔</a></td>
+    </tr>
   </tbody>
 </table>
 
