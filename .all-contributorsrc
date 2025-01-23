@@ -85,6 +85,18 @@
         "doc",
         "projectManagement"
       ]
+    },
+    {
+      "login": "radka-j",
+      "name": "Radka Jersakova",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29207091?v=4",
+      "profile": "https://github.com/radka-j",
+      "contributions": [
+        "code",
+        "projectManagement",
+        "maintenance",
+        "ideas"
+      ]
     }
   ]
 }
