@@ -85,6 +85,16 @@
         "doc",
         "projectManagement"
       ]
+    },
+    {
+      "login": "aduncan001",
+      "name": "Andrew Duncan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2352812?v=4",
+      "profile": "https://github.com/aduncan001",
+      "contributions": [
+        "ideas",
+        "projectManagement"
+      ]
     }
   ]
 }
