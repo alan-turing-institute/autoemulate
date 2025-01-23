@@ -115,12 +115,6 @@ def test_param_basic_random(model, param_space):
     assert all(key in param_space.keys() for key in model_grid.keys())
 
 
-def test_param_basic_bayes(model, param_space):
-    model_grid = get_model_param_space(model, search_type="bayes")
-    # check that all keys in model_grid are in param_space
-    assert all(key in param_space.keys() for key in model_grid.keys())
-
-
 def test_param_pipe(model_in_pipe, param_space):
     model_grid = get_model_param_space(model_in_pipe)
     assert all(key in param_space.keys() for key in model_grid.keys())

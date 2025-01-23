@@ -256,34 +256,23 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             return mean
 
     @staticmethod
-    def get_grid_params(search_type: str = "random"):
-        param_space = {
-            "max_epochs": [100, 200, 300],
-            "batch_size": [16, 32],
-            "hidden_dim": [32, 64, 128],
-            "latent_dim": [32, 64, 128],
-            "max_context_points": [5, 10, 15],
-            "hidden_layers_enc": [2, 3, 4],
-            "hidden_layers_dec": [2, 3, 4],
-            "activation": [
-                nn.ReLU,
-                nn.GELU,
-            ],
-            "optimizer": [torch.optim.AdamW],  #
-            "lr": loguniform(5e-4, 1e-3, 5e-3, 1e-2),
-        }
-        # # match search_type:
-        # case "random":
-        #     param_space |= {
-        #         "lr": loguniform(1e-4, 1e-2),
-        #     }
-        # case "bayes":
-        #     param_space |= {
-        #         "lr": Real(1e-4, 1e-2, prior="log-uniform"),
-        #     }
-        # case _:
-        #     raise ValueError(f"Invalid search type: {search_type}")
-
+    def get_grid_params(self, search_type="random"):
+        if search_type == "random":
+            param_space = {
+                "max_epochs": [100, 200, 300],
+                "batch_size": [16, 32],
+                "hidden_dim": [32, 64, 128],
+                "latent_dim": [32, 64, 128],
+                "max_context_points": [5, 10, 15],
+                "hidden_layers_enc": [2, 3, 4],
+                "hidden_layers_dec": [2, 3, 4],
+                "activation": [
+                    nn.ReLU,
+                    nn.GELU,
+                ],
+                "optimizer": [torch.optim.AdamW],  #
+                "lr": loguniform(5e-4, 1e-3, 5e-3, 1e-2),
+            }
         return param_space
 
     @property

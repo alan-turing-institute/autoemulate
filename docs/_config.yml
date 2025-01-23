@@ -1,4 +1,4 @@
-title: "AutoEmulate: An emulator platform for Digital Twins"
+title: "AutoEmulate: A package for semi-automated emulation"
 author: Martin Stoffel
 # logo: logo.png
 
@@ -38,7 +38,10 @@ sphinx:
   config:
     add_module_names: False
     autodoc_typehints: none
+    autodoc_member_order: 'bysource'
     autoclass_content: class
+    autodoc_default_options:
+      exclude-members: set_score_request
     bibtex_reference_style: author_year
     intersphinx_mapping:
       python:

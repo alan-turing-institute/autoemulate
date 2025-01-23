@@ -1,24 +1,26 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.1.0.post1"
-description = "An emulator platform for Digital Twins"
+version = "0.2.0"
+description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
            "Kalle Westerling <kwesterling@turing.ac.uk>",
            "Bryan Li <bli@turing.ac.uk>",
+           "Max Balmus <mbalmus@turing.ac.uk>",
+           "Sophie Arana <sarana@turing.ac.uk>",
            "Eric Daub <edaub@turing.ac.uk>",
            "Steve Niederer <sniederer@turing.ac.uk>"]
 readme = "README.md"
+include = ["misc/AE_logo_final.png"]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 mogp-emulator = "^0.7.2"
 matplotlib = "^3.7.2"
-scikit-learn = "^1.3.0"
+scikit-learn = ">=1.3.0,<1.6.0"
 pandas = "^2.1"
 torch = "^2.1.0"
 skorch = "^0.15.0"
-scikit-optimize = "^0.9.0"
 scipy = "^1.11.3"
 numpy = "^1.24"
 joblib = "^1.3.2"

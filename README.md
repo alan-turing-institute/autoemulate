@@ -1,4 +1,4 @@
-# AutoEmulate
+# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="misc/AE_logo_final.png" align="right" height="138" /></a>
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
@@ -7,22 +7,20 @@
 [![Documentation](https://img.shields.io/badge/documentation-blue)](https://alan-turing-institute.github.io/autoemulate/)
 
 <!-- SPHINX-START -->
-
-Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various models, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines, Gaussian Processes and Conditional Neural Processes to find the best emulator for a simulation. 
+Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines, Gaussian Processes and Conditional Neural Processes to find the best emulator for a simulation. 
 
 The project is in early development. 
 
-<img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/main/misc/robot2.png" alt="" width="38.2%">
+## Installation
 
-## installation
-
-There's currently a lot of development, so we recommend installing the most current version from GitHub:
+There's lots of development at the moment, so we recommend installing the most current version from GitHub:
 
 ```bash
 pip install git+https://github.com/alan-turing-institute/autoemulate.git
 ```
 
-There's also a release available on PyPI (note: currently an older version and out of date with the documentation)
+There's also a release on PyPI:
+
 ```bash
 pip install autoemulate
 ```
@@ -35,7 +33,7 @@ cd autoemulate
 poetry install
 ```
 
-## quick start
+## Quick start
 
 ```python
 import numpy as np
@@ -48,16 +46,16 @@ lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
 X = lhd.sample(100)
 y = np.array([simulate_projectile(x) for x in X])
 
-# compare emulator models
+# compare emulators
 ae = AutoEmulate()
 ae.setup(X, y)
 best_emulator = ae.compare() 
 
-# training set cross-validation results
+# cross-validation results
 ae.summarise_cv() 
 ae.plot_cv()
 
-# test set results for the best model
+# test set results for the best emulator
 ae.evaluate(best_emulator) 
 ae.plot_eval(best_emulator)
 
@@ -70,7 +68,7 @@ si = ae.sensitivity_analysis(emulator)
 ae.plot_sensitivity_analysis(si)
 ```
 
-## documentation
+## Documentation
 
 You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/). The documentation is still work in progress.
 

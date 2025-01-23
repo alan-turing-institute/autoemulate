@@ -9,8 +9,6 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
-from skopt.space import Categorical
-from skopt.space import Real
 
 from autoemulate.utils import _suppress_convergence_warnings
 
@@ -95,29 +93,18 @@ class GaussianProcessSklearn(BaseEstimator, RegressorMixin):
 
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters of the emulator."""
-        param_space_random = {
-            "kernel": [
-                RBF(),
-                Matern(),
-                RationalQuadratic(),
-                # DotProduct(),
-            ],
-            "optimizer": ["fmin_l_bfgs_b"],
-            "alpha": loguniform(1e-10, 1e-2),
-            "normalize_y": [True],
-        }
-        param_space_bayes = {
-            # "kernel": Categorical([RBF(), Matern()]), # unhashable type
-            "optimizer": Categorical(["fmin_l_bfgs_b"]),
-            "alpha": Real(1e-10, 1e-2, prior="log-uniform"),
-            "normalize_y": Categorical([True]),
-        }
-
         if search_type == "random":
-            param_space = param_space_random
-        elif search_type == "bayes":
-            param_space = param_space_bayes
-
+            param_space = {
+                "kernel": [
+                    RBF(),
+                    Matern(),
+                    RationalQuadratic(),
+                    # DotProduct(),
+                ],
+                "optimizer": ["fmin_l_bfgs_b"],
+                "alpha": loguniform(1e-10, 1e-2),
+                "normalize_y": [True],
+            }
         return param_space
 
     @property

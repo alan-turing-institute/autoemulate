@@ -221,85 +221,6 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
     def get_grid_params(self, search_type="random"):
         """Returns the grid parameters for the emulator."""
 
-        def rbf(n_features, n_outputs):
-            return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            ).initialize(lengthscale=torch.ones(n_features) * 1.5)
-
-        def matern_5_2_kernel(n_features, n_outputs):
-            return gpytorch.kernels.MaternKernel(
-                nu=2.5,
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            )
-
-        def matern_3_2_kernel(n_features, n_outputs):
-            return gpytorch.kernels.MaternKernel(
-                nu=1.5,
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            )
-
-        def rq_kernel(n_features, n_outputs):
-            return gpytorch.kernels.RQKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            )
-
-        def rbf_plus_constant(n_features, n_outputs):
-            return (
-                gpytorch.kernels.RBFKernel(
-                    ard_num_dims=n_features,
-                    batch_shape=n_outputs,
-                ).initialize(lengthscale=torch.ones(n_features) * 1.5)
-                + gpytorch.kernels.ConstantKernel()
-            )
-
-        # combinations
-        def rbf_plus_linear(n_features, n_outputs):
-            return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            ) + gpytorch.kernels.LinearKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            )
-
-        def matern_5_2_plus_rq(n_features, n_outputs):
-            return gpytorch.kernels.MaternKernel(
-                nu=2.5,
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            ) + gpytorch.kernels.RQKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            )
-
-        def rbf_times_linear(n_features, n_outputs):
-            return gpytorch.kernels.RBFKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            ) * gpytorch.kernels.LinearKernel(
-                ard_num_dims=n_features,
-                batch_shape=n_outputs,
-            )
-
-        # means
-        def constant_mean(n_features, n_outputs):
-            return gpytorch.means.ConstantMean(batch_shape=n_outputs)
-
-        def zero_mean(n_features, n_outputs):
-            return gpytorch.means.ZeroMean(batch_shape=n_outputs)
-
-        def linear_mean(n_features, n_outputs):
-            return gpytorch.means.LinearMean(
-                input_size=n_features, batch_shape=n_outputs
-            )
-
-        def poly_mean(n_features, n_outputs):
-            return PolyMean(degree=2, input_size=n_features, batch_shape=n_outputs)
-
         if search_type == "random":
             param_space = {
                 "covar_module": [
@@ -320,15 +241,8 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
                 ],
                 "optimizer": [torch.optim.AdamW, torch.optim.Adam],
                 "lr": [5e-1, 1e-1, 5e-2, 1e-2],
-                "max_epochs": [
-                    50,
-                    100,
-                    200,
-                ],
+                "max_epochs": [50, 100, 200],
             }
-        else:
-            raise ValueError("search_type must be 'random'")
-
         return param_space
 
     @property
@@ -338,3 +252,93 @@ class GaussianProcess(RegressorMixin, BaseEstimator):
     def _more_tags(self):
         # TODO: is it really non-deterministic?
         return {"multioutput": True, "non_deterministic": True}
+
+
+# kernel functions for parameter search have to be outside the class so that pickle can find them
+def rbf(n_features, n_outputs):
+    return gpytorch.kernels.RBFKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    ).initialize(lengthscale=torch.ones(n_features) * 1.5)
+
+
+def matern_5_2_kernel(n_features, n_outputs):
+    return gpytorch.kernels.MaternKernel(
+        nu=2.5,
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
+def matern_3_2_kernel(n_features, n_outputs):
+    return gpytorch.kernels.MaternKernel(
+        nu=1.5,
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
+def rq_kernel(n_features, n_outputs):
+    return gpytorch.kernels.RQKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
+def rbf_plus_constant(n_features, n_outputs):
+    return (
+        gpytorch.kernels.RBFKernel(
+            ard_num_dims=n_features,
+            batch_shape=n_outputs,
+        ).initialize(lengthscale=torch.ones(n_features) * 1.5)
+        + gpytorch.kernels.ConstantKernel()
+    )
+
+
+# combinations
+def rbf_plus_linear(n_features, n_outputs):
+    return gpytorch.kernels.RBFKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    ) + gpytorch.kernels.LinearKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
+def matern_5_2_plus_rq(n_features, n_outputs):
+    return gpytorch.kernels.MaternKernel(
+        nu=2.5,
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    ) + gpytorch.kernels.RQKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
+def rbf_times_linear(n_features, n_outputs):
+    return gpytorch.kernels.RBFKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    ) * gpytorch.kernels.LinearKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
+# means
+def constant_mean(n_features, n_outputs):
+    return gpytorch.means.ConstantMean(batch_shape=n_outputs)
+
+
+def zero_mean(n_features, n_outputs):
+    return gpytorch.means.ZeroMean(batch_shape=n_outputs)
+
+
+def linear_mean(n_features, n_outputs):
+    return gpytorch.means.LinearMean(input_size=n_features, batch_shape=n_outputs)
+
+
+def poly_mean(n_features, n_outputs):
+    return PolyMean(degree=2, input_size=n_features, batch_shape=n_outputs)

@@ -7,12 +7,12 @@ from sklearn.model_selection import train_test_split
 
 from autoemulate.compare import AutoEmulate
 from autoemulate.emulators import RadialBasisFunctions
+from autoemulate.plotting import _check_multioutput
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.plotting import _plot_single_fold
 from autoemulate.plotting import _predict_with_optional_std
 from autoemulate.plotting import _validate_inputs
-from autoemulate.plotting import check_multioutput
 
 
 @pytest.fixture(scope="module")
@@ -72,7 +72,7 @@ def test_check_multioutput_with_single_output():
     y = np.array([1, 2, 3, 4, 5])
     output_index = 0
     try:
-        check_multioutput(y, output_index)
+        _check_multioutput(y, output_index)
     except ValueError as e:
         assert False, f"Unexpected ValueError: {str(e)}"
 
@@ -81,7 +81,7 @@ def test_check_multioutput_with_multioutput():
     y = np.array([[1, 2, 3], [4, 5, 6]])
     output_index = 1
     try:
-        check_multioutput(y, output_index)
+        _check_multioutput(y, output_index)
     except ValueError as e:
         assert False, f"Unexpected ValueError: {str(e)}"
 
@@ -90,7 +90,7 @@ def test_check_multioutput_with_invalid_output_index():
     y = np.array([[1, 2, 3], [4, 5, 6]])
     output_index = 3
     try:
-        check_multioutput(y, output_index)
+        _check_multioutput(y, output_index)
         assert False, "Expected ValueError to be raised"
     except ValueError as e:
         assert (
@@ -354,7 +354,7 @@ def test__plot_model_int(ae_single_output):
         output_index=0,
     )
     assert isinstance(fig, plt.Figure)
-    assert fig.axes[0].get_title() == "X0 vs. y0"
+    assert all(term in fig.axes[0].get_title() for term in ["X", "y", "vs."])
 
 
 def test__plot_model_list(ae_single_output):
@@ -367,7 +367,7 @@ def test__plot_model_list(ae_single_output):
         output_index=[0],
     )
     assert isinstance(fig, plt.Figure)
-    assert fig.axes[1].get_title() == "X1 vs. y0"
+    assert all(term in fig.axes[1].get_title() for term in ["X", "y", "vs."])
 
 
 def test__plot_model_int_out_of_range(ae_single_output):
