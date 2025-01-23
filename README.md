@@ -88,6 +88,9 @@ You can find tutorials, FAQs and the API reference [here](https://alan-turing-in
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MaxBalmus"><img src="https://avatars.githubusercontent.com/u/34339336?v=4?s=100" width="100px;" alt="Maximilian Balmus"/><br /><sub><b>Maximilian Balmus</b></sub></a><br /><a href="#code-MaxBalmus" title="Code">💻</a> <a href="#bug-MaxBalmus" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/aranas"><img src="https://avatars.githubusercontent.com/u/6906140?v=4?s=100" width="100px;" alt="Sophie Arana"/><br /><sub><b>Sophie Arana</b></sub></a><br /><a href="#content-aranas" title="Content">🖋</a> <a href="#doc-aranas" title="Documentation">📖</a> <a href="#projectManagement-aranas" title="Project Management">📆</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/aduncan001"><img src="https://avatars.githubusercontent.com/u/2352812?v=4?s=100" width="100px;" alt="Andrew Duncan"/><br /><sub><b>Andrew Duncan</b></sub></a><br /><a href="#ideas-aduncan001" title="Ideas, Planning, & Feedback">🤔</a> <a href="#projectManagement-aduncan001" title="Project Management">📆</a></td>
+    </tr>
   </tbody>
 </table>
 
