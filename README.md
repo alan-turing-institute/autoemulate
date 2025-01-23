@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        3 |     97% |253-254, 295 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        5 |     95% |73, 259, 266, 289, 321 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        6 |     94% |73, 259, 266, 282, 289, 332 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        7 |     93% |71, 240, 246, 265, 271, 286, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -70,7 +70,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      111 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      182 |        6 |     97% |51, 57, 62, 67, 72, 77 |
-|                                                                    **TOTAL** | **3587** |  **205** | **94%** |           |
+|                                                                    **TOTAL** | **3587** |  **206** | **94%** |           |
 
 
 ## Setup coverage badge
