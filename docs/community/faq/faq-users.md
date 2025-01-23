@@ -19,7 +19,7 @@
 4. Does `AutoEmulate` support temporal or spatial data?
    - Not explicitly. The train-test split just takes a random subset as a test set, so does KFold cross-validation.
 
-5. Why is `AutoEmulate` so slow?
+5. `AutoEmulate` takes a long time to run on my dataset, why?
    - The package fits a lot of models, in particular when hyperparameters are optimised. With say 8 default models and 5-fold cross-validation, this amounts to 40 model fits. With the addition of hyperparameter optimisation (n_iter=20), this results in 800 model fits. Some models such as Gaussian Processes and Neural Processes will take a long time to run on a CPU. However, don't despair! There is a [speeding up AutoEmulate guide](../../tutorials/02_speed.ipynb). As a rule of thumb, if your dataset is smaller than 1000 samples, you should be fine, if it's larger and you want to optimise hyperparameters, you might want to read the guide.
 
 ## Usage Questions

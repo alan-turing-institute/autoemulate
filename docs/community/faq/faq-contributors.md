@@ -9,8 +9,13 @@
    * `autoemulate/emulators/` contains the emulator models, which are implemented as [scikit-learn estimators](https://scikit-learn.org/1.5/developers/develop.html). Deep learning models have two main parts: The scikit-learn estimator interface in `autoemulate/emulators/` and the neural network architecture in `autoemulate/emulators/neural_networks/`.
    * Emulators need to be registered in the model registry in `autoemulate/emulators/__init__.py` to be available in `AutoEmulate`.
    * `autoemulate/simulations/` contains simple example simulations.
+      * `epidemic.py` is a simple epidemiological [SIR simulation](https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology).
+      * `projectile.py` is a projectile motion with drag simulation.
    * `tests/` contains tests for the package.
-   * `data/` contains example datasets.
+   * `data/` contains example datasets from three fields:
+      * cardiac1-6 are datasets from cardiac simulations in [Strocci et al. 2023](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011257)
+      * climate1 is data from a climate simulation in [Holden et al. 2018](https://www.nature.com/articles/s41558-018-0197-7)
+      * engineering1 is data from a simulated cantilever truss design problem.
    * `docs/` contains the documentation source files. We use `jupyter-book` to build the documentation.
 
 2. How do I set up my development environment for AutoEmulate?
