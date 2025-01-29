@@ -44,5 +44,6 @@ from autoemulate.emulators import SupportVectorMachines
         GaussianProcess(random_state=42),
     ]
 )
+@pytest.mark.filterwarnings("ignore::gpytorch.models.exact_gp.GPInputWarning")
 def test_check_estimator(estimator, check):
     check(estimator)
