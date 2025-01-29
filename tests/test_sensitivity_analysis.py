@@ -110,6 +110,7 @@ def test_get_output_names_invalid():
 
 
 # test Sobol analysis ------------------------------------------------------------
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_sobol_analysis(model_1d):
     problem = {
         "num_vars": 2,
@@ -125,6 +126,7 @@ def test_sobol_analysis(model_1d):
     )
 
 
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_sobol_analysis_2d(model_2d):
     problem = {
         "num_vars": 2,
@@ -146,7 +148,8 @@ def sobol_results_1d(model_1d):
     return _sobol_analysis(model_1d, problem)
 
 
-# test conversion to DataFrame --------------------------------------------------
+# # test conversion to DataFrame --------------------------------------------------
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_sobol_results_to_df(sobol_results_1d):
     df = _sobol_results_to_df(sobol_results_1d)
     assert isinstance(df, pd.DataFrame)
@@ -166,11 +169,13 @@ def test_sobol_results_to_df(sobol_results_1d):
 
 
 # test _validate_input ----------------------------------------------------------
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_validate_input(sobol_results_1d):
     with pytest.raises(ValueError):
         _validate_input(sobol_results_1d, "S3")
 
 
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_validate_input_valid(sobol_results_1d):
     Si = _validate_input(sobol_results_1d, "S1")
     assert isinstance(Si, pd.DataFrame)
