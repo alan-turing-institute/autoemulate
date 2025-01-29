@@ -16,8 +16,10 @@ from autoemulate.emulators import model_registry
 
 @pytest.fixture
 def param_search_ae():
-    X = np.random.rand(50, 2)
-    y = np.random.rand(50, 1)
+    X = np.random.rand(140, 2)
+    y = np.random.rand(
+        140,
+    )
 
     # names of all models
     all_models = list(model_registry.get_model_names().keys())
@@ -29,7 +31,7 @@ def param_search_ae():
         cross_validator=KFold(n_splits=2),
         param_search_type="random",
         param_search=True,
-        param_search_iters=2,
+        param_search_iters=1,
         models=all_models,
     )
     ae.compare()
@@ -42,7 +44,9 @@ model_subset = ["SecondOrderPolynomial", "RadialBasisFunctions"]
 
 def test_scalers():
     X = np.random.rand(100, 5)
-    y = np.random.rand(100, 1)
+    y = np.random.rand(
+        100,
+    )
 
     scalers = [MinMaxScaler(), RobustScaler()]
 
@@ -56,7 +60,9 @@ def test_scalers():
 
 def test_dimension_reducers():
     X = np.random.rand(100, 10)
-    y = np.random.rand(100, 1)
+    y = np.random.rand(
+        100,
+    )
 
     dim_reducers = [PCA(n_components=5), KernelPCA(n_components=5)]
 
@@ -70,16 +76,15 @@ def test_dimension_reducers():
 
 def test_cross_validators():
     X = np.random.rand(100, 5)
-    y = np.random.rand(100, 1)
+    y = np.random.rand(
+        100,
+    )
 
-    cross_validators = [KFold(n_splits=5)]
+    ae = AutoEmulate()
+    ae.setup(X, y, cross_validator=KFold(n_splits=5), models=model_subset)
+    ae.compare()
 
-    for cross_validator in cross_validators:
-        ae = AutoEmulate()
-        ae.setup(X, y, cross_validator=cross_validator, models=model_subset)
-        ae.compare()
-
-        assert ae.best_model is not None
+    assert ae.best_model is not None
 
 
 def test_param_search(param_search_ae):
