@@ -221,9 +221,9 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
     def predict(self, X, return_std=False):
         check_is_fitted(self)
         X = check_array(X, dtype=np.float32)
-        X_context = torch.from_numpy(self.X_train_).float().unsqueeze(0)
-        y_context = torch.from_numpy(self.y_train_).float().unsqueeze(0)
-        X_target = torch.from_numpy(X).float().unsqueeze(0)
+        X_context = torch.tensor(self.X_train_, dtype=torch.float32).unsqueeze(0)
+        y_context = torch.tensor(self.y_train_, dtype=torch.float32).unsqueeze(0)
+        X_target = torch.tensor(X, dtype=torch.float32).unsqueeze(0)
 
         with torch.no_grad():
             predictions = self.model_.module_.forward(X_context, y_context, X_target)
