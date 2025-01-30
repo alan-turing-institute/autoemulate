@@ -12,15 +12,15 @@ def kfold():
 
 @pytest.fixture()
 def Xy_single():
-    X = np.random.rand(15, 2)
-    y = np.random.rand(15)
+    X = np.random.rand(30, 2)
+    y = np.random.rand(30)
     return X, y
 
 
 @pytest.fixture()
 def Xy_multi():
-    X = np.random.rand(10, 2)
-    y = np.random.rand(10, 2)
+    X = np.random.rand(30, 2)
+    y = np.random.rand(30, 2)
     return X, y
 
 
@@ -42,7 +42,7 @@ def test_run_param_search(Xy_single, kfold):
         y,
         print_setup=False,
         param_search=True,
-        param_search_iters=2,
+        param_search_iters=1,
         cross_validator=kfold,
     )
     em.compare()

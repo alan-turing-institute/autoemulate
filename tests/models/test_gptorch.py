@@ -18,34 +18,49 @@ def sample_data_y1d():
 
 
 @pytest.fixture
+def new_data_y1d():
+    X, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=1)
+    return X, y
+
+
+@pytest.fixture
 def sample_data_y2d():
     X, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=0)
     return X, y
 
 
+@pytest.fixture
+def new_data_y2d():
+    X, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=1)
+    return X, y
+
+
 # test multitask GP
-def test_multi_output_gpmt(sample_data_y2d):
+def test_multi_output_gpmt(sample_data_y2d, new_data_y2d):
     X, y = sample_data_y2d
     gp = GaussianProcessMT(random_state=42)
     gp.fit(X, y)
-    assert gp.predict(X).shape == (20, 2)
+    X2, _ = new_data_y2d
+    assert gp.predict(X2).shape == (20, 2)
 
 
-def test_predict_with_uncertainty_gpmt(sample_data_y1d):
+def test_predict_with_uncertainty_gpmt(sample_data_y1d, new_data_y1d):
     X, y = sample_data_y1d
     y_shape = y.shape
     gp = GaussianProcessMT(random_state=42)
     gp.fit(X, y)
-    y_pred, y_std = gp.predict(X, return_std=True)
+    X2, _ = new_data_y1d
+    y_pred, y_std = gp.predict(X2, return_std=True)
     assert y_pred.shape == y_shape
     assert y_std.shape == y_shape
 
 
-def test_multitask_gpmt(sample_data_y2d):
+def test_multitask_gpmt(sample_data_y2d, new_data_y2d):
     X, y = sample_data_y2d
     gp = GaussianProcessMT(random_state=42)
     gp.fit(X, y)
-    y_pred, y_std = gp.predict(X, return_std=True)
+    X2, _ = new_data_y2d
+    y_pred, y_std = gp.predict(X2, return_std=True)
     assert y_pred.shape == y.shape
     assert y_std.shape == y.shape
 
@@ -58,34 +73,38 @@ def test_gpmt_param_search(sample_data_y1d):
 
 
 # test multioutput GP
-def test_multioutput_gp(sample_data_y2d):
+def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     X, y = sample_data_y2d
+    X2, _ = new_data_y2d
     gp = GaussianProcess(random_state=42)
     gp.fit(X, y)
     assert gp.predict(X).shape == (20, 2)
 
 
-def test_predict_with_uncertainty_gp(sample_data_y1d):
+def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     X, y = sample_data_y1d
     y_shape = y.shape
     gp = GaussianProcess(random_state=42)
     gp.fit(X, y)
-    y_pred, y_std = gp.predict(X, return_std=True)
+    X2, _ = new_data_y1d
+    y_pred, y_std = gp.predict(X2, return_std=True)
     assert y_pred.shape == y_shape
     assert y_std.shape == y_shape
 
 
-def test_multioutput_gp(sample_data_y2d):
+def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     X, y = sample_data_y2d
+    X2, _ = new_data_y2d
     gp = GaussianProcess(random_state=42)
     gp.fit(X, y)
-    y_pred, y_std = gp.predict(X, return_std=True)
+    y_pred, y_std = gp.predict(X2, return_std=True)
     assert y_pred.shape == y.shape
     assert y_std.shape == y.shape
 
 
-def test_gp_param_search(sample_data_y1d):
+def test_gp_param_search(sample_data_y1d, new_data_y1d):
     X, y = sample_data_y1d
+    X2, _ = new_data_y1d
     em = AutoEmulate()
     em.setup(X, y, models=["gp"], param_search_iters=3)
     em.compare()
