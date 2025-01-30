@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        3 |     97% |253-254, 295 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        7 |     93% |73, 266, 274, 289, 300, 321, 336 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        7 |     93% |73, 266, 274, 289, 300, 321, 332 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        8 |     92% |71, 240, 250, 254, 259, 265, 278, 286 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
