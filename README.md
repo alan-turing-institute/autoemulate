@@ -13,6 +13,8 @@ The project is in early development.
 
 ## Installation
 
+`AutoEmulate` requires Python `>=3.10` and `<3.13`.
+
 There's lots of development at the moment, so we recommend installing the most current version from GitHub:
 
 ```bash
