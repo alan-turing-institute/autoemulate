@@ -17,8 +17,8 @@ If you'd like to find out more about AutoEmulate, make sure to check out:
 
 This section provides a high-level guide to contributing to AutoEmulate, designed for those with little or no experience with open source projects. For more detailed information, please also refer to the docs for:
 
-* [contributing emulators](contributing-emulators.md)
-* [contributing to the docs](contributing-docs.md)
+* [contributing emulators](https://alan-turing-institute.github.io/autoemulate/community/contributing-emulators.html)
+* [contributing to the docs](https://alan-turing-institute.github.io/autoemulate/community/contributing-docs.html)
 
 We welcome contributions of all kinds, be it code, documentation, or community engagement. We encourage you to read through the following sections to learn more about how you can contribute to the package.
 
@@ -45,7 +45,7 @@ After writing new code or modifying existing code, please make sure to:
 * write tests in the `tests/` directory using [pytest](https://docs.pytest.org/en/7.4.x/).
 * format the code using [black](https://github.com/psf/black)
 
-It would be great if you could also [update the documentation](contributing-docs.md) to reflect the changes you've made. If you plan to add a new emulator have a look at the [contributing emulators docs](contributing-emulators.md).
+It would be great if you could also [update the documentation](https://alan-turing-institute.github.io/autoemulate/community/contributing-docs.html) to reflect the changes you've made. If you plan to add a new emulator have a look at the [contributing emulators docs](https://alan-turing-institute.github.io/autoemulate/community/contributing-emulators.html).
 
 ### 3. Commit and Push
 
@@ -96,7 +96,7 @@ If you're stuck or need assistance:
 
 ## Inclusivity
 
-We aim to make AutoEmulate a collaboratively developed project. We, therefore, require that all our members and their contributions **adhere to our [Code of Conduct](./CODE_OF_CONDUCT.md)**. Please familiarise yourself with our Code of Conduct that lists the expected behaviours.
+We aim to make AutoEmulate a collaboratively developed project. We, therefore, require that all our members and their contributions **adhere to our [Code of Conduct](https://github.com/alan-turing-institute/autoemulate/blob/main/CODE_OF_CONDUCT.md)**. Please familiarise yourself with our Code of Conduct that lists the expected behaviours.
 
 Every contributor is expected to adhere to our Code of Conduct. It outlines our expectations and ensures a safe, respectful environment for everyone.
 

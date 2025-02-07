@@ -1,4 +1,4 @@
-# Contributing to the docs
+# Contributing to the Docs
 
 We welcome all documentation contributions, from fixing small typos to adding comprehensive tutorials. This guide will help you get started.
 

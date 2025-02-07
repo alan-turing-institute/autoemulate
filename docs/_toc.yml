@@ -22,6 +22,7 @@ chapters:
   - file: community/contributing
   - file: community/contributing-emulators
   - file: community/contributing-docs
+  - file: community/release
   - file: community/code-of-conduct
   - file: community/faq/index
     sections:
