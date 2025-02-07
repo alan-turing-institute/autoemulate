@@ -8,7 +8,7 @@ from sklearn.svm import SVR
 
 from autoemulate.emulators import GaussianProcess
 from autoemulate.emulators import RandomForest
-from autoemulate.utils import _extract_pytorch_model
+from autoemulate.utils import extract_pytorch_model
 
 
 @pytest.fixture
@@ -35,42 +35,42 @@ def Xy():
 # test_error_when_not_fitted
 def test_error_when_not_fitted(pytorch_model):
     with pytest.raises(ValueError):
-        _extract_pytorch_model(pytorch_model)
+        extract_pytorch_model(pytorch_model)
 
 
 # test standalone model
 def test_extract_when_fitted(pytorch_model, Xy):
     pytorch_model.fit(*Xy)
-    model = _extract_pytorch_model(pytorch_model)
+    model = extract_pytorch_model(pytorch_model)
     assert isinstance(model, torch.nn.Module)
 
 
 def test_error_when_not_pytorch_model(non_pytorch_model, Xy):
     non_pytorch_model.fit(*Xy)
     with pytest.raises(ValueError):
-        _extract_pytorch_model(non_pytorch_model)
+        extract_pytorch_model(non_pytorch_model)
 
 
 def test_error_when_multiout_model(non_pytorch_multiout_model, Xy):
     non_pytorch_multiout_model.fit(*Xy)
     with pytest.raises(ValueError):
-        _extract_pytorch_model(non_pytorch_multiout_model)
+        extract_pytorch_model(non_pytorch_multiout_model)
 
 
 # test pipeline
 def test_extract_when_fitted_pipeline(pytorch_model, Xy):
     pytorch_model.fit(*Xy)
-    model = _extract_pytorch_model(pytorch_model)
+    model = extract_pytorch_model(pytorch_model)
     assert isinstance(model, torch.nn.Module)
 
 
 def test_error_when_non_pytorch_pipeline(non_pytorch_model, Xy):
     non_pytorch_model.fit(*Xy)
     with pytest.raises(ValueError):
-        _extract_pytorch_model(non_pytorch_model)
+        extract_pytorch_model(non_pytorch_model)
 
 
 def test_error_when_multiout_pipeline(non_pytorch_multiout_model, Xy):
     non_pytorch_multiout_model.fit(*Xy)
     with pytest.raises(ValueError):
-        _extract_pytorch_model(non_pytorch_multiout_model)
+        extract_pytorch_model(non_pytorch_multiout_model)
