@@ -383,3 +383,57 @@ def _check_cv(cv):
             "currently support other cross-validation methods."
         )
     return cv
+
+
+# extract PyTorch model -------------------------------------------------------
+
+
+def extract_pytorch_model(model):
+    """Extract the PyTorch model from a fitted AutoEmulate model.
+
+    This function handles standalone models, models wrapped in a MultiOutputRegressor,
+    and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).
+
+    Parameters
+    ----------
+    model : model instance or Pipeline and/or MultiOutputRegressor
+        The model or pipeline from which to extract the PyTorch model.
+
+    Returns
+    -------
+    torch.nn.Module
+        The underlyingPyTorch model.
+    """
+    # get model
+    if isinstance(model, Pipeline):
+        if "model" not in model.named_steps:
+            raise ValueError("model has no 'model' step")
+        model = model.named_steps["model"]
+    elif isinstance(model, MultiOutputRegressor):
+        # Can't be a PyTorch model
+        raise ValueError("Model is not a PyTorch model")
+    else:
+        # Should be a AutoEmulate scikit-learn model
+        if not isinstance(model, RegressorMixin):
+            raise ValueError("Model is not an AutoEmulate model")
+
+    # Check inner model in pipeline. If it's a MultiOutputRegressor, it's not a PyTorch model
+    if isinstance(model, MultiOutputRegressor):
+        raise ValueError("Model is not a PyTorch model")
+
+    # check whether model is fitted (only fitted models have a model_ attribute)
+    if not hasattr(model, "is_fitted_"):
+        raise ValueError("Emulator is not fitted")
+
+    # we want the underlying model, not the wrapper
+    core_model = model.model_
+
+    # check whether model has a module_ attribute, and if so, whether it is a PyTorch model
+    # there's a module_ attribute because we use skorch to wrap the model
+    if not hasattr(core_model, "module_"):
+        raise ValueError("Emulator is not a PyTorch model")
+    else:
+        if not isinstance(core_model.module_, torch.nn.Module):
+            raise ValueError("Emulator is not a PyTorch model")
+        else:
+            return core_model.module_
