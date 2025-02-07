@@ -7,6 +7,8 @@ This guide explains how to create new releases of AutoEmulate for maintainers.
 AutoEmulate uses GitHub Actions to automatically publish releases to PyPI when a new version tag is pushed. The process is as follows:
 
 1. **Update Version Number**
+First, give the package a new version. We recommend [this guide](https://py-pkgs.org/07-releasing-versioning.html) to decide on a version number.
+
 Update the version in `pyproject.toml`:
 
 ```toml
