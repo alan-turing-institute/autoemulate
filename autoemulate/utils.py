@@ -404,36 +404,47 @@ def extract_pytorch_model(model):
     torch.nn.Module
         The underlyingPyTorch model.
     """
-    # get model
+    scaled = False
+    reduced = False
+
+    # extract inner model
     if isinstance(model, Pipeline):
         if "model" not in model.named_steps:
             raise ValueError("model has no 'model' step")
+        if "scaler" in model.named_steps:
+            scaled = True
+        if "dim_reducer" in model.named_steps:
+            reduced = True
         model = model.named_steps["model"]
     elif isinstance(model, MultiOutputRegressor):
-        # Can't be a PyTorch model
         raise ValueError("Model is not a PyTorch model")
     else:
-        # Should be a AutoEmulate scikit-learn model
         if not isinstance(model, RegressorMixin):
             raise ValueError("Model is not an AutoEmulate model")
 
-    # Check inner model in pipeline. If it's a MultiOutputRegressor, it's not a PyTorch model
+    # if inner model is a MultiOutputRegressor, it's not a PyTorch model
     if isinstance(model, MultiOutputRegressor):
         raise ValueError("Model is not a PyTorch model")
 
-    # check whether model is fitted (only fitted models have a model_ attribute)
+    # only fitted models have a model_ attribute from which to extract the underlying PyTorch model
     if not hasattr(model, "is_fitted_"):
         raise ValueError("Emulator is not fitted")
 
     # we want the underlying model, not the wrapper
     core_model = model.model_
 
-    # check whether model has a module_ attribute, and if so, whether it is a PyTorch model
     # there's a module_ attribute because we use skorch to wrap the model
+    # the module_ attribute is the actual PyTorch model
     if not hasattr(core_model, "module_"):
         raise ValueError("Emulator is not a PyTorch model")
     else:
         if not isinstance(core_model.module_, torch.nn.Module):
             raise ValueError("Emulator is not a PyTorch model")
         else:
+            if scaled or reduced:
+                warnings.warn(
+                    "Data preprocessing is not included in the model. "
+                    "Make sure to deactivate data preprocessing in the AutoEmulate using scale=False and "
+                    "reduce_dim=False if you want to use the model for prediction and scale data manually."
+                )
             return core_model.module_

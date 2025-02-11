@@ -59,18 +59,28 @@ def test_error_when_multiout_model(non_pytorch_multiout_model, Xy):
 
 # test pipeline
 def test_extract_when_fitted_pipeline(pytorch_model, Xy):
+    pytorch_model = Pipeline([("model", pytorch_model)])
     pytorch_model.fit(*Xy)
     model = extract_pytorch_model(pytorch_model)
     assert isinstance(model, torch.nn.Module)
 
 
 def test_error_when_non_pytorch_pipeline(non_pytorch_model, Xy):
+    non_pytorch_model = Pipeline([("model", non_pytorch_model)])
     non_pytorch_model.fit(*Xy)
     with pytest.raises(ValueError):
         extract_pytorch_model(non_pytorch_model)
 
 
 def test_error_when_multiout_pipeline(non_pytorch_multiout_model, Xy):
+    non_pytorch_multiout_model = Pipeline([("model", non_pytorch_multiout_model)])
     non_pytorch_multiout_model.fit(*Xy)
     with pytest.raises(ValueError):
         extract_pytorch_model(non_pytorch_multiout_model)
+
+
+def test_warning_when_scaled_or_reduced(pytorch_model, Xy):
+    pytorch_model = Pipeline([("scaler", StandardScaler()), ("model", pytorch_model)])
+    pytorch_model.fit(*Xy)
+    with pytest.warns(UserWarning):
+        extract_pytorch_model(pytorch_model)
