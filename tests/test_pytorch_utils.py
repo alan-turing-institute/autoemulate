@@ -88,3 +88,9 @@ def test_warning_when_scaled_or_reduced(pytorch_model, Xy, capsys):
         "Warning: Data preprocessing is not included in the extracted model"
         in captured.out
     )
+
+
+def test_pytorch_model_is_in_eval_mode(pytorch_model, Xy):
+    pytorch_model.fit(*Xy)
+    model = extract_pytorch_model(pytorch_model)
+    assert not model.training

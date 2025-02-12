@@ -402,7 +402,7 @@ def extract_pytorch_model(model):
     Returns
     -------
     torch.nn.Module
-        The underlying PyTorch model.
+        The underlying PyTorch model, in evaluation mode.
 
     Raises
     ------
@@ -456,4 +456,4 @@ def extract_pytorch_model(model):
             "and handle data preprocessing manually."
         )
 
-    return core_model.module_
+    return core_model.module_.eval()
