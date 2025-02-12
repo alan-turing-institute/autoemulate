@@ -391,60 +391,69 @@ def _check_cv(cv):
 def extract_pytorch_model(model):
     """Extract the PyTorch model from a fitted AutoEmulate model.
 
-    This function handles standalone models, models wrapped in a MultiOutputRegressor,
-    and models inside a pipeline (possibly wrapped in a MultiOutputRegressor).
+    This function handles standalone models and models inside a pipeline.
+    Note: MultiOutputRegressor is not supported for PyTorch models.
 
     Parameters
     ----------
-    model : model instance or Pipeline and/or MultiOutputRegressor
+    model : model instance or Pipeline
         The model or pipeline from which to extract the PyTorch model.
 
     Returns
     -------
     torch.nn.Module
-        The underlyingPyTorch model.
+        The underlying PyTorch model.
+
+    Raises
+    ------
+    ValueError
+        If the model is not a fitted PyTorch model, is a MultiOutputRegressor,
+        or if the pipeline structure is invalid.
     """
-    scaled = False
-    reduced = False
+    # track preprocessing steps for warning message
+    has_preprocessing = {"scaled": False, "reduced": False}
 
-    # extract inner model
+    # extract model from pipeline if needed
     if isinstance(model, Pipeline):
+        has_preprocessing.update(
+            {
+                "scaled": "scaler" in model.named_steps,
+                "reduced": "dim_reducer" in model.named_steps,
+            }
+        )
+
         if "model" not in model.named_steps:
-            raise ValueError("model has no 'model' step")
-        if "scaler" in model.named_steps:
-            scaled = True
-        if "dim_reducer" in model.named_steps:
-            reduced = True
+            raise ValueError("Pipeline must have a 'model' step")
         model = model.named_steps["model"]
-    elif isinstance(model, MultiOutputRegressor):
-        raise ValueError("Model is not a PyTorch model")
-    else:
-        if not isinstance(model, RegressorMixin):
-            raise ValueError("Model is not an AutoEmulate model")
 
-    # if inner model is a MultiOutputRegressor, it's not a PyTorch model
+    # check for unsupported MultiOutputRegressor
     if isinstance(model, MultiOutputRegressor):
-        raise ValueError("Model is not a PyTorch model")
+        raise ValueError("PyTorch models cannot be wrapped in MultiOutputRegressor")
 
-    # only fitted models have a model_ attribute from which to extract the underlying PyTorch model
+    # check if it's an AutoEmulate (scikit-learn) model
+    if not isinstance(model, RegressorMixin):
+        raise ValueError("Input must be an AutoEmulate model")
+
+    # check if model is fitted
     if not hasattr(model, "is_fitted_"):
-        raise ValueError("Emulator is not fitted")
+        raise ValueError("Model must be fitted before extraction")
 
-    # we want the underlying model, not the wrapper
+    # get the core model (skorch wrapper)
     core_model = model.model_
 
-    # there's a module_ attribute because we use skorch to wrap the model
-    # the module_ attribute is the actual PyTorch model
+    # check if it's a PyTorch model
     if not hasattr(core_model, "module_"):
-        raise ValueError("Emulator is not a PyTorch model")
-    else:
-        if not isinstance(core_model.module_, torch.nn.Module):
-            raise ValueError("Emulator is not a PyTorch model")
-        else:
-            if scaled or reduced:
-                warnings.warn(
-                    "Data preprocessing is not included in the model. "
-                    "Make sure to deactivate data preprocessing in the AutoEmulate using scale=False and "
-                    "reduce_dim=False if you want to use the model for prediction and scale data manually."
-                )
-            return core_model.module_
+        raise ValueError("Model must be a PyTorch model (missing module_)")
+
+    if not isinstance(core_model.module_, torch.nn.Module):
+        raise ValueError("Model must contain a valid PyTorch module")
+
+    # warn about preprocessing if necessary
+    if any(has_preprocessing.values()):
+        print(
+            "Warning: Data preprocessing is not included in the extracted model. "
+            "Best to deactivate preprocessing in AutoEmulate (scale=False, reduce_dim=False) "
+            "and handle data preprocessing manually."
+        )
+
+    return core_model.module_

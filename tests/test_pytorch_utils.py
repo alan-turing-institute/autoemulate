@@ -79,8 +79,12 @@ def test_error_when_multiout_pipeline(non_pytorch_multiout_model, Xy):
         extract_pytorch_model(non_pytorch_multiout_model)
 
 
-def test_warning_when_scaled_or_reduced(pytorch_model, Xy):
+def test_warning_when_scaled_or_reduced(pytorch_model, Xy, capsys):
     pytorch_model = Pipeline([("scaler", StandardScaler()), ("model", pytorch_model)])
     pytorch_model.fit(*Xy)
-    with pytest.warns(UserWarning):
-        extract_pytorch_model(pytorch_model)
+    extract_pytorch_model(pytorch_model)
+    captured = capsys.readouterr()
+    assert (
+        "Warning: Data preprocessing is not included in the extracted model"
+        in captured.out
+    )
