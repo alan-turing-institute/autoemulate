@@ -52,7 +52,7 @@ jobs:
         run: |
           poetry remove torch
           poetry source add -p explicit pytorch https://download.pytorch.org/whl/cpu
-          poetry add --source pytorch torch
+          poetry add --source pytorch "torch==2.2.1"
 
       - name: Install dependencies
         run: |
@@ -84,7 +84,7 @@ jobs:
 
       
       - name: Store coverage file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: .coverage.${{ matrix.python-version }}
@@ -104,7 +104,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: coverage
       
@@ -118,7 +118,7 @@ jobs:
 
       # Store comment to be posted if written
       - name: Store Pull Request comment to be posted
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action

@@ -85,6 +85,39 @@
         "doc",
         "projectManagement"
       ]
+    },
+    {
+      "login": "aduncan001",
+      "name": "Andrew Duncan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2352812?v=4",
+      "profile": "https://github.com/aduncan001",
+      "contributions": [
+        "ideas",
+        "projectManagement"
+      ]
+    },
+    {
+      "login": "marjanfamili",
+      "name": "Marjan Famili",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44607686?v=4",
+      "profile": "https://github.com/marjanfamili",
+      "contributions": [
+        "code",
+        "ideas",
+        "doc"
+        ]
+    },
+    {
+      "login": "radka-j",
+      "name": "Radka Jersakova",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29207091?v=4",
+      "profile": "https://github.com/radka-j",
+      "contributions": [
+        "code",
+        "projectManagement",
+        "maintenance",
+        "ideas"
+      ]
     }
   ]
 }

@@ -1,4 +1,4 @@
-# Contributing emulators
+# Contributing Emulators
 
 This guide explains how to contribute new emulator models to `AutoEmulate`.
 
