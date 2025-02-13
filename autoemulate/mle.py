@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+from utils import select_kernel
+
 
 def negative_log_likelihood(Sigma, obs_mean, model_mean):
     """
