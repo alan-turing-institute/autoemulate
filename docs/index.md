@@ -1,10 +1,36 @@
-# Welcome to `AutoEmulate`!
+# 🚀 AutoEmulate: Supercharge Your Simulations
 
-`AutoEmulate` is designed to be an easy, low-code pipeline to create emulators for complex simulations. At it's core, `AutoEmulate`'s `compare()` function implements a typical machine learning workflow including data processing, selecting a good emulator model, optimising model parameters and evaluating its test-set performance. Emulators range from classical models like *Radial Basis Functions* and *Second Order Polynomials* to popular machine learning methods like *Gradient Boosting* and *Support Vector Machines*, as well as modern PyTorch-based models like *Neural Processes* and *Multitask Gaussian Processes*. All default parameters and search spaces for hyperparameter optimisation are chosen to be appropriate for typical emulation problems, i.e. small-ish datasets (100s or 1000s of datapoints) with potentially many features and outputs. We've also implemented Global Sensitivity Analysis as a common use-case for emulators, and plan to add more applications in the future.
+> *Transform complex simulations into lightning-fast emulators with just a few lines of code*
 
-**Useful links**:
-[Code repository](https://github.com/alan-turing-institute/autoemulate) |
-[Issues](https://github.com/alan-turing-institute/autoemulate/issues) |
+AutoEmulate is a powerful Python library that turns your computationally expensive simulations into blazing-fast emulators. Whether you're working in scientific computing, engineering, or data science, AutoEmulate helps you create accurate, efficient surrogate models with minimal effort.
+
+## ✨ Why AutoEmulate?
+
+- 🔥 **One Function to Rule Them All**: Our `compare()` function handles everything - from data processing to model selection and optimization
+- 🎯 **Built for Real-World Problems**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points)
+- 🛠️ **Rich Model Zoo**: From classic Radial Basis Functions to cutting-edge Neural Processes - we've got you covered
+- 📊 **Advanced Analytics**: Built-in support for Global Sensitivity Analysis and more
+- 🤓 **Smart Defaults**: Hyperparameter search spaces tuned specifically for emulation tasks
+
+## 🎓 State-of-the-Art Models
+
+AutoEmulate includes a diverse set of emulation methods:
+
+- 🧠 **Modern Deep Learning**
+  - Neural Processes
+  - Multitask Gaussian Processes
+- 📈 **Classical Methods**
+  - Radial Basis Functions
+  - Second Order Polynomials
+- 🌲 **Machine Learning**
+  - Gradient Boosting
+  - Support Vector Machines
+
+## 🔗 Get Started
+
+- [📚 Documentation](https://alan-turing-institute.github.io/autoemulate)
+- [💻 GitHub Repository](https://github.com/alan-turing-institute/autoemulate)
+- [🐛 Issue Tracker](https://github.com/alan-turing-institute/autoemulate/issues)
 
 ```{tableofcontents}
 ```
