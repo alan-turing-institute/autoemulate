@@ -96,7 +96,7 @@ def _generate_problem(X):
 
     return {
         "num_vars": X.shape[1],
-        "names": [f"x{i+1}" for i in range(X.shape[1])],
+        "names": [f"X{i+1}" for i in range(X.shape[1])],
         "bounds": [[X[:, i].min(), X[:, i].max()] for i in range(X.shape[1])],
     }
 
@@ -169,7 +169,7 @@ def _sobol_results_to_df(results, problem=None):
     parameter_names = (
         problem["names"]
         if problem is not None
-        else [f"x{i+1}" for i in range(len(next(iter(results.values()))["S1"]))]
+        else [f"X{i+1}" for i in range(len(next(iter(results.values()))["S1"]))]
     )
 
     for output, indices in results.items():
