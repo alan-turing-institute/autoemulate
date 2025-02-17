@@ -177,10 +177,10 @@ def test_sobol_results_to_df(sobol_results_1d):
 @pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_validate_input(sobol_results_1d):
     problem = {
-    "num_vars": 2,
-    "names": ["c", "v0"],
-    "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
-    } 
+        "num_vars": 2,
+        "names": ["c", "v0"],
+        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
+    }
     with pytest.raises(ValueError):
         _validate_input(sobol_results_1d, problem=problem, index="S3")
 
@@ -188,10 +188,10 @@ def test_validate_input(sobol_results_1d):
 @pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_validate_input_valid(sobol_results_1d):
     problem = {
-    "num_vars": 2,
-    "names": ["c", "v0"],
-    "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
-    } 
+        "num_vars": 2,
+        "names": ["c", "v0"],
+        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
+    }
     Si = _validate_input(sobol_results_1d, problem=problem, index="S1")
     assert isinstance(Si, pd.DataFrame)
 
