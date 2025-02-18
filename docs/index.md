@@ -1,30 +1,41 @@
-# 🚀 AutoEmulate: Supercharge Your Simulations
+# Welcome to AutoEmulate
 
-> *Transform complex simulations into lightning-fast emulators with just a few lines of code*
+> *Easily build efficient emulators for your simulations*
 
-AutoEmulate is a powerful Python library that turns your computationally expensive simulations into blazing-fast emulators. Whether you're working in scientific computing, engineering, or data science, AutoEmulate helps you create accurate, efficient surrogate models with minimal effort.
+`AutoEmulate` is a Python library that makes it easy to create accurate, efficient emulators for simulations. Under the hood, it runs a complete pipeline to compare, cross-validate and optimise various models, abstracting away the need to manually tune hyperparameters and compare models. Whether you're working in scientific computing, engineering, or data science, `AutoEmulate` helps you create accurate, efficient surrogate models with minimal effort.
+
+```{button-ref} getting-started/index
+:ref-type: doc
+:color: primary
+:class: sd-rounded-pill float-left
+
+
+Get started
+```
+
 
 ## ✨ Why AutoEmulate?
 
-- 🔥 **One Function to Rule Them All**: Our `compare()` function handles everything - from data processing to model selection and optimization
-- 🎯 **Built for Real-World Problems**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points)
-- 🛠️ **Rich Model Zoo**: From classic Radial Basis Functions to cutting-edge Neural Processes - we've got you covered
-- 📊 **Advanced Analytics**: Built-in support for Global Sensitivity Analysis and more
-- 🤓 **Smart Defaults**: Hyperparameter search spaces tuned specifically for emulation tasks
+- 🛠️ **Rich Model Zoo**: From classic Radial Basis Functions to cutting-edge Neural Processes
+- 🪄 **Low-Code**: Data-processing, model comparison, cross-validation, hyperparameter search and more in few lines of code
+- 🎯 **Built for Emulation**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points) with many inputs and outputs
+- 📊 **Emulator Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more!
 
 ## 🎓 State-of-the-Art Models
 
 AutoEmulate includes a diverse set of emulation methods:
 
-- 🧠 **Modern Deep Learning**
-  - Neural Processes
-  - Multitask Gaussian Processes
-- 📈 **Classical Methods**
+- 🧠 **PyTorch Models**
+  - Multioutput Gaussian Processes
+  - Conditional (Attentive) Neural Processes
+- 📈 **Classical Models**
   - Radial Basis Functions
   - Second Order Polynomials
 - 🌲 **Machine Learning**
+  - Random Forests
   - Gradient Boosting
   - Support Vector Machines
+  - LightGBM
 
 ## 🔗 Get Started
 
