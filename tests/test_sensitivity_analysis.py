@@ -179,7 +179,7 @@ def test_sobol_results_to_df(sobol_results_1d, problem, expected_names):
         "value",
         "confidence",
     ]
-    assert ["c", "v0", "c-v0"] in df["parameter"].unique()
+    assert expected_names in df["parameter"].unique()
     assert all(isinstance(x, float) for x in df["value"])
     assert all(isinstance(x, float) for x in df["confidence"])
 
