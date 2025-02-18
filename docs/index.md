@@ -1,8 +1,6 @@
 # Welcome to AutoEmulate
 
-> *Easily build efficient emulators for your simulations*
-
-`AutoEmulate` is a Python library that makes it easy to create accurate, efficient emulators for simulations. Under the hood, it runs a complete pipeline to compare, cross-validate and optimise various models, abstracting away the need to manually tune hyperparameters and compare models. Whether you're working in scientific computing, engineering, or data science, `AutoEmulate` helps you create accurate, efficient surrogate models with minimal effort.
+`AutoEmulate` is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and history matching.
 
 ```{button-ref} getting-started/index
 :ref-type: doc
@@ -13,21 +11,18 @@
 Get started
 ```
 
-
 ## ✨ Why AutoEmulate?
 
-- 🛠️ **Rich Model Zoo**: From classic Radial Basis Functions to cutting-edge Neural Processes
+- 🛠️ **Diverse Models**: From classic Radial Basis Functions to cutting-edge Neural Processes
 - 🪄 **Low-Code**: Data-processing, model comparison, cross-validation, hyperparameter search and more in few lines of code
 - 🎯 **Built for Emulation**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points) with many inputs and outputs
 - 📊 **Emulator Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more!
 
 ## 🎓 State-of-the-Art Models
 
-AutoEmulate includes a diverse set of emulation methods:
-
-- 🧠 **PyTorch Models**
-  - Multioutput Gaussian Processes
-  - Conditional (Attentive) Neural Processes
+- <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **Deep Learning Models**
+  - Multi-output and multi-task Gaussian Processes
+  - Conditional Neural Processes (optionally with attention)
 - 📈 **Classical Models**
   - Radial Basis Functions
   - Second Order Polynomials
@@ -39,9 +34,36 @@ AutoEmulate includes a diverse set of emulation methods:
 
 ## 🔗 Get Started
 
-- [📚 Documentation](https://alan-turing-institute.github.io/autoemulate)
-- [💻 GitHub Repository](https://github.com/alan-turing-institute/autoemulate)
-- [🐛 Issue Tracker](https://github.com/alan-turing-institute/autoemulate/issues)
+::::{grid} 1 1 2 3
+:gutter: 2
 
-```{tableofcontents}
-```
+:::{grid-item-card} ⚡ Quickstart
+:link: https://alan-turing-institute.github.io/autoemulate/getting-started/quickstart
+Our quickstart guide will get you up and running in no time
+:::
+
+:::{grid-item-card} 📚 Tutorial
+:link: https://alan-turing-institute.github.io/autoemulate/tutorials
+Learn how to use AutoEmulate with our in-depth tutorials
+:::
+
+:::{grid-item-card} 👥 Contributing
+:link: https://alan-turing-institute.github.io/autoemulate/community/contributing
+Learn how to contribute to AutoEmulate
+:::
+
+:::{grid-item-card} 💻 GitHub Repository  
+:link: https://github.com/alan-turing-institute/autoemulate
+Check out our source code
+:::
+
+:::{grid-item-card} 🐛 Issue Tracker
+:link: https://github.com/alan-turing-institute/autoemulate/issues
+Report bugs or request new features
+:::
+
+:::{grid-item-card} 🔍 API Reference
+:link: https://alan-turing-institute.github.io/autoemulate/reference
+The AutoEmulate API
+:::
+::::
