@@ -165,11 +165,6 @@ def sobol_results_1d(model_1d):
     ],
 )
 def test_sobol_results_to_df(sobol_results_1d, problem, expected_names):
-    problem = {
-        "num_vars": 2,
-        "names": ["c", "v0"],
-        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
-    }
     df = _sobol_results_to_df(sobol_results_1d, problem)
     assert isinstance(df, pd.DataFrame)
     assert df.columns.tolist() == [
