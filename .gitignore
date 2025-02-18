@@ -2,7 +2,6 @@ notebooks/
 __pycache__/
 .pytest_cache/
 dist/
-my_tests/
 
 # Ignore Sphinx build artifacts
 docs/build/
