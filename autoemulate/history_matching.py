@@ -24,17 +24,16 @@ def history_matching(obs, predictions, threshold=3.0, discrepancy=0.0, rank=1):
     Returns:
         dict: Contains implausibility (I), NROY indices, and RO indices.
     """
-    if len(obs[0]) != len(predictions[0][1]):
+    obs_mean, obs_var = np.atleast_1d(obs[0]), np.atleast_1d(obs[1])
+    pred_mean, pred_var = np.atleast_1d(predictions[0]), np.atleast_1d(predictions[1])
+    if len(obs_mean) != len(pred_mean[1]):
         raise ValueError(
             "The number of means in observations and predictions must be equal."
         )
-    if len(obs[1]) != len(predictions[1][1]):
+    if len(obs_var) != len(pred_var[1]):
         raise ValueError(
             "The number of variances in observations and predictions must be equal."
         )
-    obs_mean, obs_var = np.atleast_1d(obs[0]), np.atleast_1d(obs[1])
-    pred_mean, pred_var = np.atleast_1d(predictions[0]), np.atleast_1d(predictions[1])
-
     discrepancy = np.atleast_1d(discrepancy)
     n_obs = len(obs_mean)
     rank = min(max(rank, 0), n_obs - 1)
