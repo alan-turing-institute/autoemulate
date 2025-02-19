@@ -11,12 +11,14 @@
 🚀 Get started
 ```
 
+---
+
 ## ✨ Why AutoEmulate?
 
-- 🛠️ **Diverse Models**: From classic Radial Basis Functions to cutting-edge Neural Processes
+- 🛠️ **Diverse Emulators**: From classic Radial Basis Functions to cutting-edge Neural Processes
 - 🪄 **Low-Code**: Data-processing, model comparison, cross-validation, hyperparameter search and more in few lines of code
-- 🎯 **Built for Emulation**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points) with many inputs and outputs
-- 📊 **Emulator Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more!
+- 🎯 **Optimized for Emulation**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points) with many inputs and outputs
+- 📊 **Downstream Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more!
 
 ## 🎓 State-of-the-Art Models
 
