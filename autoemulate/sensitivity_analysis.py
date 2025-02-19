@@ -103,8 +103,9 @@ def _generate_problem(X):
     }
 
 
-def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95
-                    ) -> Dict[str, ResultDict]:
+def _sobol_analysis(
+    model, problem=None, X=None, N=1024, conf_level=0.95
+) -> Dict[str, ResultDict]:
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -151,7 +152,7 @@ def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95
     return results
 
 
-def _sobol_results_to_df(results: Dict[str, ResultDict]):
+def _sobol_results_to_df(results: Dict[str, ResultDict]) -> pd.DataFrame:
     """
     Convert Sobol results to a (long-format) pandas DataFrame.
 
@@ -167,31 +168,39 @@ def _sobol_results_to_df(results: Dict[str, ResultDict]):
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
     """
-    rename_dict = {'variable': 'index',
-                   'S1': 'value',
-                   'S1_conf': 'confidence',
-                   'ST': 'value',
-                   'ST_conf': 'confidence',
-                   'S2': 'value',
-                   'S2_conf': 'confidence'}
+    rename_dict = {
+        "variable": "index",
+        "S1": "value",
+        "S1_conf": "confidence",
+        "ST": "value",
+        "ST_conf": "confidence",
+        "S2": "value",
+        "S2_conf": "confidence",
+    }
     rows = []
     for output, result in results.items():
         s1, st, s2 = result.to_df()
-        s1 = s1.reset_index(
-                ).rename(columns={'index': 'parameter'}
-                         ).rename(columns=rename_dict)
-        s1['index'] = 'S1'
-        st = st.reset_index(
-                ).rename(columns={'index': 'parameter'}
-                         ).rename(columns=rename_dict)
-        st['index'] = 'ST'
-        s2 = s2.reset_index(
-                ).rename(columns={'index': 'parameter'}
-                         ).rename(columns=rename_dict)
-        s2['index'] = 'S2'
+        s1 = (
+            s1.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        s1["index"] = "S1"
+        st = (
+            st.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        st["index"] = "ST"
+        s2 = (
+            s2.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        s2["index"] = "S2"
 
         df = pd.concat([s1, st, s2])
-        df['output'] = output
+        df["output"] = output
         rows.append(df)
 
     return pd.concat(rows)
@@ -200,9 +209,9 @@ def _sobol_results_to_df(results: Dict[str, ResultDict]):
 # plotting --------------------------------------------------------------------
 
 
-def _validate_input(results, problem, index):
+def _validate_input(results, index):
     if not isinstance(results, pd.DataFrame):
-        results = _sobol_results_to_df(results, problem=problem)
+        results = _sobol_results_to_df(results)
         # we only want to plot one index type at a time
     valid_indices = ["S1", "S2", "ST"]
     if index not in valid_indices:
