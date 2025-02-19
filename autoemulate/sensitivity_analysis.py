@@ -46,7 +46,7 @@ def _sensitivity_analysis(
     Si = _sobol_analysis(model, problem, X, N, conf_level)
 
     if as_df:
-        return _sobol_results_to_df(Si, problem)
+        return _sobol_results_to_df(Si)
     else:
         return Si
 
@@ -201,7 +201,7 @@ def _sobol_results_to_df(results: Dict[str, ResultDict]) -> pd.DataFrame:
 
         df = pd.concat([s1, st, s2])
         df["output"] = output
-        rows.append(df)
+        rows.append(df[["output", "parameter", "index", "value", "confidence"]])
 
     return pd.concat(rows)
 
