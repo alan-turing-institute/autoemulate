@@ -8,7 +8,7 @@
 :class: sd-rounded-pill float-left
 
 
-Get started
+🚀 Get started
 ```
 
 ## ✨ Why AutoEmulate?
@@ -21,8 +21,10 @@ Get started
 ## 🎓 State-of-the-Art Models
 
 - <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **Deep Learning Models**
-  - Multi-output and multi-task Gaussian Processes
-  - Conditional Neural Processes (optionally with attention)
+  - Multi-output Gaussian Processes
+  - Multi-task Gaussian Processes (for correlated outputs)
+  - Conditional Neural Processes
+  - Attentive Conditional Neural Processes
 - 📈 **Classical Models**
   - Radial Basis Functions
   - Second Order Polynomials
