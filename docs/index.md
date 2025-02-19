@@ -11,32 +11,44 @@
 🚀 Get started
 ```
 
----
-
 ## ✨ Why AutoEmulate?
 
 - 🛠️ **Diverse Emulators**: From classic Radial Basis Functions to cutting-edge Neural Processes
 - 🪄 **Low-Code**: Data-processing, model comparison, cross-validation, hyperparameter search and more in few lines of code
 - 🎯 **Optimized for Emulation**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points) with many inputs and outputs
-- 📊 **Downstream Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more!
+- 🔌 **Easy Integration**: All emulators are `scikit-learn` compatible, and the underlying `PyTorch` models can be extracted for custom use
+- 🔮 **Downstream Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more
 
 ## 🎓 State-of-the-Art Models
 
-- <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **Deep Learning Models**
-  - Multi-output Gaussian Processes
-  - Multi-task Gaussian Processes (for correlated outputs)
-  - Conditional Neural Processes
-  - Attentive Conditional Neural Processes
-- 📈 **Classical Models**
-  - Radial Basis Functions
-  - Second Order Polynomials
-- 🌲 **Machine Learning**
-  - Random Forests
-  - Gradient Boosting
-  - Support Vector Machines
-  - LightGBM
+::::{grid} 1 1 2 3
+:gutter: 2
 
-## 🔗 Get Started
+:::{grid-item} 📈 **Classical**
+
+- Radial Basis Functions
+- Second Order Polynomials
+
+:::
+
+:::{grid-item} 🌳 **Machine Learning**
+
+- Random Forests
+- Gradient Boosting
+- Support Vector Machines
+- LightGBM
+
+:::
+
+:::{grid-item} <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **Deep Learning**
+
+- Multi-output / Multi-task Gaussian Processes
+- Conditional Neural Processes
+
+:::
+::::
+
+## 🔗 Quick Links
 
 ::::{grid} 1 1 2 3
 :gutter: 2
