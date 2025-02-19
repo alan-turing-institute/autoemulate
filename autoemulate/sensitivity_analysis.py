@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from SALib.analyze.sobol import analyze
 from SALib.sample.sobol import sample
+from SALib.util import ResultDict
+from typing import Dict
 
 from autoemulate.utils import _ensure_2d
 
@@ -101,7 +103,8 @@ def _generate_problem(X):
     }
 
 
-def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
+def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95
+                    ) -> Dict[str, ResultDict]:
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -148,7 +151,7 @@ def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
     return results
 
 
-def _sobol_results_to_df(results, problem=None):
+def _sobol_results_to_df(results: Dict[str, ResultDict]):
     """
     Convert Sobol results to a (long-format) pandas DataFrame.
 
@@ -164,48 +167,34 @@ def _sobol_results_to_df(results, problem=None):
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
     """
+    rename_dict = {'variable': 'index',
+                   'S1': 'value',
+                   'S1_conf': 'confidence',
+                   'ST': 'value',
+                   'ST_conf': 'confidence',
+                   'S2': 'value',
+                   'S2_conf': 'confidence'}
     rows = []
-    # Use custom names if provided, else default to "x1", "x2", etc.
-    parameter_names = (
-        problem["names"]
-        if problem is not None
-        else [f"X{i+1}" for i in range(len(next(iter(results.values()))["S1"]))]
-    )
+    for output, result in results.items():
+        s1, st, s2 = result.to_df()
+        s1 = s1.reset_index(
+                ).rename(columns={'index': 'parameter'}
+                         ).rename(columns=rename_dict)
+        s1['index'] = 'S1'
+        st = st.reset_index(
+                ).rename(columns={'index': 'parameter'}
+                         ).rename(columns=rename_dict)
+        st['index'] = 'ST'
+        s2 = s2.reset_index(
+                ).rename(columns={'index': 'parameter'}
+                         ).rename(columns=rename_dict)
+        s2['index'] = 'S2'
 
-    for output, indices in results.items():
-        for index_type in ["S1", "ST", "S2"]:
-            values = indices.get(index_type)
-            conf_values = indices.get(f"{index_type}_conf")
-            if values is None or conf_values is None:
-                continue
+        df = pd.concat([s1, st, s2])
+        df['output'] = output
+        rows.append(df)
 
-            if index_type in ["S1", "ST"]:
-                rows.extend(
-                    {
-                        "output": output,
-                        "parameter": parameter_names[i],  # Use appropriate names
-                        "index": index_type,
-                        "value": value,
-                        "confidence": conf,
-                    }
-                    for i, (value, conf) in enumerate(zip(values, conf_values))
-                )
-
-            elif index_type == "S2":
-                n = values.shape[0]
-                rows.extend(
-                    {
-                        "output": output,
-                        "parameter": f"{parameter_names[i]}-{parameter_names[j]}",  # Use appropriate names
-                        "index": index_type,
-                        "value": values[i, j],
-                        "confidence": conf_values[i, j],
-                    }
-                    for i in range(n)
-                    for j in range(i + 1, n)
-                    if not np.isnan(values[i, j])
-                )
-    return pd.DataFrame(rows)
+    return pd.concat(rows)
 
 
 # plotting --------------------------------------------------------------------

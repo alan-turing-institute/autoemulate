@@ -42,6 +42,7 @@ class AutoEmulate:
         self.X = None
         self.y = None
         self.is_set_up = False
+        # self.logger = _configure_logging()
 
     def setup(
         self,
