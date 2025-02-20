@@ -10,11 +10,11 @@
 | autoemulate/data\_splitting.py                                               |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                                      |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
-| autoemulate/emulators/conditional\_neural\_process.py                        |      102 |        3 |     97% |253-254, 295 |
+| autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        8 |     92% |73, 266, 274, 289, 300, 310, 332, 336 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        8 |     92% |73, 259, 266, 300, 310, 321, 340, 344 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
-| autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        8 |     92% |71, 240, 250, 254, 259, 265, 278, 286 |
+| autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        9 |     91% |71, 240, 246, 250, 254, 265, 271, 282, 286 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/\_\_init\_\_.py               |        3 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/early\_stopping\_criterion.py |       11 |        2 |     82% |    58, 63 |
@@ -46,7 +46,7 @@
 | autoemulate/simulations/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | autoemulate/simulations/epidemic.py                                          |       26 |       26 |      0% |      1-55 |
 | autoemulate/simulations/projectile.py                                        |       46 |        8 |     83% |177-182, 199-200, 221-223 |
-| autoemulate/utils.py                                                         |      125 |        6 |     95% |57, 65, 180, 362-363, 379 |
+| autoemulate/utils.py                                                         |      146 |        9 |     94% |57, 65, 180, 362-363, 379, 426, 435, 449 |
 | tests/\_\_init\_\_.py                                                        |        0 |        0 |    100% |           |
 | tests/models/test\_attn\_cnp.py                                              |      147 |        0 |    100% |           |
 | tests/models/test\_cnp.py                                                    |      108 |        0 |    100% |           |
@@ -66,11 +66,12 @@
 | tests/test\_model\_registry.py                                               |       86 |        0 |    100% |           |
 | tests/test\_plotting.py                                                      |      194 |        7 |     96% |44, 54, 76-77, 85-86, 94 |
 | tests/test\_printing.py                                                      |       19 |        0 |    100% |           |
+| tests/test\_pytorch\_utils.py                                                |       63 |        0 |    100% |           |
 | tests/test\_save.py                                                          |       62 |        2 |     97% |    30, 35 |
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       55 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      182 |        6 |     97% |51, 57, 62, 67, 72, 77 |
-|                                                                    **TOTAL** | **3606** |  **210** | **94%** |           |
+|                                                                    **TOTAL** | **3691** |  **214** | **94%** |           |
 
 
 ## Setup coverage badge
