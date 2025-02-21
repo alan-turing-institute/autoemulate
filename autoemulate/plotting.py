@@ -225,8 +225,6 @@ def _plot_best_fold_per_model(
     for j in range(i + 1, len(axs)):
         axs[j].set_visible(False)
     plt.tight_layout()
-    # prevent double plotting in notebooks
-    plt.close(fig)
     return fig
 
 
@@ -293,8 +291,6 @@ def _plot_model_folds(
         axs[j].set_visible(False)
 
     plt.tight_layout()
-    # prevent double plotting in notebooks
-    plt.close(fig)
     return fig
 
 
@@ -589,17 +585,18 @@ def _display_figure(fig):
     Returns:
         fig: the input figure object
     """
-    # Check if running in Jupyter notebook
+    # Are we in Jupyter?
     try:
-        shell = get_ipython().__class__.__name__
-        if shell == "ZMQInteractiveShell":  # Jupyter notebook
-            plt.close(fig)
-            return fig
-        else:  # Terminal iPython
-            plt.show()
-            plt.close(fig)
-            return fig
-    except NameError:  # Regular Python terminal
+        is_jupyter = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
+    except NameError:
+        is_jupyter = False
+
+    if is_jupyter:
+        # we don't show otherwise it will double plot
+        plt.close(fig)
+        return fig
+    else:
+        # in terminal, show the plot
         plt.show()
         plt.close(fig)
         return fig
