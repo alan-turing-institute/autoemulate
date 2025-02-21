@@ -474,9 +474,7 @@ def _plot_model(
         ax.set_visible(False)
     plt.tight_layout()
 
-    # prevent double plotting in notebooks
-    plt.close(fig)
-    return fig
+    return _display_figure(fig)
 
 
 def _plot_Xy(
