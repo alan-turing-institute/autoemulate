@@ -355,7 +355,7 @@ def _plot_cv(
             cv_results, X, y, n_cols, style, figsize, output_index, input_index
         )
 
-    return figure
+    return _display_figure(figure)
 
 
 def _plot_model(
@@ -577,3 +577,29 @@ def _plot_Xy(
         transform=ax.transAxes,
         verticalalignment="bottom",
     )
+
+
+def _display_figure(fig):
+    """
+    Display a matplotlib figure appropriately based on the environment (Jupyter notebook or terminal).
+
+    Args:
+        fig: matplotlib figure object to display
+
+    Returns:
+        fig: the input figure object
+    """
+    # Check if running in Jupyter notebook
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":  # Jupyter notebook
+            plt.close(fig)
+            return fig
+        else:  # Terminal iPython
+            plt.show()
+            plt.close(fig)
+            return fig
+    except NameError:  # Regular Python terminal
+        plt.show()
+        plt.close(fig)
+        return fig
