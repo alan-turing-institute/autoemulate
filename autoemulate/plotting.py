@@ -61,6 +61,30 @@ def _predict_with_optional_std(model, X_test):
     return y_test_pred, y_test_std
 
 
+def _calculate_subplot_layout(n_plots, n_cols=3):
+    """Calculate optimal number of rows and columns for subplots.
+
+    Parameters
+    ----------
+    n_plots : int
+        Number of plots to display
+    n_cols : int, optional
+        Maximum number of columns allowed, default is 3
+
+    Returns
+    -------
+    tuple
+        (n_rows, n_cols) for the subplot layout
+    """
+    if n_plots <= 0:
+        return (1, 1)
+
+    n_cols = min(n_plots, n_cols)
+    n_rows = (n_plots + n_cols - 1) // n_cols
+
+    return n_rows, n_cols
+
+
 def _plot_single_fold(
     cv_results,
     X,
@@ -185,7 +209,7 @@ def _plot_best_fold_per_model(
     y : array-like, shape (n_samples, n_outputs)
         Simulation output.
     n_cols : int, optional
-        The number of columns in the plot. Default is 3.
+        The maximum number of columns in the plot. Default is 3.
     plot : str, optional
         The type of plot to draw:
         “standard" or "residual”.
@@ -198,7 +222,7 @@ def _plot_best_fold_per_model(
     """
 
     n_models = len(cv_results)
-    n_rows = int(np.ceil(n_models / n_cols))
+    n_rows, n_cols = _calculate_subplot_layout(n_models, n_cols)
 
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
@@ -252,7 +276,7 @@ def _plot_model_folds(
     model_name : str
         The name of the model to plot.
     n_cols : int, optional
-        The number of columns in the plot. Default is 5.
+        The maximum number of columns in the plot. Default is 3.
     plot : str, optional
         The type of plot to draw:
         “standard” or “residual”.
@@ -265,7 +289,7 @@ def _plot_model_folds(
     """
 
     n_folds = len(cv_results[model_name]["estimator"])
-    n_rows = int(np.ceil(n_folds / n_cols))
+    n_rows, n_cols = _calculate_subplot_layout(n_folds, n_cols)
 
     if figsize is None:
         figsize = (4 * n_cols, 3 * n_rows)
@@ -318,7 +342,7 @@ def _plot_cv(
     model_name : (str, optional)
         The name of the model to plot. If None, the best (largest R^2) fold for each model will be plotted.
     n_cols : int, optional
-        The number of columns in the plot. Default is 3.
+        The maximum number of columns in the plot. Default is 3.
     plot : str, optional
         The type of plot to draw:
         “standard” draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
@@ -380,7 +404,7 @@ def _plot_model(
         "residual" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         "Xy" draws the input features vs. the output variables, including predictions.
     n_cols : int, optional
-        The number of columns in the plot. Default is 2.
+        The maximum number of columns in the plot. Default is 3.
     figsize : tuple, optional
         Overrides the default figure size.
     input_index : int or list of int, optional
@@ -422,7 +446,7 @@ def _plot_model(
         n_plots = len(output_index)
 
     # Calculate number of rows
-    n_rows = int(np.ceil(n_plots / n_cols))
+    n_rows, n_cols = _calculate_subplot_layout(n_plots, n_cols)
 
     # Set up the figure
     if figsize is None:
