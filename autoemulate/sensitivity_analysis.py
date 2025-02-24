@@ -1,10 +1,11 @@
+from typing import Dict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from SALib.analyze.sobol import analyze
 from SALib.sample.sobol import sample
 from SALib.util import ResultDict
-from typing import Dict
 
 from autoemulate.utils import _ensure_2d
 
