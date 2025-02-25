@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        7 |     93% |73, 259, 266, 289, 310, 321, 340 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        7 |     93% |73, 259, 266, 300, 310, 321, 344 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        9 |     91% |71, 240, 246, 250, 254, 265, 271, 282, 286 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -40,10 +40,10 @@
 | autoemulate/metrics.py                                                       |        8 |        0 |    100% |           |
 | autoemulate/model\_processing.py                                             |       21 |        0 |    100% |           |
 | autoemulate/model\_registry.py                                               |       31 |        1 |     97% |        46 |
-| autoemulate/plotting.py                                                      |      163 |        6 |     96% |122, 132, 226, 403, 408, 418 |
+| autoemulate/plotting.py                                                      |      177 |        9 |     95% |146, 156, 250, 423, 428, 438, 498, 618-619 |
 | autoemulate/printing.py                                                      |       37 |       14 |     62% |7, 12, 17-26, 40, 97, 103-105 |
 | autoemulate/save.py                                                          |       36 |        3 |     92% |     28-30 |
-| autoemulate/sensitivity\_analysis.py                                         |      108 |       41 |     62% |44-49, 57, 60, 62, 67, 95, 127-130, 171, 227-241, 264-304 |
+| autoemulate/sensitivity\_analysis.py                                         |      108 |       40 |     63% |45-50, 58, 61, 63, 68, 96, 128-131, 172, 228-242, 265-303 |
 | autoemulate/simulations/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | autoemulate/simulations/epidemic.py                                          |       26 |       26 |      0% |      1-55 |
 | autoemulate/simulations/projectile.py                                        |       46 |        8 |     83% |177-182, 199-200, 221-223 |
@@ -66,14 +66,14 @@
 | tests/test\_logging\_config.py                                               |       51 |        0 |    100% |           |
 | tests/test\_model\_processing.py                                             |       54 |        0 |    100% |           |
 | tests/test\_model\_registry.py                                               |       86 |        0 |    100% |           |
-| tests/test\_plotting.py                                                      |      194 |        7 |     96% |44, 54, 76-77, 85-86, 94 |
+| tests/test\_plotting.py                                                      |      205 |        7 |     97% |44, 54, 76-77, 85-86, 94 |
 | tests/test\_printing.py                                                      |       19 |        0 |    100% |           |
 | tests/test\_pytorch\_utils.py                                                |       63 |        0 |    100% |           |
 | tests/test\_save.py                                                          |       62 |        2 |     97% |    30, 35 |
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       55 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      182 |        6 |     97% |51, 57, 62, 67, 72, 77 |
-|                                                                    **TOTAL** | **3752** |  **215** | **94%** |           |
+|                                                                    **TOTAL** | **3777** |  **217** | **94%** |           |
 
 
 ## Setup coverage badge
