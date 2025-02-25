@@ -33,6 +33,7 @@ chapters:
   sections:
   - file: reference/compare
   - file: reference/datasets
+  - file: reference/history_matching
   - file: reference/sensitivity_analysis
   - file: reference/simulations/index
     sections:
