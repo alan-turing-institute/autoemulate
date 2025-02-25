@@ -76,7 +76,7 @@ def _calculate_subplot_layout(n_plots, n_cols=3):
     tuple
         (n_rows, n_cols) for the subplot layout
     """
-    if n_plots <= 0:
+    if n_plots <= 1:
         return (1, 1)
 
     n_cols = min(n_plots, n_cols)
