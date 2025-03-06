@@ -13,3 +13,10 @@ body.home-page .prev-next-footer {
 body.home-page .bd-main {
     margin-left: 0;
 }
+
+body.home-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
