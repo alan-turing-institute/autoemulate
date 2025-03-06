@@ -6,6 +6,10 @@ body.home-page .bd-header-article {
     display: none;
 }
 
+body.home-page .prev-next-footer {
+    display: none;
+}
+
 body.home-page .bd-main {
     margin-left: 0;
 }
