@@ -28,3 +28,8 @@ body.home-page h1 {
 body.home-page p.explainer-text {
     font-size: 2em;
 }
+
+body.home-page .sd-rounded-pill {
+    font-size: 2em;
+    padding: 1em 2em;
+}
