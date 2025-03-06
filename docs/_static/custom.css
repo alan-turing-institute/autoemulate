@@ -1,0 +1,7 @@
+body.home-page .bd-sidebar-primary {
+    display: none;
+}
+
+body.home-page .bd-main {
+    margin-left: 0;
+}
