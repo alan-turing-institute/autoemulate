@@ -42,7 +42,7 @@ sphinx:
     - 'sphinx.ext.autodoc'
     - 'sphinx.ext.napoleon'
     - 'sphinx.ext.viewcode'
-  extra_css: ["_static/custom.css"]
+  extra_css: ["_static/homepage.css"]
   config:
     html_context:
       body_classes: home-page
