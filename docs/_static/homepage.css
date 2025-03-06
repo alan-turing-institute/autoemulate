@@ -20,3 +20,7 @@ body.home-page {
     align-items: center;
     text-align: center;
 }
+
+body.home-page h1 {
+    font-size: 6em;
+}
