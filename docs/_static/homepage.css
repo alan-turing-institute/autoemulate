@@ -24,3 +24,7 @@ body.home-page {
 body.home-page h1 {
     font-size: 6em;
 }
+
+body.home-page p.explainer-text {
+    font-size: 2em;
+}
