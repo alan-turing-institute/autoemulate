@@ -46,3 +46,22 @@ def fetch_data(dataset, split=False, test_size=0.2, random_state=42):
         return train_test_split(X, y, test_size=test_size, random_state=random_state)
     else:
         return X, y
+
+
+def check_nan_inf(arr):
+    """Checks for NaN and infinite values in a NumPy array."""
+    nan_mask = np.isnan(arr)
+    inf_mask = np.isinf(arr)
+
+    if np.any(nan_mask):
+        print("NaN values found at:", np.where(nan_mask))
+        return True
+    else:
+        print("No NaN values found.")
+
+    if np.any(inf_mask):
+        print("Infinite values found at:", np.where(inf_mask))
+        return True
+    else:
+        print("No infinite values found.")
+    return False

@@ -18,6 +18,7 @@ from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _process_models
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
+from autoemulate.preprocess_target import OutputOnlyPreprocessor
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
@@ -60,6 +61,7 @@ class AutoEmulate:
         ),
         n_jobs=None,
         models=None,
+        preprocess_outputs=None,
         verbose=0,
         log_to_file=False,
         print_setup=True,
@@ -114,6 +116,7 @@ class AutoEmulate:
         self.train_idxs, self.test_idxs = _split_data(
             self.X, test_size=self.test_set_size, random_state=42
         )
+        self.preprocess_outputs = preprocess_outputs
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
         self.models = _process_models(
             model_registry=self.model_registry,
@@ -123,6 +126,7 @@ class AutoEmulate:
             scaler=scaler,
             reduce_dim=reduce_dim,
             dim_reducer=dim_reducer,
+            preprocess_outputs=preprocess_outputs,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
@@ -465,6 +469,12 @@ class AutoEmulate:
             raise ValueError("Model should be a fitted model")
 
         y_pred = model.predict(self.X[self.test_idxs])
+
+        if self.preprocess_outputs:
+            y_pred = OutputOnlyPreprocessor(
+                methods=self.preprocess_outputs
+            ).inverse_transform(y_pred)
+
         y_true = self.y[self.test_idxs]
 
         scores = {}

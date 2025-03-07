@@ -2,6 +2,8 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from autoemulate.preprocess_target import OutputOnlyPreprocessor
+
 
 def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models if y is 2D.
@@ -28,7 +30,9 @@ def _turn_models_into_multioutput(models, y):
     return models_multi
 
 
-def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
+def _wrap_models_in_pipeline(
+    models, scale, scaler, reduce_dim, dim_reducer, preprocess_outputs=None
+):
     """Wrap models in a pipeline if scale is True.
 
     Parameters
@@ -54,6 +58,13 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
 
     for model in models:
         steps = []
+        if preprocess_outputs:
+            steps.append(
+                (
+                    "output_preprocessor",
+                    OutputOnlyPreprocessor(methods=preprocess_outputs),
+                )
+            )
         if scale:
             steps.append(("scaler", scaler))
         if reduce_dim:
@@ -66,7 +77,14 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
 
 
 def _process_models(
-    model_registry, model_names, y, scale, scaler, reduce_dim, dim_reducer
+    model_registry,
+    model_names,
+    y,
+    scale,
+    scaler,
+    reduce_dim,
+    dim_reducer,
+    preprocess_outputs,
 ):
     """Get and process models.
 
