@@ -2,7 +2,9 @@
 <body class="home-page">
 ```
 
-# Emulators for complex simulations
+# Accelerating large-scale simulations with AI
+
+### Replace complex simulations with fast, accurate emulators
 
 ```{button-ref} getting-started/index
 :ref-type: doc
