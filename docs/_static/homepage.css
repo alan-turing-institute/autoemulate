@@ -29,6 +29,11 @@ body.home-page p.explainer-text {
     font-size: 2em;
 }
 
+body.home-page p.left-text {
+    font-size: 1.5em;
+    text-align: left;
+}
+
 body.home-page .sd-rounded-pill {
     font-size: 2em;
     padding: 1em 2em;
