@@ -1,0 +1,52 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/nbclient/client.py", line 1319, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+ae.plot_sensitivity_analysis(si, index="S1", figsize=(3, 3))
+------------------
+
+
+[31m---------------------------------------------------------------------------[39m
+[31mTypeError[39m                                 Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[12][39m[32m, line 1[39m
+[32m----> [39m[32m1[39m [43mae[49m[43m.[49m[43mplot_sensitivity_analysis[49m[43m([49m[43msi[49m[43m,[49m[43m [49m[43mindex[49m[43m=[49m[33;43m"[39;49m[33;43mS1[39;49m[33;43m"[39;49m[43m,[49m[43m [49m[43mfigsize[49m[43m=[49m[43m([49m[32;43m3[39;49m[43m,[49m[43m [49m[32;43m3[39;49m[43m)[49m[43m)[49m
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/autoemulate/compare.py:625[39m, in [36mAutoEmulate.plot_sensitivity_analysis[39m[34m(self, results, index, n_cols, figsize)[39m
+[32m    605[39m [38;5;28;01mdef[39;00m[38;5;250m [39m[34mplot_sensitivity_analysis[39m([38;5;28mself[39m, results, index=[33m"[39m[33mS1[39m[33m"[39m, n_cols=[38;5;28;01mNone[39;00m, figsize=[38;5;28;01mNone[39;00m):
+[32m    606[39m [38;5;250m    [39m[33;03m"""[39;00m
+[32m    607[39m [33;03m    Plot the sensitivity analysis results.[39;00m
+[32m    608[39m 
+[32m   (...)[39m[32m    623[39m 
+[32m    624[39m [33;03m    """[39;00m
+[32m--> [39m[32m625[39m     [38;5;28;01mreturn[39;00m [43m_plot_sensitivity_analysis[49m[43m([49m[43mresults[49m[43m,[49m[43m [49m[43mindex[49m[43m,[49m[43m [49m[43mn_cols[49m[43m,[49m[43m [49m[43mfigsize[49m[43m)[49m
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/autoemulate/sensitivity_analysis.py:274[39m, in [36m_plot_sensitivity_analysis[39m[34m(results, problem, index, n_cols, figsize)[39m
+[32m    253[39m [38;5;250m[39m[33;03m"""[39;00m
+[32m    254[39m [33;03mPlot the sensitivity analysis results.[39;00m
+[32m    255[39m 
+[32m   (...)[39m[32m    270[39m 
+[32m    271[39m [33;03m"""[39;00m
+[32m    272[39m [38;5;28;01mwith[39;00m plt.style.context([33m"[39m[33mfast[39m[33m"[39m):
+[32m    273[39m     [38;5;66;03m# prepare data[39;00m
+[32m--> [39m[32m274[39m     results = [43m_validate_input[49m[43m([49m[43mresults[49m[43m,[49m[43m [49m[43mproblem[49m[43m,[49m[43m [49m[43mindex[49m[43m)[49m
+[32m    275[39m     unique_outputs = results[[33m"[39m[33moutput[39m[33m"[39m].unique()
+[32m    276[39m     n_outputs = [38;5;28mlen[39m(unique_outputs)
+
+[31mTypeError[39m: _validate_input() takes 2 positional arguments but 3 were given
+
