@@ -15,8 +15,10 @@
 
 ```{raw} html
 <p class="explainer-text">
-    <i>AutoEmulate</i> is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration
-</p>
+    <i>AutoEmulate</i> is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
+</p><br>
+
+<img src="./_static/heart.png" alt="Heart Image" />
 ```
 
 ::::{grid} 1 1 2 3
