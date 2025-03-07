@@ -32,6 +32,13 @@ body.home-page p.explainer-text {
 body.home-page p.left-text {
     font-size: 1.5em;
     text-align: left;
+    flex: 1;
+}
+
+body.home-page p.right-text {
+    font-size: 1.5em;
+    text-align: right;
+    flex: 1;
 }
 
 body.home-page .sd-rounded-pill {
