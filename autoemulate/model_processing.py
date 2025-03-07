@@ -2,7 +2,7 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
-from autoemulate.preprocess_target import OutputOnlyPreprocessor
+from autoemulate.preprocess_target import OutputOnlyPreprocessor, VAEOutputPreprocessor
 
 
 def _turn_models_into_multioutput(models, y):
@@ -59,12 +59,17 @@ def _wrap_models_in_pipeline(
     for model in models:
         steps = []
         if preprocess_outputs:
-            steps.append(
-                (
-                    "output_preprocessor",
-                    OutputOnlyPreprocessor(methods=preprocess_outputs),
-                )
-            )
+            # If preprocess_outputs is 'vae', use our custom VAE preprocessor
+            if preprocess_outputs == 'vae':
+                steps.append(("output_preprocessor", VAEOutputPreprocessor(
+                    latent_dim=4,  # Dimension of latent space
+                    epochs=150,    # Number of training epochs
+                    batch_size=8, # Batch size for training
+                    hidden_dims=[32, 16, 8]  # Architecture of encoder/decoder
+                )))
+            else:
+                # Otherwise use the original OutputOnlyPreprocessor
+                steps.append(("output_preprocessor", OutputOnlyPreprocessor(methods=preprocess_outputs)))
         if scale:
             steps.append(("scaler", scaler))
         if reduce_dim:
