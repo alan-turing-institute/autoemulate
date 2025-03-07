@@ -14,16 +14,16 @@
 ```
 
 ```{raw} html
-<p class="explainer-text">
+<br><p class="explainer-text">
     <i>AutoEmulate</i> is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
-</p><br>
+</p><br><br>
 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
     <p class="left-text" style="flex: 1;">
         <b>What are we trying to solve?</b><br>
         For complex systems, the computational cost of simulation poses a significant bottleneck.
-        As an example, Cardio-vascular CFD models can take on the order of hours or even days to run.
+        As an example, Cardio-vascular CFD models can take hours or even days to run.
     </p>
-    <img style="flex: 1; max-width: 50%; text-align: right;" src="./_static/heart.png" alt="Heart Image" />
+    <img style="flex: 1; max-width: 50%; text-align: right;" src="./_static/heart.png" alt="Heart Image" /><br>
 </div>
 ```
 
