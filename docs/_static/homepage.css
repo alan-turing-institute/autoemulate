@@ -45,3 +45,11 @@ body.home-page .sd-rounded-pill {
     font-size: 2em;
     padding: 1em 2em;
 }
+
+body.home-page .top-left-logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 250px;
+    height: auto;
+}

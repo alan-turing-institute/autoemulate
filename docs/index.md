@@ -14,6 +14,7 @@
 ```
 
 ```{raw} html
+<img class="top-left-logo" src="./_static/logo.png" alt="AutoEmulate Logo small" />
 <br><p class="explainer-text">
     <i>AutoEmulate</i> is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
 </p><br><br>
@@ -26,7 +27,7 @@
     <img style="flex: 1; max-width: 50%; text-align: right;" src="./_static/heart.png" alt="Heart Image" /><br>
 </div>
 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-    <img style="flex: 1; max-width: 50%; text-align: left;" src="./_static/logo.png" alt="Logo" />
+    <img style="flex: 1; max-width: 50%; text-align: left;" src="./_static/logo.png" alt="AutoEmulate Logo" />
     <p class="right-text">
         <b>Introducing <i>AutoEmulate</i></b><br>
         Replace complex simulations with fast, accurate emulators.
