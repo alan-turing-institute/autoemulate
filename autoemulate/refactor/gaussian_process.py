@@ -1,10 +1,12 @@
 import gpytorch
 import torch
 
-from autoemulate.refactor.base import BaseModel, InputTypeMixin
+from autoemulate.refactor.base import BaseModel, InputTypeMixin, PyTorchMixin
 
 
-class GaussianProcessRefactor(gpytorch.models.ExactGP, BaseModel, InputTypeMixin):
+class GaussianProcessRefactor(
+    gpytorch.models.ExactGP, BaseModel, InputTypeMixin, PyTorchMixin
+):
     # TODO: can the init method be different across models?
     # Perhaps a match statement to handle the different cases will be suffiocient
     def __init__(self, train_x, train_y, normalize_y=True):

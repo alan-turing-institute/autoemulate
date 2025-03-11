@@ -25,6 +25,12 @@ class BaseModel(ABC):
     #     pass
 
 
+class PyTorchMixin(torch.nn.Module): ...
+
+
+class SklearnMixin: ...
+
+
 # Mixin for handling input types
 class InputTypeMixin:
     def convert_to_tensor(self, X: torch.Tensor | np.ndarray) -> torch.Tensor:
@@ -32,3 +38,15 @@ class InputTypeMixin:
 
     def convert_to_numpy(self, X: torch.Tensor | np.ndarray) -> np.ndarray:
         return convert_to_numpy(X)
+
+
+class AutoEmulateRefactor:
+    pass
+
+
+class Simulator:
+    pass
+
+
+class ActiveLearner:
+    pass
