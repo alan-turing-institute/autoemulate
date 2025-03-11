@@ -1,12 +1,12 @@
 import gpytorch
 import torch
 
-from autoemulate.refactor.base import BaseModel, InputTypeMixin, PyTorchMixin
+from autoemulate.refactor.base import BaseEmulator, InputTypeMixin
+
+# TODO: try refactor of this class with latest BaseEmulator
 
 
-class GaussianProcessRefactor(
-    gpytorch.models.ExactGP, BaseModel, InputTypeMixin, PyTorchMixin
-):
+class GaussianProcessRefactor(gpytorch.models.ExactGP, BaseEmulator, InputTypeMixin):
     # TODO: can the init method be different across models?
     # Perhaps a match statement to handle the different cases will be suffiocient
     def __init__(self, train_x, train_y, normalize_y=True):
@@ -68,3 +68,9 @@ class GaussianProcessRefactor(
     def predict(self, X):
         self.eval()
         return self(X)
+
+    def tune(self, X, y):
+        raise NotImplementedError("This function is not yet implemented.")
+
+    def cross_validate(self, X, y):
+        raise NotImplementedError("This function is not yet implemented.")

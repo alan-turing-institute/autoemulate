@@ -7,10 +7,10 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 
-from autoemulate.refactor.base import BaseModel
+from autoemulate.refactor.base import BaseEmulator
 
 
-class RandomForest(BaseModel, RegressorMixin):
+class RandomForest(BaseEmulator, RegressorMixin):
     """Random forest Emulator.
 
     Implements Random Forests regression from scikit-learn.
