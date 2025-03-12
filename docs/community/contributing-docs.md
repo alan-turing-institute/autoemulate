@@ -14,7 +14,7 @@ To test the changes you make to the docs, install the package with [Poetry (deve
 
 1. Navigate to the relevant file in the `docs/` directory
 2. Make your changes
-3. From the top level of the repo, build the docs locally to verify your changes:
+3. From the top level of the repo, build the docs locally to verify your changes (drop the `--all` flag to build only the changed files):
 
    ```bash
    jupyter-book build docs --all
