@@ -12,7 +12,7 @@
 ```
 
 This website provides detailed documentation on how to use `AutoEmulate`, including installation instructions, tutorials, and a comprehensive API reference.
-For an overview of the project, checkout [autoemulate.com](https://autoemulate.com).
+For an overview of the project, checkout [autoemulate.com](https://alan-turing-institute.github.io/astroemulate/).
 
 ## 🔗 Quick Links
 
