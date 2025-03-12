@@ -1,10 +1,6 @@
-```{raw} html
-<body class="home-page">
-```
+# Welcome to AutoEmulate
 
-# Accelerating large-scale simulations with AI
-
-### Replace complex simulations with fast, accurate emulators
+`AutoEmulate` is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
 
 ```{button-ref} getting-started/index
 :ref-type: doc
@@ -15,29 +11,44 @@
 🚀 Get started
 ```
 
-```{raw} html
-<img class="top-left-logo" src="./_static/logo_dark.png" alt="AutoEmulate Logo small" />
-<br><p class="explainer-text">
-    <i>AutoEmulate</i> is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
-</p><br><br>
-<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-    <p class="left-text">
-        <b>What are we trying to solve?</b><br>
-        For complex systems, the computational cost of simulation poses a significant bottleneck.
-        As an example, Cardio-vascular CFD models can take hours or even days to run.
-    </p>
-    <img style="flex: 1; max-width: 50%; text-align: right;" src="./_static/heart.png" alt="Heart Image" /><br>
-</div>
-<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-    <img style="flex: 1; max-width: 50%; text-align: left;" src="./_static/logo_dark.png" alt="AutoEmulate Logo" />
-    <p class="right-text">
-        <b>Introducing <i>AutoEmulate</i></b><br>
-        Replace complex simulations with fast, accurate emulators.
-        Automatically fit and compare various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines, Gaussian Processes and Conditional Neural Processes.
-        
-    </p><br><br>
-</div>
-```
+## ✨ Why AutoEmulate?
+
+- 🛠️ **Diverse Emulators**: From classic Radial Basis Functions to cutting-edge Neural Processes
+- 🪄 **Low-Code**: Data-processing, model comparison, cross-validation, hyperparameter search and more in few lines of code
+- 🎯 **Optimized for Emulation**: Optimized for typical emulation scenarios with small to medium datasets (100s-1000s of points) with many inputs and outputs
+- 🔌 **Easy Integration**: All emulators are `scikit-learn` compatible, and the underlying `PyTorch` models can be extracted for custom use
+- 🔮 **Downstream Applications**: Still early days, but we've got prediction, sensitivity analysis, history matching and more
+
+## 🎓 State-of-the-Art Models
+
+::::{grid} 1 1 2 3
+:gutter: 2
+
+:::{grid-item} 📈 **Classical**
+
+- Radial Basis Functions
+- Second Order Polynomials
+
+:::
+
+:::{grid-item} 🌳 **Machine Learning**
+
+- Random Forests
+- Gradient Boosting
+- Support Vector Machines
+- LightGBM
+
+:::
+
+:::{grid-item} <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **Deep Learning**
+
+- Multi-output / Multi-task Gaussian Processes
+- Conditional Neural Processes
+
+:::
+::::
+
+## 🔗 Quick Links
 
 ::::{grid} 1 1 2 3
 :gutter: 2
@@ -72,7 +83,3 @@ Report bugs or request new features
 The AutoEmulate API
 :::
 ::::
-
-```{raw} html
-</body>
-```
