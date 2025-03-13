@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_1723575ec71c99c4_cross_validate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-03-13 12:27 +0000
+            created at 2025-03-13 22:10 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -680,31 +680,30 @@
     <p class="mis show_mis"><span class="n"><a id="t598" href="#t598">598</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t599" href="#t599">599</a></span><span class="t">                <span class="fst">f"</span><span class="fst">No model provided, using </span><span class="op">{</span><span class="nam">get_model_name</span><span class="op">(</span><span class="nam">model</span><span class="op">)</span><span class="op">}</span><span class="fst">, which had the highest average cross-validation score, refitted on full data.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t600" href="#t600">600</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t601" href="#t601">601</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t602" href="#t602">602</a></span><span class="t">        <span class="nam">Si</span> <span class="op">=</span> <span class="nam">_sensitivity_analysis</span><span class="op">(</span><span class="nam">model</span><span class="op">,</span> <span class="nam">problem</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">X</span><span class="op">,</span> <span class="nam">N</span><span class="op">,</span> <span class="nam">conf_level</span><span class="op">,</span> <span class="nam">as_df</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t603" href="#t603">603</a></span><span class="t">        <span class="key">return</span> <span class="nam">Si</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t604" href="#t604">604</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t605" href="#t605">605</a></span><span class="t">    <span class="key">def</span> <span class="nam">plot_sensitivity_analysis</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">results</span><span class="op">,</span> <span class="nam">index</span><span class="op">=</span><span class="str">"S1"</span><span class="op">,</span> <span class="nam">n_cols</span><span class="op">=</span><span class="key">None</span><span class="op">,</span> <span class="nam">figsize</span><span class="op">=</span><span class="key">None</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t606" href="#t606">606</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t607" href="#t607">607</a></span><span class="t"><span class="str">        Plot the sensitivity analysis results.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t608" href="#t608">608</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t609" href="#t609">609</a></span><span class="t"><span class="str">        Parameters:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t610" href="#t610">610</a></span><span class="t"><span class="str">        -----------</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t"><span class="str">        results : pd.DataFrame</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t"><span class="str">            The results from sobol_results_to_df.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t"><span class="str">        index : str, default "S1"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t"><span class="str">            The type of sensitivity index to plot.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t"><span class="str">            - "S1": first-order indices</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t"><span class="str">            - "S2": second-order/interaction indices</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t"><span class="str">            - "ST": total-order indices</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t"><span class="str">        n_cols : int, optional</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t"><span class="str">            The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t"><span class="str">            otherwise the number of outputs.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t"><span class="str">        figsize : tuple, optional</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t"><span class="str">            Figure size as (width, height) in inches.If None, automatically calculated.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t623" href="#t623">623</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t624" href="#t624">624</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t625" href="#t625">625</a></span><span class="t">        <span class="key">return</span> <span class="nam">_plot_sensitivity_analysis</span><span class="op">(</span><span class="nam">results</span><span class="op">,</span> <span class="nam">index</span><span class="op">,</span> <span class="nam">n_cols</span><span class="op">,</span> <span class="nam">figsize</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t601" href="#t601">601</a></span><span class="t">        <span class="nam">Si</span> <span class="op">=</span> <span class="nam">_sensitivity_analysis</span><span class="op">(</span><span class="nam">model</span><span class="op">,</span> <span class="nam">problem</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">X</span><span class="op">,</span> <span class="nam">N</span><span class="op">,</span> <span class="nam">conf_level</span><span class="op">,</span> <span class="nam">as_df</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t602" href="#t602">602</a></span><span class="t">        <span class="key">return</span> <span class="nam">Si</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t603" href="#t603">603</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t604" href="#t604">604</a></span><span class="t">    <span class="key">def</span> <span class="nam">plot_sensitivity_analysis</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">results</span><span class="op">,</span> <span class="nam">index</span><span class="op">=</span><span class="str">"S1"</span><span class="op">,</span> <span class="nam">n_cols</span><span class="op">=</span><span class="key">None</span><span class="op">,</span> <span class="nam">figsize</span><span class="op">=</span><span class="key">None</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t605" href="#t605">605</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t606" href="#t606">606</a></span><span class="t"><span class="str">        Plot the sensitivity analysis results.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t607" href="#t607">607</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t608" href="#t608">608</a></span><span class="t"><span class="str">        Parameters:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t609" href="#t609">609</a></span><span class="t"><span class="str">        -----------</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t610" href="#t610">610</a></span><span class="t"><span class="str">        results : pd.DataFrame</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t"><span class="str">            The results from sobol_results_to_df.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t"><span class="str">        index : str, default "S1"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t"><span class="str">            The type of sensitivity index to plot.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t"><span class="str">            - "S1": first-order indices</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t"><span class="str">            - "S2": second-order/interaction indices</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t"><span class="str">            - "ST": total-order indices</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t"><span class="str">        n_cols : int, optional</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t"><span class="str">            The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t"><span class="str">            otherwise the number of outputs.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t"><span class="str">        figsize : tuple, optional</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t"><span class="str">            Figure size as (width, height) in inches.If None, automatically calculated.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t623" href="#t623">623</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t624" href="#t624">624</a></span><span class="t">        <span class="key">return</span> <span class="nam">_plot_sensitivity_analysis</span><span class="op">(</span><span class="nam">results</span><span class="op">,</span> <span class="nam">index</span><span class="op">,</span> <span class="nam">n_cols</span><span class="op">,</span> <span class="nam">figsize</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -714,7 +713,7 @@
             <a class="nav" href="z_1723575ec71c99c4_cross_validate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-03-13 12:27 +0000
+            created at 2025-03-13 22:10 +0000
         </p>
     </div>
 </footer>
