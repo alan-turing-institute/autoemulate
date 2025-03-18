@@ -50,9 +50,15 @@ def _print_setup(cls):
             str(cls.search_type),
             str(cls.param_search_iters),
             str(cls.reduce_dim),
+            str(cls.reduce_dim_output),
             str(
                 cls.dim_reducer.__class__.__name__
                 if cls.dim_reducer is not None
+                else "None"
+            ),
+            str(
+                cls.dim_reducer_output.__class__.__name__
+                if cls.dim_reducer_output is not None
                 else "None"
             ),
             str(
@@ -71,8 +77,10 @@ def _print_setup(cls):
             "Do hyperparameter search (param_search)",
             "Type of hyperparameter search (search_type)",
             "Number of sampled parameter settings (param_search_iters)",
-            "Reduce dimensionality (reduce_dim)",
-            "Dimensionality reduction method (dim_reducer)",
+            "Reduce input dimensionality (reduce_dim)",
+            "Reduce output dimensionality (reduce_dim_output)",
+            "Dimensionality input reduction method (dim_reducer)",
+            "Dimensionality output reduction method (dim_reducer_output)",
             "Cross validator (cross_validator)",
             "Parallel jobs (n_jobs)",
         ],
@@ -90,7 +98,7 @@ def _print_setup(cls):
 
     # if cls.reduce_dim == False, remove the dim_reducer row
     if not cls.reduce_dim:
-        settings = settings.drop(["Dimensionality reduction method (dim_reducer)"])
+        settings = settings.drop(["Dimensionality input reduction method (dim_reducer)"])
 
     # if cls.scale == False, remove the scaler row
     if not cls.scale:
