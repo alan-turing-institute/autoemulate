@@ -26,7 +26,7 @@ authors:
       orcid: 0000-0002-6003-0178
       affiliation: 1, 3
     - name: Eric Daub
-      orcid: 
+      orcid: 0000-0002-8499-0720
       affiliation: 1
     - name: Steve Niederer
       orcid: 0000-0002-4612-6982
