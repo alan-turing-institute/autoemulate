@@ -1,11 +1,12 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.base import BaseEstimator, TransformerMixin
 
-class VAE(nn.Module):
+class VariationalAutoencoder(nn.Module):
     """
     Variational Autoencoder implementation in PyTorch.
     
@@ -18,8 +19,8 @@ class VAE(nn.Module):
     latent_dim : int
         Dimensionality of the latent space.
     """
-    def __init__(self, input_dim, hidden_dims, latent_dim):
-        super(VAE, self).__init__()
+    def __init__(self, input_dim, hidden_dims, latent_dim, verbose=False):
+        super(VariationalAutoencoder, self).__init__()
         
         # Encoder layers
         encoder_layers = []
@@ -69,259 +70,536 @@ class VAE(nn.Module):
         recon = self.decode(z)
         return recon, mu, log_var
 
-    def loss_function(self, recon_x, x, mu, log_var):
-        """Calculate VAE loss: reconstruction + KL divergence."""
+    def loss_function(self, recon_x, x, mu, log_var, beta=1.0):
+        """
+        Calculate VAE loss: reconstruction + KL divergence.
+        
+        Parameters
+        ----------
+        recon_x : torch.Tensor
+            Reconstructed input
+        x : torch.Tensor
+            Original input
+        mu : torch.Tensor
+            Mean of latent distribution
+        log_var : torch.Tensor
+            Log variance of latent distribution
+        beta : float, default=1.0
+            Weight for KL divergence term (beta-VAE)
+            
+        Returns
+        -------
+        total_loss : torch.Tensor
+            Combined reconstruction and KL divergence loss
+        """
         # MSE reconstruction loss
         recon_loss = F.mse_loss(recon_x, x, reduction='sum')
         
         # KL divergence
         kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
         
-        return recon_loss + kl_loss
+        return recon_loss + beta * kl_loss
 
-class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
+class VariationalAutoencoderDimReducer(BaseEstimator, TransformerMixin):
     """
-    A custom transformer for sklearn Pipeline that uses a PyTorch Variational Autoencoder (VAE)
-    to perform dimensionality reduction on y (output) values during model training.
+    Sklearn-compatible wrapper for PyTorch Variational Autoencoder to use as dimensionality reducer.
+    Implements fit, transform, and inverse_transform methods required for sklearn pipelines.
     
     Parameters
     ----------
-    latent_dim : int, default=2
-        The dimensionality of the latent space.
-    
+    encoding_dim : int, default=10
+        Dimension of the encoded representation (latent space)
+    hidden_layers : list of int, default=None
+        List of hidden layer sizes for encoder
     epochs : int, default=100
-        Number of epochs to train the VAE.
-    
+        Number of training epochs
     batch_size : int, default=32
-        Batch size for training the VAE.
-    
+        Batch size for training
     learning_rate : float, default=0.001
-        Learning rate for the optimizer.
-    
-    hidden_dims : list, default=None
-        List of hidden dimensions for the encoder and decoder networks.
-        If None, [64, 32] will be used.
-    
-    verbose : bool, default=False
-        Whether to print training progress.
-        
+        Learning rate for optimizer
+    beta : float, default=1.0
+        Weight for KL divergence in the loss function (beta-VAE)
     device : str, default=None
-        Device to use for training ('cuda' or 'cpu'). If None, will use
-        CUDA if available, otherwise CPU.
+        Device to run the model on ('cpu' or 'cuda'). If None, use cuda if available.
+    random_state : int, default=None
+        Random seed for reproducibility
+    verbose : bool, default=False
+        Whether to print training progress
     """
     
-    def __init__(self, latent_dim=8, epochs=100, batch_size=32, 
-                 learning_rate=0.001, hidden_dims=None, verbose=False,
-                 device=None):
-        self.latent_dim = latent_dim
+    def __init__(self, encoding_dim=10, hidden_layers=None, epochs=100, batch_size=32, 
+                 learning_rate=0.001, beta=1.0, device=None, random_state=None, verbose=False):
+        self.encoding_dim = encoding_dim
+        self.hidden_layers = hidden_layers if hidden_layers is not None else [32, 16]
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
-        self.hidden_dims = hidden_dims if hidden_dims is not None else [32, 16]
+        self.beta = beta
+        self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
+        self.random_state = random_state
         self.verbose = verbose
-        self.device = device if device is not None else ('cuda' if torch.cuda.is_available() else 'cpu')
-        self.is_fitted_ = False
-        self.y_transformed_ = None  # Store last transformed y for inverse_transform
         
+        # Will be initialized during fit
+        self.model = None
+        self.input_dim = None
+        self.is_fitted_ = False
+        
+    def _check_is_fitted(self):
+        """Check if the model is fitted."""
+        if not self.is_fitted_:
+            raise ValueError("This VariationalAutoencoderDimReducer instance is not fitted yet. "
+                            "Call 'fit' with appropriate arguments before using this estimator.")
+    
     def fit(self, X, y=None):
         """
-        Fit the VAE model to the output data y.
+        Fit the VAE on the training data.
         
         Parameters
         ----------
-        X : array-like
-            Input features (not used by this transformer)
-        y : array-like
-            Target values to be preprocessed
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored. Present for API consistency.
             
         Returns
         -------
         self : object
             Returns self.
         """
-        if y is None:
-            return self
-            
-        # Convert y to numpy array if needed
-        if not isinstance(y, np.ndarray):
-            y = np.asarray(y)
+        # Set random seed for reproducibility
+        if self.random_state is not None:
+            torch.manual_seed(self.random_state)
+            np.random.seed(self.random_state)
         
-        # Store input dimensionality
-        self.input_dim_ = y.shape[1] if len(y.shape) > 1 else 1
+        # Get input dimension from data
+        self.input_dim = X.shape[1]
         
-        # Reshape for 1D inputs
-        if len(y.shape) == 1:
-            y = y.reshape(-1, 1)
-        
-        # Store original y shape
-        self.y_shape_ = y.shape
-        
-        # Convert to PyTorch tensors
-        y_tensor = torch.tensor(y, dtype=torch.float32)
+        # Convert data to numpy array if needed
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
         
         # Create dataset and dataloader
-        dataset = TensorDataset(y_tensor)
+        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
+        dataset = TensorDataset(X_tensor, X_tensor)  # Input and target are the same
         dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         
-        # Initialize model
-        self.model_ = VAE(
-            input_dim=self.input_dim_,
-            hidden_dims=self.hidden_dims,
-            latent_dim=self.latent_dim
+        # Initialize the model
+        self.model = VariationalAutoencoder(
+            input_dim=self.input_dim,
+            hidden_dims=self.hidden_layers,
+            latent_dim=self.encoding_dim
         ).to(self.device)
         
         # Initialize optimizer
-        optimizer = torch.optim.Adam(self.model_.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         
         # Training loop
-        self.model_.train()
+        self.model.train()
         for epoch in range(self.epochs):
             total_loss = 0
-            for batch in dataloader:
-                batch_y = batch[0].to(self.device)
-                
+            for batch_x, _ in dataloader:
                 # Forward pass
+                recon_batch, mu, log_var = self.model(batch_x)
+                
+                # Calculate loss
+                loss = self.model.loss_function(recon_batch, batch_x, mu, log_var, beta=self.beta)
+                
+                # Backward pass and optimize
                 optimizer.zero_grad()
-                recon_y, mu, log_var = self.model_(batch_y)
-                
-                # Compute loss
-                loss = self.model_.loss_function(recon_y, batch_y, mu, log_var)
-                
-                # Backward pass
                 loss.backward()
                 optimizer.step()
                 
                 total_loss += loss.item()
             
-            if self.verbose and (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{self.epochs}, Loss: {total_loss/len(dataloader):.4f}")
+            # Print training progress
+            #if self.verbose and (epoch + 1) % 10 == 0:
+            #    print(f'Epoch [{epoch+1}/{self.epochs}], Loss: {total_loss/len(dataloader):.6f}')
         
         self.is_fitted_ = True
         return self
     
-    def transform(self, X, y=None):
+    def transform(self, X):
         """
-        Transform input data X (pass-through) and output data y (if provided).
-        During fitting in a pipeline, y is provided and transformed to the latent space.
+        Reduce dimensionality by encoding the data to the latent space.
         
         Parameters
         ----------
-        X : array-like
-            Input features (returned unchanged)
-        y : array-like, default=None
-            Target values to transform
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The data to transform.
             
         Returns
         -------
-        X : array-like
-            Original input features
-        y_transformed : array-like or None
-            Transformed target values in the latent space (if y was provided)
+        X_new : ndarray of shape (n_samples, encoding_dim)
+            Transformed array (means of the latent distributions).
         """
-        # During pipeline.fit(), return X unchanged and transformed y
-        if y is not None and self.is_fitted_:
-            # Convert y to numpy array if needed
-            if not isinstance(y, np.ndarray):
-                y = np.asarray(y)
-            
-            # Store original y for later use in inverse_transform
-            self.original_y_ = y.copy()
-            
-            # Reshape for 1D inputs
-            if len(y.shape) == 1:
-                y = y.reshape(-1, 1)
-            
-            # Convert to PyTorch tensor
-            y_tensor = torch.tensor(y, dtype=torch.float32).to(self.device)
-            
-            # Transform to latent space
-            self.model_.eval()
-            with torch.no_grad():
-                mu, _ = self.model_.encode(y_tensor)
-                y_transformed = mu.cpu().numpy()
-            
-            # Store the transformed y
-            self.y_transformed_ = y_transformed
-            
-            return X, y_transformed
+        self._check_is_fitted()
         
-        # During pipeline.transform() or pipeline.predict(), return X unchanged
-        return X
-    
-    def fit_transform(self, X, y=None):
-        """
-        Fit and transform in one step.
-        
-        Parameters
-        ----------
-        X : array-like
-            Input features
-        y : array-like, default=None
-            Target values
-            
-        Returns
-        -------
-        X : array-like
-            Original input features
-        y_transformed : array-like or None
-            Transformed target values (if y was provided)
-        """
-        return self.fit(X, y).transform(X, y)
-    
-    def inverse_transform_y(self, y_transformed):
-        """
-        Inverse transform the latent space representation back to the original space.
-        
-        Parameters
-        ----------
-        y_transformed : array-like
-            Transformed target values in the latent space
-            
-        Returns
-        -------
-        y : array-like
-            Reconstructed target values in the original space
-        """
-        if not self.is_fitted_:
-            return y_transformed
-            
-        # Convert to numpy array if needed
-        if not isinstance(y_transformed, np.ndarray):
-            y_transformed = np.asarray(y_transformed)
+        # Convert data to numpy array if needed
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
         
         # Convert to PyTorch tensor
-        y_tensor = torch.tensor(y_transformed, dtype=torch.float32).to(self.device)
+        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
         
-        # Decode from latent space
-        self.model_.eval()
+        # Create data loader
+        batch_size = min(self.batch_size, len(X))
+        dataloader = DataLoader(X_tensor, batch_size=batch_size, shuffle=False)
+        
+        # Encode data
+        encoded_data = []
+        self.model.eval()
         with torch.no_grad():
-            y_reconstructed = self.model_.decode(y_tensor).cpu().numpy()
+            for batch_x in dataloader:
+                mu, _ = self.model.encode(batch_x)
+                encoded_data.append(mu.cpu().numpy())
         
-        # Reshape if original was 1D
-        if self.input_dim_ == 1:
-            y_reconstructed = y_reconstructed.ravel()
-            
-        return y_reconstructed
+        return np.vstack(encoded_data)
     
     def inverse_transform(self, X):
         """
-        Standard sklearn inverse_transform method.
-        Takes transformed X (which in this case is actually the transformed y)
-        and returns the original space representation.
+        Transform encoded data back to the original space.
         
         Parameters
         ----------
-        X : array-like
-            Transformed data in the latent space
+        X : {array-like, sparse matrix} of shape (n_samples, encoding_dim)
+            The encoded data (in latent space).
             
         Returns
         -------
-        X_original : array-like
-            Data reconstructed back to original space
+        X_original : ndarray of shape (n_samples, n_features)
+            Data in original space.
         """
-        # For pipeline compatibility, treat X as the transformed y values
-        return self.inverse_transform_y(X)
+        self._check_is_fitted()
+        
+        # Convert data to numpy array if needed
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
+        
+        # Convert to PyTorch tensor
+        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
+        
+        # Create data loader
+        batch_size = min(self.batch_size, len(X))
+        dataloader = DataLoader(X_tensor, batch_size=batch_size, shuffle=False)
+        
+        # Decode data
+        decoded_data = []
+        self.model.eval()
+        with torch.no_grad():
+            for batch_z in dataloader:
+                decoded = self.model.decode(batch_z)
+                decoded_data.append(decoded.cpu().numpy())
+        
+        return np.vstack(decoded_data)
+    
+    def fit_transform(self, X, y=None):
+        """
+        Fit to data, then transform it.
+        
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored. Present for API consistency.
+            
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, encoding_dim)
+            Transformed array.
+        """
+        # Fit the model
+        self.fit(X, y)
+        # Return the transformed data
+        return self.transform(X)
+    
+    def sample(self, n_samples=1):
+        """
+        Generate samples from the latent space.
+        
+        Parameters
+        ----------
+        n_samples : int, default=1
+            Number of samples to generate
+            
+        Returns
+        -------
+        samples : ndarray of shape (n_samples, n_features)
+            Generated samples
+        """
+        self._check_is_fitted()
+        
+        self.model.eval()
+        with torch.no_grad():
+            # Sample from standard normal distribution
+            z = torch.randn(n_samples, self.encoding_dim).to(self.device)
+            # Decode samples
+            samples = self.model.decode(z)
+            
+        return samples.cpu().numpy()
+    
+    
 
+class Autoencoder(nn.Module):
+    """PyTorch Autoencoder neural network architecture."""
+    
+    def __init__(self, input_dim, encoding_dim, hidden_layers=None, verbose=False):
+        """
+        Parameters
+        ----------
+        input_dim : int
+            Dimension of the input data
+        encoding_dim : int
+            Dimension of the encoded representation
+        hidden_layers : list of int, default=None
+            List of hidden layer sizes for encoder (decoder will be symmetric)
+        """
+        super(Autoencoder, self).__init__()
+        
+        self.input_dim = input_dim
+        self.encoding_dim = encoding_dim
+        self.verbose = verbose
+        
+        # Default architecture if no hidden layers specified
+        if hidden_layers is None:
+            hidden_layers = [input_dim // 2]
+        
+        # Build encoder layers
+        encoder_layers = []
+        last_size = input_dim
+        
+        # Add hidden layers
+        for h_dim in hidden_layers:
+            encoder_layers.append(nn.Linear(last_size, h_dim))
+            encoder_layers.append(nn.ReLU())
+            last_size = h_dim
+        
+        # Add bottleneck layer
+        encoder_layers.append(nn.Linear(last_size, encoding_dim))
+        self.encoder = nn.Sequential(*encoder_layers)
+        
+        # Build decoder layers (mirroring the encoder)
+        decoder_layers = []
+        last_size = encoding_dim
+        
+        # Add hidden layers (in reverse)
+        for h_dim in reversed(hidden_layers):
+            decoder_layers.append(nn.Linear(last_size, h_dim))
+            decoder_layers.append(nn.ReLU())
+            last_size = h_dim
+        
+        # Add output layer
+        decoder_layers.append(nn.Linear(last_size, input_dim))
+        self.decoder = nn.Sequential(*decoder_layers)
+    
+    def encode(self, x):
+        """Encode the input"""
+        return self.encoder(x)
+    
+    def decode(self, z):
+        """Decode the latent representation"""
+        return self.decoder(z)
+    
+    def forward(self, x):
+        """Forward pass through the autoencoder"""
+        z = self.encode(x)
+        x_recon = self.decode(z)
+        return x_recon
+
+
+class AutoencoderDimReducer(BaseEstimator, TransformerMixin):
+    """
+    Sklearn-compatible wrapper for PyTorch Autoencoder to use as dimensionality reducer.
+    Implements fit, transform, and inverse_transform methods required for sklearn pipelines.
+    """
+    
+    def __init__(self, encoding_dim=10, hidden_layers=None, epochs=100, batch_size=32, 
+                 learning_rate=0.001, device=None, random_state=None, verbose=False):
+        """
+        Parameters
+        ----------
+        encoding_dim : int, default=10
+            Dimension of the encoded representation
+        hidden_layers : list of int, default=None
+            List of hidden layer sizes for encoder
+        epochs : int, default=100
+            Number of training epochs
+        batch_size : int, default=32
+            Batch size for training
+        learning_rate : float, default=0.001
+            Learning rate for optimizer
+        device : str, default=None
+            Device to run the model on ('cpu' or 'cuda'). If None, use cuda if available.
+        random_state : int, default=None
+            Random seed for reproducibility
+        """
+        self.encoding_dim = encoding_dim
+        self.hidden_layers = hidden_layers
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
+        self.random_state = random_state
+        self.verbose = verbose
+        
+        # Will be initialized during fit
+        self.model = None
+        self.input_dim = None
+        self.is_fitted_ = False
+    
+    def _check_is_fitted(self):
+        """Check if the model is fitted."""
+        if not self.is_fitted_:
+            raise ValueError("This AutoencoderDimReducer instance is not fitted yet. "
+                            "Call 'fit' with appropriate arguments before using this estimator.")
+    
+    def _get_data_loader(self, X, shuffle=True):
+        """Create a DataLoader for the given data."""
+        X_tensor = torch.FloatTensor(X).to(self.device)
+        dataset = torch.utils.data.TensorDataset(X_tensor, X_tensor)  # Input and target are the same
+        return torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=shuffle)
+    
+    def fit(self, X, y=None):
+        """
+        Fit the autoencoder on the training data.
+        
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored. Present for API consistency.
+            
+        Returns
+        -------
+        self : object
+            Returns self.
+        """
+        # Set random seed for reproducibility
+        if self.random_state is not None:
+            torch.manual_seed(self.random_state)
+            np.random.seed(self.random_state)
+        
+        # Get input dimension from data
+        self.input_dim = X.shape[1]
+        
+        # Initialize the model
+        self.model = Autoencoder(
+            input_dim=self.input_dim,
+            encoding_dim=self.encoding_dim,
+            hidden_layers=self.hidden_layers
+        ).to(self.device)
+        
+        # Setup optimizer and loss function
+        optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        criterion = nn.MSELoss()
+        
+        # Create data loader
+        train_loader = self._get_data_loader(X)
+        
+        # Training loop
+        self.model.train()
+        for epoch in range(self.epochs):
+            total_loss = 0
+            for batch_x, _ in train_loader:
+                # Forward pass
+                outputs = self.model(batch_x)
+                loss = criterion(outputs, batch_x)
+                
+                # Backward pass and optimize
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+                total_loss += loss.item()
+            
+            # Optional: print training progress
+            if self.verbose and (epoch + 1) % 10 == 0:
+                print(f'Epoch [{epoch+1}/{self.epochs}], Loss: {total_loss/len(train_loader):.6f}')
+        
+        self.is_fitted_ = True
+        return self
+    
+    def transform(self, X):
+        """
+        Reduce dimensionality by encoding the data.
+        
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The data to transform.
+            
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, encoding_dim)
+            Transformed array.
+        """
+        self._check_is_fitted()
+        
+        # Create data tensor and loader
+        data_loader = self._get_data_loader(X, shuffle=False)
+        
+        # Encode data
+        encoded_data = []
+        self.model.eval()
+        with torch.no_grad():
+            for batch_x, _ in data_loader:
+                encoded = self.model.encode(batch_x)
+                encoded_data.append(encoded.cpu().numpy())
+        
+        return np.vstack(encoded_data)
+    
+    def inverse_transform(self, X):
+        """
+        Transform encoded data back to the original space.
+        
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, encoding_dim)
+            The encoded data.
+            
+        Returns
+        -------
+        X_original : ndarray of shape (n_samples, n_features)
+            Data in original space.
+        """
+        self._check_is_fitted()
+        
+        # Create data tensor
+        X_tensor = torch.FloatTensor(X).to(self.device)
+        data_loader = torch.utils.data.DataLoader(X_tensor, batch_size=self.batch_size, shuffle=False)
+        
+        # Decode data
+        decoded_data = []
+        self.model.eval()
+        with torch.no_grad():
+            for batch_z in data_loader:
+                decoded = self.model.decode(batch_z)
+                decoded_data.append(decoded.cpu().numpy())
+        
+        return np.vstack(decoded_data)
+    
+    def fit_transform(self, X, y=None):
+        """
+        Fit to data, then transform it.
+        
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored. Present for API consistency.
+            
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, encoding_dim)
+            Transformed array.
+        """
+        # Fit the model
+        self.fit(X)
+        # Return the transformed data
+        return self.transform(X)
+    
 
 class OutputOnlyPreprocessor(BaseEstimator, TransformerMixin):
     """

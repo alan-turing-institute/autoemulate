@@ -2,8 +2,7 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.pipeline import Pipeline
-
-from autoemulate.preprocess_target import OutputOnlyPreprocessor, VAEOutputPreprocessor
+from autoemulate.preprocess_target import AutoencoderDimReducer, VariationalAutoencoderDimReducer
 
 def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models.
@@ -82,6 +81,23 @@ def _wrap_models_in_pipeline(
         if scale_output:
             output_steps.append(("scaler", scaler_output))
         if reduce_dim_output:
+            if dim_reducer_output == 'AE':
+                dim_reducer_output = AutoencoderDimReducer(
+                                        encoding_dim=8,           # Dimensionality of the encoded space
+                                        hidden_layers=[64, 32],    # Architecture of the encoder (decoder will be symmetric)
+                                        epochs=1000,
+                                        batch_size=32
+                                    )
+            elif dim_reducer_output == 'VAE':
+                dim_reducer_output = VariationalAutoencoderDimReducer(
+                                encoding_dim=8,         # Dimension of latent space
+                                hidden_layers=[64, 32],  # Hidden layer dimensions
+                                epochs=1000,
+                                batch_size=32,
+                                beta=1.0,                # Weight for KL divergence term
+                                verbose=True             # Show training progress
+                            )
+
             output_steps.append(("dim_reducer", dim_reducer_output))
 
        # If we have output transformations, wrap with TransformedTargetRegressor
