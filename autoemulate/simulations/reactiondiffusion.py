@@ -34,7 +34,7 @@ def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
     )
     return uvt_updated
 
-def simulate_reactiondiffusion(x, n=64, L=20, T=10, dt=0.05):
+def simulate_reactiondiffusion(x, return_last_snap = True, n=64, L=20, T=10, dt=0.05):
     """"
     Simulate the reaction-diffusion PDE for a given set of parameters
 
@@ -114,11 +114,14 @@ def simulate_reactiondiffusion(x, n=64, L=20, T=10, dt=0.05):
         vt = np.reshape(uvsol[N:, j], (n, n))
         u[:, :, j] = np.real(ifft2(ut))
         v[:, :, j] = np.real(ifft2(vt))
-    
-    u_sol = u[:, :, -1]
-    v_sol = v[:, :, -1]
 
-    return u_sol, v_sol
+    if return_last_snap:
+        # Return the last snapshot
+        u_sol = u[:, :, -1]
+        v_sol = v[:, :, -1]
+        return u_sol, v_sol
+    else:
+        return u, v
 
         
 def plot_reactiondiffuison(x, y, n=64, L=20, title='Reaction-Diffusion Simulation', cmap='viridis'):
