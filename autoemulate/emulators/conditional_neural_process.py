@@ -213,6 +213,7 @@ class ConditionalNeuralProcess(RegressorMixin, BaseEstimator):
             verbose=0,
         )
         self.model_.fit(X, y)
+        self.is_fitted_ = True
         self.X_train_ = X
         self.y_train_ = y
         self.n_features_in_ = X.shape[1]

@@ -414,7 +414,7 @@ class AutoEmulate:
             "actual_vs_predicted" for plotting observed values (y-axis) vs. the predicted values (x-axis).
             "residual_vs_predicted" for plotting the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int
-            Number of columns in the plot grid.
+            Maximum number of columns in the plot grid.
         figsize : tuple, optional
             Overrides the default figure size, in inches, e.g. (6, 4).
         output_index : int
@@ -512,7 +512,7 @@ class AutoEmulate:
             "actual_vs_predicted" draws the observed values (y-axis) vs. the predicted values (x-axis) (default).
             "residual_vs_predicted" draws the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
         n_cols : int, optional
-            Number of columns in the plot grid for multi-output. Default is 2.
+            Maximum number of columns in the plot grid for multi-output. Default is 3.
         output_index : list, int
             Index of the output to plot. Either a single index or a list of indices.
         input_index : list, int
@@ -598,7 +598,6 @@ class AutoEmulate:
             self.logger.info(
                 f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
             )
-
         Si = _sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
         return Si
 

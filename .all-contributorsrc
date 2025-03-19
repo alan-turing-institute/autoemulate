@@ -105,7 +105,7 @@
         "code",
         "ideas",
         "doc"
-        ]
+      ]
     },
     {
       "login": "radka-j",
@@ -117,6 +117,50 @@
         "projectManagement",
         "maintenance",
         "ideas"
+      ]
+    },
+    {
+      "login": "cisprague",
+      "name": "Christopher Iliffe Sprague",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17131395?v=4",
+      "profile": "https://cisprague.github.io/",
+      "contributions": [
+        "code",
+        "design",
+        "ideas"
+      ]
+    },
+    {
+      "login": "willu47",
+      "name": "Will Usher",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3727919?v=4",
+      "profile": "https://www.energy.kth.se/energy-systems",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "sgreenbury",
+      "name": "Sam Greenbury",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50113363?v=4",
+      "profile": "https://github.com/sgreenbury",
+      "contributions": [
+        "code",
+        "ideas",
+        "review",
+        "projectManagement"
+      ]
+    },
+    {
+      "login": "edwardchalstrey1",
+      "name": "Ed Chalstrey",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5486164?v=4",
+      "profile": "https://edchalstrey.com/",
+      "contributions": [
+        "code",
+        "design",
+        "review",
+        "doc"
       ]
     }
   ]

@@ -1,10 +1,51 @@
-# Welcome to `AutoEmulate`!
+# Welcome to AutoEmulate
 
-`AutoEmulate` is designed to be an easy, low-code pipeline to create emulators for complex simulations. At it's core, `AutoEmulate`'s `compare()` function implements a typical machine learning workflow including data processing, selecting a good emulator model, optimising model parameters and evaluating its test-set performance. Emulators range from classical models like *Radial Basis Functions* and *Second Order Polynomials* to popular machine learning methods like *Gradient Boosting* and *Support Vector Machines*, as well as modern PyTorch-based models like *Neural Processes* and *Multitask Gaussian Processes*. All default parameters and search spaces for hyperparameter optimisation are chosen to be appropriate for typical emulation problems, i.e. small-ish datasets (100s or 1000s of datapoints) with potentially many features and outputs. We've also implemented Global Sensitivity Analysis as a common use-case for emulators, and plan to add more applications in the future.
+`AutoEmulate` is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
 
-**Useful links**:
-[Code repository](https://github.com/alan-turing-institute/autoemulate) |
-[Issues](https://github.com/alan-turing-institute/autoemulate/issues) |
+```{button-ref} getting-started/index
+:ref-type: doc
+:color: primary
+:class: sd-rounded-pill float-left
 
-```{tableofcontents}
+
+🚀 Get started
 ```
+
+This website provides detailed documentation on how to use `AutoEmulate`, including installation instructions, tutorials, and a comprehensive API reference.
+For an overview of the project, checkout [autoemulate.com](https://alan-turing-institute.github.io/astroemulate/).
+
+## 🔗 Quick Links
+
+::::{grid} 1 1 2 3
+:gutter: 2
+
+:::{grid-item-card} ⚡ Quickstart
+:link: https://alan-turing-institute.github.io/autoemulate/getting-started/quickstart
+Our quickstart guide will get you up and running in no time
+:::
+
+:::{grid-item-card} 📚 Tutorials
+:link: https://alan-turing-institute.github.io/autoemulate/tutorials
+Learn how to use AutoEmulate with our in-depth tutorials
+:::
+
+:::{grid-item-card} 👥 Contributing
+:link: https://alan-turing-institute.github.io/autoemulate/community/contributing
+Learn how to contribute to AutoEmulate
+:::
+
+:::{grid-item-card} 💻 GitHub Repository  
+:link: https://github.com/alan-turing-institute/autoemulate
+Check out our source code
+:::
+
+:::{grid-item-card} 🐛 Issue Tracker
+:link: https://github.com/alan-turing-institute/autoemulate/issues
+Report bugs or request new features
+:::
+
+:::{grid-item-card} 🔍 API Reference
+:link: https://alan-turing-institute.github.io/autoemulate/reference
+The AutoEmulate API
+:::
+::::

@@ -1,6 +1,10 @@
 title: "AutoEmulate: A package for semi-automated emulation"
-author: Martin Stoffel
-# logo: logo.png
+author: The Alan Turing Institute
+logo: ../misc/AE_logo_final.png
+theme: 
+  primary_color: "#0077CC"  # A professional blue color
+  logo_only: true
+  display_navbar_logo_on_scroll: true
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
@@ -29,6 +33,9 @@ repository:
 html:
   use_issues_button: true
   use_repository_button: true
+  default_mode: dark
+  extra_footer: |
+    Copyright &copy; 2025
 
 sphinx:
   extra_extensions:
@@ -64,3 +71,4 @@ sphinx:
         - null
     language: en
     copybutton_prompt_text: "$"
+    html_show_copyright: false

@@ -1,9 +1,13 @@
+from typing import Dict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from SALib.analyze.sobol import analyze
 from SALib.sample.sobol import sample
+from SALib.util import ResultDict
 
+from autoemulate.plotting import _display_figure
 from autoemulate.utils import _ensure_2d
 
 
@@ -96,12 +100,14 @@ def _generate_problem(X):
 
     return {
         "num_vars": X.shape[1],
-        "names": [f"x{i+1}" for i in range(X.shape[1])],
+        "names": [f"X{i+1}" for i in range(X.shape[1])],
         "bounds": [[X[:, i].min(), X[:, i].max()] for i in range(X.shape[1])],
     }
 
 
-def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
+def _sobol_analysis(
+    model, problem=None, X=None, N=1024, conf_level=0.95
+) -> Dict[str, ResultDict]:
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -148,56 +154,58 @@ def _sobol_analysis(model, problem=None, X=None, N=1024, conf_level=0.95):
     return results
 
 
-def _sobol_results_to_df(results):
+def _sobol_results_to_df(results: Dict[str, ResultDict]) -> pd.DataFrame:
     """
-    Convert Sobol results to a (long-format)pandas DataFrame.
+    Convert Sobol results to a (long-format) pandas DataFrame.
 
     Parameters:
     -----------
     results : dict
         The Sobol indices returned by sobol_analysis.
+    problem : dict, optional
+        The problem definition, including 'names'.
 
     Returns:
     --------
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
     """
+    rename_dict = {
+        "variable": "index",
+        "S1": "value",
+        "S1_conf": "confidence",
+        "ST": "value",
+        "ST_conf": "confidence",
+        "S2": "value",
+        "S2_conf": "confidence",
+    }
     rows = []
-    for output, indices in results.items():
-        for index_type in ["S1", "ST", "S2"]:
-            values = indices.get(index_type)
-            conf_values = indices.get(f"{index_type}_conf")
-            if values is None or conf_values is None:
-                continue
+    for output, result in results.items():
+        s1, st, s2 = result.to_df()
+        s1 = (
+            s1.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        s1["index"] = "S1"
+        st = (
+            st.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        st["index"] = "ST"
+        s2 = (
+            s2.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        s2["index"] = "S2"
 
-            if index_type in ["S1", "ST"]:
-                rows.extend(
-                    {
-                        "output": output,
-                        "parameter": f"X{i+1}",
-                        "index": index_type,
-                        "value": value,
-                        "confidence": conf,
-                    }
-                    for i, (value, conf) in enumerate(zip(values, conf_values))
-                )
+        df = pd.concat([s1, st, s2])
+        df["output"] = output
+        rows.append(df[["output", "parameter", "index", "value", "confidence"]])
 
-            elif index_type == "S2":
-                n = values.shape[0]
-                rows.extend(
-                    {
-                        "output": output,
-                        "parameter": f"X{i+1}-X{j+1}",
-                        "index": index_type,
-                        "value": values[i, j],
-                        "confidence": conf_values[i, j],
-                    }
-                    for i in range(n)
-                    for j in range(i + 1, n)
-                    if not np.isnan(values[i, j])
-                )
-
-    return pd.DataFrame(rows)
+    return pd.concat(rows)
 
 
 # plotting --------------------------------------------------------------------
@@ -241,7 +249,7 @@ def _create_bar_plot(ax, output_data, output_name):
     ax.set_title(f"Output: {output_name}")
 
 
-def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
+def _plot_sensitivity_analysis(results, problem, index="S1", n_cols=None, figsize=None):
     """
     Plot the sensitivity analysis results.
 
@@ -263,7 +271,7 @@ def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
     """
     with plt.style.context("fast"):
         # prepare data
-        results = _validate_input(results, index)
+        results = _validate_input(results, problem, index)
         unique_outputs = results["output"].unique()
         n_outputs = len(unique_outputs)
 
@@ -298,7 +306,5 @@ def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
         )
 
         plt.tight_layout()
-        # prevent double plotting in notebooks
-        plt.close(fig)
 
-    return fig
+    return _display_figure(fig)

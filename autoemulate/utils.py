@@ -383,3 +383,77 @@ def _check_cv(cv):
             "currently support other cross-validation methods."
         )
     return cv
+
+
+# extract PyTorch model -------------------------------------------------------
+
+
+def extract_pytorch_model(model):
+    """Extract the PyTorch model from a fitted AutoEmulate model.
+
+    This function handles standalone models and models inside a pipeline.
+    Note: MultiOutputRegressor is not supported for PyTorch models.
+
+    Parameters
+    ----------
+    model : model instance or Pipeline
+        The model or pipeline from which to extract the PyTorch model.
+
+    Returns
+    -------
+    torch.nn.Module
+        The underlying PyTorch model, in evaluation mode.
+
+    Raises
+    ------
+    ValueError
+        If the model is not a fitted PyTorch model, is a MultiOutputRegressor,
+        or if the pipeline structure is invalid.
+    """
+    # track preprocessing steps for warning message
+    has_preprocessing = {"scaled": False, "reduced": False}
+
+    # extract model from pipeline if needed
+    if isinstance(model, Pipeline):
+        has_preprocessing.update(
+            {
+                "scaled": "scaler" in model.named_steps,
+                "reduced": "dim_reducer" in model.named_steps,
+            }
+        )
+
+        if "model" not in model.named_steps:
+            raise ValueError("Pipeline must have a 'model' step")
+        model = model.named_steps["model"]
+
+    # check for unsupported MultiOutputRegressor
+    if isinstance(model, MultiOutputRegressor):
+        raise ValueError("PyTorch models cannot be wrapped in MultiOutputRegressor")
+
+    # check if it's an AutoEmulate (scikit-learn) model
+    if not isinstance(model, RegressorMixin):
+        raise ValueError("Input must be an AutoEmulate model")
+
+    # check if model is fitted
+    if not hasattr(model, "is_fitted_"):
+        raise ValueError("Model must be fitted before extraction")
+
+    # get the core model (skorch wrapper)
+    core_model = model.model_
+
+    # check if it's a PyTorch model
+    if not hasattr(core_model, "module_"):
+        raise ValueError("Model must be a PyTorch model (missing module_)")
+
+    if not isinstance(core_model.module_, torch.nn.Module):
+        raise ValueError("Model must contain a valid PyTorch module")
+
+    # warn about preprocessing if necessary
+    if any(has_preprocessing.values()):
+        print(
+            "Warning: Data preprocessing is not included in the extracted model. "
+            "Best to deactivate preprocessing in AutoEmulate (scale=False, reduce_dim=False) "
+            "and handle data preprocessing manually."
+        )
+
+    return core_model.module_.eval()
