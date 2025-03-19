@@ -20,7 +20,7 @@ authors:
       orcid: 0000-0002-2014-332X
       affiliation: 1
     - name: Sophie Arana
-      orcid: 0000-0002-2014-332X
+      orcid: 0000-0001-9708-7058
       affiliation: 1
     - name: Max Balmus
       orcid: 0000-0002-6003-0178
