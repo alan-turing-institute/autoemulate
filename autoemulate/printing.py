@@ -51,13 +51,15 @@ def _print_setup(cls):
             str(cls.param_search_iters),
             str(cls.reduce_dim),
             str(cls.reduce_dim_output),
-            str(
-                cls.dim_reducer.__class__.__name__
+            str(cls.dim_reducer
+                if isinstance(cls.dim_reducer, str)
+                else cls.dim_reducer.__class__.__name__
                 if cls.dim_reducer is not None
                 else "None"
             ),
-            str(
-                cls.dim_reducer_output.__class__.__name__
+            str(cls.dim_reducer_output
+                if isinstance(cls.dim_reducer_output, str)
+                else cls.dim_reducer_output.__class__.__name__
                 if cls.dim_reducer_output is not None
                 else "None"
             ),

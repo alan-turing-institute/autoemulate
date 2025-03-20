@@ -2,6 +2,7 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
 from autoemulate.preprocess_target import AutoencoderDimReducer, VariationalAutoencoderDimReducer
 
 def _turn_models_into_multioutput(models, y):
@@ -45,16 +46,17 @@ def _wrap_models_in_pipeline(
         Scaler to use.
     reduce_dim : bool
         Whether to reduce the dimensionality of the data.
-    dim_reducer : sklearn.decomposition object
-        Dimensionality reduction method to use.
+    dim_reducer : sklearn.decomposition object or str
+        Dimensionality reduction method to use or its name.
     scale_output : bool, default=False
         Whether to scale the output data.
     reduce_dim_output : bool, default=False
         Whether to reduce the dimensionality of the output data.
     scaler_output : sklearn.preprocessing object
         Scaler to use for outputs. If None and scale_output is True, a StandardScaler will be used.
-    dim_reducer_output : sklearn.decomposition object
-        Dimensionality reduction method to use for outputs. If None and reduce_dim_output is True, a PCA will be used.
+    dim_reducer_output : sklearn.decomposition object or str
+        Dimensionality reduction method to use for outputs or its name.
+        If None and reduce_dim_output is True, a PCA will be used.  #TODO
 
     Returns
     -------
@@ -70,7 +72,9 @@ def _wrap_models_in_pipeline(
         if scale:
             input_steps.append(("scaler", scaler))
         if reduce_dim:
-            input_steps.append(("dim_reducer", dim_reducer))
+           # Only call get_dim_reducer if dim_reducer is a string
+            reducer = get_dim_reducer(name=dim_reducer) if isinstance(dim_reducer, str) else dim_reducer
+            input_steps.append(("dim_reducer", reducer))
         
         # Create input transformation pipeline
         input_steps.append(("model", model))
@@ -81,24 +85,9 @@ def _wrap_models_in_pipeline(
         if scale_output:
             output_steps.append(("scaler", scaler_output))
         if reduce_dim_output:
-            if dim_reducer_output == 'AE':
-                dim_reducer_output = AutoencoderDimReducer(
-                                        encoding_dim=8,           # Dimensionality of the encoded space
-                                        hidden_layers=[64, 32],    # Architecture of the encoder (decoder will be symmetric)
-                                        epochs=1000,
-                                        batch_size=32
-                                    )
-            elif dim_reducer_output == 'VAE':
-                dim_reducer_output = VariationalAutoencoderDimReducer(
-                                encoding_dim=8,         # Dimension of latent space
-                                hidden_layers=[64, 32],  # Hidden layer dimensions
-                                epochs=1000,
-                                batch_size=32,
-                                beta=1.0,                # Weight for KL divergence term
-                                verbose=True             # Show training progress
-                            )
-
-            output_steps.append(("dim_reducer", dim_reducer_output))
+            # Only call get_dim_reducer if dim_reducer_output is a string
+            output_reducer = get_dim_reducer(name=dim_reducer_output) if isinstance(dim_reducer_output, str) else dim_reducer_output
+            output_steps.append(("dim_reducer", output_reducer))
 
        # If we have output transformations, wrap with TransformedTargetRegressor
         if output_steps:
@@ -170,3 +159,49 @@ def _process_models(
         dim_reducer_output
     )
     return models_scaled
+
+def get_dim_reducer(name, n_components=8, encoding_dim=8, hidden_layers=None, 
+                   epochs=1200, batch_size=32, beta=1.0, verbose=False):
+    """
+    Factory function to get a dimensionality reducer based on name.
+    
+    Parameters
+    ----------
+    name : str or None
+        Name of the dimensionality reducer to use.
+        Options:
+        - 'PCA': Principal Component Analysis
+        - 'AE': Autoencoder
+        - 'VAE': Variational Autoencoder
+        - None: No dimensionality reduction (returns None)
+        
+    Returns
+    -------
+    dim_reducer : object or None
+        Scikit-learn compatible dimensionality reducer or None if name is None.
+    """
+    if name is None:
+        return None
+    
+    # Return the appropriate dimensionality reducer
+    if name == 'PCA': 
+        return PCA(n_components=8)
+    
+    elif name == 'AE': #TODO: also full name
+        return AutoencoderDimReducer(
+            encoding_dim=8,
+            hidden_layers=[64, 32],
+            epochs=1200,
+            batch_size=32,
+            verbose=False
+        )
+    elif name == 'VAE':
+        return VariationalAutoencoderDimReducer(
+            encoding_dim=8,
+            hidden_layers=[64, 32],
+            epochs=1200,
+            batch_size=32,
+            verbose=False
+        )
+    else:
+        raise ValueError(f"Unknown dimensionality reducer: {name}")

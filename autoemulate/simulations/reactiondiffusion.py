@@ -34,7 +34,7 @@ def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
     )
     return uvt_updated
 
-def simulate_reactiondiffusion(x, return_last_snap = True, n=64, L=20, T=10, dt=0.05):
+def simulate_reactiondiffusion(x, return_last_snap = True, n=32, L=20, T=10, dt=0.1):
     """"
     Simulate the reaction-diffusion PDE for a given set of parameters
 
