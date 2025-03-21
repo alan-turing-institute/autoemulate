@@ -3,7 +3,7 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.compose import TransformedTargetRegressor
 from autoemulate.preprocess_target import get_dim_reducer
-
+from preprocess_target import VAEOutputPreprocessor
 
 def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models if y is 2D.
@@ -158,3 +158,41 @@ def _process_models(
         dim_reducer_output
     )
     return models_scaled
+
+def get_dim_reducer(name, n_components=8, encoding_dim=8, hidden_layers=None, 
+                   epochs=1200, batch_size=32, beta=1.0, verbose=False):
+    """
+    Factory function to get a dimensionality reducer based on name.
+    
+    Parameters
+    ----------
+    name : str or None
+        Name of the dimensionality reducer to use.
+        Options:
+        - 'PCA': Principal Component Analysis
+        - 'AE': Autoencoder
+        - 'VAE': Variational Autoencoder
+        - None: No dimensionality reduction (returns None)
+        
+    Returns
+    -------
+    dim_reducer : object or None
+        Scikit-learn compatible dimensionality reducer or None if name is None.
+    """
+    if name is None:
+        return None
+    
+    # Return the appropriate dimensionality reducer
+    if name == 'PCA': 
+        return PCA(n_components=8)
+
+    elif name == 'VAE':
+        return VAEOutputPreprocessor(
+            encoding_dim=8,
+            hidden_layers=[64, 32],
+            epochs=1200,
+            batch_size=32,
+            verbose=False
+        )
+    else:
+        raise ValueError(f"Unknown dimensionality reducer: {name}")
