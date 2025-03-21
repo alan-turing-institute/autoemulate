@@ -33,21 +33,62 @@ def get_dim_reducer(name, n_components=8, encoding_dim=8, hidden_layers=None,
     """
     if name is None:
         return None
-    
+
     # Return the appropriate dimensionality reducer
     if name == 'PCA': 
-        return PCA(n_components=8)
+        return TargetPCA(n_components)
 
     elif name == 'VAE':
         return VAEOutputPreprocessor(
-            encoding_dim=8,
-            hidden_layers=[64, 32],
-            epochs=1200,
-            batch_size=32,
-            verbose=False
+        latent_dim=3,
+        hidden_dims=[64, 32],
+        epochs=100,
+        batch_size=32,
+        learning_rate=1e-3,
+        device=None,
+        verbose=False
         )
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
+
+
+
+class TargetPCA(BaseEstimator, TransformerMixin):
+    """Transformer that applies PCA to target values (y) only."""
+
+    def __init__(self, n_components):
+        self.n_components = n_components
+        self.pca = PCA(n_components=n_components)
+
+    def fit(self, X, y=None):
+        """Fit the PCA to y, but leave X unchanged."""
+        if y is not None:
+            # Reshape y to 2D if needed
+            y_reshaped = y.reshape(-1, 1) if len(np.array(y).shape) == 1 else y
+            self.pca.fit(y_reshaped)
+        return self
+
+    def transform(self, X, y=None):
+        """Transform y if provided, but leave X unchanged."""
+        if y is not None:
+            # Reshape y to 2D if needed
+            y_reshaped = y.reshape(-1, 1) if len(np.array(y).shape) == 1 else y
+            y_transformed = self.pca.transform(y_reshaped)
+            return X, y_transformed
+        return X, y
+
+    def fit_transform(self, X, y=None):
+        """Fit to y and transform it, but leave X unchanged."""
+        return self.fit(X, y).transform(X, y)
+
+    def inverse_transform(self, X, y=None):
+        """Inverse transform y but leave X unchanged."""
+        if y is not None:
+            y_orig = self.pca.inverse_transform(y)
+            return X, y_orig
+        return X, y
+
+
 
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     """

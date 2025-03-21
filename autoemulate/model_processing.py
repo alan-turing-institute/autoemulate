@@ -2,7 +2,7 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.compose import TransformedTargetRegressor
-from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import get_dim_reducer, TargetPCA,VAEOutputPreprocessor
 
 
 def _turn_models_into_multioutput(models, y):
@@ -63,45 +63,40 @@ def _wrap_models_in_pipeline(
     models_scaled : dict
         dict of model_names: model instances, with scaled models wrapped in a pipeline.
     """
-
     models_piped = []
-
     for model in models:
-        # Create input transformation pipeline
-        input_steps = []
-        if scale:
-            input_steps.append(("scaler", scaler))
-        if reduce_dim:
-           # Only call get_dim_reducer if dim_reducer is a string
-            reducer = get_dim_reducer(name=dim_reducer) if isinstance(dim_reducer, str) else dim_reducer
-            input_steps.append(("dim_reducer", reducer))
-        
-        # Create input transformation pipeline
-        input_steps.append(("model", model))
-        input_pipeline = Pipeline(input_steps)
-
-        # Create output transformation pipeline
-        output_steps = []
-        if scale_output:
-            output_steps.append(("scaler", scaler_output))
+        steps = []
         if reduce_dim_output:
-            # Only call get_dim_reducer if dim_reducer_output is a string
-            output_reducer = get_dim_reducer(name=dim_reducer_output) if isinstance(dim_reducer_output, str) else dim_reducer_output
-            output_steps.append(("dim_reducer", output_reducer))
-
-       # If we have output transformations, wrap with TransformedTargetRegressor
-        if output_steps:
-            output_transformer = Pipeline(output_steps)
-            final_model = TransformedTargetRegressor(
-                regressor=input_pipeline,
-                transformer=output_transformer
+           # Only call get_dim_reducer if dim_reducer is a string
+            reducer = get_dim_reducer(name=dim_reducer_output)
+            steps.append(
+                ("Dimentionality reducer for output ",reducer)
             )
-            models_piped.append(final_model)
-        else:
-            # No output transformations, just use the input pipeline
-            models_piped.append(input_pipeline)
 
+        print(reduce_dim,reduce_dim_output,reducer)
+
+        # Add X preprocessing steps
+        if scale:
+            steps.append(("scaler", scaler))
+        if reduce_dim:
+            steps.append(("dim_reducer", dim_reducer))
+
+        # Add the model as the final step
+        steps.append(("model", model))
+
+        # Use YAwarePipeline if we need to transform y, otherwise use standard Pipeline
+        if reduce_dim_output:
+            pipeline = AutoEmulatePipeline(steps)
+        else:
+            pipeline = Pipeline(steps)
+
+        # Explicitly ensure model_name is set
+        if hasattr(model, "model_name"):
+            pipeline.model_name = model.model_name
+
+        models_piped.append(pipeline)
     return models_piped
+
 
 def _process_models(
     model_registry,
@@ -158,3 +153,108 @@ def _process_models(
         dim_reducer_output
     )
     return models_scaled
+
+
+
+
+
+class AutoEmulatePipeline(Pipeline):
+    """Pipeline that can modify both X and y, while preserving all Pipeline attributes."""
+
+    def __init__(self, steps, memory=None, verbose=True):
+        # Initialize with parent class - this will set up all the Pipeline internals
+        super().__init__(steps=steps, memory=memory, verbose=verbose)
+
+        # Track the steps separately to avoid property issues
+        self._y_transformers = []
+        self._x_steps = []
+
+
+        # Process the steps after super().__init__() has been called
+        for name, transform in steps:
+            # Set verbosity on each transformer if it has the attribute
+            if hasattr(transform, 'verbose'):
+                transform.verbose = verbose
+
+            if isinstance(transform, TargetPCA):
+                self._y_transformers.append((name, transform))
+            else:
+                self._x_steps.append((name, transform))
+
+        # Propagate model_name from final estimator
+        if hasattr(self._final_estimator, "model_name"):
+            self.model_name = self._final_estimator.model_name
+
+        # Create a standard pipeline for X transformations
+        if self._x_steps:
+            self.x_pipeline = Pipeline(self._x_steps)
+            # Also propagate model_name to this sub-pipeline
+            if hasattr(self, "model_name"):
+                self.x_pipeline.model_name = self.model_name
+
+    def fit(self, X, y=None, **fit_params):
+        """Apply y transformations first, then fit X pipeline."""
+        X_temp, y_temp = X, y
+
+        # Apply y transformations if any
+        for _, y_transformer in self._y_transformers:
+            y_transformer.fit(X_temp, y_temp)
+            X_temp, y_temp = y_transformer.transform(X_temp, y_temp)
+
+        # Then fit the X pipeline or the parent Pipeline
+        if hasattr(self, "x_pipeline"):
+            self.x_pipeline.fit(X_temp, y_temp, **fit_params)
+        else:
+            super().fit(X_temp, y_temp, **fit_params)
+
+        return self
+
+    def predict(self, X, **predict_params):
+        """Predict using the X pipeline or parent Pipeline."""
+        # Handle `return_std` and similar parameters
+        return_std = predict_params.pop("return_std", False)
+
+        if hasattr(self, "x_pipeline"):
+            # Pass parameters to the underlying model's predict method
+            if return_std:
+                y_pred, y_std = self.x_pipeline.predict(
+                    X, return_std=return_std, **predict_params
+                )
+            else:
+                y_pred = self.x_pipeline.predict(X, **predict_params)
+        else:
+            if return_std:
+                y_pred, y_std = super().predict(
+                    X, return_std=return_std, **predict_params
+                )
+            else:
+                y_pred = super().predict(X, **predict_params)
+
+        # Inverse transform y predictions through y transformers in reverse order
+        X_temp, y_temp = X, y_pred
+        for _, y_transformer in reversed(self._y_transformers):
+            X_temp, y_temp = y_transformer.inverse_transform(X_temp, y_temp)
+
+        # Return results with or without std based on `return_std`
+        if return_std:
+            return y_temp, y_std
+        return y_temp
+
+    def transform(self, X):
+        """Transform X using the X pipeline or parent Pipeline."""
+        if hasattr(self, "x_pipeline"):
+            return self.x_pipeline.transform(X)
+        return super().transform(X)
+
+    def score(self, X, y=None, sample_weight=None):
+        """Transform y before scoring."""
+        X_temp, y_temp = X, y
+
+        # Transform y for scoring
+        for _, y_transformer in self._y_transformers:
+            X_temp, y_temp = y_transformer.transform(X_temp, y_temp)
+
+        # Then score using the X pipeline or parent Pipeline
+        if hasattr(self, "x_pipeline"):
+            return self.x_pipeline.score(X_temp, y_temp, sample_weight)
+        return super().score(X_temp, y_temp, sample_weight)
