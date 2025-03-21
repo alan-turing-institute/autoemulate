@@ -8,11 +8,11 @@ from contextlib import contextmanager
 import numpy as np
 import torch
 from sklearn.base import RegressorMixin
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.compose import TransformedTargetRegressor
 
 
 # manage warnings -------------------------------------------------------------
@@ -107,7 +107,7 @@ def get_model_name(model):
     # If the model is a TransformedTargetRegressor, unwrap it
     elif isinstance(model, TransformedTargetRegressor):
         return get_model_name(model.regressor)
-    
+
     # Otherwise, it's a standalone model
     else:
         return model.model_name

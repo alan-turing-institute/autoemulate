@@ -1,8 +1,12 @@
 """Functions for getting and processing models."""
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.compose import TransformedTargetRegressor
-from autoemulate.preprocess_target import get_dim_reducer, TargetPCA,VAEOutputPreprocessor
+
+from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import TargetPCA
+from autoemulate.preprocess_target import VAEOutputPreprocessor
+
 
 def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models if y is 2D.
@@ -30,8 +34,15 @@ def _turn_models_into_multioutput(models, y):
 
 
 def _wrap_models_in_pipeline(
-    models, scale, scaler, reduce_dim, dim_reducer, scale_output=False, reduce_dim_output=False, 
-    scaler_output=None, dim_reducer_output=None
+    models,
+    scale,
+    scaler,
+    reduce_dim,
+    dim_reducer,
+    scale_output=False,
+    reduce_dim_output=False,
+    scaler_output=None,
+    dim_reducer_output=None,
 ):
     """Wrap models in a pipeline.
 
@@ -66,11 +77,9 @@ def _wrap_models_in_pipeline(
     for model in models:
         steps = []
         if reduce_dim_output:
-           # Only call get_dim_reducer if dim_reducer is a string
+            # Only call get_dim_reducer if dim_reducer is a string
             reducer = get_dim_reducer(name=dim_reducer_output)
-            steps.append(
-                ("Dimentionality reducer for output ",reducer)
-            )
+            steps.append(("Dimentionality reducer for output ", reducer))
 
         # Add X preprocessing steps
         if scale:
@@ -106,7 +115,7 @@ def _process_models(
     scale_output,
     scaler_output,
     reduce_dim_output,
-    dim_reducer_output
+    dim_reducer_output,
 ):
     """Get and process models.
 
@@ -137,17 +146,17 @@ def _process_models(
         List of model instances.
     """
     models = model_registry.get_models(model_names)
-    models_multi = _turn_models_into_multioutput(models, y) 
+    models_multi = _turn_models_into_multioutput(models, y)
     models_scaled = _wrap_models_in_pipeline(
-        models_multi, 
-        scale, 
-        scaler, 
-        reduce_dim, 
+        models_multi,
+        scale,
+        scaler,
+        reduce_dim,
         dim_reducer,
-        scale_output, 
-        reduce_dim_output, 
-        scaler_output, 
-        dim_reducer_output
+        scale_output,
+        reduce_dim_output,
+        scaler_output,
+        dim_reducer_output,
     )
     return models_scaled
 
@@ -163,11 +172,10 @@ class AutoEmulatePipeline(Pipeline):
         self._y_transformers = []
         self._x_steps = []
 
-
         # Process the steps after super().__init__() has been called
         for name, transform in steps:
             # Set verbosity on each transformer if it has the attribute
-            if hasattr(transform, 'verbose'):
+            if hasattr(transform, "verbose"):
                 transform.verbose = verbose
 
             if isinstance(transform, TargetPCA):

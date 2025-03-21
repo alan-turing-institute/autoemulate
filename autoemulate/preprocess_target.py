@@ -6,16 +6,25 @@ import torch.optim as optim
 from sklearn.base import BaseEstimator
 from sklearn.base import clone
 from sklearn.base import TransformerMixin
+from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
-from sklearn.decomposition import PCA
 
-def get_dim_reducer(name, n_components=8, encoding_dim=8, hidden_layers=None, 
-                   epochs=1200, batch_size=32, beta=1.0, verbose=False):
+
+def get_dim_reducer(
+    name,
+    n_components=8,
+    encoding_dim=8,
+    hidden_layers=None,
+    epochs=1200,
+    batch_size=32,
+    beta=1.0,
+    verbose=False,
+):
     """
     Factory function to get a dimensionality reducer based on name.
-    
+
     Parameters
     ----------
     name : str or None
@@ -25,7 +34,7 @@ def get_dim_reducer(name, n_components=8, encoding_dim=8, hidden_layers=None,
         - 'AE': Autoencoder
         - 'VAE': Variational Autoencoder
         - None: No dimensionality reduction (returns None)
-        
+
     Returns
     -------
     dim_reducer : object or None
@@ -35,22 +44,21 @@ def get_dim_reducer(name, n_components=8, encoding_dim=8, hidden_layers=None,
         return None
 
     # Return the appropriate dimensionality reducer
-    if name == 'PCA': 
+    if name == "PCA":
         return TargetPCA(n_components)
 
-    elif name == 'VAE':
+    elif name == "VAE":
         return VAEOutputPreprocessor(
-        latent_dim=3,
-        hidden_dims=[64, 32],
-        epochs=100,
-        batch_size=32,
-        learning_rate=1e-3,
-        device=None,
-        verbose=False
+            latent_dim=3,
+            hidden_dims=[64, 32],
+            epochs=100,
+            batch_size=32,
+            learning_rate=1e-3,
+            device=None,
+            verbose=False,
         )
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
-
 
 
 class TargetPCA(BaseEstimator, TransformerMixin):
@@ -89,7 +97,6 @@ class TargetPCA(BaseEstimator, TransformerMixin):
         return X, y
 
 
-
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     """
     A scikit-learn compatible transformer that applies a Variational Autoencoder (VAE)
@@ -122,7 +129,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         batch_size=32,
         learning_rate=1e-3,
         device=None,
-        verbose=False
+        verbose=False,
     ):
         self.latent_dim = latent_dim
         self.hidden_dims = [64, 32] if hidden_dims is None else hidden_dims
@@ -130,7 +137,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.verbose = verbose 
+        self.verbose = verbose
         self.vae = None
         self.is_fitted_ = False
 
@@ -302,6 +309,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         """Set verbosity setting."""
         self._verbose = value
 
+
 class VAE(nn.Module):
     """
     Variational Autoencoder implementation in PyTorch.
@@ -376,4 +384,3 @@ class VAE(nn.Module):
         kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
         return recon_loss + kl_loss
-
