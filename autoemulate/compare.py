@@ -105,7 +105,7 @@ class AutoEmulate:
         reduce_dim_output : bool
             Whether to reduce the dimensionality of the output data.
         dim_reducer_output : sklearn.decomposition object
-            Dimensionality reduction method to use for outputs.            
+            Dimensionality reduction method to use for outputs.
         cross_validator : sklearn.model_selection object
             Cross-validation strategy to use. Defaults to KFold with 5 splits and shuffle=True.
             Can be any object in `sklearn.model_selection` that generates train/test indices.
@@ -152,6 +152,10 @@ class AutoEmulate:
         self.is_set_up = True
         self.dim_reducer = dim_reducer
         self.reduce_dim = reduce_dim
+        self.scale_output = scale_output
+        self.scaler_output = scaler_output
+        self.dim_reducer_output = dim_reducer_output
+        self.reduce_dim_output = reduce_dim_output
         self.cv_results = {}
 
         if print_setup:
