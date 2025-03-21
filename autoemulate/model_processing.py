@@ -4,7 +4,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import TransformedTargetRegressor
 from autoemulate.preprocess_target import get_dim_reducer, TargetPCA,VAEOutputPreprocessor
 
-
 def _turn_models_into_multioutput(models, y):
     """Turn single output models into multioutput models if y is 2D.
 
@@ -72,8 +71,6 @@ def _wrap_models_in_pipeline(
             steps.append(
                 ("Dimentionality reducer for output ",reducer)
             )
-
-        print(reduce_dim,reduce_dim_output,reducer)
 
         # Add X preprocessing steps
         if scale:
@@ -153,9 +150,6 @@ def _process_models(
         dim_reducer_output
     )
     return models_scaled
-
-
-
 
 
 class AutoEmulatePipeline(Pipeline):
