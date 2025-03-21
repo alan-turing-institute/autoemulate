@@ -1,6 +1,8 @@
 """Functions for getting and processing models."""
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.compose import TransformedTargetRegressor
+from autoemulate.preprocess_target import get_dim_reducer
 
 
 def _turn_models_into_multioutput(models, y):
@@ -28,8 +30,11 @@ def _turn_models_into_multioutput(models, y):
     return models_multi
 
 
-def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
-    """Wrap models in a pipeline if scale is True.
+def _wrap_models_in_pipeline(
+    models, scale, scaler, reduce_dim, dim_reducer, scale_output=False, reduce_dim_output=False, 
+    scaler_output=None, dim_reducer_output=None
+):
+    """Wrap models in a pipeline.
 
     Parameters
     ----------
@@ -41,8 +46,17 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
         Scaler to use.
     reduce_dim : bool
         Whether to reduce the dimensionality of the data.
-    dim_reducer : sklearn.decomposition object
-        Dimensionality reduction method to use.
+    dim_reducer : sklearn.decomposition object or str
+        Dimensionality reduction method to use or its name.
+    scale_output : bool, default=False
+        Whether to scale the output data.
+    reduce_dim_output : bool, default=False
+        Whether to reduce the dimensionality of the output data.
+    scaler_output : sklearn.preprocessing object
+        Scaler to use for outputs. If None and scale_output is True, a StandardScaler will be used.
+    dim_reducer_output : sklearn.decomposition object or str
+        Dimensionality reduction method to use for outputs or its name.
+        If None and reduce_dim_output is True, a PCA will be used.  #TODO
 
     Returns
     -------
@@ -53,20 +67,54 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     models_piped = []
 
     for model in models:
-        steps = []
+        # Create input transformation pipeline
+        input_steps = []
         if scale:
-            steps.append(("scaler", scaler))
+            input_steps.append(("scaler", scaler))
         if reduce_dim:
-            steps.append(("dim_reducer", dim_reducer))
-        steps.append(("model", model))
-        # without scaling or dim reduction, the model is the only step
-        models_piped.append(Pipeline(steps))
+           # Only call get_dim_reducer if dim_reducer is a string
+            reducer = get_dim_reducer(name=dim_reducer) if isinstance(dim_reducer, str) else dim_reducer
+            input_steps.append(("dim_reducer", reducer))
+        
+        # Create input transformation pipeline
+        input_steps.append(("model", model))
+        input_pipeline = Pipeline(input_steps)
+
+        # Create output transformation pipeline
+        output_steps = []
+        if scale_output:
+            output_steps.append(("scaler", scaler_output))
+        if reduce_dim_output:
+            # Only call get_dim_reducer if dim_reducer_output is a string
+            output_reducer = get_dim_reducer(name=dim_reducer_output) if isinstance(dim_reducer_output, str) else dim_reducer_output
+            output_steps.append(("dim_reducer", output_reducer))
+
+       # If we have output transformations, wrap with TransformedTargetRegressor
+        if output_steps:
+            output_transformer = Pipeline(output_steps)
+            final_model = TransformedTargetRegressor(
+                regressor=input_pipeline,
+                transformer=output_transformer
+            )
+            models_piped.append(final_model)
+        else:
+            # No output transformations, just use the input pipeline
+            models_piped.append(input_pipeline)
 
     return models_piped
 
-
 def _process_models(
-    model_registry, model_names, y, scale, scaler, reduce_dim, dim_reducer
+    model_registry,
+    model_names,
+    y,
+    scale,
+    scaler,
+    reduce_dim,
+    dim_reducer,
+    scale_output,
+    scaler_output,
+    reduce_dim_output,
+    dim_reducer_output
 ):
     """Get and process models.
 
@@ -82,6 +130,14 @@ def _process_models(
         Whether to scale the data.
     scaler : sklearn.preprocessing object
         Scaler to use.
+    scale_output : bool
+        Whether to scale the output data.
+    scaler_output : sklearn.preprocessing object
+        Scaler to use for outputs.
+    reduce_dim_output : bool
+        Whether to reduce the dimensionality of the output data.
+    dim_reducer_output : sklearn.decomposition object
+        Dimensionality reduction method to use for outputs.
 
     Returns
     -------
@@ -89,8 +145,16 @@ def _process_models(
         List of model instances.
     """
     models = model_registry.get_models(model_names)
-    models_multi = _turn_models_into_multioutput(models, y)
+    models_multi = _turn_models_into_multioutput(models, y) 
     models_scaled = _wrap_models_in_pipeline(
-        models_multi, scale, scaler, reduce_dim, dim_reducer
+        models_multi, 
+        scale, 
+        scaler, 
+        reduce_dim, 
+        dim_reducer,
+        scale_output, 
+        reduce_dim_output, 
+        scaler_output, 
+        dim_reducer_output
     )
     return models_scaled

@@ -55,6 +55,10 @@ class AutoEmulate:
         scaler=StandardScaler(),
         reduce_dim=False,
         dim_reducer=PCA(),
+        scale_output=True,
+        scaler_output=StandardScaler(),
+        reduce_dim_output=False,
+        dim_reducer_output=PCA(),
         cross_validator=KFold(
             n_splits=5, shuffle=True, random_state=np.random.randint(1e5)
         ),
@@ -94,6 +98,14 @@ class AutoEmulate:
             explain 95% of the variance. Other methods can have slightly different n_components
             parameter inputs, see the sklearn documentation for more details. Dimension reduction
             is always performed after scaling.
+        scale_output : bool
+            Whether to scale the output data.
+        scaler_output : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.
+        reduce_dim_output : bool
+            Whether to reduce the dimensionality of the output data.
+        dim_reducer_output : sklearn.decomposition object
+            Dimensionality reduction method to use for outputs.            
         cross_validator : sklearn.model_selection object
             Cross-validation strategy to use. Defaults to KFold with 5 splits and shuffle=True.
             Can be any object in `sklearn.model_selection` that generates train/test indices.
@@ -123,6 +135,10 @@ class AutoEmulate:
             scaler=scaler,
             reduce_dim=reduce_dim,
             dim_reducer=dim_reducer,
+            scale_output=scale_output,
+            scaler_output=scaler_output,
+            reduce_dim_output=reduce_dim_output,
+            dim_reducer_output=dim_reducer_output,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
