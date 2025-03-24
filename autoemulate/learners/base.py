@@ -5,6 +5,9 @@ from typing import Union, Tuple, Dict, List, Any
 import numpy as np, torch
 from torcheval.metrics import MeanSquaredError, R2Score
 from tqdm import tqdm
+from anytree import Node, RenderTree
+from inspect import isabstract
+
 
 
 @dataclass(kw_only=True)
@@ -392,6 +395,57 @@ class Learner(Base):
         self.emulator.fit(X_train, Y_train)
         self.in_dim = self.X_train.shape[1]
         self.out_dim = self.Y_train.shape[1]
+
+    @classmethod
+    def registry(cls) -> dict:
+        """
+        Recursively builds a dictionary mapping class names to class objects,
+        starting from cls.
+        
+        Returns:
+            A dictionary where keys are class names and values are the class objects.
+        """
+        d = {cls.__name__: cls}
+        for sub in cls.__subclasses__():
+            d.update(sub.registry())
+        return d
+
+    @classmethod
+    def hierarchy(cls) -> List[Tuple[str, str]]:
+        """
+        Recursively collects the inheritance relationships (as ordered pairs)
+        starting from cls.
+        
+        Returns:
+            A list of tuples where each tuple is (parent_class_name, child_class_name).
+        """
+        edges = []
+        for base in cls.__subclasses__():
+            edges.append((cls.__name__, base.__name__))
+            edges.extend(base.hierarchy())
+        return edges
+
+    @classmethod
+    def plot_hierarchy(cls):
+        """
+        Builds and prints an ASCII tree of the class hierarchy starting from cls.
+        
+        Each class name is annotated with a marker indicating whether it is abstract:
+          - [Abstract] for classes with one or more abstract methods.
+          - [Concrete] for classes that are fully implemented.
+          
+        The method uses the anytree library to construct and render the tree.
+        """
+        pairs = cls.hierarchy()
+        nodes = {name: Node(name) for pair in pairs for name in pair}
+        for parent, child in pairs:
+            nodes[child].parent = nodes[parent]
+        root = nodes[cls.__name__]
+        registry = cls.registry()
+        for pre, _, node in RenderTree(root):
+            class_obj = registry.get(node.name)
+            mark = "[Abstract]" if class_obj and isabstract(class_obj) else "[Concrete]"
+            print(f"{pre}{node.name} {mark}")
 
 
 @dataclass(kw_only=True)
@@ -1013,6 +1067,14 @@ class PID_E_Optimal(Adaptive, E_Optimal):
     (Inherits parameters from Adaptive and E_Optimal)
     """
     pass
+
+# %%
+
+
+# %%
+
+
+# %%
 
 if __name__ == "__main__":
 
