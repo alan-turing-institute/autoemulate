@@ -180,6 +180,8 @@ class AutoEmulatePipeline(Pipeline):
 
             if isinstance(transform, TargetPCA):
                 self._y_transformers.append((name, transform))
+            elif isinstance(transform, VAEOutputPreprocessor):
+                self._y_transformers.append((name, transform))
             else:
                 self._x_steps.append((name, transform))
 
@@ -232,10 +234,12 @@ class AutoEmulatePipeline(Pipeline):
             else:
                 y_pred = super().predict(X, **predict_params)
 
+        print('Predicted outputs:', y_pred.shape)
         # Inverse transform y predictions through y transformers in reverse order
         X_temp, y_temp = X, y_pred
         for _, y_transformer in reversed(self._y_transformers):
             X_temp, y_temp = y_transformer.inverse_transform(X_temp, y_temp)
+        print('Inverse transformed outputs:', y_temp.shape)
 
         # Return results with or without std based on `return_std`
         if return_std:
