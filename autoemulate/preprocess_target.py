@@ -62,39 +62,37 @@ def get_dim_reducer(
 
 
 class TargetPCA(BaseEstimator, TransformerMixin):
-    """Transformer that applies PCA to target values (y) only."""
+    """PCA transformer for target values (y) that strictly requires y."""
 
     def __init__(self, n_components):
         self.n_components = n_components
         self.pca = PCA(n_components=n_components)
 
+    def _validate_y(self, y):
+        """Validate that y is provided and properly shaped."""
+        if y is None:
+            raise ValueError("This is a target transformer - y cannot be None")
+        return y.reshape(-1, 1) if len(np.array(y).shape) == 1 else y
+
     def fit(self, X, y=None):
-        """Fit the PCA to y, but leave X unchanged."""
-        if y is not None:
-            # Reshape y to 2D if needed
-            y_reshaped = y.reshape(-1, 1) if len(np.array(y).shape) == 1 else y
-            self.pca.fit(y_reshaped)
+        y_reshaped = self._validate_y(y)
+        self.pca.fit(y_reshaped)
         return self
 
     def transform(self, X, y=None):
-        """Transform y if provided, but leave X unchanged."""
-        if y is not None:
-            # Reshape y to 2D if needed
-            y_reshaped = y.reshape(-1, 1) if len(np.array(y).shape) == 1 else y
-            y_transformed = self.pca.transform(y_reshaped)
-            return X, y_transformed
-        return X, y
+        y_reshaped = self._validate_y(y)
+        y_transformed = self.pca.transform(y_reshaped)
+        return X, y_transformed
 
     def fit_transform(self, X, y=None):
-        """Fit to y and transform it, but leave X unchanged."""
-        return self.fit(X, y).transform(X, y)
+        y_reshaped = self._validate_y(y)
+        y_transformed = self.pca.fit_transform(y_reshaped)
+        return X, y_transformed
 
     def inverse_transform(self, X, y=None):
-        """Inverse transform y but leave X unchanged."""
-        if y is not None:
-            y_orig = self.pca.inverse_transform(y)
-            return X, y_orig
-        return X, y
+        y_reshaped = self._validate_y(y)
+        y_original = self.pca.inverse_transform(y_reshaped)
+        return X, y_original
 
 
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
@@ -262,6 +260,10 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
             y_transformed = mu.cpu().numpy()
 
         return X, y_transformed
+
+    def fit_transform(self, X, y=None, **fit_params):
+        self.fit(X, y, **fit_params)
+        return self.transform(X, y)
 
     def inverse_transform(self, X, y=None):
         """

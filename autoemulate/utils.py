@@ -95,18 +95,12 @@ def get_model_name(model):
         # If the model step is a MultiOutputRegressor, get the estimator
         if isinstance(step, MultiOutputRegressor):
             return step.estimator.model_name
-        elif isinstance(step, TransformedTargetRegressor):
-            return get_model_name(step.regressor)  # Unwrap TransformedTargetRegressor
         else:
             return step.model_name
 
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.model_name
-
-    # If the model is a TransformedTargetRegressor, unwrap it
-    elif isinstance(model, TransformedTargetRegressor):
-        return get_model_name(model.regressor)
 
     # Otherwise, it's a standalone model
     else:
