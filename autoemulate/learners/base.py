@@ -9,7 +9,6 @@ from anytree import Node, RenderTree
 from inspect import isabstract
 
 
-
 @dataclass(kw_only=True)
 class Base(ABC):
     """
@@ -73,7 +72,9 @@ class Base(ABC):
             return X
 
     @staticmethod
-    def check_pair(X: torch.Tensor, Y: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def check_pair(
+        X: torch.Tensor, Y: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Validate that two tensors have the same number of rows.
 
@@ -222,6 +223,7 @@ class Base(ABC):
         else:
             raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
+
 @dataclass(kw_only=True)
 class Simulator(Base):
     """
@@ -268,6 +270,7 @@ class Simulator(Base):
             Simulated output tensor.
         """
         pass
+
 
 @dataclass(kw_only=True)
 class Emulator(Base):
@@ -350,6 +353,7 @@ class Emulator(Base):
         """
         pass
 
+
 @dataclass(kw_only=True)
 class Learner(Base):
     """
@@ -369,6 +373,7 @@ class Learner(Base):
     Y_train : torch.Tensor
         Initial training output tensor.
     """
+
     simulator: Simulator
     emulator: Emulator
     in_dim: int = field(init=False)
@@ -398,7 +403,7 @@ class Learner(Base):
         """
         Recursively builds a dictionary mapping class names to class objects,
         starting from cls.
-        
+
         Returns:
             A dictionary where keys are class names and values are the class objects.
         """
@@ -412,7 +417,7 @@ class Learner(Base):
         """
         Recursively collects the inheritance relationships (as ordered pairs)
         starting from cls.
-        
+
         Returns:
             A list of tuples where each tuple is (parent_class_name, child_class_name).
         """
@@ -426,11 +431,11 @@ class Learner(Base):
     def plot_hierarchy(cls):
         """
         Builds and prints an ASCII tree of the class hierarchy starting from cls.
-        
+
         Each class name is annotated with a marker indicating whether it is abstract:
           - [Abstract] for classes with one or more abstract methods.
           - [Concrete] for classes that are fully implemented.
-          
+
         The method uses the anytree library to construct and render the tree.
         """
         pairs = cls.hierarchy()
@@ -444,18 +449,20 @@ class Learner(Base):
             mark = "[Abstract]" if class_obj and isabstract(class_obj) else "[Concrete]"
             print(f"{pre}{node.name} {mark}")
 
+
 @dataclass(kw_only=True)
 class Active(Learner):
-
     def __post_init__(self, X_train, Y_train):
         super().__post_init__(X_train, Y_train)
-        self.metrics = {k: [] for k in ("mse", "r2", "rate", "trace", "logdet", "max_eigval", "n_queries")}
+        self.metrics = {
+            k: []
+            for k in ("mse", "r2", "rate", "trace", "logdet", "max_eigval", "n_queries")
+        }
         self.mse = MeanSquaredError()
         self.r2 = R2Score()
         self.n_queries = 0
 
     def fit(self, *args):
-
         # Query simulator and fit emulator
         X, Y_pred, Sigma, extra = self.query(*args)
         if X is not None:
@@ -472,8 +479,8 @@ class Active(Learner):
             mse_val = self.mse.compute().item()
             r2_val = self.r2.compute().item()
         else:
-            mse_val = float('nan')
-            r2_val = float('nan')
+            mse_val = float("nan")
+            r2_val = float("nan")
 
         self.metrics["mse"].append(mse_val)
         self.metrics["r2"].append(r2_val)
@@ -484,7 +491,7 @@ class Active(Learner):
         self.metrics["max_eigval"].append(self.max_eigval(Sigma).item())
 
         # extra per‑strategy metrics
-        for k,v in extra.items():
+        for k, v in extra.items():
             self.metrics.setdefault(k, []).append(v)
 
     @property
@@ -494,16 +501,16 @@ class Active(Learner):
 
         This property converts the history of MSE and cumulative query counts into float tensors,
         and then computes two types of summary metrics:
-        
+
         1. **Per-Query Ratios:** For each metric in ("mse", "r2", "trace", "logdet", "max_eigval"),
            the ratio is defined as the last recorded value of the metric divided by the last recorded
            cumulative number of queries. If no queries have been made (i.e. the last query count is 0),
            NaN is returned for all per-query ratios.
-        
+
         2. **Area Under the MSE Curve (AUC):** The area is computed via trapezoidal integration of the MSE
            values over the cumulative number of queries, but only if there are at least 2 valid MSE entries.
            Otherwise, the AUC is set to NaN.
-        
+
         Returns
         -------
         dict
@@ -515,13 +522,15 @@ class Active(Learner):
         """
         # pull histories into float tensors
         mse = torch.tensor(self.metrics["mse"], dtype=torch.float32)
-        q   = torch.tensor(self.metrics["n_queries"], dtype=torch.float32)
+        q = torch.tensor(self.metrics["n_queries"], dtype=torch.float32)
 
         # build per-query ratios safely (avoid zero division)
         d = {}
         if q[-1] > 0:
             for k in ("mse", "r2", "trace", "logdet", "max_eigval"):
-                d[f"{k}_per_query"] = self.metrics[k][-1] / self.metrics["n_queries"][-1]
+                d[f"{k}_per_query"] = (
+                    self.metrics[k][-1] / self.metrics["n_queries"][-1]
+                )
         else:
             for k in ("mse", "r2", "trace", "logdet", "max_eigval"):
                 d[f"{k}_per_query"] = float("nan")
@@ -532,12 +541,17 @@ class Active(Learner):
         # compute AUC only if ≥2 valid points
         d["auc_mse"] = (
             torch.trapz(mse[valid_mse], q[valid_mse]).item()
-            if valid_mse.sum() >= 2 else float("nan")
+            if valid_mse.sum() >= 2
+            else float("nan")
         )
         return d
 
     @abstractmethod
-    def query(self, *arg: Union[torch.Tensor, None]) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self, *arg: Union[torch.Tensor, None]
+    ) -> Tuple[
+        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
+    ]:
         """
         Abstract method to query new samples.
 
@@ -557,6 +571,7 @@ class Active(Learner):
         """
         pass
 
+
 @dataclass(kw_only=True)
 class Pool(Active):
     """
@@ -568,7 +583,9 @@ class Pool(Active):
     """
 
     @abstractmethod
-    def query(self, X: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self, X: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
         """
         Abstract method to query new samples from a given pool.
 
@@ -588,6 +605,7 @@ class Pool(Active):
         """
         pass
 
+
 @dataclass(kw_only=True)
 class Membership(Active):
     """
@@ -599,7 +617,9 @@ class Membership(Active):
     """
 
     @abstractmethod
-    def query(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
         """
         Abstract method to query new samples using a membership strategy.
 
@@ -614,6 +634,7 @@ class Membership(Active):
         """
         pass
 
+
 @dataclass(kw_only=True)
 class Stream(Active):
     """
@@ -625,7 +646,11 @@ class Stream(Active):
     """
 
     @abstractmethod
-    def query(self, X: torch.Tensor) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self, X: torch.Tensor
+    ) -> Tuple[
+        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
+    ]:
         """
         Abstract method to query new samples from a stream.
 
@@ -658,13 +683,15 @@ class Stream(Active):
         for x in (pb := tqdm(X, desc=self.__class__.__name__)):
             x = x.reshape(1, -1)
             self.fit(x)
-            pb.set_postfix(ordered_dict={key: val[-1] for key, val in self.metrics.items()})
+            pb.set_postfix(
+                ordered_dict={key: val[-1] for key, val in self.metrics.items()}
+            )
 
     def fit_batches(self, X: torch.Tensor, batch_size: int):
         """
         Fit the active learner using batches of samples.
 
-        This method automatically splits X into batches of the specified size and then sequentially 
+        This method automatically splits X into batches of the specified size and then sequentially
         fits each batch.
 
         Parameters
@@ -682,6 +709,7 @@ class Stream(Active):
         # NOTE: To be continued
         raise NotImplementedError
 
+
 @dataclass(kw_only=True)
 class Random(Stream):
     """
@@ -692,9 +720,14 @@ class Random(Stream):
     p_query : float
         Query probability for selecting a sample.
     """
+
     p_query: float
 
-    def query(self, X: torch.Tensor) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self, X: torch.Tensor
+    ) -> Tuple[
+        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
+    ]:
         """
         Query new samples randomly based on a fixed probability.
 
@@ -716,6 +749,7 @@ class Random(Stream):
         X = X if np.random.rand() < self.p_query else None
         return X, Y, Sigma, dict()
 
+
 @dataclass(kw_only=True)
 class Threshold(Stream):
     """
@@ -726,6 +760,7 @@ class Threshold(Stream):
     threshold : float
         Threshold value for querying.
     """
+
     threshold: float
 
     def __post_init__(self, X_train: torch.Tensor, Y_train: torch.Tensor):
@@ -743,7 +778,9 @@ class Threshold(Stream):
         self.metrics.update(dict(score=list()))
 
     @abstractmethod
-    def score(self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
+    def score(
+        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+    ) -> torch.Tensor:
         """
         Abstract method to compute a score for querying based on the input sample.
 
@@ -763,7 +800,11 @@ class Threshold(Stream):
         """
         pass
 
-    def query(self, X: torch.Tensor) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self, X: torch.Tensor
+    ) -> Tuple[
+        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
+    ]:
         """
         Query new samples based on whether the computed score exceeds a threshold.
 
@@ -786,6 +827,7 @@ class Threshold(Stream):
         X = X if score > self.threshold else None
         return X, Y, Sigma, dict(score=score.item())
 
+
 @dataclass(kw_only=True)
 class Input(Threshold):
     """
@@ -795,7 +837,9 @@ class Input(Threshold):
     ----------
     (Inherits parameters from Threshold)
     """
+
     pass
+
 
 @dataclass(kw_only=True)
 class Distance(Input):
@@ -808,7 +852,10 @@ class Distance(Input):
     ----------
     (Inherits parameters from Input)
     """
-    def score(self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
+
+    def score(
+        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+    ) -> torch.Tensor:
         """
         Compute the average minimum distance from the input samples to the training data.
 
@@ -826,6 +873,7 @@ class Distance(Input):
         min_dists, _ = distances.min(dim=1)
         return min_dists.mean()
 
+
 @dataclass(kw_only=True)
 class Output(Threshold):
     """
@@ -835,7 +883,9 @@ class Output(Threshold):
     ----------
     (Inherits parameters from Threshold)
     """
+
     pass
+
 
 @dataclass(kw_only=True)
 class A_Optimal(Output):
@@ -848,7 +898,10 @@ class A_Optimal(Output):
     ----------
     (Inherits parameters from Output)
     """
-    def score(self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
+
+    def score(
+        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+    ) -> torch.Tensor:
         """
         Compute the score using the trace of the covariance matrix.
 
@@ -868,6 +921,7 @@ class A_Optimal(Output):
         """
         return self.trace(Sigma, self.out_dim)
 
+
 @dataclass(kw_only=True)
 class D_Optimal(Output):
     """
@@ -879,7 +933,10 @@ class D_Optimal(Output):
     ----------
     (Inherits parameters from Output)
     """
-    def score(self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
+
+    def score(
+        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+    ) -> torch.Tensor:
         """
         Compute the score using the log-determinant of the covariance matrix.
 
@@ -899,6 +956,7 @@ class D_Optimal(Output):
         """
         return self.logdet(Sigma, self.out_dim)
 
+
 @dataclass(kw_only=True)
 class E_Optimal(Output):
     """
@@ -910,7 +968,10 @@ class E_Optimal(Output):
     ----------
     (Inherits parameters from Output)
     """
-    def score(self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
+
+    def score(
+        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+    ) -> torch.Tensor:
         """
         Compute the score using the maximum eigenvalue of the covariance matrix.
 
@@ -929,6 +990,7 @@ class E_Optimal(Output):
             Score based on the maximum eigenvalue of the covariance matrix.
         """
         return self.max_eigval(Sigma)
+
 
 @dataclass(kw_only=True)
 class Adaptive:
@@ -957,6 +1019,7 @@ class Adaptive:
     window_size : int or None, optional
         Size of the sliding window to use for error computation. If None, use the full error history.
     """
+
     Kp: float
     Ki: float
     Kd: float
@@ -981,7 +1044,11 @@ class Adaptive:
         super().__post_init__(X_train, Y_train)
         self.metrics.update(dict(threshold=list(), ep=list(), ei=list(), ed=list()))
 
-    def query(self, X: torch.Tensor) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+    def query(
+        self, X: torch.Tensor
+    ) -> Tuple[
+        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
+    ]:
         """
         Query new samples and adapt the threshold using a PID controller with a sliding window for error computation.
 
@@ -1028,7 +1095,8 @@ class Adaptive:
         # Update the metrics dictionary with the PID control terms.
         metrics.update(dict(threshold=self.threshold, ep=ep, ei=ei, ed=ed))
         return X, Y, Sigma, metrics
-    
+
+
 @dataclass(kw_only=True)
 class Adaptive_Distance(Adaptive, Distance):
     """
@@ -1038,7 +1106,9 @@ class Adaptive_Distance(Adaptive, Distance):
     ----------
     (Inherits parameters from Adaptive and Distance)
     """
+
     pass
+
 
 @dataclass(kw_only=True)
 class Adaptive_A_Optimal(Adaptive, A_Optimal):
@@ -1049,7 +1119,9 @@ class Adaptive_A_Optimal(Adaptive, A_Optimal):
     ----------
     (Inherits parameters from Adaptive and A_Optimal)
     """
+
     pass
+
 
 @dataclass(kw_only=True)
 class Adaptive_D_Optimal(Adaptive, D_Optimal):
@@ -1060,7 +1132,9 @@ class Adaptive_D_Optimal(Adaptive, D_Optimal):
     ----------
     (Inherits parameters from Adaptive and D_Optimal)
     """
+
     pass
+
 
 @dataclass(kw_only=True)
 class Adaptive_E_Optimal(Adaptive, E_Optimal):
@@ -1071,4 +1145,5 @@ class Adaptive_E_Optimal(Adaptive, E_Optimal):
     ----------
     (Inherits parameters from Adaptive and E_Optimal)
     """
+
     pass
