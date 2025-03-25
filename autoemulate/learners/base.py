@@ -222,7 +222,6 @@ class Base(ABC):
         else:
             raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
-
 @dataclass(kw_only=True)
 class Simulator(Base):
     """
@@ -269,7 +268,6 @@ class Simulator(Base):
             Simulated output tensor.
         """
         pass
-
 
 @dataclass(kw_only=True)
 class Emulator(Base):
@@ -351,7 +349,6 @@ class Emulator(Base):
             Predicted outputs and covariance estimates.
         """
         pass
-
 
 @dataclass(kw_only=True)
 class Learner(Base):
@@ -447,7 +444,6 @@ class Learner(Base):
             mark = "[Abstract]" if class_obj and isabstract(class_obj) else "[Concrete]"
             print(f"{pre}{node.name} {mark}")
 
-
 @dataclass(kw_only=True)
 class Active(Learner):
 
@@ -540,7 +536,6 @@ class Active(Learner):
         )
         return d
 
-
     @abstractmethod
     def query(self, *arg: Union[torch.Tensor, None]) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
         """
@@ -561,43 +556,6 @@ class Active(Learner):
             - A dictionary of additional metrics.
         """
         pass
-
-    def fit_samples(self, X: torch.Tensor):
-        """
-        Fit the active learner using a stream of samples.
-
-        Parameters
-        ----------
-        X : torch.Tensor
-            Stream of input samples.
-        """
-        X = self.check_matrix(X)
-        for x in (pb := tqdm(X, desc=self.__class__.__name__)):
-            x = x.reshape(1, -1)
-            self.fit(x)
-            pb.set_postfix(ordered_dict={key: val[-1] for key, val in self.metrics.items()})
-
-    def fit_batches(self, X: torch.Tensor, batch_size: int):
-        """
-        Fit the active learner using batches of samples.
-
-        This method automatically splits X into batches of the specified size and then sequentially 
-        fits each batch.
-
-        Parameters
-        ----------
-        X : torch.Tensor
-            Stream of input samples.
-        batch_size : int
-            Number of samples per batch.
-        """
-        # X = self.check_matrix(X)
-        # for i in (pb := tqdm(range(0, X.shape[0], batch_size), desc=f"{self.__class__.__name__} (batches)")):
-        #     batch = X[i:i+batch_size]
-        #     self.fit(batch)
-        #     pb.set_postfix(ordered_dict={k: v[-1] for k, v in self.metrics.items()})
-        # NOTE: To be continued
-        raise NotImplementedError
 
 @dataclass(kw_only=True)
 class Pool(Active):
@@ -686,6 +644,43 @@ class Stream(Active):
             - A dictionary of additional metrics.
         """
         pass
+
+    def fit_samples(self, X: torch.Tensor):
+        """
+        Fit the active learner using a stream of samples.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            Stream of input samples.
+        """
+        X = self.check_matrix(X)
+        for x in (pb := tqdm(X, desc=self.__class__.__name__)):
+            x = x.reshape(1, -1)
+            self.fit(x)
+            pb.set_postfix(ordered_dict={key: val[-1] for key, val in self.metrics.items()})
+
+    def fit_batches(self, X: torch.Tensor, batch_size: int):
+        """
+        Fit the active learner using batches of samples.
+
+        This method automatically splits X into batches of the specified size and then sequentially 
+        fits each batch.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            Stream of input samples.
+        batch_size : int
+            Number of samples per batch.
+        """
+        # X = self.check_matrix(X)
+        # for i in (pb := tqdm(range(0, X.shape[0], batch_size), desc=f"{self.__class__.__name__} (batches)")):
+        #     batch = X[i:i+batch_size]
+        #     self.fit(batch)
+        #     pb.set_postfix(ordered_dict={k: v[-1] for k, v in self.metrics.items()})
+        # NOTE: To be continued
+        raise NotImplementedError
 
 @dataclass(kw_only=True)
 class Random(Stream):
@@ -813,7 +808,7 @@ class Distance(Input):
     ----------
     (Inherits parameters from Input)
     """
-    def score(self, X: torch.Tensor) -> float:
+    def score(self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
         """
         Compute the average minimum distance from the input samples to the training data.
 
@@ -1019,9 +1014,9 @@ class Adaptive:
             errors = torch.tensor([0.0])
 
         # Compute PID components.
-        ep = errors[-1] if len(errors) >= 1 else torch.tensor(0.0)
-        ei = errors.sum() if len(errors) >= 1 else torch.tensor(0.0)
-        ed = errors[-1] - errors[-2] if len(errors) >= 2 else torch.tensor(0.0)
+        ep = errors[-1].item() if len(errors) >= 1 else 0.0
+        ei = errors.sum().item() if len(errors) >= 1 else 0.0
+        ed = errors[-1].item() - errors[-2].item() if len(errors) >= 2 else 0.0
 
         # Update the threshold using the PID control law and enforce bounds.
         self.threshold += self.Kp * ep + self.Ki * ei + self.Kd * ed
@@ -1029,14 +1024,24 @@ class Adaptive:
             self.threshold = max(self.threshold, self.min_threshold)
         if self.max_threshold is not None:
             self.threshold = min(self.threshold, self.max_threshold)
-        self.threshold = torch.tensor(self.threshold)
 
         # Update the metrics dictionary with the PID control terms.
-        metrics.update(dict(threshold=self.threshold.item(), ep=ep.item(), ei=ei.item(), ed=ed.item()))
+        metrics.update(dict(threshold=self.threshold, ep=ep, ei=ei, ed=ed))
         return X, Y, Sigma, metrics
+    
+@dataclass(kw_only=True)
+class Adaptive_Distance(Adaptive, Distance):
+    """
+    Adaptive input distance-based active learning strategy using PID control.
+
+    Parameters
+    ----------
+    (Inherits parameters from Adaptive and Distance)
+    """
+    pass
 
 @dataclass(kw_only=True)
-class PID_A_Optimal(Adaptive, A_Optimal):
+class Adaptive_A_Optimal(Adaptive, A_Optimal):
     """
     Adaptive A-optimal active learning strategy using PID control.
 
@@ -1047,7 +1052,7 @@ class PID_A_Optimal(Adaptive, A_Optimal):
     pass
 
 @dataclass(kw_only=True)
-class PID_D_Optimal(Adaptive, D_Optimal):
+class Adaptive_D_Optimal(Adaptive, D_Optimal):
     """
     Adaptive D-optimal active learning strategy using PID control.
 
@@ -1058,7 +1063,7 @@ class PID_D_Optimal(Adaptive, D_Optimal):
     pass
 
 @dataclass(kw_only=True)
-class PID_E_Optimal(Adaptive, E_Optimal):
+class Adaptive_E_Optimal(Adaptive, E_Optimal):
     """
     Adaptive E-optimal active learning strategy using PID control.
 
@@ -1067,44 +1072,3 @@ class PID_E_Optimal(Adaptive, E_Optimal):
     (Inherits parameters from Adaptive and E_Optimal)
     """
     pass
-
-# %%
-
-
-# %%
-
-
-# %%
-
-if __name__ == "__main__":
-
-
-        # learner.fit_batches(X_stream, 10)
-        # print({key: val[-1] for key, val in learner.metrics.items()})
-
-    # Aggregate metrics from all learners and plot them
-    master = {}
-    for learner in learners:
-        name = learner.__class__.__name__
-        for key, vals in learner.metrics.items():
-            master.setdefault(key, {})[name] = vals
-
-    n_metrics = len(master)
-    fig, axes = plt.subplots(n_metrics, 1, figsize=(6, 3 * n_metrics), sharex=True)
-    fig.suptitle("Metrics by Learner", fontsize=14)
-
-    for ax, (metric, learner_data) in zip(axes, master.items()):
-        for learner_name, vals in learner_data.items():
-            ax.plot(vals, label=learner_name, alpha=0.5)
-        ax.set_ylabel(metric)
-        ax.grid(True)
-        if metric == "r2":
-            ax.set_ylim(-1, 1)
-        ax.legend(loc="best")
-
-    axes[-1].set_xlabel("Iteration")
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plt.show()
-
-    for learner in learners:
-        print(learner.summary)
