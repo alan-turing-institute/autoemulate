@@ -7,6 +7,7 @@ from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
 from autoemulate.utils import _ensure_2d
+from autoemulate.preprocess_target import reconstruct_mean_std
 
 
 def _validate_inputs(cv_results, model_name):
@@ -380,6 +381,8 @@ def _plot_cv(
 
 def _plot_model(
     model,
+    preprocessing,
+    transformer,
     X,
     y,
     style="Xy",
@@ -412,9 +415,16 @@ def _plot_model(
     output_index : int or list of int, optional
         The index(es) of the output variable(s) to plot. If None, all outputs are used.
     """
+
     # Get predictions, with uncertainty if available
     y_pred, y_std = _predict_with_optional_std(model, X)
 
+    y_pred, y_std = reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000)
+
+    # If preprocessing was applied, inverse transform predictions for evaluation
+    # if transformer is not None and hasattr(transformer, "inverse_transform"):
+    #    y_pred = transformer.inverse_transform(X, y_pred)[1]
+    
     n_samples, n_features = X.shape
     n_outputs = y.shape[1] if y.ndim > 1 else 1
 

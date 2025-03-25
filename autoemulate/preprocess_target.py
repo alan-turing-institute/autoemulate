@@ -51,7 +51,7 @@ def get_dim_reducer(
         return VAEOutputPreprocessor(
             latent_dim=3,
             hidden_dims=[64, 32],
-            epochs=100,
+            epochs=800,
             batch_size=32,
             learning_rate=1e-3,
             device=None,
@@ -123,7 +123,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         self,
         latent_dim=3,
         hidden_dims=None,
-        epochs=100,
+        epochs=800,
         batch_size=32,
         learning_rate=1e-3,
         device=None,
@@ -386,3 +386,47 @@ class VAE(nn.Module):
         kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
         return recon_loss + kl_loss
+
+def reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000):
+    """
+    Sample from a normal distribution for each simulation and reduced dimension.
+    
+    Parameters:
+    -----------
+    y_pred : np.ndarray
+        Predicted values with shape (n_simulations, reduced_dim)
+    y_std : np.ndarray
+        Standard deviation values with shape (n_simulations, reduced_dim)
+    n_samples : int
+        Number of samples to generate for each simulation
+    
+    Returns:
+    --------
+    np.ndarray
+        Sampled values with shape (n_simulations, n_samples, reduced_dim)
+    """
+
+    #if transformer is PCA (so linear), you can use inverse_transform for both mean and std
+    #otherwise use sampling procedure to estimate mean and std
+    if isinstance(transformer, TargetPCA):
+        print("Using PCA")
+        pred_mean = transformer.inverse_transform(None, y_pred)[1]
+        pred_std = transformer.inverse_transform(None, y_std)[1]
+
+    else:
+        samples = np.zeros((y_pred.shape[0], n_samples, y_pred.shape[1]))
+        
+        for i in range(y_pred.shape[0]):
+            # Sample from normal distribution for each simulation
+            samples[i] = np.random.normal(
+                loc=y_pred[i], 
+                scale=y_std[i], 
+                size=(n_samples, y_pred.shape[1])
+            )
+        
+        if transformer is not None and hasattr(transformer, "inverse_transform"):
+            samples = transformer.inverse_transform(None, samples)[1]
+
+        pred_mean, pred_std = np.mean(samples, axis=1), np.std(samples, axis=1)
+
+    return pred_mean, pred_std

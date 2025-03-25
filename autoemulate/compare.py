@@ -928,7 +928,8 @@ class AutoEmulate:
 
     def plot_eval(
         self,
-        model,
+        model=None,
+        preprocessing=None,
         style="Xy",
         n_cols=3,
         figsize=None,
@@ -953,8 +954,27 @@ class AutoEmulate:
         input_index : list, int
             Index of the input to plot. Either a single index or a list of indices. Only used if style="Xy".
         """
+        # select model and preprocessing method and transformer if available
+        if model is None:
+            model = self.best_model
+
+        if preprocessing is None:
+            if hasattr(self, "best_prep_method"):
+                preprocessing = self.best_prep_method
+            else:
+                preprocessing = "None"
+
+        transformer = None
+        if (
+            hasattr(self, "preprocessing_results")
+            and preprocessing in self.preprocessing_results
+        ):
+            transformer = self.preprocessing_results[preprocessing]["transformer"]
+            
         fig = _plot_model(
             model,
+            preprocessing,
+            transformer,
             self.X[self.test_idxs],
             self.y[self.test_idxs],
             style,
