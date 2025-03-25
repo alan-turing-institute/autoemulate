@@ -1,12 +1,19 @@
 from autoemulate.emulators import GaussianProcess
-from autoemulate.learners.base import Simulator, Emulator, Random, A_Optimal, D_Optimal, E_Optimal
+from autoemulate.learners.base import (
+    Simulator,
+    Emulator,
+    Random,
+    A_Optimal,
+    D_Optimal,
+    E_Optimal,
+)
 from autoemulate.learners.base import PID_A_Optimal, PID_D_Optimal, PID_E_Optimal
 from autoemulate.experimental_design import LatinHypercube
 import matplotlib.pyplot as plt
 import torch
 
-def test_learners():
 
+def test_learners():
     class Sin(Simulator):
         def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
             return torch.sin(X)
@@ -14,11 +21,13 @@ def test_learners():
     class GP(Emulator):
         def __init__(self):
             self.model = GaussianProcess()
+
         def fit_forward(self, X: torch.Tensor, Y: torch.Tensor):
             self.model.fit(X, Y)
+
         def sample_forward(self, X: torch.Tensor):
             return torch.tensor(self.model.predict(X, return_std=True))
-        
+
     # Initialize simulator and training data
     simulator = Sin()
     X_train = torch.linspace(0, 50, 5).reshape(-1, 1)
@@ -30,28 +39,28 @@ def test_learners():
             emulator=GP(),
             X_train=X_train,
             Y_train=Y_train,
-            p_query=0.25
+            p_query=0.25,
         ),
         A_Optimal(
             simulator=simulator,
             emulator=GP(),
             X_train=X_train,
             Y_train=Y_train,
-            threshold=1e-6
+            threshold=1e-6,
         ),
         D_Optimal(
             simulator=simulator,
             emulator=GP(),
             X_train=X_train,
             Y_train=Y_train,
-            threshold=-4.1
+            threshold=-4.1,
         ),
         E_Optimal(
             simulator=simulator,
             emulator=GP(),
             X_train=X_train,
             Y_train=Y_train,
-            threshold=1e-6
+            threshold=1e-6,
         ),
         PID_A_Optimal(
             simulator=simulator,
@@ -66,7 +75,7 @@ def test_learners():
             target=0.25,
             min_threshold=0.0,
             max_threshold=1.0,
-            window_size=10
+            window_size=10,
         ),
         PID_D_Optimal(
             simulator=simulator,
@@ -81,7 +90,7 @@ def test_learners():
             target=0.25,
             min_threshold=None,
             max_threshold=None,
-            window_size=10
+            window_size=10,
         ),
         PID_E_Optimal(
             simulator=simulator,
@@ -96,7 +105,7 @@ def test_learners():
             target=0.25,
             min_threshold=0.0,
             max_threshold=1.0,
-            window_size=10
+            window_size=10,
         ),
     ]
 
