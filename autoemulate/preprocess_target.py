@@ -93,7 +93,18 @@ class TargetPCA(BaseEstimator, TransformerMixin):
         y_reshaped = self._validate_y(y)
         y_original = self.pca.inverse_transform(y_reshaped)
         return X, y_original
+    
+    def inverse_transform_std(self, y_std):
+        '''
+        As PCA is a linear transformation, the variance in the origianl coordinate system can be calculated as:
+        σ²_X = Σ_j (A_j)^2 * σ²_Y_j,
+        where A_j is the j-th principal component and σ²_Y_j is the variance of the j-th principal component.
+        '''
+        n_pca_components = y_std.shape[1]
 
+        components = self.pca.components_[:n_pca_components]  
+        x_std = np.sqrt(np.sum((y_std[:, np.newaxis, :] * components.T) ** 2, axis=2)) 
+        return x_std
 
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     """
@@ -402,16 +413,17 @@ def reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000):
     
     Returns:
     --------
-    np.ndarray
-        Sampled values with shape (n_simulations, n_samples, reduced_dim)
+    pred_mean: np.ndarray
+        Mean values with shape (n_simulations, original_dim)
+    pred_std: np.ndarray
+        Standard deviation values with shape (n_simulations, original_dim)
     """
 
-    #if transformer is PCA (so linear), you can use inverse_transform for both mean and std
-    #otherwise use sampling procedure to estimate mean and std
+    #if transformer is PCA (so linear), you can reconstruct the mean and std,
+    #otherwise, we sample from the distribution
     if isinstance(transformer, TargetPCA):
-        print("Using PCA")
         pred_mean = transformer.inverse_transform(None, y_pred)[1]
-        pred_std = transformer.inverse_transform(None, y_std)[1]
+        pred_std = transformer.inverse_transform_std(y_std)
 
     else:
         samples = np.zeros((y_pred.shape[0], n_samples, y_pred.shape[1]))
