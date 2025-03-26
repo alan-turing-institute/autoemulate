@@ -442,3 +442,15 @@ def reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000):
         pred_mean, pred_std = np.mean(samples, axis=1), np.std(samples, axis=1)
 
     return pred_mean, pred_std
+
+class Reducer:
+    def __init__(self, base_model):
+        self.base_model = base_model  # Expect an instance of either targetPCA or targetVAE
+
+    def fit(self, X, y=None):
+        pass
+
+    def __getattr__(self, name):
+        """Delegate attribute access to the base model if not found in Reducer."""
+        return getattr(self.base_model, name)
+

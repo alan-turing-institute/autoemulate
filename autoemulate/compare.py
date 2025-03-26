@@ -21,6 +21,7 @@ from autoemulate.model_processing import _process_models
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import Reducer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
@@ -362,6 +363,10 @@ class AutoEmulate:
                 if transformer is not None:
                     # Apply your custom target transformer
                     _, y_transformed = transformer.fit_transform(self.X, self.y)
+
+                # Once the transformer is fit, wrap in a non-trainable class and include in the pipeline
+                # This is to ensure that the transformer is not re-fitted during hyperparameter search
+                transformer = Reducer(transformer)
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
