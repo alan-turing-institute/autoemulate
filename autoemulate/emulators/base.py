@@ -1,12 +1,16 @@
-from abc import ABC, abstractmethod
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset, Dataset
-from torch import Tensor
-import torch.optim as optim
-import torch
-import numpy as np
+from abc import ABC
+from abc import abstractmethod
+
 import gpytorch
+import numpy as np
+import torch
+import torch.optim as optim
 from gpytorch.likelihoods.likelihood import Likelihood
+from torch import nn
+from torch import Tensor
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+from torch.utils.data import TensorDataset
 
 
 class BaseEmulator(ABC):
