@@ -49,9 +49,9 @@ def get_dim_reducer(
 
     elif name == "VAE":
         return VAEOutputPreprocessor(
-            latent_dim=3,
+            latent_dim=n_components,
             hidden_dims=[64, 32],
-            epochs=800,
+            epochs=2000,
             batch_size=32,
             learning_rate=1e-3,
             device=None,
