@@ -150,6 +150,18 @@
         "review",
         "projectManagement"
       ]
+    },
+    {
+      "login": "edwardchalstrey1",
+      "name": "Ed Chalstrey",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5486164?v=4",
+      "profile": "https://edchalstrey.com/",
+      "contributions": [
+        "code",
+        "design",
+        "review",
+        "doc"
+      ]
     }
   ]
 }
