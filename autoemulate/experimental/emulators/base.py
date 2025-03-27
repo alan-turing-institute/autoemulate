@@ -1,15 +1,12 @@
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
-from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader, TensorDataset
 
 from autoemulate.experimental.config import FitConfig
-from autoemulate.experimental.types import InputLike
-from autoemulate.experimental.types import OutputLike
+from autoemulate.experimental.types import InputLike, OutputLike
 
 _default_fit_config = FitConfig(
     epochs=10,
@@ -38,20 +35,17 @@ class Emulator(ABC):
         x: InputLike,
         y: OutputLike | None,
         config: FitConfig,
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
         pass
 
     @abstractmethod
-    def tune(self, x: InputLike):
-        ...
+    def tune(self, x: InputLike): ...
 
     @abstractmethod
-    def cross_validate(self, x: InputLike):
-        ...
+    def cross_validate(self, x: InputLike): ...
 
 
 class InputTypeMixin:
