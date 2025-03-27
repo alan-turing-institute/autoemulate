@@ -137,4 +137,3 @@ class TestPyTorchBackend:
 
         assert isinstance(y_pred, torch.Tensor)
         assert y_pred.shape == (1, 1)
-        assert y_pred.shape == (1, 1)

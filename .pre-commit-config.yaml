@@ -17,9 +17,9 @@ repos:
     # Run the linter.
     - id: ruff
       types_or: [ python, pyi ]
-      files: ^autoemulate/experimental
-      args: [--select, I, --fix]
+      args: [ --fix ]
+      files: ^autoemulate/experimental|^tests/test_experimental
     # Run the formatter.
     - id: ruff-format
       types_or: [ python, pyi ]
-      files: ^autoemulate/experimental
+      files: ^autoemulate/experimental|^tests/test_experimental
