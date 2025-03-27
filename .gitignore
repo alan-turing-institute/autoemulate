@@ -32,3 +32,7 @@ Thumbs.db
 # Quarto
 README.html
 README_files/
+
+# Examples/exploring refactor
+docs/examples
+autoemulate/refactor
