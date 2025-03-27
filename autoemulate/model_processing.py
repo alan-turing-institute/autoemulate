@@ -66,10 +66,13 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
         steps.append(("model", model))
         # without scaling or dim reduction, the model is the only step
         models_piped.append(Pipeline(steps))
-    
+
     return models_piped
 
-def _wrap_reducer_in_pipeline(models, scale_output, scaler_output, reduce_dim_output, dim_reducer_output):
+
+def _wrap_reducer_in_pipeline(
+    models, scale_output, scaler_output, reduce_dim_output, dim_reducer_output
+):
     """Wrap reducer in a pipeline if reduce_dim_output is True. #TODO: should we pass "reduce_dim_output" bool at this point?
 
     Parameters
@@ -102,8 +105,7 @@ def _wrap_reducer_in_pipeline(models, scale_output, scaler_output, reduce_dim_ou
         if output_steps:
             output_pipeline = Pipeline(output_steps)
             final_model = TransformedTargetRegressor(
-                regressor=input_pipeline,
-                transformer=output_pipeline
+                regressor=input_pipeline, transformer=output_pipeline
             )
             models_piped.append(final_model)
         else:
@@ -111,6 +113,7 @@ def _wrap_reducer_in_pipeline(models, scale_output, scaler_output, reduce_dim_ou
             models_piped.append(input_pipeline)
 
     return models_piped
+
 
 def _process_models(
     model_registry,
@@ -156,12 +159,9 @@ def _process_models(
     )
     return models_scaled
 
+
 def _process_reducers(
-    models,
-    scale_output,
-    scaler_output,
-    reduce_dim_output,
-    dim_reducer_output
+    models, scale_output, scaler_output, reduce_dim_output, dim_reducer_output
 ):
     """Process dimensionality reducers.
 
@@ -172,7 +172,7 @@ def _process_reducers(
     reducer_output : Reducer
         An instance of the Reducer class.
     """
-    #TODO: change "models_reduced" name
+    # TODO: change "models_reduced" name
     models_reduced = _wrap_reducer_in_pipeline(
         models, scale_output, scaler_output, reduce_dim_output, dim_reducer_output
     )

@@ -2,14 +2,13 @@ import inspect
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
-from sklearn.compose import TransformedTargetRegressor
 
-
-from autoemulate.utils import _ensure_2d
 from autoemulate.preprocess_target import reconstruct_mean_std
+from autoemulate.utils import _ensure_2d
 
 
 def _validate_inputs(cv_results, model_name):
@@ -53,7 +52,9 @@ def _predict_with_optional_std(model, X_test):
         # Check if regressor supports return_std
         predict_params = inspect.signature(regressor.predict).parameters
         if "return_std" in predict_params:
-            y_pred, y_std = regressor.predict(X_test, return_std=True)
+            y_pred, y_std = model.regressor_.predict(X_test, return_std=True)
+            y_pred, y_std = reconstruct_mean_std(model, y_pred, y_std, n_samples=1000)
+
         else:
             y_pred = model.predict(X_test)
             y_std = None
@@ -71,6 +72,7 @@ def _predict_with_optional_std(model, X_test):
             y_std = None
 
     return y_pred, y_std
+
 
 def _calculate_subplot_layout(n_plots, n_cols=3):
     """Calculate optimal number of rows and columns for subplots.
@@ -391,8 +393,6 @@ def _plot_cv(
 
 def _plot_model(
     model,
-    preprocessing,
-    transformer,
     X,
     y,
     style="Xy",
@@ -427,18 +427,8 @@ def _plot_model(
     """
 
     # Get predictions, with uncertainty if available
-    #y_pred, y_std = _predict_with_optional_std(model, X)
-    y_pred = model.predict(X)
-    y_std = None
+    y_pred, y_std = _predict_with_optional_std(model, X)
 
-    #TODO: Fix STD!!! cause now  since I wrapped in TransformTargedRegressor, it doesnt know how to deal with the variance
-
-    #y_pred, y_std = reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000)
-
-    # If preprocessing was applied, inverse transform predictions for evaluation
-    # if transformer is not None and hasattr(transformer, "inverse_transform"):
-    #    y_pred = transformer.inverse_transform(X, y_pred)[1]
-    
     n_samples, n_features = X.shape
     n_outputs = y.shape[1] if y.ndim > 1 else 1
 

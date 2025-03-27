@@ -13,7 +13,6 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.compose import TransformedTargetRegressor
 
 
 # manage warnings -------------------------------------------------------------
@@ -108,10 +107,11 @@ def get_model_name(model):
     # If the model is a TransformedTargetRegressor, unwrap it
     elif isinstance(model, TransformedTargetRegressor):
         return get_model_name(model.regressor)
-    
+
     # Otherwise, it's a standalone model
     else:
         return model.model_name
+
 
 def get_short_model_name(model):
     """Get the short name of the base model.

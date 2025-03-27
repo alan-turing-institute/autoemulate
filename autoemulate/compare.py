@@ -17,7 +17,8 @@ from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import _process_models, _process_reducers
+from autoemulate.model_processing import _process_models
+from autoemulate.model_processing import _process_reducers
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.preprocess_target import get_dim_reducer
@@ -348,29 +349,30 @@ class AutoEmulate:
                 # Create the actual transformer instance
                 transformer = (
                     None
-                    if prep_name == "None" #TODO: allow to pass None not as a string
-                    else get_dim_reducer(prep_name, **prep_params) 
+                    if prep_name == "None"  # TODO: allow to pass None not as a string
+                    else get_dim_reducer(prep_name, **prep_params)
                 )
 
                 # Apply preprocessing to data
                 # X_transformed = self.X  # X remains unchanged
-                #y_transformed = self.y  # Default if no transformation
+                # y_transformed = self.y  # Default if no transformation
 
                 if transformer is not None:
                     # Apply your custom target transformer
-                    #_, y_transformed = transformer.fit_transform(self.X, self.y) #TODO
+                    # _, y_transformed = transformer.fit_transform(self.X, self.y) #TODO
                     transformer.fit(self.y)
                     transformer = Reducer(transformer)
                     # Add the Reducer to the Pipeline
-                    self.models = _process_reducers(models=self.models, 
-                                                    scale_output=self.scale_output, 
-                                                    scaler_output=self.scaler_output, 
-                                                    reduce_dim_output=self.reduce_dim_output, 
-                                                    dim_reducer_output=transformer)
-                    
+                    self.models = _process_reducers(
+                        models=self.models,
+                        scale_output=self.scale_output,
+                        scaler_output=self.scaler_output,
+                        reduce_dim_output=self.reduce_dim_output,
+                        dim_reducer_output=transformer,
+                    )
+
                 # Once the transformer is fit, wrap in a non-trainable class and include in the pipeline
                 # This is to ensure that the transformer is not re-fitted during hyperparameter search
-                
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
@@ -889,8 +891,8 @@ class AutoEmulate:
             transformer = self.preprocessing_results[preprocessing]["transformer"]
 
         # Get true values (transform if needed)
-        #y_true = self.y[self.test_idxs]
-        #if transformer is not None:
+        # y_true = self.y[self.test_idxs]
+        # if transformer is not None:
         #    _, y_true = transformer.transform(self.X[self.test_idxs], y_true)
 
         # Get predictions
@@ -898,7 +900,7 @@ class AutoEmulate:
         y_true = self.y[self.test_idxs]
 
         # If preprocessing was applied, inverse transform predictions for evaluation
-        #if transformer is not None and hasattr(transformer, "inverse_transform"):
+        # if transformer is not None and hasattr(transformer, "inverse_transform"):
         #    y_pred = transformer.inverse_transform(self.X[self.test_idxs], y_pred)[1]
         #   y_true = self.y[self.test_idxs]  # Revert to original y values
 
@@ -968,23 +970,24 @@ class AutoEmulate:
         if model is None:
             model = self.best_model
 
-        if preprocessing is None:
-            if hasattr(self, "best_prep_method"):
-                preprocessing = self.best_prep_method
-            else:
-                preprocessing = "None"
-
+        '''
         transformer = None
         if (
             hasattr(self, "preprocessing_results")
             and preprocessing in self.preprocessing_results
         ):
             transformer = self.preprocessing_results[preprocessing]["transformer"]
-            
+
+        scaler_output = None
+        if (
+            hasattr(model.transformer.named_steps, "scaler_output")
+            and preprocessing in self.preprocessing_results
+        ):
+            scaler_output = model.transformer.named_steps["scaler_output"]
+        '''
+
         fig = _plot_model(
             model,
-            preprocessing,
-            transformer,
             self.X[self.test_idxs],
             self.y[self.test_idxs],
             style,

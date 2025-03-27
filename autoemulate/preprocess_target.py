@@ -46,7 +46,7 @@ def get_dim_reducer(
     # Return the appropriate dimensionality reducer
     if name == "PCA":
         return TargetPCA(n_components)
-        #return PCA(n_components=n_components) #check! Marjan was sayin base class should not have fit and etc.
+        # return PCA(n_components=n_components) #check! Marjan was sayin base class should not have fit and etc.
 
     elif name == "VAE":
         return VAEOutputPreprocessor(
@@ -94,24 +94,27 @@ class TargetPCA(BaseEstimator, TransformerMixin):
         X_reshaped = self._validate_data(X)
         X_original = self.pca.inverse_transform(X_reshaped)
         return X_original
-    
+
     def inverse_transform_std(self, x_std):
-        '''
+        """
         As PCA is a linear transformation, the variance in the origianl coordinate system can be calculated as:
         σ²_X = Σ_j (A_j)^2 * σ²_Y_j,
         where A_j is the j-th principal component and σ²_Y_j is the variance of the j-th principal component.
-        '''
+        """
         n_pca_components = x_std.shape[1]
 
-        components = self.pca.components_[:n_pca_components]  
-        x_std_transformed = np.sqrt(np.sum((x_std[:, np.newaxis, :] * components.T) ** 2, axis=2)) 
+        components = self.pca.components_[:n_pca_components]
+        x_std_transformed = np.sqrt(
+            np.sum((x_std[:, np.newaxis, :] * components.T) ** 2, axis=2)
+        )
         return x_std_transformed
+
 
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     """
     Sklearn-compatible wrapper for PyTorch Variational Autoencoder to use as dimensionality reducer.
     Implements fit, transform, and inverse_transform methods required for sklearn pipelines.
-    
+
     Parameters
     ----------
     latent_dim : int, default=3
@@ -143,7 +146,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         learning_rate=1e-3,
         device=None,
         random_state=None,
-        beta = 1.0,
+        beta=1.0,
         verbose=False,
     ):
         self.latent_dim = latent_dim
@@ -170,32 +173,33 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
             latent_dim=self.latent_dim,
         ).to(self.device)
 
-    #def _create_data_loader(self, y):
+    # def _create_data_loader(self, y):
     #    """Create a PyTorch DataLoader for the target values."""
     #    y_tensor = torch.FloatTensor(y).to(self.device)
     #    dataset = torch.utils.data.TensorDataset(y_tensor)
     #    return torch.utils.data.DataLoader(
     #        dataset, batch_size=self.batch_size, shuffle=True
     #    )
-    
+
     def _check_is_fitted(self):
         """Check if the model is fitted."""
         if not self.is_fitted_:
-            raise ValueError("The VAEOutputPreprocessor has not been fitted yet."
-                            "Call 'fit' with appropriate arguments before using this estimator.")
-
+            raise ValueError(
+                "The VAEOutputPreprocessor has not been fitted yet."
+                "Call 'fit' with appropriate arguments before using this estimator."
+            )
 
     def fit(self, X, y=None, **fit_params):
         """
         Fit the VAE on the training data.
-        
+
         Parameters
         ----------
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
             Training data.
         y : None
             Ignored. Present for API consistency.
-            
+
         Returns
         -------
         self : object
@@ -222,7 +226,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         self.vae = VAE(
             input_dim=self.input_dim,
             hidden_dims=self.hidden_dims,
-            latent_dim=self.latent_dim
+            latent_dim=self.latent_dim,
         ).to(self.device)
 
         # Train the VAE
@@ -234,12 +238,13 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         for epoch in range(self.epochs):
             total_loss = 0
             for batch_x, _ in data_loader:
-                
                 # Forward pass
                 recon_batch, mu, log_var = self.vae(batch_x)
 
                 # Calculate loss
-                loss = self.vae.loss_function(recon_batch, batch_x, mu, log_var, beta = self.beta)
+                loss = self.vae.loss_function(
+                    recon_batch, batch_x, mu, log_var, beta=self.beta
+                )
 
                 # Backward pass and optimize
                 optimizer.zero_grad()
@@ -260,12 +265,12 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     def transform(self, X):
         """
         Reduce dimensionality by encoding the data to the latent space.
-        
+
         Parameters
         ----------
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
             The data to transform.
-            
+
         Returns
         -------
         X_new : ndarray of shape (n_samples, encoding_dim)
@@ -276,7 +281,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         # Convert data to numpy array if needed
         if not isinstance(X, np.ndarray):
             X = np.asarray(X)
-        
+
         # Convert to PyTorch tensor
         X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
 
@@ -298,12 +303,12 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     def inverse_transform(self, X):
         """
         Transform encoded data back to the original space.
-        
+
         Parameters
         ----------
         X : {array-like, sparse matrix} of shape (n_samples, encoding_dim)
             The encoded data (in latent space).
-            
+
         Returns
         -------
         X_original : ndarray of shape (n_samples, n_features)
@@ -314,7 +319,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         # Convert data to numpy array if needed
         if not isinstance(X, np.ndarray):
             X = np.asarray(X)
-        
+
         # Convert to PyTorch tensor
         X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
 
@@ -411,10 +416,11 @@ class VAE(nn.Module):
 
         return recon_loss + beta * kl_loss
 
-def reconstruct_mean_std(x_latent_pred, x_latent_std, transformer, n_samples=1000):
+
+def reconstruct_mean_std(model, x_latent_pred, x_latent_std, n_samples=1000):
     """
     Sample from a normal distribution for each simulation and reduced dimension.
-    
+
     Parameters:
     -----------
     y_pred : np.ndarray
@@ -423,7 +429,7 @@ def reconstruct_mean_std(x_latent_pred, x_latent_std, transformer, n_samples=100
         Standard deviation values with shape (n_simulations, reduced_dim)
     n_samples : int
         Number of samples to generate for each simulation
-    
+
     Returns:
     --------
     pred_mean: np.ndarray
@@ -432,54 +438,55 @@ def reconstruct_mean_std(x_latent_pred, x_latent_std, transformer, n_samples=100
         Standard deviation values with shape (n_simulations, original_dim)
     """
 
-    #if transformer is PCA (so linear), you can reconstruct the mean and std,
-    #otherwise, we sample from the distribution
-    if isinstance(transformer.base_model, TargetPCA):
-        x_reconstructed_mean = transformer.inverse_transform(x_latent_pred)
-        x_reconstructed_std = transformer.base_model.inverse_transform_std(x_latent_std) #TODO: fix such this is a method of the transformer
+    # if transformer is PCA (so linear), you can reconstruct the mean and std,
+    # otherwise, we sample from the distribution
+    '''
+    if model.transformer is not None and isinstance(transformer.base_model, TargetPCA):
+        x_reconstructed_mean = model.transformer_.inverse_transform(x_latent_pred)
+        x_reconstructed_std = transformer.base_model.inverse_transform_std(x_latent_std)  # TODO: fix such this is a method of the transformer
 
     else:
-        #TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
-        n_simulations, n_features = x_latent_pred.shape
-        samples = []
+    '''
+        # TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
+    n_simulations, n_features = x_latent_pred.shape
+    samples = []
 
-        for i in range(n_simulations):
-            # Sample from normal distribution for each simulation
-            samples_latent = np.random.normal(
-                loc=x_latent_pred[i], 
-                scale=x_latent_std[i], 
-                size=(n_samples, n_features)
-            )
-            if transformer is not None and hasattr(transformer, "inverse_transform"):
-                samples.append(transformer.inverse_transform(samples_latent))
+    for i in range(n_simulations):
+        # Sample from normal distribution for each simulation
+        samples_latent = np.random.normal(
+            loc=x_latent_pred[i],
+            scale=x_latent_std[i],
+            size=(n_samples, n_features),
+        )
+        samples.append(model.transformer_.inverse_transform(samples_latent))
+    samples = np.array(samples)
 
-        samples = np.array(samples)
-        print(samples.shape)
-
-        x_reconstructed_mean, x_reconstructed_std = np.mean(samples, axis=1), np.std(samples, axis=1)
+    x_reconstructed_mean, x_reconstructed_std = np.mean(samples, axis=1), np.std(samples, axis=1)
 
     return x_reconstructed_mean, x_reconstructed_std
 
+
 class Reducer:
     def __init__(self, base_model):
-        self.base_model = base_model  # Expect an instance of either targetPCA or targetVAE
+        self.base_model = (
+            base_model  # Expect an instance of either targetPCA or targetVAE
+        )
 
     def fit(self, X, y=None):
-        return 
-    
+        return
+
     def transform(self, X, y=None):
         return self.base_model.transform(X)
-    
+
     def inverse_transform(self, X, y=None):
         return self.base_model.inverse_transform(X)
-    
+
     def fit_transform(self, X, y=None):
         return self.transform(X)
-    
+
     def inverse_transform_std(self, X):
         return self.base_model.inverse_transform_std(X)
-    
-    #def __getattr__(self, name):
+
+    # def __getattr__(self, name):
     #    """Delegate attribute access to the base model if not found in Reducer."""
     #    return getattr(self.base_model, name)
-
