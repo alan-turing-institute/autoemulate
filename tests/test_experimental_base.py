@@ -6,9 +6,9 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 
-from autoemulate.experimental.base import InputTypeMixin
-from autoemulate.experimental.base import PyTorchBackend
 from autoemulate.experimental.config import FitConfig
+from autoemulate.experimental.emulators.base import InputTypeMixin
+from autoemulate.experimental.emulators.base import PyTorchBackend
 
 
 @pytest.fixture

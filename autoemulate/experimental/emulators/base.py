@@ -33,7 +33,12 @@ class BaseEmulator(ABC):
         return self.predict(*args, **kwds)
 
     @abstractmethod
-    def fit(self, x: InputLike):
+    def fit(
+        self,
+        x: InputLike,
+        y: OutputLike | None = None,
+        config: FitConfig = _default_fit_config,
+    ):
         ...
 
     @abstractmethod
@@ -114,10 +119,6 @@ class PyTorchBackend(nn.Module, BaseEmulator, InputTypeMixin):
         """
         if not isinstance(config, FitConfig):
             raise ValueError("config must be an instance of FitConfig")
-
-        # epochs = config.epochs
-        # verbose = config.verbose
-        # config.batch_size = config.config.batch_size
 
         self.train()  # Set model to training mode
         loss_history = []
