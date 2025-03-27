@@ -22,7 +22,7 @@ _default_fit_config = FitConfig(
 )
 
 
-class BaseEmulator(ABC):
+class Emulator(ABC):
     """The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
@@ -36,8 +36,8 @@ class BaseEmulator(ABC):
     def fit(
         self,
         x: InputLike,
-        y: OutputLike | None = None,
-        config: FitConfig = _default_fit_config,
+        y: OutputLike | None,
+        config: FitConfig,
     ):
         ...
 
@@ -92,7 +92,7 @@ class InputTypeMixin:
     #     return y
 
 
-class PyTorchBackend(nn.Module, BaseEmulator, InputTypeMixin):
+class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     """PyTorchBackend is a torch model and implements the base class.
     This provides default implementations to further subclasses.
     This means that models can subclass and only need to implement
