@@ -25,19 +25,19 @@ class BaseEmulator(ABC):
 
     @abstractmethod
     def fit(self, X: DataLoader):
-        pass
+        ...
 
     @abstractmethod
     def predict(self, X: DataLoader):
-        pass
+        ...
 
     @abstractmethod
     def tune(self, X: Dataset):
-        pass
+        ...
 
     @abstractmethod
     def cross_validate(self, X: Dataset):
-        pass
+        ...
 
 
 class InputTypeMixin:
@@ -53,7 +53,7 @@ class InputTypeMixin:
         """
         # Convert input to DataLoader if not already
         if isinstance(X, np.ndarray):
-            X = torch.tensor(X, dtype=torch.float32)
+            x = torch.tensor(X, dtype=torch.float32)
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=torch.float32)
 
@@ -103,9 +103,9 @@ class PyTorchBackend(nn.Module, BaseEmulator, InputTypeMixin):
 
         Args:
             X: Input features as numpy array, PyTorch tensor, or DataLoader
-            y: Target values (not needed if X is a DataLoader)
+            y: Target values (not needed if xis a DataLoader)
             epochs: Number of training epochs
-            batch_size: Batch size (used only when X is not a DataLoader)
+            batch_size: Batch size (used only when xis not a DataLoader)
             verbose: Whether to print progress
 
         Returns:
@@ -150,28 +150,10 @@ class PyTorchBackend(nn.Module, BaseEmulator, InputTypeMixin):
         return self(X)
 
     def cross_validate(self, X):
-        pass
+        raise NotImplementedError("This function is not yet implemented.")
 
     def tune(self, X):
-        pass
-
-
-class LinearRegression(PyTorchBackend):
-    """Inherits from the PyTorchBackend.
-    To complete the model, `.forward()` needs to be implemented. Methods from
-    `BaseEmulator` could be optionally overridden too.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.linear = nn.Sequential(nn.Flatten(), nn.Linear(1, 1, bias=True))
-        self.loss_fn = nn.MSELoss()
-        self.optimizer = optim.SGD(self.parameters(), lr=0.01)
-
-    def forward(self, x: Tensor | np.ndarray) -> Tensor:
-        # Complete the model by passing through the linear layer
-
-        return self.linear(x)
+        raise NotImplementedError("This function is not yet implemented.")
 
 
 class GPyTorchBackend(gpytorch.models.ExactGP, BaseEmulator, InputTypeMixin):
@@ -261,31 +243,3 @@ class GaussianProcessRBFExact(GPyTorchBackend):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
-
-
-if __name__ == "__main__":
-    # Generate some random data
-    np.random.seed(42)
-    X = np.arange(0, 10).reshape(-1, 1).astype(np.float32)
-    y = 2 * X + 1
-
-    model = LinearRegression()
-    model.fit(X, y, epochs=50, batch_size=1)
-
-    # Predict
-    x_pred = torch.tensor([[44.0]])
-    y_pred = model.predict(x_pred)
-    print(f"Input: {x_pred.item()}")
-    print(f"Prediction: {y_pred.item()}")
-    print(f"Actual: {2 * x_pred.item() + 1}")
-
-    # TODO: update example with data for GP
-    # model = GaussianProcessRBFExact()
-    # model.fit(X, y, epochs=50, batch_size=1)
-
-    # # Predict
-    # x_pred = torch.tensor([[44.0]])
-    # y_pred = model.predict(x_pred)
-    # print(f'Input: {x_pred.item()}')
-    # print(f'Prediction: {y_pred.item()}')
-    # print(f'Actual: {2 * x_pred.item() + 1}')
