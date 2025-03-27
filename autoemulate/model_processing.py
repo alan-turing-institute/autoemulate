@@ -66,9 +66,51 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
         steps.append(("model", model))
         # without scaling or dim reduction, the model is the only step
         models_piped.append(Pipeline(steps))
-
+    
     return models_piped
 
+def _wrap_reducer_in_pipeline(models, scale_output, scaler_output, reduce_dim_output, dim_reducer_output):
+    """Wrap reducer in a pipeline if reduce_dim_output is True. #TODO: should we pass "reduce_dim_output" bool at this point?
+
+    Parameters
+    ----------
+    models : dict
+        dict of model instances, with scaled models wrapped in a pipeline.
+    dim_reducer_output : Reducer
+        An instance of the Reducer class.
+
+    Returns
+    -------
+    models_reduced : dict
+        dict of model_names: model instances, with reduced models wrapped in a pipeline.
+    """
+
+    models_piped = []
+
+    for models in models:
+        # Retrieve the input pipeline
+        input_pipeline = models
+
+        # Create output transformation pipeline
+        output_steps = []
+        if scale_output:
+            output_steps.append(("scaler_output", scaler_output))
+        if reduce_dim_output:
+            output_steps.append(("dim_reducer_output", dim_reducer_output))
+
+        # If we have output transformations, wrap with TransformedTargetRegressor
+        if output_steps:
+            output_pipeline = Pipeline(output_steps)
+            final_model = TransformedTargetRegressor(
+                regressor=input_pipeline,
+                transformer=output_pipeline
+            )
+            models_piped.append(final_model)
+        else:
+            # No output transformations, just use the input pipeline
+            models_piped.append(input_pipeline)
+
+    return models_piped
 
 def _process_models(
     model_registry,
@@ -78,10 +120,6 @@ def _process_models(
     scaler,
     reduce_dim,
     dim_reducer,
-    scale_output,
-    scaler_output,
-    reduce_dim_output,
-    dim_reducer_output,
 ):
     """Get and process models.
 
@@ -117,3 +155,25 @@ def _process_models(
         models_multi, scale, scaler, reduce_dim, dim_reducer
     )
     return models_scaled
+
+def _process_reducers(
+    models,
+    scale_output,
+    scaler_output,
+    reduce_dim_output,
+    dim_reducer_output
+):
+    """Process dimensionality reducers.
+
+    Parameters
+    ----------
+    models : list
+        List of model instances.
+    reducer_output : Reducer
+        An instance of the Reducer class.
+    """
+    #TODO: change "models_reduced" name
+    models_reduced = _wrap_reducer_in_pipeline(
+        models, scale_output, scaler_output, reduce_dim_output, dim_reducer_output
+    )
+    return models_reduced
