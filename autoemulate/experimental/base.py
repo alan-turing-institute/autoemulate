@@ -13,9 +13,10 @@ from autoemulate.experimental.types import OutputLike
 
 _default_fit_config = FitConfig(
     epochs=10,
+    batch_size=16,
     shuffle=True,
-    criterion=torch.nn.MSELoss(),
-    optimizer=torch.optim.Adam(),
+    criterion=torch.nn.MSELoss,
+    optimizer=torch.optim.Adam,
     device="cpu",
     verbose=False,
 )
@@ -127,7 +128,7 @@ class PyTorchBackend(nn.Module, BaseEmulator, InputTypeMixin):
         )
 
         # Training loop
-        for epoch in range(epochs):
+        for epoch in range(config.epochs):
             epoch_loss = 0.0
             batches = 0
 
@@ -149,8 +150,10 @@ class PyTorchBackend(nn.Module, BaseEmulator, InputTypeMixin):
             avg_epoch_loss = epoch_loss / batches
             loss_history.append(avg_epoch_loss)
 
-            if verbose and (epoch + 1) % (epochs // 10 or 1) == 0:
-                print(f"Epoch [{epoch + 1}/{epochs}], Loss: {avg_epoch_loss:.4f}")
+            if config.verbose and (epoch + 1) % (config.epochs // 10 or 1) == 0:
+                print(
+                    f"Epoch [{epoch + 1}/{config.epochs}], Loss: {avg_epoch_loss:.4f}"
+                )
 
         return loss_history
 

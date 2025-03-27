@@ -18,9 +18,10 @@ class LoggingConfig:
 @dataclass(kw_only=True)
 class FitConfig(DeviceConfig, LoggingConfig):
     epochs: int
+    batch_size: int
     shuffle: bool
-    criterion: nn.Module
-    optimizer: Optimizer
+    criterion: type[nn.Module]
+    optimizer: type[Optimizer]
     device: str = "cpu"
 
 
