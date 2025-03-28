@@ -4,7 +4,22 @@ repos:
     hooks:
     - id: black
       language_version: python3
+      exclude: "^autoemulate/experimental"
 -   repo: https://github.com/asottile/reorder-python-imports
     rev: v3.12.0
     hooks:
     -   id: reorder-python-imports
+        exclude: "^autoemulate/experimental"
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.11.2
+  hooks:
+    # Run the linter.
+    - id: ruff
+      types_or: [ python, pyi ]
+      files: ^autoemulate/experimental
+      args: [--select, I, --fix]
+    # Run the formatter.
+    - id: ruff-format
+      types_or: [ python, pyi ]
+      files: ^autoemulate/experimental

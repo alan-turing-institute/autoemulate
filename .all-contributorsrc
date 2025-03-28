@@ -162,6 +162,28 @@
         "review",
         "doc"
       ]
+    },
+    {
+      "login": "EdwinB12",
+      "name": "Edwin ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64434531?v=4",
+      "profile": "https://github.com/EdwinB12",
+      "contributions": [
+        "code",
+        "ideas",
+        "review"
+      ]
+    },
+    {
+      "login": "ContiPaolo",
+      "name": "Paolo Conti",
+      "avatar_url": "https://avatars.githubusercontent.com/u/51111500?v=4",
+      "profile": "https://paolo-conti.com/",
+      "contributions": [
+        "code",
+        "ideas",
+        "review"
+      ]
     }
   ]
 }

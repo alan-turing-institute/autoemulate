@@ -99,6 +99,10 @@ You can find tutorials, FAQs and the API reference [here](https://alan-turing-in
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/sgreenbury"><img src="https://avatars.githubusercontent.com/u/50113363?v=4?s=100" width="100px;" alt="Sam Greenbury"/><br /><sub><b>Sam Greenbury</b></sub></a><br /><a href="#code-sgreenbury" title="Code">💻</a> <a href="#ideas-sgreenbury" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-sgreenbury" title="Reviewed Pull Requests">👀</a> <a href="#projectManagement-sgreenbury" title="Project Management">📆</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://edchalstrey.com/"><img src="https://avatars.githubusercontent.com/u/5486164?v=4?s=100" width="100px;" alt="Ed Chalstrey"/><br /><sub><b>Ed Chalstrey</b></sub></a><br /><a href="#code-edwardchalstrey1" title="Code">💻</a> <a href="#design-edwardchalstrey1" title="Design">🎨</a> <a href="#review-edwardchalstrey1" title="Reviewed Pull Requests">👀</a> <a href="#doc-edwardchalstrey1" title="Documentation">📖</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/EdwinB12"><img src="https://avatars.githubusercontent.com/u/64434531?v=4?s=100" width="100px;" alt="Edwin "/><br /><sub><b>Edwin </b></sub></a><br /><a href="#code-EdwinB12" title="Code">💻</a> <a href="#ideas-EdwinB12" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-EdwinB12" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://paolo-conti.com/"><img src="https://avatars.githubusercontent.com/u/51111500?v=4?s=100" width="100px;" alt="Paolo Conti"/><br /><sub><b>Paolo Conti</b></sub></a><br /><a href="#code-ContiPaolo" title="Code">💻</a> <a href="#ideas-ContiPaolo" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-ContiPaolo" title="Reviewed Pull Requests">👀</a></td>
+    </tr>
   </tbody>
 </table>
 
