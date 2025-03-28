@@ -361,8 +361,9 @@ class AutoEmulate:
                     # Apply your custom target transformer
                     # _, y_transformed = transformer.fit_transform(self.X, self.y) #TODO
                     transformer.fit(self.y)
+                    # Once the transformer is fit, wrap in a non-trainable class and include in the pipeline
+                    # This is to ensure that the transformer is not re-fitted during cross-validation
                     transformer = Reducer(transformer)
-                    # Add the Reducer to the Pipeline
                     self.models = _process_reducers(
                         models=self.models,
                         scale_output=self.scale_output,
@@ -371,8 +372,6 @@ class AutoEmulate:
                         dim_reducer_output=transformer,
                     )
 
-                # Once the transformer is fit, wrap in a non-trainable class and include in the pipeline
-                # This is to ensure that the transformer is not re-fitted during hyperparameter search
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
@@ -412,9 +411,7 @@ class AutoEmulate:
                                 X=self.X[self.train_idxs],
                                 y=self.y[self.train_idxs],
                                 cv=self.cross_validator,
-                                model=self.preprocessing_results[prep_name]["models"][
-                                    i
-                                ],
+                                model=model,#self.preprocessing_results[prep_name]["models"][i], #TODO: check if this is correct
                                 metrics=self.metrics,
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
@@ -452,7 +449,6 @@ class AutoEmulate:
                                         [self.scores_df, pd.DataFrame([new_row])],
                                         ignore_index=True,
                                     )
-
                 # Get best model for this preprocessing method
                 self.preprocessing_results[prep_name][
                     "best_model"

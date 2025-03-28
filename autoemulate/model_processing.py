@@ -56,7 +56,6 @@ def _wrap_models_in_pipeline(models, scale, scaler, reduce_dim, dim_reducer):
     """
 
     models_piped = []
-
     for model in models:
         steps = []
         if scale:

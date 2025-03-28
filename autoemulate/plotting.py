@@ -7,7 +7,7 @@ from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
-from autoemulate.preprocess_target import reconstruct_mean_std
+from autoemulate.preprocess_target import inverse_transform_wtih_std
 from autoemulate.utils import _ensure_2d
 
 
@@ -53,7 +53,7 @@ def _predict_with_optional_std(model, X_test):
         predict_params = inspect.signature(regressor.predict).parameters
         if "return_std" in predict_params:
             y_pred, y_std = model.regressor_.predict(X_test, return_std=True)
-            y_pred, y_std = reconstruct_mean_std(model, y_pred, y_std, n_samples=1000)
+            y_pred, y_std = inverse_transform_wtih_std(model, y_pred, y_std, n_samples=1000)
 
         else:
             y_pred = model.predict(X_test)

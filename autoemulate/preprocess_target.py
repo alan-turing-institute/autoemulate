@@ -14,10 +14,9 @@ from torch.utils.data import TensorDataset
 
 def get_dim_reducer(
     name,
-    n_components=8,
-    encoding_dim=8,
-    hidden_layers=None,
-    epochs=1200,
+    reduced_dim=8,
+    hidden_dims=[64,32],
+    epochs=4000,
     batch_size=32,
     beta=1.0,
     verbose=False,
@@ -45,18 +44,19 @@ def get_dim_reducer(
 
     # Return the appropriate dimensionality reducer
     if name == "PCA":
-        return TargetPCA(n_components)
+        return PCA(reduced_dim)
         # return PCA(n_components=n_components) #check! Marjan was sayin base class should not have fit and etc.
 
     elif name == "VAE":
         return VAEOutputPreprocessor(
-            latent_dim=n_components,
-            hidden_dims=[64, 32],
-            epochs=2000,
-            batch_size=32,
+            latent_dim=reduced_dim,
+            hidden_dims=hidden_dims,
+            epochs=epochs,
+            batch_size=batch_size,
             learning_rate=1e-3,
             device=None,
-            verbose=False,
+            beta=beta,
+            verbose=verbose,
         )
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
@@ -417,7 +417,7 @@ class VAE(nn.Module):
         return recon_loss + beta * kl_loss
 
 
-def reconstruct_mean_std(model, x_latent_pred, x_latent_std, n_samples=1000):
+def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=1000):
     """
     Sample from a normal distribution for each simulation and reduced dimension.
 
