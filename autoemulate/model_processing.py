@@ -89,9 +89,9 @@ def _wrap_reducer_in_pipeline(
 
     models_piped = []
 
-    for models in models:
+    for model in models:
         # Retrieve the input pipeline
-        input_pipeline = models
+        input_pipeline = model
 
         # Create output transformation pipeline
         output_steps = []

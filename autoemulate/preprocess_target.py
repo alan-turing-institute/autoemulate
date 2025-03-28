@@ -15,7 +15,7 @@ from torch.utils.data import TensorDataset
 def get_dim_reducer(
     name,
     reduced_dim=8,
-    hidden_dims=[64,32],
+    hidden_dims=[64, 32],
     epochs=4000,
     batch_size=32,
     beta=1.0,
@@ -440,14 +440,14 @@ def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=100
 
     # if transformer is PCA (so linear), you can reconstruct the mean and std,
     # otherwise, we sample from the distribution
-    '''
+    """
     if model.transformer is not None and isinstance(transformer.base_model, TargetPCA):
         x_reconstructed_mean = model.transformer_.inverse_transform(x_latent_pred)
         x_reconstructed_std = transformer.base_model.inverse_transform_std(x_latent_std)  # TODO: fix such this is a method of the transformer
 
     else:
-    '''
-        # TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
+    """
+    # TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
     n_simulations, n_features = x_latent_pred.shape
     samples = []
 
@@ -461,7 +461,9 @@ def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=100
         samples.append(model.transformer_.inverse_transform(samples_latent))
     samples = np.array(samples)
 
-    x_reconstructed_mean, x_reconstructed_std = np.mean(samples, axis=1), np.std(samples, axis=1)
+    x_reconstructed_mean, x_reconstructed_std = np.mean(samples, axis=1), np.std(
+        samples, axis=1
+    )
 
     return x_reconstructed_mean, x_reconstructed_std
 

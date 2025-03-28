@@ -140,7 +140,7 @@ class AutoEmulate:
             scale=scale,
             scaler=scaler,
             reduce_dim=reduce_dim,
-            dim_reducer=dim_reducer
+            dim_reducer=dim_reducer,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
@@ -356,26 +356,24 @@ class AutoEmulate:
                 # Apply preprocessing to data
                 # X_transformed = self.X  # X remains unchanged
                 # y_transformed = self.y  # Default if no transformation
-
+                self.models_trans = self.models
                 if transformer is not None:
                     # Apply your custom target transformer
                     # _, y_transformed = transformer.fit_transform(self.X, self.y) #TODO
                     transformer.fit(self.y)
                     # Once the transformer is fit, wrap in a non-trainable class and include in the pipeline
                     # This is to ensure that the transformer is not re-fitted during cross-validation
-                    transformer = Reducer(transformer)
-                    self.models = _process_reducers(
+                    self.models_trans = _process_reducers(
                         models=self.models,
                         scale_output=self.scale_output,
                         scaler_output=self.scaler_output,
                         reduce_dim_output=self.reduce_dim_output,
-                        dim_reducer_output=transformer,
+                        dim_reducer_output=Reducer(transformer),
                     )
-
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
-                    "models": copy.deepcopy(self.models),
+                    "models": copy.deepcopy(self.models_trans),
                     "cv_results": {},
                     "best_model": None,
                     "transformer": transformer,
@@ -411,7 +409,7 @@ class AutoEmulate:
                                 X=self.X[self.train_idxs],
                                 y=self.y[self.train_idxs],
                                 cv=self.cross_validator,
-                                model=model,#self.preprocessing_results[prep_name]["models"][i], #TODO: check if this is correct
+                                model=model,  # self.preprocessing_results[prep_name]["models"][i], #TODO: check if this is correct
                                 metrics=self.metrics,
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
@@ -966,7 +964,7 @@ class AutoEmulate:
         if model is None:
             model = self.best_model
 
-        '''
+        """
         transformer = None
         if (
             hasattr(self, "preprocessing_results")
@@ -980,7 +978,7 @@ class AutoEmulate:
             and preprocessing in self.preprocessing_results
         ):
             scaler_output = model.transformer.named_steps["scaler_output"]
-        '''
+        """
 
         fig = _plot_model(
             model,
