@@ -84,7 +84,7 @@ class TestInputTypeMixin:
         """
         X = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for X."):
-            self.mixin._convert(X)
+            self.mixin._convert(X)  # type: ignore
 
 
 class TestPyTorchBackend:

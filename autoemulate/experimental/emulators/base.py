@@ -34,7 +34,7 @@ class Emulator(ABC):
     def fit(
         self,
         x: InputLike,
-        y: OutputLike | None,
+        y: InputLike | None,
         config: FitConfig,
     ): ...
 
@@ -53,7 +53,7 @@ class InputTypeMixin:
     def _convert(
         self,
         x: InputLike,
-        y: OutputLike | None = None,
+        y: InputLike | None = None,
         batch_size: int = 16,
         shuffle: bool = True,
     ) -> DataLoader:
@@ -99,9 +99,9 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
 
     def fit(
         self,
-        x: InputLike,
-        y: OutputLike | None = None,
-        config: FitConfig = _default_fit_config,
+        x,
+        y=None,
+        config=_default_fit_config,
     ):
         """
         Train the linear regression model.
