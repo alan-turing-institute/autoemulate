@@ -8,16 +8,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.types import InputLike, OutputLike
 
-_default_fit_config = FitConfig(
-    epochs=10,
-    batch_size=16,
-    shuffle=True,
-    criterion=torch.nn.MSELoss,
-    optimizer=torch.optim.Adam,
-    device="cpu",
-    verbose=False,
-)
-
 
 class Emulator(ABC):
     """The interface containing methods on emulators that are
@@ -101,7 +91,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         self,
         x,
         y=None,
-        config=_default_fit_config,
+        config=FitConfig(),
     ):
         """
         Train the linear regression model.

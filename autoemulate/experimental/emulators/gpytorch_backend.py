@@ -11,17 +11,6 @@ from autoemulate.utils import set_random_seed
 from autoemulate.experimental.types import InputLike, OutputLike
 
 
-_default_fit_config = FitConfig(
-    epochs=10,
-    batch_size=16,
-    shuffle=True,
-    criterion=torch.nn.MSELoss,
-    optimizer=torch.optim.Adam,
-    device="cpu",
-    verbose=False,
-)
-
-
 class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: ignore
     likelihood: GaussianLikelihood
 
@@ -130,5 +119,5 @@ if __name__ == "__main__":
     y = torch.rand(10, 1)
     likelihood = MultitaskGaussianLikelihood(num_tasks=1)
     model = GPExactRBF(x, y, likelihood)
-    model.fit(x, y, _default_fit_config)
+    model.fit(x, y, FitConfig())
     print(model(x))
