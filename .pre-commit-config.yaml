@@ -23,3 +23,8 @@ repos:
     - id: ruff-format
       types_or: [ python, pyi ]
       files: ^autoemulate/experimental|^tests/test_experimental
+- repo: https://github.com/RobertCraigie/pyright-python
+  rev: v1.1.398
+  hooks:
+  - id: pyright
+    files: ^autoemulate/experimental/|^tests/test_experimental

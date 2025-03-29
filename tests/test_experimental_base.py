@@ -99,6 +99,7 @@ class TestPyTorchBackend:
 
         def __init__(self):
             super().__init__()
+            self.loss_history = []
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
@@ -118,11 +119,11 @@ class TestPyTorchBackend:
         """
         x = np.array([[1.0], [2.0], [3.0]])
         y = np.array([[2.0], [4.0], [6.0]])
-        loss_history = self.model.fit(x, y, fit_config)
+        self.model.fit(x, y, fit_config)
 
-        assert isinstance(loss_history, list)
-        assert len(loss_history) == 10
-        assert all(isinstance(loss, float) for loss in loss_history)
+        assert isinstance(self.model.loss_history, list)
+        assert len(self.model.loss_history) == 10
+        assert all(isinstance(loss, float) for loss in self.model.loss_history)
 
     def test_predict(self, fit_config):
         """

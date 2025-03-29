@@ -26,8 +26,9 @@ class Emulator(ABC):
     - Active learning implementations
     """
 
-    def __call__(self, *args, **kwds):
-        return self.predict(*args, **kwds)
+    # TODO: currently this has an issue with recursion
+    # def __call__(self, *args, **kwds):
+    #     return self.predict(*args, **kwds)
 
     @abstractmethod
     def fit(
@@ -65,7 +66,9 @@ class InputTypeMixin:
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=torch.float32)
 
-        if isinstance(x, (torch.Tensor, np.ndarray)) and y is not None:
+        if isinstance(x, (torch.Tensor, np.ndarray)) and isinstance(
+            y, (torch.Tensor, np.ndarray)
+        ):
             dataset = TensorDataset(x, y)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         elif isinstance(x, DataLoader) and y is None:
@@ -92,12 +95,14 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     This means that models can subclass and only need to implement
     `.forward()` to have an emulator to be run in `AutoEmulate`"""
 
+    loss_history: list[float]
+
     def fit(
         self,
         x: InputLike,
         y: OutputLike | None = None,
         config: FitConfig = _default_fit_config,
-    ) -> list:
+    ):
         """
         Train the linear regression model.
 
@@ -115,7 +120,6 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
             raise ValueError("config must be an instance of FitConfig")
 
         self.train()  # Set model to training mode
-        loss_history = []
 
         # Convert input to DataLoader if not already
         dataloader = self._convert(
@@ -143,14 +147,12 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
 
             # Average loss for the epoch
             avg_epoch_loss = epoch_loss / batches
-            loss_history.append(avg_epoch_loss)
+            self.loss_history.append(avg_epoch_loss)
 
             if config.verbose and (epoch + 1) % (config.epochs // 10 or 1) == 0:
                 print(
                     f"Epoch [{epoch + 1}/{config.epochs}], Loss: {avg_epoch_loss:.4f}"
                 )
-
-        return loss_history
 
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()

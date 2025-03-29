@@ -1,7 +1,6 @@
 import gpytorch
 from gpytorch.likelihoods import GaussianLikelihood, MultitaskGaussianLikelihood
 import torch
-from torch import nn
 
 from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.emulators.base import (
@@ -10,6 +9,7 @@ from autoemulate.experimental.emulators.base import (
 )
 from autoemulate.utils import set_random_seed
 from autoemulate.experimental.types import InputLike, OutputLike
+
 
 _default_fit_config = FitConfig(
     epochs=10,
@@ -22,46 +22,49 @@ _default_fit_config = FitConfig(
 )
 
 
-class GPyTorch(nn.Module, Emulator, InputTypeMixin):  # type: ignore
-    """PyTorchBackend is a torch model and implements the base class.
-    This provides default implementations to further subclasses.
-    This means that models can subclass and only need to implement
-    `.forward()` to have an emulator to be run in `AutoEmulate`"""
-
+class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: ignore
     likelihood: GaussianLikelihood
+
+    def forward(self, *inputs, **kwargs):
+        raise NotImplementedError("Subclassing required.")
 
     def fit(  # type: ignore
         self, x: InputLike, y: OutputLike | None, config: FitConfig
     ):
+        # Find optimal model hyperparameters
+        model.train()
+        likelihood.train()
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
+        mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
         for epoch in range(config.epochs):
-            print(epoch)
-            # Find optimal model hyperparameters
-            model.train()
-            likelihood.train()
+            # Zero gradients from previous iteration
+            optimizer.zero_grad()
+            output = model(x)
+            loss = mll(output, y)
+            assert isinstance(loss, torch.Tensor)
+            loss = -loss
+            loss.backward()
 
-            # Use the adam optimizer
-            optimizer = torch.optim.Adam(
-                model.parameters(), lr=0.1
-            )  # Includes GaussianLikelihood parameters
-
-            # "Loss" for GPs - the marginal log likelihood
-            mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
-
-            for i in range(config.epochs):
-                # Zero gradients from previous iteration
-                optimizer.zero_grad()
-                # Output from model
-                output = model(x)
-                # Calc loss and backprop gradients
-                loss = -mll(output, y)
-                loss.backward()
-                # print('Iter %d/%d - Loss: %.3f   lengthscale: %.3f   noise: %.3f' % (
-                #     i + 1, config.epochs, loss.item(),
-                #     model.covar_module.base_kernel.lengthscale.item(),
-                #     model.likelihood.noise.item()
-                # ))
-                print(loss)
-                optimizer.step()
+            print(
+                "Iter %d/%d - Loss: %.3f  kernels: %s  noise: %s  likelihood: %s"
+                % (
+                    epoch + 1,
+                    config.epochs,
+                    loss,
+                    "; ".join(
+                        [
+                            f"{name} | {sub_kernel.lengthscale}"
+                            for (
+                                name,
+                                sub_kernel,
+                            ) in model.covar_module.base_kernel.named_sub_kernels()
+                        ]
+                    ),
+                    model.likelihood.noise,
+                    model.likelihood,
+                )
+            )
+            optimizer.step()
 
         self.is_fitted_ = True
 
@@ -76,7 +79,7 @@ class GPyTorch(nn.Module, Emulator, InputTypeMixin):  # type: ignore
         raise NotImplementedError("This function is not yet implemented.")
 
 
-class GPExactRBF(gpytorch.models.ExactGP, GPyTorch):
+class GPExactRBF(GPyTorch):
     random_state: int | None = None
 
     def __init__(
@@ -84,28 +87,17 @@ class GPExactRBF(gpytorch.models.ExactGP, GPyTorch):
     ):
         if self.random_state is not None:
             set_random_seed(self.random_state)
-        print(type(y), y)
-        assert isinstance(y, torch.Tensor)
+        assert isinstance(y, torch.Tensor) and isinstance(x, torch.Tensor)
         self.y_dim_ = y.ndim
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-        # y = y.astype(torch.float32)
 
-        # GP's work better when the target values are normalized
-        # if self.normalize_y:
-        #     self._y_train_mean = torch.mean(y, axis=0)
-        #     self._y_train_std = torch.std(y, axis=0)
-        #     y = (y - self._y_train_mean) / self._y_train_std
-
-        # default modules
         mean_module = gpytorch.means.ConstantMean(
             batch_shape=torch.Size([self.n_outputs_])
         )
-
-        # combined RBF + constant kernel works well in a lot of cases
         rbf = gpytorch.kernels.RBFKernel(
-            ard_num_dims=self.n_features_in_,  # different lengthscale for each feature
-            batch_shape=torch.Size([self.n_outputs_]),  # batched multioutput
+            ard_num_dims=self.n_features_in_,
+            batch_shape=torch.Size([self.n_outputs_]),
             # seems to work better when we initialize the lengthscale
         ).initialize(lengthscale=torch.ones(self.n_features_in_) * 1.5)
         constant = gpytorch.kernels.ConstantKernel()
@@ -114,23 +106,20 @@ class GPExactRBF(gpytorch.models.ExactGP, GPyTorch):
         covar_module = gpytorch.kernels.ScaleKernel(
             combined, batch_shape=torch.Size([self.n_outputs_])
         )
-
-        # wrapping in ScaleKernel is generally good, as it adds an outputscale parameter
+        # wrapping in ScaleKernel is generally good, as it adds an output scale parameter
         if not isinstance(covar_module, gpytorch.kernels.ScaleKernel):
             covar_module = gpytorch.kernels.ScaleKernel(
                 covar_module, batch_shape=torch.Size([self.n_outputs_])
             )
-
         super().__init__(x, y, likelihood)
         self.mean_module = mean_module
         self.covar_module = covar_module
 
-    def forward(self, x: InputLike) -> OutputLike:
-        # assert x is torch.Tensor
+    def forward(self, x):
         mean = self.mean_module(x)
-        # assert mean is torch.Tensor
+        print(type(mean))
+        assert isinstance(mean, torch.Tensor)
         covar = self.covar_module(x)  # type: ignore
-        # return gpytorch.distributions.MultivariateNormal(mean, covar)
         return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
             gpytorch.distributions.MultivariateNormal(mean, covar)
         )
