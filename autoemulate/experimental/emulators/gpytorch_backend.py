@@ -21,14 +21,14 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: igno
         self, x: InputLike, y: OutputLike | None, config: FitConfig
     ):
         # Find optimal model hyperparameters
-        model.train()
-        likelihood.train()
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
-        mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+        self.train()
+        self.likelihood.train()
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.1)
+        mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self)
         for epoch in range(config.epochs):
             # Zero gradients from previous iteration
             optimizer.zero_grad()
-            output = model(x)
+            output = self(x)
             loss = mll(output, y)
             assert isinstance(loss, torch.Tensor)
             loss = -loss
@@ -46,11 +46,11 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: igno
                             for (
                                 name,
                                 sub_kernel,
-                            ) in model.covar_module.base_kernel.named_sub_kernels()
+                            ) in self.covar_module.base_kernel.named_sub_kernels()
                         ]
                     ),
-                    model.likelihood.noise,
-                    model.likelihood,
+                    self.likelihood.noise,
+                    self.likelihood,
                 )
             )
             optimizer.step()
