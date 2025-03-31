@@ -15,7 +15,7 @@ from torch.utils.data import TensorDataset
 def get_dim_reducer(
     name,
     reduced_dim=8,
-    hidden_dims=[64, 32],
+    hidden_layers=[64, 32],
     epochs=4000,
     batch_size=32,
     beta=1.0,
@@ -50,7 +50,7 @@ def get_dim_reducer(
     elif name == "VAE":
         return VAEOutputPreprocessor(
             latent_dim=reduced_dim,
-            hidden_dims=hidden_dims,
+            hidden_layers=hidden_layers,
             epochs=epochs,
             batch_size=batch_size,
             learning_rate=1e-3,
@@ -119,7 +119,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     ----------
     latent_dim : int, default=3
         Dimension of the encoded representation (latent space)
-    hidden_dims : list of int, default=None
+    hidden_layers : list of int, default=None
         List of hidden layer sizes for encoder
     epochs : int, default=100
         Number of training epochs
@@ -140,7 +140,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         latent_dim=3,
-        hidden_dims=None,
+        hidden_layers=None,
         epochs=800,
         batch_size=32,
         learning_rate=1e-3,
@@ -150,7 +150,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         verbose=False,
     ):
         self.latent_dim = latent_dim
-        self.hidden_dims = [64, 32] if hidden_dims is None else hidden_dims
+        self.hidden_layers = [64, 32] if hidden_layers is None else hidden_layers
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -169,7 +169,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
 
         self.vae = VAE(
             input_dim=input_dim,
-            hidden_dims=self.hidden_dims,
+            hidden_layers=self.hidden_layers,
             latent_dim=self.latent_dim,
         ).to(self.device)
 
@@ -225,7 +225,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         # Initialize the model
         self.vae = VAE(
             input_dim=self.input_dim,
-            hidden_dims=self.hidden_dims,
+            hidden_layers=self.hidden_layers,
             latent_dim=self.latent_dim,
         ).to(self.device)
 
@@ -349,31 +349,31 @@ class VAE(nn.Module):
     ----------
     input_dim : int
         Dimensionality of input data.
-    hidden_dims : list
+    hidden_layers : list
         List of hidden dimensions for encoder and decoder networks.
     latent_dim : int
         Dimensionality of the latent space.
     """
 
-    def __init__(self, input_dim, hidden_dims, latent_dim):
+    def __init__(self, input_dim, hidden_layers, latent_dim):
         super(VAE, self).__init__()
 
         # Encoder layers
         encoder_layers = []
         prev_dim = input_dim
-        for dim in hidden_dims:
+        for dim in hidden_layers:
             encoder_layers.append(nn.Linear(prev_dim, dim))
             encoder_layers.append(nn.ReLU())
             prev_dim = dim
 
         self.encoder = nn.Sequential(*encoder_layers)
-        self.fc_mu = nn.Linear(hidden_dims[-1], latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1], latent_dim)
+        self.fc_mu = nn.Linear(hidden_layers[-1], latent_dim)
+        self.fc_var = nn.Linear(hidden_layers[-1], latent_dim)
 
         # Decoder layers
         decoder_layers = []
         prev_dim = latent_dim
-        for dim in reversed(hidden_dims):
+        for dim in reversed(hidden_layers):
             decoder_layers.append(nn.Linear(prev_dim, dim))
             decoder_layers.append(nn.ReLU())
             prev_dim = dim

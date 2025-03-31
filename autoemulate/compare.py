@@ -812,7 +812,7 @@ class AutoEmulate:
         y_train = self.y[self.train_idxs]
         if preprocessing != "None":
             transformer = self.preprocessing_results[preprocessing]["transformer"]
-            _, y_train = transformer.transform(self.X[self.train_idxs], y_train)
+            y_train = transformer.transform(y_train)
 
         # Create the plot
         figure = _plot_cv(
