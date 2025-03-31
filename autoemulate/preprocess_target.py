@@ -18,6 +18,7 @@ def get_dim_reducer(
     hidden_layers=[64, 32],
     epochs=4000,
     batch_size=32,
+    learning_rate=1e-3,
     beta=1.0,
     verbose=False,
 ):
@@ -53,7 +54,7 @@ def get_dim_reducer(
             hidden_layers=hidden_layers,
             epochs=epochs,
             batch_size=batch_size,
-            learning_rate=1e-3,
+            learning_rate=learning_rate,
             device=None,
             beta=beta,
             verbose=verbose,

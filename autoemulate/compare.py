@@ -248,24 +248,26 @@ class AutoEmulate:
                 prep_name = prep_config["name"]
                 prep_params = prep_config.get("params", {})
 
-                # Create transformer if applicable
-                transformer = None
-                models_trans = self.models
-                if prep_name != "None":
-                    transformer = get_dim_reducer(prep_name, **prep_params)
-                    if transformer is not None:
-                        transformer.fit(self.y)
-                        models_trans = _process_reducers(
-                            models=self.models,
-                            scale_output=self.scale_output,
-                            scaler_output=self.scaler_output,
-                            reduce_dim_output=self.reduce_dim_output,
-                            dim_reducer_output=Reducer(transformer),
-                        )
+                # Get the models to use for this preprocessing method
+                models_to_use = copy.deepcopy(self.models)  # Deep copy to avoid modifying originals
+
+                # Create the actual transformer instance and fit it
+                transformer = get_dim_reducer(prep_name, **prep_params) if prep_name != "None" else None
+
+                if transformer is not None:
+                    transformer.fit(self.y)
+                    # Wrap in non-trainable "Reducer" class for pipeline #TODO: fix name of class and variables
+                    models_to_use = _process_reducers(
+                        models=self.models,
+                        scale_output=self.scale_output,
+                        scaler_output=self.scaler_output,
+                        reduce_dim_output=self.reduce_dim_output,
+                        dim_reducer_output=Reducer(transformer),
+                    )
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
-                    "models": copy.deepcopy(models_trans),
+                    "models": models_to_use,
                     "cv_results": {},
                     "best_model": None,
                     "transformer": transformer,
@@ -290,13 +292,11 @@ class AutoEmulate:
                         try:
                             # hyperparameter search
                             if self.param_search:
-                                self.preprocessing_results[prep_name]["models"][
-                                    i
-                                ] = _optimize_params(
+                                model = _optimize_params( #TODO: self.preprocessing_results[prep_name]["models"][i]
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=model,
+                                    model=model, #TODO: self.preprocessing_results[prep_name]["models"][i]
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,
