@@ -1,13 +1,14 @@
-from numpy.fft import fft2, ifft2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from numpy.fft import fft2
+from numpy.fft import ifft2
 from scipy.integrate import solve_ivp
 from tqdm import tqdm
 
 integrator_keywords = {}
-integrator_keywords['rtol'] = 1e-12
-integrator_keywords['method'] = 'RK45'  
-integrator_keywords['atol'] = 1e-12
+integrator_keywords["rtol"] = 1e-12
+integrator_keywords["method"] = "RK45"
+integrator_keywords["atol"] = 1e-12
 
 
 def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
@@ -19,23 +20,23 @@ def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
     vt = np.reshape(uvt[N : 2 * N], (n, n))
     u = np.real(ifft2(ut))
     v = np.real(ifft2(vt))
-    u3 = u ** 3
-    v3 = v ** 3
-    u2v = (u ** 2) * v
-    uv2 = u * (v ** 2)
+    u3 = u**3
+    v3 = v**3
+    u2v = (u**2) * v
+    uv2 = u * (v**2)
     utrhs = np.reshape((fft2(u - u3 - uv2 + beta * u2v + beta * v3)), (N, 1))
     vtrhs = np.reshape((fft2(v - u2v - v3 - beta * u3 - beta * uv2)), (N, 1))
     uvt_reshaped = np.reshape(uvt, (len(uvt), 1))
     uvt_updated = np.squeeze(
         np.vstack(
-            (-d1 * K22 * uvt_reshaped[:N] + utrhs, 
-             -d2 * K22 * uvt_reshaped[N:] + vtrhs)
+            (-d1 * K22 * uvt_reshaped[:N] + utrhs, -d2 * K22 * uvt_reshaped[N:] + vtrhs)
         )
     )
     return uvt_updated
 
-def simulate_reactiondiffusion(x, return_last_snap = True, n=32, L=20, T=10., dt=0.1):
-    """"
+
+def simulate_reactiondiffusion(x, return_last_snap=True, n=32, L=20, T=10.0, dt=0.1):
+    """ "
     Simulate the reaction-diffusion PDE for a given set of parameters
 
     Parameters
@@ -46,7 +47,7 @@ def simulate_reactiondiffusion(x, return_last_snap = True, n=32, L=20, T=10., dt
         Number of spatial points in each direction
     L : int
         Domain size in X and Y directions
-    T : float 
+    T : float
         Total time to simulate
     dt : float
         Time step size
@@ -69,13 +70,14 @@ def simulate_reactiondiffusion(x, return_last_snap = True, n=32, L=20, T=10., dt
     y_grid = x_uniform[:n]
     n2 = int(n / 2)
     # Define Fourier wavevectors (kx, ky)
-    kx = (2 * np.pi / L) * np.hstack((np.linspace(0, n2 - 1, n2), 
-                                    np.linspace(-n2, -1, n2)))
+    kx = (2 * np.pi / L) * np.hstack(
+        (np.linspace(0, n2 - 1, n2), np.linspace(-n2, -1, n2))
+    )
     ky = kx
     # Get 2D meshes in (x, y) and (kx, ky)
     X_grid, Y_grid = np.meshgrid(x_grid, y_grid)
     KX, KY = np.meshgrid(kx, ky)
-    K2 = KX ** 2 + KY ** 2
+    K2 = KX**2 + KY**2
     K22 = np.reshape(K2, (N, 1))
 
     m = 1
@@ -85,26 +87,29 @@ def simulate_reactiondiffusion(x, return_last_snap = True, n=32, L=20, T=10., dt
     v = np.zeros((len(x_grid), len(y_grid), len(t)))
 
     # Initial conditions
-    u[:, :, 0] = np.tanh(np.sqrt(X_grid ** 2 + Y_grid ** 2)) * np.cos(
-        m * np.angle(X_grid + 1j * Y_grid) - (np.sqrt(X_grid ** 2 + Y_grid ** 2))
+    u[:, :, 0] = np.tanh(np.sqrt(X_grid**2 + Y_grid**2)) * np.cos(
+        m * np.angle(X_grid + 1j * Y_grid) - (np.sqrt(X_grid**2 + Y_grid**2))
     )
-    v[:, :, 0] = np.tanh(np.sqrt(X_grid ** 2 + Y_grid ** 2)) * np.sin(
-        m * np.angle(X_grid + 1j * Y_grid) - (np.sqrt(X_grid ** 2 + Y_grid ** 2))
+    v[:, :, 0] = np.tanh(np.sqrt(X_grid**2 + Y_grid**2)) * np.sin(
+        m * np.angle(X_grid + 1j * Y_grid) - (np.sqrt(X_grid**2 + Y_grid**2))
     )
 
     # uvt is the solution vector in Fourier space, so below
     # we are initializing the 2D FFT of the initial condition, uvt0
     uvt0 = np.squeeze(
         np.hstack(
-            (np.reshape(fft2(u[:, :, 0]), (1, N)), 
-            np.reshape(fft2(v[:, :, 0]), (1, N)))
+            (np.reshape(fft2(u[:, :, 0]), (1, N)), np.reshape(fft2(v[:, :, 0]), (1, N)))
         )
     )
 
     # Solve the PDE in the Fourier space, where it rseduces to system of ODEs
     uvsol = solve_ivp(
-        reaction_diffusion, (t[0], t[-1]), y0=uvt0, t_eval=t, 
-        args=(K22, d1, d2, beta, n, N), **integrator_keywords
+        reaction_diffusion,
+        (t[0], t[-1]),
+        y0=uvt0,
+        t_eval=t,
+        args=(K22, d1, d2, beta, n, N),
+        **integrator_keywords
     )
     uvsol = uvsol.y
 
@@ -122,4 +127,3 @@ def simulate_reactiondiffusion(x, return_last_snap = True, n=32, L=20, T=10., dt
         return u_sol, v_sol
     else:
         return u, v
-

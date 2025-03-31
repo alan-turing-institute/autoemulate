@@ -18,9 +18,11 @@ from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import _process_models
+from autoemulate.model_processing import _process_reducers
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import Reducer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
@@ -139,10 +141,6 @@ class AutoEmulate:
             scaler=scaler,
             reduce_dim=reduce_dim,
             dim_reducer=dim_reducer,
-            scale_output=scale_output,
-            scaler_output=scaler_output,
-            reduce_dim_output=reduce_dim_output,
-            dim_reducer_output=dim_reducer_output,
         )
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
@@ -237,24 +235,56 @@ class AutoEmulate:
         # Initialize dictionary to store results
         self.preprocessing_results = {}
 
-        # Handle case when no preprocessing methods are specified
+        # Determine preprocessing methods
+
         if self.preprocessing_methods is None or len(self.preprocessing_methods) == 0:
             # Default to no preprocessing
-            prep_name = "None"
-            self.preprocessing_results[prep_name] = {
-                "models": copy.deepcopy(self.models),
-                "cv_results": {},
-                "best_model": None,
-                "transformer": None,
-                "params": {},
-            }
+            self.preprocessing_methods = [{"name": "None", "params": {}}]
 
-            with tqdm(total=len(self.models), desc=pb_text) as pbar:
+        with tqdm(
+            total=len(self.models) * len(self.preprocessing_methods), desc=pb_text
+        ) as pbar:
+            for prep_config in self.preprocessing_methods:
+                prep_name = prep_config["name"]
+                prep_params = prep_config.get("params", {})
+
+                # Create transformer if applicable
+                transformer = None
+                models_trans = self.models
+                if prep_name != "None":
+                    transformer = get_dim_reducer(prep_name, **prep_params)
+                    if transformer is not None:
+                        transformer.fit(self.y)
+                        models_trans = _process_reducers(
+                            models=self.models,
+                            scale_output=self.scale_output,
+                            scaler_output=self.scaler_output,
+                            reduce_dim_output=self.reduce_dim_output,
+                            dim_reducer_output=Reducer(transformer),
+                        )
+
+                # Initialize storage for this preprocessing method
+                self.preprocessing_results[prep_name] = {
+                    "models": copy.deepcopy(models_trans),
+                    "cv_results": {},
+                    "best_model": None,
+                    "transformer": transformer,
+                    "params": prep_params,
+                }
+
+                # Process each model
                 for i, model in enumerate(
                     self.preprocessing_results[prep_name]["models"]
                 ):
                     model_name = get_model_name(model)
-                    pbar.set_description(f"{pb_text} {model_name}")
+
+                    # Update progress bar description
+                    if prep_name == "None":
+                        pbar.set_description(f"{pb_text} {model_name}")
+                    else:
+                        pbar.set_description(
+                            f"{pb_text} {prep_name} | Model: {model_name}"
+                        )
 
                     with _redirect_warnings(self.logger):
                         try:
@@ -279,142 +309,20 @@ class AutoEmulate:
                                 X=self.X[self.train_idxs],
                                 y=self.y[self.train_idxs],
                                 cv=self.cross_validator,
-                                model=self.preprocessing_results[prep_name]["models"][
-                                    i
-                                ],
+                                model=model,
                                 metrics=self.metrics,
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
                             )
                         except Exception:
-                            self.logger.exception(
-                                f"Error cross-validating {model_name}"
-                            )
-                            continue
-                        finally:
-                            pbar.update(1)
-
-                        # Store the fitted model and results
-                        self.preprocessing_results[prep_name]["models"][
-                            i
-                        ] = fitted_model
-                        self.preprocessing_results[prep_name]["cv_results"][
-                            model_name
-                        ] = cv_results
-
-                        # Add results to scores_df with preprocessing method
-                        for metric_name, metric_values in cv_results.items():
-                            if metric_name.startswith("test_"):
-                                metric = metric_name.replace("test_", "")
-                                for fold_idx, fold_score in enumerate(metric_values):
-                                    new_row = {
-                                        "model": model_name,
-                                        "short": get_short_model_name(model),
-                                        "preprocessing": prep_name,
-                                        "metric": metric,
-                                        "fold": fold_idx,
-                                        "score": fold_score,
-                                    }
-                                    self.scores_df = pd.concat(
-                                        [self.scores_df, pd.DataFrame([new_row])],
-                                        ignore_index=True,
-                                    )
-
-            # Get best model for this case (no preprocessing)
-            self.preprocessing_results[prep_name][
-                "best_model"
-            ] = self.get_best_model_for_prep(
-                prep_results=self.preprocessing_results[prep_name], metric="r2"
-            )
-
-            # Set the best combination
-            self.best_prep_method = prep_name
-            self.best_model = self.preprocessing_results[prep_name]["best_model"]
-            self.best_transformer = None
-            self.best_combination = {
-                "preprocessing": self.best_prep_method,
-                "model": get_model_name(self.best_model),
-                "transformer": self.best_transformer,
-            }
-
-            return self.best_combination
-
-        # Original code for when preprocessing_methods are specified
-        with tqdm(
-            total=len(self.models) * len(self.preprocessing_methods),
-            desc="Initializing",
-        ) as pbar:
-            for prep_config in self.preprocessing_methods:
-                prep_name = prep_config["name"]
-                prep_params = prep_config["params"]
-
-                # Create the actual transformer instance
-                transformer = (
-                    None
-                    if prep_name == "None"
-                    else get_dim_reducer(prep_name, **prep_params)
-                )
-
-                # Apply preprocessing to data
-                X_transformed = self.X  # X remains unchanged
-                y_transformed = self.y  # Default if no transformation
-
-                if transformer is not None:
-                    # Apply your custom target transformer
-                    _, y_transformed = transformer.fit_transform(self.X, self.y)
-
-                # Initialize storage for this preprocessing method
-                self.preprocessing_results[prep_name] = {
-                    "models": copy.deepcopy(self.models),
-                    "cv_results": {},
-                    "best_model": None,
-                    "transformer": transformer,
-                    "params": prep_params,
-                }
-
-                for i, model in enumerate(
-                    self.preprocessing_results[prep_name]["models"]
-                ):
-                    model_name = get_model_name(model)
-                    pbar.set_description(f"{pb_text} {prep_name} | Model: {model_name}")
-
-                    with _redirect_warnings(self.logger):
-                        try:
-                            # hyperparameter search
-                            if self.param_search:
-                                self.preprocessing_results[prep_name]["models"][
-                                    i
-                                ] = _optimize_params(
-                                    X=self.X[self.train_idxs],
-                                    y=y_transformed[self.train_idxs],
-                                    cv=self.cross_validator,
-                                    model=model,
-                                    search_type=self.search_type,
-                                    niter=self.param_search_iters,
-                                    param_space=None,
-                                    n_jobs=self.n_jobs,
-                                    logger=self.logger,
+                            error_msg = f"Error cross-validating {model_name}"
+                            if prep_name != "None":
+                                error_msg = (
+                                    f"Error cross-validating {prep_name} - {model_name}"
                                 )
-
-                            # run cross validation
-                            fitted_model, cv_results = _run_cv(
-                                X=self.X[self.train_idxs],
-                                y=y_transformed[self.train_idxs],
-                                cv=self.cross_validator,
-                                model=self.preprocessing_results[prep_name]["models"][
-                                    i
-                                ],
-                                metrics=self.metrics,
-                                n_jobs=self.n_jobs,
-                                logger=self.logger,
-                            )
-                        except Exception:
-                            self.logger.exception(
-                                f"Error cross-validating {prep_name} - {model_name}"
-                            )
-                            continue
-                        finally:
+                            self.logger.exception(error_msg)
                             pbar.update(1)
+                            continue
 
                         # Store the fitted model and results
                         self.preprocessing_results[prep_name]["models"][
@@ -441,6 +349,9 @@ class AutoEmulate:
                                         [self.scores_df, pd.DataFrame([new_row])],
                                         ignore_index=True,
                                     )
+
+                        # Update progress bar
+                        pbar.update(1)
 
                 # Get best model for this preprocessing method
                 self.preprocessing_results[prep_name][
@@ -807,7 +718,7 @@ class AutoEmulate:
         y_train = self.y[self.train_idxs]
         if preprocessing != "None":
             transformer = self.preprocessing_results[preprocessing]["transformer"]
-            _, y_train = transformer.transform(self.X[self.train_idxs], y_train)
+            y_train = transformer.transform(y_train)
 
         # Create the plot
         figure = _plot_cv(
@@ -880,17 +791,18 @@ class AutoEmulate:
             transformer = self.preprocessing_results[preprocessing]["transformer"]
 
         # Get true values (transform if needed)
-        y_true = self.y[self.test_idxs]
-        if transformer is not None:
-            _, y_true = transformer.transform(self.X[self.test_idxs], y_true)
+        # y_true = self.y[self.test_idxs]
+        # if transformer is not None:
+        #    _, y_true = transformer.transform(self.X[self.test_idxs], y_true)
 
         # Get predictions
         y_pred = model.predict(self.X[self.test_idxs])
+        y_true = self.y[self.test_idxs]
 
         # If preprocessing was applied, inverse transform predictions for evaluation
-        if transformer is not None and hasattr(transformer, "inverse_transform"):
-            y_pred = transformer.inverse_transform(self.X[self.test_idxs], y_pred)[1]
-            y_true = self.y[self.test_idxs]  # Revert to original y values
+        # if transformer is not None and hasattr(transformer, "inverse_transform"):
+        #    y_pred = transformer.inverse_transform(self.X[self.test_idxs], y_pred)[1]
+        #   y_true = self.y[self.test_idxs]  # Revert to original y values
 
         # Calculate metrics
         scores = {}
@@ -958,23 +870,24 @@ class AutoEmulate:
         if model is None:
             model = self.best_model
 
-        if preprocessing is None:
-            if hasattr(self, "best_prep_method"):
-                preprocessing = self.best_prep_method
-            else:
-                preprocessing = "None"
-
+        """
         transformer = None
         if (
             hasattr(self, "preprocessing_results")
             and preprocessing in self.preprocessing_results
         ):
             transformer = self.preprocessing_results[preprocessing]["transformer"]
-            
+
+        scaler_output = None
+        if (
+            hasattr(model.transformer.named_steps, "scaler_output")
+            and preprocessing in self.preprocessing_results
+        ):
+            scaler_output = model.transformer.named_steps["scaler_output"]
+        """
+
         fig = _plot_model(
             model,
-            preprocessing,
-            transformer,
             self.X[self.test_idxs],
             self.y[self.test_idxs],
             style,

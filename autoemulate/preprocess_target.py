@@ -14,10 +14,9 @@ from torch.utils.data import TensorDataset
 
 def get_dim_reducer(
     name,
-    n_components=8,
-    encoding_dim=8,
-    hidden_layers=None,
-    epochs=1200,
+    reduced_dim=8,
+    hidden_layers=[64, 32],
+    epochs=4000,
     batch_size=32,
     beta=1.0,
     verbose=False,
@@ -45,17 +44,19 @@ def get_dim_reducer(
 
     # Return the appropriate dimensionality reducer
     if name == "PCA":
-        return TargetPCA(n_components)
+        return PCA(reduced_dim)
+        # return PCA(n_components=n_components) #check! Marjan was sayin base class should not have fit and etc.
 
     elif name == "VAE":
         return VAEOutputPreprocessor(
-            latent_dim=n_components,
-            hidden_dims=[64, 32],
-            epochs=2000,
-            batch_size=32,
+            latent_dim=reduced_dim,
+            hidden_layers=hidden_layers,
+            epochs=epochs,
+            batch_size=batch_size,
             learning_rate=1e-3,
             device=None,
-            verbose=False,
+            beta=beta,
+            verbose=verbose,
         )
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
@@ -68,86 +69,99 @@ class TargetPCA(BaseEstimator, TransformerMixin):
         self.n_components = n_components
         self.pca = PCA(n_components=n_components)
 
-    def _validate_y(self, y):
-        """Validate that y is provided and properly shaped."""
-        if y is None:
-            raise ValueError("This is a target transformer - y cannot be None")
-        return y.reshape(-1, 1) if len(np.array(y).shape) == 1 else y
+    def _validate_data(self, X):
+        """Validate that X is provided and properly shaped."""
+        if X is None:
+            raise ValueError("This is a PCA transformer - input data cannot be None")
+        return X.reshape(-1, 1) if len(np.array(X).shape) == 1 else X
 
-    def fit(self, X, y=None):
-        y_reshaped = self._validate_y(y)
-        self.pca.fit(y_reshaped)
+    def fit(self, X):
+        X_reshaped = self._validate_data(X)
+        self.pca.fit(X_reshaped)
         return self
 
-    def transform(self, X, y=None):
-        y_reshaped = self._validate_y(y)
-        y_transformed = self.pca.transform(y_reshaped)
-        return X, y_transformed
+    def transform(self, X):
+        X_reshaped = self._validate_data(X)
+        X_transformed = self.pca.transform(X_reshaped)
+        return X_transformed
 
-    def fit_transform(self, X, y=None):
-        y_reshaped = self._validate_y(y)
-        y_transformed = self.pca.fit_transform(y_reshaped)
-        return X, y_transformed
+    def fit_transform(self, X):
+        X_reshaped = self._validate_data(X)
+        X_transformed = self.pca.fit_transform(X_reshaped)
+        return X_transformed
 
-    def inverse_transform(self, X, y=None):
-        y_reshaped = self._validate_y(y)
-        y_original = self.pca.inverse_transform(y_reshaped)
-        return X, y_original
-    
-    def inverse_transform_std(self, y_std):
-        '''
+    def inverse_transform(self, X):
+        X_reshaped = self._validate_data(X)
+        X_original = self.pca.inverse_transform(X_reshaped)
+        return X_original
+
+    def inverse_transform_std(self, x_std):
+        """
         As PCA is a linear transformation, the variance in the origianl coordinate system can be calculated as:
         σ²_X = Σ_j (A_j)^2 * σ²_Y_j,
         where A_j is the j-th principal component and σ²_Y_j is the variance of the j-th principal component.
-        '''
-        n_pca_components = y_std.shape[1]
+        """
+        n_pca_components = x_std.shape[1]
 
-        components = self.pca.components_[:n_pca_components]  
-        x_std = np.sqrt(np.sum((y_std[:, np.newaxis, :] * components.T) ** 2, axis=2)) 
-        return x_std
+        components = self.pca.components_[:n_pca_components]
+        x_std_transformed = np.sqrt(
+            np.sum((x_std[:, np.newaxis, :] * components.T) ** 2, axis=2)
+        )
+        return x_std_transformed
+
 
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
     """
-    A scikit-learn compatible transformer that applies a Variational Autoencoder (VAE)
-    to target values (y) in a sklearn pipeline.
-
-    This class wraps a PyTorch VAE model to preprocess output data through the latent space
-    and provides inverse transformation capabilities.
+    Sklearn-compatible wrapper for PyTorch Variational Autoencoder to use as dimensionality reducer.
+    Implements fit, transform, and inverse_transform methods required for sklearn pipelines.
 
     Parameters
     ----------
     latent_dim : int, default=3
-        Dimension of the latent space.
-    hidden_dims : list, default=[64, 32]
-        Hidden dimensions for the VAE encoder and decoder networks.
+        Dimension of the encoded representation (latent space)
+    hidden_layers : list of int, default=None
+        List of hidden layer sizes for encoder
     epochs : int, default=100
-        Number of training epochs for the VAE.
+        Number of training epochs
     batch_size : int, default=32
-        Batch size for training.
-    learning_rate : float, default=1e-3
-        Learning rate for the Adam optimizer.
-    device : str, default='cuda' if available else 'cpu'
-        Device to use for computation.
+        Batch size for training
+    learning_rate : float, default=0.001
+        Learning rate for optimizer
+    beta : float, default=1.0
+        Weight for KL divergence in the loss function (beta-VAE)
+    device : str, default=None
+        Device to run the model on ('cpu' or 'cuda'). If None, use cuda if available.
+    random_state : int, default=None
+        Random seed for reproducibility
+    verbose : bool, default=False
+        Whether to print training progress
     """
 
     def __init__(
         self,
         latent_dim=3,
-        hidden_dims=None,
+        hidden_layers=None,
         epochs=800,
         batch_size=32,
         learning_rate=1e-3,
         device=None,
+        random_state=None,
+        beta=1.0,
         verbose=False,
     ):
         self.latent_dim = latent_dim
-        self.hidden_dims = [64, 32] if hidden_dims is None else hidden_dims
+        self.hidden_layers = [64, 32] if hidden_layers is None else hidden_layers
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.beta = beta
+        self.random_state = random_state
         self.verbose = verbose
+
+        # Will be initialized during fit
         self.vae = None
+        self.input_dim = None
         self.is_fitted_ = False
 
     def _init_vae(self, input_dim):
@@ -155,74 +169,91 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
 
         self.vae = VAE(
             input_dim=input_dim,
-            hidden_dims=self.hidden_dims,
+            hidden_layers=self.hidden_layers,
             latent_dim=self.latent_dim,
         ).to(self.device)
 
-    def _create_data_loader(self, y):
-        """Create a PyTorch DataLoader for the target values."""
-        y_tensor = torch.FloatTensor(y).to(self.device)
-        dataset = torch.utils.data.TensorDataset(y_tensor)
-        return torch.utils.data.DataLoader(
-            dataset, batch_size=self.batch_size, shuffle=True
-        )
+    # def _create_data_loader(self, y):
+    #    """Create a PyTorch DataLoader for the target values."""
+    #    y_tensor = torch.FloatTensor(y).to(self.device)
+    #    dataset = torch.utils.data.TensorDataset(y_tensor)
+    #    return torch.utils.data.DataLoader(
+    #        dataset, batch_size=self.batch_size, shuffle=True
+    #    )
+
+    def _check_is_fitted(self):
+        """Check if the model is fitted."""
+        if not self.is_fitted_:
+            raise ValueError(
+                "The VAEOutputPreprocessor has not been fitted yet."
+                "Call 'fit' with appropriate arguments before using this estimator."
+            )
 
     def fit(self, X, y=None, **fit_params):
         """
-        Fit the VAE model to the target values.
+        Fit the VAE on the training data.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Input data (not used but required by the sklearn API).
-        y : array-like, shape (n_samples, n_outputs)
-            Target values to transform.
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored. Present for API consistency.
 
         Returns
         -------
         self : object
             Returns self.
         """
-        if y is None:
-            raise ValueError(
-                "Target values (y) are required for VAEOutputPreprocessor."
-            )
+        # Set random seed for reproducibility
+        if self.random_state is not None:
+            torch.manual_seed(self.random_state)
+            np.random.seed(self.random_state)
 
-        # Ensure y is 2D
-        if y.ndim == 1:
-            y = y.reshape(-1, 1)
+        # Get input dimension from data
+        self.input_dim = X.shape[1]
 
-        # Initialize VAE with input dimension from y
-        self.n_features_out_ = y.shape[1]
-        self._init_vae(input_dim=self.n_features_out_)
+        # Convert data to numpy array if needed
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
 
-        # Create data loader
-        data_loader = self._create_data_loader(y)
+        # Create dataset and dataloader
+        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
+        dataset = TensorDataset(X_tensor, X_tensor)  # Input and target are the same
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+
+        # Initialize the model
+        self.vae = VAE(
+            input_dim=self.input_dim,
+            hidden_layers=self.hidden_layers,
+            latent_dim=self.latent_dim,
+        ).to(self.device)
 
         # Train the VAE
         optimizer = optim.Adam(self.vae.parameters(), lr=self.learning_rate)
+
+        # Training loop
         self.vae.train()
 
         for epoch in range(self.epochs):
             total_loss = 0
-            for batch in data_loader:
-                y_batch = batch[0]
-
-                # Zero gradients
-                optimizer.zero_grad()
-
+            for batch_x, _ in data_loader:
                 # Forward pass
-                recon_y, mu, log_var = self.vae(y_batch)
+                recon_batch, mu, log_var = self.vae(batch_x)
 
                 # Calculate loss
-                loss = self.vae.loss_function(recon_y, y_batch, mu, log_var)
+                loss = self.vae.loss_function(
+                    recon_batch, batch_x, mu, log_var, beta=self.beta
+                )
 
                 # Backward pass and optimize
+                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
                 total_loss += loss.item()
 
+            # Print progress
             if self.verbose and (epoch + 1) % 10 == 0:
                 print(
                     f"Epoch {epoch+1}/{self.epochs}, Loss: {total_loss/len(data_loader):.4f}"
@@ -231,86 +262,73 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
         self.is_fitted_ = True
         return self
 
-    def transform(self, X, y=None):
+    def transform(self, X):
         """
-        Transform the target values using the VAE's latent representation.
+        Reduce dimensionality by encoding the data to the latent space.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Input data (passed through unchanged).
-        y : array-like, shape (n_samples, n_outputs)
-            Target values to transform.
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The data to transform.
 
         Returns
         -------
-        X_new : array-like, shape (n_samples, n_features)
-            Same as input X (unchanged).
-        y_new : array-like, shape (n_samples, latent_dim)
-            Transformed target values (encoded to latent space).
+        X_new : ndarray of shape (n_samples, encoding_dim)
+            Transformed array (means of the latent distributions).
         """
-        if not self.is_fitted_:
-            raise ValueError("The VAEOutputPreprocessor has not been fitted yet.")
+        self._check_is_fitted()
 
-        if y is None:
-            return X
+        # Convert data to numpy array if needed
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
 
-        # Ensure y is 2D
-        if y.ndim == 1:
-            y = y.reshape(-1, 1)
+        # Convert to PyTorch tensor
+        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
 
-        # Convert to torch tensor
-        y_tensor = torch.FloatTensor(y).to(self.device)
-
-        # Set model to evaluation mode
-        self.vae.eval()
-
+        # Encode data
         # Get latent representation (mu part only, no sampling in transform)
+        self.vae.eval()
         with torch.no_grad():
-            mu, _ = self.vae.encode(y_tensor)
-            y_transformed = mu.cpu().numpy()
+            mu, _ = self.vae.encode(X_tensor)
+            X_encoded = mu.cpu().numpy()
 
-        return X, y_transformed
+        return X_encoded
 
-    def fit_transform(self, X, y=None, **fit_params):
-        self.fit(X, y, **fit_params)
-        return self.transform(X, y)
+    def fit_transform(self, X, **fit_params):
+        # Fit the model
+        self.fit(X, **fit_params)
+        # Return the transformed data
+        return self.transform(X)
 
-    def inverse_transform(self, X, y=None):
+    def inverse_transform(self, X):
         """
-        Inverse transform from latent space back to original target space.
+        Transform encoded data back to the original space.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Input data (passed through unchanged).
-        y : array-like, shape (n_samples, latent_dim)
-            Latent representations to inverse transform.
+        X : {array-like, sparse matrix} of shape (n_samples, encoding_dim)
+            The encoded data (in latent space).
 
         Returns
         -------
-        X_new : array-like, shape (n_samples, n_features)
-            Same as input X (unchanged).
-        y_new : array-like, shape (n_samples, n_original_outputs)
-            Reconstructed target values in original space.
+        X_original : ndarray of shape (n_samples, n_features)
+            Data in original space.
         """
-        if not self.is_fitted_:
-            raise ValueError("The VAEOutputPreprocessor has not been fitted yet.")
+        self._check_is_fitted()
 
-        if y is None:
-            return X
+        # Convert data to numpy array if needed
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
 
-        # Convert to torch tensor
-        y_tensor = torch.FloatTensor(y).to(self.device)
-
-        # Set model to evaluation mode
-        self.vae.eval()
+        # Convert to PyTorch tensor
+        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
 
         # Decode from latent representation
+        self.vae.eval()
         with torch.no_grad():
-            y_reconstructed = self.vae.decode(y_tensor).cpu().numpy()
+            X_reconstructed = self.vae.decode(X_tensor).cpu().numpy()
 
-        return X, y_reconstructed
+        return X_reconstructed
 
     @property
     def verbose(self):
@@ -331,31 +349,31 @@ class VAE(nn.Module):
     ----------
     input_dim : int
         Dimensionality of input data.
-    hidden_dims : list
+    hidden_layers : list
         List of hidden dimensions for encoder and decoder networks.
     latent_dim : int
         Dimensionality of the latent space.
     """
 
-    def __init__(self, input_dim, hidden_dims, latent_dim):
+    def __init__(self, input_dim, hidden_layers, latent_dim):
         super(VAE, self).__init__()
 
         # Encoder layers
         encoder_layers = []
         prev_dim = input_dim
-        for dim in hidden_dims:
+        for dim in hidden_layers:
             encoder_layers.append(nn.Linear(prev_dim, dim))
             encoder_layers.append(nn.ReLU())
             prev_dim = dim
 
         self.encoder = nn.Sequential(*encoder_layers)
-        self.fc_mu = nn.Linear(hidden_dims[-1], latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1], latent_dim)
+        self.fc_mu = nn.Linear(hidden_layers[-1], latent_dim)
+        self.fc_var = nn.Linear(hidden_layers[-1], latent_dim)
 
         # Decoder layers
         decoder_layers = []
         prev_dim = latent_dim
-        for dim in reversed(hidden_dims):
+        for dim in reversed(hidden_layers):
             decoder_layers.append(nn.Linear(prev_dim, dim))
             decoder_layers.append(nn.ReLU())
             prev_dim = dim
@@ -388,7 +406,7 @@ class VAE(nn.Module):
         recon = self.decode(z)
         return recon, mu, log_var
 
-    def loss_function(self, recon_x, x, mu, log_var):
+    def loss_function(self, recon_x, x, mu, log_var, beta=1.0):
         """Calculate VAE loss: reconstruction + KL divergence."""
         # MSE reconstruction loss
         recon_loss = F.mse_loss(recon_x, x, reduction="sum")
@@ -396,12 +414,13 @@ class VAE(nn.Module):
         # KL divergence
         kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-        return recon_loss + kl_loss
+        return recon_loss + beta * kl_loss
 
-def reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000):
+
+def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=1000):
     """
     Sample from a normal distribution for each simulation and reduced dimension.
-    
+
     Parameters:
     -----------
     y_pred : np.ndarray
@@ -410,7 +429,7 @@ def reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000):
         Standard deviation values with shape (n_simulations, reduced_dim)
     n_samples : int
         Number of samples to generate for each simulation
-    
+
     Returns:
     --------
     pred_mean: np.ndarray
@@ -419,26 +438,57 @@ def reconstruct_mean_std(y_pred, y_std, transformer, n_samples=1000):
         Standard deviation values with shape (n_simulations, original_dim)
     """
 
-    #if transformer is PCA (so linear), you can reconstruct the mean and std,
-    #otherwise, we sample from the distribution
-    if isinstance(transformer, TargetPCA):
-        pred_mean = transformer.inverse_transform(None, y_pred)[1]
-        pred_std = transformer.inverse_transform_std(y_std)
+    # if transformer is PCA (so linear), you can reconstruct the mean and std,
+    # otherwise, we sample from the distribution
+    """
+    if model.transformer is not None and isinstance(transformer.base_model, TargetPCA):
+        x_reconstructed_mean = model.transformer_.inverse_transform(x_latent_pred)
+        x_reconstructed_std = transformer.base_model.inverse_transform_std(x_latent_std)  # TODO: fix such this is a method of the transformer
 
     else:
-        samples = np.zeros((y_pred.shape[0], n_samples, y_pred.shape[1]))
-        
-        for i in range(y_pred.shape[0]):
-            # Sample from normal distribution for each simulation
-            samples[i] = np.random.normal(
-                loc=y_pred[i], 
-                scale=y_std[i], 
-                size=(n_samples, y_pred.shape[1])
-            )
-        
-        if transformer is not None and hasattr(transformer, "inverse_transform"):
-            samples = transformer.inverse_transform(None, samples)[1]
+    """
+    # TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
+    n_simulations, n_features = x_latent_pred.shape
+    samples = []
 
-        pred_mean, pred_std = np.mean(samples, axis=1), np.std(samples, axis=1)
+    for i in range(n_simulations):
+        # Sample from normal distribution for each simulation
+        samples_latent = np.random.normal(
+            loc=x_latent_pred[i],
+            scale=x_latent_std[i],
+            size=(n_samples, n_features),
+        )
+        samples.append(model.transformer_.inverse_transform(samples_latent))
+    samples = np.array(samples)
 
-    return pred_mean, pred_std
+    x_reconstructed_mean, x_reconstructed_std = np.mean(samples, axis=1), np.std(
+        samples, axis=1
+    )
+
+    return x_reconstructed_mean, x_reconstructed_std
+
+
+class Reducer:
+    def __init__(self, base_model):
+        self.base_model = (
+            base_model  # Expect an instance of either targetPCA or targetVAE
+        )
+
+    def fit(self, X, y=None):
+        return
+
+    def transform(self, X, y=None):
+        return self.base_model.transform(X)
+
+    def inverse_transform(self, X, y=None):
+        return self.base_model.inverse_transform(X)
+
+    def fit_transform(self, X, y=None):
+        return self.transform(X)
+
+    def inverse_transform_std(self, X):
+        return self.base_model.inverse_transform_std(X)
+
+    # def __getattr__(self, name):
+    #    """Delegate attribute access to the base model if not found in Reducer."""
+    #    return getattr(self.base_model, name)
