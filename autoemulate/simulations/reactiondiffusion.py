@@ -35,7 +35,7 @@ def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
     return uvt_updated
 
 
-def simulate_reactiondiffusion(x, return_last_snap=True, n=32, L=20, T=10.0, dt=0.1):
+def simulate_reactiondiffusion(x, return_timeseries=False, n=32, L=20, T=10.0, dt=0.1):
     """ "
     Simulate the reaction-diffusion PDE for a given set of parameters
 
@@ -120,10 +120,11 @@ def simulate_reactiondiffusion(x, return_last_snap=True, n=32, L=20, T=10.0, dt=
         u[:, :, j] = np.real(ifft2(ut))
         v[:, :, j] = np.real(ifft2(vt))
 
-    if return_last_snap:
+    if return_timeseries:
+
+        return u.transpose(2,0,1), v.transpose(2,0,1)
+    else:
         # Return the last snapshot
         u_sol = u[:, :, -1]
         v_sol = v[:, :, -1]
         return u_sol, v_sol
-    else:
-        return u, v
