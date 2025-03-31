@@ -1,4 +1,4 @@
-from . import pool, membership, stream, base
+from . import base, membership, pool, stream
 from .base import Emulator, Simulator
 
 # # TODO: automate this with Learner.hierarchy()

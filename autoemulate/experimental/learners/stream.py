@@ -1,7 +1,9 @@
-from dataclasses import dataclass
 from abc import abstractmethod
-from typing import Union, Tuple, Dict, List, Any, Iterator
-import numpy as np, torch
+from dataclasses import dataclass
+from typing import Any, Dict, Iterator, List, Tuple, Union
+
+import numpy as np
+import torch
 from tqdm import tqdm
 
 from .base import Active, Simulator

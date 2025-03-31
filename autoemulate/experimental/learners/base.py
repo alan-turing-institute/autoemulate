@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field, InitVar
 from abc import ABC, abstractmethod
-from typing import Union, Tuple, Dict, List, Any
-import torch
-from torcheval.metrics import MeanSquaredError, R2Score
-from anytree import Node, RenderTree
+from dataclasses import InitVar, dataclass, field
 from inspect import isabstract
+from typing import Any, Dict, List, Tuple, Union
+
+import torch
+from anytree import Node, RenderTree
+from torcheval.metrics import MeanSquaredError, R2Score
 
 
 @dataclass(kw_only=True)

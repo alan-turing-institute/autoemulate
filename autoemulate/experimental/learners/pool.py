@@ -1,11 +1,13 @@
-from dataclasses import dataclass, field, InitVar
 from abc import ABC, abstractmethod
-from typing import Union, Tuple, Dict, List, Any
-import numpy as np, torch
+from dataclasses import InitVar, dataclass, field
+from inspect import isabstract
+from typing import Any, Dict, List, Tuple, Union
+
+import numpy as np
+import torch
+from anytree import Node, RenderTree
 from torcheval.metrics import MeanSquaredError, R2Score
 from tqdm import tqdm
-from anytree import Node, RenderTree
-from inspect import isabstract
 
 from .base import Active
 
