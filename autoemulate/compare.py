@@ -28,7 +28,7 @@ from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
-
+from autoemulate.history_matching import HistoryMatching
 
 class AutoEmulate:
     """
@@ -622,3 +622,27 @@ class AutoEmulate:
 
         """
         return _plot_sensitivity_analysis(results, index, n_cols, figsize)
+
+
+    def refine_with_history_matching(self, simulator, obs, threshold=1.0, n_new_points=10):
+        """
+        Refine the parameter space using history matching.
+        """
+        history_matcher = HistoryMatching(threshold=threshold)
+        
+        pred_mean, pred_std = self.gp_final.predict(self.X, return_std=True)
+        pred_var = np.square(pred_std)
+        predictions = (pred_mean, pred_var)
+
+        hist_match = history_matcher.history_matching(obs, predictions)
+        nroy_mask = hist_match["NROY"]
+        X_nroy = self.X[nroy_mask]
+
+        if len(X_nroy) > 0:
+            new_X_candidates = history_matcher._sample_new_points(X_nroy, n_new_points)
+            new_Y_candidates = simulator(new_X_candidates)
+
+            self.X = np.vstack([self.X, new_X_candidates])
+            self.Y = np.hstack([self.Y, new_Y_candidates])
+
+            return self.refit(self.gp)
