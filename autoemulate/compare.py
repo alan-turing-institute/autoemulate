@@ -723,7 +723,7 @@ class AutoEmulate:
 
         # Create the plot
         figure = _plot_cv(
-            cv_results,
+            self.preprocessing_results["None"]["cv_results"],
             self.X[self.train_idxs],
             y_train,
             model_name=model_name,

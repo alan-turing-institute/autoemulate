@@ -418,7 +418,7 @@ class VAE(nn.Module):
         return recon_loss + beta * kl_loss
 
 
-def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=1000):
+def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=1000):
     """
     Sample from a normal distribution for each simulation and reduced dimension.
 
@@ -449,6 +449,10 @@ def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=100
     else:
     """
     # TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
+    if len(x_latent_pred.shape) == 1:
+        x_latent_pred = x_latent_pred.reshape(-1, 1)
+        x_latent_std = x_latent_std.reshape(-1, 1)
+
     n_simulations, n_features = x_latent_pred.shape
     samples = []
 

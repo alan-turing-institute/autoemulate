@@ -50,7 +50,7 @@ def _print_setup(cls):
             str(cls.search_type),
             str(cls.param_search_iters),
             str(cls.reduce_dim),
-            #str(cls.reduce_dim_output),
+            # str(cls.reduce_dim_output),
             str(
                 cls.dim_reducer
                 if isinstance(cls.dim_reducer, str)
@@ -58,13 +58,13 @@ def _print_setup(cls):
                 if cls.dim_reducer is not None
                 else "None"
             ),
-            #str(
+            # str(
             #    cls.dim_reducer_output
             #    if isinstance(cls.dim_reducer_output, str)
             #    else cls.dim_reducer_output.__class__.__name__
             #    if cls.dim_reducer_output is not None
             #    else "None"
-            #),
+            # ),
             str(
                 cls.cross_validator.__class__.__name__
                 if cls.cross_validator is not None
@@ -82,9 +82,9 @@ def _print_setup(cls):
             "Type of hyperparameter search (search_type)",
             "Number of sampled parameter settings (param_search_iters)",
             "Reduce input dimensionality (reduce_dim)",
-            #"Reduce output dimensionality (reduce_dim_output)",
+            # "Reduce output dimensionality (reduce_dim_output)",
             "Dimensionality input reduction method (dim_reducer)",
-            #"Dimensionality output reduction method (dim_reducer_output)",
+            # "Dimensionality output reduction method (dim_reducer_output)",
             "Cross validator (cross_validator)",
             "Parallel jobs (n_jobs)",
         ],

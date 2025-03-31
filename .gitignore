@@ -9,6 +9,7 @@ docs/_build/
 docs/generated/
 .sphinx-build-environment
 
+
 # Auto-generated documentation
 _autosummary/
 _autodoc/

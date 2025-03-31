@@ -121,8 +121,7 @@ def simulate_reactiondiffusion(x, return_timeseries=False, n=32, L=20, T=10.0, d
         v[:, :, j] = np.real(ifft2(vt))
 
     if return_timeseries:
-
-        return u.transpose(2,0,1), v.transpose(2,0,1)
+        return u.transpose(2, 0, 1), v.transpose(2, 0, 1)
     else:
         # Return the last snapshot
         u_sol = u[:, :, -1]
