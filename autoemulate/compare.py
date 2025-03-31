@@ -17,12 +17,11 @@ from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import _process_models
-from autoemulate.model_processing import _process_reducers
+from autoemulate.model_processing import ModelPrepPipeline
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import Reducer
+from autoemulate.preprocess_target import non_trainable_transformer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
@@ -133,15 +132,20 @@ class AutoEmulate:
             self.X, test_size=self.test_set_size, random_state=42
         )
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
-        self.models = _process_models(
+        self.ae_pipeline = ModelPrepPipeline(
             model_registry=self.model_registry,
             model_names=list(self.model_names.keys()),
             y=self.y,
-            scale=scale,
-            scaler=scaler,
-            reduce_dim=reduce_dim,
-            dim_reducer=dim_reducer,
+            scale_input=scale,
+            scaler_input=scaler,
+            reduce_dim_input=reduce_dim,
+            dim_reducer_input=dim_reducer,
+            scale_output=scale_output,
+            scaler_output=scaler_output,
+            reduce_dim_output=reduce_dim_output,
+            dim_reducer_output=dim_reducer_output,
         )
+
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
         self.param_search = param_search
@@ -242,32 +246,29 @@ class AutoEmulate:
             self.preprocessing_methods = [{"name": "None", "params": {}}]
 
         with tqdm(
-            total=len(self.models) * len(self.preprocessing_methods), desc=pb_text
+            total=len(self.ae_pipeline.models_piped) * len(self.preprocessing_methods),
+            desc=pb_text,
         ) as pbar:
             for prep_config in self.preprocessing_methods:
                 prep_name = prep_config["name"]
                 prep_params = prep_config.get("params", {})
 
-                # Get the models to use for this preprocessing method
-                models_to_use = copy.deepcopy(self.models)  # Deep copy to avoid modifying originals
-
                 # Create the actual transformer instance and fit it
-                transformer = get_dim_reducer(prep_name, **prep_params) if prep_name != "None" else None
+                transformer = (
+                    get_dim_reducer(prep_name, **prep_params)
+                    if prep_name != "None"
+                    else None
+                )
 
                 if transformer is not None:
                     transformer.fit(self.y)
-                    # Wrap in non-trainable "Reducer" class for pipeline #TODO: fix name of class and variables
-                    models_to_use = _process_reducers(
-                        models=self.models,
-                        scale_output=self.scale_output,
-                        scaler_output=self.scaler_output,
-                        reduce_dim_output=self.reduce_dim_output,
-                        dim_reducer_output=Reducer(transformer),
+                    self.ae_pipeline.transformer = non_trainable_transformer(
+                        transformer
                     )
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
-                    "models": models_to_use,
+                    "models": self.ae_pipeline.models_piped,
                     "cv_results": {},
                     "best_model": None,
                     "transformer": transformer,
@@ -292,11 +293,11 @@ class AutoEmulate:
                         try:
                             # hyperparameter search
                             if self.param_search:
-                                model = _optimize_params( #TODO: self.preprocessing_results[prep_name]["models"][i]
+                                model = _optimize_params(  # TODO: self.preprocessing_results[prep_name]["models"][i]
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=model, #TODO: self.preprocessing_results[prep_name]["models"][i]
+                                    model=model,  # TODO: self.preprocessing_results[prep_name]["models"][i]
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,

@@ -469,26 +469,31 @@ def inverse_transform_wtih_std(model, x_latent_pred, x_latent_std, n_samples=100
     return x_reconstructed_mean, x_reconstructed_std
 
 
-class Reducer:
-    def __init__(self, base_model):
-        self.base_model = (
-            base_model  # Expect an instance of either targetPCA or targetVAE
+class non_trainable_transformer:
+    def __init__(self, NT_transformer):
+        self.NT_transformer = (
+            NT_transformer  # Expect an instance of either targetPCA or targetVAE
         )
+
+    @property
+    def base_transformer(self):
+        """Get the underlying transformer instance."""
+        return self.NT_transformer
 
     def fit(self, X, y=None):
         return
 
     def transform(self, X, y=None):
-        return self.base_model.transform(X)
+        return self.NT_transformer.transform(X)
 
     def inverse_transform(self, X, y=None):
-        return self.base_model.inverse_transform(X)
+        return self.NT_transformer.inverse_transform(X)
 
     def fit_transform(self, X, y=None):
         return self.transform(X)
 
     def inverse_transform_std(self, X):
-        return self.base_model.inverse_transform_std(X)
+        return self.NT_transformer.inverse_transform_std(X)
 
     # def __getattr__(self, name):
     #    """Delegate attribute access to the base model if not found in Reducer."""
