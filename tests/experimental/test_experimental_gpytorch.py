@@ -60,7 +60,6 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
         mean(y),
         covar(x, y),
     )
-    gp.train()
     gp.fit(x, y, FitConfig())
     y_pred = gp.predict(x)
     assert isinstance(y_pred, DistributionLike)
@@ -69,9 +68,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
 
 def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
-    # y = y.reshape(1, -1)
     print(x.shape, y.shape)
-    # y_shape = y.shape
     gp = GPyTorch(
         x,
         y,
@@ -79,14 +76,14 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
         mean(y),
         covar(x, y),
     )
-    gp.train()
+    # gp.train()
     gp.fit(x, y, FitConfig())
     x2, _ = new_data_y1d
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
     # TODO: fix shape assertion
-    # assert y_pred.mean.shape == y_shape
-    # assert y_pred.variance.shape == y_shape
+    assert y_pred.mean.shape == y.shape
+    assert y_pred.variance.shape == y.shape
 
 
 # TODO: update compare loop
