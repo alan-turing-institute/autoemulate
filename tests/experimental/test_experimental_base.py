@@ -149,5 +149,3 @@ class TestPyTorchBackend:
         dataset = TensorDataset(x_train, y_train)
         tuner = Tuner(dataset, n_iter=10)
         tuner.run(self.DummyModel)
-        tuner.run(self.DummyModel)
-        tuner.run(self.DummyModel)

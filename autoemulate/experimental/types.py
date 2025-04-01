@@ -15,6 +15,3 @@ OutputLike = DistributionLike | TensorLike | tuple[TensorLike, TensorLike]
 ValueLike = Any
 TuneConfig = dict[str, list[ValueLike]]
 ModelConfig = dict[str, ValueLike]
-ModelConfig = dict[str, ValueLike]
-ModelConfig = dict[str, ValueLike]
-ModelConfig = dict[str, ValueLike]
