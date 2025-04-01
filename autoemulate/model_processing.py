@@ -24,7 +24,7 @@ class ModelPrepPipeline:
         dim_reducer_output=None,
     ):
         self.model_piped = None
-        self.transformer = dim_reducer_output
+        self.transformer = None
 
         self.models = model_registry.get_models(model_names)
 
@@ -92,10 +92,7 @@ class ModelPrepPipeline:
         """
         self.models_piped = []
 
-        for (
-            model
-        ) in self.models_multi:  # Changed from self.multi_models to self.model_multi
-            # Retrieve the input pipeline
+        for model in self.models_multi:
             input_steps = []
             if scale_input:
                 input_steps.append(("scaler", scaler_input))
@@ -105,7 +102,7 @@ class ModelPrepPipeline:
             input_pipeline = Pipeline(input_steps)
 
             # Create output transformation pipeline
-            if self.transformer:
+            if self.transformer is not None:
                 output_steps = []
                 if scale_output:
                     output_steps.append(("scaler_output", scaler_output))
