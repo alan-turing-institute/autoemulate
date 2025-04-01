@@ -3,7 +3,6 @@ import pytest
 import torch
 from sklearn.datasets import make_regression
 
-from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.emulators.gpytorch_backend import GPyTorch
 from autoemulate.experimental.types import DistributionLike
 from autoemulate.experimental.types import TensorLike
@@ -60,7 +59,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
         mean(y),
         covar(x, y),
     )
-    gp.fit(x, y, FitConfig())
+    gp.fit(x, y)
     y_pred = gp.predict(x)
     assert isinstance(y_pred, DistributionLike)
     assert y_pred.mean.shape == (20, 2)
@@ -76,8 +75,7 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
         mean(y),
         covar(x, y),
     )
-    # gp.train()
-    gp.fit(x, y, FitConfig())
+    gp.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)

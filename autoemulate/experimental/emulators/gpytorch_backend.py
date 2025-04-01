@@ -1,8 +1,9 @@
 import gpytorch
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 import torch
+from torch import nn
+import numpy as np
 
-from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.emulators.base import (
     Emulator,
     InputTypeMixin,
@@ -17,6 +18,7 @@ from gpytorch.kernels import Kernel
 class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     likelihood: MultitaskGaussianLikelihood
     random_state: int | None = None
+    epochs: int = 10
 
     def __init__(
         self,
@@ -53,13 +55,13 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
             gpytorch.distributions.MultivariateNormal(mean, covar)
         )
 
-    def fit(self, x: InputLike, y: InputLike | None, config: FitConfig):
+    def fit(self, x: InputLike, y: InputLike | None):
         # Find optimal model hyperparameters
         self.train()
         self.likelihood.train()
         optimizer = torch.optim.Adam(self.parameters(), lr=0.1)
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self)
-        for epoch in range(config.epochs):
+        for epoch in range(self.epochs):
             # Zero gradients from previous iteration
             optimizer.zero_grad()
             output = self(x)
@@ -72,7 +74,7 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
                 "Iter %d/%d - Loss: %.3f  kernels: %s  noise: %s  likelihood: %s"
                 % (
                     epoch + 1,
-                    config.epochs,
+                    self.epochs,
                     loss,
                     "; ".join(
                         [
@@ -98,5 +100,15 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     def cross_validate(self, x: InputLike) -> None:
         raise NotImplementedError("This function is not yet implemented.")
 
-    def tune(self, x: InputLike) -> None:
-        raise NotImplementedError("This function is not yet implemented.")
+    @staticmethod
+    def get_tune_config():
+        return {
+            "epochs": [100, 200, 300],
+            "batch_size": [16, 32],
+            "activation": [
+                nn.ReLU,
+                nn.GELU,
+            ],
+            "optimizer": [torch.optim.Adam],
+            "lr": list(np.logspace(-6, -1)),
+        }

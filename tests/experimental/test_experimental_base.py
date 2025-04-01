@@ -106,6 +106,7 @@ class TestPyTorchBackend:
         def forward(self, x):
             return self.linear(x)
 
+        @staticmethod
         def get_tune_config():
             return {
                 "epochs": [100, 200, 300],
