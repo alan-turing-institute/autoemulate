@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 import numpy as np
 import torch
 
@@ -6,3 +8,5 @@ TensorLike = torch.Tensor
 DistributionLike = torch.distributions.Distribution
 InputLike = NumpyLike | TensorLike | torch.utils.data.DataLoader
 OutputLike = DistributionLike | TensorLike | tuple[TensorLike, TensorLike]
+ValueLike = Any
+ParamsLike = Dict[str, list[ValueLike]]
