@@ -19,7 +19,7 @@ class Tuner(InputTypeMixin):
     Parameters
     ----------
     X: InputLike
-                Input features as numpy array, PyTorch tensor, or Dataset.
+        Input features as numpy array, PyTorch tensor, or Dataset.
     y: OutputLine or None
         Target values (not needed if x is a Dataset).
     n_iter: int
