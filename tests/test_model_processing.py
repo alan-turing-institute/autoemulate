@@ -10,8 +10,8 @@ from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.emulators import RandomForest
 from autoemulate.emulators import SupportVectorMachines
-from autoemulate.model_processing import _turn_models_into_multioutput
-from autoemulate.model_processing import _wrap_models_in_pipeline
+from autoemulate.model_processing import ModelPrepPipeline
+from autoemulate.model_processing import ModelPrepPipeline
 from autoemulate.model_registry import ModelRegistry
 from autoemulate.utils import get_model_name
 
@@ -35,7 +35,7 @@ def model_registry():
 def test_turn_models_into_multioutput(model_registry):
     models = model_registry.get_models()
     y = np.array([[1, 2], [3, 4]])
-    models = _turn_models_into_multioutput(models, y)
+    models = ModelPrepPipeline._turn_models_into_multioutput(models, y)
     print(f"models === {models}")
     assert isinstance(models, list)
     # check that non-native multioutput models are wrapped in MultiOutputRegressor
@@ -51,7 +51,7 @@ def test_turn_models_into_multioutput(model_registry):
 # -----------------------test wrapping models in pipeline-------------------#
 def test_wrap_models_in_pipeline_no_scaler(model_registry):
     models = model_registry.get_models()
-    models = _wrap_models_in_pipeline(
+    models = ModelPrepPipeline._wrap_models_in_pipeline(
         models,
         scale=False,
         scaler=StandardScaler(),
@@ -66,7 +66,7 @@ def test_wrap_models_in_pipeline_no_scaler(model_registry):
 
 def test_wrap_models_in_pipeline_scaler(model_registry):
     models = model_registry.get_models()
-    models = _wrap_models_in_pipeline(
+    models = ModelPrepPipeline._wrap_models_in_pipeline(
         models, scale=True, scaler=StandardScaler(), reduce_dim=False, dim_reducer=PCA()
     )
     assert isinstance(models, list)
@@ -77,7 +77,7 @@ def test_wrap_models_in_pipeline_scaler(model_registry):
 
 def test_wrap_models_in_pipeline_no_scaler_dim_reducer(model_registry):
     models = model_registry.get_models()
-    models = _wrap_models_in_pipeline(
+    models = ModelPrepPipeline._wrap_models_in_pipeline(
         models, scale=False, scaler=StandardScaler(), reduce_dim=True, dim_reducer=PCA()
     )
     assert isinstance(models, list)
@@ -88,7 +88,7 @@ def test_wrap_models_in_pipeline_no_scaler_dim_reducer(model_registry):
 
 def test_wrap_models_in_pipeline_scaler_dim_reducer(model_registry):
     models = model_registry.get_models()
-    models = _wrap_models_in_pipeline(
+    models = ModelPrepPipeline._wrap_models_in_pipeline(
         models, scale=True, scaler=StandardScaler(), reduce_dim=True, dim_reducer=PCA()
     )
     assert isinstance(models, list)

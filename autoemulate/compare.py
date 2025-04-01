@@ -424,10 +424,12 @@ class AutoEmulate:
 
         # Search all preprocessing methods for named model
         for prep_name, prep_data in self.preprocessing_results.items():
+            print("testiiiibg", prep_data["models"])
             for model in prep_data["models"]:
                 if get_model_name(model) == name:
                     return model
-        raise ValueError(f"Model {name} not found in any preprocessing method")
+                else: 
+                    raise ValueError(f"Model {name} not found in any preprocessing method")
 
     def get_best_model_for_prep(self, prep_results, metric="r2"):
         """Get the best model for a specific preprocessing method.
