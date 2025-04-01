@@ -38,10 +38,8 @@ class Tuner(InputTypeMixin):
 
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
         # split data into train/validation sets
-        train, val = tuple(random_split(self.dataset, [0.8, 0.2]))
-        train_loader = self._convert_to_dataloader(train, batch_size=len(train))
+        train_loader, val_loader = self._random_split(self.dataset)
         train_x, train_y = next(iter(train_loader))
-        val_loader = self._convert_to_dataloader(val, batch_size=len(val))
         val_x, val_y = next(iter(val_loader))
 
         # get all the available hyperparameter options
