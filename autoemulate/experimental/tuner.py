@@ -39,6 +39,7 @@ class Tuner(InputTypeMixin):
 
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
         # split data into train/validation sets
+        # batch size defaults to size of train data if not otherwise specified
         train_loader, val_loader = self._random_split(self.dataset)
         train_x, train_y = next(iter(train_loader))
         val_x, val_y = next(iter(val_loader))

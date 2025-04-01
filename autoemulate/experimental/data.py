@@ -56,10 +56,25 @@ class InputTypeMixin:
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return dataloader
 
-    def _random_split(self, dataset: Dataset) -> tuple[DataLoader, DataLoader]:
+    def _random_split(
+        self, dataset: Dataset, batch_size: int | None = None
+    ) -> tuple[DataLoader, DataLoader]:
+        """
+        Split Dataset into train/test DataLoaders.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The data to split.
+        batch_size: int | None
+            The DataLoader batch_size. If None, sets batch_size to lenth of training
+            data. Defaults to None.
+        """
         train, test = tuple(random_split(dataset, [0.8, 0.2]))
-        train_loader = self._convert_to_dataloader(train, batch_size=len(train))
-        test_loader = self._convert_to_dataloader(test, batch_size=len(test))
+        if batch_size is None:
+            batch_size = len(train)
+        train_loader = self._convert_to_dataloader(train, batch_size=batch_size)
+        test_loader = self._convert_to_dataloader(test, batch_size=batch_size)
         return train_loader, test_loader
 
     # TODO: consider possible method for predict
