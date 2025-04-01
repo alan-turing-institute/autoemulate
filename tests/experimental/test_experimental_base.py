@@ -6,21 +6,20 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 
-from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.emulators.base import InputTypeMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.tuner import Tuner
 
-
-@pytest.fixture
-def fit_config():
-    return FitConfig(
-        epochs=10,
-        batch_size=2,
-        shuffle=False,
-        verbose=False,
-        optimizer=torch.optim.Adam,
-        criterion=torch.nn.MSELoss,
-    )
+# @pytest.fixture
+# def model_config() -> M:
+#     return {
+#         "epochs": 10,
+#         "batch_size": 2,
+#         "shuffle": False,
+#         "verbose": False,
+#         "optimizer": torch.optim.Adam,
+#         "criterion": torch.nn.MSELoss,
+#     }
 
 
 class TestInputTypeMixin:
@@ -97,7 +96,7 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self):
+        def __init__(self, **kwargs):
             super().__init__()
             self.loss_history = []
             self.linear = nn.Linear(1, 1)
@@ -107,34 +106,47 @@ class TestPyTorchBackend:
         def forward(self, x):
             return self.linear(x)
 
+        def get_tune_config():
+            return {
+                "epochs": [100, 200, 300],
+            }
+
     def setup_method(self):
         """
         Define the PyTorchBackend instance.
         """
         self.model = self.DummyModel()
 
-    def test_fit(self, fit_config):
+    def test_fit(self):
         """
         Test the fit method of PyTorchBackend.
         """
         x = np.array([[1.0], [2.0], [3.0]])
         y = np.array([[2.0], [4.0], [6.0]])
-        self.model.fit(x, y, fit_config)
+        self.model.fit(x, y)
 
         assert isinstance(self.model.loss_history, list)
         assert len(self.model.loss_history) == 10
         assert all(isinstance(loss, float) for loss in self.model.loss_history)
 
-    def test_predict(self, fit_config):
+    def test_predict(self):
         """
         Test the predict method of PyTorchBackend.
         """
         x_train = np.array([[1.0], [2.0], [3.0]])
         y_train = np.array([[2.0], [4.0], [6.0]])
-        self.model.fit(x_train, y_train, fit_config)
+        self.model.fit(x_train, y_train)
 
         X_test = torch.tensor([[4.0]])
         y_pred = self.model.predict(X_test)
 
         assert isinstance(y_pred, torch.Tensor)
         assert y_pred.shape == (1, 1)
+        assert y_pred.shape == (1, 1)
+
+    def test_tune(self):
+        x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
+        dataset = TensorDataset(x_train, y_train)
+        tuner = Tuner(dataset, n_iter=10)
+        tuner.run(self.DummyModel)
