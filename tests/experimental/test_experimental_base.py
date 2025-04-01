@@ -145,7 +145,20 @@ class TestPyTorchBackend:
         assert y_pred.shape == (1, 1)
 
     def test_tune(self):
+        """
+        Test that Tuner accepts X,Y inputs.
+        """
         x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
         y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
         tuner = Tuner(x_train, y_train, n_iter=10)
+        tuner.run(self.DummyModel)
+
+    def test_tune(self):
+        """
+        Test that Tuner accepts a single Dataset input.
+        """
+        x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
+        dataset = self.model._convert_to_dataset(x_train, y_train)
+        tuner = Tuner(x=dataset, y=None, n_iter=10)
         tuner.run(self.DummyModel)
