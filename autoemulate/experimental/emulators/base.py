@@ -5,17 +5,11 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from autoemulate.experimental.config import FitConfig
-from autoemulate.experimental.types import InputLike, OutputLike
-
-_default_fit_config = FitConfig(
-    epochs=10,
-    batch_size=16,
-    shuffle=True,
-    criterion=torch.nn.MSELoss,
-    optimizer=torch.optim.Adam,
-    device="cpu",
-    verbose=False,
+from autoemulate.experimental.types import (
+    InputLike,
+    ModelConfig,
+    OutputLike,
+    TuneConfig,
 )
 
 
@@ -30,19 +24,14 @@ class Emulator(ABC):
         return self.predict(*args, **kwds)
 
     @abstractmethod
-    def fit(
-        self,
-        x: InputLike,
-        y: OutputLike | None,
-        config: FitConfig,
-    ): ...
+    def fit(self, x: InputLike, y: OutputLike | None, config: ModelConfig): ...
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
         pass
 
     @abstractmethod
-    def tune(self, x: InputLike): ...
+    def get_tune_config(self) -> TuneConfig: ...
 
     @abstractmethod
     def cross_validate(self, x: InputLike): ...
@@ -92,11 +81,16 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     This means that models can subclass and only need to implement
     `.forward()` to have an emulator to be run in `AutoEmulate`"""
 
+    batch_size: int = 16
+    shuffle: bool = True
+    epochs: int = 10
+    verbose: bool = False
+
     def fit(
         self,
         x: InputLike,
-        y: OutputLike | None = None,
-        config: FitConfig = _default_fit_config,
+        y: OutputLike | None,
+        config: ModelConfig,
     ) -> list:
         """
         Train the linear regression model.
@@ -111,19 +105,19 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         Returns:
             List of loss values per epoch
         """
-        if not isinstance(config, FitConfig):
-            raise ValueError("config must be an instance of FitConfig")
+        if config is None:
+            raise ValueError("config must be an instance of ModelConfig")
 
         self.train()  # Set model to training mode
         loss_history = []
 
         # Convert input to DataLoader if not already
         dataloader = self._convert(
-            x, y, batch_size=config.batch_size, shuffle=config.shuffle
+            x, y, batch_size=self.batch_size, shuffle=self.shuffle
         )
 
         # Training loop
-        for epoch in range(config.epochs):
+        for epoch in range(self.epochs):
             epoch_loss = 0.0
             batches = 0
 
@@ -145,7 +139,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
             avg_epoch_loss = epoch_loss / batches
             loss_history.append(avg_epoch_loss)
 
-            if config.verbose and (epoch + 1) % (config.epochs // 10 or 1) == 0:
+            if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(
                     f"Epoch [{epoch + 1}/{config.epochs}], Loss: {avg_epoch_loss:.4f}"
                 )
@@ -159,5 +153,19 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     def cross_validate(self, x: InputLike) -> None:
         raise NotImplementedError("This function is not yet implemented.")
 
-    def tune(self, x: InputLike) -> None:
-        raise NotImplementedError("This function is not yet implemented.")
+    def get_tune_config(self):
+        return {
+            "max_epochs": [100, 200, 300],
+            "batch_size": [16, 32],
+            "hidden_dim": [32, 64, 128],
+            "latent_dim": [32, 64, 128],
+            "max_context_points": [5, 10, 15],
+            "hidden_layers_enc": [2, 3, 4],
+            "hidden_layers_dec": [2, 3, 4],
+            "activation": [
+                nn.ReLU,
+                nn.GELU,
+            ],
+            "optimizer": [torch.optim.Adam],
+            "lr": list(np.logspace(-6, -1)),
+        }
