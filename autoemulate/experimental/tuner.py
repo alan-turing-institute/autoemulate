@@ -1,7 +1,6 @@
 import gpytorch
 import numpy as np
 from sklearn.metrics import r2_score
-from torch.utils.data import DataLoader, Dataset, random_split
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.types import (
