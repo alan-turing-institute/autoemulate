@@ -18,8 +18,10 @@ class Tuner(InputTypeMixin):
 
     Parameters
     ----------
-    dataset: Dataset
-        The training data.
+    X: InputLike
+                Input features as numpy array, PyTorch tensor, or Dataset.
+    y: OutputLine or None
+        Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
 
@@ -29,7 +31,7 @@ class Tuner(InputTypeMixin):
         The validation scores and parameter values used in each search iteration.
     """
 
-    def __init__(self, x: InputLike, y: OutputLike, n_iter: int):
+    def __init__(self, x: InputLike, y: OutputLike | None, n_iter: int):
         self.n_iter = n_iter
         self.dataset = self._convert_to_dataset(x, y)
         # Q: should users be able to choose a different validation metric?
