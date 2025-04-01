@@ -14,7 +14,7 @@ from gpytorch.means import Mean
 from gpytorch.kernels import Kernel
 
 
-class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: ignore
+class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     likelihood: MultitaskGaussianLikelihood
     random_state: int | None = None
 
@@ -45,17 +45,15 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: igno
         self.covar_module = covar_module
 
     def forward(self, x: InputLike):
+        assert isinstance(x, torch.Tensor)
         mean = self.mean_module(x)
-        print(type(mean))
         assert isinstance(mean, torch.Tensor)
-        covar = self.covar_module(x)  # type: ignore
+        covar = self.covar_module(x)
         return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
             gpytorch.distributions.MultivariateNormal(mean, covar)
         )
 
-    def fit(  # type: ignore
-        self, x: InputLike, y: OutputLike | None, config: FitConfig
-    ):
+    def fit(self, x: InputLike, y: InputLike | None, config: FitConfig):
         # Find optimal model hyperparameters
         self.train()
         self.likelihood.train()
@@ -102,59 +100,3 @@ class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: igno
 
     def tune(self, x: InputLike) -> None:
         raise NotImplementedError("This function is not yet implemented.")
-
-
-class GPExactRBF(GPyTorch):
-    random_state: int | None = None
-
-    def __init__(
-        self, x: InputLike, y: OutputLike, likelihood: MultitaskGaussianLikelihood
-    ):
-        if self.random_state is not None:
-            set_random_seed(self.random_state)
-        assert isinstance(y, torch.Tensor) and isinstance(x, torch.Tensor)
-        self.y_dim_ = y.ndim
-        self.n_features_in_ = x.shape[1]
-        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-
-        mean_module = gpytorch.means.ConstantMean(
-            batch_shape=torch.Size([self.n_outputs_])
-        )
-        rbf = gpytorch.kernels.RBFKernel(
-            ard_num_dims=self.n_features_in_,
-            batch_shape=torch.Size([self.n_outputs_]),
-            # seems to work better when we initialize the lengthscale
-        ).initialize(lengthscale=torch.ones(self.n_features_in_) * 1.5)
-        constant = gpytorch.kernels.ConstantKernel()
-        combined = rbf + constant
-
-        covar_module = gpytorch.kernels.ScaleKernel(
-            combined, batch_shape=torch.Size([self.n_outputs_])
-        )
-        # wrapping in ScaleKernel is generally good, as it adds an output scale parameter
-        if not isinstance(covar_module, gpytorch.kernels.ScaleKernel):
-            covar_module = gpytorch.kernels.ScaleKernel(
-                covar_module, batch_shape=torch.Size([self.n_outputs_])
-            )
-        # super().__init__(x, y, likelihood)
-        super().__init__(x, y, likelihood, mean_module, covar_module)
-        # self.mean_module = mean_module
-        # self.covar_module = covar_module
-
-    def forward(self, x):
-        mean = self.mean_module(x)
-        print(type(mean))
-        assert isinstance(mean, torch.Tensor)
-        covar = self.covar_module(x)  # type: ignore
-        return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
-            gpytorch.distributions.MultivariateNormal(mean, covar)
-        )
-
-
-if __name__ == "__main__":
-    x = torch.rand(10, 2)
-    y = torch.rand(10, 1)
-    likelihood = MultitaskGaussianLikelihood(num_tasks=1)
-    model = GPExactRBF(x, y, likelihood)
-    model.fit(x, y, FitConfig())
-    print(model(x))
