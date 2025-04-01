@@ -24,7 +24,7 @@ class Emulator(ABC):
         return self.predict(*args, **kwds)
 
     @abstractmethod
-    def fit(self, x: InputLike, y: OutputLike | None, config: ModelConfig): ...
+    def fit(self, x: InputLike, y: OutputLike | None): ...
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
@@ -90,7 +90,6 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         self,
         x: InputLike,
         y: OutputLike | None,
-        config: ModelConfig,
     ) -> list:
         """
         Train the linear regression model.
