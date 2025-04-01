@@ -57,14 +57,20 @@ def _optimize_params(
     -------
     Refitted estimator on the whole dataset with best parameters.
     """
-    logger.info(f"Performing grid search for {get_model_name(model)}...")
-    param_space = _process_param_space(model, search_type, param_space)
+    if hasattr(model, "transformer"):
+        y = model.transformer.transform(y)
+        regressor = model.regressor
+    else:
+        regressor = model
+
+    logger.info(f"Performing grid search for {get_model_name(regressor)}...")
+    param_space = _process_param_space(regressor, search_type, param_space)
     search_type = search_type.lower()
 
     # random search
     if search_type == "random":
         searcher = RandomizedSearchCV(
-            model,
+            regressor,
             param_space,
             n_iter=niter,
             cv=cv,
@@ -79,6 +85,7 @@ def _optimize_params(
     # run hyperparameter search
     try:
         searcher.fit(X, y)
+
     except Exception:
         logger.exception(
             f"Failed to perform hyperparameter search on {get_model_name(model)}"

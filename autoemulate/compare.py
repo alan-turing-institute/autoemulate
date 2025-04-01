@@ -62,7 +62,6 @@ class AutoEmulate:
         scale_output=True,
         scaler_output=StandardScaler(),
         reduce_dim_output=False,
-        dim_reducer_output=PCA(),
         preprocessing_methods=None,
         cross_validator=KFold(
             n_splits=5, shuffle=True, random_state=np.random.randint(1e5)
@@ -143,7 +142,6 @@ class AutoEmulate:
             scale_output=scale_output,
             scaler_output=scaler_output,
             reduce_dim_output=reduce_dim_output,
-            dim_reducer_output=dim_reducer_output,
         )
 
         self.metrics = self._get_metrics(METRIC_REGISTRY)
@@ -160,7 +158,6 @@ class AutoEmulate:
         self.reduce_dim = reduce_dim
         self.scale_output = scale_output
         self.scaler_output = scaler_output
-        self.dim_reducer_output = dim_reducer_output
         self.reduce_dim_output = reduce_dim_output
         self.cv_results = {}
         self.preprocessing_methods = preprocessing_methods
@@ -259,6 +256,7 @@ class AutoEmulate:
                     if prep_name != "None"
                     else None
                 )
+                print(transformer)
 
                 if transformer is not None:
                     transformer.fit(self.y)
@@ -293,11 +291,15 @@ class AutoEmulate:
                         try:
                             # hyperparameter search
                             if self.param_search:
-                                model = _optimize_params(  # TODO: self.preprocessing_results[prep_name]["models"][i]
+                                self.preprocessing_results[prep_name]["models"][
+                                    i
+                                ] = _optimize_params(
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=model,  # TODO: self.preprocessing_results[prep_name]["models"][i]
+                                    model=self.preprocessing_results[prep_name][
+                                        "models"
+                                    ][i],
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,
