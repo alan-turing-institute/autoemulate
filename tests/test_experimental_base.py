@@ -8,6 +8,7 @@ from torch.utils.data import TensorDataset
 
 from autoemulate.experimental.emulators.base import InputTypeMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import ModelConfig
 
 
@@ -138,3 +139,15 @@ class TestPyTorchBackend:
         assert isinstance(y_pred, torch.Tensor)
         assert y_pred.shape == (1, 1)
         assert y_pred.shape == (1, 1)
+
+    def test_tune(self):
+        x_train = np.array([[1.0], [2.0], [3.0]])
+        y_train = np.array([[2.0], [4.0], [6.0]])
+        self.model.fit(x_train, y_train, model_config)
+
+        X_test = torch.tensor([[4.0]])
+        y_pred = self.model.predict(X_test)
+
+        dataset = TensorDataset(x_train, y_train)
+        tuner = Tuner(dataset, n_iter=10)
+        tuner.run()
