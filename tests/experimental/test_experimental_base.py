@@ -1,13 +1,10 @@
 import numpy as np
 import pytest
 import torch
-from torch import nn
-from torch import optim
-from torch.utils.data import DataLoader
-from torch.utils.data import TensorDataset
+from torch import nn, optim
+from torch.utils.data import DataLoader, TensorDataset
 
-from autoemulate.experimental.emulators.base import InputTypeMixin
-from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 
 # @pytest.fixture
@@ -39,7 +36,9 @@ class TestInputTypeMixin:
         """
         X = np.array([[1.0], [2.0], [3.0]])
         y = np.array([1.0, 2.0, 3.0])
-        dataloader = self.mixin._convert(X, y, batch_size=2, shuffle=False)
+        dataloader = self.mixin._convert_to_dataloader(
+            X, y, batch_size=2, shuffle=False
+        )
 
         assert isinstance(dataloader, DataLoader)
         batches = list(dataloader)
@@ -53,7 +52,9 @@ class TestInputTypeMixin:
         """
         X = torch.tensor([[1.0], [2.0], [3.0]])
         y = torch.tensor([1.0, 2.0, 3.0])
-        dataloader = self.mixin._convert(X, y, batch_size=2, shuffle=False)
+        dataloader = self.mixin._convert_to_dataloader(
+            X, y, batch_size=2, shuffle=False
+        )
 
         assert isinstance(dataloader, DataLoader)
         batches = list(dataloader)
@@ -70,7 +71,7 @@ class TestInputTypeMixin:
         dataset = TensorDataset(X, y)
         dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
 
-        result = self.mixin._convert(dataloader)
+        result = self.mixin._convert_to_dataloader(dataloader)
         assert isinstance(result, DataLoader)
         batches = list(result)
         assert len(batches) == 2
@@ -82,8 +83,8 @@ class TestInputTypeMixin:
         Test converting an invalid input type.
         """
         X = "invalid input"
-        with pytest.raises(ValueError, match="Unsupported type for X."):
-            self.mixin._convert(X)
+        with pytest.raises(ValueError, match="Unsupported type for x."):
+            self.mixin._convert_to_dataloader(X)
 
 
 class TestPyTorchBackend:
@@ -146,6 +147,5 @@ class TestPyTorchBackend:
     def test_tune(self):
         x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
         y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
-        dataset = TensorDataset(x_train, y_train)
-        tuner = Tuner(dataset, n_iter=10)
+        tuner = Tuner(x_train, y_train, n_iter=10)
         tuner.run(self.DummyModel)

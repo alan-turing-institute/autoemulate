@@ -5,15 +5,12 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from autoemulate.experimental.types import (
-    InputLike,
-    OutputLike,
-    TuneConfig,
-)
+from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
 
 
 class Emulator(ABC):
-    """The interface containing methods on emulators that are
+    """
+    The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
@@ -37,15 +34,17 @@ class Emulator(ABC):
 
 
 class InputTypeMixin:
-    def _convert(
+    """
+    Mixin class to convert input data to pytorch Datasets and DataLoaders.
+    """
+
+    def _convert_to_dataset(
         self,
         x: InputLike,
         y: OutputLike | None = None,
-        batch_size: int = 16,
-        shuffle: bool = True,
-    ) -> DataLoader | Dataset:
+    ) -> Dataset:
         """
-        Mixin class to convert input data to pytorch DataLoaders.
+        Convert input data to pytorch Dataset.
         """
         # Convert input to DataLoader if not already
         if isinstance(x, np.ndarray):
@@ -55,16 +54,34 @@ class InputTypeMixin:
 
         if isinstance(x, (torch.Tensor, np.ndarray)) and y is not None:
             dataset = TensorDataset(x, y)
-            dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
-        elif isinstance(x, DataLoader) and y is None:
-            dataloader = x
         elif isinstance(x, Dataset) and y is None:
-            dataloader = x
+            dataset = x
         else:
             raise ValueError(
-                f"Unsupported type for X ({type(x)}). Must be numpy array, PyTorch tensor, or DataLoader."
+                f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch tensor."
             )
 
+        return dataset
+
+    def _convert_to_dataloader(
+        self,
+        x: InputLike,
+        y: OutputLike | None = None,
+        batch_size: int = 16,
+        shuffle: bool = True,
+    ) -> DataLoader:
+        """
+        Convert input data to pytorch DataLoaders.
+        """
+        if isinstance(x, DataLoader) and y is None:
+            dataloader = x
+        elif isinstance(x, DataLoader) and y is not None:
+            raise ValueError(
+                f"Since x is already a DataLoader, expect y to be None, not {type(y)}."
+            )
+        else:
+            dataset = self._convert_to_dataset(x, y)
+            dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return dataloader
 
     # TODO: consider possible method for predict
@@ -77,10 +94,12 @@ class InputTypeMixin:
 
 
 class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
-    """PyTorchBackend is a torch model and implements the base class.
+    """
+    PyTorchBackend is a torch model and implements the base class.
     This provides default implementations to further subclasses.
     This means that models can subclass and only need to implement
-    `.forward()` to have an emulator to be run in `AutoEmulate`"""
+    `.forward()` to have an emulator to be run in `AutoEmulate`
+    """
 
     batch_size: int = 16
     shuffle: bool = True
@@ -93,24 +112,33 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         y: OutputLike | None,
     ) -> list:
         """
-        Train the linear regression model.
+        Train a PyTorchBackend model.
 
-        Args:
-            X: Input features as numpy array, PyTorch tensor, or DataLoader
-            y: Target values (not needed if xis a DataLoader)
-            epochs: Number of training epochs
-            batch_size: Batch size (used only when xis not a DataLoader)
-            verbose: Whether to print progress
+        Parameters
+        ----------
+            X: InputLike
+                Input features as numpy array, PyTorch tensor, or DataLoader.
+            y: OutputLine or None
+                Target values (not needed if xis a DataLoader).
+            batch_size: int
+                Batch size (used only when xis not a DataLoader).
+            shuffle: bool
+                Whether to shuffle the data.
+            epochs: int
+                Number of training epochs.
+            verbose: bool
+                Whether to print progress.
 
         Returns:
-            List of loss values per epoch
+        -------
+            List of loss values per epoch.
         """
 
         self.train()  # Set model to training mode
         loss_history = []
 
         # Convert input to DataLoader if not already
-        dataloader = self._convert(
+        dataloader = self._convert_to_dataloader(
             x, y, batch_size=self.batch_size, shuffle=self.shuffle
         )
 

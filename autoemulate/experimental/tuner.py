@@ -3,11 +3,17 @@ import numpy as np
 from sklearn.metrics import r2_score
 from torch.utils.data import DataLoader, Dataset, random_split
 
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import ModelConfig, TuneConfig, ValueLike
+from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.types import (
+    InputLike,
+    ModelConfig,
+    OutputLike,
+    TuneConfig,
+    ValueLike,
+)
 
 
-class Tuner:
+class Tuner(InputTypeMixin):
     """
     Run randomised hyperparameter search for a given model.
 
@@ -24,20 +30,19 @@ class Tuner:
         The validation scores and parameter values used in each search iteration.
     """
 
-    def __init__(self, dataset: Dataset, n_iter: int):
+    def __init__(self, x: InputLike, y: OutputLike, n_iter: int):
         self.n_iter = n_iter
-        self.dataset = dataset
+        self.dataset = self._convert_to_dataset(x, y)
         # Q: should users be able to choose a different validation metric?
         self.score_f = r2_score
 
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
         # split data into train/validation sets
         train, val = tuple(random_split(self.dataset, [0.8, 0.2]))
-        train, val = (
-            DataLoader(train, batch_size=len(train)),
-            DataLoader(val, batch_size=len(val)),
-        )
-        ((train_x, train_y), (val_x, val_y)) = next(iter(train)), next(iter(val))
+        train_loader = self._convert_to_dataloader(train, batch_size=len(train))
+        train_x, train_y = next(iter(train_loader))
+        val_loader = self._convert_to_dataloader(val, batch_size=len(val))
+        val_x, val_y = next(iter(val_loader))
 
         # get all the available hyperparameter options
         params_all: TuneConfig = model_class.get_tune_config()
