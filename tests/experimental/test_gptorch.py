@@ -5,6 +5,7 @@ from sklearn.datasets import make_regression
 
 from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.emulators.gpytorch_backend import GPExactRBF
+from autoemulate.experimental.emulators.gpytorch_backend import GPyTorch
 from autoemulate.experimental.types import DistributionLike
 
 # from autoemulate.emulators.gaussian_process_mt import GPExactRBFMT
@@ -39,7 +40,22 @@ def new_data_y2d():
 def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     X, y = sample_data_y2d
     X2, _ = new_data_y2d
-    gp = GPExactRBF(X, y, gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2))
+    # gp = GPExactRBF(X, y, gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2))
+    mean_module = gpytorch.means.ConstantMean(batch_shape=torch.Size([len(y.shape)]))
+    covar_module = gpytorch.kernels.ScaleKernel(
+        gpytorch.kernels.ConstantKernel()
+        + gpytorch.kernels.RBFKernel(
+            ard_num_dims=X.shape[1], batch_shape=torch.Size([y.shape[1]])
+        ),
+        batch_shape=torch.Size([y.shape[1]]),
+    )
+    gp = GPyTorch(
+        X,
+        y,
+        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2),
+        mean_module,
+        covar_module,
+    )
     gp.train()
     gp.fit(X, y, FitConfig())
     y_pred = gp.predict(X)

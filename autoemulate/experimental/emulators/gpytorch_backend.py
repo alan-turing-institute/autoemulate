@@ -1,5 +1,5 @@
 import gpytorch
-from gpytorch.likelihoods import GaussianLikelihood, MultitaskGaussianLikelihood
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 import torch
 
 from autoemulate.experimental.config import FitConfig
@@ -10,21 +10,48 @@ from autoemulate.experimental.emulators.base import (
 from autoemulate.utils import set_random_seed
 from autoemulate.experimental.types import InputLike, OutputLike
 
+from gpytorch.means import Mean
+from gpytorch.kernels import Kernel
+
 
 class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: ignore
-    likelihood: GaussianLikelihood
+    likelihood: MultitaskGaussianLikelihood
+    random_state: int | None = None
 
-    # def __init__(
-    #     self,
-    #     x: InputLike,
-    #     y: OutputLike,
-    #     likelihood: MultitaskGaussianLikelihood,
-    #     mean_module: Mean,
-    #     covar_module: Kernel,
-    # ): ...
+    def __init__(
+        self,
+        x: InputLike,
+        y: OutputLike,
+        likelihood: MultitaskGaussianLikelihood,
+        mean_module: Mean,
+        covar_module: Kernel,
+        random_state: int | None = None,
+    ):
+        if random_state is not None:
+            set_random_seed(random_state)
+        assert isinstance(y, torch.Tensor) and isinstance(x, torch.Tensor)
+        self.y_dim_ = y.ndim
+        self.n_features_in_ = x.shape[1]
+        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
-    def forward(self, *inputs, **kwargs):
-        raise NotImplementedError("Subclassing required.")
+        # wrapping in ScaleKernel is generally good, as it adds an output scale parameter
+        if not isinstance(covar_module, gpytorch.kernels.ScaleKernel):
+            covar_module = gpytorch.kernels.ScaleKernel(
+                covar_module, batch_shape=torch.Size([self.n_outputs_])
+            )
+
+        super().__init__(x, y, likelihood)
+        self.mean_module = mean_module
+        self.covar_module = covar_module
+
+    def forward(self, x: InputLike):
+        mean = self.mean_module(x)
+        print(type(mean))
+        assert isinstance(mean, torch.Tensor)
+        covar = self.covar_module(x)  # type: ignore
+        return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
+            gpytorch.distributions.MultivariateNormal(mean, covar)
+        )
 
     def fit(  # type: ignore
         self, x: InputLike, y: OutputLike | None, config: FitConfig
@@ -109,9 +136,10 @@ class GPExactRBF(GPyTorch):
             covar_module = gpytorch.kernels.ScaleKernel(
                 covar_module, batch_shape=torch.Size([self.n_outputs_])
             )
-        super().__init__(x, y, likelihood)
-        self.mean_module = mean_module
-        self.covar_module = covar_module
+        # super().__init__(x, y, likelihood)
+        super().__init__(x, y, likelihood, mean_module, covar_module)
+        # self.mean_module = mean_module
+        # self.covar_module = covar_module
 
     def forward(self, x):
         mean = self.mean_module(x)
