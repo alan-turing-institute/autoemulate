@@ -3,12 +3,10 @@ import logging
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 
-from autoemulate.utils import (
-    _adjust_param_space,
-    get_model_name,
-    get_model_param_space,
-    get_model_params,
-)
+from autoemulate.utils import _adjust_param_space
+from autoemulate.utils import get_model_name
+from autoemulate.utils import get_model_param_space
+from autoemulate.utils import get_model_params
 
 
 def _optimize_params(
