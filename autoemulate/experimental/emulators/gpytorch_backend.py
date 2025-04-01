@@ -14,6 +14,15 @@ from autoemulate.experimental.types import InputLike, OutputLike
 class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):  # type: ignore
     likelihood: GaussianLikelihood
 
+    # def __init__(
+    #     self,
+    #     x: InputLike,
+    #     y: OutputLike,
+    #     likelihood: MultitaskGaussianLikelihood,
+    #     mean_module: Mean,
+    #     covar_module: Kernel,
+    # ): ...
+
     def forward(self, *inputs, **kwargs):
         raise NotImplementedError("Subclassing required.")
 
