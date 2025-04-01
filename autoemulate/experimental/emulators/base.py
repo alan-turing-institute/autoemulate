@@ -59,7 +59,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
             X: InputLike
                 Input features as numpy array, PyTorch tensor, or DataLoader.
             y: OutputLine or None
-                Target values (not needed if xis a DataLoader).
+                Target values (not needed if x is a DataLoader).
             batch_size: int
                 Batch size (used only when xis not a DataLoader).
             shuffle: bool
