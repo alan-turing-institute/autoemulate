@@ -6,21 +6,21 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 
-from autoemulate.experimental.config import FitConfig
 from autoemulate.experimental.emulators.base import InputTypeMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.types import ModelConfig
 
 
 @pytest.fixture
-def fit_config():
-    return FitConfig(
-        epochs=10,
-        batch_size=2,
-        shuffle=False,
-        verbose=False,
-        optimizer=torch.optim.Adam,
-        criterion=torch.nn.MSELoss,
-    )
+def model_config() -> ModelConfig:
+    return {
+        "epochs": 10,
+        "batch_size": 2,
+        "shuffle": False,
+        "verbose": False,
+        "optimizer": torch.optim.Adam,
+        "criterion": torch.nn.MSELoss,
+    }
 
 
 class TestInputTypeMixin:
@@ -112,25 +112,25 @@ class TestPyTorchBackend:
         """
         self.model = self.DummyModel()
 
-    def test_fit(self, fit_config):
+    def test_fit(self, model_config):
         """
         Test the fit method of PyTorchBackend.
         """
         x = np.array([[1.0], [2.0], [3.0]])
         y = np.array([[2.0], [4.0], [6.0]])
-        loss_history = self.model.fit(x, y, fit_config)
+        loss_history = self.model.fit(x, y, model_config)
 
         assert isinstance(loss_history, list)
         assert len(loss_history) == 10
         assert all(isinstance(loss, float) for loss in loss_history)
 
-    def test_predict(self, fit_config):
+    def test_predict(self, model_config):
         """
         Test the predict method of PyTorchBackend.
         """
         x_train = np.array([[1.0], [2.0], [3.0]])
         y_train = np.array([[2.0], [4.0], [6.0]])
-        self.model.fit(x_train, y_train, fit_config)
+        self.model.fit(x_train, y_train, model_config)
 
         X_test = torch.tensor([[4.0]])
         y_pred = self.model.predict(X_test)
