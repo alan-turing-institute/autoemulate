@@ -33,11 +33,14 @@ class Tuner:
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
         # split data into train/validation sets
         train, val = tuple(random_split(self.dataset, [0.8, 0.2]))
-        train, val = DataLoader(train), DataLoader(val)
-        train_x, train_y = next(iter(train))
+        train, val = (
+            DataLoader(train, batch_size=len(train)),
+            DataLoader(val, batch_size=len(val)),
+        )
+        ((train_x, train_y), (val_x, val_y)) = next(iter(train)), next(iter(val))
 
         # get all the available hyperparameter options
-        params_all: TuneConfig = model_class.get_tunables()
+        params_all: TuneConfig = model_class.get_tune_config()
 
         # keep track of what parameter values tested and how they performed
         params_tested: list[ModelConfig] = []
@@ -46,18 +49,19 @@ class Tuner:
         for _ in range(self.n_iter):
             # randomly sample hyperparameters and instantiate model
             params_sample: dict[str, ValueLike] = {
-                k: np.random.choice(v) for k, v in params_all
+                k: np.random.choice(v) for k, v in params_all.items()
             }
             if isinstance(model_class, gpytorch.models.ExactGP):
                 m = model_class(train_x, train_y, **params_sample)
                 m.fit(train_x, train_y)
             else:
                 m = model_class(**params_sample)
-                m.fit(train_x, None)
+                # TODO: check if pass as dataloader
+                m.fit(train_x, train_y)
 
             # evaluate
-            y_pred = m.predict(val)
-            score = self.score_f(next(val)[1], y_pred)
+            y_pred = m.predict(val_x)
+            score = self.score_f(val_y, y_pred.detach().numpy())
             params_tested.append(params_sample)
             val_scores.append(score)
 

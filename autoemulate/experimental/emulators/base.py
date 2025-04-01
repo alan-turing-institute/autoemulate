@@ -3,11 +3,10 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 from autoemulate.experimental.types import (
     InputLike,
-    ModelConfig,
     OutputLike,
     TuneConfig,
 )
@@ -17,7 +16,6 @@ class Emulator(ABC):
     """The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
-    - Active learning implementations
     """
 
     def __call__(self, *args, **kwds):
@@ -30,8 +28,9 @@ class Emulator(ABC):
     def predict(self, x: InputLike) -> OutputLike:
         pass
 
+    @staticmethod
     @abstractmethod
-    def get_tune_config(self) -> TuneConfig: ...
+    def get_tune_config() -> TuneConfig: ...
 
     @abstractmethod
     def cross_validate(self, x: InputLike): ...
@@ -44,7 +43,7 @@ class InputTypeMixin:
         y: OutputLike | None = None,
         batch_size: int = 16,
         shuffle: bool = True,
-    ) -> DataLoader:
+    ) -> DataLoader | Dataset:
         """
         Mixin class to convert input data to pytorch DataLoaders.
         """
@@ -59,9 +58,11 @@ class InputTypeMixin:
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         elif isinstance(x, DataLoader) and y is None:
             dataloader = x
+        elif isinstance(x, Dataset) and y is None:
+            dataloader = x
         else:
             raise ValueError(
-                "Unsupported type for X. Must be numpy array, PyTorch tensor, or DataLoader."
+                f"Unsupported type for X ({type(x)}). Must be numpy array, PyTorch tensor, or DataLoader."
             )
 
         return dataloader
@@ -104,8 +105,6 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         Returns:
             List of loss values per epoch
         """
-        if config is None:
-            raise ValueError("config must be an instance of ModelConfig")
 
         self.train()  # Set model to training mode
         loss_history = []
@@ -139,9 +138,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
             loss_history.append(avg_epoch_loss)
 
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
-                print(
-                    f"Epoch [{epoch + 1}/{config.epochs}], Loss: {avg_epoch_loss:.4f}"
-                )
+                print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
         return loss_history
 
@@ -152,9 +149,10 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     def cross_validate(self, x: InputLike) -> None:
         raise NotImplementedError("This function is not yet implemented.")
 
-    def get_tune_config(self):
+    @staticmethod
+    def get_tune_config():
         return {
-            "max_epochs": [100, 200, 300],
+            "epochs": [100, 200, 300],
             "batch_size": [16, 32],
             "hidden_dim": [32, 64, 128],
             "latent_dim": [32, 64, 128],
