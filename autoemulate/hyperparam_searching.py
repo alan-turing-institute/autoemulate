@@ -3,10 +3,12 @@ import logging
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 
-from autoemulate.utils import _adjust_param_space
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_model_param_space
-from autoemulate.utils import get_model_params
+from autoemulate.utils import (
+    _adjust_param_space,
+    get_model_name,
+    get_model_param_space,
+    get_model_params,
+)
 
 
 def _optimize_params(
@@ -37,7 +39,7 @@ def _optimize_params(
         Type of search to perform. Only "random" is supported.
     niter : int, default=20
         Number of parameter settings that are sampled. Trades off runtime vs quality of the solution.
-        param_space : dict, default=None
+    param_space : dict, default=None
         Dictionary with parameters names (string) as keys and lists of
         parameter settings to try as values, or a list of such dictionaries,
         in which case the grids spanned by each dictionary in the list are
