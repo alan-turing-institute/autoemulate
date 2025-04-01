@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import torch
@@ -9,4 +9,5 @@ DistributionLike = torch.distributions.Distribution
 InputLike = NumpyLike | TensorLike | torch.utils.data.DataLoader
 OutputLike = DistributionLike | TensorLike | tuple[TensorLike, TensorLike]
 ValueLike = Any
-ParamsLike = Dict[str, list[ValueLike]]
+TuneConfig = dict[str, list[ValueLike]]
+ModelConfig = dict[str, ValueLike]
