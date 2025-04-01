@@ -144,7 +144,7 @@ class TestPyTorchBackend:
         assert y_pred.shape == (1, 1)
         assert y_pred.shape == (1, 1)
 
-    def test_tune(self):
+    def test_tune_xy(self):
         """
         Test that Tuner accepts X,Y inputs.
         """
@@ -153,7 +153,7 @@ class TestPyTorchBackend:
         tuner = Tuner(x_train, y_train, n_iter=10)
         tuner.run(self.DummyModel)
 
-    def test_tune(self):
+    def test_tune_dataset(self):
         """
         Test that Tuner accepts a single Dataset input.
         """
