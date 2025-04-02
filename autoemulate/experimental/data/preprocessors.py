@@ -6,7 +6,7 @@ from autoemulate.experimental.types import InputLike
 
 class Preprocessor(ABC):
     @abstractmethod
-    def preprocess(x: InputLike) -> InputLike: ...
+    def preprocess(self, x: InputLike) -> InputLike: ...
 
 
 class StandardizerMixin(Preprocessor):

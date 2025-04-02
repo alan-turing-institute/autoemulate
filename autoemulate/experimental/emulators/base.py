@@ -34,7 +34,7 @@ class Emulator(ABC):
     def cross_validate(self, x: InputLike): ...
 
 
-class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
+class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     """
     PyTorchBackend is a torch model and implements the base class.
     This provides default implementations to further subclasses.
@@ -47,6 +47,11 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     epochs: int = 10
     verbose: bool = False
     preprocessor: Preprocessor | None = None
+
+    def preprocess(self, x):
+        if self.preprocessor is None:
+            return x
+        return self.preprocessor.preprocess(x)
 
     def fit(
         self,
@@ -79,10 +84,6 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         self.train()  # Set model to training mode
         loss_history = []
 
-        # Preprocess x if preprocessor
-        if self.preprocessor is not None:
-            x = self.preprocessor.preprocess(x)
-
         # Convert input to DataLoader if not already
         dataloader = self._convert_to_dataloader(
             x, y, batch_size=self.batch_size, shuffle=self.shuffle
@@ -94,6 +95,11 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
             batches = 0
 
             for X_batch, y_batch in dataloader:
+                # Preprocess x_batch
+                # TODO: consider if this should be moved outside of dataloader iteration
+                # e.g. as part of the InputTypeMixin
+                x = self.preprocess(X_batch)
+
                 # Forward pass
                 y_pred = self.forward(X_batch)
                 loss = self.loss_fn(y_pred, y_batch)
@@ -118,7 +124,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
 
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()
-        x = self.standardize(x)
+        x = self.preprocess(x)
         return self(x)
 
     def cross_validate(self, x: InputLike) -> None:

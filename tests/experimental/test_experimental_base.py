@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
+from autoemulate.experimental.data.preprocessors import StandardizerMixin
 
 # @pytest.fixture
 # def model_config() -> M:
@@ -92,7 +93,7 @@ class TestPyTorchBackend:
     Class to test the PyTorchBackend class.
     """
 
-    class DummyModel(PyTorchBackend):
+    class DummyModel(PyTorchBackend, StandardizerMixin):
         """
         A dummy implementation of PyTorchBackend for testing purposes.
         """
@@ -102,6 +103,9 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
+            self.preprocessor = StandardizerMixin(
+                torch.Tensor([[0.0]]), torch.Tensor([[1.0]])
+            )
 
         def forward(self, x):
             return self.linear(x)
