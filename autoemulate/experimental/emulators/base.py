@@ -20,7 +20,7 @@ class Emulator(ABC):
         return self.predict(*args, **kwds)
 
     @abstractmethod
-    def fit(self, x: InputLike, y: OutputLike | None): ...
+    def fit(self, x: InputLike, y: InputLike | None): ...
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
@@ -56,7 +56,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     def fit(
         self,
         x: InputLike,
-        y: OutputLike | None,
+        y: InputLike | None,
     ) -> list:
         """
         Train a PyTorchBackend model.

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
 
-from autoemulate.experimental.types import InputLike, OutputLike
+from autoemulate.experimental.types import InputLike
 
 
 class InputTypeMixin:
@@ -13,7 +13,7 @@ class InputTypeMixin:
     def _convert_to_dataset(
         self,
         x: InputLike,
-        y: OutputLike | None = None,
+        y: InputLike | None = None,
     ) -> Dataset:
         """
         Convert input data to pytorch Dataset.
@@ -38,7 +38,7 @@ class InputTypeMixin:
     def _convert_to_dataloader(
         self,
         x: InputLike,
-        y: OutputLike | None = None,
+        y: InputLike | None = None,
         batch_size: int = 16,
         shuffle: bool = True,
     ) -> DataLoader:
