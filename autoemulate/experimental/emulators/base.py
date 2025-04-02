@@ -4,7 +4,8 @@ import numpy as np
 import torch
 from torch import nn
 
-from autoemulate.experimental.data import InputTypeMixin
+from autoemulate.experimental.data.preprocessors import Preprocessor
+from autoemulate.experimental.data.utils import InputTypeMixin
 from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
 
 
@@ -45,6 +46,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     shuffle: bool = True
     epochs: int = 10
     verbose: bool = False
+    preprocessor: Preprocessor | None = None
 
     def fit(
         self,
@@ -76,6 +78,10 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
 
         self.train()  # Set model to training mode
         loss_history = []
+
+        # Preprocess x if preprocessor
+        if self.preprocessor is not None:
+            x = self.preprocessor.preprocess(x)
 
         # Convert input to DataLoader if not already
         dataloader = self._convert_to_dataloader(
@@ -112,6 +118,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
 
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()
+        x = self.standardize(x)
         return self(x)
 
     def cross_validate(self, x: InputLike) -> None:
