@@ -85,7 +85,7 @@ class TestInputTypeMixin:
         """
         X = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for x."):
-            self.mixin._convert_to_dataloader(X)
+            self.mixin._convert_to_dataloader(X)  # type: ignore - test for invalid type
 
 
 class TestPyTorchBackend:
