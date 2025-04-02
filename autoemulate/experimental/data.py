@@ -18,7 +18,7 @@ class InputTypeMixin:
         """
         Convert input data to pytorch Dataset.
         """
-        # Convert input to DataLoader if not already
+        # Convert input to Dataset if not already
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
         if isinstance(y, np.ndarray):
