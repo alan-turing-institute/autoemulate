@@ -12,6 +12,6 @@ InputLike = (
     NumpyLike | TensorLike | torch.utils.data.DataLoader | torch.utils.data.Dataset
 )
 OutputLike = DistributionLike | TensorLike | tuple[TensorLike, TensorLike]
-ValueLike = Any
-TuneConfig = dict[str, list[ValueLike]]
-ModelConfig = dict[str, ValueLike]
+ParamLike = Any
+TuneConfig = dict[str, list[ParamLike]]
+ModelConfig = dict[str, ParamLike]

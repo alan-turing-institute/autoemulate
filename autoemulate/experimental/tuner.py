@@ -8,7 +8,7 @@ from autoemulate.experimental.types import (
     ModelConfig,
     OutputLike,
     TuneConfig,
-    ValueLike,
+    ParamLike,
 )
 
 
@@ -53,7 +53,7 @@ class Tuner(InputTypeMixin):
 
         for _ in range(self.n_iter):
             # randomly sample hyperparameters and instantiate model
-            params_sample: dict[str, ValueLike] = {
+            params_sample: dict[str, ParamLike] = {
                 k: np.random.choice(v) for k, v in params_all.items()
             }
             if isinstance(model_class, gpytorch.models.ExactGP):
