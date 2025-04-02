@@ -2,9 +2,10 @@
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
 
 from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import TargetPCA
+from autoemulate.preprocess_target import TargetPCA, NoChangeTransformer
 from autoemulate.preprocess_target import VAEOutputPreprocessor
 
 
@@ -24,7 +25,7 @@ class ModelPrepPipeline:
         dim_reducer_output=None,
     ):
         self.model_piped = None
-        self.transformer = None
+        self.transformer = NoChangeTransformer()
 
         self.models = model_registry.get_models(model_names)
 
@@ -38,7 +39,6 @@ class ModelPrepPipeline:
             scale_output,
             scaler_output,
             reduce_dim_output,
-            dim_reducer_output,
         )
 
     def _turn_models_into_multioutput(self, y):
@@ -74,7 +74,6 @@ class ModelPrepPipeline:
         scale_output,
         scaler_output,
         reduce_dim_output,
-        dim_reducer_output,
     ):
         """Wrap reducer in a pipeline if reduce_dim_output is True.
 
@@ -102,13 +101,13 @@ class ModelPrepPipeline:
             input_pipeline = Pipeline(input_steps)
 
             # Create output transformation pipeline
-            if self.transformer is not None:
-                output_steps = []
-                if scale_output:
-                    output_steps.append(("scaler_output", scaler_output))
-                if reduce_dim_output:
-                    output_steps.append(("dim_reducer_output", self.transformer))
+            output_steps = []
+            if scale_output:
+                output_steps.append(("scaler_output", scaler_output))
+            if reduce_dim_output:
+                output_steps.append(("dim_reducer_output", self.transformer))
 
+            if output_steps:
                 output_pipeline = Pipeline(output_steps)
                 final_model = TransformedTargetRegressor(
                     regressor=input_pipeline, transformer=output_pipeline

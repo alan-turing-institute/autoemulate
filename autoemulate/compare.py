@@ -256,7 +256,6 @@ class AutoEmulate:
                     if prep_name != "None"
                     else None
                 )
-                print(transformer)
 
                 if transformer is not None:
                     transformer.fit(self.y)
@@ -291,15 +290,11 @@ class AutoEmulate:
                         try:
                             # hyperparameter search
                             if self.param_search:
-                                self.preprocessing_results[prep_name]["models"][
-                                    i
-                                ] = _optimize_params(
+                                model = _optimize_params(  # TODO: self.preprocessing_results[prep_name]["models"][i]
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=self.preprocessing_results[prep_name][
-                                        "models"
-                                    ][i],
+                                    model=model,  # TODO: self.preprocessing_results[prep_name]["models"][i]
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,
@@ -424,10 +419,14 @@ class AutoEmulate:
                 if not isinstance(name, str):
                     raise ValueError("Name must be a string")
                 for model in self.preprocessing_results[preprocessing]["models"]:
+<<<<<<< HEAD
                     if (
                         get_model_name(model) == name
                         or get_short_model_name(model) == name
                     ):
+=======
+                    if get_model_name(model) == name or get_short_model_name(model) == name:
+>>>>>>> ddb5c35792e8553908f04e058d0d31bd5bc9f128
                         return model
                 raise ValueError(f"Model {name} not found")
             else:
@@ -743,7 +742,7 @@ class AutoEmulate:
 
         # Create the plot
         figure = _plot_cv(
-            self.preprocessing_results["None"]["cv_results"],
+            self.preprocessing_results["None"]["cv_results"], #TODO: debug why this and not directly cv_results
             self.X[self.train_idxs],
             y_train,
             model_name=model_name,

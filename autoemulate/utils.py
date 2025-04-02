@@ -14,7 +14,6 @@ from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
-
 # manage warnings -------------------------------------------------------------
 
 
@@ -220,6 +219,9 @@ def get_model_param_space(model, search_type="random"):
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.get_grid_params(search_type)
+    
+    elif isinstance(model, TransformedTargetRegressor):
+        return get_model_param_space(model.regressor)
 
     # Otherwise, it's a standalone model
     else:

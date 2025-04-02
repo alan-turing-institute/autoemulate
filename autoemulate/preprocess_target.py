@@ -76,7 +76,7 @@ class TargetPCA(BaseEstimator, TransformerMixin):
             raise ValueError("This is a PCA transformer - input data cannot be None")
         return X.reshape(-1, 1) if len(np.array(X).shape) == 1 else X
 
-    def fit(self, X):
+    def fit(self, X, y=None):
         X_reshaped = self._validate_data(X)
         self.pca.fit(X_reshaped)
         return self
@@ -502,3 +502,29 @@ class non_trainable_transformer:
     # def __getattr__(self, name):
     #    """Delegate attribute access to the base model if not found in Reducer."""
     #    return getattr(self.base_model, name)
+
+
+
+
+class NoChangeTransformer(BaseEstimator, TransformerMixin):
+    """Transformer which does not do any reduction"""
+
+    def __init__(self):
+        pass
+    def _validate_data(self, X):
+        return X
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return X
+
+    def fit_transform(self, X):
+        return X
+
+    def inverse_transform(self, X):
+        return X
+
+    def inverse_transform_std(self, x_std):
+        return x_std
