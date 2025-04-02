@@ -62,7 +62,6 @@ def _optimize_params(
         # the transformer is non trainable so this will only scale the data
         model.transformer.fit(y)
         y = model.transformer.transform(y)
-
         regressor = model.regressor
     else:
         regressor = model
