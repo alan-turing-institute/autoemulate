@@ -256,6 +256,7 @@ class AutoEmulate:
                     if prep_name != "None"
                     else None
                 )
+                print(transformer)
 
                 if transformer is not None:
                     transformer.fit(self.y)
