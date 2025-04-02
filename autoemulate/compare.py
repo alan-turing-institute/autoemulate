@@ -377,7 +377,7 @@ class AutoEmulate:
 
         return self.best_combination
 
-    def get_model(self, name=None, rank=1, preprocessing=None, metric="r2"):
+    def get_model(self, name=None, rank=None, preprocessing=None, metric="r2"):
         """Get a fitted model by name or rank, optionally from specific preprocessing.
 
         Parameters
@@ -398,8 +398,19 @@ class AutoEmulate:
 
         if not hasattr(self, "preprocessing_results"):
             raise RuntimeError("Must run compare() first")
-        if not isinstance(name, str):
-            raise ValueError("Name must be a string")
+            # Get overall best across all preprocessing methods
+
+        if rank is not None:
+            summary = self.summarise_cv(sort_by=metric)
+            # Remove duplicate models from different preprocessing
+            summary = summary.drop_duplicates(subset=["model", "short"], keep="first")
+            name = summary.iloc[rank - 1]["model"]
+            # Check valid rank
+            if rank < 1 or rank > len(summary):
+                raise RuntimeError(
+                    f"Rank must be between 1 and {len(summary)} for preprocessing '{preprocessing}'"
+                )
+
         # Get from specific preprocessing method
         if preprocessing is not None:
             if preprocessing not in self.preprocessing_results:
@@ -411,7 +422,14 @@ class AutoEmulate:
                 if not isinstance(name, str):
                     raise ValueError("Name must be a string")
                 for model in self.preprocessing_results[preprocessing]["models"]:
+<<<<<<< HEAD
+                    if (
+                        get_model_name(model) == name
+                        or get_short_model_name(model) == name
+                    ):
+=======
                     if get_model_name(model) == name or get_short_model_name(model) == name:
+>>>>>>> ddb5c35792e8553908f04e058d0d31bd5bc9f128
                         return model
                 raise ValueError(f"Model {name} not found")
             else:
@@ -428,11 +446,9 @@ class AutoEmulate:
         # Search all preprocessing methods for named model
         for prep_name, prep_data in self.preprocessing_results.items():
             for model in prep_data["models"]:
-                if get_model_name(model) == name  or get_short_model_name(model) == name:
+                if get_model_name(model) == name or get_short_model_name(model) == name:
                     return model
         raise ValueError(f"Model {name} not found")
-
-                
 
     def get_best_model_for_prep(self, prep_results, metric="r2"):
         """Get the best model for a specific preprocessing method.
