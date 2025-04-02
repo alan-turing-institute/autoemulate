@@ -257,10 +257,13 @@ class AutoEmulate:
                     else None
                 )
 
-                if transformer is not None:
-                    transformer.fit(self.y)
-                    self.ae_pipeline.transformer = non_trainable_transformer(
-                        transformer
+                if self.scale_output and self.scaler_output is not None:
+                    fitted_scaler_output = self.ae_pipeline.scaler_output.fit(_ensure_2d(self.y))
+                    self.ae_pipeline.scaler_output = non_trainable_transformer(fitted_scaler_output)
+                if self.reduce_dim_output and transformer is not None:
+                    fitted_transformer = transformer.fit(self.y)
+                    self.ae_pipeline.dim_reducer_output = non_trainable_transformer(
+                        fitted_transformer
                     )
 
                 # Initialize storage for this preprocessing method
@@ -726,7 +729,7 @@ class AutoEmulate:
 
         # Create the plot
         figure = _plot_cv(
-            self.preprocessing_results["None"]["cv_results"], #TODO: debug why this and not directly cv_results
+            cv_results,#self.preprocessing_results["None"]["cv_results"], #TODO: debug why this and not directly cv_results
             self.X[self.train_idxs],
             y_train,
             model_name=model_name,

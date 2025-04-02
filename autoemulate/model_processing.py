@@ -25,7 +25,8 @@ class ModelPrepPipeline:
         dim_reducer_output=None,
     ):
         self.model_piped = None
-        self.transformer = NoChangeTransformer()
+        self.scaler_output = scaler_output
+        self.transformer = PCA() #TODO: NoChangeTransformer() is not working 
 
         self.models = model_registry.get_models(model_names)
 
@@ -103,7 +104,7 @@ class ModelPrepPipeline:
             # Create output transformation pipeline
             output_steps = []
             if scale_output:
-                output_steps.append(("scaler_output", scaler_output))
+                output_steps.append(("scaler_output", self.scaler_output))
             if reduce_dim_output:
                 output_steps.append(("dim_reducer_output", self.transformer))
 
