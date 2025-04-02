@@ -9,7 +9,7 @@ class Preprocessor(ABC):
     def preprocess(self, x: InputLike) -> InputLike: ...
 
 
-class StandardizerMixin(Preprocessor):
+class Standardizer(Preprocessor):
     mean: torch.Tensor
     std: torch.Tensor
 
