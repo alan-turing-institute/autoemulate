@@ -103,8 +103,9 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
+
             self.preprocessor = Standardizer(
-                torch.Tensor([[0.0, -0.5]]), torch.Tensor([[2.0, 0.5]])
+                torch.Tensor([[-0.5]]), torch.Tensor([[0.5]])
             )
 
         def forward(self, x):
@@ -165,7 +166,7 @@ class TestPyTorchBackend:
         assert isinstance(x_train_preprocessed, torch.Tensor)
         assert torch.allclose(
             x_train_preprocessed,
-            torch.Tensor([[0.5, 3.0], [1.0, 5.0], [1.5, 7.0], [2.0, 9.0], [2.5, 11.0]]),
+            torch.Tensor([[3.0], [5.0], [7.0], [9.0], [11.0]]),
         )
 
     def test_standardizer_fail(self):
