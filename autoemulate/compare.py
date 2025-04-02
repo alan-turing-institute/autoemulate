@@ -253,7 +253,9 @@ class AutoEmulate:
                 prep_name = prep_config["name"]
                 prep_params = prep_config.get("params", {})
 
-                fitted_transformer = get_dim_reducer(prep_name, **prep_params).fit(self.y)
+                fitted_transformer = get_dim_reducer(prep_name, **prep_params).fit(
+                    self.y
+                )
 
                 # Convert to non-trainable wrapper and Update pipeline with frozen transformer
                 self.ae_pipeline.transformer_method = non_trainable_transformer(
@@ -736,7 +738,9 @@ class AutoEmulate:
 
         # Create the plot
         figure = _plot_cv(
-            self.preprocessing_results["None"]["cv_results"], #TODO: debug why this and not directly cv_results
+            self.preprocessing_results["None"][
+                "cv_results"
+            ],  # TODO: debug why this and not directly cv_results
             self.X[self.train_idxs],
             y_train,
             model_name=model_name,

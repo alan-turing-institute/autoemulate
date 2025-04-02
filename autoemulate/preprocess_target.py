@@ -61,15 +61,13 @@ def get_dim_reducer(
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
 
-
 class TargetPCA(BaseEstimator, TransformerMixin):
     """PCA transformer for target values (y) that strictly requires y."""
 
-    def __init__(self, n_components):
+    def __init__(self, n_components=None):
         self.n_components = n_components
-        self.pca = PCA(n_components=n_components)
-
-    def _validate_data(self, X):
+        
+    def _validate_data(self, X, y=None):
         """Validate that X is provided and properly shaped."""
         if X is None:
             raise ValueError("This is a PCA transformer - input data cannot be None")
@@ -77,37 +75,40 @@ class TargetPCA(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         X_reshaped = self._validate_data(X)
-        self.pca.fit(X_reshaped)
+        if self.n_components is None:
+            self.n_components = min(X_reshaped.shape)
+        self._pca = PCA(n_components=self.n_components)
+        self._pca.fit(X_reshaped)
         return self
 
-    def transform(self, X):
+    def transform(self, X, y=None):
         X_reshaped = self._validate_data(X)
-        X_transformed = self.pca.transform(X_reshaped)
-        return X_transformed
+        return self._pca.transform(X_reshaped)
 
-    def fit_transform(self, X):
+    def fit_transform(self, X, y=None, **fit_params):
         X_reshaped = self._validate_data(X)
-        X_transformed = self.pca.fit_transform(X_reshaped)
-        return X_transformed
+        if self.n_components is None:
+            self.n_components = min(X_reshaped.shape)
+        self._pca = PCA(n_components=self.n_components)
+        return self._pca.fit_transform(X_reshaped)
 
-    def inverse_transform(self, X):
+    def inverse_transform(self, X, y=None):
         X_reshaped = self._validate_data(X)
-        X_original = self.pca.inverse_transform(X_reshaped)
-        return X_original
+        return self._pca.inverse_transform(X_reshaped)
 
     def inverse_transform_std(self, x_std):
-        """
-        As PCA is a linear transformation, the variance in the origianl coordinate system can be calculated as:
-        σ²_X = Σ_j (A_j)^2 * σ²_Y_j,
-        where A_j is the j-th principal component and σ²_Y_j is the variance of the j-th principal component.
-        """
+        """Transform standard deviations from latent space to original space."""
         n_pca_components = x_std.shape[1]
-
-        components = self.pca.components_[:n_pca_components]
+        components = self._pca.components_[:n_pca_components]
         x_std_transformed = np.sqrt(
             np.sum((x_std[:, np.newaxis, :] * components.T) ** 2, axis=2)
         )
         return x_std_transformed
+
+    @property
+    def pca(self):
+        """Public accessor for the PCA model."""
+        return self._pca
 
 
 class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
@@ -294,7 +295,7 @@ class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
 
         return X_encoded
 
-    def fit_transform(self, X, **fit_params):
+    def fit_transform(self, X, y=None, **fit_params):
         # Fit the model
         self.fit(X, **fit_params)
         # Return the transformed data
@@ -528,7 +529,7 @@ class NoChangeTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         return X
 
-    def fit_transform(self, X):
+    def fit_transform(self, X, y=None, **fit_params):
         return X
 
     def inverse_transform(self, X):
