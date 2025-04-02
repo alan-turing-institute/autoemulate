@@ -3,7 +3,9 @@ import pytest
 import torch
 from sklearn.datasets import make_regression
 
-from autoemulate.experimental.emulators.gpytorch_backend import GPyTorch
+from autoemulate.experimental.emulators.gaussian_process.exact import (
+    GaussianProcessExact,
+)
 from autoemulate.experimental.types import DistributionLike
 from autoemulate.experimental.types import TensorLike
 
@@ -52,7 +54,7 @@ def covar(X: TensorLike, y: TensorLike):
 def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
-    gp = GPyTorch(
+    gp = GaussianProcessExact(
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2),
@@ -68,7 +70,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
 def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     print(x.shape, y.shape)
-    gp = GPyTorch(
+    gp = GaussianProcessExact(
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=1),

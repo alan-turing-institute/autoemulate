@@ -15,7 +15,7 @@ from gpytorch.means import Mean
 from gpytorch.kernels import Kernel
 
 
-class GPyTorch(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
+class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     likelihood: MultitaskGaussianLikelihood
     random_state: int | None = None
     epochs: int = 10
