@@ -127,11 +127,11 @@ class TestPyTorchBackend:
         """
         x = np.array([[1.0], [2.0], [3.0]])
         y = np.array([[2.0], [4.0], [6.0]])
-        loss_history = self.model.fit(x, y)
+        self.model.fit(x, y)
 
-        assert isinstance(loss_history, list)
-        assert len(loss_history) == 10
-        assert all(isinstance(loss, float) for loss in loss_history)
+        assert isinstance(self.model.loss_history, list)
+        assert len(self.model.loss_history) == 10
+        assert all(isinstance(loss, float) for loss in self.model.loss_history)
 
     def test_predict(self):
         """
