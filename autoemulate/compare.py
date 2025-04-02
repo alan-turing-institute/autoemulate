@@ -131,10 +131,17 @@ class AutoEmulate:
             self.X, test_size=self.test_set_size, random_state=42
         )
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
+
+        if preprocessing_methods is None or len(preprocessing_methods) == 0:
+            # Default to no preprocessing
+            preprocessing_methods = [{"name": "None", "params": {}}]
+        self.preprocessing_methods = preprocessing_methods
+
         self.ae_pipeline = ModelPrepPipeline(
             model_registry=self.model_registry,
             model_names=list(self.model_names.keys()),
             y=self.y,
+            prep_config={"name": "None", "params": {}},
             scale_input=scale,
             scaler_input=scaler,
             reduce_dim_input=reduce_dim,
@@ -160,7 +167,6 @@ class AutoEmulate:
         self.scaler_output = scaler_output
         self.reduce_dim_output = reduce_dim_output
         self.cv_results = {}
-        self.preprocessing_methods = preprocessing_methods
 
         if print_setup:
             self.print_setup()
@@ -238,37 +244,31 @@ class AutoEmulate:
 
         # Determine preprocessing methods
 
-        if self.preprocessing_methods is None or len(self.preprocessing_methods) == 0:
-            # Default to no preprocessing
-            self.preprocessing_methods = [{"name": "None", "params": {}}]
-
         with tqdm(
             total=len(self.ae_pipeline.models_piped) * len(self.preprocessing_methods),
             desc=pb_text,
         ) as pbar:
             for prep_config in self.preprocessing_methods:
+                # Create the actual transformer instance and fit it
                 prep_name = prep_config["name"]
                 prep_params = prep_config.get("params", {})
 
-                # Create the actual transformer instance and fit it
-                transformer = (
-                    get_dim_reducer(prep_name, **prep_params)
-                    if prep_name != "None"
-                    else None
+                fitted_transformer = get_dim_reducer(prep_name, **prep_params).fit(
+                    self.y
                 )
+                # Convert to non-trainable wrapper and Update pipeline with frozen transformer
 
-                if transformer is not None:
-                    transformer.fit(self.y)
-                    self.ae_pipeline.transformer = non_trainable_transformer(
-                        transformer
-                    )
+                self.ae_pipeline.transformer_method = non_trainable_transformer(
+                    fitted_transformer
+                )
+                self.ae_pipeline._wrap_model_reducer_in_pipeline()
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
                     "models": self.ae_pipeline.models_piped,
                     "cv_results": {},
                     "best_model": None,
-                    "transformer": transformer,
+                    "transformer": self.ae_pipeline.transformer_method,
                     "params": prep_params,
                 }
 
@@ -419,14 +419,10 @@ class AutoEmulate:
                 if not isinstance(name, str):
                     raise ValueError("Name must be a string")
                 for model in self.preprocessing_results[preprocessing]["models"]:
-<<<<<<< HEAD
                     if (
                         get_model_name(model) == name
                         or get_short_model_name(model) == name
                     ):
-=======
-                    if get_model_name(model) == name or get_short_model_name(model) == name:
->>>>>>> ddb5c35792e8553908f04e058d0d31bd5bc9f128
                         return model
                 raise ValueError(f"Model {name} not found")
             else:
@@ -742,7 +738,9 @@ class AutoEmulate:
 
         # Create the plot
         figure = _plot_cv(
-            self.preprocessing_results["None"]["cv_results"], #TODO: debug why this and not directly cv_results
+            self.preprocessing_results["None"][
+                "cv_results"
+            ],  # TODO: debug why this and not directly cv_results
             self.X[self.train_idxs],
             y_train,
             model_name=model_name,

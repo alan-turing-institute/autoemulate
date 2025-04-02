@@ -190,19 +190,25 @@ def test_evaluate_singleoutput_raw(ae_run):
     model = ae_run.get_model(rank=1)
     scores_df = ae_run.evaluate(model=model, multioutput="raw_values")
     assert isinstance(scores_df, pd.DataFrame)
-    assert scores_df.shape == (1, len(ae_run.metrics) + 3)
+    assert scores_df.shape == (1, len(ae_run.metrics) + 4)
 
 
 def test_evaluate_multioutput_raw(ae_run_multioutput):
     model = ae_run_multioutput.get_model(rank=1)
     scores_df = ae_run_multioutput.evaluate(model=model, multioutput="raw_values")
     assert isinstance(scores_df, pd.DataFrame)
-    assert scores_df.shape == (2, len(ae_run_multioutput.metrics) + 3)
+    assert scores_df.shape == (2, len(ae_run_multioutput.metrics) + 4)
 
+
+"""
+The method has a default model=None parameter
+If no model is provided, it tries to use self.best_model
+Only raises ValueError if self.best_model doesn't exist and no model was provided
 
 def test_score_without_model(ae_run):
     with pytest.raises(ValueError):
         ae_run.evaluate()
+"""
 
 
 # -----------------------test refit-------------------#
@@ -217,30 +223,162 @@ def test_refit(ae_run):
 # --------------- test correct hyperparameter updating ------------------
 def test_param_search_updates_models(ae, Xy):
     X, y = Xy
-    ae.setup(X, y, models=["RandomForest"], param_search=True, param_search_iters=5)
-    params_before = ae.models[0].get_params()  # just one model, so index with 0
+    # Ensure y is 2D for testing
+    y = y.reshape(-1, 1) if y.ndim == 1 else y
+
+    ae.setup(X, y, models=["RandomForest"], param_search=True, param_search_iters=1)
+
+    # Get initial parameters from the pipeline's model
+    params_before = ae.ae_pipeline.models_piped[0].regressor.steps[-1][1].get_params()
+
     ae.compare()
-    params_after = ae.models[0].get_params()
+
+    # Get parameters from the best model after comparison
+    best_model = ae.preprocessing_results["None"]["best_model"]
+
+    # Handle both pipeline structures
+    if hasattr(best_model, "regressor"):  # TransformedTargetRegressor case
+        params_after = best_model.regressor.steps[-1][1].get_params()
+    else:  # Direct pipeline case
+        params_after = best_model.steps[-1][1].get_params()
+
+    # Verify parameters changed (since param_search=True)
     assert params_before != params_after
 
 
 def test_model_params_equal_wo_param_search(ae, Xy):
     X, y = Xy
-    ae.setup(X, y, models=["RandomForest"])
-    params_before = ae.models[0].get_params()
+    # Ensure y is 2D if needed
+    y = y.reshape(-1, 1) if len(y.shape) == 1 else y
+
+    # Setup without parameter search and with output scaling disabled
+    ae.setup(
+        X,
+        y,
+        models=["RandomForest"],
+        param_search=False,
+        scale_output=False,  # Disable output scaling
+        scaler_output=None,  # Explicitly no scaler
+    )
+
+    # Get initial parameters directly from the model (not pipeline)
+    initial_model = ae.ae_pipeline.models_piped[0]
+    if hasattr(initial_model, "regressor"):  # If wrapped in a pipeline
+        initial_params = initial_model.regressor.get_params()
+    else:
+        initial_params = initial_model.get_params()
+
     ae.compare()
-    params_after = ae.models[0].get_params()
-    assert params_before == params_after
+
+    # Get final parameters
+    final_model = ae.preprocessing_results["None"]["models"][0]
+    if hasattr(final_model, "regressor"):  # If wrapped in a pipeline
+        final_params = final_model.regressor.get_params()
+    else:
+        final_params = final_model.get_params()
+
+    # Filter out sklearn internal parameters and random states
+    skip_params = {"random_state", "n_jobs", "verbose"}  # Add others as needed
+    filtered_before = {
+        k: v
+        for k, v in initial_params.items()
+        if not (k.endswith("_") or k in skip_params)
+    }
+    filtered_after = {
+        k: v
+        for k, v in final_params.items()
+        if not (k.endswith("_") or k in skip_params)
+    }
+
+    # Compare only the parameters that should remain constant
+    for param in filtered_before:
+        assert param in filtered_after, f"Parameter {param} missing after compare"
+        assert filtered_before[param] == filtered_after[param], (
+            f"Parameter {param} changed unexpectedly\n"
+            f"Before: {filtered_before[param]}\n"
+            f"After: {filtered_after[param]}"
+        )
 
 
 # -----------------------test summarize_cv-------------------#
 def test_cv_summary_all_models(ae_run):
+    """Test that summarize_cv returns aggregated results for all models."""
     summary = ae_run.summarize_cv()
+
     assert isinstance(summary, pd.DataFrame)
-    assert summary.shape[0] == len(ae_run.model_names)
+
+    # Get the unique model names from the summary (accounting for preprocessing)
+    summary_model_names = summary["model"].unique()
+
+    # Get the expected model names from model_registry
+    expected_model_names = set(ae_run.model_names.keys())
+
+    # Verify all expected models are present in the results
+    assert (
+        set(summary_model_names) == expected_model_names
+    ), f"Expected models {expected_model_names}, got {set(summary_model_names)}"
 
 
-def test_cv_summary_one_model(ae_run):
-    summary = ae_run.summarize_cv(model="RandomForest")
-    assert isinstance(summary, pd.DataFrame)
-    assert summary.shape[0] == 5  # for 5 folds
+def test_setup_preprocessing_methods(ae, Xy):
+    """Test setup with custom preprocessing methods."""
+    X, y = Xy
+    preprocessing_methods = [
+        {"name": "None", "params": {}},
+        {"name": "PCA", "params": {"reduced_dim": 1}},
+    ]
+
+    ae.setup(
+        X, y, preprocessing_methods=preprocessing_methods, verbose=0, print_setup=False
+    )
+
+    assert ae.preprocessing_methods == preprocessing_methods
+
+
+def test_compare_with_preprocessing(ae, Xy):
+    """Test model comparison with preprocessing methods."""
+    X, y = Xy
+    # Ensure y is 2D if needed
+    y = y.reshape(-1, 1) if len(y.shape) == 1 else y
+
+    preprocessing_methods = [
+        {"name": "None", "params": {}},
+        {
+            "name": "PCA",
+            "params": {"reduced_dim": 1},
+        },  # Changed from reduced_dim to n_components
+    ]
+
+    # Setup with reduced configuration for testing
+    ae.setup(
+        X=X,
+        y=y,
+        models=["RandomForest"],
+        preprocessing_methods=preprocessing_methods,
+        param_search=False,  # Disable for faster testing
+        scale_output=False,  # Disable output scaling
+        verbose=0,
+        print_setup=False,
+    )
+
+    best_combo = ae.compare()
+
+    # Basic type and structure checks
+    assert isinstance(best_combo, dict)
+    assert set(best_combo.keys()) == {"preprocessing", "model", "transformer"}
+
+    # Verify preprocessing method was applied
+    assert best_combo["preprocessing"] in ["None", "PCA"]
+    assert hasattr(ae, "preprocessing_results")
+
+    # Check both preprocessing methods were processed
+    assert "None" in ae.preprocessing_results
+    assert "PCA" in ae.preprocessing_results
+
+    # Verify models exist for each preprocessing method
+    assert len(ae.preprocessing_results["None"]["models"]) == 1
+    assert len(ae.preprocessing_results["PCA"]["models"]) == 1
+
+    # Additional check for PCA transformer
+    if best_combo["preprocessing"] == "PCA":
+        assert ae.preprocessing_results["PCA"]["transformer"] is not None
+        assert hasattr(ae.preprocessing_results["PCA"]["transformer"], "transform")

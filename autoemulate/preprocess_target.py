@@ -40,9 +40,6 @@ def get_dim_reducer(
     dim_reducer : object or None
         Scikit-learn compatible dimensionality reducer or None if name is None.
     """
-    if name is None:
-        return None
-
     # Return the appropriate dimensionality reducer
     if name == "PCA":
         return PCA(reduced_dim)
@@ -59,6 +56,8 @@ def get_dim_reducer(
             beta=beta,
             verbose=verbose,
         )
+    elif name == "None":
+        return NoChangeTransformer()
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
 
@@ -484,6 +483,11 @@ class non_trainable_transformer:
         """Get the underlying transformer instance."""
         return self.NT_transformer
 
+    @property
+    def base_transformer_name(self):
+        """Get the underlying transformer instance."""
+        return str(self.NT_transformer)
+
     def fit(self, X, y=None):
         return
 
@@ -504,13 +508,17 @@ class non_trainable_transformer:
     #    return getattr(self.base_model, name)
 
 
-
-
 class NoChangeTransformer(BaseEstimator, TransformerMixin):
     """Transformer which does not do any reduction"""
 
     def __init__(self):
         pass
+
+    @property
+    def base_transformer_name(self):
+        """Get the underlying transformer instance."""
+        return "NoChangeTransformer"
+
     def _validate_data(self, X):
         return X
 

@@ -59,8 +59,12 @@ def _optimize_params(
     """
 
     if hasattr(model, "transformer"):
+        # the transformer is non trainable so this will only scale the data
         model.transformer.fit(y)
         y = model.transformer.transform(y)
+        print(model.transformer)
+        print("This is in hyperparam", y.shape)
+
         regressor = model.regressor
     else:
         regressor = model

@@ -1,11 +1,12 @@
 """Functions for getting and processing models."""
 from sklearn.compose import TransformedTargetRegressor
+from sklearn.decomposition import PCA
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.decomposition import PCA
 
 from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import TargetPCA, NoChangeTransformer
+from autoemulate.preprocess_target import NoChangeTransformer
+from autoemulate.preprocess_target import TargetPCA
 from autoemulate.preprocess_target import VAEOutputPreprocessor
 
 
@@ -15,6 +16,7 @@ class ModelPrepPipeline:
         model_registry,
         model_names,
         y,
+        prep_config,
         scale_input=False,
         scaler_input=None,
         reduce_dim_input=False,
@@ -22,24 +24,58 @@ class ModelPrepPipeline:
         scale_output=False,
         scaler_output=None,
         reduce_dim_output=False,
-        dim_reducer_output=None,
     ):
         self.model_piped = None
-        self.transformer = NoChangeTransformer()
+        prep_name = prep_config["name"]
+        prep_params = prep_config.get("params", {})
+        self.transformer_method = get_dim_reducer(prep_name, **prep_params)
 
         self.models = model_registry.get_models(model_names)
 
         self._turn_models_into_multioutput(y)
 
-        self._wrap_model_reducer_in_pipeline(
-            scale_input,
-            scaler_input,
-            reduce_dim_input,
-            dim_reducer_input,
-            scale_output,
-            scaler_output,
-            reduce_dim_output,
-        )
+        # Store pipeline settings as instance attributes
+        self.scale_input = scale_input
+        self.scaler_input = scaler_input
+        self.reduce_dim_input = reduce_dim_input
+        self.dim_reducer_input = dim_reducer_input
+        self.scale_output = scale_output
+        self.scaler_output = scaler_output
+        self.reduce_dim_output = reduce_dim_output
+
+        # Wrap the model and reducer into a pipeline
+        self._wrap_model_reducer_in_pipeline()
+
+    def _wrap_model_reducer_in_pipeline(self):
+        """Wrap reducer in a pipeline if reduce_dim_output is True."""
+        self.models_piped = []
+
+        for model in self.models_multi:
+            input_steps = []
+            if self.scale_input:
+                input_steps.append(("scaler", self.scaler_input))
+            if self.reduce_dim_input:
+                input_steps.append(("dim_reducer", self.dim_reducer_input))
+            input_steps.append(("model", model))
+            input_pipeline = Pipeline(input_steps)
+
+            # Create output transformation pipeline
+            output_steps = []
+            if self.scale_output:
+                output_steps.append(("scaler_output", self.scaler_output))
+            output_steps.append(
+                (self.transformer_method.base_transformer_name, self.transformer_method)
+            )
+
+            if output_steps:
+                output_pipeline = Pipeline(output_steps)
+                final_model = TransformedTargetRegressor(
+                    regressor=input_pipeline, transformer=output_pipeline
+                )
+                self.models_piped.append(final_model)
+            else:
+                self.models_piped.append(input_pipeline)
+        return self.models_piped
 
     def _turn_models_into_multioutput(self, y):
         """Turn single output models into multioutput models if y is 2D.
@@ -64,57 +100,3 @@ class ModelPrepPipeline:
             for model in self.models
         ]
         return self.models_multi
-
-    def _wrap_model_reducer_in_pipeline(
-        self,
-        scale_input,
-        scaler_input,
-        reduce_dim_input,
-        dim_reducer_input,
-        scale_output,
-        scaler_output,
-        reduce_dim_output,
-    ):
-        """Wrap reducer in a pipeline if reduce_dim_output is True.
-
-        Parameters
-        ----------
-        models : dict
-            dict of model instances, with scaled models wrapped in a pipeline.
-        dim_reducer_output : Reducer
-            An instance of the Reducer class.
-
-        Returns
-        -------
-        models_reduced : dict
-            dict of model_names: model instances, with reduced models wrapped in a pipeline.
-        """
-        self.models_piped = []
-
-        for model in self.models_multi:
-            input_steps = []
-            if scale_input:
-                input_steps.append(("scaler", scaler_input))
-            if reduce_dim_input:
-                input_steps.append(("dim_reducer", dim_reducer_input))
-            input_steps.append(("model", model))
-            input_pipeline = Pipeline(input_steps)
-
-            # Create output transformation pipeline
-            output_steps = []
-            if scale_output:
-                output_steps.append(("scaler_output", scaler_output))
-            if reduce_dim_output:
-                output_steps.append(("dim_reducer_output", self.transformer))
-
-            if output_steps:
-                output_pipeline = Pipeline(output_steps)
-                final_model = TransformedTargetRegressor(
-                    regressor=input_pipeline, transformer=output_pipeline
-                )
-                self.models_piped.append(final_model)
-            else:
-                # No output transformations, just use the input pipeline
-                self.models_piped.append(input_pipeline)
-
-        return self.models_piped

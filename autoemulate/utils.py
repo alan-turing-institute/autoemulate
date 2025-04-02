@@ -219,7 +219,7 @@ def get_model_param_space(model, search_type="random"):
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.get_grid_params(search_type)
-    
+
     elif isinstance(model, TransformedTargetRegressor):
         return get_model_param_space(model.regressor)
 
