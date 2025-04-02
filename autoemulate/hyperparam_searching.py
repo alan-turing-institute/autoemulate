@@ -57,7 +57,9 @@ def _optimize_params(
     -------
     Refitted estimator on the whole dataset with best parameters.
     """
+
     if hasattr(model, "transformer"):
+        model.transformer.fit(y)
         y = model.transformer.transform(y)
         regressor = model.regressor
     else:
