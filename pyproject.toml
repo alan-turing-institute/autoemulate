@@ -60,7 +60,3 @@ build-backend = "poetry.core.masonry.api"
 [tool.coverage.run]
 relative_files = true
 source = [".", "/tmp"]
-
-[tool.pyright]
-venvPath = "."
-venv = ".venv"
