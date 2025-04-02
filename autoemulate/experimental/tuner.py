@@ -4,8 +4,10 @@ from sklearn.metrics import r2_score
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.types import (
+    DistributionLike,
     InputLike,
     ModelConfig,
+    TensorLike,
     TuneConfig,
     ParamLike,
 )
@@ -57,15 +59,31 @@ class Tuner(InputTypeMixin):
             }
             if isinstance(model_class, gpytorch.models.ExactGP):
                 m = model_class(train_x, train_y, **params_sample)
+                assert isinstance(m, Emulator)
                 m.fit(train_x, train_y)
             else:
                 m = model_class(**params_sample)
+                assert isinstance(m, Emulator)
                 # TODO: check if pass as dataloader
                 m.fit(train_x, train_y)
 
             # evaluate
             y_pred = m.predict(val_x)
-            score = self.score_f(val_y, y_pred.detach().numpy())
+            # handle types
+            if isinstance(y_pred, TensorLike):
+                score = self.score_f(val_y, y_pred.detach().numpy())
+            elif isinstance(y_pred, DistributionLike):
+                score = self.score_f(val_y, y_pred.mean.detach().numpy())
+            elif (
+                isinstance(y_pred, tuple)
+                and len(y_pred) == 2
+                and all(isinstance(item, TensorLike) for item in y_pred)
+            ):
+                score = self.score_f(val_y, y_pred[0].detach().numpy())
+            else:
+                raise ValueError(f"Score not implmented for {type(y_pred)}")
+
+            assert isinstance(score, float)
             params_tested.append(params_sample)
             val_scores.append(score)
 
