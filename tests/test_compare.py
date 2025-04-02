@@ -130,6 +130,7 @@ def test_get_model_by_name(ae_run):
 
 def test_get_model_by_short_name(ae_run):
     model = ae_run.get_model(name="rf")
+    print('intest',model)
     assert get_model_name(model) == "RandomForest"
 
 
