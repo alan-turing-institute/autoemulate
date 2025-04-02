@@ -18,11 +18,12 @@ class Emulator(ABC):
     - `AutoEmulate`
     """
 
-    def __call__(self, *args, **kwds):
-        return self.predict(*args, **kwds)
+    # TODO: currently this has an issue with recursion
+    # def __call__(self, *args, **kwds):
+    #     return self.predict(*args, **kwds)
 
     @abstractmethod
-    def fit(self, x: InputLike, y: OutputLike | None): ...
+    def fit(self, x: InputLike, y: InputLike | None): ...
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
@@ -40,7 +41,7 @@ class InputTypeMixin:
     def _convert(
         self,
         x: InputLike,
-        y: OutputLike | None = None,
+        y: InputLike | None = None,
         batch_size: int = 16,
         shuffle: bool = True,
     ) -> DataLoader | Dataset:
@@ -53,7 +54,9 @@ class InputTypeMixin:
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=torch.float32)
 
-        if isinstance(x, (torch.Tensor, np.ndarray)) and y is not None:
+        if isinstance(x, (torch.Tensor, np.ndarray)) and isinstance(
+            y, (torch.Tensor, np.ndarray)
+        ):
             dataset = TensorDataset(x, y)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         elif isinstance(x, DataLoader) and y is None:
@@ -87,11 +90,13 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
     epochs: int = 10
     verbose: bool = False
 
+    loss_history: list[float]
+
     def fit(
         self,
         x: InputLike,
-        y: OutputLike | None,
-    ) -> list:
+        y: InputLike | None,
+    ):
         """
         Train the linear regression model.
 
@@ -107,7 +112,6 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
         """
 
         self.train()  # Set model to training mode
-        loss_history = []
 
         # Convert input to DataLoader if not already
         dataloader = self._convert(
@@ -135,12 +139,10 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin):
 
             # Average loss for the epoch
             avg_epoch_loss = epoch_loss / batches
-            loss_history.append(avg_epoch_loss)
+            self.loss_history.append(avg_epoch_loss)
 
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
-
-        return loss_history
 
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()

@@ -17,9 +17,14 @@ repos:
     # Run the linter.
     - id: ruff
       types_or: [ python, pyi ]
+      args: [ --fix ]
       files: ^autoemulate/experimental|^tests/experimental
-      args: [--fix]
     # Run the formatter.
     - id: ruff-format
       types_or: [ python, pyi ]
       files: ^autoemulate/experimental|^tests/experimental
+- repo: https://github.com/RobertCraigie/pyright-python
+  rev: v1.1.398
+  hooks:
+  - id: pyright
+    files: ^autoemulate/experimental/|^tests/experimental
