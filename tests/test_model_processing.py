@@ -11,7 +11,6 @@ from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.emulators import RandomForest
 from autoemulate.emulators import SupportVectorMachines
 from autoemulate.model_processing import ModelPrepPipeline
-from autoemulate.model_processing import ModelPrepPipeline
 from autoemulate.model_registry import ModelRegistry
 from autoemulate.utils import get_model_name
 

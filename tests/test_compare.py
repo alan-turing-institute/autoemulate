@@ -130,7 +130,7 @@ def test_get_model_by_name(ae_run):
 
 def test_get_model_by_short_name(ae_run):
     model = ae_run.get_model(name="rf")
-    print('intest',model)
+    print("intest", model)
     assert get_model_name(model) == "RandomForest"
 
 
@@ -167,10 +167,14 @@ def test_get_model_with_invalid_metric(ae_run):
 def test_evaluate_singleoutput(ae_run):
     model = ae_run.get_model(rank=1)
     scores_df = ae_run.evaluate(model=model, multioutput="uniform_average")
+    expected_cols = {"model", "short", "preprocessing"}.union(
+        {metric.__name__ for metric in ae_run.metrics}
+    )
+    assert set(scores_df.columns) == expected_cols
     assert isinstance(scores_df, pd.DataFrame)
     assert scores_df.shape == (
         1,
-        len(ae_run.metrics) + 2,
+        len(ae_run.metrics) + 3,
     )  # 3 columns: model, short, target
     assert all(metric.__name__ in scores_df.columns for metric in ae_run.metrics)
 
@@ -179,7 +183,7 @@ def test_evaluate_multioutput(ae_run_multioutput):
     model = ae_run_multioutput.get_model(rank=1)
     scores_df = ae_run_multioutput.evaluate(model=model, multioutput="uniform_average")
     assert isinstance(scores_df, pd.DataFrame)
-    assert scores_df.shape == (1, len(ae_run_multioutput.metrics) + 2)
+    assert scores_df.shape == (1, len(ae_run_multioutput.metrics) + 3)
 
 
 def test_evaluate_singleoutput_raw(ae_run):
