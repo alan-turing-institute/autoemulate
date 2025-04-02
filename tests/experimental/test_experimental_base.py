@@ -104,7 +104,7 @@ class TestPyTorchBackend:
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
             self.preprocessor = Standardizer(
-                torch.Tensor([[0.0]]), torch.Tensor([[1.0]])
+                torch.Tensor([[0.0, -0.5]]), torch.Tensor([[2.0, 0.5]])
             )
 
         def forward(self, x):
@@ -156,6 +156,24 @@ class TestPyTorchBackend:
         y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
         tuner = Tuner(x_train, y_train, n_iter=10)
         tuner.run(self.DummyModel)
+
+    def test_standardizer(self):
+        x_train = torch.Tensor(
+            [[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]]
+        )
+        x_train_preprocessed = self.model.preprocess(x_train)
+        assert isinstance(x_train_preprocessed, torch.Tensor)
+        assert torch.allclose(
+            x_train_preprocessed,
+            torch.Tensor([[0.5, 3.0], [1.0, 5.0], [1.5, 7.0], [2.0, 9.0], [2.5, 11.0]]),
+        )
+
+    def test_standardizer_fail(self):
+        with pytest.raises(
+            ValueError, match="Expected 2D torch.Tensor, actual shape dim 1"
+        ):
+            x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
+            self.model.preprocess(x_train)
 
     def test_tune_dataset(self):
         """
