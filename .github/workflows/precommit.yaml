@@ -22,12 +22,30 @@ jobs:
         name: Pre-commit
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-              with:
-                fetch-depth: 0
-            - uses: actions/setup-python@v4
-              with:
-                python-version: "3.x"
-            - uses: pre-commit/action@v3.0.0
-              with:
-                extra_args: --hook-stage manual --all-files
+          - uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
+          - uses: actions/setup-python@v4
+            with:
+              python-version: "3.12"
+          - name: Install poetry
+            run: |
+              curl -sSL https://install.python-poetry.org | python -
+
+          - name: Configure poetry
+            run: |
+              poetry config virtualenvs.in-project true
+
+          - name: Switch to CPU version of PyTorch
+            run: |
+              poetry remove torch
+              poetry source add -p explicit pytorch https://download.pytorch.org/whl/cpu
+              poetry add --source pytorch "torch==2.2.1"
+
+          - name: Install dependencies
+            run: |
+              poetry install --with dev
+
+          - uses: pre-commit/action@v3.0.0
+            with:
+              extra_args: --hook-stage manual --all-files
