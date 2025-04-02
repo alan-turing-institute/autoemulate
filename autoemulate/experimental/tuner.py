@@ -6,7 +6,6 @@ from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.types import (
     InputLike,
     ModelConfig,
-    OutputLike,
     TuneConfig,
     ParamLike,
 )
