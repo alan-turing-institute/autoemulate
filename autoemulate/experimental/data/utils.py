@@ -59,7 +59,7 @@ class InputTypeMixin:
         return dataloader
 
     def _random_split(
-        self, dataset: Dataset, batch_size: int | None = None
+        self, dataset: Dataset, batch_size: int | None = None, train_size: float = 0.8
     ) -> tuple[DataLoader, DataLoader]:
         """
         Split Dataset into train/test DataLoaders.
@@ -72,7 +72,11 @@ class InputTypeMixin:
             The DataLoader batch_size. If None, sets batch_size to lenth of training
             data. Defaults to None.
         """
-        train, test = tuple(random_split(dataset, [0.8, 0.2]))
+        if train_size < 0.0 or train_size > 1.0:
+            raise ValueError(
+                f"Train size ({train_size}) must be specified as a proportion between 0 and 1"
+            )
+        train, test = tuple(random_split(dataset, [train_size, 1.0 - train_size]))
         if batch_size is None:
             batch_size = len(train)
         train_loader = self._convert_to_dataloader(train, batch_size=batch_size)
