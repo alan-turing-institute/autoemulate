@@ -1,5 +1,8 @@
 import gpytorch
+from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
+from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
+from gpytorch.kernels import ScaleKernel
 import torch
 from torch import nn
 import numpy as np
@@ -23,12 +26,13 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     def __init__(
         self,
         x: InputLike,
-        y: OutputLike,
+        y: InputLike,
         likelihood: MultitaskGaussianLikelihood,
         mean_module: Mean,
         covar_module: Kernel,
         random_state: int | None = None,
     ):
+        # TODO: refactor using mixin
         if random_state is not None:
             set_random_seed(random_state)
         assert isinstance(y, torch.Tensor) and isinstance(x, torch.Tensor)
@@ -37,8 +41,8 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
         # wrapping in ScaleKernel is generally good, as it adds an output scale parameter
-        if not isinstance(covar_module, gpytorch.kernels.ScaleKernel):
-            covar_module = gpytorch.kernels.ScaleKernel(
+        if not isinstance(covar_module, ScaleKernel):
+            covar_module = ScaleKernel(
                 covar_module, batch_shape=torch.Size([self.n_outputs_])
             )
 
@@ -51,8 +55,8 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         mean = self.mean_module(x)
         assert isinstance(mean, torch.Tensor)
         covar = self.covar_module(x)
-        return gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
-            gpytorch.distributions.MultivariateNormal(mean, covar)
+        return MultitaskMultivariateNormal.from_batch_mvn(
+            MultivariateNormal(mean, covar)
         )
 
     def fit(self, x: InputLike, y: InputLike | None):
@@ -60,9 +64,8 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         self.train()
         self.likelihood.train()
         optimizer = torch.optim.Adam(self.parameters(), lr=0.1)
-        mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self)
+        mll = ExactMarginalLogLikelihood(self.likelihood, self)
         for epoch in range(self.epochs):
-            # Zero gradients from previous iteration
             optimizer.zero_grad()
             output = self(x)
             loss = mll(output, y)
@@ -105,6 +108,8 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         return {
             "epochs": [100, 200, 300],
             "batch_size": [16, 32],
+            "mean_module": [],
+            "covar_module": [],
             "activation": [
                 nn.ReLU,
                 nn.GELU,
