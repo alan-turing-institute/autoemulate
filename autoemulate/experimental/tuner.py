@@ -2,14 +2,9 @@ import gpytorch
 import numpy as np
 from sklearn.metrics import r2_score
 
+from autoemulate.experimental.cross_validation import evaluate
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
-from autoemulate.experimental.types import (
-    DistributionLike,
-    InputLike,
-    ModelConfig,
-    TensorLike,
-    TuneConfig,
-)
+from autoemulate.experimental.types import InputLike, ModelConfig, TuneConfig
 
 
 class Tuner(InputTypeMixin):
@@ -24,11 +19,6 @@ class Tuner(InputTypeMixin):
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
-
-    Returns
-    -------
-    Tuple[list[float], list[ModelConfig]]
-        The validation scores and parameter values used in each search iteration.
     """
 
     def __init__(self, x: InputLike, y: InputLike | None, n_iter: int):
@@ -38,6 +28,17 @@ class Tuner(InputTypeMixin):
         self.score_f = r2_score
 
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
+        """
+        Parameters
+        ----------
+        model_class: type[Emulator]
+            A concrete Emulator subclass.
+
+        Returns
+        -------
+        Tuple[list[float], list[ModelConfig]]
+            The validation scores and parameter values used in each search iteration.
+        """
         # split data into train/validation sets
         # batch size defaults to size of train data if not otherwise specified
         train_loader, val_loader = self._random_split(self.dataset)
@@ -68,20 +69,7 @@ class Tuner(InputTypeMixin):
 
             # evaluate
             y_pred = m.predict(val_x)
-            # handle types
-            if isinstance(y_pred, TensorLike):
-                score = self.score_f(val_y, y_pred.detach().numpy())
-            elif isinstance(y_pred, DistributionLike):
-                score = self.score_f(val_y, y_pred.mean.detach().numpy())
-            elif (
-                isinstance(y_pred, tuple)
-                and len(y_pred) == 2
-                and all(isinstance(item, TensorLike) for item in y_pred)
-            ):
-                score = self.score_f(val_y, y_pred[0].detach().numpy())
-            else:
-                raise ValueError(f"Score not implmented for {type(y_pred)}")
-
+            score = evaluate(val_y, y_pred, self.score_f)
             assert isinstance(score, float)
             model_config_tested.append(model_config)
             val_scores.append(score)
