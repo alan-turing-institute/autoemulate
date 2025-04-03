@@ -15,7 +15,6 @@ from autoemulate.preprocess_target import (
     VAEOutputPreprocessor,
     VAE,
     NoChangeTransformer,
-    inverse_transform_with_std,
     non_trainable_transformer
 )
 
