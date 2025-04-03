@@ -1,50 +1,83 @@
+import logging
+
 import gpytorch
-from gpytorch import ExactMarginalLogLikelihood
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
-from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
-from gpytorch.kernels import ScaleKernel
-import torch
-from torch import nn
 import numpy as np
+import torch
+from gpytorch import ExactMarginalLogLikelihood
+from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
+from gpytorch.kernels import (
+    ScaleKernel,
+)
+from torch import nn
 
 from autoemulate.experimental.emulators.base import (
     Emulator,
     InputTypeMixin,
 )
-from autoemulate.utils import set_random_seed
+from autoemulate.emulators.gaussian_process import (
+    zero_mean,
+    constant_mean,
+    linear_mean,
+    poly_mean,
+)
+from autoemulate.emulators.gaussian_process import (
+    rbf,
+    matern_5_2_kernel,
+    matern_3_2_kernel,
+    rq_kernel,
+    rbf_plus_constant,
+    rbf_plus_linear,
+    matern_5_2_plus_rq,
+    rbf_times_linear,
+)
+from autoemulate.experimental.emulators.gaussian_process import (
+    CovarModuleFn,
+    MeanModuleFn,
+)
 from autoemulate.experimental.types import InputLike, OutputLike
-
-from gpytorch.means import Mean
-from gpytorch.kernels import Kernel
+from autoemulate.utils import set_random_seed
 
 
 class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     likelihood: MultitaskGaussianLikelihood
     random_state: int | None = None
     epochs: int = 10
+    is_fitted_: bool = False
 
     def __init__(
         self,
         x: InputLike,
         y: InputLike,
         likelihood: MultitaskGaussianLikelihood,
-        mean_module: Mean,
-        covar_module: Kernel,
+        mean_module_fn: MeanModuleFn,
+        covar_module_fn: CovarModuleFn,
         random_state: int | None = None,
     ):
-        # TODO: refactor using mixin
         if random_state is not None:
             set_random_seed(random_state)
+
+        # TODO: handle conversion to Tensor
+        assert isinstance(x, torch.Tensor) and isinstance(y, torch.Tensor)
+
+        # Initialize the mean and covariance modules
+        # TODO: consider refactoring to only pass torch tensors x and y
+        mean_module = mean_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
+        combined_kernel = covar_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
+
+        # If the combined kernel is not a ScaleKernel, wrap it in one
+        covar_module = (
+            combined_kernel
+            if isinstance(combined_kernel, ScaleKernel)
+            else ScaleKernel(
+                combined_kernel,
+                batch_shape=torch.Size([y.shape[1]]),
+            )
+        )
+
         assert isinstance(y, torch.Tensor) and isinstance(x, torch.Tensor)
-        self.y_dim_ = y.ndim
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-
-        # wrapping in ScaleKernel is generally good, as it adds an output scale parameter
-        if not isinstance(covar_module, ScaleKernel):
-            covar_module = ScaleKernel(
-                covar_module, batch_shape=torch.Size([self.n_outputs_])
-            )
 
         super().__init__(x, y, likelihood)
         self.mean_module = mean_module
@@ -53,14 +86,31 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     def forward(self, x: InputLike):
         assert isinstance(x, torch.Tensor)
         mean = self.mean_module(x)
+
         assert isinstance(mean, torch.Tensor)
         covar = self.covar_module(x)
+
         return MultitaskMultivariateNormal.from_batch_mvn(
             MultivariateNormal(mean, covar)
         )
 
+    def log_epoch(self, epoch: int, loss: torch.Tensor):
+        logger = logging.getLogger()
+        kernel_str = ", ".join(
+            [
+                f"{name} | {sub_kernel.lengthscale}"
+                for (
+                    name,
+                    sub_kernel,
+                ) in self.covar_module.base_kernel.named_sub_kernels()
+            ]
+        )
+        logger.info(
+            f"Iter {epoch + 1}/{self.epochs}; Loss: {loss:.3f};  kernels: {kernel_str}; "
+            f"noise: {self.likelihood.noise};  likelihood: {self.likelihood}"
+        )
+
     def fit(self, x: InputLike, y: InputLike | None):
-        # Find optimal model hyperparameters
         self.train()
         self.likelihood.train()
         optimizer = torch.optim.Adam(self.parameters(), lr=0.1)
@@ -72,28 +122,8 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
             assert isinstance(loss, torch.Tensor)
             loss = -loss
             loss.backward()
-
-            print(
-                "Iter %d/%d - Loss: %.3f  kernels: %s  noise: %s  likelihood: %s"
-                % (
-                    epoch + 1,
-                    self.epochs,
-                    loss,
-                    "; ".join(
-                        [
-                            f"{name} | {sub_kernel.lengthscale}"
-                            for (
-                                name,
-                                sub_kernel,
-                            ) in self.covar_module.base_kernel.named_sub_kernels()
-                        ]
-                    ),
-                    self.likelihood.noise,
-                    self.likelihood,
-                )
-            )
+            self.log_epoch(epoch, loss)
             optimizer.step()
-
         self.is_fitted_ = True
 
     def predict(self, x: InputLike) -> OutputLike:
@@ -108,8 +138,22 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         return {
             "epochs": [100, 200, 300],
             "batch_size": [16, 32],
-            "mean_module": [],
-            "covar_module": [],
+            "mean_module": [
+                constant_mean,
+                zero_mean,
+                linear_mean,
+                poly_mean,
+            ],
+            "covar_module": [
+                rbf,
+                matern_5_2_kernel,
+                matern_3_2_kernel,
+                rq_kernel,
+                rbf_plus_constant,
+                rbf_plus_linear,
+                matern_5_2_plus_rq,
+                rbf_times_linear,
+            ],
             "activation": [
                 nn.ReLU,
                 nn.GELU,

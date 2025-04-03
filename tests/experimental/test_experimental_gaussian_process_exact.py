@@ -1,13 +1,14 @@
 import gpytorch
+import gpytorch.kernels as gpyk
+import gpytorch.means as gpym
 import pytest
 import torch
-from sklearn.datasets import make_regression
-
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
+from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
 from autoemulate.experimental.types import DistributionLike
-from autoemulate.experimental.types import TensorLike
+from sklearn.datasets import make_regression
 
 
 @pytest.fixture
@@ -36,18 +37,12 @@ def new_data_y2d():
     return torch.Tensor(X), torch.Tensor(y)
 
 
-def mean(y: TensorLike):
-    return gpytorch.means.ConstantMean(batch_shape=torch.Size([y.shape[1]]))
+def mean() -> type[gpym.Mean]:
+    return gpym.ConstantMean
 
 
-def covar(X: TensorLike, y: TensorLike):
-    return gpytorch.kernels.ScaleKernel(
-        gpytorch.kernels.ConstantKernel()
-        + gpytorch.kernels.RBFKernel(
-            ard_num_dims=X.shape[1], batch_shape=torch.Size([y.shape[1]])
-        ),
-        batch_shape=torch.Size([y.shape[1]]),
-    )
+def covar() -> list[type[gpyk.Kernel]]:
+    return [gpytorch.kernels.ConstantKernel, gpytorch.kernels.RBFKernel]
 
 
 # test multioutput GP
@@ -58,8 +53,8 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2),
-        mean(y),
-        covar(x, y),
+        constant_mean,
+        rbf_times_linear,
     )
     gp.fit(x, y)
     y_pred = gp.predict(x)
@@ -74,14 +69,13 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=1),
-        mean(y),
-        covar(x, y),
+        constant_mean,
+        rbf,
     )
     gp.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
-    # TODO: fix shape assertion
     assert y_pred.mean.shape == y.shape
     assert y_pred.variance.shape == y.shape
 
