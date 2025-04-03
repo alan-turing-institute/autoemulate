@@ -85,7 +85,7 @@ class TestInputTypeMixin:
         """
         X = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for x."):
-            self.mixin._convert_to_dataloader(X)
+            self.mixin._convert_to_dataloader(X)  # type: ignore - test for invalid type
 
 
 class TestPyTorchBackend:
@@ -93,7 +93,7 @@ class TestPyTorchBackend:
     Class to test the PyTorchBackend class.
     """
 
-    class DummyModel(PyTorchBackend, Standardizer):
+    class DummyModel(PyTorchBackend):
         """
         A dummy implementation of PyTorchBackend for testing purposes.
         """
@@ -111,6 +111,7 @@ class TestPyTorchBackend:
         def forward(self, x):
             return self.linear(x)
 
+        @staticmethod
         def get_tune_config():
             return {
                 "epochs": [100, 200, 300],
