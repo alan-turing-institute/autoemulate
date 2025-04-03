@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        9 |     91% |73, 259, 266, 289, 300, 310, 321, 340, 344 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        8 |     92% |73, 259, 289, 300, 310, 321, 340, 344 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        9 |     91% |71, 240, 246, 250, 254, 265, 271, 282, 286 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -33,11 +33,14 @@
 | autoemulate/emulators/radial\_basis\_functions.py                            |       34 |        0 |    100% |           |
 | autoemulate/emulators/random\_forest.py                                      |       39 |        0 |    100% |           |
 | autoemulate/emulators/support\_vector\_machines.py                           |       54 |        3 |     94% |     80-82 |
+| autoemulate/experimental/\_\_init\_\_.py                                     |        0 |        0 |    100% |           |
 | autoemulate/experimental/data/preprocessors.py                               |       23 |        3 |     87% |18, 20, 38 |
 | autoemulate/experimental/data/utils.py                                       |       35 |        3 |     91% |53, 80, 84 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                           |        0 |        0 |    100% |           |
-| autoemulate/experimental/emulators/base.py                                   |       59 |        6 |     90% |20, 27, 54, 121, 129, 133 |
-| autoemulate/experimental/tuner.py                                            |       38 |        8 |     79% |61-63, 75-84 |
+| autoemulate/experimental/emulators/base.py                                   |       59 |        8 |     86% |18, 25, 52, 75, 142, 150, 154-158 |
+| autoemulate/experimental/learners/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
+| autoemulate/experimental/simulations/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
+| autoemulate/experimental/tuner.py                                            |       38 |        8 |     79% |60-62, 74-83 |
 | autoemulate/experimental/types.py                                            |       13 |        0 |    100% |           |
 | autoemulate/experimental\_design.py                                          |       18 |        3 |     83% |23, 34, 45 |
 | autoemulate/history\_matching.py                                             |       18 |        2 |     89% |    30, 34 |
@@ -81,7 +84,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       55 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      182 |        6 |     97% |51, 57, 62, 67, 72, 77 |
-|                                                                    **TOTAL** | **4126** |  **323** | **92%** |           |
+|                                                                    **TOTAL** | **4126** |  **324** | **92%** |           |
 
 
 ## Setup coverage badge
