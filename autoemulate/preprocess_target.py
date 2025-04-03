@@ -61,12 +61,13 @@ def get_dim_reducer(
     else:
         raise ValueError(f"Unknown dimensionality reducer: {name}")
 
+
 class TargetPCA(BaseEstimator, TransformerMixin):
     """PCA transformer for target values (y) that strictly requires y."""
 
     def __init__(self, n_components=None):
         self.n_components = n_components
-        
+
     def _validate_data(self, X, y=None):
         """Validate that X is provided and properly shaped."""
         if X is None:

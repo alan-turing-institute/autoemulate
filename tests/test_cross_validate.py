@@ -79,7 +79,7 @@ def cv_results(Xy):
     em = AutoEmulate()
     em.setup(X, y, models=["rbf", "rf"])
     em.compare()
-    return em.preprocessing_results['None']["cv_results"]
+    return em.preprocessing_results["None"]["cv_results"]
 
 
 def test_run_cv(Xy, cv, metrics, model):
