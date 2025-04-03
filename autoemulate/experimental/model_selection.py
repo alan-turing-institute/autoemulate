@@ -44,12 +44,12 @@ def evaluate(y_true: TensorLike, y_pred: TensorLike, score_f: Callable):
 
 def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
     """
-    Perform cross validation using the given `cv` strategy.
+    Cross validate model performance using the given `cv` strategy.
 
     Parameters
     ----------
     cv: BaseCrossValidator
-        Provides split method that returns train/val Dataset indices using a
+        Provides split method that returns train/val Dataset indices using the
         specified cross-validation strategy (e.g., KFold, LeaveOneOut).
     dataset: Dataset
         The data to use for model training and validation.
@@ -63,14 +63,18 @@ def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
     """
     cv_results = {"r2": [], "rmse": []}
     for train_idx, val_idx in cv.split(dataset):
+        # create data subsets
         train_subset = Subset(dataset, train_idx)
         val_subset = Subset(dataset, val_idx)
         train_loader = DataLoader(train_subset)
         val_loader = DataLoader(val_subset)
-        # score and save results
         val_x, val_y = next(iter(val_loader))
+
+        # fit model and predict
         model.fit(train_loader)
         y_pred = model.predict(val_x)
+
+        # score and save results
         r2 = evaluate(val_y, y_pred, r2_score)
         rmse = evaluate(val_y, y_pred, root_mean_squared_error)
         cv_results["r2"].append(r2)
