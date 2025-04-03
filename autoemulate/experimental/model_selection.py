@@ -52,7 +52,7 @@ def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
         Provides split method that returns train/val Dataset indices using a
         specified cross-validation strategy (e.g., KFold, LeaveOneOut).
     dataset: Dataset
-        The data to split.
+        The data to use for model training and validation.
     model: Emulator
         An instance of an Emulator subclass.
 
