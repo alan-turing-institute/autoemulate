@@ -208,7 +208,7 @@ def test__plot_cv(ae_single_output, monkeypatch):
     # Mock plt.show to do nothing
     monkeypatch.setattr(plt, "show", lambda: None)
 
-    cv_results = ae_single_output.cv_results
+    cv_results = ae_single_output.preprocessing_results['None']["cv_results"]
     X, y = ae_single_output.X, ae_single_output.y
 
     # without model name
@@ -225,7 +225,7 @@ def test__plot_cv(ae_single_output, monkeypatch):
 def test__plot_cv_output_range(ae_multi_output, monkeypatch):
     # Mock plt.show to do nothing
     monkeypatch.setattr(plt, "show", lambda: None)
-    cv_results = ae_single_output.preprocessing_results['None']["cv_results"]
+    cv_results = ae_multi_output.preprocessing_results['None']["cv_results"]
     X, y = ae_multi_output.X, ae_multi_output.y
 
     # check that output index 1 works

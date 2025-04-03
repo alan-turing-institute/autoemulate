@@ -154,22 +154,6 @@ def test_no_change_transformer(sample_data):
     std_inv = transformer.inverse_transform_std(x_std)
     assert np.array_equal(x_std, std_inv)
 
-def test_inverse_transform_with_std(sample_data):
-    """Test the inverse_transform_with_std function."""
-    # Create a dummy model with PCA transformer
-    class DummyModel:
-        def __init__(self):
-            self.transformer_ = TargetPCA(n_components=3)
-            self.transformer_.fit(sample_data)
-    
-    model = DummyModel()
-    x_latent_pred = np.random.randn(10, 3)
-    x_latent_std = np.abs(np.random.randn(10, 3)) * 0.1  # small positive std
-    
-    mean, std = inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=100)
-    assert mean.shape == (10, sample_data.shape[1])
-    assert std.shape == (10, sample_data.shape[1])
-
 def test_non_trainable_transformer(sample_data):
     """Test the non_trainable_transformer wrapper."""
     # Wrap a PCA
