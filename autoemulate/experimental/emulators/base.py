@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-import numpy as np
-import torch
 from torch import nn
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
@@ -28,7 +26,30 @@ class Emulator(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_tune_config() -> TuneConfig: ...
+    def get_tune_config() -> TuneConfig:
+        """
+        The keys in the TuneConfig must be implemented as keyword arguments in the __init__ method of any subclasses.
+
+        e.g.
+
+        tune_config: TuneConfig = {
+            "lr": list[0.01, 0.1],
+            "batch_size": [16, 32],
+            "mean"
+        }
+
+        model_config: ModelConfig = {
+            "lr": 0.01,
+            "batch_size": 16
+        }
+
+        class MySubClass(Emulator):
+            def __init__(lr, batch_size):
+                self.lr = lr
+                self.batch_size = batch_size
+        """
+
+        ...
 
     @abstractmethod
     def cross_validate(self, x: InputLike): ...
@@ -130,18 +151,8 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
 
     @staticmethod
     def get_tune_config():
-        return {
-            "epochs": [100, 200, 300],
-            "batch_size": [16, 32],
-            "hidden_dim": [32, 64, 128],
-            "latent_dim": [32, 64, 128],
-            "max_context_points": [5, 10, 15],
-            "hidden_layers_enc": [2, 3, 4],
-            "hidden_layers_dec": [2, 3, 4],
-            "activation": [
-                nn.ReLU,
-                nn.GELU,
-            ],
-            "optimizer": [torch.optim.Adam],
-            "lr": list(np.logspace(-6, -1)),
-        }
+        msg = (
+            "Subclasses should implement for generating tuning config specific to "
+            "each subclass."
+        )
+        raise NotImplementedError(msg)

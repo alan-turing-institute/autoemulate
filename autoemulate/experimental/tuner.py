@@ -9,7 +9,6 @@ from autoemulate.experimental.types import (
     ModelConfig,
     TensorLike,
     TuneConfig,
-    ParamLike,
 )
 
 
@@ -46,23 +45,23 @@ class Tuner(InputTypeMixin):
         val_x, val_y = next(iter(val_loader))
 
         # get all the available hyperparameter options
-        params_all: TuneConfig = model_class.get_tune_config()
+        tune_config: TuneConfig = model_class.get_tune_config()
 
         # keep track of what parameter values tested and how they performed
-        params_tested: list[ModelConfig] = []
+        model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
         for _ in range(self.n_iter):
             # randomly sample hyperparameters and instantiate model
-            params_sample: dict[str, ParamLike] = {
-                k: np.random.choice(v) for k, v in params_all.items()
+            model_config: ModelConfig = {
+                k: np.random.choice(v) for k, v in tune_config.items()
             }
             if isinstance(model_class, gpytorch.models.ExactGP):
-                m = model_class(train_x, train_y, **params_sample)
+                m = model_class(train_x, train_y, **model_config)
                 assert isinstance(m, Emulator)
                 m.fit(train_x, train_y)
             else:
-                m = model_class(**params_sample)
+                m = model_class(**model_config)
                 assert isinstance(m, Emulator)
                 # TODO: check if pass as dataloader
                 m.fit(train_x, train_y)
@@ -84,7 +83,7 @@ class Tuner(InputTypeMixin):
                 raise ValueError(f"Score not implmented for {type(y_pred)}")
 
             assert isinstance(score, float)
-            params_tested.append(params_sample)
+            model_config_tested.append(model_config)
             val_scores.append(score)
 
-        return val_scores, params_tested
+        return val_scores, model_config_tested
