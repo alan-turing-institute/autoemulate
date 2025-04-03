@@ -3,13 +3,15 @@ name = "autoemulate"
 version = "0.2.1dev1"
 description = "A python package for semi-automated emulation"
 license = "MIT"
-authors = ["Martin Stoffel <mstoffel@turing.ac.uk>",
-           "Kalle Westerling <kwesterling@turing.ac.uk>",
-           "Bryan Li <bli@turing.ac.uk>",
-           "Max Balmus <mbalmus@turing.ac.uk>",
-           "Sophie Arana <sarana@turing.ac.uk>",
-           "Eric Daub <edaub@turing.ac.uk>",
-           "Steve Niederer <sniederer@turing.ac.uk>"]
+authors = [
+    "Martin Stoffel <mstoffel@turing.ac.uk>",
+    "Kalle Westerling <kwesterling@turing.ac.uk>",
+    "Bryan Li <bli@turing.ac.uk>",
+    "Max Balmus <mbalmus@turing.ac.uk>",
+    "Sophie Arana <sarana@turing.ac.uk>",
+    "Eric Daub <edaub@turing.ac.uk>",
+    "Steve Niederer <sniederer@turing.ac.uk>",
+]
 readme = "README.md"
 include = ["misc/AE_logo_final.png"]
 
@@ -48,12 +50,11 @@ jupyter-book = "^1.0.0"
 pytest-cov = "^4.1.0"
 coverage = "^7.6.4"
 plotnine = "^0.13.6"
+pyright = "^1.1.398"
 
 
 [tool.poetry.extras]
-docs = ["furo", 
-        "sphinx-copybutton", 
-        "sphinx-autodoc-typehints"]
+docs = ["furo", "sphinx-copybutton", "sphinx-autodoc-typehints"]
 
 [build-system]
 requires = ["poetry-core"]
@@ -61,7 +62,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
 relative_files = true
-source = [
-    ".",
-    "/tmp"
-]
+source = [".", "/tmp"]

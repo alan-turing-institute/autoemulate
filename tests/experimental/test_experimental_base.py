@@ -1,26 +1,23 @@
 import numpy as np
 import pytest
 import torch
-from torch import nn
-from torch import optim
-from torch.utils.data import DataLoader
-from torch.utils.data import TensorDataset
+from torch import nn, optim
+from torch.utils.data import DataLoader, TensorDataset
 
-from autoemulate.experimental.config import FitConfig
-from autoemulate.experimental.emulators.base import InputTypeMixin
-from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
+from autoemulate.experimental.tuner import Tuner
+from autoemulate.experimental.data.preprocessors import Standardizer
 
-
-@pytest.fixture
-def fit_config():
-    return FitConfig(
-        epochs=10,
-        batch_size=2,
-        shuffle=False,
-        verbose=False,
-        optimizer=torch.optim.Adam,
-        criterion=torch.nn.MSELoss,
-    )
+# @pytest.fixture
+# def model_config() -> M:
+#     return {
+#         "epochs": 10,
+#         "batch_size": 2,
+#         "shuffle": False,
+#         "verbose": False,
+#         "optimizer": torch.optim.Adam,
+#         "criterion": torch.nn.MSELoss,
+#     }
 
 
 class TestInputTypeMixin:
@@ -40,7 +37,9 @@ class TestInputTypeMixin:
         """
         X = np.array([[1.0], [2.0], [3.0]])
         y = np.array([1.0, 2.0, 3.0])
-        dataloader = self.mixin._convert(X, y, batch_size=2, shuffle=False)
+        dataloader = self.mixin._convert_to_dataloader(
+            X, y, batch_size=2, shuffle=False
+        )
 
         assert isinstance(dataloader, DataLoader)
         batches = list(dataloader)
@@ -54,7 +53,9 @@ class TestInputTypeMixin:
         """
         X = torch.tensor([[1.0], [2.0], [3.0]])
         y = torch.tensor([1.0, 2.0, 3.0])
-        dataloader = self.mixin._convert(X, y, batch_size=2, shuffle=False)
+        dataloader = self.mixin._convert_to_dataloader(
+            X, y, batch_size=2, shuffle=False
+        )
 
         assert isinstance(dataloader, DataLoader)
         batches = list(dataloader)
@@ -71,7 +72,7 @@ class TestInputTypeMixin:
         dataset = TensorDataset(X, y)
         dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
 
-        result = self.mixin._convert(dataloader)
+        result = self.mixin._convert_to_dataloader(dataloader)
         assert isinstance(result, DataLoader)
         batches = list(result)
         assert len(batches) == 2
@@ -83,8 +84,8 @@ class TestInputTypeMixin:
         Test converting an invalid input type.
         """
         X = "invalid input"
-        with pytest.raises(ValueError, match="Unsupported type for X."):
-            self.mixin._convert(X)
+        with pytest.raises(ValueError, match="Unsupported type for x."):
+            self.mixin._convert_to_dataloader(X)  # type: ignore - test for invalid type
 
 
 class TestPyTorchBackend:
@@ -97,14 +98,24 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self):
+        def __init__(self, **kwargs):
             super().__init__()
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
 
+            self.preprocessor = Standardizer(
+                torch.Tensor([[-0.5]]), torch.Tensor([[0.5]])
+            )
+
         def forward(self, x):
             return self.linear(x)
+
+        @staticmethod
+        def get_tune_config():
+            return {
+                "epochs": [100, 200, 300],
+            }
 
     def setup_method(self):
         """
@@ -112,25 +123,25 @@ class TestPyTorchBackend:
         """
         self.model = self.DummyModel()
 
-    def test_fit(self, fit_config):
+    def test_fit(self):
         """
         Test the fit method of PyTorchBackend.
         """
         x = np.array([[1.0], [2.0], [3.0]])
         y = np.array([[2.0], [4.0], [6.0]])
-        loss_history = self.model.fit(x, y, fit_config)
+        self.model.fit(x, y)
 
-        assert isinstance(loss_history, list)
-        assert len(loss_history) == 10
-        assert all(isinstance(loss, float) for loss in loss_history)
+        assert isinstance(self.model.loss_history, list)
+        assert len(self.model.loss_history) == 10
+        assert all(isinstance(loss, float) for loss in self.model.loss_history)
 
-    def test_predict(self, fit_config):
+    def test_predict(self):
         """
         Test the predict method of PyTorchBackend.
         """
         x_train = np.array([[1.0], [2.0], [3.0]])
         y_train = np.array([[2.0], [4.0], [6.0]])
-        self.model.fit(x_train, y_train, fit_config)
+        self.model.fit(x_train, y_train)
 
         X_test = torch.tensor([[4.0]])
         y_pred = self.model.predict(X_test)
@@ -138,3 +149,40 @@ class TestPyTorchBackend:
         assert isinstance(y_pred, torch.Tensor)
         assert y_pred.shape == (1, 1)
         assert y_pred.shape == (1, 1)
+
+    def test_tune_xy(self):
+        """
+        Test that Tuner accepts X,Y inputs.
+        """
+        x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
+        tuner = Tuner(x_train, y_train, n_iter=10)
+        tuner.run(self.DummyModel)
+
+    def test_standardizer(self):
+        x_train = torch.Tensor(
+            [[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]]
+        )
+        x_train_preprocessed = self.model.preprocess(x_train)
+        assert isinstance(x_train_preprocessed, torch.Tensor)
+        assert torch.allclose(
+            x_train_preprocessed,
+            torch.Tensor([[3.0], [5.0], [7.0], [9.0], [11.0]]),
+        )
+
+    def test_standardizer_fail(self):
+        with pytest.raises(
+            ValueError, match="Expected 2D torch.Tensor, actual shape dim 1"
+        ):
+            x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
+            self.model.preprocess(x_train)
+
+    def test_tune_dataset(self):
+        """
+        Test that Tuner accepts a single Dataset input.
+        """
+        x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
+        dataset = self.model._convert_to_dataset(x_train, y_train)
+        tuner = Tuner(x=dataset, y=None, n_iter=10)
+        tuner.run(self.DummyModel)
