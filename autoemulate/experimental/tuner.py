@@ -2,8 +2,8 @@ import gpytorch
 import numpy as np
 from sklearn.metrics import r2_score
 
-from autoemulate.experimental.cross_validation import evaluate
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.types import InputLike, ModelConfig, TuneConfig
 
 
