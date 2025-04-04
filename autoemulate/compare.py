@@ -253,14 +253,24 @@ class AutoEmulate:
                 prep_name = prep_config["name"]
                 prep_params = prep_config.get("params", {})
                 
-                #if self.scale_output:
-                #    fitted_scaler = self.scaler_output.fit(self.y)
-                #    fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(fitted_scaler.transform(self.y))
-                #else:
-                fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(self.y)
-                
-                self.ae_pipeline.dim_reducer_output = non_trainable_transformer(fitted_reducer)
-                self.ae_pipeline._wrap_model_reducer_in_pipeline()
+                # Outer loop training:
+                # Fit the scaler and reducer on the whole training set
+                if self.scale_output:
+                    fitted_scaler = self.scaler_output.fit(_ensure_2d(self.y))
+                    self.ae_pipeline.scaler_output = non_trainable_transformer(fitted_scaler)
+                if self.reduce_dim_output:
+                    if self.scale_output:
+                        # Fit the dimensionality reducer on the scaled output
+                        fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(
+                            fitted_scaler.transform(self.y)
+                        )
+                    else:
+                        # Fit the dimensionality reducer on the original output
+                        fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(self.y)
+                    self.ae_pipeline.dim_reducer_output = non_trainable_transformer(fitted_reducer)
+
+                if self.scale_output or self.reduce_dim_output:
+                    self.ae_pipeline._wrap_model_reducer_in_pipeline()
 
                 # Initialize storage for this preprocessing method
                 self.preprocessing_results[prep_name] = {
