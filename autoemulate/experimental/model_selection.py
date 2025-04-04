@@ -5,18 +5,23 @@ from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import DistributionLike, TensorLike
+from autoemulate.experimental.types import (
+    DistributionLike,
+    InputLike,
+    OutputLike,
+    TensorLike,
+)
 
 
-def evaluate(y_true: TensorLike, y_pred: TensorLike, score_f: Callable):
+def evaluate(y_true: InputLike, y_pred: OutputLike, score_f: Callable):
     """
     Evaluate Emulator prediction performance using a `score_f` metric.
 
     Parameters
     ----------
-    y_true: TensorLike
+    y_true: InputLike
         Ground truth target values.
-    y_pred: TensorLike
+    y_pred: OutputLike
         Predicted target values, as returned by an Emulator.
     score_f: Callable
         Function that takes in ground truth and predicted target values and
@@ -68,10 +73,11 @@ def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
         val_subset = Subset(dataset, val_idx)
         train_loader = DataLoader(train_subset)
         val_loader = DataLoader(val_subset)
+        train_x, train_y = next(iter(train_loader))
         val_x, val_y = next(iter(val_loader))
 
         # fit model and predict
-        model.fit(train_loader)
+        model.fit(train_x, train_y)
         y_pred = model.predict(val_x)
 
         # score and save results
