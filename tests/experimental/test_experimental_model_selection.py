@@ -2,6 +2,7 @@ import torch
 from sklearn.model_selection import KFold, LeaveOneOut
 from torch.utils.data import TensorDataset
 
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.model_selection import cross_validate
 
 
@@ -10,12 +11,16 @@ def test_cross_validate():
     Test cross_validate can be called with any sklearn.model_selection class.
     """
 
-    class SimpleEmulator:
-        def fit(self, train_loader):
+    class DummyEmulator(Emulator):
+        def fit(self, x, y):
             pass
 
-        def predict(self, X):
-            return torch.tensor([x * 2 for x in X])
+        def predict(self, x):
+            return torch.tensor(2 * [val * 2 for val in x])
+
+        @staticmethod
+        def get_tune_config():
+            return {}
 
     x = torch.tensor([1, 2, 3, 4, 5])
     y = 2 * x
