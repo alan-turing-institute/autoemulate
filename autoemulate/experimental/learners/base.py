@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from dataclasses import InitVar, dataclass, field
+from dataclasses import dataclass, field
 from inspect import isabstract
-from typing import Any, Dict, List, Tuple, Union
+from ..types import TensorLike
+from typing import Tuple, List, Optional
 
 import torch
 from anytree import Node, RenderTree
@@ -17,76 +18,74 @@ class Base(ABC):
     """
 
     @staticmethod
-    def check_vector(X: torch.Tensor) -> torch.Tensor:
+    def check_vector(X: TensorLike) -> TensorLike:
         """
-        Validate that the input is a 1D torch.Tensor.
+        Validate that the input is a 1D TensorLike.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             Input tensor to validate.
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             Validated 1D tensor.
 
         Raises
         ------
         ValueError
-            If X is not a torch.Tensor or is not 1-dimensional.
+            If X is not a TensorLike or is not 1-dimensional.
         """
-        if not isinstance(X, torch.Tensor):
-            raise ValueError(f"Expected torch.Tensor, got {type(X)}")
+        if not isinstance(X, TensorLike):
+            raise ValueError(f"Expected TensorLike, got {type(X)}")
         elif X.ndim != 1:
             raise ValueError(f"Expected 1D tensor, got {X.ndim}D")
         else:
             return X
 
     @staticmethod
-    def check_matrix(X: torch.Tensor) -> torch.Tensor:
+    def check_matrix(X: TensorLike) -> TensorLike:
         """
-        Validate that the input is a 2D torch.Tensor.
+        Validate that the input is a 2D TensorLike.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             Input tensor to validate.
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             Validated 2D tensor.
 
         Raises
         ------
         ValueError
-            If X is not a torch.Tensor or is not 2-dimensional.
+            If X is not a TensorLike or is not 2-dimensional.
         """
-        if not isinstance(X, torch.Tensor):
-            raise ValueError(f"Expected torch.Tensor, got {type(X)}")
+        if not isinstance(X, TensorLike):
+            raise ValueError(f"Expected TensorLike, got {type(X)}")
         elif X.ndim != 2:
             raise ValueError(f"Expected 2D tensor, got {X.ndim}D")
         else:
             return X
 
     @staticmethod
-    def check_pair(
-        X: torch.Tensor, Y: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def check_pair(X: TensorLike, Y: TensorLike) -> Tuple[TensorLike, TensorLike]:
         """
         Validate that two tensors have the same number of rows.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             First tensor.
-        Y : torch.Tensor
+        Y : TensorLike
             Second tensor.
 
         Returns
         -------
-        Tuple[torch.Tensor, torch.Tensor]
+        Tuple[TensorLike, TensorLike]
             The validated pair of tensors.
 
         Raises
@@ -100,20 +99,20 @@ class Base(ABC):
             return X, Y
 
     @staticmethod
-    def check_covariance(Y: torch.Tensor, Sigma: torch.Tensor) -> torch.Tensor:
+    def check_covariance(Y: TensorLike, Sigma: TensorLike) -> TensorLike:
         """
         Validate and return the covariance matrix.
 
         Parameters
         ----------
-        Y : torch.Tensor
+        Y : TensorLike
             Output tensor.
-        Sigma : torch.Tensor
+        Sigma : TensorLike
             Covariance matrix, which may be full, diagonal, or a scalar per sample.
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             Validated covariance matrix.
 
         Raises
@@ -131,20 +130,20 @@ class Base(ABC):
             raise ValueError("Invalid covariance matrix shape")
 
     @staticmethod
-    def trace(Sigma: torch.Tensor, d: int) -> torch.Tensor:
+    def trace(Sigma: TensorLike, d: int) -> TensorLike:
         """
         Compute the trace of the covariance matrix (A-optimal design criterion).
 
         Parameters
         ----------
-        Sigma : torch.Tensor
+        Sigma : TensorLike
             Covariance matrix (full, diagonal, or scalar).
         d : int
             Dimension of the output.
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             The computed trace value.
 
         Raises
@@ -162,20 +161,20 @@ class Base(ABC):
             raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
     @staticmethod
-    def logdet(Sigma: torch.Tensor, dim: int) -> torch.Tensor:
+    def logdet(Sigma: TensorLike, dim: int) -> TensorLike:
         """
         Compute the log-determinant of the covariance matrix (D-optimal design criterion).
 
         Parameters
         ----------
-        Sigma : torch.Tensor
+        Sigma : TensorLike
             Covariance matrix (full, diagonal, or scalar).
         dim : int
             Dimension of the output.
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             The computed log-determinant value.
 
         Raises
@@ -193,18 +192,18 @@ class Base(ABC):
             raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
     @staticmethod
-    def max_eigval(Sigma: torch.Tensor) -> torch.Tensor:
+    def max_eigval(Sigma: TensorLike) -> TensorLike:
         """
         Compute the maximum eigenvalue of the covariance matrix (E-optimal design criterion).
 
         Parameters
         ----------
-        Sigma : torch.Tensor
+        Sigma : TensorLike
             Covariance matrix (full, diagonal, or scalar).
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             The average maximum eigenvalue.
 
         Raises
@@ -235,18 +234,18 @@ class Simulator(Base):
     (No additional parameters)
     """
 
-    def sample(self, X: torch.Tensor) -> torch.Tensor:
+    def sample(self, X: TensorLike) -> TensorLike:
         """
         Generate samples from input data using the simulator.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             Input tensor of shape (n_samples, n_features).
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             Simulated output tensor.
         """
         Y = self.check_matrix(self.sample_forward(self.check_matrix(X)))
@@ -254,19 +253,36 @@ class Simulator(Base):
         return Y
 
     @abstractmethod
-    def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
+    def sample_forward(self, X: TensorLike) -> TensorLike:
         """
         Abstract method to perform the forward simulation.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             Input tensor.
 
         Returns
         -------
-        torch.Tensor
+        TensorLike
             Simulated output tensor.
+        """
+        pass
+
+    @abstractmethod
+    def sample_inputs(self, n: int) -> TensorLike:
+        """
+        Abstract method to generate random input samples.
+
+        Parameters
+        ----------
+        n : int
+            Number of input samples to generate.
+
+        Returns
+        -------
+        TensorLike
+            Random input tensor.
         """
         pass
 
@@ -284,18 +300,18 @@ class Emulator(Base):
     (No additional parameters)
     """
 
-    def sample(self, X: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def sample(self, X: TensorLike) -> Tuple[TensorLike, TensorLike]:
         """
         Generate emulator predictions and covariance estimates for given inputs.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             Input tensor of shape (n_samples, n_features).
 
         Returns
         -------
-        Tuple[torch.Tensor, torch.Tensor]
+        Tuple[TensorLike, TensorLike]
             A tuple containing the predicted outputs and covariance estimates.
         """
         X = self.check_matrix(X)
@@ -305,15 +321,15 @@ class Emulator(Base):
         Sigma = self.check_covariance(Y, Sigma)
         return Y, Sigma
 
-    def fit(self, X_train: torch.Tensor, Y_train: torch.Tensor):
+    def fit(self, X_train: TensorLike, Y_train: TensorLike):
         """
         Fit the emulator model using the training data.
 
         Parameters
         ----------
-        X_train : torch.Tensor
+        X_train : TensorLike
             Training input tensor.
-        Y_train : torch.Tensor
+        Y_train : TensorLike
             Training output tensor.
         """
         self.check_matrix(X_train)
@@ -322,32 +338,32 @@ class Emulator(Base):
         self.fit_forward(X_train, Y_train)
 
     @abstractmethod
-    def fit_forward(self, X_train: torch.Tensor, Y_train: torch.Tensor):
+    def fit_forward(self, X_train: TensorLike, Y_train: TensorLike):
         """
         Abstract method to fit the emulator model using training data.
 
         Parameters
         ----------
-        X_train : torch.Tensor
+        X_train : TensorLike
             Training input tensor.
-        Y_train : torch.Tensor
+        Y_train : TensorLike
             Training output tensor.
         """
         pass
 
     @abstractmethod
-    def sample_forward(self, X: torch.Tensor):
+    def sample_forward(self, X: TensorLike) -> Tuple[TensorLike, TensorLike]:
         """
         Abstract method to generate predictions and covariance estimates.
 
         Parameters
         ----------
-        X : torch.Tensor
+        X : TensorLike
             Input tensor.
 
         Returns
         -------
-        Tuple[torch.Tensor, torch.Tensor]
+        Tuple[TensorLike, TensorLike]
             Predicted outputs and covariance estimates.
         """
         pass
@@ -367,39 +383,26 @@ class Learner(Base):
         Simulator instance used to generate ground truth outputs.
     emulator : Emulator
         Emulator instance used to approximate the simulator.
-    X_train : torch.Tensor
+    X_train : TensorLike
         Initial training input tensor.
-    Y_train : torch.Tensor
+    Y_train : TensorLike
         Initial training output tensor.
     """
 
     simulator: Simulator
     emulator: Emulator
+    X_train: TensorLike
+    Y_train: TensorLike
     in_dim: int = field(init=False)
     out_dim: int = field(init=False)
-    X_train: InitVar[torch.Tensor]
-    Y_train: InitVar[torch.Tensor]
 
-    def __post_init__(self, X_train: torch.Tensor, Y_train: torch.Tensor):
+    def __post_init__(self):
         """
         Initialize the learner with training data and fit the emulator.
-
-        Parameters
-        ----------
-        X_train : torch.Tensor
-            Initial training input tensor.
-        Y_train : torch.Tensor
-            Initial training output tensor.
         """
-        self.X_train = X_train
-        self.Y_train = Y_train
-        if X_train is not None and Y_train is not None:
-            self.emulator.fit(X_train, Y_train)
-            self.in_dim = self.X_train.shape[1]
-            self.out_dim = self.Y_train.shape[1]
-        else:
-            self.in_dim = None
-            self.out_dim = None
+        self.emulator.fit(self.X_train, self.Y_train)
+        self.in_dim = self.X_train.shape[1]
+        self.out_dim = self.Y_train.shape[1]
 
     @classmethod
     def registry(cls) -> dict:
@@ -455,8 +458,8 @@ class Learner(Base):
 
 @dataclass(kw_only=True)
 class Active(Learner):
-    def __post_init__(self, X_train, Y_train):
-        super().__post_init__(X_train, Y_train)
+    def __post_init__(self):
+        super().__post_init__()
         self.metrics = {
             k: list()
             for k in ["mse", "r2", "rate", "logdet", "trace", "max_eigval", "n_queries"]
@@ -551,21 +554,19 @@ class Active(Learner):
 
     @abstractmethod
     def query(
-        self, *arg: Union[torch.Tensor, None]
-    ) -> Tuple[
-        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
-    ]:
+        self, X: Optional[TensorLike] = None
+    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, dict[str, float]]:
         """
         Abstract method to query new samples.
 
         Parameters
         ----------
-        *arg : torch.Tensor or None
+        *arg : TensorLike or None
             Optional input samples.
 
         Returns
         -------
-        Tuple[torch.Tensor or None, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]
+        Tuple[TensorLike or None, TensorLike, TensorLike, Dict[str, List[Any]]]
             A tuple containing:
             - The queried samples (or None if no query is made),
             - The predicted outputs,

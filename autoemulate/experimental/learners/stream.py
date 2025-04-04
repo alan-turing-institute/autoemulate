@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
+from ..types import TensorLike
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
-from .base import Active, Simulator
+from .base import Active
 
 
 @dataclass(kw_only=True)
@@ -21,10 +22,8 @@ class Stream(Active):
 
     @abstractmethod
     def query(
-        self, X: torch.Tensor
-    ) -> Tuple[
-        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
-    ]:
+        self, X: Optional[TensorLike] = None
+    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, Dict[str, float]]:
         """
         Abstract method to query new samples from a stream.
 
@@ -101,10 +100,8 @@ class Random(Stream):
     p_query: float
 
     def query(
-        self, X: torch.Tensor
-    ) -> Tuple[
-        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
-    ]:
+        self, X: Optional[TensorLike] = None
+    ) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, float]]:
         """
         Query new samples randomly based on a fixed probability.
 
@@ -122,6 +119,7 @@ class Random(Stream):
             - The covariance estimates,
             - An empty dictionary of additional metrics.
         """
+        assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
         Y, Sigma = self.emulator.sample(X)
         X = X if np.random.rand() < self.p_query else None
         return X, Y, Sigma, dict()
@@ -140,7 +138,7 @@ class Threshold(Stream):
 
     threshold: float
 
-    def __post_init__(self, X_train: torch.Tensor, Y_train: torch.Tensor):
+    def __post_init__(self):
         """
         Initialize the threshold-based learner and update metrics.
 
@@ -151,7 +149,7 @@ class Threshold(Stream):
         Y_train : torch.Tensor
             Training output tensor.
         """
-        super().__post_init__(X_train, Y_train)
+        super().__post_init__()
         self.metrics.update(dict(score=list()))
 
     @abstractmethod
@@ -178,10 +176,8 @@ class Threshold(Stream):
         pass
 
     def query(
-        self, X: torch.Tensor
-    ) -> Tuple[
-        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
-    ]:
+        self, X: Optional[TensorLike] = None
+    ) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, float]]:
         """
         Query new samples based on whether the computed score exceeds a threshold.
 
@@ -199,6 +195,7 @@ class Threshold(Stream):
             - The covariance estimates,
             - A dictionary with the computed score.
         """
+        assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
         Y, Sigma = self.emulator.sample(X)
         score = self.score(X, Y, Sigma)
         X = X if score > self.threshold else None
@@ -370,7 +367,7 @@ class E_Optimal(Output):
 
 
 @dataclass(kw_only=True)
-class Adaptive:
+class Adaptive(Threshold):
     """
     Adaptive active learning strategy that adjusts the query threshold using PID control.
 
@@ -406,7 +403,7 @@ class Adaptive:
     max_threshold: Union[float, None]
     window_size: Union[int, None]
 
-    def __post_init__(self, X_train: torch.Tensor, Y_train: torch.Tensor):
+    def __post_init__(self):
         """
         Initialize the adaptive learner and update metrics.
 
@@ -417,8 +414,7 @@ class Adaptive:
         Y_train : torch.Tensor
             Training output tensor.
         """
-        # Assuming a parent __post_init__ exists (e.g., from Threshold)
-        super().__post_init__(X_train, Y_train)
+        super().__post_init__()
         self.metrics.update(
             dict(
                 threshold=list(),
@@ -429,10 +425,8 @@ class Adaptive:
         )
 
     def query(
-        self, X: torch.Tensor
-    ) -> Tuple[
-        Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, List[Any]]
-    ]:
+        self, X: Optional[TensorLike] = None
+    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, Dict[str, float]]:
         """
         Query new samples and adapt the threshold using a PID controller with a sliding window for error computation.
 

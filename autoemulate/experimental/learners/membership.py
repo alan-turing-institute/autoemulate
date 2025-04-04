@@ -1,13 +1,8 @@
-from abc import ABC, abstractmethod
-from dataclasses import InitVar, dataclass, field
-from inspect import isabstract
-from typing import Any, Dict, List, Tuple, Union
+from abc import abstractmethod
+from dataclasses import dataclass
+from typing import Dict, Tuple, Optional
+from ..types import TensorLike
 
-import numpy as np
-import torch
-from anytree import Node, RenderTree
-from torcheval.metrics import MeanSquaredError, R2Score
-from tqdm import tqdm
 
 from .base import Active
 
@@ -24,8 +19,8 @@ class Membership(Active):
 
     @abstractmethod
     def query(
-        self,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]:
+        self, X: Optional[TensorLike] = None
+    ) -> Tuple[TensorLike, TensorLike, TensorLike, Dict[str, float]]:
         """
         Abstract method to query new samples using a membership strategy.
 

@@ -1,4 +1,4 @@
-from . import base, membership, pool, stream
+from . import stream
 from .base import Emulator, Simulator
 
 # # TODO: automate this with Learner.hierarchy()
@@ -29,4 +29,4 @@ from .base import Emulator, Simulator
 #                     D_Optimal=_stream.Adaptive_D_Optimal
 #                     E_Optimal=_stream.Adaptive_E_Optimal
 
-# __all__ = ['active', 'Emulator', 'Simulator']
+__all__ = ["stream", "Emulator", "Simulator"]
