@@ -68,11 +68,12 @@ def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
     """
     cv_results = {"r2": [], "rmse": []}
     for train_idx, val_idx in cv.split(dataset):
-        # create data subsets
+        # create train/val data subsets
+        # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())
         val_subset = Subset(dataset, val_idx.tolist())
-        train_loader = DataLoader(train_subset)
-        val_loader = DataLoader(val_subset)
+        train_loader = DataLoader(train_subset, batch_size=len(train_subset))
+        val_loader = DataLoader(val_subset, batch_size=len(val_subset))
         train_x, train_y = next(iter(train_loader))
         val_x, val_y = next(iter(val_loader))
 

@@ -16,7 +16,7 @@ def test_cross_validate():
             pass
 
         def predict(self, x):
-            return torch.tensor(2 * [val * 2 for val in x])
+            return torch.tensor([val * 2 for val in x])
 
         @staticmethod
         def get_tune_config():
