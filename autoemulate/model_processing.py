@@ -1,11 +1,15 @@
 """Functions for getting and processing models."""
-#from sklearn.compose import TransformedTargetRegressor
+# from sklearn.compose import TransformedTargetRegressor
 from sklearn.decomposition import PCA
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from autoemulate.preprocess_target import CustomTransformedTargetRegressor
 from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import NoChangeTransformer, TargetPCA, VAEOutputPreprocessor, CustomTransformedTargetRegressor
+from autoemulate.preprocess_target import NoChangeTransformer
+from autoemulate.preprocess_target import TargetPCA
+from autoemulate.preprocess_target import VAEOutputPreprocessor
+
 
 class ModelPrepPipeline:
     def __init__(

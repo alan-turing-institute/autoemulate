@@ -8,13 +8,14 @@ from contextlib import contextmanager
 import numpy as np
 import torch
 from sklearn.base import RegressorMixin
-#from sklearn.compose import TransformedTargetRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
 from autoemulate.preprocess_target import CustomTransformedTargetRegressor
+
+# from sklearn.compose import TransformedTargetRegressor
 
 # manage warnings -------------------------------------------------------------
 
@@ -97,7 +98,9 @@ def get_model_name(model):
         if isinstance(step, MultiOutputRegressor):
             return step.estimator.model_name
         elif isinstance(step, CustomTransformedTargetRegressor):
-            return get_model_name(step.regressor)  # Unwrap CustomTransformedTargetRegressor
+            return get_model_name(
+                step.regressor
+            )  # Unwrap CustomTransformedTargetRegressor
         else:
             return step.model_name
 

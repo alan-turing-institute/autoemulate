@@ -1,19 +1,20 @@
+import inspect
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import inspect
 from sklearn.base import BaseEstimator
 from sklearn.base import clone
 from sklearn.base import TransformerMixin
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
+from sklearn.utils.validation import check_is_fitted
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
-from sklearn.utils.validation import check_is_fitted
 
-from sklearn.compose import TransformedTargetRegressor
 
 def get_dim_reducer(
     name,
@@ -484,7 +485,7 @@ class non_trainable_transformer:
         )
 
     def __repr__(self):
-        return str(self.NT_transformer) 
+        return str(self.NT_transformer)
 
     @property
     def base_transformer(self):
@@ -545,8 +546,10 @@ class NoChangeTransformer(BaseEstimator, TransformerMixin):
     def inverse_transform_std(self, x_std):
         return x_std
 
+
 class CustomTransformedTargetRegressor(TransformedTargetRegressor):
     """Custom TransformedTargetRegressor to handle inverse transformation of standard deviation."""
+
     def __init__(
         self,
         regressor=None,
@@ -554,7 +557,7 @@ class CustomTransformedTargetRegressor(TransformedTargetRegressor):
         func=None,
         inverse_func=None,
         check_inverse=True,
-        n_samples=1000  # Added custom parameter
+        n_samples=1000,  # Added custom parameter
     ):
         super().__init__(
             regressor=regressor,
@@ -594,24 +597,24 @@ class CustomTransformedTargetRegressor(TransformedTargetRegressor):
             returns (y_pred, y_std). Otherwise returns just y_pred.
         """
         check_is_fitted(self)
-        
+
         # Check if the regressor supports return_std
         base_model = self.regressor_.named_steps["model"]
-        supports_std = 'return_std' in inspect.signature(base_model.predict).parameters
+        supports_std = "return_std" in inspect.signature(base_model.predict).parameters
 
         # Only pass return_std if the regressor supports it
-        if supports_std and predict_params.get('return_std', False):
+        if supports_std and predict_params.get("return_std", False):
             pred_mean, pred_std = self.regressor_.predict(X, **predict_params)
             pred_mean = self._ensure_2d(pred_mean)
             pred_std = self._ensure_2d(pred_std)
             return self._inverse_transform_with_std(pred_mean, pred_std)
-        
+
         # Otherwise just predict mean
         pred_mean = self.regressor_.predict(X, **predict_params)
-        #pred_mean = self.regressor_.predict(X, **{k: v for k, v in predict_params.items() if k != 'return_std'})
+        # pred_mean = self.regressor_.predict(X, **{k: v for k, v in predict_params.items() if k != 'return_std'})
         pred_mean = self._ensure_2d(pred_mean)
-        
-        if predict_params.get('return_std', False):
+
+        if predict_params.get("return_std", False):
             # If return_std was requested but not supported, return None for std
             return self.transformer_.inverse_transform(pred_mean).squeeze(), None
         return self.transformer_.inverse_transform(pred_mean).squeeze()
@@ -634,10 +637,10 @@ class CustomTransformedTargetRegressor(TransformedTargetRegressor):
         """
         pred_mean = self._ensure_2d(pred_mean)
         pred_std = self._ensure_2d(pred_std)
-        
+
         if pred_mean.shape != pred_std.shape:
             raise ValueError("pred_mean and pred_std must have the same shape")
-            
+
         n_simulations, n_features = pred_mean.shape
         samples = []
 
@@ -650,9 +653,9 @@ class CustomTransformedTargetRegressor(TransformedTargetRegressor):
             )
             samples.append(self.transformer_.inverse_transform(samples_latent))
         samples = np.array(samples)
-        
+
         # Calculate mean and std across samples for each prediction
-        transformed_mean = np.mean(samples, axis=1).squeeze() 
-        transformed_std = np.std(samples, axis=1).squeeze() 
-        
+        transformed_mean = np.mean(samples, axis=1).squeeze()
+        transformed_std = np.std(samples, axis=1).squeeze()
+
         return transformed_mean, transformed_std

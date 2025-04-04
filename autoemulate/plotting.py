@@ -2,13 +2,14 @@ import inspect
 
 import matplotlib.pyplot as plt
 import numpy as np
-#from sklearn.compose import TransformedTargetRegressor
-from autoemulate.preprocess_target import CustomTransformedTargetRegressor
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
+from autoemulate.preprocess_target import CustomTransformedTargetRegressor
 from autoemulate.utils import _ensure_2d
+
+# from sklearn.compose import TransformedTargetRegressor
 
 
 def _validate_inputs(cv_results, model_name):
@@ -42,6 +43,7 @@ def _check_multioutput(y, output_index):
             f"""Plotting the output variable with index {output_index}. 
 To plot other outputs, set `output_index` argument to the desired index."""
         )
+
 
 def _predict_with_optional_std(model, X_test):
     """Predicts the output of the model with or without uncertainty."""
