@@ -407,56 +407,100 @@ class AutoEmulate:
         -------
         Fitted model instance
         """
-
         if not hasattr(self, "preprocessing_results"):
             raise RuntimeError("Must run compare() first")
-            # Get overall best across all preprocessing methods
 
+        # Handle rank specification
         if rank is not None:
-            summary = self.summarise_cv(sort_by=metric)
-            # Remove duplicate models from different preprocessing
-            summary = summary.drop_duplicates(subset=["model", "short"], keep="first")
-            name = summary.iloc[rank - 1]["model"]
-            # Check valid rank
-            if rank < 1 or rank > len(summary):
-                raise RuntimeError(
-                    f"Rank must be between 1 and {len(summary)} for preprocessing '{preprocessing}'"
+            if preprocessing is None:
+                # Get overall ranking across all preprocessing methods
+                summary = self.summarise_cv(sort_by=metric)
+                # Remove duplicate models from different preprocessing
+                summary = summary.drop_duplicates(
+                    subset=["model", "short"], keep="first"
                 )
+                if rank < 1 or rank > len(summary):
+                    raise RuntimeError(f"Rank must be between 1 and {len(summary)}")
+                name = summary.iloc[rank - 1]["model"]
+            else:
+                # Get ranking within specific preprocessing method
+                if preprocessing not in self.preprocessing_results:
+                    raise ValueError(
+                        f"Unknown preprocessing: {preprocessing}. "
+                        f"Available: {list(self.preprocessing_results.keys())}"
+                    )
+                summary = self.summarise_cv(preprocessing=preprocessing, sort_by=metric)
+                if rank < 1 or rank > len(summary):
+                    raise RuntimeError(
+                        f"Rank must be between 1 and {len(summary)} for preprocessing '{preprocessing}'"
+                    )
+                name = summary.iloc[rank - 1]["model"]
 
-        # Get from specific preprocessing method
+        # Get model by name with optional preprocessing filter
+        if name is not None:
+            # Convert short name to full name if needed
+            full_name = _get_full_model_name(name, self.model_names)
+            if full_name is None:
+                raise ValueError(f"Model '{name}' not found in registered models")
+
+            if preprocessing is not None:
+                # Get model from specific preprocessing method
+                if preprocessing not in self.preprocessing_results:
+                    raise ValueError(
+                        f"Unknown preprocessing: {preprocessing}. "
+                        f"Available: {list(self.preprocessing_results.keys())}"
+                    )
+                for model in self.preprocessing_results[preprocessing]["models"]:
+                    if get_model_name(model) == full_name:
+                        return model
+                raise ValueError(
+                    f"Model '{full_name}' not found in preprocessing '{preprocessing}'"
+                )
+            else:
+                # Search all preprocessing methods for the best instance of this model
+                best_score = -float("inf") if metric == "r2" else float("inf")
+                best_model = None
+
+                for prep_name, prep_data in self.preprocessing_results.items():
+                    # Get CV results for this preprocessing method
+                    cv_results = prep_data["cv_results"]
+                    if full_name not in cv_results:
+                        continue
+
+                    # Get mean score for this model+preprocessing combination
+                    means = _sum_cvs({full_name: cv_results[full_name]}, metric)
+                    current_score = means.iloc[0][f"{metric}"]
+
+                    # Compare with current best
+                    if (metric == "r2" and current_score > best_score) or (
+                        metric != "r2" and current_score < best_score
+                    ):
+                        best_score = current_score
+                        for model in prep_data["models"]:
+                            if get_model_name(model) == full_name:
+                                best_model = model
+                                break
+
+                if best_model is None:
+                    raise ValueError(
+                        f"Model '{full_name}' not found in any preprocessing method"
+                    )
+                return best_model
+
+        # Get best model for specific preprocessing or overall best
         if preprocessing is not None:
             if preprocessing not in self.preprocessing_results:
                 raise ValueError(
-                    f"Unknown preprocessing: {preprocessing}. Available: {list(self.preprocessing_results.keys())}"
+                    f"Unknown preprocessing: {preprocessing}. "
+                    f"Available: {list(self.preprocessing_results.keys())}"
                 )
-
-            if name is not None:
-                if not isinstance(name, str):
-                    raise ValueError("Name must be a string")
-                for model in self.preprocessing_results[preprocessing]["models"]:
-                    if (
-                        get_model_name(model) == name
-                        or get_short_model_name(model) == name
-                    ):
-                        return model
-                raise ValueError(f"Model {name} not found")
-            else:
-                return self.get_best_model_for_prep(
-                    prep_results=self.preprocessing_results[preprocessing],
-                    metric=metric,
-                )
-
-        # Get best overall model
-        if name is None:
+            return self.get_best_model_for_prep(
+                prep_results=self.preprocessing_results[preprocessing], metric=metric
+            )
+        else:
+            # Get overall best model across all preprocessing methods
             _, best_model, _ = self.get_overall_best_model(metric=metric)
             return best_model
-
-        # Search all preprocessing methods for named model
-        for prep_name, prep_data in self.preprocessing_results.items():
-            for model in prep_data["models"]:
-                if get_model_name(model) == name or get_short_model_name(model) == name:
-                    return model
-        raise ValueError(f"Model {name} not found")
 
     def get_best_model_for_prep(self, prep_results, metric="r2"):
         """Get the best model for a specific preprocessing method.
