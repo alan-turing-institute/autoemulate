@@ -2,12 +2,12 @@ import inspect
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.compose import TransformedTargetRegressor
+#from sklearn.compose import TransformedTargetRegressor
+from autoemulate.preprocess_target import CustomTransformedTargetRegressor
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
-from autoemulate.preprocess_target import inverse_transform_with_std
 from autoemulate.utils import _ensure_2d
 
 
@@ -43,37 +43,21 @@ def _check_multioutput(y, output_index):
 To plot other outputs, set `output_index` argument to the desired index."""
         )
 
-
 def _predict_with_optional_std(model, X_test):
     """Predicts the output of the model with or without uncertainty."""
-
-    if isinstance(model, TransformedTargetRegressor):
-        regressor = model.regressor_.named_steps["model"]
-        # Check if regressor supports return_std
-        predict_params = inspect.signature(regressor.predict).parameters
-        if "return_std" in predict_params:
-            y_pred, y_std = model.regressor_.predict(X_test, return_std=True)
-            y_pred, y_std = inverse_transform_with_std(
-                model, y_pred, y_std, n_samples=1000
-            )
-
-        else:
-            y_pred = model.predict(X_test)
-            y_std = None
+    # Get the base model's predict signature
+    if isinstance(model, CustomTransformedTargetRegressor):
+        base_model = model.regressor_.named_steps["model"]
+    elif isinstance(model, Pipeline):
+        base_model = model.named_steps["model"]
     else:
-        if isinstance(model, Pipeline):
-            print("Pipeline")
-            regressor = model.named_steps["model"]
-        else:
-            regressor = model
-        predict_params = inspect.signature(regressor.predict).parameters
-        if "return_std" in predict_params:
-            y_pred, y_std = model.predict(X_test, return_std=True)
-        else:
-            y_pred = model.predict(X_test)
-            y_std = None
+        base_model = model
 
-    return y_pred, y_std
+    predict_params = inspect.signature(base_model.predict).parameters
+    # Only pass return_std if explicitly supported
+    if "return_std" in predict_params:
+        return model.predict(X_test, return_std=True)
+    return model.predict(X_test), None
 
 
 def _calculate_subplot_layout(n_plots, n_cols=3):

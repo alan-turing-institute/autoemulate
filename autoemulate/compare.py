@@ -252,15 +252,14 @@ class AutoEmulate:
                 # Create the actual transformer instance and fit it
                 prep_name = prep_config["name"]
                 prep_params = prep_config.get("params", {})
-
-                fitted_transformer = get_dim_reducer(prep_name, **prep_params).fit(
-                    self.y
-                )
-
-                # Convert to non-trainable wrapper and Update pipeline with frozen transformer
-                self.ae_pipeline.transformer_method = non_trainable_transformer(
-                    fitted_transformer
-                )
+                
+                #if self.scale_output:
+                #    fitted_scaler = self.scaler_output.fit(self.y)
+                #    fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(fitted_scaler.transform(self.y))
+                #else:
+                fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(self.y)
+                
+                self.ae_pipeline.dim_reducer_output = non_trainable_transformer(fitted_reducer)
                 self.ae_pipeline._wrap_model_reducer_in_pipeline()
 
                 # Initialize storage for this preprocessing method
@@ -268,7 +267,7 @@ class AutoEmulate:
                     "models": self.ae_pipeline.models_piped,
                     "cv_results": {},
                     "best_model": None,
-                    "transformer": self.ae_pipeline.transformer_method,
+                    "transformer": self.ae_pipeline.dim_reducer_output,
                     "params": prep_params,
                 }
 
@@ -369,7 +368,7 @@ class AutoEmulate:
         self.best_combination = {
             "preprocessing": self.best_prep_method,
             "model": get_model_name(self.best_model),
-            "transformer": self.best_transformer,
+            "transformer" : self.best_transformer.base_transformer_name
         }
 
         return self.best_combination

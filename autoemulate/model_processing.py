@@ -1,14 +1,11 @@
 """Functions for getting and processing models."""
-from sklearn.compose import TransformedTargetRegressor
+#from sklearn.compose import TransformedTargetRegressor
 from sklearn.decomposition import PCA
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
 from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import NoChangeTransformer
-from autoemulate.preprocess_target import TargetPCA
-from autoemulate.preprocess_target import VAEOutputPreprocessor
-
+from autoemulate.preprocess_target import NoChangeTransformer, TargetPCA, VAEOutputPreprocessor, CustomTransformedTargetRegressor
 
 class ModelPrepPipeline:
     def __init__(
@@ -28,7 +25,7 @@ class ModelPrepPipeline:
         self.model_piped = None
         prep_name = prep_config["name"]
         prep_params = prep_config.get("params", {})
-        self.transformer_method = get_dim_reducer(prep_name, **prep_params)
+        self.dim_reducer_output = get_dim_reducer(prep_name, **prep_params)
 
         self.models = model_registry.get_models(model_names)
 
@@ -63,13 +60,12 @@ class ModelPrepPipeline:
             output_steps = []
             if self.scale_output:
                 output_steps.append(("scaler_output", self.scaler_output))
-            output_steps.append(
-                (self.transformer_method.base_transformer_name, self.transformer_method)
-            )
+            if self.reduce_dim_output:
+                output_steps.append(("dim_reducer_output", self.dim_reducer_output))
 
             if output_steps:
                 output_pipeline = Pipeline(output_steps)
-                final_model = TransformedTargetRegressor(
+                final_model = CustomTransformedTargetRegressor(
                     regressor=input_pipeline, transformer=output_pipeline
                 )
                 self.models_piped.append(final_model)

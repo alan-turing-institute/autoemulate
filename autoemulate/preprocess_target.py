@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import inspect
 from sklearn.base import BaseEstimator
 from sklearn.base import clone
 from sklearn.base import TransformerMixin
@@ -10,7 +11,9 @@ from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
+from sklearn.utils.validation import check_is_fitted
 
+from sklearn.compose import TransformedTargetRegressor
 
 def get_dim_reducer(
     name,
@@ -480,6 +483,9 @@ class non_trainable_transformer:
             NT_transformer  # Expect an instance of either targetPCA or targetVAE
         )
 
+    def __repr__(self):
+        return str(self.NT_transformer) 
+
     @property
     def base_transformer(self):
         """Get the underlying transformer instance."""
@@ -538,3 +544,115 @@ class NoChangeTransformer(BaseEstimator, TransformerMixin):
 
     def inverse_transform_std(self, x_std):
         return x_std
+
+class CustomTransformedTargetRegressor(TransformedTargetRegressor):
+    """Custom TransformedTargetRegressor to handle inverse transformation of standard deviation."""
+    def __init__(
+        self,
+        regressor=None,
+        transformer=None,
+        func=None,
+        inverse_func=None,
+        check_inverse=True,
+        n_samples=1000  # Added custom parameter
+    ):
+        super().__init__(
+            regressor=regressor,
+            transformer=transformer,
+            func=func,
+            inverse_func=inverse_func,
+            check_inverse=check_inverse,
+        )
+        self.n_samples = n_samples  # Store custom parameter
+
+    @staticmethod
+    def _ensure_2d(arr):
+        """Ensure that arr is a 2D array with shape (n_samples, n_features)."""
+        arr = np.asarray(arr)
+        if arr.ndim == 1:
+            arr = arr.reshape(-1, 1)
+        elif arr.ndim > 2:
+            raise ValueError("Input array must be 1D or 2D")
+        return arr
+
+    def predict(self, X, **predict_params):
+        """
+        Predict using the base regressor and inverse transform the predictions.
+        Handles both single predictions and tuples (mean, std) from the base regressor.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input data.
+        **predict_params : dict
+            Additional parameters passed to the regressor's predict method.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,) or tuple (y_pred, std)
+            Transformed prediction. If base regressor supports std and return_std is True,
+            returns (y_pred, y_std). Otherwise returns just y_pred.
+        """
+        check_is_fitted(self)
+        
+        # Check if the regressor supports return_std
+        base_model = self.regressor_.named_steps["model"]
+        supports_std = 'return_std' in inspect.signature(base_model.predict).parameters
+
+        # Only pass return_std if the regressor supports it
+        if supports_std and predict_params.get('return_std', False):
+            pred_mean, pred_std = self.regressor_.predict(X, **predict_params)
+            pred_mean = self._ensure_2d(pred_mean)
+            pred_std = self._ensure_2d(pred_std)
+            return self._inverse_transform_with_std(pred_mean, pred_std)
+        
+        # Otherwise just predict mean
+        pred_mean = self.regressor_.predict(X, **predict_params)
+        #pred_mean = self.regressor_.predict(X, **{k: v for k, v in predict_params.items() if k != 'return_std'})
+        pred_mean = self._ensure_2d(pred_mean)
+        
+        if predict_params.get('return_std', False):
+            # If return_std was requested but not supported, return None for std
+            return self.transformer_.inverse_transform(pred_mean).squeeze(), None
+        return self.transformer_.inverse_transform(pred_mean).squeeze()
+
+    def _inverse_transform_with_std(self, pred_mean, pred_std):
+        """
+        Transform encoded standard deviation data back to the original space using Monte Carlo sampling.
+
+        Parameters
+        ----------
+        pred_mean : array-like of shape (n_samples, n_outputs)
+            Predicted means in transformed space.
+        pred_std : array-like of shape (n_samples, n_outputs)
+            Predicted standard deviations in transformed space.
+
+        Returns
+        -------
+        tuple of ndarrays
+            (transformed_mean, transformed_std) in original space
+        """
+        pred_mean = self._ensure_2d(pred_mean)
+        pred_std = self._ensure_2d(pred_std)
+        
+        if pred_mean.shape != pred_std.shape:
+            raise ValueError("pred_mean and pred_std must have the same shape")
+            
+        n_simulations, n_features = pred_mean.shape
+        samples = []
+
+        for i in range(n_simulations):
+            # Sample from normal distribution for each simulation
+            samples_latent = np.random.normal(
+                loc=pred_mean[i],
+                scale=pred_std[i],
+                size=(self.n_samples, n_features),
+            )
+            samples.append(self.transformer_.inverse_transform(samples_latent))
+        samples = np.array(samples)
+        
+        # Calculate mean and std across samples for each prediction
+        transformed_mean = np.mean(samples, axis=1).squeeze() 
+        transformed_std = np.std(samples, axis=1).squeeze() 
+        
+        return transformed_mean, transformed_std
