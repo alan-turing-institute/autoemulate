@@ -13,6 +13,9 @@ from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from autoemulate.preprocess_target import CustomTransformedTargetRegressor
+
+# from sklearn.compose import TransformedTargetRegressor
 
 # manage warnings -------------------------------------------------------------
 
@@ -94,12 +97,20 @@ def get_model_name(model):
         # If the model step is a MultiOutputRegressor, get the estimator
         if isinstance(step, MultiOutputRegressor):
             return step.estimator.model_name
+        elif isinstance(step, CustomTransformedTargetRegressor):
+            return get_model_name(
+                step.regressor
+            )  # Unwrap CustomTransformedTargetRegressor
         else:
             return step.model_name
 
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.model_name
+
+    # If the model is a CustomTransformedTargetRegressor, unwrap it
+    elif isinstance(model, CustomTransformedTargetRegressor):
+        return get_model_name(model.regressor)
 
     # Otherwise, it's a standalone model
     else:
@@ -213,6 +224,9 @@ def get_model_param_space(model, search_type="random"):
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.get_grid_params(search_type)
+
+    elif isinstance(model, CustomTransformedTargetRegressor):
+        return get_model_param_space(model.regressor)
 
     # Otherwise, it's a standalone model
     else:
