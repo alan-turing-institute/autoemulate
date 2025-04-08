@@ -57,7 +57,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
         rbf_times_linear,
     )
     gp.fit(x, y)
-    y_pred = gp.predict(x)
+    y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
     assert y_pred.mean.shape == (20, 2)
 
