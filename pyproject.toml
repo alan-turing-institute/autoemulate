@@ -32,6 +32,7 @@ lightgbm = "^4.3.0"
 ipywidgets = "^8.1.2"
 gpytorch = "^1.12"
 salib = "^1.5.1"
+torchmetrics = "^1.7.1"
 
 
 [tool.poetry.group.dev.dependencies]

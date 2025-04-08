@@ -1,6 +1,4 @@
-from typing import Callable
-
-from sklearn.metrics import r2_score, root_mean_squared_error
+import numpy as np
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
@@ -11,9 +9,14 @@ from autoemulate.experimental.types import (
     OutputLike,
     TensorLike,
 )
+import torchmetrics
 
 
-def evaluate(y_true: InputLike, y_pred: OutputLike, score_f: Callable):
+def _update(
+    y_true: InputLike,
+    y_pred: OutputLike,
+    metric: torchmetrics.Metric,
+):
     """
     Evaluate Emulator prediction performance using a `score_f` metric.
 
@@ -33,21 +36,25 @@ def evaluate(y_true: InputLike, y_pred: OutputLike, score_f: Callable):
     """
     # handle types
     if isinstance(y_pred, TensorLike):
-        score = score_f(y_true, y_pred.detach().numpy())
+        metric.update(y_true, y_pred)
     elif isinstance(y_pred, DistributionLike):
-        score = score_f(y_true, y_pred.mean.detach().numpy())
+        metric.update(y_true, y_pred.mean)
     elif (
         isinstance(y_pred, tuple)
         and len(y_pred) == 2
         and all(isinstance(item, TensorLike) for item in y_pred)
     ):
-        score = score_f(y_true, y_pred[0].detach().numpy())
+        metric.update(y_true, y_pred)
     else:
         raise ValueError(f"Score not implmented for {type(y_pred)}")
-    return score
 
 
-def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
+def cross_validate(
+    cv: BaseCrossValidator,
+    dataset: Dataset,
+    model: Emulator,
+    batch_size: int = 16,
+):
     """
     Cross validate model performance using the given `cv` strategy.
 
@@ -72,18 +79,23 @@ def cross_validate(cv: BaseCrossValidator, dataset: Dataset, model: Emulator):
         # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())
         val_subset = Subset(dataset, val_idx.tolist())
-        train_loader = DataLoader(train_subset, batch_size=len(train_subset))
-        val_loader = DataLoader(val_subset, batch_size=len(val_subset))
-        train_x, train_y = next(iter(train_loader))
-        val_x, val_y = next(iter(val_loader))
+        train_loader = DataLoader(train_subset, batch_size=batch_size)
+        val_loader = DataLoader(val_subset, batch_size=batch_size)
 
-        # fit model and predict
-        model.fit(train_x, train_y)
-        y_pred = model.predict(val_x)
+        # fit model
+        model.fit(train_loader, y=None)
 
-        # score and save results
-        r2 = evaluate(val_y, y_pred, r2_score)
-        rmse = evaluate(val_y, y_pred, root_mean_squared_error)
+        # evaluate on batches
+        r2_metric = torchmetrics.R2Score()
+        mse_metric = torchmetrics.MeanSquaredError()
+        for x_batch, y_batch in val_loader:
+            y_batch_pred = model.predict(x_batch)
+            _update(y_batch, y_batch_pred, r2_metric)
+            _update(y_batch, y_batch_pred, mse_metric)
+
+        # compute and save results
+        r2 = r2_metric.compute().detach().numpy()
+        rmse = np.sqrt(mse_metric.compute().detach().numpy())
         cv_results["r2"].append(r2)
         cv_results["rmse"].append(rmse)
     return cv_results
