@@ -17,23 +17,6 @@ def _update(
     y_pred: OutputLike,
     metric: torchmetrics.Metric,
 ):
-    """
-    Evaluate Emulator prediction performance using a `score_f` metric.
-
-    Parameters
-    ----------
-    y_true: InputLike
-        Ground truth target values.
-    y_pred: OutputLike
-        Predicted target values, as returned by an Emulator.
-    score_f: Callable
-        Function that takes in ground truth and predicted target values and
-        returns a measure of performance (e.g., r2, rmse).
-
-    Returns
-    -------
-    float
-    """
     # handle types
     if isinstance(y_pred, TensorLike):
         metric.update(y_true, y_pred)
@@ -47,6 +30,31 @@ def _update(
         metric.update(y_true, y_pred)
     else:
         raise ValueError(f"Score not implmented for {type(y_pred)}")
+
+
+def evaluate(
+    y_true: InputLike, y_pred: OutputLike, metric: type[torchmetrics.Metric]
+) -> float:
+    """
+    Evaluate Emulator prediction performance using a `score_f` metric.
+
+    Parameters
+    ----------
+    y_true: InputLike
+        Ground truth target values.
+    y_pred: OutputLike
+        Predicted target values, as returned by an Emulator.
+    metric: type[Metric]
+        A torchmetrics metric to compute the score.
+
+    Returns
+    -------
+    float
+    """
+
+    metric_instance = metric()
+    _update(y_true, y_pred, metric_instance)
+    return metric_instance.compute().detach().numpy().item()
 
 
 def cross_validate(
@@ -94,8 +102,8 @@ def cross_validate(
             _update(y_batch, y_batch_pred, mse_metric)
 
         # compute and save results
-        r2 = r2_metric.compute().detach().numpy()
-        rmse = np.sqrt(mse_metric.compute().detach().numpy())
+        r2 = r2_metric.compute().detach().numpy().item()
+        rmse = np.sqrt(mse_metric.compute().detach().numpy().item())
         cv_results["r2"].append(r2)
         cv_results["rmse"].append(rmse)
     return cv_results

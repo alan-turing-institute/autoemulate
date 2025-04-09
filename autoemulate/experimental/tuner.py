@@ -1,6 +1,6 @@
 import gpytorch
 import numpy as np
-from sklearn.metrics import r2_score
+from torchmetrics import R2Score
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
@@ -25,7 +25,7 @@ class Tuner(InputTypeMixin):
         self.n_iter = n_iter
         self.dataset = self._convert_to_dataset(x, y)
         # Q: should users be able to choose a different validation metric?
-        self.score_f = r2_score
+        self.metric = R2Score
 
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
         """
@@ -55,7 +55,7 @@ class Tuner(InputTypeMixin):
         for _ in range(self.n_iter):
             # randomly sample hyperparameters and instantiate model
             model_config: ModelConfig = {
-                k: np.random.choice(v) for k, v in tune_config.items()
+                k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
             if isinstance(model_class, gpytorch.models.ExactGP):
                 m = model_class(train_x, train_y, **model_config)
@@ -69,7 +69,7 @@ class Tuner(InputTypeMixin):
 
             # evaluate
             y_pred = m.predict(val_x)
-            score = evaluate(val_y, y_pred, self.score_f)
+            score = evaluate(val_y, y_pred, self.metric)
             assert isinstance(score, float)
             model_config_tested.append(model_config)
             val_scores.append(score)
