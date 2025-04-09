@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
 from torch import nn
 
@@ -28,7 +29,8 @@ class Emulator(ABC):
     @abstractmethod
     def get_tune_config() -> TuneConfig:
         """
-        The keys in the TuneConfig must be implemented as keyword arguments in the __init__ method of any subclasses.
+        The keys in the TuneConfig must be implemented as keyword arguments in the
+        __init__ method of any subclasses.
 
         e.g.
 
@@ -63,7 +65,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     batch_size: int = 16
     shuffle: bool = True
     epochs: int = 10
-    loss_history: list[float] = []
+    loss_history: ClassVar[list[float]] = []
     verbose: bool = False
     preprocessor: Preprocessor | None = None
 
@@ -144,7 +146,8 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         return self(x)
 
     def cross_validate(self, x: InputLike) -> None:
-        raise NotImplementedError("This function is not yet implemented.")
+        msg = "This function is not yet implemented."
+        raise NotImplementedError(msg)
 
     @staticmethod
     def get_tune_config():

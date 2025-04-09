@@ -1,8 +1,7 @@
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
-
 from autoemulate.experimental.types import InputLike
+from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
 
 
 class InputTypeMixin:
@@ -32,7 +31,8 @@ class InputTypeMixin:
             dataset = x
         else:
             raise ValueError(
-                f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch tensor."
+                f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch "
+                "tensor."
             )
 
         return dataset
@@ -78,7 +78,8 @@ class InputTypeMixin:
         """
         if train_size < 0.0 or train_size > 1.0 or test_size < 0.0 or test_size > 1.0:
             raise ValueError(
-                f"Train size ({train_size}) and test size ({test_size}) must be specified as a proportion between 0 and 1"
+                f"Train size ({train_size}) and test size ({test_size}) must be "
+                "specified as a proportion between 0 and 1"
             )
         if test_size + train_size != 1.0:
             raise ValueError(
@@ -96,5 +97,7 @@ class InputTypeMixin:
     #     if isinstance(y, np.ndarray):
     #         y = torch.tensor(y, dtype=torch.float32)
     #     else:
-    #         raise ValueError("Unsupported type for X. Must be numpy array, PyTorch tensor")
+    #         raise ValueError(
+    #             "Unsupported type for X. Must be numpy array, PyTorch tensor"
+    #         )
     #     return y

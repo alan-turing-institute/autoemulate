@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-import torch
 
+import torch
 from autoemulate.experimental.types import InputLike
 
 
