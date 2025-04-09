@@ -54,7 +54,7 @@ def evaluate(
 
     metric_instance = metric()
     _update(y_true, y_pred, metric_instance)
-    return metric_instance.compute().detach().numpy().item()
+    return metric_instance.compute().item()
 
 
 def cross_validate(
@@ -82,7 +82,7 @@ def cross_validate(
        Contains r2 and rmse scores computed for each cross validation fold.
     """
     cv_results = {"r2": [], "rmse": []}
-    for train_idx, val_idx in cv.split(dataset):
+    for train_idx, val_idx in cv.split(dataset):  # type: ignore TODO: identify type handling here
         # create train/val data subsets
         # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())
@@ -102,8 +102,8 @@ def cross_validate(
             _update(y_batch, y_batch_pred, mse_metric)
 
         # compute and save results
-        r2 = r2_metric.compute().detach().numpy().item()
-        rmse = np.sqrt(mse_metric.compute().detach().numpy().item())
+        r2 = r2_metric.compute().item()
+        rmse = np.sqrt(mse_metric.compute().item())
         cv_results["r2"].append(r2)
         cv_results["rmse"].append(rmse)
     return cv_results
