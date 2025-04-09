@@ -1,5 +1,6 @@
+import numpy as np
 import torch
-from sklearn.model_selection import KFold, LeaveOneOut
+from sklearn.model_selection import KFold, LeavePOut
 from torch.utils.data import TensorDataset
 
 from autoemulate.experimental.emulators.base import Emulator
@@ -22,7 +23,7 @@ def test_cross_validate():
         def get_tune_config():
             return {}
 
-    x = torch.tensor([1, 2, 3, 4, 5])
+    x = torch.tensor(np.arange(32)).float()
     y = 2 * x
     dataset = TensorDataset(x, y)
 
@@ -35,7 +36,9 @@ def test_cross_validate():
     assert len(results["r2"]) == 2
     assert len(results["rmse"]) == 2
 
-    # LOO
-    results = cross_validate(LeaveOneOut(), dataset, emulator)
-    assert len(results["r2"]) == 5
-    assert len(results["rmse"]) == 5
+    # LeavePOut: LOO raised an error with torchmetrics R2Score since it requires at
+    # least 2 samples
+    results = cross_validate(LeavePOut(p=2), dataset, emulator)
+    expected_n = (x.shape[0] * (x.shape[0] - 1)) / 2
+    assert len(results["r2"]) == expected_n
+    assert len(results["rmse"]) == expected_n
