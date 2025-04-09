@@ -82,8 +82,7 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
 
 # TODO: update compare loop
 # def test_gp_param_search(sample_data_y1d, new_data_y1d):
-#     X, y = sample_data_y1d
-#     X2, _ = new_data_y1d
-#     em = AutoEmulate()
-#     em.setup(X, y, models=["gp"], param_search_iters=3)
-#     em.compare()
+#     x, y = sample_data_y1d
+#     x2, _ = new_data_y1d
+#     tuner = Tuner(x, y, n_iter=10)
+#     tuner.run(GaussianProcessExact)

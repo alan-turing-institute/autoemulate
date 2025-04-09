@@ -63,6 +63,9 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         covar_module_fn: CovarModuleFn,
         random_state: int | None = None,
         epochs: int = 10,
+        batch_size: int = 16,
+        activation: type[nn.Module] = nn.ReLU,
+        lr: float = 0.01,
     ):
         if random_state is not None:
             set_random_seed(random_state)
@@ -93,6 +96,9 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         self.mean_module = mean_module
         self.covar_module = covar_module
         self.epochs = epochs
+        self.lr = lr
+        self.batch_size = batch_size
+        self.activation = activation
 
     def forward(self, x: InputLike):
         assert isinstance(x, torch.Tensor)
@@ -116,7 +122,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     def fit(self, x: InputLike, y: InputLike | None):
         self.train()
         self.likelihood.train()
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.1)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         for epoch in range(self.epochs):
             optimizer.zero_grad()
@@ -138,15 +144,13 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     @staticmethod
     def get_tune_config():
         return {
-            "epochs": [100, 200, 300],
-            "batch_size": [16, 32],
-            "mean_module": [
+            "mean_module_fn": [
                 constant_mean,
                 zero_mean,
                 linear_mean,
                 poly_mean,
             ],
-            "covar_module": [
+            "covar_module_fn": [
                 rbf,
                 matern_5_2_kernel,
                 matern_3_2_kernel,
@@ -156,10 +160,11 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
                 matern_5_2_plus_rq,
                 rbf_times_linear,
             ],
+            "epochs": [100, 200, 300],
+            "batch_size": [16, 32],
             "activation": [
                 nn.ReLU,
                 nn.GELU,
             ],
-            "optimizer": [torch.optim.Adam],
             "lr": list(np.logspace(-6, -1)),
         }
