@@ -9,4 +9,5 @@ class MeanModuleFn(Protocol):
 
 
 class CovarModuleFn(Protocol):
+    # TODO: consider revising input API to be more flexible
     def __call__(self, n_features: int, n_outputs: torch.Size) -> Kernel: ...

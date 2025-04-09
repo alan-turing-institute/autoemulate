@@ -40,10 +40,19 @@ from autoemulate.utils import set_random_seed
 
 
 class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
+    """
+    Gaussian Process Exact Emulator
+    This class implements an exact Gaussian Process emulator using the GPyTorch library
+
+    It supports:
+    - multi-task Gaussian processes
+    - custom mean and kernel specification
+
+    """
+
     likelihood: MultitaskGaussianLikelihood
     random_state: int | None = None
     epochs: int = 10
-    is_fitted_: bool = False
 
     def __init__(
         self,
@@ -53,6 +62,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         mean_module_fn: MeanModuleFn,
         covar_module_fn: CovarModuleFn,
         random_state: int | None = None,
+        epochs: int = 10,
     ):
         if random_state is not None:
             set_random_seed(random_state)
@@ -82,6 +92,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         super().__init__(x, y, likelihood)
         self.mean_module = mean_module
         self.covar_module = covar_module
+        self.epochs = epochs
 
     def forward(self, x: InputLike):
         assert isinstance(x, torch.Tensor)
@@ -95,19 +106,11 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         )
 
     def log_epoch(self, epoch: int, loss: torch.Tensor):
-        logger = logging.getLogger()
-        kernel_str = ", ".join(
-            [
-                f"{name} | {sub_kernel.lengthscale}"
-                for (
-                    name,
-                    sub_kernel,
-                ) in self.covar_module.base_kernel.named_sub_kernels()
-            ]
-        )
+        logger = logging.getLogger(__name__)
+        assert self.likelihood.noise is not None
         logger.info(
-            f"Iter {epoch + 1}/{self.epochs}; Loss: {loss:.3f};  kernels: {kernel_str}; "
-            f"noise: {self.likelihood.noise};  likelihood: {self.likelihood}"
+            f"Epoch: {epoch + 1:{np.log10(self.epochs) + 1}f}/{self.epochs}; "
+            f"MLL: {-loss:4.3f}; noise: {self.likelihood.noise.item():4.3f}"
         )
 
     def fit(self, x: InputLike, y: InputLike | None):
@@ -124,7 +127,6 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
             loss.backward()
             self.log_epoch(epoch, loss)
             optimizer.step()
-        self.is_fitted_ = True
 
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()
