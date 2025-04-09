@@ -29,14 +29,14 @@ def _update(
     ):
         metric.update(y_true, y_pred)
     else:
-        raise ValueError(f"Score not implmented for {type(y_pred)}")
+        raise ValueError(f"Metric not implmented for {type(y_pred)}")
 
 
 def evaluate(
     y_true: InputLike, y_pred: OutputLike, metric: type[torchmetrics.Metric]
 ) -> float:
     """
-    Evaluate Emulator prediction performance using a `score_f` metric.
+    Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
 
     Parameters
     ----------
