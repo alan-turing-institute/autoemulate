@@ -2,6 +2,7 @@ import gpytorch
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 import numpy as np
 from torchmetrics import R2Score
+from tqdm import tqdm
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
@@ -53,7 +54,7 @@ class Tuner(InputTypeMixin):
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
-        for _ in range(self.n_iter):
+        for _ in tqdm(range(self.n_iter)):
             # randomly sample hyperparameters and instantiate model
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
