@@ -7,6 +7,7 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
+from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 from sklearn.datasets import make_regression
 
@@ -80,9 +81,8 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     assert y_pred.variance.shape == y.shape
 
 
-# TODO: update compare loop
-# def test_gp_param_search(sample_data_y1d, new_data_y1d):
-#     x, y = sample_data_y1d
-#     x2, _ = new_data_y1d
-#     tuner = Tuner(x, y, n_iter=10)
-#     tuner.run(GaussianProcessExact)
+def test_gp_param_search(sample_data_y1d, new_data_y1d):
+    x, y = sample_data_y1d
+    x2, _ = new_data_y1d
+    tuner = Tuner(x, y, n_iter=10)
+    tuner.run(GaussianProcessExact)

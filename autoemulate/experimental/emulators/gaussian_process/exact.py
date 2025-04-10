@@ -115,7 +115,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         logger = logging.getLogger(__name__)
         assert self.likelihood.noise is not None
         logger.info(
-            f"Epoch: {epoch + 1:{np.log10(self.epochs) + 1}f}/{self.epochs}; "
+            f"Epoch: {epoch + 1:{int(np.log10(self.epochs) + 1)}f}/{self.epochs}; "
             f"MLL: {-loss:4.3f}; noise: {self.likelihood.noise.item():4.3f}"
         )
 

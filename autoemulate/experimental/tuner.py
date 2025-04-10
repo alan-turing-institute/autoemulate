@@ -1,4 +1,5 @@
 import gpytorch
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 import numpy as np
 from sklearn.metrics import r2_score
 
@@ -56,13 +57,19 @@ class Tuner(InputTypeMixin):
             model_config: ModelConfig = {
                 k: np.random.choice(v) for k, v in tune_config.items()
             }
-            if isinstance(model_class, gpytorch.models.ExactGP):
-                m = model_class(train_x, train_y, **model_config)
-                assert isinstance(m, Emulator)
+
+            if issubclass(model_class, gpytorch.models.ExactGP):
+                m = model_class(
+                    train_x,
+                    train_y,
+                    likelihood=MultitaskGaussianLikelihood(
+                        num_tasks=tuple(train_y.shape)[1]
+                    ),
+                    **model_config,
+                )
                 m.fit(train_x, train_y)
             else:
                 m = model_class(**model_config)
-                assert isinstance(m, Emulator)
                 # TODO: check if pass as dataloader
                 m.fit(train_x, train_y)
 
