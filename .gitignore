@@ -33,6 +33,5 @@ Thumbs.db
 README.html
 README_files/
 
-# Examples/exploring refactor
-docs/examples
-autoemulate/refactor
+# Ignore pyrightconfig.json to enable custom venv to be set
+pyrightconfig.json
