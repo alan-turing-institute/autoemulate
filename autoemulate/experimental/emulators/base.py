@@ -14,10 +14,6 @@ class Emulator(ABC):
     - `AutoEmulate`
     """
 
-    # TODO: currently this has an issue with recursion
-    # def __call__(self, *args, **kwds):
-    #     return self.predict(*args, **kwds)
-
     @abstractmethod
     def fit(self, x: InputLike, y: InputLike | None): ...
 
