@@ -53,11 +53,6 @@ class GaussianProcessExact(
 
     """
 
-    likelihood: MultitaskGaussianLikelihood
-    random_state: int | None = None
-    epochs: int = 10
-    preprocessor: Preprocessor | None = None
-
     def __init__(
         self,
         x: InputLike,
@@ -107,9 +102,12 @@ class GaussianProcessExact(
                 raise NotImplementedError(
                     f"Preprocessor ({preprocessor_cls}) not currently implemented."
                 )
+        else:
+            self.preprocessor = None
 
         # Init must be called with preprocessed data
         super().__init__(self.preprocess(x), y, likelihood)
+        self.likelihood = likelihood
         self.mean_module = mean_module
         self.covar_module = covar_module
         self.epochs = epochs
