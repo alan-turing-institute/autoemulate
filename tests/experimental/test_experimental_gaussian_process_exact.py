@@ -1,6 +1,4 @@
 import gpytorch
-import gpytorch.kernels as gpyk
-import gpytorch.means as gpym
 import pytest
 import torch
 from autoemulate.experimental.emulators.gaussian_process.exact import (
@@ -14,39 +12,47 @@ from sklearn.datasets import make_regression
 
 @pytest.fixture
 def sample_data_y1d():
-    X, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=0)  # type: ignore
+    x, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=0)  # type: ignore
     # TODO: consider how to convert to tensor within init, fit, predict
     y = y.reshape(-1, 1)
-    return torch.Tensor(X), torch.Tensor(y)
+    return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def new_data_y1d():
-    X, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=1)  # type: ignore
-    return torch.Tensor(X), torch.Tensor(y)
+    x, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=1)  # type: ignore
+    return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def sample_data_y2d():
-    X, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=0)  # type: ignore
-    return torch.Tensor(X), torch.Tensor(y)
+    x, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=0)  # type: ignore
+    return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def new_data_y2d():
-    X, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=1)  # type: ignore
-    return torch.Tensor(X), torch.Tensor(y)
+    x, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=1)  # type: ignore
+    return torch.Tensor(x), torch.Tensor(y)
 
 
-def mean() -> type[gpym.Mean]:
-    return gpym.ConstantMean
+def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
+    x, y = sample_data_y1d
+    gp = GaussianProcessExact(
+        x,
+        y,
+        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=1),
+        constant_mean,
+        rbf,
+    )
+    gp.fit(x, y)
+    x2, _ = new_data_y1d
+    y_pred = gp.predict(x2)
+    assert isinstance(y_pred, DistributionLike)
+    assert y_pred.mean.shape == y.shape
+    assert y_pred.variance.shape == y.shape
 
 
-def covar() -> list[type[gpyk.Kernel]]:
-    return [gpytorch.kernels.ConstantKernel, gpytorch.kernels.RBFKernel]
-
-
-# test multioutput GP
 def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
@@ -63,26 +69,9 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
+def test_tune_gp(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
-    print(x.shape, y.shape)
-    gp = GaussianProcessExact(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=1),
-        constant_mean,
-        rbf,
-    )
-    gp.fit(x, y)
-    x2, _ = new_data_y1d
-    y_pred = gp.predict(x2)
-    assert isinstance(y_pred, DistributionLike)
-    assert y_pred.mean.shape == y.shape
-    assert y_pred.variance.shape == y.shape
-
-
-def test_gp_param_search(sample_data_y1d, new_data_y1d):
-    x, y = sample_data_y1d
-    x2, _ = new_data_y1d
-    tuner = Tuner(x, y, n_iter=10)
-    tuner.run(GaussianProcessExact)
+    tuner = Tuner(x, y, n_iter=5)
+    scores, configs = tuner.run(GaussianProcessExact)
+    assert len(scores) == 5
+    assert len(configs) == 5

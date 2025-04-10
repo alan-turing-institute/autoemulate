@@ -138,9 +138,6 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         self.eval()
         return self(x)
 
-    def cross_validate(self, x: InputLike) -> None:
-        raise NotImplementedError("This function is not yet implemented.")
-
     @staticmethod
     def get_tune_config():
         return {
