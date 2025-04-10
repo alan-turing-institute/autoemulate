@@ -52,9 +52,6 @@ class Emulator(ABC):
 
         ...
 
-    @abstractmethod
-    def cross_validate(self, x: InputLike): ...
-
 
 class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     """

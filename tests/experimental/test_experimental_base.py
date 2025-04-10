@@ -104,7 +104,8 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
-
+            self.epochs = kwargs.get("epochs", 10)
+            self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(
                 torch.Tensor([[-0.5]]), torch.Tensor([[0.5]])
             )
@@ -116,6 +117,7 @@ class TestPyTorchBackend:
         def get_tune_config():
             return {
                 "epochs": [100, 200, 300],
+                "batch_size": [16],
             }
 
     def setup_method(self):
@@ -155,8 +157,8 @@ class TestPyTorchBackend:
         """
         Test that Tuner accepts X,Y inputs.
         """
-        x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
-        y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
+        x_train = torch.Tensor(np.arange(16).reshape(-1, 1))
+        y_train = 2 * x_train
         tuner = Tuner(x_train, y_train, n_iter=10)
         tuner.run(self.DummyModel)
 
@@ -182,8 +184,8 @@ class TestPyTorchBackend:
         """
         Test that Tuner accepts a single Dataset input.
         """
-        x_train = torch.Tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
-        y_train = torch.Tensor([[2.0], [4.0], [6.0], [8.0], [10.0]])
+        x_train = torch.Tensor(np.arange(16).reshape(-1, 1))
+        y_train = 2 * x_train
         dataset = self.model._convert_to_dataset(x_train, y_train)
         tuner = Tuner(x=dataset, y=None, n_iter=10)
         tuner.run(self.DummyModel)
