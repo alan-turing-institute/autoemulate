@@ -9,8 +9,13 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
 
+from autoemulate.experimental.emulators.base import (
+    Emulator,
+    InputTypeMixin,
+)
 
-class LightGBM(BaseEstimator, RegressorMixin):
+
+class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
@@ -18,6 +23,8 @@ class LightGBM(BaseEstimator, RegressorMixin):
 
     def __init__(
         self,
+        x: InputLike,
+        y: InputLike,
         boosting_type="gbdt",
         num_leaves=31,
         max_depth=-1,
@@ -61,13 +68,13 @@ class LightGBM(BaseEstimator, RegressorMixin):
         self.importance_type = importance_type
         self.verbose = verbose
 
-    def fit(self, X, y, sample_weight=None, **kwargs):
+    def fit(self, x: InputLike, y: InputLike | None, sample_weight=None, **kwargs):
         """Fits the emulator to the data."""
-        X, y = check_X_y(
-            X, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
+        x, y = check_X_y(
+            x, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
         )
 
-        self.n_features_in_ = X.shape[1]
+        self.n_features_in_ = x.shape[1]
 
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
@@ -91,15 +98,15 @@ class LightGBM(BaseEstimator, RegressorMixin):
             verbose=self.verbose,
         )
 
-        self.model_.fit(X, y, sample_weight=sample_weight)
+        self.model_.fit(x, y, sample_weight=sample_weight)
         self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
-        X = check_array(X)
+        x = check_array(x)
         check_is_fitted(self, "is_fitted_")
-        y_pred = self.model_.predict(X)
+        y_pred = self.model_.predict(x)
         return y_pred
 
     def get_grid_params(self, search_type="random"):
