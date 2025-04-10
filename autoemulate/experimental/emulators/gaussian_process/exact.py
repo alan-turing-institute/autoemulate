@@ -70,7 +70,7 @@ class GaussianProcessExact(
         if random_state is not None:
             set_random_seed(random_state)
 
-        x, y = self._convert_to_tensors(self._convert_to_dataset(x, y))
+        x, y = self._convert_to_tensors(x, y)
 
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
@@ -160,7 +160,11 @@ class GaussianProcessExact(
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
-        return self(x)
+        x_tensor = self._convert_to_tensors(x)
+        if not isinstance(x, torch.Tensor):
+            msg = f"x ({x}) must be a torch.Tensor"
+            raise ValueError(msg)
+        return self(x_tensor)
 
     @staticmethod
     def get_tune_config():

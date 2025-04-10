@@ -28,6 +28,8 @@ class InputTypeMixin:
             y, (torch.Tensor, np.ndarray)
         ):
             dataset = TensorDataset(x, y)
+        elif isinstance(x, (torch.Tensor, np.ndarray)) and y is None:
+            dataset = TensorDataset(x)
         elif isinstance(x, Dataset) and y is None:
             dataset = x
         else:
@@ -59,29 +61,33 @@ class InputTypeMixin:
         return dataloader
 
     def _convert_to_tensors(
-        self, dataset: Dataset
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+        self,
+        x: InputLike,
+        y: InputLike | None = None,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
-        Convert a Dataset to a pair of tensors (x and y).
+        Convert InputLike x, y to Tensor or tuple of Tensors.
         """
+        dataset = self._convert_to_dataset(x, y)
         if isinstance(dataset, TensorDataset):
-            if len(dataset.tensors) != 2:
+            if len(dataset.tensors) > 2:
                 raise ValueError(
-                    f"Dataset must have exactly 2 tensors. Found {len(dataset.tensors)}."
+                    f"Dataset must have 2 or fewer tensors. Found {len(dataset.tensors)}."
                 )
-            else:
+            elif len(dataset.tensors) == 2:
                 x, y = dataset.tensors
-                if not isinstance(x, torch.Tensor) or not isinstance(y, torch.Tensor):
-                    raise ValueError(
-                        f"Dataset tensors must be of type torch.Tensor. Found {type(x)} "
-                        f"and {type(y)}."
-                    )
-                assert isinstance(x, torch.Tensor) and isinstance(y, torch.Tensor)
                 assert x.ndim == 2 and y.ndim in (1, 2)
                 # Ensure always 2D tensors
                 if y.ndim == 1:
                     y = y.unsqueeze(1)
                 return x, y
+            elif len(dataset.tensors) == 1:
+                (x,) = dataset.tensors
+                assert x.ndim == 2
+                return x
+            else:
+                msg = "Number of tensors returned must be greater than zero."
+                raise ValueError(msg)
         else:
             raise ValueError(
                 f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
