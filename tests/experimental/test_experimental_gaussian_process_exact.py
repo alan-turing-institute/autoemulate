@@ -13,8 +13,6 @@ from sklearn.datasets import make_regression
 @pytest.fixture
 def sample_data_y1d():
     x, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=0)  # type: ignore
-    # TODO: consider how to convert to tensor within init, fit, predict
-    y = y.reshape(-1, 1)
     return torch.Tensor(x), torch.Tensor(y)
 
 
@@ -49,8 +47,8 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     x2, _ = new_data_y1d
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
-    assert y_pred.mean.shape == y.shape
-    assert y_pred.variance.shape == y.shape
+    assert y_pred.mean.shape == y.unsqueeze(1).shape
+    assert y_pred.variance.shape == y.unsqueeze(1).shape
 
 
 def test_multioutput_gp(sample_data_y2d, new_data_y2d):

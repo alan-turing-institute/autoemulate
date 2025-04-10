@@ -25,7 +25,12 @@ class Tuner(InputTypeMixin):
 
     def __init__(self, x: InputLike, y: InputLike | None, n_iter: int):
         self.n_iter = n_iter
-        self.dataset = self._convert_to_dataset(x, y)
+        # Convert input types, convert to tensors to ensure correct shapes, convert back
+        # to dataset. TODO: consider if this is the best way to do this.
+        dataset = self._convert_to_dataset(x, y)
+        x_tensor, y_tensor = self._convert_to_tensors(dataset)
+        self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
+
         # Q: should users be able to choose a different validation metric?
         self.metric = R2Score
 

@@ -76,6 +76,11 @@ class InputTypeMixin:
                         f"Dataset tensors must be of type torch.Tensor. Found {type(x)} "
                         f"and {type(y)}."
                     )
+                assert isinstance(x, torch.Tensor) and isinstance(y, torch.Tensor)
+                assert x.ndim == 2 and y.ndim in (1, 2)
+                # Ensure always 2D tensors
+                if y.ndim == 1:
+                    y = y.unsqueeze(1)
                 return x, y
         else:
             raise ValueError(

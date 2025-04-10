@@ -71,7 +71,6 @@ class GaussianProcessExact(
             set_random_seed(random_state)
 
         x, y = self._convert_to_tensors(self._convert_to_dataset(x, y))
-        assert isinstance(x, torch.Tensor) and isinstance(y, torch.Tensor)
 
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
@@ -143,6 +142,8 @@ class GaussianProcessExact(
     def fit(self, x: InputLike, y: InputLike | None):
         self.train()
         self.likelihood.train()
+        # Ensure tensors and correct shapes
+        x, y = self._convert_to_tensors(self._convert_to_dataset(x, y))
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         x = self.preprocess(x)
