@@ -11,6 +11,7 @@ from gpytorch.kernels import (
 )
 from torch import nn
 
+from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.emulators.base import (
     Emulator,
     InputTypeMixin,
@@ -39,7 +40,9 @@ from autoemulate.experimental.types import InputLike, OutputLike
 from autoemulate.utils import set_random_seed
 
 
-class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
+class GaussianProcessExact(
+    Emulator, InputTypeMixin, gpytorch.models.ExactGP, Preprocessor
+):
     """
     Gaussian Process Exact Emulator
     This class implements an exact Gaussian Process emulator using the GPyTorch library
@@ -53,6 +56,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
     likelihood: MultitaskGaussianLikelihood
     random_state: int | None = None
     epochs: int = 10
+    preprocessor: Preprocessor | None = None
 
     def __init__(
         self,
@@ -61,6 +65,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         likelihood: MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn,
         covar_module_fn: CovarModuleFn,
+        preprocessor_cls: type[Preprocessor] | None = None,
         random_state: int | None = None,
         epochs: int = 10,
         batch_size: int = 16,
@@ -92,13 +97,31 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
-        super().__init__(x, y, likelihood)
+        # Initialize preprocessor
+        if preprocessor_cls is not None:
+            if issubclass(preprocessor_cls, Standardizer):
+                self.preprocessor = preprocessor_cls(
+                    x.mean(0, keepdim=True), x.std(0, keepdim=True)
+                )
+            else:
+                raise NotImplementedError(
+                    f"Preprocessor ({preprocessor_cls}) not currently implemented."
+                )
+
+        # Init must be called with preprocessed data
+        super().__init__(self.preprocess(x), y, likelihood)
         self.mean_module = mean_module
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+
+    def preprocess(self, x: InputLike) -> InputLike:
+        """Preprocess the input data using the preprocessor."""
+        if self.preprocessor is not None:
+            x = self.preprocessor.preprocess(x)
+        return x
 
     def forward(self, x: InputLike):
         assert isinstance(x, torch.Tensor)
@@ -124,6 +147,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
         self.likelihood.train()
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
+        x = self.preprocess(x)
         for epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)
@@ -136,6 +160,7 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
 
     def predict(self, x: InputLike) -> OutputLike:
         self.eval()
+        x = self.preprocess(x)
         return self(x)
 
     @staticmethod
@@ -157,11 +182,12 @@ class GaussianProcessExact(Emulator, InputTypeMixin, gpytorch.models.ExactGP):
                 matern_5_2_plus_rq,
                 rbf_times_linear,
             ],
-            "epochs": [100, 200, 300],
+            "epochs": [100, 200, 500, 1000],
             "batch_size": [16, 32],
             "activation": [
                 nn.ReLU,
                 nn.GELU,
             ],
-            "lr": list(np.logspace(-6, -1)),
+            "lr": list(np.logspace(-3, -1)),
+            "preprocessor_cls": [None, Standardizer],
         }
