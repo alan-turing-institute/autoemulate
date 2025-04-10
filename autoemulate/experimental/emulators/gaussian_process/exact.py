@@ -75,7 +75,7 @@ class GaussianProcessExact(
         if random_state is not None:
             set_random_seed(random_state)
 
-        # TODO: handle conversion to Tensor
+        x, y = self._convert_to_tensors(self._convert_to_dataset(x, y))
         assert isinstance(x, torch.Tensor) and isinstance(y, torch.Tensor)
 
         # Initialize the mean and covariance modules

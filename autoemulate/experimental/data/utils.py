@@ -58,6 +58,30 @@ class InputTypeMixin:
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return dataloader
 
+    def _convert_to_tensors(
+        self, dataset: Dataset
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Convert a Dataset to a pair of tensors (x and y).
+        """
+        if isinstance(dataset, TensorDataset):
+            if len(dataset.tensors) != 2:
+                raise ValueError(
+                    f"Dataset must have exactly 2 tensors. Found {len(dataset.tensors)}."
+                )
+            else:
+                x, y = dataset.tensors
+                if not isinstance(x, torch.Tensor) or not isinstance(y, torch.Tensor):
+                    raise ValueError(
+                        f"Dataset tensors must be of type torch.Tensor. Found {type(x)} "
+                        f"and {type(y)}."
+                    )
+                return x, y
+        else:
+            raise ValueError(
+                f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
+            )
+
     def _random_split(
         self,
         dataset: Dataset,
