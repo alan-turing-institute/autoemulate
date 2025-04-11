@@ -1,6 +1,8 @@
 import gpytorch
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 import numpy as np
 from torchmetrics import R2Score
+from tqdm import tqdm
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
@@ -28,6 +30,7 @@ class Tuner(InputTypeMixin):
         dataset = self._convert_to_dataset(x, y)
         x_tensor, y_tensor = self._convert_to_tensors(dataset)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
+
         # Q: should users be able to choose a different validation metric?
         self.metric = R2Score
 
@@ -56,25 +59,32 @@ class Tuner(InputTypeMixin):
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
-        for _ in range(self.n_iter):
+        for _ in tqdm(range(self.n_iter)):
             # randomly sample hyperparameters and instantiate model
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
-            if isinstance(model_class, gpytorch.models.ExactGP):
-                m = model_class(train_x, train_y, **model_config)
-                assert isinstance(m, Emulator)
+
+            if issubclass(model_class, gpytorch.models.ExactGP):
+                m = model_class(
+                    train_x,
+                    train_y,
+                    likelihood=MultitaskGaussianLikelihood(
+                        num_tasks=tuple(train_y.shape)[1]
+                    ),
+                    **model_config,
+                )
                 m.fit(train_x, train_y)
             else:
                 m = model_class(**model_config)
-                assert isinstance(m, Emulator)
                 # TODO: check if pass as dataloader
                 m.fit(train_x, train_y)
 
             # evaluate
             y_pred = m.predict(val_x)
             score = evaluate(val_y, y_pred, self.metric)
-            assert isinstance(score, float)
+
+            # record score and config
             model_config_tested.append(model_config)
             val_scores.append(score)
 
