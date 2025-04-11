@@ -28,7 +28,7 @@ pip install autoemulate
 
 If you'd like to contribute to `AutoEmulate`, you can install the package using Poetry.
 
-* Ensure you have poetry installed. If not, install it following the [official instructions](https://python-poetry.org/docs/).
+* Ensure you have poetry installed. If not, install it following the [official instructions](https://python-poetry.org/docs/). This has been most recently tested with Poetry version `2.1`.
 
 * Fork the repository on GitHub by clicking the "Fork" button at the top right of the [AutoEmulate repository](https://github.com/alan-turing-institute/autoemulate)
 
@@ -50,8 +50,14 @@ Set up poetry:
 poetry install
 ```
 
-Enter the poetry shell:
+Create a virtual environment:
 
 ```bash
-poetry shell
+poetry env activate
+```
+
+Then activate the virtual environment using the command displayed by the previous command. This will be something like:
+
+```bash
+    source /Users/yourName/Library/Caches/pypoetry/virtualenvs/autoemulate-l4vGdsmY-py3.11/bin/activate
 ```
