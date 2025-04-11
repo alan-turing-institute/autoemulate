@@ -13,7 +13,7 @@ def sample_data_y1d():
     return torch.Tensor(x), torch.Tensor(y)
 
 
-def test_tune_gp(sample_data_y1d):
+def test_tune_lightgbm(sample_data_y1d):
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5)
     scores, configs = tuner.run(LightGBM)
