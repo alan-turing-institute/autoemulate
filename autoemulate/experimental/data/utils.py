@@ -28,6 +28,8 @@ class InputTypeMixin:
             y, (torch.Tensor, np.ndarray)
         ):
             dataset = TensorDataset(x, y)
+        elif isinstance(x, (torch.Tensor, np.ndarray)) and y is None:
+            dataset = TensorDataset(x)
         elif isinstance(x, Dataset) and y is None:
             dataset = x
         else:
@@ -57,6 +59,39 @@ class InputTypeMixin:
             dataset = self._convert_to_dataset(x, y)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return dataloader
+
+    def _convert_to_tensors(
+        self,
+        x: InputLike,
+        y: InputLike | None = None,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        """
+        Convert InputLike x, y to Tensor or tuple of Tensors.
+        """
+        dataset = self._convert_to_dataset(x, y)
+        if isinstance(dataset, TensorDataset):
+            if len(dataset.tensors) > 2:
+                raise ValueError(
+                    f"Dataset must have 2 or fewer tensors. Found {len(dataset.tensors)}."
+                )
+            elif len(dataset.tensors) == 2:
+                x, y = dataset.tensors
+                assert x.ndim == 2 and y.ndim in (1, 2)
+                # Ensure always 2D tensors
+                if y.ndim == 1:
+                    y = y.unsqueeze(1)
+                return x, y
+            elif len(dataset.tensors) == 1:
+                (x,) = dataset.tensors
+                assert x.ndim == 2
+                return x
+            else:
+                msg = "Number of tensors returned must be greater than zero."
+                raise ValueError(msg)
+        else:
+            raise ValueError(
+                f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
+            )
 
     def _random_split(
         self,
