@@ -1,15 +1,39 @@
 import numpy as np
+import gpytorch
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
+import torch
 
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
     DistributionLike,
     InputLike,
+    ModelConfig,
     OutputLike,
     TensorLike,
 )
 import torchmetrics
+
+
+def model_cls_init(
+    x: InputLike,
+    y: InputLike | None,
+    model_class: type[Emulator],
+    model_config: ModelConfig,
+) -> Emulator:
+    if issubclass(model_class, gpytorch.models.ExactGP):
+        # TODO: handle types
+        assert isinstance(y, torch.Tensor)
+        m = model_class(
+            x,
+            y,
+            likelihood=MultitaskGaussianLikelihood(num_tasks=tuple(y.shape)[1]),
+            **model_config,
+        )
+    else:
+        m = model_class(**model_config)
+    return m
 
 
 def _update(
