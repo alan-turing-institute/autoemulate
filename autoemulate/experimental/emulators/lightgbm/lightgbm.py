@@ -14,6 +14,7 @@ from autoemulate.experimental.emulators.base import (
     InputTypeMixin,
 )
 
+from autoemulate.experimental.types import InputLike, OutputLike
 
 class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     """LightGBM Emulator.
