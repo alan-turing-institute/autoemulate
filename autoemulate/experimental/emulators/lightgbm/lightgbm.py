@@ -108,21 +108,19 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         y_pred = self.model_.predict(x)
         return y_pred
-
-    def get_grid_params(self, search_type="random"):
-        """Returns the grid parameters of the emulator."""
-        if search_type == "random":
-            param_space = {
-                "boosting_type": ["gbdt"],
-                "num_leaves": randint(10, 100),
-                "max_depth": randint(-1, 12),
-                "learning_rate": loguniform(0.001, 0.1),
-                "n_estimators": randint(50, 1000),
-                # "colsample_bytree": uniform(0.5, 1.0),
-                "reg_alpha": loguniform(0.001, 1),
-                "reg_lambda": loguniform(0.001, 1),
-            }
-        return param_space
+    
+    @staticmethod
+    def get_tune_config():
+        return {
+            "boosting_type": ["gbdt"],
+            "num_leaves": randint(10, 100),
+            "max_depth": randint(-1, 12),
+            "learning_rate": loguniform(0.001, 0.1),
+            "n_estimators": randint(50, 1000),
+            # "colsample_bytree": uniform(0.5, 1.0),
+            "reg_alpha": loguniform(0.001, 1),
+            "reg_lambda": loguniform(0.001, 1),
+        }
 
     @property
     def model_name(self):
