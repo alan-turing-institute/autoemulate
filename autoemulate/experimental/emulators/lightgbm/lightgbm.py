@@ -8,6 +8,7 @@ from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import check_X_y
+from torch import Tensor
 
 from autoemulate.experimental.emulators.base import (
     Emulator,
@@ -71,6 +72,9 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
 
     def fit(self, x: InputLike, y: InputLike | None, sample_weight=None, **kwargs):
         """Fits the emulator to the data."""
+
+        x, y = self._convert_to_numpy(x, y)
+        
         x, y = check_X_y(
             x, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
         )
@@ -108,10 +112,11 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         x = check_array(x)
         check_is_fitted(self, "is_fitted_")
         y_pred = self.model_.predict(x)
-        return y_pred
+        return Tensor(y_pred)
     
     @staticmethod
     def get_tune_config():
+        # TODO: change from scipy to numpy randint and loginform and wrap in lists
         return {
             "boosting_type": ["gbdt"],
             "num_leaves": randint(10, 100),
