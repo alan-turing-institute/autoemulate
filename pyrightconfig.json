@@ -1,5 +1,0 @@
-{
-    "venvPath": ".",
-    "venv": ".venv",
-    "include": ["autoemulate/experimental/*", "tests/experimental/*"]
-  }
