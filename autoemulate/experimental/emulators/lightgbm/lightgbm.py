@@ -1,8 +1,5 @@
 import numpy as np
 from lightgbm import LGBMRegressor
-from scipy.stats import loguniform
-from scipy.stats import randint
-from scipy.stats import uniform
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 from sklearn.utils.validation import check_array
@@ -116,16 +113,14 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     
     @staticmethod
     def get_tune_config():
-        # TODO: change from scipy to numpy randint and loginform and wrap in lists
+        # Note: 10 ** np.random.uniform(-3, 0) is equivalent to scipy.stats.loguniform(0.001, 0.1)
         return {
-            "boosting_type": ["gbdt"],
-            "num_leaves": randint(10, 100),
-            "max_depth": randint(-1, 12),
-            "learning_rate": loguniform(0.001, 0.1),
-            "n_estimators": randint(50, 1000),
-            # "colsample_bytree": uniform(0.5, 1.0),
-            "reg_alpha": loguniform(0.001, 1),
-            "reg_lambda": loguniform(0.001, 1),
+            "num_leaves": [np.random.randint(10, 100)],
+            "max_depth": [np.random.randint(-1, 12)],
+            "learning_rate": [10 ** np.random.uniform(-3, -1)],
+            "n_estimators": [np.random.randint(50, 1000)],
+            "reg_alpha": [10 ** np.random.uniform(-3, 0)],
+            "reg_lambda": [10 ** np.random.uniform(-3, 0)],
         }
 
     @property
