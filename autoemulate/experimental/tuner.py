@@ -61,40 +61,15 @@ class Tuner(InputTypeMixin):
         val_scores: list[float] = []
 
         for _ in tqdm(range(self.n_iter)):
-            if model_class == LightGBM:
 
-                # randomly sample hyperparameters and instantiate model
-                model_config: ModelConfig = {
-                    k: (v.rvs() if hasattr(v, "rvs") else np.random.choice(v) if isinstance(v, list) else v)
-                    for k, v in tune_config.items()
-                }
-                m = model_class(
-                    train_x,
-                    train_y,
-                    **model_config,
-                )
-                m.fit(train_x, train_y)
-            else:
+            # randomly sample hyperparameters and instantiate model
+            model_config: ModelConfig = {
+                k: v[np.random.randint(len(v))] for k, v in tune_config.items()
+            }
 
-                # randomly sample hyperparameters and instantiate model
-                model_config: ModelConfig = {
-                    k: v[np.random.randint(len(v))] for k, v in tune_config.items()
-                }
-
-                if issubclass(model_class, gpytorch.models.ExactGP):
-                    m = model_class(
-                        train_x,
-                        train_y,
-                        likelihood=MultitaskGaussianLikelihood(
-                            num_tasks=tuple(train_y.shape)[1]
-                        ),
-                        **model_config,
-                    )
-                    m.fit(train_x, train_y)
-                else:
-                    m = model_class(**model_config)
-                    # TODO: check if pass as dataloader
-                    m.fit(train_x, train_y)
+            # TODO: consider whether to pass as tensors or dataloader
+            m = model_class(train_x, train_y, **model_config)
+            m.fit(train_x, train_y)
 
             # evaluate
             y_pred = m.predict(val_x)
