@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from torch import nn
+from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
@@ -69,11 +69,23 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     loss_history: list[float] = []
     verbose: bool = False
     preprocessor: Preprocessor | None = None
+    learning_rate: float = 0.001
+
+    def __init__(self):
+        super().__init__()
+        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 
     def preprocess(self, x):
         if self.preprocessor is None:
             return x
         return self.preprocessor.preprocess(x)
+
+    def loss_func(self, y_pred, y_true):
+        """
+        Loss function to be used for training the model.
+        This can be overridden by subclasses to use a different loss function.
+        """
+        return nn.MSELoss()(y_pred, y_true)
 
     def fit(
         self,
@@ -87,20 +99,9 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         ----------
             X: InputLike
                 Input features as numpy array, PyTorch tensor, or DataLoader.
-            y: OutputLine or None
+            y: OutputLike or None
                 Target values (not needed if x is a DataLoader).
-            batch_size: int
-                Batch size (used only when xis not a DataLoader).
-            shuffle: bool
-                Whether to shuffle the data.
-            epochs: int
-                Number of training epochs.
-            verbose: bool
-                Whether to print progress.
 
-        Returns:
-        -------
-            List of loss values per epoch.
         """
 
         self.train()  # Set model to training mode
@@ -123,7 +124,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
 
                 # Forward pass
                 y_pred = self.forward(X_batch)
-                loss = self.loss_fn(y_pred, y_batch)
+                loss = self.loss_func(y_pred, y_batch)
 
                 # Backward pass and optimize
                 self.optimizer.zero_grad()
