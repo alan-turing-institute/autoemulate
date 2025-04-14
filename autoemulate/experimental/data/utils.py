@@ -92,6 +92,10 @@ class InputTypeMixin:
             raise ValueError(
                 f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
             )
+        
+    def _convert_to_numpy(self, x, y):
+        x, y = self._covert_to_tensors(x, y)
+        return x.numpy(), y.numpy()
 
     def _random_split(
         self,
