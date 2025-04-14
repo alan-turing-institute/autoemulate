@@ -57,7 +57,7 @@ class GaussianProcessExact(
         self,
         x: InputLike,
         y: InputLike,
-        likelihood: MultitaskGaussianLikelihood,
+        likelihood_cls: type[MultitaskGaussianLikelihood],
         mean_module_fn: MeanModuleFn,
         covar_module_fn: CovarModuleFn,
         preprocessor_cls: type[Preprocessor] | None = None,
@@ -104,8 +104,11 @@ class GaussianProcessExact(
         else:
             self.preprocessor = None
 
+        # Init likelihood
+        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+
         # Init must be called with preprocessed data
-        super().__init__(self.preprocess(x), y, likelihood)
+        gpytorch.models.ExactGP.__init__(self, self.preprocess(x), y, likelihood)
         self.likelihood = likelihood
         self.mean_module = mean_module
         self.covar_module = covar_module
@@ -193,4 +196,5 @@ class GaussianProcessExact(
             ],
             "lr": list(np.logspace(-3, -1)),
             "preprocessor_cls": [None, Standardizer],
+            "likelihood_cls": [MultitaskGaussianLikelihood],
         }

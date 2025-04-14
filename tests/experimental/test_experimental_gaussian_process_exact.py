@@ -39,7 +39,7 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     gp = GaussianProcessExact(
         x,
         y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=1),
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf,
     )
@@ -57,7 +57,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     gp = GaussianProcessExact(
         x,
         y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2),
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf_times_linear,
     )

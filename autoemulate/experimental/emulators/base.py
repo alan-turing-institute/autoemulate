@@ -4,7 +4,11 @@ from torch import nn
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
+from autoemulate.experimental.types import (
+    InputLike,
+    OutputLike,
+    TuneConfig,
+)
 
 
 class Emulator(ABC):
@@ -13,6 +17,11 @@ class Emulator(ABC):
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
+
+    @abstractmethod
+    def __init__(
+        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+    ): ...
 
     @abstractmethod
     def fit(self, x: InputLike, y: InputLike | None): ...
