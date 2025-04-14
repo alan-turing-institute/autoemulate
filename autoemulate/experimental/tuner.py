@@ -1,5 +1,3 @@
-import gpytorch
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
 import numpy as np
 from torchmetrics import R2Score
 from tqdm import tqdm
