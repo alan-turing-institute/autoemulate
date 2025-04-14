@@ -1,5 +1,4 @@
 import pytest
-import torch
 from autoemulate.experimental.emulators.lightgbm.lightgbm import (
     LightGBM,
 )
