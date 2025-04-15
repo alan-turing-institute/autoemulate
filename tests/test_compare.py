@@ -5,7 +5,8 @@ import torch
 
 from autoemulate.compare import AutoEmulate
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.utils import get_model_name, _ensure_2d
+from autoemulate.utils import get_model_name
+
 
 @pytest.fixture()
 def ae():
@@ -245,8 +246,6 @@ def test_param_search_updates_models(ae, Xy):
 
 def test_model_params_equal_wo_param_search(ae, Xy):
     X, y = Xy
-    # Ensure y is 2D if needed
-    y = _ensure_2d(y)
 
     # Setup without parameter search and with output scaling disabled
     ae.setup(
