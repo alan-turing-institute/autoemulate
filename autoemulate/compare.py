@@ -311,7 +311,7 @@ class AutoEmulate:
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=model, 
+                                    model=model,
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,
@@ -1045,7 +1045,6 @@ class AutoEmulate:
             self.logger.info(
                 f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
             )
-
         Si = _sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
         return Si
 
