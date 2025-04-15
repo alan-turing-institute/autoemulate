@@ -384,6 +384,17 @@ def _ensure_2d(arr):
     return arr
 
 
+def _ensure_1d_if_column_vec(arr):
+    """Ensure that arr is 1D if shape is (n, 1)."""
+    if arr.ndim == 2 and arr.shape[1] == 1:
+        arr = arr.ravel()
+    if arr.ndim > 2 or arr.ndim < 1:
+        raise ValueError(
+            f"arr should be 1D or 2D. Found {arr.ndim}D array with shape {arr.shape}"
+        )
+    return arr
+
+
 # checkers --------------------------------------------
 
 

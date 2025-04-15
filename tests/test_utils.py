@@ -16,6 +16,7 @@ from autoemulate.utils import _add_prefix_to_single_grid
 from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _check_cv
 from autoemulate.utils import _denormalise_y
+from autoemulate.utils import _ensure_1d_if_column_vec
 from autoemulate.utils import _ensure_2d
 from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _normalise_y
@@ -337,6 +338,37 @@ def test_ensure_2d_2d():
     y = np.array([[1, 2], [3, 4], [5, 6]])
     y_2d = _ensure_2d(y)
     assert y_2d.ndim == 2
+
+
+# test _ensure_1d_if_column_vec -------------------------------------------------------------
+def test_ensure_1d_if_column_vec():
+    y = np.array([[1], [2], [3], [4], [5]])
+    y_1d = _ensure_1d_if_column_vec(y)
+    assert y_1d.ndim == 1
+    assert np.array_equal(y_1d, y.ravel())
+
+
+def test_ensure_1d_if_column_vec_1d():
+    y = np.array([1, 2, 3, 4, 5])
+    y_1d = _ensure_1d_if_column_vec(y)
+    assert y_1d.ndim == 1
+    assert np.array_equal(y_1d, y)
+
+
+def test_ensure_1d_if_column_vec_2d():
+    y = np.array([[1, 2], [3, 4], [5, 6]])
+    y_2d = _ensure_1d_if_column_vec(y)
+    assert y_2d.ndim == 2
+    assert np.array_equal(y_2d, y)
+
+
+def test_ensure_1d_if_column_vec_raises():
+    y = np.array([[[1, 2]], [[3, 4]], [[5, 6]]])
+    with pytest.raises(
+        ValueError,
+        match=r"arr should be 1D or 2D. Found 3D array with shape \(3, 1, 2\)",
+    ):
+        _ensure_1d_if_column_vec(y)
 
 
 # test checkers for scikit-learn objects --------------------------------------

@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 
 from autoemulate.utils import _adjust_param_space
+from autoemulate.utils import _ensure_1d_if_column_vec
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
@@ -87,7 +88,7 @@ def _optimize_params(
 
     # run hyperparameter search
     try:
-        searcher.fit(X, y)
+        searcher.fit(X, _ensure_1d_if_column_vec(y))
 
     except Exception:
         logger.exception(
