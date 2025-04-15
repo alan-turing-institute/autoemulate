@@ -3,9 +3,10 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
+from torch.distributions import MultivariateNormal
 from tqdm import tqdm
 
-from ..types import TensorLike
+from ..types import DistributionLike, GaussianLike, TensorLike
 from .base import Active
 
 
@@ -22,7 +23,7 @@ class Stream(Active):
     @abstractmethod
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples from a stream.
 
@@ -98,7 +99,7 @@ class Random(Stream):
 
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor, dict[str, float]]:
+    ) -> tuple[torch.Tensor | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Query new samples randomly based on a fixed probability.
 
@@ -116,10 +117,13 @@ class Random(Stream):
             - The covariance estimates,
             - An empty dictionary of additional metrics.
         """
-        assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
-        Y, Sigma = self.emulator.sample(X)
+        assert isinstance(X, TensorLike)
+        # TODO: move handling to check method in base class
+        output = self.emulator.predict(X)
+        assert isinstance(output, TensorLike | GaussianLike)
+        # assert isinstance(output, TensorLike | DistributionLike)
         X = X if np.random.rand() < self.p_query else None
-        return X, Y, Sigma, {}
+        return X, output, {}
 
 
 @dataclass(kw_only=True)
@@ -174,7 +178,11 @@ class Threshold(Stream):
 
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor, dict[str, float]]:
+    ) -> tuple[
+        torch.Tensor | None,
+        torch.Tensor | GaussianLike,
+        dict[str, float],
+    ]:
         """
         Query new samples based on whether the computed score exceeds a threshold.
 
@@ -192,11 +200,14 @@ class Threshold(Stream):
             - The covariance estimates,
             - A dictionary with the computed score.
         """
-        assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
-        Y, Sigma = self.emulator.sample(X)
-        score = self.score(X, Y, Sigma)
+        # TODO: move handling to check method in base class
+        assert isinstance(X, torch.Tensor)
+        output = self.emulator.predict(X)
+        assert isinstance(output, GaussianLike)
+        assert isinstance(output.covariance_matrix, torch.Tensor)
+        score = self.score(X, output.mean, output.covariance_matrix)
         X = X if score > self.threshold else None
-        return X, Y, Sigma, {"score": score.item()}
+        return X, output, {"score": score.item()}
 
 
 @dataclass(kw_only=True)
@@ -427,7 +438,7 @@ class Adaptive(Threshold):
 
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Query new samples and adapt the threshold using a PID controller with a sliding
         window for error computation.
@@ -448,7 +459,7 @@ class Adaptive(Threshold):
         """
         # Call the parent query (e.g., from Threshold) to get initial values and
         # metrics.
-        X, Y, Sigma, metrics = super().query(X)
+        X, output, metrics = super().query(X)
 
         # Retrieve the error history for the specified metric.
         error_list = self.metrics.get(self.key, [])
@@ -482,7 +493,7 @@ class Adaptive(Threshold):
                 "error_deriv": ed,
             }
         )
-        return X, Y, Sigma, metrics
+        return X, output, metrics
 
 
 @dataclass(kw_only=True)

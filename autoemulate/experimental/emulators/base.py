@@ -6,8 +6,10 @@ from torch import nn, optim
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
 from autoemulate.experimental.types import (
+    DistributionLike,
     InputLike,
     OutputLike,
+    TensorLike,
     TuneConfig,
 )
 
@@ -24,11 +26,21 @@ class Emulator(ABC):
         self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
     ): ...
 
-    @abstractmethod
-    def fit(self, x: InputLike, y: InputLike | None): ...
+    def fit(self, x: InputLike, y: InputLike | None):
+        self._check(x)
+        self._fit(x, y)
 
     @abstractmethod
+    def _fit(self, x: InputLike, y: InputLike | None): ...
+
     def predict(self, x: InputLike) -> OutputLike:
+        self._check(x)
+        output = self.predict(x)
+        # Check that it is Gaussian or Y
+        self._check_output(output)
+
+    @abstractmethod
+    def _predict(self, x: InputLike) -> OutputLike:
         pass
 
     @staticmethod

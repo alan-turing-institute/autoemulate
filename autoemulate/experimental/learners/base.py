@@ -4,9 +4,12 @@ from inspect import isabstract
 
 import torch
 from anytree import Node, RenderTree
+from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
-from ..types import TensorLike
+from autoemulate.experimental.emulators.base import Emulator
+
+from ..types import GaussianLike, TensorLike
 
 
 @dataclass(kw_only=True)
@@ -283,84 +286,84 @@ class Simulator(Base, ABC):
         """
 
 
-@dataclass(kw_only=True)
-class Emulator(Base, ABC):
-    """
-    Emulator abstract class for approximating simulator outputs along with uncertainty.
+# @dataclass(kw_only=True)
+# class Emulator(Base, ABC):
+#     """
+#     Emulator abstract class for approximating simulator outputs along with uncertainty.
 
-    Provides an interface for fitting an emulator model to training data and generating
-    predictions with associated covariance.
+#     Provides an interface for fitting an emulator model to training data and generating
+#     predictions with associated covariance.
 
-    Parameters
-    ----------
-    (No additional parameters)
-    """
+#     Parameters
+#     ----------
+#     (No additional parameters)
+#     """
 
-    def sample(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Generate emulator predictions and covariance estimates for given inputs.
+#     def sample(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
+#         """
+#         Generate emulator predictions and covariance estimates for given inputs.
 
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor of shape (n_samples, n_features).
+#         Parameters
+#         ----------
+#         X : TensorLike
+#             Input tensor of shape (n_samples, n_features).
 
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            A tuple containing the predicted outputs and covariance estimates.
-        """
-        X = self.check_matrix(X)
-        Y, Sigma = self.sample_forward(X)
-        Y = self.check_matrix(Y)
-        X, Y = self.check_pair(X, Y)
-        Sigma = self.check_covariance(Y, Sigma)
-        return Y, Sigma
+#         Returns
+#         -------
+#         tuple[TensorLike, TensorLike]
+#             A tuple containing the predicted outputs and covariance estimates.
+#         """
+#         X = self.check_matrix(X)
+#         Y, Sigma = self.sample_forward(X)
+#         Y = self.check_matrix(Y)
+#         X, Y = self.check_pair(X, Y)
+#         Sigma = self.check_covariance(Y, Sigma)
+#         return Y, Sigma
 
-    def fit(self, X_train: TensorLike, Y_train: TensorLike):
-        """
-        Fit the emulator model using the training data.
+#     def fit(self, X_train: TensorLike, Y_train: TensorLike):
+#         """
+#         Fit the emulator model using the training data.
 
-        Parameters
-        ----------
-        X_train : TensorLike
-            Training input tensor.
-        Y_train : TensorLike
-            Training output tensor.
-        """
-        self.check_matrix(X_train)
-        self.check_matrix(Y_train)
-        self.check_pair(X_train, Y_train)
-        self.fit_forward(X_train, Y_train)
+#         Parameters
+#         ----------
+#         X_train : TensorLike
+#             Training input tensor.
+#         Y_train : TensorLike
+#             Training output tensor.
+#         """
+#         self.check_matrix(X_train)
+#         self.check_matrix(Y_train)
+#         self.check_pair(X_train, Y_train)
+#         self.fit_forward(X_train, Y_train)
 
-    @abstractmethod
-    def fit_forward(self, X_train: TensorLike, Y_train: TensorLike):
-        """
-        Abstract method to fit the emulator model using training data.
+#     @abstractmethod
+#     def fit_forward(self, X_train: TensorLike, Y_train: TensorLike):
+#         """
+#         Abstract method to fit the emulator model using training data.
 
-        Parameters
-        ----------
-        X_train : TensorLike
-            Training input tensor.
-        Y_train : TensorLike
-            Training output tensor.
-        """
+#         Parameters
+#         ----------
+#         X_train : TensorLike
+#             Training input tensor.
+#         Y_train : TensorLike
+#             Training output tensor.
+#         """
 
-    @abstractmethod
-    def sample_forward(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Abstract method to generate predictions and covariance estimates.
+#     @abstractmethod
+#     def sample_forward(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
+#         """
+#         Abstract method to generate predictions and covariance estimates.
 
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor.
+#         Parameters
+#         ----------
+#         X : TensorLike
+#             Input tensor.
 
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            Predicted outputs and covariance estimates.
-        """
+#         Returns
+#         -------
+#         tuple[TensorLike, TensorLike]
+#             Predicted outputs and covariance estimates.
+#         """
 
 
 @dataclass(kw_only=True)
@@ -464,8 +467,20 @@ class Active(Learner):
 
     def fit(self, *args):
         # Query simulator and fit emulator
-        X, Y_pred, Sigma, extra = self.query(*args)
+        X, output, extra = self.query(*args)
+        if isinstance(output, TensorLike):
+            Y_pred = output
+        elif isinstance(output, GaussianLike):
+            Y_pred, Sigma = output.mean, output.covariance_matrix
+        else:
+            msg = (
+                f"Output must be either `Tensor` or `MultivariateNormal` but got "
+                f"{type(output)}"
+            )
+            raise TypeError(msg)
+
         if X is not None:
+            # If X is not, we skip the point (typically for Stream learners)
             Y_true = self.simulator.sample(X)
             self.X_train = torch.cat([self.X_train, X])
             self.Y_train = torch.cat([self.Y_train, Y_true])
@@ -486,9 +501,19 @@ class Active(Learner):
         self.metrics["r2"].append(r2_val)
         self.metrics["rate"].append(self.n_queries / (len(self.metrics["rate"]) + 1))
         self.metrics["n_queries"].append(self.n_queries)
-        self.metrics["trace"].append(self.trace(Sigma, self.out_dim).item())
-        self.metrics["logdet"].append(self.logdet(Sigma, self.out_dim).item())
-        self.metrics["max_eigval"].append(self.max_eigval(Sigma).item())
+
+        # If Gaussian output
+        if isinstance(output, MultivariateNormal):
+            assert isinstance(output.covariance_matrix, TensorLike)
+            self.metrics["trace"].append(
+                self.trace(output.covariance_matrix, self.out_dim).item()
+            )
+            self.metrics["logdet"].append(
+                self.logdet(output.covariance_matrix, self.out_dim).item()
+            )
+            self.metrics["max_eigval"].append(
+                self.max_eigval(output.covariance_matrix).item()
+            )
 
         # extra per-strategy metrics
         for k, v in extra.items():
@@ -551,7 +576,7 @@ class Active(Learner):
     @abstractmethod
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples.
 
