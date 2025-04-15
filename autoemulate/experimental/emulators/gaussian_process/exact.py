@@ -73,14 +73,14 @@ class GaussianProcessExact(
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
         mean_module = mean_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
-        combined_kernel = covar_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
+        covar_module = covar_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
 
         # If the combined kernel is not a ScaleKernel, wrap it in one
         covar_module = (
-            combined_kernel
-            if isinstance(combined_kernel, ScaleKernel)
+            covar_module
+            if isinstance(covar_module, ScaleKernel)
             else ScaleKernel(
-                combined_kernel,
+                covar_module,
                 batch_shape=torch.Size([y.shape[1]]),
             )
         )
