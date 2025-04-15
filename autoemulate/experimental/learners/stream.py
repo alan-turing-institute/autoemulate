@@ -1,12 +1,11 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Tuple, Union, Optional
-from ..types import TensorLike
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
+from ..types import TensorLike
 from .base import Active
 
 
@@ -22,8 +21,8 @@ class Stream(Active):
 
     @abstractmethod
     def query(
-        self, X: Optional[TensorLike] = None
-    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, Dict[str, float]]:
+        self, X: TensorLike | None = None
+    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
         """
         Abstract method to query new samples from a stream.
 
@@ -41,7 +40,6 @@ class Stream(Active):
             - The covariance estimates,
             - A dictionary of additional metrics.
         """
-        pass
 
     def fit_samples(self, X: torch.Tensor):
         """
@@ -54,8 +52,7 @@ class Stream(Active):
         """
         X = self.check_matrix(X)
         for x in (pb := tqdm(X, desc=self.__class__.__name__, leave=True)):
-            x = x.reshape(1, -1)
-            self.fit(x)
+            self.fit(x.reshape(1, -1))
             pb.set_postfix(
                 ordered_dict={key: val[-1] for key, val in self.metrics.items()}
             )
@@ -64,8 +61,8 @@ class Stream(Active):
         """
         Fit the active learner using batches of samples.
 
-        This method automatically splits X into batches of the specified size and then sequentially
-        fits each batch.
+        This method automatically splits X into batches of the specified size and then
+        sequentially fits each batch.
 
         Parameters
         ----------
@@ -100,8 +97,8 @@ class Random(Stream):
     p_query: float
 
     def query(
-        self, X: Optional[TensorLike] = None
-    ) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, float]]:
+        self, X: TensorLike | None = None
+    ) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor, dict[str, float]]:
         """
         Query new samples randomly based on a fixed probability.
 
@@ -122,13 +119,14 @@ class Random(Stream):
         assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
         Y, Sigma = self.emulator.sample(X)
         X = X if np.random.rand() < self.p_query else None
-        return X, Y, Sigma, dict()
+        return X, Y, Sigma, {}
 
 
 @dataclass(kw_only=True)
 class Threshold(Stream):
     """
-    Threshold-based active learning strategy that queries samples based on a score threshold.
+    Threshold-based active learning strategy that queries samples based on a score
+    threshold.
 
     Parameters
     ----------
@@ -150,7 +148,7 @@ class Threshold(Stream):
             Training output tensor.
         """
         super().__post_init__()
-        self.metrics.update(dict(score=list()))
+        self.metrics.update({"score": []})
 
     @abstractmethod
     def score(
@@ -173,11 +171,10 @@ class Threshold(Stream):
         torch.Tensor
             Computed score for the input sample.
         """
-        pass
 
     def query(
-        self, X: Optional[TensorLike] = None
-    ) -> Tuple[Union[torch.Tensor, None], torch.Tensor, torch.Tensor, Dict[str, float]]:
+        self, X: TensorLike | None = None
+    ) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor, dict[str, float]]:
         """
         Query new samples based on whether the computed score exceeds a threshold.
 
@@ -199,7 +196,7 @@ class Threshold(Stream):
         Y, Sigma = self.emulator.sample(X)
         score = self.score(X, Y, Sigma)
         X = X if score > self.threshold else None
-        return X, Y, Sigma, dict(score=score.item())
+        return X, Y, Sigma, {"score": score.item()}
 
 
 @dataclass(kw_only=True)
@@ -211,8 +208,6 @@ class Input(Threshold):
     ----------
     (Inherits parameters from Threshold)
     """
-
-    pass
 
 
 @dataclass(kw_only=True)
@@ -231,7 +226,8 @@ class Distance(Input):
         self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute the average minimum distance from the input samples to the training data.
+        Compute the average minimum distance from the input samples to the training
+        data.
 
         Parameters
         ----------
@@ -243,6 +239,7 @@ class Distance(Input):
         float
             The average minimum distance.
         """
+        _, _, _ = X, Y, Sigma  # Unused variables
         distances = torch.cdist(X, self.X_train)
         min_dists, _ = distances.min(dim=1)
         return min_dists.mean()
@@ -257,8 +254,6 @@ class Output(Threshold):
     ----------
     (Inherits parameters from Threshold)
     """
-
-    pass
 
 
 @dataclass(kw_only=True)
@@ -293,6 +288,7 @@ class A_Optimal(Output):
         torch.Tensor
             Score based on the trace of the covariance matrix.
         """
+        _, _ = X, Y  # Unused variables
         return self.trace(Sigma, self.out_dim)
 
 
@@ -328,6 +324,7 @@ class D_Optimal(Output):
         torch.Tensor
             Score based on the log-determinant of the covariance matrix.
         """
+        _, _ = X, Y  # Unused variables
         return self.logdet(Sigma, self.out_dim)
 
 
@@ -363,16 +360,19 @@ class E_Optimal(Output):
         torch.Tensor
             Score based on the maximum eigenvalue of the covariance matrix.
         """
+        _, _ = X, Y  # Unused variables
         return self.max_eigval(Sigma)
 
 
 @dataclass(kw_only=True)
 class Adaptive(Threshold):
     """
-    Adaptive active learning strategy that adjusts the query threshold using PID control.
+    Adaptive active learning strategy that adjusts the query threshold using PID
+    control.
 
-    The adaptive mechanism modifies the threshold based on proportional, integral, and derivative components.
-    Errors can be computed using a sliding window to reduce dependency on initial errors.
+    The adaptive mechanism modifies the threshold based on proportional, integral, and
+    derivative components. Errors can be computed using a sliding window to reduce
+    dependency on initial errors.
 
     Parameters
     ----------
@@ -391,7 +391,8 @@ class Adaptive(Threshold):
     max_threshold : float or None
         Maximum allowable threshold.
     window_size : int or None, optional
-        Size of the sliding window to use for error computation. If None, use the full error history.
+        Size of the sliding window to use for error computation. If None, use the full
+        error history.
     """
 
     Kp: float
@@ -399,9 +400,9 @@ class Adaptive(Threshold):
     Kd: float
     key: str
     target: float
-    min_threshold: Union[float, None]
-    max_threshold: Union[float, None]
-    window_size: Union[int, None]
+    min_threshold: float | None
+    max_threshold: float | None
+    window_size: int | None
 
     def __post_init__(self):
         """
@@ -416,19 +417,20 @@ class Adaptive(Threshold):
         """
         super().__post_init__()
         self.metrics.update(
-            dict(
-                threshold=list(),
-                error_prop=list(),
-                error_int=list(),
-                error_deriv=list(),
-            )
+            {
+                "threshold": [],
+                "error_prop": [],
+                "error_int": [],
+                "error_deriv": [],
+            }
         )
 
     def query(
-        self, X: Optional[TensorLike] = None
-    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, Dict[str, float]]:
+        self, X: TensorLike | None = None
+    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
         """
-        Query new samples and adapt the threshold using a PID controller with a sliding window for error computation.
+        Query new samples and adapt the threshold using a PID controller with a sliding
+        window for error computation.
 
         Parameters
         ----------
@@ -444,7 +446,8 @@ class Adaptive(Threshold):
             - The covariance estimates,
             - A dictionary with the PID control metrics.
         """
-        # Call the parent query (e.g., from Threshold) to get initial values and metrics.
+        # Call the parent query (e.g., from Threshold) to get initial values and
+        # metrics.
         X, Y, Sigma, metrics = super().query(X)
 
         # Retrieve the error history for the specified metric.
@@ -472,7 +475,12 @@ class Adaptive(Threshold):
 
         # Update the metrics dictionary with the PID control terms.
         metrics.update(
-            dict(threshold=self.threshold, error_prop=ep, error_int=ei, error_deriv=ed)
+            {
+                "threshold": self.threshold,
+                "error_prop": ep,
+                "error_int": ei,
+                "error_deriv": ed,
+            }
         )
         return X, Y, Sigma, metrics
 
@@ -487,8 +495,6 @@ class Adaptive_Distance(Adaptive, Distance):
     (Inherits parameters from Adaptive and Distance)
     """
 
-    pass
-
 
 @dataclass(kw_only=True)
 class Adaptive_A_Optimal(Adaptive, A_Optimal):
@@ -499,8 +505,6 @@ class Adaptive_A_Optimal(Adaptive, A_Optimal):
     ----------
     (Inherits parameters from Adaptive and A_Optimal)
     """
-
-    pass
 
 
 @dataclass(kw_only=True)
@@ -513,8 +517,6 @@ class Adaptive_D_Optimal(Adaptive, D_Optimal):
     (Inherits parameters from Adaptive and D_Optimal)
     """
 
-    pass
-
 
 @dataclass(kw_only=True)
 class Adaptive_E_Optimal(Adaptive, E_Optimal):
@@ -525,5 +527,3 @@ class Adaptive_E_Optimal(Adaptive, E_Optimal):
     ----------
     (Inherits parameters from Adaptive and E_Optimal)
     """
-
-    pass

@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from inspect import isabstract
-from ..types import TensorLike
-from typing import Tuple, List, Optional
 
 import torch
 from anytree import Node, RenderTree
 from torcheval.metrics import MeanSquaredError, R2Score
 
+from ..types import TensorLike
+
 
 @dataclass(kw_only=True)
-class Base(ABC):
+class Base:
     """
     Base class for active learning simulation and emulation.
 
@@ -39,10 +39,9 @@ class Base(ABC):
         """
         if not isinstance(X, TensorLike):
             raise ValueError(f"Expected TensorLike, got {type(X)}")
-        elif X.ndim != 1:
+        if X.ndim != 1:
             raise ValueError(f"Expected 1D tensor, got {X.ndim}D")
-        else:
-            return X
+        return X
 
     @staticmethod
     def check_matrix(X: TensorLike) -> TensorLike:
@@ -66,13 +65,12 @@ class Base(ABC):
         """
         if not isinstance(X, TensorLike):
             raise ValueError(f"Expected TensorLike, got {type(X)}")
-        elif X.ndim != 2:
+        if X.ndim != 2:
             raise ValueError(f"Expected 2D tensor, got {X.ndim}D")
-        else:
-            return X
+        return X
 
     @staticmethod
-    def check_pair(X: TensorLike, Y: TensorLike) -> Tuple[TensorLike, TensorLike]:
+    def check_pair(X: TensorLike, Y: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
         Validate that two tensors have the same number of rows.
 
@@ -85,7 +83,7 @@ class Base(ABC):
 
         Returns
         -------
-        Tuple[TensorLike, TensorLike]
+        tuple[TensorLike, TensorLike]
             The validated pair of tensors.
 
         Raises
@@ -94,9 +92,9 @@ class Base(ABC):
             If X and Y do not have the same number of rows.
         """
         if X.shape[0] != Y.shape[0]:
-            raise ValueError("X and Y must have the same number of rows")
-        else:
-            return X, Y
+            msg = "X and Y must have the same number of rows"
+            raise ValueError(msg)
+        return X, Y
 
     @staticmethod
     def check_covariance(Y: TensorLike, Sigma: TensorLike) -> TensorLike:
@@ -120,14 +118,14 @@ class Base(ABC):
         ValueError
             If Sigma does not have a valid shape relative to Y.
         """
-        if Sigma.shape == (Y.shape[0], Y.shape[1], Y.shape[1]):
+        if (
+            Sigma.shape == (Y.shape[0], Y.shape[1], Y.shape[1])
+            or Sigma.shape == (Y.shape[0], Y.shape[1])
+            or Sigma.shape == (Y.shape[0],)
+        ):
             return Sigma
-        elif Sigma.shape == (Y.shape[0], Y.shape[1]):
-            return Sigma
-        elif Sigma.shape == (Y.shape[0],):
-            return Sigma
-        else:
-            raise ValueError("Invalid covariance matrix shape")
+        msg = "Invalid covariance matrix shape"
+        raise ValueError(msg)
 
     @staticmethod
     def trace(Sigma: TensorLike, d: int) -> TensorLike:
@@ -153,17 +151,17 @@ class Base(ABC):
         """
         if Sigma.dim() == 3 and Sigma.shape[1:] == (d, d):
             return torch.diagonal(Sigma, dim1=1, dim2=2).sum(dim=1).mean()
-        elif Sigma.dim() == 2 and Sigma.shape[1] == d:
+        if Sigma.dim() == 2 and Sigma.shape[1] == d:
             return Sigma.sum(dim=1).mean()
-        elif Sigma.dim() == 1:
+        if Sigma.dim() == 1:
             return d * Sigma.mean()
-        else:
-            raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
+        raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
     @staticmethod
     def logdet(Sigma: TensorLike, dim: int) -> TensorLike:
         """
-        Compute the log-determinant of the covariance matrix (D-optimal design criterion).
+        Compute the log-determinant of the covariance matrix (D-optimal design
+        criterion).
 
         Parameters
         ----------
@@ -184,17 +182,17 @@ class Base(ABC):
         """
         if len(Sigma.shape) == 3 and Sigma.shape[1:] == (dim, dim):
             return torch.logdet(Sigma).mean()
-        elif len(Sigma.shape) == 2 and Sigma.shape[1] == dim:
+        if len(Sigma.shape) == 2 and Sigma.shape[1] == dim:
             return torch.sum(torch.log(Sigma), dim=1).mean()
-        elif len(Sigma.shape) == 1:
+        if len(Sigma.shape) == 1:
             return dim * torch.log(Sigma).mean()
-        else:
-            raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
+        raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
     @staticmethod
     def max_eigval(Sigma: TensorLike) -> TensorLike:
         """
-        Compute the maximum eigenvalue of the covariance matrix (E-optimal design criterion).
+        Compute the maximum eigenvalue of the covariance matrix (E-optimal design
+        criterion).
 
         Parameters
         ----------
@@ -214,20 +212,20 @@ class Base(ABC):
         if Sigma.dim() == 3 and Sigma.shape[1:] == (Sigma.shape[1], Sigma.shape[1]):
             eigvals = torch.linalg.eigvalsh(Sigma)
             return eigvals[:, -1].mean()  # Eigenvalues are sorted in ascending order
-        elif Sigma.dim() == 2:
+        if Sigma.dim() == 2:
             return Sigma.max(dim=1).values.mean()
-        elif Sigma.dim() == 1:
+        if Sigma.dim() == 1:
             return Sigma.mean()
-        else:
-            raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
+        raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
 
 @dataclass(kw_only=True)
-class Simulator(Base):
+class Simulator(Base, ABC):
     """
     Simulator abstract class for generating outputs from inputs.
 
-    This class defines the interface for a simulator that produces samples based on input X.
+    This class defines the interface for a simulator that produces samples based on
+    input X.
 
     Parameters
     ----------
@@ -267,7 +265,6 @@ class Simulator(Base):
         TensorLike
             Simulated output tensor.
         """
-        pass
 
     @abstractmethod
     def sample_inputs(self, n: int) -> TensorLike:
@@ -284,23 +281,22 @@ class Simulator(Base):
         TensorLike
             Random input tensor.
         """
-        pass
 
 
 @dataclass(kw_only=True)
-class Emulator(Base):
+class Emulator(Base, ABC):
     """
     Emulator abstract class for approximating simulator outputs along with uncertainty.
 
-    Provides an interface for fitting an emulator model to training data and generating predictions with
-    associated covariance.
+    Provides an interface for fitting an emulator model to training data and generating
+    predictions with associated covariance.
 
     Parameters
     ----------
     (No additional parameters)
     """
 
-    def sample(self, X: TensorLike) -> Tuple[TensorLike, TensorLike]:
+    def sample(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
         Generate emulator predictions and covariance estimates for given inputs.
 
@@ -311,7 +307,7 @@ class Emulator(Base):
 
         Returns
         -------
-        Tuple[TensorLike, TensorLike]
+        tuple[TensorLike, TensorLike]
             A tuple containing the predicted outputs and covariance estimates.
         """
         X = self.check_matrix(X)
@@ -349,10 +345,9 @@ class Emulator(Base):
         Y_train : TensorLike
             Training output tensor.
         """
-        pass
 
     @abstractmethod
-    def sample_forward(self, X: TensorLike) -> Tuple[TensorLike, TensorLike]:
+    def sample_forward(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
         Abstract method to generate predictions and covariance estimates.
 
@@ -363,19 +358,18 @@ class Emulator(Base):
 
         Returns
         -------
-        Tuple[TensorLike, TensorLike]
+        tuple[TensorLike, TensorLike]
             Predicted outputs and covariance estimates.
         """
-        pass
 
 
 @dataclass(kw_only=True)
-class Learner(Base):
+class Learner(Base, ABC):
     """
     Learner class that combines a simulator and an emulator for active learning.
 
-    The learner uses a simulator to generate ground-truth outputs and an emulator to approximate
-    the simulator. Training data is stored and used to update the emulator.
+    The learner uses a simulator to generate ground-truth outputs and an emulator to
+    approximate the simulator. Training data is stored and used to update the emulator.
 
     Parameters
     ----------
@@ -419,7 +413,7 @@ class Learner(Base):
         return d
 
     @classmethod
-    def hierarchy(cls) -> List[Tuple[str, str]]:
+    def hierarchy(cls) -> list[tuple[str, str]]:
         """
         Recursively collects the inheritance relationships (as ordered pairs)
         starting from cls.
@@ -461,7 +455,7 @@ class Active(Learner):
     def __post_init__(self):
         super().__post_init__()
         self.metrics = {
-            k: list()
+            k: []
             for k in ["mse", "r2", "rate", "logdet", "trace", "max_eigval", "n_queries"]
         }
         self.mse = MeanSquaredError()
@@ -496,35 +490,37 @@ class Active(Learner):
         self.metrics["logdet"].append(self.logdet(Sigma, self.out_dim).item())
         self.metrics["max_eigval"].append(self.max_eigval(Sigma).item())
 
-        # extra per‑strategy metrics
+        # extra per-strategy metrics
         for k, v in extra.items():
             self.metrics.setdefault(k, []).append(v)
 
     @property
     def summary(self):
         """
-        Compute summary metrics for the active learner based on recorded learning histories.
+        Compute summary metrics for the active learner based on recorded learning
+        histories.
 
-        This property converts the history of MSE and cumulative query counts into float tensors,
-        and then computes two types of summary metrics:
+        This property converts the history of MSE and cumulative query counts into float
+        tensors, and then computes two types of summary metrics:
 
-        1. **Per-Query Ratios:** For each metric in ("mse", "r2", "trace", "logdet", "max_eigval"),
-           the ratio is defined as the last recorded value of the metric divided by the last recorded
-           cumulative number of queries. If no queries have been made (i.e. the last query count is 0),
-           NaN is returned for all per-query ratios.
+        1. **Per-Query Ratios:** For each metric in ("mse", "r2", "trace", "logdet",
+           "max_eigval"), the ratio is defined as the last recorded value of the metric
+           divided by the last recorded cumulative number of queries. If no queries have
+           been made (i.e. the last query count is 0), NaN is returned for all per-query
+           ratios.
 
-        2. **Area Under the MSE Curve (AUC):** The area is computed via trapezoidal integration of the MSE
-           values over the cumulative number of queries, but only if there are at least 2 valid MSE entries.
-           Otherwise, the AUC is set to NaN.
+        2. **Area Under the MSE Curve (AUC):** The area is computed via trapezoidal
+           integration of the MSE values over the cumulative number of queries, but only
+           if there are at least 2 valid MSE entries. Otherwise, the AUC is set to NaN.
 
         Returns
         -------
         dict
             A dictionary containing:
-                - "<metric>_per_query": The per-query ratio for each metric in ("mse", "r2", "trace",
-                  "logdet", "max_eigval").
-                - "auc_mse": The area under the MSE curve computed with respect to the cumulative number
-                  of queries.
+                - "<metric>_per_query": The per-query ratio for each metric in ("mse",
+                  "r2", "trace", "logdet", "max_eigval").
+                - "auc_mse": The area under the MSE curve computed with respect to the
+                  cumulative number of queries.
         """
         # pull histories into float tensors
         mse = torch.tensor(self.metrics["mse"], dtype=torch.float32)
@@ -554,8 +550,8 @@ class Active(Learner):
 
     @abstractmethod
     def query(
-        self, X: Optional[TensorLike] = None
-    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, dict[str, float]]:
+        self, X: TensorLike | None = None
+    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
         """
         Abstract method to query new samples.
 
@@ -566,11 +562,10 @@ class Active(Learner):
 
         Returns
         -------
-        Tuple[TensorLike or None, TensorLike, TensorLike, Dict[str, List[Any]]]
+        tuple[TensorLike or None, TensorLike, TensorLike, Dict[str, list[Any]]]
             A tuple containing:
             - The queried samples (or None if no query is made),
             - The predicted outputs,
             - The covariance estimates,
             - A dictionary of additional metrics.
         """
-        pass

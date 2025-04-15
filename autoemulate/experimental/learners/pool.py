@@ -1,9 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Tuple, Optional
+
 from ..types import TensorLike
-
-
 from .base import Active
 
 
@@ -19,8 +17,8 @@ class Pool(Active):
 
     @abstractmethod
     def query(
-        self, X: Optional[TensorLike] = None
-    ) -> Tuple[Optional[TensorLike], TensorLike, TensorLike, Dict[str, float]]:
+        self, X: TensorLike | None = None
+    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
         """
         Abstract method to query new samples from a given pool.
 
@@ -38,4 +36,3 @@ class Pool(Active):
             - The covariance estimates,
             - A dictionary of additional metrics.
         """
-        pass
