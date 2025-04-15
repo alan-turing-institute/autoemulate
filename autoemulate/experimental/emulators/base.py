@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from torch import nn
+from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
@@ -68,6 +68,8 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     loss_history: ClassVar[list[float]] = []
     verbose: bool = False
     preprocessor: Preprocessor | None = None
+    loss_fn: nn.Module = nn.MSELoss()
+    optimizer: optim.Optimizer
 
     def preprocess(self, x):
         if self.preprocessor is None:
