@@ -6,6 +6,9 @@ from autoemulate.experimental.types import InputLike
 
 class Preprocessor(ABC):
     @abstractmethod
+    def __init__(*args, **kwargs): ...
+
+    @abstractmethod
     def preprocess(self, x: InputLike) -> InputLike: ...
 
 

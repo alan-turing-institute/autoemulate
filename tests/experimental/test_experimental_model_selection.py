@@ -12,6 +12,9 @@ def test_cross_validate():
     """
 
     class DummyEmulator(Emulator):
+        def __init__(self, x=None, y=None, **kwargs):
+            pass
+
         def fit(self, x, y):
             pass
 
