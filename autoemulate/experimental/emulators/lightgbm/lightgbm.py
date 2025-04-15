@@ -36,7 +36,6 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         min_child_weight=0.001,
         min_child_samples=20,
         subsample=1.0,
-        # subsample_freq=0.0,
         colsample_bytree=1.0,
         reg_alpha=0.0,
         reg_lambda=0.0,
@@ -58,7 +57,6 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         self.min_child_weight = min_child_weight
         self.min_child_samples = min_child_samples
         self.subsample = subsample
-        # self.subsample_freq = subsample_freq
         self.colsample_bytree = colsample_bytree
         self.reg_alpha = reg_alpha
         self.reg_lambda = reg_lambda
