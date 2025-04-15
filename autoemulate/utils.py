@@ -15,7 +15,6 @@ from sklearn.pipeline import Pipeline
 
 from autoemulate.preprocess_target import InputOutputPipeline
 
-# from sklearn.compose import TransformedTargetRegressor
 
 # manage warnings -------------------------------------------------------------
 
