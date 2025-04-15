@@ -5,6 +5,7 @@ from sklearn.model_selection import RandomizedSearchCV
 
 from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _ensure_1d_if_column_vec
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
@@ -66,6 +67,7 @@ def _optimize_params(
         # where 'regressor' is the Input Pipeline (containing the model) and 'transformer' is the Output Pipeline
 
         # Fit the transformer to the output data and transform the output data
+        y = _ensure_2d(y) #data expected to be 2D for transformer
         y = model.transformer.fit_transform(y)
         regressor = model.regressor
     else:
