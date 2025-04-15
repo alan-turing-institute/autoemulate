@@ -10,10 +10,10 @@ from sklearn.utils.estimator_checks import check_estimator
 
 from autoemulate.preprocess_target import get_dim_reducer
 from autoemulate.preprocess_target import NoChangeTransformer
-from autoemulate.preprocess_target import non_trainable_transformer
+from autoemulate.preprocess_target import NonTrainableTransformer
 from autoemulate.preprocess_target import TargetPCA
 from autoemulate.preprocess_target import VAE
-from autoemulate.preprocess_target import VAEOutputPreprocessor
+from autoemulate.preprocess_target import TargetVAE
 
 # Import the components to test
 
@@ -44,7 +44,7 @@ def test_get_dim_reducer():
 
     # Test VAE
     vae = get_dim_reducer("VAE", reduced_dim=3)
-    assert isinstance(vae, VAEOutputPreprocessor)
+    assert isinstance(vae, TargetVAE)
     assert vae.latent_dim == 3
 
     # Test None case
@@ -90,7 +90,7 @@ def test_target_pca(sample_data, sample_data_1d):
 def test_vae_output_preprocessor(sample_data):
     """Test VAEOutputPreprocessor functionality."""
     # Test initialization
-    vae = VAEOutputPreprocessor(latent_dim=3, epochs=5, verbose=False)
+    vae = TargetVAE(latent_dim=3, epochs=5, verbose=False)
     assert vae.latent_dim == 3
     assert not vae.is_fitted_
 
@@ -112,7 +112,7 @@ def test_vae_output_preprocessor(sample_data):
     assert X_trans2.shape == (X.shape[0], 3)
 
     # Test not fitted error
-    vae2 = VAEOutputPreprocessor(latent_dim=3)
+    vae2 = TargetVAE(latent_dim=3)
     with pytest.raises(ValueError):
         vae2.transform(X)
 
@@ -166,7 +166,7 @@ def test_non_trainable_transformer(sample_data):
     # Wrap a PCA
     pca = TargetPCA(n_components=3)
     pca.fit(sample_data)
-    transformer = non_trainable_transformer(pca)
+    transformer = NonTrainableTransformer(pca)
 
     X = sample_data
     X_trans = transformer.transform(X)

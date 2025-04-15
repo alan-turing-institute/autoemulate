@@ -6,10 +6,8 @@ from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
-from autoemulate.preprocess_target import CustomTransformedTargetRegressor
+from autoemulate.preprocess_target import InputOutputPipeline
 from autoemulate.utils import _ensure_2d
-
-# from sklearn.compose import TransformedTargetRegressor
 
 
 def _validate_inputs(cv_results, model_name):
@@ -48,7 +46,7 @@ To plot other outputs, set `output_index` argument to the desired index."""
 def _predict_with_optional_std(model, X_test):
     """Predicts the output of the model with or without uncertainty."""
     # Get the base model's predict signature
-    if isinstance(model, CustomTransformedTargetRegressor):
+    if isinstance(model, InputOutputPipeline):
         base_model = model.regressor_.named_steps["model"]
     elif isinstance(model, Pipeline):
         base_model = model.named_steps["model"]

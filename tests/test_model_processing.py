@@ -13,7 +13,7 @@ from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.emulators import RandomForest
 from autoemulate.emulators import SupportVectorMachines
-from autoemulate.model_processing import ModelPrepPipeline
+from autoemulate.model_processing import AutoEmulatePipeline
 from autoemulate.model_registry import ModelRegistry
 from autoemulate.utils import get_model_name
 
@@ -40,7 +40,7 @@ def basic_pipeline(model_registry):
     model_names = list(model_registry.get_model_names().keys())
     y = np.array([[1, 2], [3, 4]])  # 2D output for multioutput testing
 
-    return ModelPrepPipeline(
+    return AutoEmulatePipeline(
         model_registry=model_registry,
         model_names=model_names,  # Now passing a list of names
         y=y,
@@ -218,7 +218,7 @@ def test_pipeline_with_scaler_and_dim_reducer(basic_pipeline):
 
 def pipeline_with_preprocessing(request, model_registry):
     """Fixture that provides pipelines with different preprocessing methods."""
-    return ModelPrepPipeline(
+    return AutoEmulatePipeline(
         model_registry=model_registry,
         model_names=list(model_registry.get_model_names().keys()),
         y=np.random.rand(10, 3),  # 3 outputs

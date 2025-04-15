@@ -17,11 +17,11 @@ from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import ModelPrepPipeline
+from autoemulate.model_processing import AutoEmulatePipeline
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
 from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import non_trainable_transformer
+from autoemulate.preprocess_target import NonTrainableTransformer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
@@ -108,8 +108,9 @@ class AutoEmulate:
             Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.
         reduce_dim_output : bool
             Whether to reduce the dimensionality of the output data.
-        dim_reducer_output : sklearn.decomposition object
-            Dimensionality reduction method to use for outputs.
+        preprocessing_methods : dict
+            List of dictionaries with preprocessing methods and their parameters.
+            Dimensionality reduction method to use for outputs. Can be PCA or Variational Autoencoder. #TODO: set PCA as default.
         cross_validator : sklearn.model_selection object
             Cross-validation strategy to use. Defaults to KFold with 5 splits and shuffle=True.
             Can be any object in `sklearn.model_selection` that generates train/test indices.
@@ -133,11 +134,11 @@ class AutoEmulate:
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
 
         if preprocessing_methods is None or len(preprocessing_methods) == 0:
-            # Default to no preprocessing
             preprocessing_methods = [{"name": "None", "params": {}}]
         self.preprocessing_methods = preprocessing_methods
 
-        self.ae_pipeline = ModelPrepPipeline(
+        # Replaced `self.models = _process_models(...)` with:
+        self.ae_pipeline = AutoEmulatePipeline(
             model_registry=self.model_registry,
             model_names=list(self.model_names.keys()),
             y=self.y,
@@ -150,6 +151,9 @@ class AutoEmulate:
             scaler_output=scaler_output,
             reduce_dim_output=reduce_dim_output,
         )
+        # to avoid confusion between the pipeline and the actual models (which are now components of the pipeline).
+        # The `AutoEmulatePipeline` class was created to wrap the pipeline creation logic and provide direct access
+        # to its components (e.g., models, reducers, scalers, etc.).
 
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
@@ -242,8 +246,6 @@ class AutoEmulate:
         # Initialize dictionary to store results
         self.preprocessing_results = {}
 
-        # Determine preprocessing methods
-
         with tqdm(
             total=len(self.ae_pipeline.models_piped) * len(self.preprocessing_methods),
             desc=pb_text,
@@ -257,7 +259,7 @@ class AutoEmulate:
                 # Fit the scaler and reducer on the whole training set
                 if self.scale_output:
                     fitted_scaler = self.scaler_output.fit(_ensure_2d(self.y))
-                    self.ae_pipeline.scaler_output = non_trainable_transformer(
+                    self.ae_pipeline.scaler_output = NonTrainableTransformer(
                         fitted_scaler
                     )
                 if self.reduce_dim_output:
@@ -271,7 +273,7 @@ class AutoEmulate:
                         fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(
                             self.y
                         )
-                    self.ae_pipeline.dim_reducer_output = non_trainable_transformer(
+                    self.ae_pipeline.dim_reducer_output = NonTrainableTransformer(
                         fitted_reducer
                     )
 
@@ -305,11 +307,11 @@ class AutoEmulate:
                         try:
                             # hyperparameter search
                             if self.param_search:
-                                model = _optimize_params(  # TODO: self.preprocessing_results[prep_name]["models"][i]
+                                model = _optimize_params(
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=model,  # TODO: self.preprocessing_results[prep_name]["models"][i]
+                                    model=model, 
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,

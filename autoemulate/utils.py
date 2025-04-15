@@ -13,7 +13,7 @@ from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
-from autoemulate.preprocess_target import CustomTransformedTargetRegressor
+from autoemulate.preprocess_target import InputOutputPipeline
 
 # from sklearn.compose import TransformedTargetRegressor
 
@@ -97,7 +97,7 @@ def get_model_name(model):
         # If the model step is a MultiOutputRegressor, get the estimator
         if isinstance(step, MultiOutputRegressor):
             return step.estimator.model_name
-        elif isinstance(step, CustomTransformedTargetRegressor):
+        elif isinstance(step, InputOutputPipeline):
             return get_model_name(
                 step.regressor
             )  # Unwrap CustomTransformedTargetRegressor
@@ -109,7 +109,7 @@ def get_model_name(model):
         return model.estimator.model_name
 
     # If the model is a CustomTransformedTargetRegressor, unwrap it
-    elif isinstance(model, CustomTransformedTargetRegressor):
+    elif isinstance(model, InputOutputPipeline):
         return get_model_name(model.regressor)
 
     # Otherwise, it's a standalone model
@@ -225,7 +225,7 @@ def get_model_param_space(model, search_type="random"):
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.get_grid_params(search_type)
 
-    elif isinstance(model, CustomTransformedTargetRegressor):
+    elif isinstance(model, InputOutputPipeline):
         return get_model_param_space(model.regressor)
 
     # Otherwise, it's a standalone model

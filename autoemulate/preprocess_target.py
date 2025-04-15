@@ -50,7 +50,7 @@ def get_dim_reducer(
         # return PCA(n_components=n_components) #check! Marjan was sayin base class should not have fit and etc.
 
     elif name == "VAE":
-        return VAEOutputPreprocessor(
+        return TargetVAE(
             latent_dim=reduced_dim,
             hidden_layers=hidden_layers,
             epochs=epochs,
@@ -116,7 +116,7 @@ class TargetPCA(BaseEstimator, TransformerMixin):
         return self._pca
 
 
-class VAEOutputPreprocessor(BaseEstimator, TransformerMixin):
+class TargetVAE(BaseEstimator, TransformerMixin):
     """
     Sklearn-compatible wrapper for PyTorch Variational Autoencoder to use as dimensionality reducer.
     Implements fit, transform, and inverse_transform methods required for sklearn pipelines.
@@ -478,7 +478,7 @@ def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=100
     return x_reconstructed_mean, x_reconstructed_std
 
 
-class non_trainable_transformer:
+class NonTrainableTransformer:
     def __init__(self, NT_transformer):
         self.NT_transformer = (
             NT_transformer  # Expect an instance of either targetPCA or targetVAE
@@ -547,7 +547,7 @@ class NoChangeTransformer(BaseEstimator, TransformerMixin):
         return x_std
 
 
-class CustomTransformedTargetRegressor(TransformedTargetRegressor):
+class InputOutputPipeline(TransformedTargetRegressor):
     """Custom TransformedTargetRegressor to handle inverse transformation of standard deviation."""
 
     def __init__(

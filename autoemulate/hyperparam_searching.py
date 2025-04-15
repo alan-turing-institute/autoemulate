@@ -60,9 +60,13 @@ def _optimize_params(
     """
 
     if hasattr(model, "transformer"):
-        # the transformer is non trainable so this will only scale the data
-        model.transformer.fit(y)
-        y = model.transformer.transform(y)
+        # If 'model' is a Pipeline with transformer, we need to fit the transformer, before performing the search.
+
+        # Note that if the pipeline has transformer 'model' is a InputOutputPipeline
+        # where 'regressor' is the Input Pipeline (containing the model) and 'transformer' is the Output Pipeline
+
+        # Fit the transformer to the output data and transform the output data
+        y = model.transformer.fit_transform(y)
         regressor = model.regressor
     else:
         regressor = model
