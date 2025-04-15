@@ -1,4 +1,5 @@
 import numpy as np
+import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
@@ -9,7 +10,6 @@ from autoemulate.experimental.types import (
     OutputLike,
     TensorLike,
 )
-import torchmetrics
 
 
 def _update(
