@@ -62,10 +62,10 @@
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_1c5d0098789d27be_projectile_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_ec89eae49609d65e_test_experimental_base_py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_ec89eae49609d65e_conftest_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-15 13:17 +0000
+            created at 2025-04-15 17:32 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -211,14 +211,14 @@
     <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t"><span class="key">def</span> <span class="nam">_get_full_model_name</span><span class="op">(</span><span class="nam">model_name</span><span class="op">,</span> <span class="nam">model_names_dict</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">    <span class="str">""""""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">    <span class="str">"""Returns the full model name from the full name or short name.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t"><span class="str">    Parameters</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t"><span class="str">    ----------</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t"><span class="str">    model_name : str</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t"><span class="str">        The full name or short name of the model.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t"><span class="str">    model_names_dict : dict</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t"><span class="str">        Dictionary of model names and their short names.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t"><span class="str">        </span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t"><span class="str">    Returns</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t"><span class="str">    -------</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t"><span class="str">    str</span>&nbsp;</span><span class="r"></span></p>
@@ -334,7 +334,7 @@
     <p class="run"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">    <span class="key">elif</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">model</span><span class="op">,</span> <span class="nam">RegressorMixin</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">        <span class="key">return</span> <span class="nam">param_space</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t254" href="#t254">254</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t255" href="#t255">255</a></span><span class="t">    <span class="key">return</span> <span class="nam">_add_prefix_to_param_space</span><span class="op">(</span><span class="nam">param_space</span><span class="op">,</span> <span class="nam">prefix</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t255" href="#t255">255</a></span><span class="t">    <span class="key">return</span> <span class="nam">_add_prefix_to_param_space</span><span class="op">(</span><span class="nam">param_space</span><span class="op">,</span> <span class="nam">prefix</span><span class="op">)</span>  <span class="com"># type: ignore</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t256" href="#t256">256</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t257" href="#t257">257</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t258" href="#t258">258</a></span><span class="t"><span class="key">def</span> <span class="nam">_add_prefix_to_param_space</span><span class="op">(</span><span class="nam">param_space</span><span class="op">,</span> <span class="nam">prefix</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -521,7 +521,7 @@
     <p class="run"><span class="n"><a id="t439" href="#t439">439</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="str">"Model must be fitted before extraction"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t440" href="#t440">440</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t441" href="#t441">441</a></span><span class="t">    <span class="com"># get the core model (skorch wrapper)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t442" href="#t442">442</a></span><span class="t">    <span class="nam">core_model</span> <span class="op">=</span> <span class="nam">model</span><span class="op">.</span><span class="nam">model_</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t442" href="#t442">442</a></span><span class="t">    <span class="nam">core_model</span> <span class="op">=</span> <span class="nam">model</span><span class="op">.</span><span class="nam">model_</span>  <span class="com"># type: ignore</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t443" href="#t443">443</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t444" href="#t444">444</a></span><span class="t">    <span class="com"># check if it's a PyTorch model</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t445" href="#t445">445</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">hasattr</span><span class="op">(</span><span class="nam">core_model</span><span class="op">,</span> <span class="str">"module_"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -545,10 +545,10 @@
         <p>
             <a class="nav" href="z_1c5d0098789d27be_projectile_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_ec89eae49609d65e_test_experimental_base_py.html">&#xbb; next</a>
+            <a class="nav" href="z_ec89eae49609d65e_conftest_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-15 13:17 +0000
+            created at 2025-04-15 17:32 +0000
         </p>
     </div>
 </footer>
