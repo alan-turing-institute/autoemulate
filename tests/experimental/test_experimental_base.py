@@ -97,8 +97,9 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self, **kwargs):
+        def __init__(self, x=None, y=None, **kwargs):
             super().__init__()
+            _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
