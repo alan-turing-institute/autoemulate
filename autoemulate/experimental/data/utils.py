@@ -95,6 +95,7 @@ class InputTypeMixin:
         
     def _convert_to_numpy(self, x, y):
         x, y = self._convert_to_tensors(x, y)
+        y = y.ravel()  # Ensure y is 1-dimensional
         return x.numpy(), y.numpy()
 
     def _random_split(
