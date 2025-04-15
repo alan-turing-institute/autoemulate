@@ -1,6 +1,6 @@
 from typing import Any
-import numpy as np
 
+import numpy as np
 import torch
 import torch.utils
 import torch.utils.data
