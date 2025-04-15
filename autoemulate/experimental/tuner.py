@@ -3,7 +3,6 @@ from torchmetrics import R2Score
 from tqdm import tqdm
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
-from autoemulate.experimental.emulators.lightgbm.lightgbm import LightGBM
 from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.types import InputLike, ModelConfig, TuneConfig
 
