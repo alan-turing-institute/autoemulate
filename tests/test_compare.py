@@ -223,8 +223,6 @@ def test_refit(ae_run):
 # --------------- test correct hyperparameter updating ------------------
 def test_param_search_updates_models(ae, Xy):
     X, y = Xy
-    # Ensure y is 2D for testing
-    y = y.reshape(-1, 1) if y.ndim == 1 else y
 
     ae.setup(X, y, models=["RandomForest"], param_search=True, param_search_iters=1)
 
@@ -248,8 +246,6 @@ def test_param_search_updates_models(ae, Xy):
 
 def test_model_params_equal_wo_param_search(ae, Xy):
     X, y = Xy
-    # Ensure y is 2D if needed
-    y = y.reshape(-1, 1) if len(y.shape) == 1 else y
 
     # Setup without parameter search and with output scaling disabled
     ae.setup(
@@ -337,8 +333,6 @@ def test_setup_preprocessing_methods(ae, Xy):
 def test_compare_with_preprocessing(ae, Xy):
     """Test model comparison with preprocessing methods."""
     X, y = Xy
-    # Ensure y is 2D if needed
-    y = y.reshape(-1, 1) if len(y.shape) == 1 else y
 
     preprocessing_methods = [
         {"name": "None", "params": {}},

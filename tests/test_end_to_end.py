@@ -13,7 +13,9 @@ def kfold():
 @pytest.fixture()
 def Xy_single():
     X = np.random.rand(30, 2)
-    y = np.random.rand(30, 1)  # Make y 2D
+    y = np.random.rand(
+        30,
+    )
     return X, y
 
 

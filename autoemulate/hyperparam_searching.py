@@ -5,6 +5,7 @@ from sklearn.model_selection import RandomizedSearchCV
 
 from autoemulate.utils import _adjust_param_space
 from autoemulate.utils import _ensure_1d_if_column_vec
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
@@ -60,6 +61,8 @@ def _optimize_params(
     """
 
     if hasattr(model, "transformer"):
+        # data expected to be 2D for transformer
+        y = _ensure_2d(y)
         # the transformer is non trainable so this will only scale the data
         model.transformer.fit(y)
         y = model.transformer.transform(y)
