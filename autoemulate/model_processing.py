@@ -3,8 +3,8 @@ from sklearn.decomposition import PCA
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
-from autoemulate.preprocess_target import InputOutputPipeline
 from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import InputOutputPipeline
 from autoemulate.preprocess_target import NoChangeTransformer
 from autoemulate.preprocess_target import TargetPCA
 from autoemulate.preprocess_target import TargetVAE
