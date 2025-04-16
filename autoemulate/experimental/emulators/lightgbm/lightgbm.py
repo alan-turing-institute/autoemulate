@@ -69,7 +69,7 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         """Fits the emulator to the data."""
 
         x, y = self._convert_to_numpy(x, y)
-        
+
         x, y = check_X_y(
             x, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
         )
@@ -109,7 +109,7 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         y_pred = self.model_.predict(x)
         # Ensure the output is a 2D tensor array with shape (n_samples, 1)
         return Tensor(y_pred.reshape(-1, 1))
-    
+
     @staticmethod
     def get_tune_config():
         # Note: 10 ** np.random.uniform(-3, 0) is equivalent to scipy.stats.loguniform(0.001, 0.1)
