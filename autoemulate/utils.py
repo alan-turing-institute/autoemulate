@@ -13,6 +13,8 @@ from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
 
+from autoemulate.preprocess_target import InputOutputPipeline
+
 
 # manage warnings -------------------------------------------------------------
 
@@ -94,12 +96,20 @@ def get_model_name(model):
         # If the model step is a MultiOutputRegressor, get the estimator
         if isinstance(step, MultiOutputRegressor):
             return step.estimator.model_name
+        elif isinstance(step, InputOutputPipeline):
+            return get_model_name(
+                step.regressor
+            )  # Unwrap CustomTransformedTargetRegressor
         else:
             return step.model_name
 
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.model_name
+
+    # If the model is a CustomTransformedTargetRegressor, unwrap it
+    elif isinstance(model, InputOutputPipeline):
+        return get_model_name(model.regressor)
 
     # Otherwise, it's a standalone model
     else:
@@ -213,6 +223,9 @@ def get_model_param_space(model, search_type="random"):
     # If the model is a MultiOutputRegressor but not in a pipeline
     elif isinstance(model, MultiOutputRegressor):
         return model.estimator.get_grid_params(search_type)
+
+    elif isinstance(model, InputOutputPipeline):
+        return get_model_param_space(model.regressor)
 
     # Otherwise, it's a standalone model
     else:
@@ -367,6 +380,17 @@ def _ensure_2d(arr):
     """Ensure that arr is a 2D."""
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
+    return arr
+
+
+def _ensure_1d_if_column_vec(arr):
+    """Ensure that arr is 1D if shape is (n, 1)."""
+    if arr.ndim == 2 and arr.shape[1] == 1:
+        arr = arr.ravel()
+    if arr.ndim > 2 or arr.ndim < 1:
+        raise ValueError(
+            f"arr should be 1D or 2D. Found {arr.ndim}D array with shape {arr.shape}"
+        )
     return arr
 
 

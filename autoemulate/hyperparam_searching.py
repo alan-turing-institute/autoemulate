@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 
 from autoemulate.utils import _adjust_param_space
+from autoemulate.utils import _ensure_1d_if_column_vec
+from autoemulate.utils import _ensure_2d
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_param_space
 from autoemulate.utils import get_model_params
@@ -57,14 +59,28 @@ def _optimize_params(
     -------
     Refitted estimator on the whole dataset with best parameters.
     """
-    logger.info(f"Performing grid search for {get_model_name(model)}...")
-    param_space = _process_param_space(model, search_type, param_space)
+
+    if hasattr(model, "transformer"):
+        # If 'model' is a Pipeline with transformer, we need to fit the transformer, before performing the search.
+
+        # Note that if the pipeline has transformer 'model' is a InputOutputPipeline
+        # where 'regressor' is the Input Pipeline (containing the model) and 'transformer' is the Output Pipeline
+
+        # Fit the transformer to the output data and transform the output data
+        y = _ensure_2d(y)  # data expected to be 2D for transformer
+        y = model.transformer.fit_transform(y)
+        regressor = model.regressor
+    else:
+        regressor = model
+
+    logger.info(f"Performing grid search for {get_model_name(regressor)}...")
+    param_space = _process_param_space(regressor, search_type, param_space)
     search_type = search_type.lower()
 
     # random search
     if search_type == "random":
         searcher = RandomizedSearchCV(
-            model,
+            regressor,
             param_space,
             n_iter=niter,
             cv=cv,
@@ -78,7 +94,8 @@ def _optimize_params(
 
     # run hyperparameter search
     try:
-        searcher.fit(X, y)
+        searcher.fit(X, _ensure_1d_if_column_vec(y))
+
     except Exception:
         logger.exception(
             f"Failed to perform hyperparameter search on {get_model_name(model)}"

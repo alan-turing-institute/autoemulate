@@ -9,6 +9,7 @@ docs/_build/
 docs/generated/
 .sphinx-build-environment
 
+
 # Auto-generated documentation
 _autosummary/
 _autodoc/
@@ -32,6 +33,8 @@ Thumbs.db
 # Quarto
 README.html
 README_files/
+requirements.txt
+
 
 # Ignore pyrightconfig.json to enable custom venv to be set
 pyrightconfig.json

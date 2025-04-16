@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_validate
 
+from autoemulate.utils import _ensure_1d_if_column_vec
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_model_params
 
@@ -45,6 +46,8 @@ def _run_cv(X, y, cv, model, metrics, n_jobs=None, logger=None):
         logger = logging.getLogger(__name__)
     logger.info(f"Cross-validating {get_model_name(model)}...")
     logger.info(f"Parameters: {get_model_params(model)}")
+
+    y = _ensure_1d_if_column_vec(y)
 
     cv_results = None
     try:

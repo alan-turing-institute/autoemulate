@@ -6,6 +6,7 @@ from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
 
+from autoemulate.preprocess_target import InputOutputPipeline
 from autoemulate.utils import _ensure_2d
 
 
@@ -44,21 +45,19 @@ To plot other outputs, set `output_index` argument to the desired index."""
 
 def _predict_with_optional_std(model, X_test):
     """Predicts the output of the model with or without uncertainty."""
-    # see whether the model is a pipeline or not
-    if isinstance(model, Pipeline):
-        predict_params = inspect.signature(
-            model.named_steps["model"].predict
-        ).parameters
+    # Get the base model's predict signature
+    if isinstance(model, InputOutputPipeline):
+        base_model = model.regressor_.named_steps["model"]
+    elif isinstance(model, Pipeline):
+        base_model = model.named_steps["model"]
     else:
-        predict_params = inspect.signature(model.predict).parameters
-    # see whether the model has return_std in its predict parameters
-    if "return_std" in predict_params:
-        y_test_pred, y_test_std = model.predict(X_test, return_std=True)
-    else:
-        y_test_pred = model.predict(X_test)
-        y_test_std = None
+        base_model = model
 
-    return y_test_pred, y_test_std
+    predict_params = inspect.signature(base_model.predict).parameters
+    # Only pass return_std if explicitly supported
+    if "return_std" in predict_params:
+        return model.predict(X_test, return_std=True)
+    return model.predict(X_test), None
 
 
 def _calculate_subplot_layout(n_plots, n_cols=3):
@@ -412,6 +411,7 @@ def _plot_model(
     output_index : int or list of int, optional
         The index(es) of the output variable(s) to plot. If None, all outputs are used.
     """
+
     # Get predictions, with uncertainty if available
     y_pred, y_std = _predict_with_optional_std(model, X)
 
