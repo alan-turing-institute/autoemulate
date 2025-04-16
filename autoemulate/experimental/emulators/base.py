@@ -1,10 +1,15 @@
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
-from torch import nn
+from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
+from autoemulate.experimental.types import (
+    InputLike,
+    OutputLike,
+    TuneConfig,
+)
 
 
 class Emulator(ABC):
@@ -13,6 +18,11 @@ class Emulator(ABC):
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
+
+    @abstractmethod
+    def __init__(
+        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+    ): ...
 
     @abstractmethod
     def fit(self, x: InputLike, y: InputLike | None): ...
@@ -25,7 +35,8 @@ class Emulator(ABC):
     @abstractmethod
     def get_tune_config() -> TuneConfig:
         """
-        The keys in the TuneConfig must be implemented as keyword arguments in the __init__ method of any subclasses.
+        The keys in the TuneConfig must be implemented as keyword arguments in the
+        __init__ method of any subclasses.
 
         e.g.
 
@@ -60,9 +71,11 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     batch_size: int = 16
     shuffle: bool = True
     epochs: int = 10
-    loss_history: list[float] = []
+    loss_history: ClassVar[list[float]] = []
     verbose: bool = False
     preprocessor: Preprocessor | None = None
+    loss_fn: nn.Module = nn.MSELoss()
+    optimizer: optim.Optimizer
 
     def preprocess(self, x):
         if self.preprocessor is None:
@@ -141,7 +154,8 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         return self(x)
 
     def cross_validate(self, x: InputLike) -> None:
-        raise NotImplementedError("This function is not yet implemented.")
+        msg = "This function is not yet implemented."
+        raise NotImplementedError(msg)
 
     @staticmethod
     def get_tune_config():

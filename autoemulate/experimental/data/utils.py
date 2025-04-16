@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split, S
 import torch.utils.data
 
 from autoemulate.experimental.types import InputLike
+from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
 
 
 class InputTypeMixin:
@@ -38,7 +39,8 @@ class InputTypeMixin:
             dataset = x.dataset
         else:
             raise ValueError(
-                f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch tensor."
+                f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch "
+                "tensor."
             )
 
         return dataset
@@ -91,26 +93,26 @@ class InputTypeMixin:
         if isinstance(dataset, TensorDataset):
             if len(dataset.tensors) > 2:
                 raise ValueError(
-                    f"Dataset must have 2 or fewer tensors. Found {len(dataset.tensors)}."
+                    f"Dataset must have 2 or fewer tensors. Found "
+                    f"{len(dataset.tensors)}."
                 )
-            elif len(dataset.tensors) == 2:
+            if len(dataset.tensors) == 2:
                 x, y = dataset.tensors
-                assert x.ndim == 2 and y.ndim in (1, 2)
+                assert x.ndim == 2
+                assert y.ndim in (1, 2)
                 # Ensure always 2D tensors
                 if y.ndim == 1:
                     y = y.unsqueeze(1)
                 return x, y
-            elif len(dataset.tensors) == 1:
+            if len(dataset.tensors) == 1:
                 (x,) = dataset.tensors
                 assert x.ndim == 2
                 return x
-            else:
-                msg = "Number of tensors returned must be greater than zero."
-                raise ValueError(msg)
-        else:
-            raise ValueError(
-                f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
-            )
+            msg = "Number of tensors returned must be greater than zero."
+            raise ValueError(msg)
+        raise ValueError(
+            f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
+        )
 
     def _random_split(
         self,
@@ -132,7 +134,8 @@ class InputTypeMixin:
         """
         if train_size < 0.0 or train_size > 1.0 or test_size < 0.0 or test_size > 1.0:
             raise ValueError(
-                f"Train size ({train_size}) and test size ({test_size}) must be specified as a proportion between 0 and 1"
+                f"Train size ({train_size}) and test size ({test_size}) must be "
+                "specified as a proportion between 0 and 1"
             )
         if test_size + train_size != 1.0:
             raise ValueError(
@@ -150,5 +153,7 @@ class InputTypeMixin:
     #     if isinstance(y, np.ndarray):
     #         y = torch.tensor(y, dtype=torch.float32)
     #     else:
-    #         raise ValueError("Unsupported type for X. Must be numpy array, PyTorch tensor")
+    #         raise ValueError(
+    #             "Unsupported type for X. Must be numpy array, PyTorch tensor"
+    #         )
     #     return y

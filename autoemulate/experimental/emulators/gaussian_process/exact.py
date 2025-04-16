@@ -5,32 +5,30 @@ import numpy as np
 import torch
 from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.kernels import (
     ScaleKernel,
 )
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from torch import nn
 
+from autoemulate.emulators.gaussian_process import (
+    constant_mean,
+    linear_mean,
+    matern_3_2_kernel,
+    matern_5_2_kernel,
+    matern_5_2_plus_rq,
+    poly_mean,
+    rbf,
+    rbf_plus_constant,
+    rbf_plus_linear,
+    rbf_times_linear,
+    rq_kernel,
+    zero_mean,
+)
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.emulators.base import (
     Emulator,
     InputTypeMixin,
-)
-from autoemulate.emulators.gaussian_process import (
-    zero_mean,
-    constant_mean,
-    linear_mean,
-    poly_mean,
-)
-from autoemulate.emulators.gaussian_process import (
-    rbf,
-    matern_5_2_kernel,
-    matern_3_2_kernel,
-    rq_kernel,
-    rbf_plus_constant,
-    rbf_plus_linear,
-    matern_5_2_plus_rq,
-    rbf_times_linear,
 )
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
@@ -53,11 +51,11 @@ class GaussianProcessExact(
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         x: InputLike,
         y: InputLike,
-        likelihood: MultitaskGaussianLikelihood,
+        likelihood_cls: type[MultitaskGaussianLikelihood],
         mean_module_fn: MeanModuleFn,
         covar_module_fn: CovarModuleFn,
         preprocessor_cls: type[Preprocessor] | None = None,
@@ -75,19 +73,20 @@ class GaussianProcessExact(
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
         mean_module = mean_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
-        combined_kernel = covar_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
+        covar_module = covar_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
 
         # If the combined kernel is not a ScaleKernel, wrap it in one
         covar_module = (
-            combined_kernel
-            if isinstance(combined_kernel, ScaleKernel)
+            covar_module
+            if isinstance(covar_module, ScaleKernel)
             else ScaleKernel(
-                combined_kernel,
+                covar_module,
                 batch_shape=torch.Size([y.shape[1]]),
             )
         )
 
-        assert isinstance(y, torch.Tensor) and isinstance(x, torch.Tensor)
+        assert isinstance(y, torch.Tensor)
+        assert isinstance(x, torch.Tensor)
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
@@ -104,8 +103,18 @@ class GaussianProcessExact(
         else:
             self.preprocessor = None
 
+        # Init likelihood
+        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+
         # Init must be called with preprocessed data
-        super().__init__(self.preprocess(x), y, likelihood)
+        x_preprocessed = self.preprocess(x)
+        assert isinstance(x_preprocessed, torch.Tensor)
+        gpytorch.models.ExactGP.__init__(
+            self,
+            train_inputs=x_preprocessed,
+            train_targets=y,
+            likelihood=likelihood,
+        )
         self.likelihood = likelihood
         self.mean_module = mean_module
         self.covar_module = covar_module
@@ -134,10 +143,11 @@ class GaussianProcessExact(
     def log_epoch(self, epoch: int, loss: torch.Tensor):
         logger = logging.getLogger(__name__)
         assert self.likelihood.noise is not None
-        logger.info(
+        msg = (
             f"Epoch: {epoch + 1:{int(np.log10(self.epochs) + 1)}.0f}/{self.epochs}; "
             f"MLL: {-loss:4.3f}; noise: {self.likelihood.noise.item():4.3f}"
         )
+        logger.info(msg)
 
     def fit(self, x: InputLike, y: InputLike | None):
         self.train()
@@ -193,4 +203,5 @@ class GaussianProcessExact(
             ],
             "lr": list(np.logspace(-3, -1)),
             "preprocessor_cls": [None, Standardizer],
+            "likelihood_cls": [MultitaskGaussianLikelihood],
         }

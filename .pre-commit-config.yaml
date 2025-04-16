@@ -4,27 +4,27 @@ repos:
     hooks:
     - id: black
       language_version: python3
-      exclude: "^autoemulate/experimental|^tests/experimental"
+      exclude: "^autoemulate/experimental/|^tests/experimental/"
 -   repo: https://github.com/asottile/reorder-python-imports
     rev: v3.12.0
     hooks:
     -   id: reorder-python-imports
-        exclude: "^autoemulate/experimental|^tests/experimental"
+        exclude: "^autoemulate/experimental/|^tests/experimental/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff version.
-  rev: v0.11.2
+  rev: v0.11.4
   hooks:
-    # Run the linter.
-    - id: ruff
-      types_or: [ python, pyi ]
-      args: [ --fix ]
-      files: ^autoemulate/experimental|^tests/experimental
-    # Run the formatter.
-    - id: ruff-format
-      types_or: [ python, pyi ]
-      files: ^autoemulate/experimental|^tests/experimental
+  # Run the linter.
+  - id: ruff
+    types_or: [ python, pyi ]
+    args: [ --fix ]
+    files: ^autoemulate/experimental/|^tests/experimental/
+  # Run the formatter.
+  - id: ruff-format
+    types_or: [ python, pyi ]
+    files: ^autoemulate/experimental/|^tests/experimental/
 - repo: https://github.com/RobertCraigie/pyright-python
   rev: v1.1.398
   hooks:
   - id: pyright
-    files: ^autoemulate/experimental/|^tests/experimental
+    files: ^autoemulate/experimental/|^tests/experimental/

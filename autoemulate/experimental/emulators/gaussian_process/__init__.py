@@ -1,7 +1,8 @@
-from gpytorch.means import Mean
-from gpytorch.kernels import Kernel
-import torch
 from typing import Protocol
+
+import torch
+from gpytorch.kernels import Kernel
+from gpytorch.means import Mean
 
 
 class MeanModuleFn(Protocol):

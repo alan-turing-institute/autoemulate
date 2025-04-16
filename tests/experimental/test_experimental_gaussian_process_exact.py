@@ -1,8 +1,8 @@
 import gpytorch
+from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
-from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
@@ -12,7 +12,7 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     gp = GaussianProcessExact(
         x,
         y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=1),
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf,
     )
@@ -30,7 +30,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     gp = GaussianProcessExact(
         x,
         y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=2),
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf_times_linear,
     )
@@ -40,7 +40,7 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_tune_gp(sample_data_y1d, new_data_y1d):
+def test_tune_gp(sample_data_y1d):
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5)
     scores, configs = tuner.run(GaussianProcessExact)

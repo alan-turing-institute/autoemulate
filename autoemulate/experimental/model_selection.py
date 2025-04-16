@@ -1,6 +1,7 @@
 import numpy as np
 import gpytorch
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
+import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 import torch
@@ -13,7 +14,6 @@ from autoemulate.experimental.types import (
     OutputLike,
     TensorLike,
 )
-import torchmetrics
 
 
 def model_cls_init(

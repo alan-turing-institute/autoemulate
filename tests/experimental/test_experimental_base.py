@@ -1,12 +1,11 @@
 import numpy as np
 import pytest
 import torch
-from torch import nn, optim
-from torch.utils.data import DataLoader, TensorDataset
-
+from autoemulate.experimental.data.preprocessors import Standardizer
 from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.data.preprocessors import Standardizer
+from torch import nn, optim
+from torch.utils.data import DataLoader, TensorDataset
 
 # @pytest.fixture
 # def model_config() -> M:
@@ -98,9 +97,9 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self, **kwargs):
+        def __init__(self, x=None, y=None, **kwargs):
             super().__init__()
-            self.loss_history = []
+            _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_fn = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
@@ -174,10 +173,10 @@ class TestPyTorchBackend:
         )
 
     def test_standardizer_fail(self):
+        x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
         with pytest.raises(
             ValueError, match="Expected 2D torch.Tensor, actual shape dim 1"
         ):
-            x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
             self.model.preprocess(x_train)
 
     def test_tune_dataset(self):
