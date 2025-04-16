@@ -2,7 +2,7 @@ from autoemulate.experimental.emulators.lightgbm.lightgbm import (
     LightGBM,
 )
 from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import OutputLike
+from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
@@ -11,7 +11,7 @@ def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
     lgbm.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = lgbm.predict(x2)
-    assert isinstance(y_pred, OutputLike)
+    assert isinstance(y_pred, TensorLike)
 
 
 def test_tune_lightgbm(sample_data_y1d):
