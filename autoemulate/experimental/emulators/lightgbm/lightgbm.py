@@ -17,7 +17,7 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     Wraps LightGBM regression from LightGBM.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         x: InputLike,
         y: InputLike,
