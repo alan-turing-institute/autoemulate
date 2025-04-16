@@ -100,7 +100,6 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
 
         self.model_.fit(x, y, sample_weight=sample_weight)
         self.is_fitted_ = True
-        return self
 
     def predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
