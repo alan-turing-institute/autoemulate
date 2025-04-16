@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from autoemulate.experimental.types import InputLike
 from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
+from typing import Tuple
 
 
 class InputTypeMixin:
@@ -94,8 +95,11 @@ class InputTypeMixin:
             raise ValueError(
                 f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
             )
-        
-    def _convert_to_numpy(self, x, y):
+
+    def _convert_to_numpy(self, x: InputLike, y: InputLike) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Convert InputLike x, y to tuple of numpy arrays.
+        """
         x, y = self._convert_to_tensors(x, y)
         y = y.ravel()  # Ensure y is 1-dimensional
         return x.numpy(), y.numpy()
