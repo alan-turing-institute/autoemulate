@@ -1,18 +1,15 @@
 import numpy as np
 from lightgbm import LGBMRegressor
-from sklearn.base import BaseEstimator
-from sklearn.base import RegressorMixin
-from sklearn.utils.validation import check_array
-from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.validation import check_X_y
+from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import (
     Emulator,
     InputTypeMixin,
 )
-
 from autoemulate.experimental.types import InputLike, OutputLike
+
 
 class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     """LightGBM Emulator.
