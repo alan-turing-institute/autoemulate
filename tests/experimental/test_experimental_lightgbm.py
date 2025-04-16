@@ -7,10 +7,7 @@ from autoemulate.experimental.types import OutputLike
 
 def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
-    lgbm = LightGBM(
-        x,
-        y,
-    )
+    lgbm = LightGBM()
     lgbm.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = lgbm.predict(x2)

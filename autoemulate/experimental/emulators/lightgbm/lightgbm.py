@@ -19,8 +19,6 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        x: InputLike,
-        y: InputLike,
         boosting_type="gbdt",
         num_leaves=31,
         max_depth=-1,
