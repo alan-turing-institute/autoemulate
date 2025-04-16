@@ -87,13 +87,11 @@ class InputTypeMixin:
                 (x,) = dataset.tensors
                 assert x.ndim == 2
                 return x
-            else:
-                msg = "Number of tensors returned must be greater than zero."
-                raise ValueError(msg)
-        else:
-            raise ValueError(
-                f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
-            )
+            msg = "Number of tensors returned must be greater than zero."
+            raise ValueError(msg)
+        raise ValueError(
+            f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
+        )
 
     def _convert_to_numpy(
             self,
