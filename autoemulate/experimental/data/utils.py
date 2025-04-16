@@ -1,7 +1,9 @@
 import numpy as np
 import torch
+import torch.utils
+import torch.utils.data
 from autoemulate.experimental.types import InputLike
-from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
+from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
 class InputTypeMixin:
@@ -31,6 +33,8 @@ class InputTypeMixin:
             dataset = TensorDataset(x)
         elif isinstance(x, Dataset) and y is None:
             dataset = x
+        elif isinstance(x, DataLoader) and y is None:
+            dataset = x.dataset
         else:
             raise ValueError(
                 f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch "
@@ -69,6 +73,21 @@ class InputTypeMixin:
         Convert InputLike x, y to Tensor or tuple of Tensors.
         """
         dataset = self._convert_to_dataset(x, y)
+
+        # Handle Subset of TensorDataset
+        if isinstance(dataset, Subset):
+            if isinstance(dataset.dataset, TensorDataset):
+                tensors = dataset.dataset.tensors
+                indices = dataset.indices
+
+                # Use indexing to get subset tensors
+                subset_tensors = tuple(tensor[indices] for tensor in tensors)
+                dataset = TensorDataset(*subset_tensors)
+            else:
+                raise ValueError(
+                    f"Subset must wrap a TensorDataset. Found {type(dataset.dataset)}."
+                )
+
         if isinstance(dataset, TensorDataset):
             if len(dataset.tensors) > 2:
                 raise ValueError(
