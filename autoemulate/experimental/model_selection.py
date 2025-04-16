@@ -28,7 +28,6 @@ def model_cls_init(
         m = model_class(
             x,
             y,
-            likelihood=MultitaskGaussianLikelihood(num_tasks=tuple(y.shape)[1]),
             **model_config,
         )
     else:
