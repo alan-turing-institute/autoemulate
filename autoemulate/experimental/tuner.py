@@ -58,7 +58,6 @@ class Tuner(InputTypeMixin):
         val_scores: list[float] = []
 
         for _ in tqdm(range(self.n_iter)):
-
             # randomly sample hyperparameters and instantiate model
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
