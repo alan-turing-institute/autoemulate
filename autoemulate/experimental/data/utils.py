@@ -94,10 +94,10 @@ class InputTypeMixin:
         )
 
     def _convert_to_numpy(
-            self,
-            x: InputLike,
-            y: InputLike
-        ) -> tuple[np.ndarray, np.ndarray]:
+        self,
+        x: InputLike,
+        y: InputLike | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Convert InputLike x, y to tuple of numpy arrays.
         """
