@@ -1,11 +1,8 @@
-import pytest
-import torch
 from autoemulate.experimental.emulators.lightgbm.lightgbm import (
     LightGBM,
 )
 from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike, OutputLike
-from sklearn.datasets import make_regression
+from autoemulate.experimental.types import OutputLike
 
 
 def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
