@@ -2,7 +2,6 @@ import gpytorch
 import numpy as np
 import torch
 import torchmetrics
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
