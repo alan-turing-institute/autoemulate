@@ -106,7 +106,8 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
 
     @staticmethod
     def get_tune_config():
-        # Note: 10 ** np.random.uniform(-3, 0) is equivalent to scipy.stats.loguniform(0.001, 0.1)
+        # Note: 10 ** np.random.uniform(-3, 0)
+        # is equivalent to scipy.stats.loguniform(0.001, 0.1)
         return {
             "num_leaves": [np.random.randint(10, 100)],
             "max_depth": [np.random.randint(-1, 12)],
