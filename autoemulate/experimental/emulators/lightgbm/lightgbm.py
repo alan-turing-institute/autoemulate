@@ -102,7 +102,7 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         check_is_fitted(self, "is_fitted_")
         y_pred = self.model_.predict(x)
         # Ensure the output is a 2D tensor array with shape (n_samples, 1)
-        return Tensor(y_pred.reshape(-1, 1))
+        return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
 
     @staticmethod
     def get_tune_config():
