@@ -1,5 +1,8 @@
-from typing import Any
+from typing import Any, Optional
+
+import numpy as np
 import torchmetrics
+
 from autoemulate.experimental.data.utils import InputTypeMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
@@ -8,7 +11,6 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
 from autoemulate.experimental.model_selection import evaluate, model_cls_init
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import InputLike
-import numpy as np
 
 
 class AutoEmulate(InputTypeMixin):
@@ -16,8 +18,10 @@ class AutoEmulate(InputTypeMixin):
         self,
         x: InputLike,
         y: InputLike,
-        models: list[type[Emulator]] = [GaussianProcessExact],
+        models: Optional[list[type[Emulator]]] = None,
     ):
+        if models is None:
+            models = [GaussianProcessExact]
         self.models = models
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
 

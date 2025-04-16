@@ -1,10 +1,10 @@
-import numpy as np
 import gpytorch
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
+import numpy as np
+import torch
 import torchmetrics
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
-import torch
 
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
