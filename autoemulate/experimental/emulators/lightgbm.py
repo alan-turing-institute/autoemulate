@@ -1,5 +1,6 @@
 import numpy as np
 from lightgbm import LGBMRegressor
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
@@ -10,7 +11,7 @@ from autoemulate.experimental.emulators.base import (
 from autoemulate.experimental.types import InputLike, OutputLike
 
 
-class LightGBM(Emulator, InputTypeMixin):
+class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
