@@ -101,6 +101,8 @@ class InputTypeMixin:
         """
         Convert InputLike x, y to tuple of numpy arrays.
         """
+        if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+            return x, y
         x, y = self._convert_to_tensors(x, y)
         y = y.ravel()  # Ensure y is 1-dimensional
         return x.numpy(), y.numpy()
