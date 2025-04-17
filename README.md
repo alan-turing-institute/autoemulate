@@ -19,7 +19,13 @@ You can find the project documentation [here](https://alan-turing-institute.gith
 
 - The AutoEmulate project is run out of the [Alan Turing Institute](https://www.turing.ac.uk/).
 - Visit [autoemulate.com](https://www.autoemulate.com/) to learn more.
-- We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626).
+- We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626). 
+
+  Please cite this paper if you use the package in your work:
+
+  ```bibtex
+  @article{Stoffel2025, doi = {10.21105/joss.07626}, url = {https://doi.org/10.21105/joss.07626}, year = {2025}, publisher = {The Open Journal}, volume = {10}, number = {107}, pages = {7626}, author = {Martin A. Stoffel and Bryan M. Li and Kalle Westerling and Sophie Arana and Max Balmus and Eric Daub and Steve Niederer}, title = {AutoEmulate: A Python package for semi-automated emulation}, journal = {Journal of Open Source Software} }
+  ```
 
 ## Contributors
 
