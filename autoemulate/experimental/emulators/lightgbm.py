@@ -67,7 +67,7 @@ class LightGBM(Emulator, InputTypeMixin):
         self.n_features_in_ = x.shape[1]
 
         x, y = check_X_y(
-            x, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
+            x, y, y_numeric=True
         )
 
         self.model_ = LGBMRegressor(
@@ -120,5 +120,3 @@ class LightGBM(Emulator, InputTypeMixin):
     def model_name(self):
         return self.__class__.__name__
 
-    def _more_tags(self):
-        return {"multioutput": False}
