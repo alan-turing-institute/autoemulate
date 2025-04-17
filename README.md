@@ -9,70 +9,23 @@
 <!-- SPHINX-START -->
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines, Gaussian Processes and Conditional Neural Processes to find the best emulator for a simulation. 
 
-The project is in early development. 
-
-## Installation
-
-`AutoEmulate` requires Python `>=3.10` and `<3.13`.
-
-There's lots of development at the moment, so we recommend installing the most current version from GitHub:
-
-```bash
-pip install git+https://github.com/alan-turing-institute/autoemulate.git
-```
-
-There's also a release on PyPI:
-
-```bash
-pip install autoemulate
-```
-
-For contributors using [Poetry](https://python-poetry.org/):
-
-```bash
-git clone https://github.com/alan-turing-institute/autoemulate.git
-cd autoemulate
-poetry install
-```
-
-## Quick start
-
-```python
-import numpy as np
-from autoemulate.compare import AutoEmulate
-from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations.projectile import simulate_projectile
-
-# sample from a simulation
-lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
-X = lhd.sample(100)
-y = np.array([simulate_projectile(x) for x in X])
-
-# compare emulators
-ae = AutoEmulate()
-ae.setup(X, y)
-best_emulator = ae.compare() 
-
-# cross-validation results
-ae.summarise_cv() 
-ae.plot_cv()
-
-# test set results for the best emulator
-ae.evaluate(best_emulator) 
-ae.plot_eval(best_emulator)
-
-# refit on full data and emulate!
-emulator = ae.refit(best_emulator) 
-emulator.predict(X)
-
-# global sensitivity analysis
-si = ae.sensitivity_analysis(emulator)
-ae.plot_sensitivity_analysis(si)
-```
+⚠️ Warning: This is an early version of the package and is still under development. We are working on improving the documentation and adding more features. If you have any questions or suggestions, please open an issue or a pull request.
 
 ## Documentation
 
-You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/). The documentation is still work in progress.
+You can find the project documentation [here](https://alan-turing-institute.github.io/autoemulate/), including [installation](https://alan-turing-institute.github.io/autoemulate/getting-started/installation.html).
+
+## The AutoEmulate project
+
+- The AutoEmulate project is run out of the [Alan Turing Institute](https://www.turing.ac.uk/).
+- Visit [autoemulate.com](https://www.autoemulate.com/) to learn more.
+- We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626). 
+
+  Please cite this paper if you use the package in your work:
+
+  ```bibtex
+  @article{Stoffel2025, doi = {10.21105/joss.07626}, url = {https://doi.org/10.21105/joss.07626}, year = {2025}, publisher = {The Open Journal}, volume = {10}, number = {107}, pages = {7626}, author = {Martin A. Stoffel and Bryan M. Li and Kalle Westerling and Sophie Arana and Max Balmus and Eric Daub and Steve Niederer}, title = {AutoEmulate: A Python package for semi-automated emulation}, journal = {Journal of Open Source Software} }
+  ```
 
 ## Contributors
 

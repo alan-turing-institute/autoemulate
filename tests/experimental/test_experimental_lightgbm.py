@@ -1,4 +1,4 @@
-from autoemulate.experimental.emulators.lightgbm.lightgbm import (
+from autoemulate.experimental.emulators.lightgbm import (
     LightGBM,
 )
 from autoemulate.experimental.tuner import Tuner
