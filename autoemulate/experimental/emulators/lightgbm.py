@@ -66,9 +66,7 @@ class LightGBM(Emulator, InputTypeMixin):
 
         self.n_features_in_ = x.shape[1]
 
-        x, y = check_X_y(
-            x, y, y_numeric=True
-        )
+        x, y = check_X_y(x, y, y_numeric=True)
 
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
@@ -119,4 +117,3 @@ class LightGBM(Emulator, InputTypeMixin):
     @property
     def model_name(self):
         return self.__class__.__name__
-
