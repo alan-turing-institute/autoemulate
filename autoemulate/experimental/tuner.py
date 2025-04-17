@@ -64,7 +64,12 @@ class Tuner(InputTypeMixin):
             }
 
             # TODO: consider whether to pass as tensors or dataloader
-            m = model_class(train_x, train_y, **model_config)
+            # TODO: is there a better way to distinguish between models that
+            # require training data for initialisation as well as fitting?
+            if "x" in model_class.__init__.__code__.co_varnames:
+                m = model_class(train_x, train_y, **model_config)
+            else:
+                m = model_class(**model_config)
             m.fit(train_x, train_y)
 
             # evaluate

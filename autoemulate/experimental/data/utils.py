@@ -93,6 +93,18 @@ class InputTypeMixin:
             f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
         )
 
+    def _convert_to_numpy(
+        self,
+        x: InputLike,
+        y: InputLike | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Convert InputLike x, y to tuple of numpy arrays.
+        """
+        x, y = self._convert_to_tensors(x, y)
+        y = y.ravel()  # Ensure y is 1-dimensional
+        return x.numpy(), y.numpy()
+
     def _random_split(
         self,
         dataset: Dataset,
