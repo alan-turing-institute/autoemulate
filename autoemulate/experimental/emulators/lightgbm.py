@@ -59,7 +59,7 @@ class LightGBM(Emulator, InputTypeMixin):
         self.importance_type = importance_type
         self.verbose = verbose
 
-    def fit(self, x: InputLike, y: InputLike | None, sample_weight=None, **kwargs):
+    def fit(self, x: InputLike, y: InputLike | None):
         """Fits the emulator to the data."""
 
         x, y = self._convert_to_numpy(x, y)
@@ -92,7 +92,7 @@ class LightGBM(Emulator, InputTypeMixin):
             verbose=self.verbose,
         )
 
-        self.model_.fit(x, y, sample_weight=sample_weight)
+        self.model_.fit(x, y)
         self.is_fitted_ = True
 
     def predict(self, x: InputLike) -> OutputLike:
