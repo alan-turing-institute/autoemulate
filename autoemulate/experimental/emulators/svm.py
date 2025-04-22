@@ -4,14 +4,14 @@ from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import (
-    Emulator,
     InputTypeMixin,
+    SklearnBackend,
 )
 from autoemulate.experimental.types import InputLike, OutputLike
 from autoemulate.utils import _denormalise_y, _normalise_y
 
 
-class SupportVectorMachines(Emulator, InputTypeMixin):
+class SupportVectorMachines(SklearnBackend, InputTypeMixin):
     """Support Vector Machines Emulator.
 
     Wraps Support Vector Regressor from scikit-learn.
