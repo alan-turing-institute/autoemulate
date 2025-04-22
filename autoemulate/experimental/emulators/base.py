@@ -174,7 +174,9 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    def __init__(self, x: InputLike | None = None, y: InputLike | None = None, **kwargs):
+    def __init__(
+        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+    ):
         pass
 
     def fit(self, x: InputLike, y: InputLike | None):
