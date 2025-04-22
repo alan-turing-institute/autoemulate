@@ -5,7 +5,7 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.learners.base import Base
+from autoemulate.experimental.data.validation import Base
 from autoemulate.experimental.types import (
     InputLike,
     OutputLike,
@@ -20,27 +20,36 @@ class Emulator(ABC, Base):
     - `AutoEmulate`
     """
 
+    # TODO: update emulators with these methods
+    # @abstractmethod
+    # def _fit(self, x: InputLike, y: InputLike | None): ...
+
+    # def fit(self, x: InputLike, y: InputLike | None):
+    #     self._check(x, y)
+    #     self._fit(x, y)
+
+    @abstractmethod
+    def fit(self, x: InputLike, y: InputLike | None): ...
+
     @abstractmethod
     def __init__(
         self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
     ): ...
 
-    def fit(self, x: InputLike, y: InputLike | None):
-        self._check(x, y)
-        self._fit(x, y)
+    # TODO: update emulators with these methods
+    # @abstractmethod
+    # def _predict(self, x: InputLike) -> OutputLike:
+    #     pass
+
+    # def predict(self, x: InputLike) -> OutputLike:
+    #     self._check(x, None)
+    #     output = self.predict(x)
+    #     # Check that it is Gaussian or Y
+    #     self._check_output(output)
+    #     return output
 
     @abstractmethod
-    def _fit(self, x: InputLike, y: InputLike | None): ...
-
     def predict(self, x: InputLike) -> OutputLike:
-        self._check(x, None)
-        output = self.predict(x)
-        # Check that it is Gaussian or Y
-        self._check_output(output)
-        return output
-
-    @abstractmethod
-    def _predict(self, x: InputLike) -> OutputLike:
         pass
 
     @staticmethod
