@@ -164,3 +164,25 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
             "each subclass."
         )
         raise NotImplementedError(msg)
+
+
+class SklearnBackend(Emulator):
+    """
+    SklearnBackend is a sklearn model and implements the base class.
+    This provides default implementations to further subclasses.
+    This means that models can subclass and only need to implement
+    `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
+    """
+
+    def __init__(self, x: InputLike | None = None, y: InputLike | None = None, **kwargs):
+        pass
+
+    def fit(self, x: InputLike, y: InputLike | None):
+        raise NotImplementedError("Subclasses must implement the `fit` method.")
+
+    def predict(self, x: InputLike) -> OutputLike:
+        raise NotImplementedError("Subclasses must implement the `predict` method.")
+
+    @staticmethod
+    def get_tune_config() -> TuneConfig:
+        return {}
