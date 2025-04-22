@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
@@ -7,6 +9,7 @@ from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
     DistributionLike,
     InputLike,
+    ModelConfig,
     OutputLike,
     TensorLike,
 )
@@ -61,7 +64,7 @@ def cross_validate(
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
-    batch_size: int = 16,
+    **kwargs: Any,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -81,7 +84,9 @@ def cross_validate(
     dict[str, list[float]]
        Contains r2 and rmse scores computed for each cross validation fold.
     """
+    best_model_config: ModelConfig = kwargs
     cv_results = {"r2": [], "rmse": []}
+    batch_size = best_model_config.get("batch_size", 16)
     for train_idx, val_idx in cv.split(dataset):  # type: ignore TODO: identify type handling here
         # create train/val data subsets
         # convert idx to list to satisfy type checker
@@ -92,7 +97,7 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        m = model(x, y)
+        m = model(x, y, **best_model_config)
         m.fit(x, y)
 
         # evaluate on batches
