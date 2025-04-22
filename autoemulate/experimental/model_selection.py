@@ -60,7 +60,7 @@ def evaluate(
 def cross_validate(
     cv: BaseCrossValidator,
     dataset: Dataset,
-    model: Emulator,
+    model: type[Emulator],
     batch_size: int = 16,
 ):
     """
@@ -91,13 +91,15 @@ def cross_validate(
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
         # fit model
-        model.fit(train_loader, y=None)
+        x, y = next(iter(train_loader))
+        m = model(x, y)
+        m.fit(x, y)
 
         # evaluate on batches
         r2_metric = torchmetrics.R2Score()
         mse_metric = torchmetrics.MeanSquaredError()
         for x_batch, y_batch in val_loader:
-            y_batch_pred = model.predict(x_batch)
+            y_batch_pred = m.predict(x_batch)
             _update(y_batch, y_batch_pred, r2_metric)
             _update(y_batch, y_batch_pred, mse_metric)
 
