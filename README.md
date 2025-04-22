@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        4 |     96% |73, 274, 282, 310 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        4 |     96% |73, 266, 282, 310 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        8 |     92% |71, 246, 254, 259, 265, 271, 282, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -61,6 +61,7 @@
 | autoemulate/save.py                                                          |       36 |        3 |     92% |     28-30 |
 | autoemulate/sensitivity\_analysis.py                                         |      111 |       39 |     65% |48-53, 61, 64, 66, 71, 99, 133-136, 235-249, 272-310 |
 | autoemulate/simulations/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
+| autoemulate/simulations/base.py                                              |       23 |        4 |     83% |26, 39, 45, 51 |
 | autoemulate/simulations/epidemic.py                                          |       26 |       26 |      0% |      1-55 |
 | autoemulate/simulations/flow\_functions.py                                   |       85 |       85 |      0% |     1-162 |
 | autoemulate/simulations/projectile.py                                        |       46 |        8 |     83% |177-182, 199-200, 221-223 |
@@ -74,6 +75,7 @@
 | tests/models/test\_cnp.py                                                    |      108 |        0 |    100% |           |
 | tests/models/test\_cnp\_dataset.py                                           |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                |       81 |        5 |     94% |     77-81 |
+| tests/test\_base\_simulator.py                                               |       89 |        2 |     98% |     49-50 |
 | tests/test\_compare.py                                                       |      149 |        0 |    100% |           |
 | tests/test\_cross\_validate.py                                               |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                               |       11 |        0 |    100% |           |
@@ -95,7 +97,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       55 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      182 |        6 |     97% |51, 57, 62, 67, 72, 77 |
-|                                                                    **TOTAL** | **4721** |  **380** | **92%** |           |
+|                                                                    **TOTAL** | **4833** |  **386** | **92%** |           |
 
 
 ## Setup coverage badge
