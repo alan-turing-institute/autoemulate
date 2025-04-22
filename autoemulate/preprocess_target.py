@@ -607,9 +607,20 @@ class InputOutputPipeline(TransformedTargetRegressor):
             return self.transformer_.inverse_transform(pred_mean).squeeze(), None
         return self.transformer_.inverse_transform(pred_mean).squeeze()
 
-    def _inverse_transform_with_std(self, pred_mean, pred_std):
+    def _inverse_transform_with_std(self, pred_mean, pred_std, n_samples=1000):
         """
-        Transform encoded standard deviation data back to the original space using Monte Carlo sampling.
+        Transforms uncertainty (standard deviation) from latent space to original space 
+        using a sampling-based method.
+
+        This approach draws samples from the latent Gaussian distribution 
+        (defined by the predicted mean and standard deviation), reconstructs 
+        each sample in the original space, and computes the resulting mean and 
+        standard deviation. 
+        
+        Future improvements could include:
+        - Analytical propagation for linear reductions (e.g., PCA)
+        - Delta method for nonlinear reductions (e.g., VAE)
+
 
         Parameters
         ----------
@@ -626,9 +637,6 @@ class InputOutputPipeline(TransformedTargetRegressor):
         pred_mean = self._ensure_2d(pred_mean)
         pred_std = self._ensure_2d(pred_std)
 
-        if pred_mean.shape != pred_std.shape:
-            raise ValueError("pred_mean and pred_std must have the same shape")
-
         n_simulations, n_features = pred_mean.shape
         samples = []
 
@@ -642,8 +650,7 @@ class InputOutputPipeline(TransformedTargetRegressor):
             samples.append(self.transformer_.inverse_transform(samples_latent))
         samples = np.array(samples)
 
-        # Calculate mean and std across samples for each prediction
-        transformed_mean = np.mean(samples, axis=1).squeeze()
-        transformed_std = np.std(samples, axis=1).squeeze()
+        transformed_mean = np.mean(samples, axis=1)
+        transformed_std = np.std(samples, axis=1)
 
         return transformed_mean, transformed_std
