@@ -65,7 +65,6 @@ class SupportVectorMachines(SklearnBackend, InputTypeMixin):
         if self.normalise_y:
             y, self.y_mean_, self.y_std_ = _normalise_y(y)
         else:
-            y = y
             self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
             self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
 
