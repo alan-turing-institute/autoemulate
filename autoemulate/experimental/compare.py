@@ -8,7 +8,7 @@ from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
-from autoemulate.experimental.model_selection import evaluate, model_cls_init
+from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import InputLike
 
@@ -35,7 +35,7 @@ class AutoEmulate(InputTypeMixin):
 
             # refit model on all train+val data using the best config
             x, y = self._convert_to_tensors(self.train_val, y=None)
-            model = model_cls_init(x, y, model_cls, best_model_config)
+            model = model_cls(x, y, **best_model_config)
             model.fit(self.train_val, y=None)
 
             # predict on test data
