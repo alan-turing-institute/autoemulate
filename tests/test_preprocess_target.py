@@ -12,8 +12,8 @@ from autoemulate.preprocess_target import get_dim_reducer
 from autoemulate.preprocess_target import NoChangeTransformer
 from autoemulate.preprocess_target import NonTrainableTransformer
 from autoemulate.preprocess_target import TargetPCA
-from autoemulate.preprocess_target import VAE
 from autoemulate.preprocess_target import TargetVAE
+from autoemulate.preprocess_target import VAE
 
 # Import the components to test
 

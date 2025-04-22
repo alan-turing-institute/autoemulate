@@ -1,17 +1,17 @@
 # Started by importing the ModularCirc package.
 # * Imported Naghavi model and its parameters from ModularCirc models submodule
 # * Imported the solver from ModularCirc solver submodule
-
-from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
-from ModularCirc.Solver import Solver
-from ModularCirc.Analysis.BaseAnalysis import BaseAnalysis
-import pandas as pd
-import numpy as np
 import os
-import joblib
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 
+import joblib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from ModularCirc.Analysis.BaseAnalysis import BaseAnalysis
+from ModularCirc.Models.NaghaviModel import NaghaviModel
+from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
+from ModularCirc.Solver import Solver
+from tqdm import tqdm
 
 
 def signal_get_pulse(signal, dt, num=100):
@@ -26,10 +26,12 @@ def signal_get_pulse(signal, dt, num=100):
     Returns:
             _type_: _description_
     """
-    
-    ind = np.argmin(signal)        
+
+    ind = np.argmin(signal)
     ncycle = len(signal)
-    new_signal = np.interp(np.linspace(0, ncycle, num), np.arange(ncycle), np.roll(signal, -ind))
+    new_signal = np.interp(
+        np.linspace(0, ncycle, num), np.arange(ncycle), np.roll(signal, -ind)
+    )
     new_dt = ncycle / (num - 1) * dt
     return new_dt, new_signal
 
@@ -80,11 +82,11 @@ def run_case(row, output_path, N_cycles, dt):
     )  # replace the .. with the correct Class and inputs if applicable
 
     solver.setup(
-        suppress_output=True, 
-        optimize_secondary_sv=False, 
+        suppress_output=True,
+        optimize_secondary_sv=False,
         conv_cols=["p_ao"],
-        method='LSODA'
-        )
+        method="LSODA",
+    )
     solver.solve()
 
     # If the solver hasn't converged we quit the function early..
@@ -123,39 +125,52 @@ def run_in_parallel(
             parameter_data_frame.iterrows(), total=len(parameter_data_frame)
         )
     )
-    print('done')
+    print("done")
 
     return successful_runs
 
+
 def simulation_loader(input_directory):
-
     file_list = os.listdir(input_directory)
-    file_list_clean = [file for file in file_list if file.split('.')[-1] == 'csv']
+    file_list_clean = [file for file in file_list if file.split(".")[-1] == "csv"]
 
+    file_series = pd.DataFrame(
+        file_list_clean,
+        columns=[
+            "file",
+        ],
+    )
+    file_series["Index"] = [int(file[2:].split(".")[0]) for file in file_list_clean]
 
-    file_series = pd.DataFrame(file_list_clean, columns=['file',])
-    file_series['Index'] = [int(file[2:].split('.')[0]) for file in file_list_clean]
+    file_series.sort_values("Index", inplace=True)
+    file_series.set_index("Index", inplace=True)
 
-    file_series.sort_values('Index', inplace=True)
-    file_series.set_index('Index', inplace=True)
-    
     # Define a dataframe for the values collected from the simulation...
-    signal_df  = file_series.apply(
-        lambda row: list(pd.read_csv(os.path.join(input_directory, row['file']), index_col='Index').to_numpy().reshape((-1))),
-        axis=1, result_type='expand')
-    template_columns = pd.read_csv(os.path.join(input_directory, file_series.iloc[0,0]))['Index'].to_dict()
+    signal_df = file_series.apply(
+        lambda row: list(
+            pd.read_csv(os.path.join(input_directory, row["file"]), index_col="Index")
+            .to_numpy()
+            .reshape((-1))
+        ),
+        axis=1,
+        result_type="expand",
+    )
+    template_columns = pd.read_csv(
+        os.path.join(input_directory, file_series.iloc[0, 0])
+    )["Index"].to_dict()
     signal_df.rename(columns=template_columns, inplace=True)
 
     return signal_df
- 
+
 
 dict_parameters_condensed_range = dict()
 dict_parameters_condensed_single = dict()
 
-def condense_dict_parameters(dict_param:dict, prev=""):
+
+def condense_dict_parameters(dict_param: dict, prev=""):
     for key, val in dict_param.items():
         if len(prev) > 0:
-            new_key = prev.split('.')[-1] + '.' + key
+            new_key = prev.split(".")[-1] + "." + key
         else:
             new_key = key
         if isinstance(val, dict):
@@ -166,7 +181,7 @@ def condense_dict_parameters(dict_param:dict, prev=""):
                 dict_parameters_condensed_range[new_key] = tuple(np.array(r) * value)
             else:
                 dict_parameters_condensed_single[new_key] = val[0]
-    return  
+    return
 
 
 ######## DEFINED A FUNCTION TO PLOT THE VARIANCE
@@ -178,15 +193,14 @@ def plot_variance(pca, width=8, dpi=100):
     # Explained variance
     explained_variance_ratio = pca.explained_variance_ratio_
     axs[0].bar(grid, explained_variance_ratio, log=True)
-    axs[0].set(
-        xlabel="Component", title="% Explained Variance", ylim=(0.0, 1.0)
-    )
+    axs[0].set(xlabel="Component", title="% Explained Variance", ylim=(0.0, 1.0))
 
     # Cumulative Variance
     cumulative_explained_variance = np.cumsum(explained_variance_ratio)
     axs[1].semilogy(grid, cumulative_explained_variance, "o-")
     axs[1].set(
-        xlabel="Component", title="% Cumulative Variance", 
+        xlabel="Component",
+        title="% Cumulative Variance",
     )
     # Set up figure
     fig.set(figwidth=8, dpi=100)
@@ -201,19 +215,19 @@ def get_component(X, component_matrix, component_id, scaler):
         * component_matrix[component_id, :].reshape((1, -1))
     )
 
+
 def scale_time_parameters_and_asign_to_components(df):
+    # Scale the time parameters down based on specific pulse duration
+    # 800 ms in this case
 
-# Scale the time parameters down based on specific pulse duration
-# 800 ms in this case
+    df["la.delay"] = df["la.delay"] * df["T"] / 800.0
 
-    df['la.delay'] = df['la.delay'] * df['T'] / 800.
-    
-    df['la.t_tr'] = df['la.t_tr'] * df['T'] / 800.
-    df['lv.t_tr'] = df['lv.t_tr'] * df['T'] / 800.
-    
-    df['la.tau'] = df['la.tau'] * df['T'] / 800.
-    df['lv.tau'] = df['lv.tau'] * df['T'] / 800.
+    df["la.t_tr"] = df["la.t_tr"] * df["T"] / 800.0
+    df["lv.t_tr"] = df["lv.t_tr"] * df["T"] / 800.0
 
-    df['la.t_max'] = df['la.t_max']  * df['T'] / 800.
-    df['lv.t_max'] = df['lv.t_max']  * df['T'] / 800.
-    return 
+    df["la.tau"] = df["la.tau"] * df["T"] / 800.0
+    df["lv.tau"] = df["lv.tau"] * df["T"] / 800.0
+
+    df["la.t_max"] = df["la.t_max"] * df["T"] / 800.0
+    df["lv.t_max"] = df["lv.t_max"] * df["T"] / 800.0
+    return

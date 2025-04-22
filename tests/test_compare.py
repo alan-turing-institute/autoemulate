@@ -5,7 +5,9 @@ import torch
 
 from autoemulate.compare import AutoEmulate
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.utils import get_model_name, _ensure_2d
+from autoemulate.utils import _ensure_2d
+from autoemulate.utils import get_model_name
+
 
 @pytest.fixture()
 def ae():

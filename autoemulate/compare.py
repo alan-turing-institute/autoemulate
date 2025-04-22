@@ -14,6 +14,7 @@ from autoemulate.cross_validate import _sum_cv
 from autoemulate.cross_validate import _sum_cvs
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import model_registry
+from autoemulate.history_matching import HistoryMatching
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
@@ -32,7 +33,7 @@ from autoemulate.utils import _get_full_model_name
 from autoemulate.utils import _redirect_warnings
 from autoemulate.utils import get_model_name
 from autoemulate.utils import get_short_model_name
-from autoemulate.history_matching import HistoryMatching
+
 
 class AutoEmulate:
     """
@@ -311,7 +312,7 @@ class AutoEmulate:
                                     X=self.X[self.train_idxs],
                                     y=self.y[self.train_idxs],
                                     cv=self.cross_validator,
-                                    model=model, 
+                                    model=model,
                                     search_type=self.search_type,
                                     niter=self.param_search_iters,
                                     param_space=None,
@@ -1070,13 +1071,14 @@ class AutoEmulate:
         """
         return _plot_sensitivity_analysis(results, index, n_cols, figsize)
 
-
-    def refine_with_history_matching(self, simulator, obs, threshold=1.0, n_new_points=10):
+    def refine_with_history_matching(
+        self, simulator, obs, threshold=1.0, n_new_points=10
+    ):
         """
         Refine the parameter space using history matching.
         """
         history_matcher = HistoryMatching(threshold=threshold)
-        
+
         pred_mean, pred_std = self.gp_final.predict(self.X, return_std=True)
         pred_var = np.square(pred_std)
         predictions = (pred_mean, pred_var)

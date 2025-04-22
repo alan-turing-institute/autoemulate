@@ -67,7 +67,7 @@ def _optimize_params(
         # where 'regressor' is the Input Pipeline (containing the model) and 'transformer' is the Output Pipeline
 
         # Fit the transformer to the output data and transform the output data
-        y = _ensure_2d(y) #data expected to be 2D for transformer
+        y = _ensure_2d(y)  # data expected to be 2D for transformer
         y = model.transformer.fit_transform(y)
         regressor = model.regressor
     else:
