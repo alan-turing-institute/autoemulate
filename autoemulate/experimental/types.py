@@ -5,7 +5,6 @@ import torch
 import torch.utils
 import torch.utils.data
 from gpytorch.distributions import MultitaskMultivariateNormal
-from torch.distributions import MultivariateNormal
 from torch.utils.data import DataLoader
 
 NumpyLike: TypeAlias = np.ndarray

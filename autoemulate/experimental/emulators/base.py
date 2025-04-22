@@ -5,16 +5,15 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
+from autoemulate.experimental.learners.base import Base
 from autoemulate.experimental.types import (
-    DistributionLike,
     InputLike,
     OutputLike,
-    TensorLike,
     TuneConfig,
 )
 
 
-class Emulator(ABC):
+class Emulator(ABC, Base):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
@@ -27,17 +26,18 @@ class Emulator(ABC):
     ): ...
 
     def fit(self, x: InputLike, y: InputLike | None):
-        self._check(x)
+        self._check(x, y)
         self._fit(x, y)
 
     @abstractmethod
     def _fit(self, x: InputLike, y: InputLike | None): ...
 
     def predict(self, x: InputLike) -> OutputLike:
-        self._check(x)
+        self._check(x, None)
         output = self.predict(x)
         # Check that it is Gaussian or Y
         self._check_output(output)
+        return output
 
     @abstractmethod
     def _predict(self, x: InputLike) -> OutputLike:

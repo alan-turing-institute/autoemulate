@@ -9,7 +9,7 @@ from torcheval.metrics import MeanSquaredError, R2Score
 
 from autoemulate.experimental.emulators.base import Emulator
 
-from ..types import GaussianLike, TensorLike
+from ..types import GaussianLike, InputLike, OutputLike, TensorLike
 
 
 @dataclass(kw_only=True)
@@ -19,6 +19,16 @@ class Base:
 
     Provides utility methods for tensor validation and design criteria computations.
     """
+
+    @staticmethod
+    def _check(x: InputLike, y: InputLike | None):
+        # TODO: compare with InputTypeMixin and consider additional implementation
+        ...
+
+    @staticmethod
+    def _check_output(output: OutputLike):
+        # TODO: compare with InputTypeMixin and consider additional implementation
+        ...
 
     @staticmethod
     def check_vector(X: TensorLike) -> TensorLike:
@@ -289,10 +299,11 @@ class Simulator(Base, ABC):
 # @dataclass(kw_only=True)
 # class Emulator(Base, ABC):
 #     """
-#     Emulator abstract class for approximating simulator outputs along with uncertainty.
+#     Emulator abstract class for approximating simulator outputs along with
+#     uncertainty.
 
-#     Provides an interface for fitting an emulator model to training data and generating
-#     predictions with associated covariance.
+#     Provides an interface for fitting an emulator model to training data and
+#     generating predictions with associated covariance.
 
 #     Parameters
 #     ----------
