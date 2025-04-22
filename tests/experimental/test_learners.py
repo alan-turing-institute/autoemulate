@@ -1,26 +1,34 @@
-from dataclasses import asdict
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Tuple
+from collections.abc import Iterable
 
-import matplotlib.pyplot as plt
+import gpytorch
 import numpy as np
-import pandas as pd
 import torch
-from tqdm import tqdm
-
 from autoemulate.emulators import GaussianProcess
-from autoemulate.experimental.learners import base
-from autoemulate.experimental.learners import Emulator
-from autoemulate.experimental.learners import membership
-from autoemulate.experimental.learners import pool
-from autoemulate.experimental.learners import Simulator
-from autoemulate.experimental.learners import stream
+from autoemulate.experimental.emulators.gaussian_process.exact import (
+    GaussianProcessExact,
+    constant_mean,
+    rbf,
+)
+from autoemulate.experimental.learners import (
+    Emulator,
+    Simulator,
+    stream,
+)
 from autoemulate.experimental_design import LatinHypercube
 from autoemulate.simulations.projectile import simulate_projectile_multioutput
+from tqdm import tqdm
 
 # Import core classes from the source code.
+
+
+def get_test_gp(x, y):
+    return GaussianProcessExact(
+        x,
+        y,
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
+        constant_mean,
+        rbf,
+    )
 
 
 def test_learners():
@@ -57,7 +65,7 @@ def test_learners():
         Y_train = simulator.sample(X_train)
         yield stream.Random(
             simulator=simulator,
-            emulator=GP(),
+            emulator=get_test_gp(X_train, Y_train),
             X_train=X_train,
             Y_train=Y_train,
             p_query=0.25,
@@ -65,35 +73,35 @@ def test_learners():
         if not adaptive_only:
             yield stream.Distance(
                 simulator=simulator,
-                emulator=GP(),
+                emulator=get_test_gp(X_train, Y_train),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=0.5,
             )
             yield stream.A_Optimal(
                 simulator=simulator,
-                emulator=GP(),
+                emulator=get_test_gp(X_train, Y_train),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=1.0,
             )
             yield stream.D_Optimal(
                 simulator=simulator,
-                emulator=GP(),
+                emulator=get_test_gp(X_train, Y_train),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=-4.2,
             )
             yield stream.E_Optimal(
                 simulator=simulator,
-                emulator=GP(),
+                emulator=get_test_gp(X_train, Y_train),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=1.0,
             )
         yield stream.Adaptive_Distance(
             simulator=simulator,
-            emulator=GP(),
+            emulator=get_test_gp(X_train, Y_train),
             X_train=X_train,
             Y_train=Y_train,
             threshold=0.5,
@@ -108,7 +116,7 @@ def test_learners():
         )
         yield stream.Adaptive_A_Optimal(
             simulator=simulator,
-            emulator=GP(),
+            emulator=get_test_gp(X_train, Y_train),
             X_train=X_train,
             Y_train=Y_train,
             threshold=1e-1,
@@ -123,7 +131,7 @@ def test_learners():
         )
         yield stream.Adaptive_D_Optimal(
             simulator=simulator,
-            emulator=GP(),
+            emulator=get_test_gp(X_train, Y_train),
             X_train=X_train,
             Y_train=Y_train,
             threshold=-4.0,
@@ -138,7 +146,7 @@ def test_learners():
         )
         yield stream.Adaptive_E_Optimal(
             simulator=simulator,
-            emulator=GP(),
+            emulator=get_test_gp(X_train, Y_train),
             X_train=X_train,
             Y_train=Y_train,
             threshold=0.75 if isinstance(simulator, Sin) else 1000,
@@ -155,12 +163,12 @@ def test_learners():
     def run_experiment(
         *,
         simulator: Simulator,
-        seeds: List[int],
+        seeds: list[int],
         n_initial_samples: int,
         n_stream_samples: int,
         adaptive_only: bool,
-    ) -> Tuple[List[Dict], List[Dict]]:
-        metrics, summary = list(), list()
+    ) -> tuple[list[dict], list[dict]]:
+        metrics, summary = [], []
         for seed in seeds:
             torch.manual_seed(seed)
             np.random.seed(seed)
