@@ -13,7 +13,7 @@ from ModularCirc.Solver import Solver
 from tqdm.notebook import tqdm  # For Jupyter notebook progress bar
 
 from autoemulate.simulations import circ_utils
-from autoemulate.simulations.base_simulator import BaseSimulator
+from autoemulate.simulations.base import Simulator
 
 
 def extract_parameter_ranges(json_file_path):
@@ -33,7 +33,7 @@ def extract_parameter_ranges(json_file_path):
     return circ_utils.dict_parameters_condensed_range
 
 
-class NaghaviSimulator(BaseSimulator):
+class NaghaviSimulator(Simulator):
     def __init__(
         self,
         parameters_range: Dict[str, Tuple[float, float]],
@@ -64,7 +64,7 @@ class NaghaviSimulator(BaseSimulator):
         self._output_names = (
             []
         )  # Will be populated with expanded stat names after first simulation
-        self._has_run_simulation = False  # Flag to track if a simulation has been run
+        self._has_sample_forward = False  # Flag to track if a simulation has been run
 
     @property
     def param_names(self) -> List[str]:
@@ -81,7 +81,7 @@ class NaghaviSimulator(BaseSimulator):
         """List of original output variables without statistic suffixes"""
         return self._output_variables
 
-    def generate_initial_samples(self, n_samples: int) -> List[Dict[str, float]]:
+    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
         """Generate random samples within the parameter bounds using Latin Hypercube Sampling"""
         samples = []
         param_count = len(self._param_names)
@@ -132,7 +132,7 @@ class NaghaviSimulator(BaseSimulator):
 
         return stats, stat_names
 
-    def run_simulation(self, params: Dict[str, float]) -> Optional[np.ndarray]:
+    def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """Run simulation and return output statistics as a numpy array"""
         # Set parameters
         parobj = NaghaviModelParameters()
@@ -201,9 +201,9 @@ class NaghaviSimulator(BaseSimulator):
                         continue
 
         # Always update output names after the first simulation
-        if not self._has_run_simulation:
+        if not self._has_sample_forward:
             self._output_names = output_names
-            self._has_run_simulation = True
+            self._has_sample_forward = True
 
         return np.array(output_stats)
 
@@ -219,7 +219,7 @@ class NaghaviSimulator(BaseSimulator):
 
         for sample in tqdm(samples, desc="Running simulations", unit="sample"):
             # Run simulation for each sample
-            result = self.run_simulation(sample)
+            result = self.sample_forward(sample)
             if result is not None:
                 results.append(result)
                 successful += 1

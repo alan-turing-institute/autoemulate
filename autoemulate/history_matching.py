@@ -7,54 +7,12 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
-
-
-class BaseSimulator(ABC):
-    """Abstract base class for simulators used in history matching"""
-
-    @abstractmethod
-    def run_simulation(self, params: Dict[str, float]) -> Optional[Dict[str, float]]:
-        """
-        Run simulation with given parameters and return outputs
-
-        Args:
-            params: Dictionary of parameter name-value pairs
-
-        Returns:
-            Dictionary of output name-value pairs or None if simulation fails
-        """
-        pass
-
-    @abstractmethod
-    def generate_initial_samples(self, n_samples: int) -> List[Dict[str, float]]:
-        """
-        Generate initial parameter samples
-
-        Args:
-            n_samples: Number of samples to generate
-
-        Returns:
-            List of parameter dictionaries
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def param_names(self) -> List[str]:
-        """List of parameter names"""
-        pass
-
-    @property
-    @abstractmethod
-    def output_names(self) -> List[str]:
-        """List of output names"""
-        pass
-
+from autoemulate.simulations.base import Simulator
 
 class HistoryMatcher:
     def __init__(
         self,
-        simulator: BaseSimulator,
+        simulator: Simulator,
         observations: Dict[str, Tuple[float, float]],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -168,7 +126,7 @@ class HistoryMatcher:
                     }
             else:
                 # Run actual simulation
-                outputs = self.simulator.run_simulation(params)
+                outputs = self.simulator.sample_forward(params)
                 if outputs is None:
                     continue
 
@@ -199,7 +157,7 @@ class HistoryMatcher:
             List of new parameter dictionaries
         """
         if not nroy_samples:
-            return self.simulator.generate_initial_samples(n_samples)
+            return self.simulator.sample_inputs(n_samples)
 
         # Convert to array
         X_nroy = np.array(
@@ -243,7 +201,7 @@ class HistoryMatcher:
         emulator = initial_emulator  # Start with your pre-trained GP
 
         # Generate initial samples
-        current_samples = self.simulator.generate_initial_samples(n_samples_per_wave)
+        current_samples = self.simulator.sample_inputs(n_samples_per_wave)
 
         for wave in range(n_waves):
             print(f"\n=== Wave {wave + 1}/{n_waves} ===")
@@ -262,7 +220,7 @@ class HistoryMatcher:
             if len(successful_samples) == 0:
                 print("Warning: No successful simulations in this wave")
                 if wave < n_waves - 1:
-                    current_samples = self.simulator.generate_initial_samples(
+                    current_samples = self.simulator.sample_inputs(
                         n_samples_per_wave
                     )
                 continue
@@ -301,7 +259,7 @@ class HistoryMatcher:
                 y_train = np.array(
                     [
                         [
-                            self.simulator.run_simulation(params)[i]
+                            self.simulator.sample_forward(params)[i]
                             for i in range(len(self.simulator.output_names))
                         ]
                         for params in successful_samples
@@ -319,7 +277,7 @@ class HistoryMatcher:
                     )
                 else:
                     print("No NROY points - generating new random samples")
-                    current_samples = self.simulator.generate_initial_samples(
+                    current_samples = self.simulator.sample_inputs(
                         n_samples_per_wave
                     )
 
