@@ -98,3 +98,46 @@ def test_generate_initial_samples(mock_simulator):
         assert 0.0 <= sample["param1"] <= 1.0
         assert -10.0 <= sample["param2"] <= 10.0
         assert 0.5 <= sample["param3"] <= 5.0
+
+
+# Test run_simulation method returns correct output structure
+def test_run_simulation(mock_simulator):
+    """Test that run_simulation returns correct output structure"""
+    # Create a test parameter set
+    params = {"param1": 0.5, "param2": 0.0, "param3": 2.5}
+
+    # Run simulation
+    result = mock_simulator.run_simulation(params)
+
+    # Check result structure
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(mock_simulator.output_names)
+
+    # Check specific values for this deterministic mock
+    expected_output1 = (0.5 + 0.0 + 2.5) / 3
+    expected_output2 = (0.5 + 0.0 + 2.5) * 2
+    assert result["output1"] == pytest.approx(expected_output1)
+    assert result["output2"] == pytest.approx(expected_output2)
+
+
+# Test run_simulation with invalid parameters
+def test_run_simulation_invalid_params(mock_simulator):
+    """Test that run_simulation handles invalid parameters gracefully"""
+    # Create an incomplete parameter set
+    params = {
+        "param1": 0.5,
+        # Missing param2 and param3
+    }
+
+    # Run simulation with invalid parameters
+    result = mock_simulator.run_simulation(params)
+
+    # We expect it to return None for invalid parameters
+    assert result is None
+
+
+# Test attempting to instantiate abstract base class
+def test_abstract_class_instantiation():
+    """Test that BaseSimulator cannot be instantiated directly"""
+    with pytest.raises(TypeError):
+        BaseSimulator()  # Should raise TypeError
