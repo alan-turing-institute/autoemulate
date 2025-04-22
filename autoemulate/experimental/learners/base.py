@@ -482,7 +482,7 @@ class Active(Learner):
         if isinstance(output, TensorLike):
             Y_pred = output
         elif isinstance(output, GaussianLike):
-            Y_pred, Sigma = output.mean, output.covariance_matrix
+            Y_pred, _ = output.mean, output.covariance_matrix
         else:
             msg = (
                 f"Output must be either `Tensor` or `MultivariateNormal` but got "
