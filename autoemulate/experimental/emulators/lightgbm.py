@@ -1,6 +1,5 @@
 import numpy as np
 from lightgbm import LGBMRegressor
-from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
@@ -11,7 +10,7 @@ from autoemulate.experimental.emulators.base import (
 from autoemulate.experimental.types import InputLike, OutputLike
 
 
-class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
+class LightGBM(Emulator, InputTypeMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
@@ -60,16 +59,14 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
         self.importance_type = importance_type
         self.verbose = verbose
 
-    def fit(self, x: InputLike, y: InputLike | None, sample_weight=None, **kwargs):
+    def fit(self, x: InputLike, y: InputLike | None):
         """Fits the emulator to the data."""
 
         x, y = self._convert_to_numpy(x, y)
 
         self.n_features_in_ = x.shape[1]
 
-        x, y = check_X_y(
-            x, y, multi_output=self._more_tags()["multioutput"], y_numeric=True
-        )
+        x, y = check_X_y(x, y, y_numeric=True)
 
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
@@ -93,7 +90,7 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
             verbose=self.verbose,
         )
 
-        self.model_.fit(x, y, sample_weight=sample_weight)
+        self.model_.fit(x, y)
         self.is_fitted_ = True
 
     def predict(self, x: InputLike) -> OutputLike:
@@ -120,6 +117,3 @@ class LightGBM(Emulator, InputTypeMixin, BaseEstimator, RegressorMixin):
     @property
     def model_name(self):
         return self.__class__.__name__
-
-    def _more_tags(self):
-        return {"multioutput": False}

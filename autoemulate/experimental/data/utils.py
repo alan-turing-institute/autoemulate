@@ -97,13 +97,20 @@ class InputTypeMixin:
         self,
         x: InputLike,
         y: InputLike | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Convert InputLike x, y to tuple of numpy arrays.
         """
-        x, y = self._convert_to_tensors(x, y)
-        y = y.ravel()  # Ensure y is 1-dimensional
-        return x.numpy(), y.numpy()
+        if isinstance(x, np.ndarray) and (y is None or isinstance(y, np.ndarray)):
+            return x, y
+
+        result = self._convert_to_tensors(x, y)
+        if isinstance(result, tuple):
+            x, y = result
+            y = y.ravel()  # Ensure y is 1-dimensional
+            return x.numpy(), y.numpy()
+        x = result
+        return x.numpy(), None
 
     def _random_split(
         self,
