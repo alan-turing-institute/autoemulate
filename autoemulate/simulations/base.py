@@ -13,7 +13,7 @@ class Simulator(ABC):
     """Abstract base class for simulators used in history matching"""
 
     @abstractmethod
-    def run_simulation(self, params: Dict[str, float]) -> Optional[Dict[str, float]]:
+    def sample_forward(self, params: Dict[str, float]) -> Optional[Dict[str, float]]:
         """
         Run simulation with given parameters and return outputs
 
@@ -26,7 +26,7 @@ class Simulator(ABC):
         pass
 
     @abstractmethod
-    def generate_initial_samples(self, n_samples: int) -> List[Dict[str, float]]:
+    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
         """
         Generate initial parameter samples
 

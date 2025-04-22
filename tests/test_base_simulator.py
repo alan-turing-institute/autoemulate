@@ -25,7 +25,7 @@ class MockSimulator(Simulator):
     def output_names(self) -> List[str]:
         return self._output_names_list
 
-    def generate_initial_samples(self, n_samples: int) -> List[Dict[str, float]]:
+    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
         """Generate mock samples"""
         samples = []
         for i in range(n_samples):
@@ -36,7 +36,7 @@ class MockSimulator(Simulator):
             samples.append(sample)
         return samples
 
-    def run_simulation(self, params: Dict[str, float]) -> Optional[Dict[str, float]]:
+    def sample_forward(self, params: Dict[str, float]) -> Optional[Dict[str, float]]:
         """Run mock simulation"""
         # Check that all required parameters are present
         if not all(param in params for param in self._param_names_list):
@@ -80,11 +80,11 @@ def test_output_names(mock_simulator):
     assert len(mock_simulator.output_names) == 2
 
 
-# Test generate_initial_samples method returns correct structure
-def test_generate_initial_samples(mock_simulator):
-    """Test that generate_initial_samples returns correct number and structure of samples"""
+# Test sample_inputs method returns correct structure
+def test_sample_inputs(mock_simulator):
+    """Test that sample_inputs returns correct number and structure of samples"""
     n_samples = 5
-    samples = mock_simulator.generate_initial_samples(n_samples)
+    samples = mock_simulator.sample_inputs(n_samples)
 
     # Check number of samples
     assert len(samples) == n_samples
@@ -100,14 +100,14 @@ def test_generate_initial_samples(mock_simulator):
         assert 0.5 <= sample["param3"] <= 5.0
 
 
-# Test run_simulation method returns correct output structure
-def test_run_simulation(mock_simulator):
-    """Test that run_simulation returns correct output structure"""
+# Test sample_forward method returns correct output structure
+def test_sample_forward(mock_simulator):
+    """Test that sample_forward returns correct output structure"""
     # Create a test parameter set
     params = {"param1": 0.5, "param2": 0.0, "param3": 2.5}
 
     # Run simulation
-    result = mock_simulator.run_simulation(params)
+    result = mock_simulator.sample_forward(params)
 
     # Check result structure
     assert isinstance(result, dict)
@@ -120,9 +120,9 @@ def test_run_simulation(mock_simulator):
     assert result["output2"] == pytest.approx(expected_output2)
 
 
-# Test run_simulation with invalid parameters
-def test_run_simulation_invalid_params(mock_simulator):
-    """Test that run_simulation handles invalid parameters gracefully"""
+# Test sample_forward with invalid parameters
+def test_sample_forward_invalid_params(mock_simulator):
+    """Test that sample_forward handles invalid parameters gracefully"""
     # Create an incomplete parameter set
     params = {
         "param1": 0.5,
@@ -130,7 +130,7 @@ def test_run_simulation_invalid_params(mock_simulator):
     }
 
     # Run simulation with invalid parameters
-    result = mock_simulator.run_simulation(params)
+    result = mock_simulator.sample_forward(params)
 
     # We expect it to return None for invalid parameters
     assert result is None
@@ -148,12 +148,12 @@ def test_end_to_end_workflow(mock_simulator):
     """Test the end-to-end workflow of generating samples and running simulations"""
     # Generate samples
     n_samples = 10
-    samples = mock_simulator.generate_initial_samples(n_samples)
+    samples = mock_simulator.sample_inputs(n_samples)
 
     # Run simulations on all samples
     results = []
     for sample in samples:
-        result = mock_simulator.run_simulation(sample)
+        result = mock_simulator.sample_forward(sample)
         if result is not None:
             results.append(result)
 
