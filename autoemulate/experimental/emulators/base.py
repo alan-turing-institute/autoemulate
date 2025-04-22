@@ -180,10 +180,12 @@ class SklearnBackend(Emulator):
         pass
 
     def fit(self, x: InputLike, y: InputLike | None):
-        raise NotImplementedError("Subclasses must implement the `fit` method.")
+        msg = "Subclasses must implement the `fit` method."
+        raise NotImplementedError(msg)
 
     def predict(self, x: InputLike) -> OutputLike:
-        raise NotImplementedError("Subclasses must implement the `predict` method.")
+        msg = "Subclasses must implement the `predict` method."
+        raise NotImplementedError(msg)
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
