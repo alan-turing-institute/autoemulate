@@ -3,10 +3,9 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
-from torch.distributions import MultivariateNormal
 from tqdm import tqdm
 
-from ..types import DistributionLike, GaussianLike, TensorLike
+from ..types import GaussianLike, TensorLike
 from .base import Active
 
 
