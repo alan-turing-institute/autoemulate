@@ -1,10 +1,10 @@
-from dataclasses import dataclass
-
 import torch
 from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
 
 
-@dataclass(kw_only=True)
+# TODO: consider reverting but currrently not all emulators are hashable
+# (e.g. GaussianProcessExact)
+# @dataclass(kw_only=True)
 class Base:
     """
     Base class for active learning simulation and emulation.
