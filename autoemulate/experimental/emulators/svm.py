@@ -101,12 +101,12 @@ class SupportVectorMachines(SklearnBackend, InputTypeMixin):
     def get_tune_config():
         return {
             "kernel": ["rbf", "linear", "poly", "sigmoid"],
-            "degree": np.random.randint(2, 6),
+            "degree": [np.random.randint(2, 6)],
             "gamma": ["scale", "auto"],
-            "coef0": np.random.uniform(0.0, 1.0),
-            "tol": np.random.uniform(1e-5, 1e-3),
-            "C": np.random.uniform(1.0, 3.0),
-            "epsilon": np.random.uniform(0.1, 0.3),
+            "coef0": [np.random.uniform(0.0, 1.0)],
+            "tol": [np.random.uniform(1e-5, 1e-3)],
+            "C": [np.random.uniform(1.0, 3.0)],
+            "epsilon": [np.random.uniform(0.1, 0.3)],
             "shrinking": [True, False],
             "max_iter": [-1],
         }
