@@ -141,3 +141,28 @@ def test_abstract_class_instantiation():
     """Test that BaseSimulator cannot be instantiated directly"""
     with pytest.raises(TypeError):
         BaseSimulator()  # Should raise TypeError
+
+
+# Integration test - generate samples and run simulations on them
+def test_end_to_end_workflow(mock_simulator):
+    """Test the end-to-end workflow of generating samples and running simulations"""
+    # Generate samples
+    n_samples = 10
+    samples = mock_simulator.generate_initial_samples(n_samples)
+
+    # Run simulations on all samples
+    results = []
+    for sample in samples:
+        result = mock_simulator.run_simulation(sample)
+        if result is not None:
+            results.append(result)
+
+    # All simulations should succeed with our mock
+    assert len(results) == n_samples
+
+    # Each result should have the expected structure
+    for result in results:
+        assert isinstance(result, dict)
+        assert set(result.keys()) == set(mock_simulator.output_names)
+        assert "output1" in result
+        assert "output2" in result
