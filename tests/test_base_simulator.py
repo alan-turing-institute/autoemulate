@@ -33,6 +33,10 @@ class MockSimulator(BaseSimulator):
     
     def run_simulation(self, params: Dict[str, float]) -> Optional[Dict[str, float]]:
         """Run mock simulation"""
+        # Check that all required parameters are present
+        if not all(param in params for param in self._param_names_list):
+            return None
+            
         # Simple deterministic output based on input parameters
         try:
             param_sum = sum(params.values())
@@ -43,3 +47,21 @@ class MockSimulator(BaseSimulator):
         except Exception:
             return None
 
+
+# Fixture to create a mock simulator with test parameters
+@pytest.fixture
+def mock_simulator():
+    param_ranges = {
+        "param1": (0.0, 1.0),
+        "param2": (-10.0, 10.0),
+        "param3": (0.5, 5.0)
+    }
+    return MockSimulator(param_ranges)
+
+
+
+# Test creation of a concrete BaseSimulator implementation
+def test_simulator_creation(mock_simulator):
+    """Test that a concrete simulator can be created"""
+    assert isinstance(mock_simulator, BaseSimulator)
+    assert isinstance(mock_simulator, MockSimulator)
