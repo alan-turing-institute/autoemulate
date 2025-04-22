@@ -29,6 +29,9 @@ Thumbs.db
 # VScode settings
 .vscode/
 
+
+.venv/
+
 # Quarto
 README.html
 README_files/
