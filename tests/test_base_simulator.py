@@ -79,3 +79,22 @@ def test_output_names(mock_simulator):
     assert mock_simulator.output_names == expected
     assert len(mock_simulator.output_names) == 2
 
+
+# Test generate_initial_samples method returns correct structure
+def test_generate_initial_samples(mock_simulator):
+    """Test that generate_initial_samples returns correct number and structure of samples"""
+    n_samples = 5
+    samples = mock_simulator.generate_initial_samples(n_samples)
+
+    # Check number of samples
+    assert len(samples) == n_samples
+
+    # Check structure of each sample
+    for sample in samples:
+        assert isinstance(sample, dict)
+        assert set(sample.keys()) == set(mock_simulator.param_names)
+
+        # Check parameter bounds
+        assert 0.0 <= sample["param1"] <= 1.0
+        assert -10.0 <= sample["param2"] <= 10.0
+        assert 0.5 <= sample["param3"] <= 5.0
