@@ -5,12 +5,12 @@ from typing import Optional
 import numpy as np
 import pytest
 
-from autoemulate.simulations.base_simulator import BaseSimulator
+from autoemulate.simulations.base import Simulator
 
 
-# Mock implementation of BaseSimulator for testing
-class MockSimulator(BaseSimulator):
-    """Mock implementation of BaseSimulator for testing purposes"""
+# Mock implementation of Simulator for testing
+class MockSimulator(Simulator):
+    """Mock implementation of Simulator for testing purposes"""
 
     def __init__(self, param_ranges):
         self._param_bounds = param_ranges
@@ -57,10 +57,10 @@ def mock_simulator():
     return MockSimulator(param_ranges)
 
 
-# Test creation of a concrete BaseSimulator implementation
+# Test creation of a concrete Simulator implementation
 def test_simulator_creation(mock_simulator):
     """Test that a concrete simulator can be created"""
-    assert isinstance(mock_simulator, BaseSimulator)
+    assert isinstance(mock_simulator, Simulator)
     assert isinstance(mock_simulator, MockSimulator)
 
 
@@ -138,9 +138,9 @@ def test_run_simulation_invalid_params(mock_simulator):
 
 # Test attempting to instantiate abstract base class
 def test_abstract_class_instantiation():
-    """Test that BaseSimulator cannot be instantiated directly"""
+    """Test that Simulator cannot be instantiated directly"""
     with pytest.raises(TypeError):
-        BaseSimulator()  # Should raise TypeError
+        Simulator()  # Should raise TypeError
 
 
 # Integration test - generate samples and run simulations on them

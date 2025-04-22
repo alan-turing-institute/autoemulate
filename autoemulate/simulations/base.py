@@ -9,7 +9,7 @@ from typing import Union
 import numpy as np
 
 
-class BaseSimulator(ABC):
+class Simulator(ABC):
     """Abstract base class for simulators used in history matching"""
 
     @abstractmethod
