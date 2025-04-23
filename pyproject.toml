@@ -4,13 +4,7 @@ version = "0.2.1dev1"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = [
-    "Martin Stoffel <mstoffel@turing.ac.uk>",
-    "Kalle Westerling <kwesterling@turing.ac.uk>",
-    "Bryan Li <bli@turing.ac.uk>",
-    "Max Balmus <mbalmus@turing.ac.uk>",
-    "Sophie Arana <sarana@turing.ac.uk>",
-    "Eric Daub <edaub@turing.ac.uk>",
-    "Steve Niederer <sniederer@turing.ac.uk>",
+    "AutoEmulate contributors (see our GitHub page)"
 ]
 readme = "README.md"
 include = ["misc/AE_logo_final.png"]
