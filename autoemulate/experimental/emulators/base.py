@@ -12,7 +12,7 @@ from autoemulate.experimental.types import (
 )
 
 
-class Emulator(ABC):
+class Emulator(ABC, InputTypeMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
@@ -29,7 +29,33 @@ class Emulator(ABC):
         return cls.__name__
 
     @abstractmethod
-    def fit(self, x: InputLike, y: InputLike | None): ...
+    def _fit(self, x: InputLike, y: InputLike | None): ...
+
+
+    @abstractmethod
+    def check(self, x: InputLike, y: InputLike | None): ...
+
+    @abstractmethod
+    def convert(self, x: InputLike, y: InputLike | None) -> tuple[InputLike, InputLike | None]: ...
+
+    def fit(self, x, y):
+        """
+        Fit the model to the data.
+
+        Parameters
+        ----------
+            x: InputLike
+                Input features as numpy array, PyTorch tensor, or DataLoader.
+            y: OutputLike or None
+                Target values (not needed if x is a DataLoader).
+
+        Returns
+        -------
+            None
+        """
+        x, y = self.convert(x, y)
+        self.check(x, y)
+        self._fit(x, y)
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
@@ -170,6 +196,8 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         raise NotImplementedError(msg)
 
 
+class SklearnEstimator(BaseEstimator, RegressorMixin): ...
+
 class SklearnBackend(Emulator):
     """
     SklearnBackend is a sklearn model and implements the base class.
@@ -178,14 +206,17 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
+    model: SklearnEstimator
+
     def __init__(
         self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
     ):
         pass
 
-    def fit(self, x: InputLike, y: InputLike | None):
-        msg = "Subclasses must implement the `fit` method."
-        raise NotImplementedError(msg)
+
+    def _fit(self, x: InputLike, y: InputLike | None):
+        self.model.fit(x, y)
+        self.is_fitted_ = True
 
     def predict(self, x: InputLike) -> OutputLike:
         msg = "Subclasses must implement the `predict` method."
