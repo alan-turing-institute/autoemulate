@@ -18,6 +18,8 @@ class LightGBM(Emulator, InputTypeMixin):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
+        x: InputLike | None = None,
+        y: InputLike | None = None,
         boosting_type="gbdt",
         num_leaves=31,
         max_depth=-1,
@@ -39,6 +41,7 @@ class LightGBM(Emulator, InputTypeMixin):
         verbose=-1,
     ):
         """Initializes a LightGBM object."""
+        _, _ = x, y # ignore unused arguments
         self.boosting_type = boosting_type
         self.num_leaves = num_leaves
         self.max_depth = max_depth
