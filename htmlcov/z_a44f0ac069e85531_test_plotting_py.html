@@ -62,10 +62,10 @@
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_a44f0ac069e85531_test_model_registry_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_a44f0ac069e85531_test_printing_py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_a44f0ac069e85531_test_preprocess_target_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-22 16:00 +0000
+            created at 2025-04-23 14:21 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -290,7 +290,7 @@
     <p class="pln"><span class="n"><a id="t208" href="#t208">208</a></span><span class="t">    <span class="com"># Mock plt.show to do nothing</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t209" href="#t209">209</a></span><span class="t">    <span class="nam">monkeypatch</span><span class="op">.</span><span class="nam">setattr</span><span class="op">(</span><span class="nam">plt</span><span class="op">,</span> <span class="str">"show"</span><span class="op">,</span> <span class="key">lambda</span><span class="op">:</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t210" href="#t210">210</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t211" href="#t211">211</a></span><span class="t">    <span class="nam">cv_results</span> <span class="op">=</span> <span class="nam">ae_single_output</span><span class="op">.</span><span class="nam">cv_results</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t211" href="#t211">211</a></span><span class="t">    <span class="nam">cv_results</span> <span class="op">=</span> <span class="nam">ae_single_output</span><span class="op">.</span><span class="nam">preprocessing_results</span><span class="op">[</span><span class="str">"None"</span><span class="op">]</span><span class="op">[</span><span class="str">"cv_results"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t212" href="#t212">212</a></span><span class="t">    <span class="nam">X</span><span class="op">,</span> <span class="nam">y</span> <span class="op">=</span> <span class="nam">ae_single_output</span><span class="op">.</span><span class="nam">X</span><span class="op">,</span> <span class="nam">ae_single_output</span><span class="op">.</span><span class="nam">y</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t213" href="#t213">213</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t214" href="#t214">214</a></span><span class="t">    <span class="com"># without model name</span>&nbsp;</span><span class="r"></span></p>
@@ -307,7 +307,7 @@
     <p class="run"><span class="n"><a id="t225" href="#t225">225</a></span><span class="t"><span class="key">def</span> <span class="nam">test__plot_cv_output_range</span><span class="op">(</span><span class="nam">ae_multi_output</span><span class="op">,</span> <span class="nam">monkeypatch</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t226" href="#t226">226</a></span><span class="t">    <span class="com"># Mock plt.show to do nothing</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t227" href="#t227">227</a></span><span class="t">    <span class="nam">monkeypatch</span><span class="op">.</span><span class="nam">setattr</span><span class="op">(</span><span class="nam">plt</span><span class="op">,</span> <span class="str">"show"</span><span class="op">,</span> <span class="key">lambda</span><span class="op">:</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t228" href="#t228">228</a></span><span class="t">    <span class="nam">cv_results</span> <span class="op">=</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">cv_results</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t228" href="#t228">228</a></span><span class="t">    <span class="nam">cv_results</span> <span class="op">=</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">preprocessing_results</span><span class="op">[</span><span class="str">"None"</span><span class="op">]</span><span class="op">[</span><span class="str">"cv_results"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t229" href="#t229">229</a></span><span class="t">    <span class="nam">X</span><span class="op">,</span> <span class="nam">y</span> <span class="op">=</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">X</span><span class="op">,</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">y</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t231" href="#t231">231</a></span><span class="t">    <span class="com"># check that output index 1 works</span>&nbsp;</span><span class="r"></span></p>
@@ -327,7 +327,7 @@
     <p class="run"><span class="n"><a id="t245" href="#t245">245</a></span><span class="t"><span class="key">def</span> <span class="nam">test__plot_cv_input_range</span><span class="op">(</span><span class="nam">ae_multi_output</span><span class="op">,</span> <span class="nam">monkeypatch</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t">    <span class="com"># Mock plt.show to do nothing</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">    <span class="nam">monkeypatch</span><span class="op">.</span><span class="nam">setattr</span><span class="op">(</span><span class="nam">plt</span><span class="op">,</span> <span class="str">"show"</span><span class="op">,</span> <span class="key">lambda</span><span class="op">:</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">    <span class="nam">cv_results</span> <span class="op">=</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">cv_results</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">    <span class="nam">cv_results</span> <span class="op">=</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">preprocessing_results</span><span class="op">[</span><span class="str">"None"</span><span class="op">]</span><span class="op">[</span><span class="str">"cv_results"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">    <span class="nam">X</span><span class="op">,</span> <span class="nam">y</span> <span class="op">=</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">X</span><span class="op">,</span> <span class="nam">ae_multi_output</span><span class="op">.</span><span class="nam">y</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">    <span class="com"># check that input index 1 works</span>&nbsp;</span><span class="r"></span></p>
@@ -492,10 +492,10 @@
         <p>
             <a class="nav" href="z_a44f0ac069e85531_test_model_registry_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_a44f0ac069e85531_test_printing_py.html">&#xbb; next</a>
+            <a class="nav" href="z_a44f0ac069e85531_test_preprocess_target_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-22 16:00 +0000
+            created at 2025-04-23 14:21 +0000
         </p>
     </div>
 </footer>
