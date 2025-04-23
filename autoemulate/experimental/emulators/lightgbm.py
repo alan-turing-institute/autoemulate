@@ -114,6 +114,4 @@ class LightGBM(Emulator, InputTypeMixin):
             "reg_lambda": [10 ** np.random.uniform(-3, 0)],
         }
 
-    @property
-    def model_name(self):
-        return self.__class__.__name__
+
