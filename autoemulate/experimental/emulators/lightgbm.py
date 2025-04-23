@@ -41,7 +41,7 @@ class LightGBM(Emulator, InputTypeMixin):
         verbose=-1,
     ):
         """Initializes a LightGBM object."""
-        _, _ = x, y # ignore unused arguments
+        _, _ = x, y  # ignore unused arguments
         self.boosting_type = boosting_type
         self.num_leaves = num_leaves
         self.max_depth = max_depth
