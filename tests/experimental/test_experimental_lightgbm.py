@@ -20,3 +20,8 @@ def test_tune_lightgbm(sample_data_y1d):
     scores, configs = tuner.run(LightGBM)
     assert len(scores) == 5
     assert len(configs) == 5
+
+
+def test_lightgm_class_name_returned():
+    lgbm = LightGBM()
+    assert lgbm.model_name() == "LightGBM"
