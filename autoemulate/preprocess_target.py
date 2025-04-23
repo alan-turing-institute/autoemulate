@@ -417,14 +417,14 @@ class VAE(nn.Module):
 
 def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=1000):
     """
-    Transforms uncertainty (standard deviation) from latent space to original space 
+    Transforms uncertainty (standard deviation) from latent space to original space
     using a sampling-based method.
 
-    This approach draws samples from the latent Gaussian distribution 
-    (defined by the predicted mean and standard deviation), reconstructs 
-    each sample in the original space, and computes the resulting mean and 
-    standard deviation. 
-    
+    This approach draws samples from the latent Gaussian distribution
+    (defined by the predicted mean and standard deviation), reconstructs
+    each sample in the original space, and computes the resulting mean and
+    standard deviation.
+
     Future improvements could include:
     - Analytical propagation for linear reductions (e.g., PCA)
     - Delta method for nonlinear reductions (e.g., VAE)
@@ -609,14 +609,14 @@ class InputOutputPipeline(TransformedTargetRegressor):
 
     def _inverse_transform_with_std(self, pred_mean, pred_std, n_samples=1000):
         """
-        Transforms uncertainty (standard deviation) from latent space to original space 
+        Transforms uncertainty (standard deviation) from latent space to original space
         using a sampling-based method.
 
-        This approach draws samples from the latent Gaussian distribution 
-        (defined by the predicted mean and standard deviation), reconstructs 
-        each sample in the original space, and computes the resulting mean and 
-        standard deviation. 
-        
+        This approach draws samples from the latent Gaussian distribution
+        (defined by the predicted mean and standard deviation), reconstructs
+        each sample in the original space, and computes the resulting mean and
+        standard deviation.
+
         Future improvements could include:
         - Analytical propagation for linear reductions (e.g., PCA)
         - Delta method for nonlinear reductions (e.g., VAE)

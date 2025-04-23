@@ -47,7 +47,11 @@ def _print_setup(cls):
             str(cls.scale),
             str(cls.scaler.__class__.__name__ if cls.scaler is not None else "None"),
             str(cls.scale_output),
-            str(cls.scaler_output.__class__.__name__ if cls.scaler_output is not None else "None"),
+            str(
+                cls.scaler_output.__class__.__name__
+                if cls.scaler_output is not None
+                else "None"
+            ),
             str(cls.param_search),
             str(cls.search_type),
             str(cls.param_search_iters),
@@ -60,7 +64,16 @@ def _print_setup(cls):
                 else "None"
             ),
             str(cls.reduce_dim_output),
-            str(", ".join(dict.fromkeys(method["name"] for method in cls.preprocessing_methods)) if cls.preprocessing_methods is not None and len(cls.preprocessing_methods) != 0 else "None"),
+            str(
+                ", ".join(
+                    dict.fromkeys(
+                        method["name"] for method in cls.preprocessing_methods
+                    )
+                )
+                if cls.preprocessing_methods is not None
+                and len(cls.preprocessing_methods) != 0
+                else "None"
+            ),
             str(
                 cls.cross_validator.__class__.__name__
                 if cls.cross_validator is not None
@@ -113,7 +126,7 @@ def _print_setup(cls):
     # if cls.scale == False, remove the scaler row
     if not cls.scale:
         settings = settings.drop(["Scaler (scaler)"])
-    
+
     if not cls.scale_output:
         settings = settings.drop(["Scaler output (scaler_output)"])
 
