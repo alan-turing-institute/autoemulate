@@ -2,6 +2,7 @@ from collections.abc import Iterable
 
 import gpytorch
 import numpy as np
+import pytest
 import torch
 from autoemulate.emulators import GaussianProcess
 from autoemulate.experimental.emulators.gaussian_process.exact import (
@@ -18,20 +19,17 @@ from autoemulate.experimental_design import LatinHypercube
 from autoemulate.simulations.projectile import simulate_projectile_multioutput
 from tqdm import tqdm
 
-# Import core classes from the source code.
+
+@pytest.fixture
+def emulator_config():
+    return {
+        "likelihood_cls": gpytorch.likelihoods.MultitaskGaussianLikelihood,
+        "mean_module_fn": constant_mean,
+        "covar_module_fn": rbf,
+    }
 
 
-def get_test_gp(x, y):
-    return GaussianProcessExact(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf,
-    )
-
-
-def test_learners():
+def test_learners(emulator_config):
     # Define a simple sine simulator.
     class Sin(Simulator):
         def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
@@ -65,7 +63,8 @@ def test_learners():
         Y_train = simulator.sample(X_train)
         yield stream.Random(
             simulator=simulator,
-            emulator=get_test_gp(X_train, Y_train),
+            emulator_cls=GaussianProcessExact,
+            emulator_config=emulator_config,
             X_train=X_train,
             Y_train=Y_train,
             p_query=0.25,
@@ -73,35 +72,40 @@ def test_learners():
         if not adaptive_only:
             yield stream.Distance(
                 simulator=simulator,
-                emulator=get_test_gp(X_train, Y_train),
+                emulator_cls=GaussianProcessExact,
+                emulator_config=emulator_config,
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=0.5,
             )
             yield stream.A_Optimal(
                 simulator=simulator,
-                emulator=get_test_gp(X_train, Y_train),
+                emulator_cls=GaussianProcessExact,
+                emulator_config=emulator_config,
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=1.0,
             )
             yield stream.D_Optimal(
                 simulator=simulator,
-                emulator=get_test_gp(X_train, Y_train),
+                emulator_cls=GaussianProcessExact,
+                emulator_config=emulator_config,
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=-4.2,
             )
             yield stream.E_Optimal(
                 simulator=simulator,
-                emulator=get_test_gp(X_train, Y_train),
+                emulator_cls=GaussianProcessExact,
+                emulator_config=emulator_config,
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=1.0,
             )
         yield stream.Adaptive_Distance(
             simulator=simulator,
-            emulator=get_test_gp(X_train, Y_train),
+            emulator_cls=GaussianProcessExact,
+            emulator_config=emulator_config,
             X_train=X_train,
             Y_train=Y_train,
             threshold=0.5,
@@ -116,7 +120,8 @@ def test_learners():
         )
         yield stream.Adaptive_A_Optimal(
             simulator=simulator,
-            emulator=get_test_gp(X_train, Y_train),
+            emulator_cls=GaussianProcessExact,
+            emulator_config=emulator_config,
             X_train=X_train,
             Y_train=Y_train,
             threshold=1e-1,
@@ -131,7 +136,8 @@ def test_learners():
         )
         yield stream.Adaptive_D_Optimal(
             simulator=simulator,
-            emulator=get_test_gp(X_train, Y_train),
+            emulator_cls=GaussianProcessExact,
+            emulator_config=emulator_config,
             X_train=X_train,
             Y_train=Y_train,
             threshold=-4.0,
@@ -146,7 +152,8 @@ def test_learners():
         )
         yield stream.Adaptive_E_Optimal(
             simulator=simulator,
-            emulator=get_test_gp(X_train, Y_train),
+            emulator_cls=GaussianProcessExact,
+            emulator_config=emulator_config,
             X_train=X_train,
             Y_train=Y_train,
             threshold=0.75 if isinstance(simulator, Sin) else 1000,

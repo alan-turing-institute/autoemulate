@@ -10,7 +10,7 @@ from torcheval.metrics import MeanSquaredError, R2Score
 from autoemulate.experimental.data.validation import Base
 from autoemulate.experimental.emulators.base import Emulator
 
-from ..types import GaussianLike, TensorLike
+from ..types import GaussianLike, ModelConfig, TensorLike
 
 
 @dataclass(kw_only=True)
@@ -179,7 +179,8 @@ class Learner(Base, ABC):
     """
 
     simulator: Simulator
-    emulator: Emulator
+    emulator_cls: type[Emulator]
+    emulator_config: ModelConfig
     X_train: TensorLike
     Y_train: TensorLike
     in_dim: int = field(init=False)
@@ -189,6 +190,9 @@ class Learner(Base, ABC):
         """
         Initialize the learner with training data and fit the emulator.
         """
+        self.emulator = self.emulator_cls(
+            self.X_train, self.Y_train, **self.emulator_config
+        )
         self.emulator.fit(self.X_train, self.Y_train)
         self.in_dim = self.X_train.shape[1]
         self.out_dim = self.Y_train.shape[1]
@@ -276,6 +280,9 @@ class Active(Learner):
             Y_true = self.simulator.sample(X)
             self.X_train = torch.cat([self.X_train, X])
             self.Y_train = torch.cat([self.Y_train, Y_true])
+            self.emulator = self.emulator_cls(
+                self.X_train, self.Y_train, **self.emulator_config
+            )
             self.emulator.fit(self.X_train, self.Y_train)
             self.mse.update(Y_pred, Y_true)
             self.r2.update(Y_pred, Y_true)
