@@ -5,6 +5,7 @@
 from functools import partial
 
 import numpy as np
+import os
 import pytest
 from sklearn.base import clone
 from sklearn.utils.estimator_checks import _yield_all_checks
@@ -48,4 +49,10 @@ from autoemulate.emulators import SupportVectorMachines
     "ignore::gpytorch.models.exact_gp.GPInputWarning", "ignore::UserWarning"
 )
 def test_check_estimator(estimator, check):
-    check(estimator)
+    # Disable weights_only for this test
+    os.environ["TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD"] = "1"
+    try:
+        check(estimator)
+    finally:
+        os.environ.pop("TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD", None)
+    #check(estimator)
