@@ -113,5 +113,3 @@ class LightGBM(Emulator, InputTypeMixin):
             "reg_alpha": [10 ** np.random.uniform(-3, 0)],
             "reg_lambda": [10 ** np.random.uniform(-3, 0)],
         }
-
-
