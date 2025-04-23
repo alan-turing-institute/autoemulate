@@ -354,14 +354,14 @@ def test_compare_with_preprocessing(ae, Xy):
         print_setup=False,
     )
 
-    best_combo = ae.compare()
+    best_model = ae.compare()
 
     # Basic type and structure checks
-    assert isinstance(best_combo, dict)
-    assert set(best_combo.keys()) == {"preprocessing", "model", "transformer"}
+    assert isinstance(ae.best_combination, dict)
+    assert set(ae.best_combination.keys()) == {"preprocessing", "model", "transformer"}
 
     # Verify preprocessing method was applied
-    assert best_combo["preprocessing"] in ["None", "PCA"]
+    assert ae.best_combination["preprocessing"] in ["None", "PCA"]
     assert hasattr(ae, "preprocessing_results")
 
     # Check both preprocessing methods were processed
@@ -373,6 +373,6 @@ def test_compare_with_preprocessing(ae, Xy):
     assert len(ae.preprocessing_results["PCA"]["models"]) == 1
 
     # Additional check for PCA transformer
-    if best_combo["preprocessing"] == "PCA":
+    if ae.best_combination["preprocessing"] == "PCA":
         assert ae.preprocessing_results["PCA"]["transformer"] is not None
         assert hasattr(ae.preprocessing_results["PCA"]["transformer"], "transform")

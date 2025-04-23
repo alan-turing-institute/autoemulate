@@ -650,7 +650,7 @@ class InputOutputPipeline(TransformedTargetRegressor):
             samples.append(self.transformer_.inverse_transform(samples_latent))
         samples = np.array(samples)
 
-        transformed_mean = np.mean(samples, axis=1)
-        transformed_std = np.std(samples, axis=1)
+        transformed_mean = np.mean(samples, axis=1).squeeze()
+        transformed_std = np.std(samples, axis=1).squeeze()
 
         return transformed_mean, transformed_std
