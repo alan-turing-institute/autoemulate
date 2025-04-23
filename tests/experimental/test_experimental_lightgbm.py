@@ -1,3 +1,4 @@
+import pytest
 from autoemulate.experimental.emulators.lightgbm import (
     LightGBM,
 )
@@ -5,9 +6,13 @@ from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
 
 
-def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
+@pytest.fixture
+def lgbm():
+    return LightGBM()
+
+
+def test_predict_lightgbm(lgbm, sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
-    lgbm = LightGBM()
     lgbm.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = lgbm.predict(x2)
@@ -22,6 +27,5 @@ def test_tune_lightgbm(sample_data_y1d):
     assert len(configs) == 5
 
 
-def test_lightgm_class_name_returned():
-    lgbm = LightGBM()
+def test_lightgm_class_name_returned(lgbm):
     assert lgbm.model_name() == "LightGBM"
