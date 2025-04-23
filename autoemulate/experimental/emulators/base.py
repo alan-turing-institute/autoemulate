@@ -5,7 +5,11 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
+from autoemulate.experimental.types import (
+    InputLike,
+    OutputLike,
+    TuneConfig,
+)
 
 
 class Emulator(ABC):
@@ -15,8 +19,10 @@ class Emulator(ABC):
     - `AutoEmulate`
     """
 
-    def __call__(self, *args, **kwds):
-        return self.predict(*args, **kwds)
+    @abstractmethod
+    def __init__(
+        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+    ): ...
 
     @abstractmethod
     def fit(self, x: InputLike, y: InputLike | None): ...
