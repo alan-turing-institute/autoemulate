@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, KFold
@@ -19,7 +19,7 @@ class AutoEmulate(InputTypeMixin):
         self,
         x: InputLike,
         y: InputLike,
-        models: Optional[list[type[Emulator]]] = None,
+        models: list[type[Emulator]] | None = None,
     ):
         if models is None:
             models = [GaussianProcessExact]
