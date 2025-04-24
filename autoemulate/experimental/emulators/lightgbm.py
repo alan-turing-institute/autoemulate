@@ -14,10 +14,11 @@ class LightGBM(Emulator, InputTypeMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
+    See https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html
+    for more details.
     """
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
-        # TODO: check these and update docstring
         self,
         x: InputLike | None = None,
         y: InputLike | None = None,
