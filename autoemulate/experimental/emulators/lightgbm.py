@@ -66,10 +66,10 @@ class LightGBM(Emulator, InputTypeMixin):
 
     def fit(self, x: InputLike, y: InputLike | None):
         """
-            Fits the emulator to the data.
-            The model expects the input data to be:
-                x (features): 2D array
-                y (target): 1D array
+        Fits the emulator to the data.
+        The model expects the input data to be:
+            x (features): 2D array
+            y (target): 1D array
         """
 
         x, y = self._convert_to_numpy(x, y)
