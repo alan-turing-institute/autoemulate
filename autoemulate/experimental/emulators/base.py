@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from torch import nn, optim
+from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
@@ -225,8 +225,16 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
         self._fit(x, y)
 
     def predict(self, x: InputLike) -> OutputLike:
-        msg = "Subclasses must implement the `predict` method."
-        raise NotImplementedError(msg)
+        """Predicts the output of the emulator for a given input."""
+        check_is_fitted(self)
+        x = check_array(x)
+        y_pred = self.model.predict(x)
+
+        if self.normalise_y:
+            y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
+
+        # Ensure the output is a 2D tensor array with shape (n_samples, 1)
+        return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
