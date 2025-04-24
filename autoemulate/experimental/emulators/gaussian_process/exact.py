@@ -39,7 +39,7 @@ from autoemulate.utils import set_random_seed
 
 
 class GaussianProcessExact(
-    Emulator, InputTypeMixin, gpytorch.models.ExactGP, Preprocessor
+    Emulator, gpytorch.models.ExactGP, Preprocessor
 ):
     """
     Gaussian Process Exact Emulator
