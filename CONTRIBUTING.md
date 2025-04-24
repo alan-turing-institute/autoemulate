@@ -106,7 +106,7 @@ These Contributing Guidelines have been adapted from the [Contributing Guideline
 
 ## Get in touch
 
-**Email**: For any inquiries, please reach out to lead Developer Martin Stoffel, <mstoffel@turing.ac.uk>.
+Please visit our [GitHub repository](https://github.com/alan-turing-institute/autoemulate) and open an issue or discussion.
 
 <!-- The easiest way to get involved with the active development of AutoEmulate is to join our regular community calls. The community calls are currently on a hiatus but if you are interested in participating in the forthcoming community calls, which will start in 2024, you should join our Slack workspace, where conversation about when to hold the community calls in the future will take place. -->
 

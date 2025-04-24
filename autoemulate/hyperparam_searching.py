@@ -39,7 +39,7 @@ def _optimize_params(
         Type of search to perform. Only "random" is supported.
     niter : int, default=20
         Number of parameter settings that are sampled. Trades off runtime vs quality of the solution.
-        param_space : dict, default=None
+    param_space : dict, default=None
         Dictionary with parameters names (string) as keys and lists of
         parameter settings to try as values, or a list of such dictionaries,
         in which case the grids spanned by each dictionary in the list are

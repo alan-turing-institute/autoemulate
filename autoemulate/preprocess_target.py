@@ -179,14 +179,6 @@ class TargetVAE(BaseEstimator, TransformerMixin):
             latent_dim=self.latent_dim,
         ).to(self.device)
 
-    # def _create_data_loader(self, y):
-    #    """Create a PyTorch DataLoader for the target values."""
-    #    y_tensor = torch.FloatTensor(y).to(self.device)
-    #    dataset = torch.utils.data.TensorDataset(y_tensor)
-    #    return torch.utils.data.DataLoader(
-    #        dataset, batch_size=self.batch_size, shuffle=True
-    #    )
-
     def _check_is_fitted(self):
         """Check if the model is fitted."""
         if not self.is_fitted_:
@@ -425,7 +417,17 @@ class VAE(nn.Module):
 
 def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=1000):
     """
-    Sample from a normal distribution for each simulation and reduced dimension.
+    Transforms uncertainty (standard deviation) from latent space to original space
+    using a sampling-based method.
+
+    This approach draws samples from the latent Gaussian distribution
+    (defined by the predicted mean and standard deviation), reconstructs
+    each sample in the original space, and computes the resulting mean and
+    standard deviation.
+
+    Future improvements could include:
+    - Analytical propagation for linear reductions (e.g., PCA)
+    - Delta method for nonlinear reductions (e.g., VAE)
 
     Parameters:
     -----------
@@ -434,7 +436,7 @@ def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=100
     y_std : np.ndarray
         Standard deviation values with shape (n_simulations, reduced_dim)
     n_samples : int
-        Number of samples to generate for each simulation
+        Number of samples to draw from the latent distribution for each simulation.
 
     Returns:
     --------
@@ -444,16 +446,6 @@ def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=100
         Standard deviation values with shape (n_simulations, original_dim)
     """
 
-    # if transformer is PCA (so linear), you can reconstruct the mean and std,
-    # otherwise, we sample from the distribution
-    """
-    if model.transformer is not None and isinstance(transformer.base_model, TargetPCA):
-        x_reconstructed_mean = model.transformer_.inverse_transform(x_latent_pred)
-        x_reconstructed_std = transformer.base_model.inverse_transform_std(x_latent_std)  # TODO: fix such this is a method of the transformer
-
-    else:
-    """
-    # TODO: implment also "delta method", in addition to "sampling method" for variance reconstruction
     if len(x_latent_pred.shape) == 1:
         x_latent_pred = x_latent_pred.reshape(-1, 1)
         x_latent_std = x_latent_std.reshape(-1, 1)
@@ -511,10 +503,6 @@ class NonTrainableTransformer:
 
     def inverse_transform_std(self, X):
         return self.NT_transformer.inverse_transform_std(X)
-
-    # def __getattr__(self, name):
-    #    """Delegate attribute access to the base model if not found in Reducer."""
-    #    return getattr(self.base_model, name)
 
 
 class NoChangeTransformer(BaseEstimator, TransformerMixin):
@@ -619,9 +607,20 @@ class InputOutputPipeline(TransformedTargetRegressor):
             return self.transformer_.inverse_transform(pred_mean).squeeze(), None
         return self.transformer_.inverse_transform(pred_mean).squeeze()
 
-    def _inverse_transform_with_std(self, pred_mean, pred_std):
+    def _inverse_transform_with_std(self, pred_mean, pred_std, n_samples=1000):
         """
-        Transform encoded standard deviation data back to the original space using Monte Carlo sampling.
+        Transforms uncertainty (standard deviation) from latent space to original space
+        using a sampling-based method.
+
+        This approach draws samples from the latent Gaussian distribution
+        (defined by the predicted mean and standard deviation), reconstructs
+        each sample in the original space, and computes the resulting mean and
+        standard deviation.
+
+        Future improvements could include:
+        - Analytical propagation for linear reductions (e.g., PCA)
+        - Delta method for nonlinear reductions (e.g., VAE)
+
 
         Parameters
         ----------
@@ -638,9 +637,6 @@ class InputOutputPipeline(TransformedTargetRegressor):
         pred_mean = self._ensure_2d(pred_mean)
         pred_std = self._ensure_2d(pred_std)
 
-        if pred_mean.shape != pred_std.shape:
-            raise ValueError("pred_mean and pred_std must have the same shape")
-
         n_simulations, n_features = pred_mean.shape
         samples = []
 
@@ -654,7 +650,6 @@ class InputOutputPipeline(TransformedTargetRegressor):
             samples.append(self.transformer_.inverse_transform(samples_latent))
         samples = np.array(samples)
 
-        # Calculate mean and std across samples for each prediction
         transformed_mean = np.mean(samples, axis=1).squeeze()
         transformed_std = np.std(samples, axis=1).squeeze()
 

@@ -15,7 +15,6 @@ from sklearn.pipeline import Pipeline
 
 from autoemulate.preprocess_target import InputOutputPipeline
 
-# from sklearn.compose import TransformedTargetRegressor
 
 # manage warnings -------------------------------------------------------------
 
@@ -140,14 +139,14 @@ def get_short_model_name(model):
 def _get_full_model_name(model_name, model_names_dict):
     """"""
     """Returns the full model name from the full name or short name.
-    
+
     Parameters
     ----------
     model_name : str
         The full name or short name of the model.
     model_names_dict : dict
         Dictionary of model names and their short names.
-        
+
     Returns
     -------
     str
@@ -266,7 +265,7 @@ def _adjust_param_space(model, param_space):
     elif isinstance(model, RegressorMixin):
         return param_space
 
-    return _add_prefix_to_param_space(param_space, prefix)
+    return _add_prefix_to_param_space(param_space, prefix)  # type: ignore
 
 
 def _add_prefix_to_param_space(param_space, prefix):
@@ -464,7 +463,7 @@ def extract_pytorch_model(model):
         raise ValueError("Model must be fitted before extraction")
 
     # get the core model (skorch wrapper)
-    core_model = model.model_
+    core_model = model.model_  # type: ignore
 
     # check if it's a PyTorch model
     if not hasattr(core_model, "module_"):

@@ -60,18 +60,14 @@
 
 ## Community and Learning Resources
 
-1. Are there any community projects or collaborations using `AutoEmulate` I can join or learn from?
-   <!-- Information on community-led projects, study groups, or collaborative research initiatives involving AutoEmulate. -->
-   - Reach out to Martin ([email](mailto:mstoffel@turing.ac.uk)) or Sophie ([email](mailto:sarana@turing.ac.uk)) for more information.
-
-2. Where can I find tutorials or case studies on using `AutoEmulate`?
+1. Where can I find tutorials or case studies on using `AutoEmulate`?
    <!-- Directions to comprehensive learning materials, such as video tutorials (if we want to record that), written guides, or published research papers using AutoEmulate. -->
    - See the [tutorial](../../tutorials/01_start.ipynb) for a comprehensive guide on using the package. Case studies are coming soon.
 
-3. How can I stay updated on new releases or updates to AutoEmulate?
+2. How can I stay updated on new releases or updates to AutoEmulate?
    <!-- Guidance on subscribing to newsletters when/if we will have that, community calls if we start that, following the project on social media if we want to create those platforms, or joining community forums/Slack once we have that ready... -->
    - Watch the [AutoEmulate repository](https://github.com/alan-turing-institute/autoemulate).
 
-4. What support options are available if I need help with AutoEmulate?
+3. What support options are available if I need help with AutoEmulate?
    <!-- Overview of support resources, including documentation, community forums/Slack when we have that ready... -->
-   - Please open an issue on GitHub or contact the maintainer ([email](mailto:mstoffel@turing.ac.uk)) directly.
+   - Please open an issue or start a discussion on [GitHub](https://github.com/alan-turing-institute/autoemulate).

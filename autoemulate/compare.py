@@ -389,7 +389,7 @@ class AutoEmulate:
             "transformer": self.best_transformer.base_transformer_name,
         }
 
-        return self.best_combination
+        return self.best_model
 
     def get_model(self, name=None, rank=None, preprocessing=None, metric="r2"):
         """Get a fitted model by name or rank, optionally from specific preprocessing.
