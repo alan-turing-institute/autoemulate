@@ -2,6 +2,7 @@
 # new emulator models should pass these tests to be fully compatible with scikit-learn
 # see https://scikit-learn.org/stable/developers/develop.html
 # and https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/utils/estimator_checks.py
+import os
 from functools import partial
 
 import numpy as np
@@ -48,4 +49,10 @@ from autoemulate.emulators import SupportVectorMachines
     "ignore::gpytorch.models.exact_gp.GPInputWarning", "ignore::UserWarning"
 )
 def test_check_estimator(estimator, check):
-    check(estimator)
+    # Disable weights_only for this test
+    os.environ["TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD"] = "1"
+    try:
+        check(estimator)
+    finally:
+        os.environ.pop("TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD", None)
+    # check(estimator)

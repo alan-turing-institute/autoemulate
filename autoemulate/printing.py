@@ -46,13 +46,32 @@ def _print_setup(cls):
             str(cls.test_set_size),
             str(cls.scale),
             str(cls.scaler.__class__.__name__ if cls.scaler is not None else "None"),
+            str(cls.scale_output),
+            str(
+                cls.scaler_output.__class__.__name__
+                if cls.scaler_output is not None
+                else "None"
+            ),
             str(cls.param_search),
             str(cls.search_type),
             str(cls.param_search_iters),
             str(cls.reduce_dim),
             str(
-                cls.dim_reducer.__class__.__name__
+                cls.dim_reducer
+                if isinstance(cls.dim_reducer, str)
+                else cls.dim_reducer.__class__.__name__
                 if cls.dim_reducer is not None
+                else "None"
+            ),
+            str(cls.reduce_dim_output),
+            str(
+                ", ".join(
+                    dict.fromkeys(
+                        method["name"] for method in cls.preprocessing_methods
+                    )
+                )
+                if cls.preprocessing_methods is not None
+                and len(cls.preprocessing_methods) != 0
                 else "None"
             ),
             str(
@@ -68,11 +87,15 @@ def _print_setup(cls):
             "Proportion of data for testing (test_set_size)",
             "Scale input data (scale)",
             "Scaler (scaler)",
+            "Scale output data (scale_output)",
+            "Scaler output (scaler_output)",
             "Do hyperparameter search (param_search)",
             "Type of hyperparameter search (search_type)",
             "Number of sampled parameter settings (param_search_iters)",
-            "Reduce dimensionality (reduce_dim)",
-            "Dimensionality reduction method (dim_reducer)",
+            "Reduce input dimensionality (reduce_dim)",
+            "Dimensionality input reduction method (dim_reducer)",
+            "Reduce output dimensionality (reduce_dim_output)",
+            "Dimensionality output reduction methods (dim_reducer_output)",
             "Cross validator (cross_validator)",
             "Parallel jobs (n_jobs)",
         ],
@@ -90,11 +113,22 @@ def _print_setup(cls):
 
     # if cls.reduce_dim == False, remove the dim_reducer row
     if not cls.reduce_dim:
-        settings = settings.drop(["Dimensionality reduction method (dim_reducer)"])
+        settings = settings.drop(
+            ["Dimensionality input reduction method (dim_reducer)"]
+        )
+
+    # if cls.reduce_dim_output == False, remove the dim_reducer row
+    if not cls.reduce_dim_output:
+        settings = settings.drop(
+            ["Dimensionality output reduction methods (dim_reducer_output)"]
+        )
 
     # if cls.scale == False, remove the scaler row
     if not cls.scale:
         settings = settings.drop(["Scaler (scaler)"])
+
+    if not cls.scale_output:
+        settings = settings.drop(["Scaler output (scaler_output)"])
 
     settings_str = settings.to_string(index=True, header=False)
     width = len(settings_str.split("\n")[0])

@@ -107,7 +107,6 @@ class InputTypeMixin:
         result = self._convert_to_tensors(x, y)
         if isinstance(result, tuple):
             x, y = result
-            y = y.ravel()  # Ensure y is 1-dimensional
             return x.numpy(), y.numpy()
         x = result
         return x.numpy(), None

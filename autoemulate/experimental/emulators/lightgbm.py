@@ -14,31 +14,36 @@ class LightGBM(Emulator, InputTypeMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
+    See https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html
+    for more details.
     """
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        boosting_type="gbdt",
-        num_leaves=31,
-        max_depth=-1,
-        learning_rate=0.1,
-        n_estimators=100,
-        subsample_for_bin=200000,
-        objective=None,
-        class_weight=None,
-        min_split_gain=0.0,
-        min_child_weight=0.001,
-        min_child_samples=20,
-        subsample=1.0,
-        colsample_bytree=1.0,
-        reg_alpha=0.0,
-        reg_lambda=0.0,
-        random_state=None,
-        n_jobs=1,
-        importance_type="split",
-        verbose=-1,
+        x: InputLike | None = None,
+        y: InputLike | None = None,
+        boosting_type: str = "gbdt",
+        num_leaves: int = 31,
+        max_depth: int = -1,
+        learning_rate: float = 0.1,
+        n_estimators: int = 100,
+        subsample_for_bin: int = 200000,
+        objective: str | None = None,
+        class_weight: dict | str | None = None,
+        min_split_gain: float = 0.0,
+        min_child_weight: float = 0.001,
+        min_child_samples: int = 20,
+        subsample: float = 1.0,
+        colsample_bytree: float = 1.0,
+        reg_alpha: float = 0.0,
+        reg_lambda: float = 0.0,
+        random_state: int | None = None,
+        n_jobs: int | None = 1,
+        importance_type: str = "split",
+        verbose: int = -1,
     ):
         """Initializes a LightGBM object."""
+        _, _ = x, y  # ignore unused arguments
         self.boosting_type = boosting_type
         self.num_leaves = num_leaves
         self.max_depth = max_depth
@@ -60,9 +65,23 @@ class LightGBM(Emulator, InputTypeMixin):
         self.verbose = verbose
 
     def fit(self, x: InputLike, y: InputLike | None):
-        """Fits the emulator to the data."""
+        """
+        Fits the emulator to the data.
+        The model expects the input data to be:
+            x (features): 2D array
+            y (target): 1D array
+        """
 
         x, y = self._convert_to_numpy(x, y)
+
+        if y is None:
+            msg = "y must be provided."
+            raise ValueError(msg)
+        if y.ndim > 2:
+            msg = f"y must be 1D or 2D array. Found {y.ndim}D array."
+            raise ValueError(msg)
+        if y.ndim == 2:  # _convert_to_numpy may return 2D y
+            y = y.ravel()  # Ensure y is 1-dimensional
 
         self.n_features_in_ = x.shape[1]
 

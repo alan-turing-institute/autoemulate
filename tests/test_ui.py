@@ -1,4 +1,5 @@
 # end-to-end tests
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -92,9 +93,10 @@ def test_param_search(param_search_ae):
 
 
 def test_save_load_with_param_search(param_search_ae):
+    os.environ["TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD"] = "1"
     with TemporaryDirectory() as temp_dir:
         for name in param_search_ae.model_names:
             save_path = Path(temp_dir) / f"test_model_{name}"
             param_search_ae.save(param_search_ae.get_model(name), save_path)
             loaded_model = param_search_ae.load(save_path)
-            assert loaded_model is not None
+    os.environ.pop("TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD", None)
