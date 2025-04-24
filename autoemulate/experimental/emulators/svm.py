@@ -58,13 +58,6 @@ class SupportVectorMachines(SklearnBackend):
             max_iter=self.max_iter,
         )
 
-    def fit(self, x: InputLike, y: InputLike | None):
-        """Fits the emulator to the data."""
-
-        x, y = self.check_and_convert(x, y)
-
-        self._fit(x, y)
-
     def predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         check_is_fitted(self)
