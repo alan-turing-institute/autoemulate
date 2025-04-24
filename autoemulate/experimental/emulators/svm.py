@@ -1,9 +1,7 @@
 import numpy as np
 from sklearn.svm import SVR
 
-from autoemulate.experimental.emulators.base import (
-    SklearnBackend,
-)
+from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.types import InputLike
 
 
