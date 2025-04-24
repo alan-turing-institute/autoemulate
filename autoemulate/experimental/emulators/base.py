@@ -203,9 +203,7 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
         if y.ndim == 2:  # _convert_to_numpy may return 2D y
             y = y.ravel()  # Ensure y is 1-dimensional
 
-        # required for sklearn compatibility
         self.n_features_in_ = x.shape[1]
-        self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
 
         x, y = check_X_y(
             x,
@@ -228,11 +226,6 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     def _fit(self, x: InputLike, y: InputLike | None):
         self.model.fit(x, y)
         self.is_fitted_ = True
-
-    def fit(self, x: InputLike, y: InputLike | None):
-        """Fits the emulator to the data."""
-        x, y = self.check_and_convert(x, y)
-        self._fit(x, y)
 
     def predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""

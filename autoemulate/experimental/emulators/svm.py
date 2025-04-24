@@ -56,6 +56,12 @@ class SupportVectorMachines(SklearnBackend):
             max_iter=self.max_iter,
         )
 
+    def fit(self, x: InputLike, y: InputLike | None):
+        """Fits the emulator to the data."""
+        self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
+        x, y = self.check_and_convert(x, y)
+        self._fit(x, y)
+
     @staticmethod
     def get_tune_config():
         return {
