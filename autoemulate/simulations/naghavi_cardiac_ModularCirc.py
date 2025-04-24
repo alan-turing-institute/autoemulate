@@ -1,13 +1,19 @@
 import json
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel
+from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
+from autoemulate.experimental_design import LatinHypercube
 from autoemulate.simulations import circ_utils
-from autoemulate.simulations.base import Simulator  # Import our base Simulator class
+from autoemulate.simulations.base import Simulator
 
 
 def extract_parameter_ranges(json_file_path):
@@ -37,7 +43,7 @@ class NaghaviSimulator(Simulator):
     ):
         """
         Initialize the Naghavi simulator.
-        
+
         Args:
             parameters_range: Dictionary mapping parameter names to (min, max) tuples
             n_cycles: Number of simulation cycles
@@ -46,7 +52,7 @@ class NaghaviSimulator(Simulator):
         """
         # Initialize the base class
         super().__init__(parameters_range, output_variables)
-        
+
         # Naghavi-specific attributes
         self.n_cycles = n_cycles
         self.dt = dt
@@ -61,27 +67,23 @@ class NaghaviSimulator(Simulator):
     def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
         """
         Generate random samples within the parameter bounds using Latin Hypercube Sampling.
-        
+
         Args:
             n_samples: Number of samples to generate
-            
+
         Returns:
             List of parameter dictionaries
         """
+        # Use LatinHypercube from autoemulate.experimental_design
+        lhd = LatinHypercube(list(self._param_bounds.values()))
+        sample_array = lhd.sample(n_samples)
+
+        # Convert the sample array to a list of parameter dictionaries
         samples = []
-        param_count = len(self._param_names)
-
-        # Generate Latin Hypercube samples
-        lhs_points = np.zeros((n_samples, param_count))
-        for i in range(param_count):
-            lhs_points[:, i] = np.random.permutation(np.linspace(0, 1, n_samples))
-
-        # Scale to parameter bounds
         for i in range(n_samples):
             sample = {}
             for j, name in enumerate(self._param_names):
-                min_val, max_val = self._param_bounds[name]
-                sample[name] = min_val + lhs_points[i, j] * (max_val - min_val)
+                sample[name] = sample_array[i, j]
             samples.append(sample)
 
         return samples
@@ -89,10 +91,10 @@ class NaghaviSimulator(Simulator):
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """
         Run a single Naghavi model simulation and return output statistics.
-        
+
         Args:
             params: Dictionary of parameter values
-            
+
         Returns:
             Array of output statistics or None if simulation fails
         """
