@@ -192,6 +192,10 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
         self.model.fit(x, y)
         self.is_fitted_ = True
 
+    def fit(self, x: InputLike, y: InputLike | None):
+        msg = "Subclasses must implement the `fit` method."
+        raise NotImplementedError(msg)
+
     def predict(self, x: InputLike) -> OutputLike:
         msg = "Subclasses must implement the `predict` method."
         raise NotImplementedError(msg)
