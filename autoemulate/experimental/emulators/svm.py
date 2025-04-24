@@ -1,13 +1,10 @@
 import numpy as np
 from sklearn.svm import SVR
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from torch import Tensor
 
 from autoemulate.experimental.emulators.base import (
     SklearnBackend,
 )
-from autoemulate.experimental.types import InputLike, OutputLike
-from autoemulate.utils import _denormalise_y, _normalise_y
+from autoemulate.experimental.types import InputLike
 
 
 class SupportVectorMachines(SklearnBackend):
@@ -18,6 +15,8 @@ class SupportVectorMachines(SklearnBackend):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
+        x: InputLike,
+        y: InputLike | None,
         kernel="rbf",
         degree=3,
         gamma="scale",
@@ -32,6 +31,7 @@ class SupportVectorMachines(SklearnBackend):
         normalise_y=True,
     ):
         """Initializes a SupportVectorMachines object."""
+        _, _ = x, y  # ignore unused arguments
         self.kernel = kernel
         self.degree = degree
         self.gamma = gamma
@@ -57,18 +57,6 @@ class SupportVectorMachines(SklearnBackend):
             verbose=self.verbose,
             max_iter=self.max_iter,
         )
-
-    def predict(self, x: InputLike) -> OutputLike:
-        """Predicts the output of the emulator for a given input."""
-        check_is_fitted(self)
-        x = check_array(x)
-        y_pred = self.model.predict(x)
-
-        if self.normalise_y:
-            y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
-
-        # Ensure the output is a 2D tensor array with shape (n_samples, 1)
-        return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
 
     @staticmethod
     def get_tune_config():
