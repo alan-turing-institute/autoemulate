@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
+from sklearn.base import BaseEstimator, RegressorMixin
 from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
@@ -170,7 +171,9 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         raise NotImplementedError(msg)
 
 
-class SklearnBackend(Emulator):
+# class SklearnEstimator(BaseEstimator, RegressorMixin): ...
+
+class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     """
     SklearnBackend is a sklearn model and implements the base class.
     This provides default implementations to further subclasses.
@@ -178,14 +181,16 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
+    # model: SklearnEstimator
+
     def __init__(
         self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
     ):
         pass
 
-    def fit(self, x: InputLike, y: InputLike | None):
-        msg = "Subclasses must implement the `fit` method."
-        raise NotImplementedError(msg)
+    def _fit(self, x: InputLike, y: InputLike | None):
+        self.model.fit(x, y)
+        self.is_fitted_ = True
 
     def predict(self, x: InputLike) -> OutputLike:
         msg = "Subclasses must implement the `predict` method."
@@ -194,3 +199,4 @@ class SklearnBackend(Emulator):
     @staticmethod
     def get_tune_config() -> TuneConfig:
         return {}
+

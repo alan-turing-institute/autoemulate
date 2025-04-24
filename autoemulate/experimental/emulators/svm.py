@@ -45,6 +45,19 @@ class SupportVectorMachines(SklearnBackend, InputTypeMixin):
         self.verbose = verbose
         self.max_iter = max_iter
         self.normalise_y = normalise_y
+        self.model = SVR(
+            kernel=self.kernel,
+            degree=self.degree,
+            gamma=self.gamma,
+            coef0=self.coef0,
+            tol=self.tol,
+            C=self.C,
+            epsilon=self.epsilon,
+            shrinking=self.shrinking,
+            cache_size=self.cache_size,
+            verbose=self.verbose,
+            max_iter=self.max_iter,
+        )
 
     def fit(self, x: InputLike, y: InputLike | None):
         """Fits the emulator to the data."""
@@ -71,27 +84,13 @@ class SupportVectorMachines(SklearnBackend, InputTypeMixin):
             msg = "Input 'y' must be a non-None NumPy array."
             raise ValueError(msg)
 
-        self.model_ = SVR(
-            kernel=self.kernel,
-            degree=self.degree,
-            gamma=self.gamma,
-            coef0=self.coef0,
-            tol=self.tol,
-            C=self.C,
-            epsilon=self.epsilon,
-            shrinking=self.shrinking,
-            cache_size=self.cache_size,
-            verbose=self.verbose,
-            max_iter=self.max_iter,
-        )
-        self.model_.fit(x, y)
-        self.is_fitted_ = True
+        self._fit(x, y)
 
     def predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         check_is_fitted(self)
         x = check_array(x)
-        y_pred = self.model_.predict(x)
+        y_pred = self.model.predict(x)
 
         if self.normalise_y:
             y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
