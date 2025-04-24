@@ -1,4 +1,4 @@
-from autoemulate.experimental.emulators.svm import (
+from autoemulate.experimental.emulators.randomforest import (
     RandomForest,
 )
 from autoemulate.experimental.tuner import Tuner
