@@ -4,14 +4,13 @@ import gpytorch
 import numpy as np
 import pytest
 import torch
-from autoemulate.emulators import GaussianProcess
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
     constant_mean,
     rbf,
 )
 from autoemulate.experimental.learners import (
-    Emulator,
     Simulator,
     stream,
 )
@@ -48,13 +47,15 @@ def test_learners(emulator_config):
     # Define an emulator using a dummy Gaussian Process.
     class GP(Emulator):
         def __init__(self):
-            self.model = GaussianProcess()
+            self.model_cls = GaussianProcessExact
+            self.model_config = emulator_config
 
         def fit_forward(self, X: torch.Tensor, Y: torch.Tensor):
+            self.model = self.model_cls(X, Y, **self.model_config)
             self.model.fit(X, Y)
 
         def sample_forward(self, X: torch.Tensor):
-            return torch.from_numpy(np.array(self.model.predict(X, return_std=True)))
+            return torch.from_numpy(np.array(self.model.predict(X).mean))
 
     def learners(
         *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
