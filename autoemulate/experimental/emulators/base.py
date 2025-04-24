@@ -193,6 +193,16 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     def check_and_convert(self, x: InputLike, y: InputLike | None):
         x, y = self._convert_to_numpy(x, y)
 
+        # TODO: check if y should always be 1D for sklearn models
+        if y is None:
+            msg = "y must be provided."
+            raise ValueError(msg)
+        if y.ndim > 2:
+            msg = f"y must be 1D or 2D array. Found {y.ndim}D array."
+            raise ValueError(msg)
+        if y.ndim == 2:  # _convert_to_numpy may return 2D y
+            y = y.ravel()  # Ensure y is 1-dimensional
+
         # required for sklearn compatibility
         self.n_features_in_ = x.shape[1]
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
