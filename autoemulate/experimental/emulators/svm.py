@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.svm import SVR
+from sklearn.utils.validation import check_X_y
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import SklearnBackend
@@ -62,6 +63,12 @@ class SupportVectorMachines(SklearnBackend):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
         x, y = self.check_and_convert(x, y)
+        x, y = check_X_y(
+            x,
+            y,
+            y_numeric=True,
+            ensure_min_samples=2,
+        )
         if self.normalise_y:
             y, self.y_mean_, self.y_std_ = _normalise_y(y)
         elif y is not None and isinstance(y, np.ndarray):

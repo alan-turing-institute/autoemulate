@@ -204,23 +204,16 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
 
         self.n_features_in_ = x.shape[1]
 
-        x, y = check_X_y(
-            x,
-            y,
-            y_numeric=True,
-            ensure_min_samples=2,
-        )
-
         return x, y
 
     def _fit(self, x: InputLike, y: InputLike | None):
         self.model.fit(x, y)
         self.is_fitted_ = True
 
-    def fit(self, x: InputLike, y: InputLike | None):
-        """Fits the emulator to the data."""
-        x, y = self.check_and_convert(x, y)
-        self._fit(x, y)
+    # def fit(self, x: InputLike, y: InputLike | None):
+    #     """Fits the emulator to the data."""
+    #     x, y = self.check_and_convert(x, y)
+    #     self._fit(x, y)
 
     def _predict(self, x: InputLike) -> OutputLike:
         check_is_fitted(self)

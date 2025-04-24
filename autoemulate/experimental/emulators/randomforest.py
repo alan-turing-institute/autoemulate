@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.types import InputLike
@@ -47,6 +48,17 @@ class RandomForest(SklearnBackend):
             bootstrap=self.bootstrap,
             random_state=self.random_state,
         )
+
+    def fit(self, x: InputLike, y: InputLike | None):
+        """Fits the emulator to the data."""
+        x, y = self.check_and_convert(x, y)
+        x, y = check_X_y(
+            x,
+            y,
+            multi_output=True,
+            y_numeric=True
+        )
+        self._fit(x, y)
 
     @staticmethod
     def get_tune_config():
