@@ -9,70 +9,23 @@
 <!-- SPHINX-START -->
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines, Gaussian Processes and Conditional Neural Processes to find the best emulator for a simulation. 
 
-The project is in early development. 
-
-## Installation
-
-`AutoEmulate` requires Python `>=3.10` and `<3.13`.
-
-There's lots of development at the moment, so we recommend installing the most current version from GitHub:
-
-```bash
-pip install git+https://github.com/alan-turing-institute/autoemulate.git
-```
-
-There's also a release on PyPI:
-
-```bash
-pip install autoemulate
-```
-
-For contributors using [Poetry](https://python-poetry.org/):
-
-```bash
-git clone https://github.com/alan-turing-institute/autoemulate.git
-cd autoemulate
-poetry install
-```
-
-## Quick start
-
-```python
-import numpy as np
-from autoemulate.compare import AutoEmulate
-from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations.projectile import simulate_projectile
-
-# sample from a simulation
-lhd = LatinHypercube([(-5., 1.), (0., 1000.)])
-X = lhd.sample(100)
-y = np.array([simulate_projectile(x) for x in X])
-
-# compare emulators
-ae = AutoEmulate()
-ae.setup(X, y)
-best_emulator = ae.compare() 
-
-# cross-validation results
-ae.summarise_cv() 
-ae.plot_cv()
-
-# test set results for the best emulator
-ae.evaluate(best_emulator) 
-ae.plot_eval(best_emulator)
-
-# refit on full data and emulate!
-emulator = ae.refit(best_emulator) 
-emulator.predict(X)
-
-# global sensitivity analysis
-si = ae.sensitivity_analysis(emulator)
-ae.plot_sensitivity_analysis(si)
-```
+⚠️ Warning: This is an early version of the package and is still under development. We are working on improving the documentation and adding more features. If you have any questions or suggestions, please open an issue or a pull request.
 
 ## Documentation
 
-You can find tutorials, FAQs and the API reference [here](https://alan-turing-institute.github.io/autoemulate/). The documentation is still work in progress.
+You can find the project documentation [here](https://alan-turing-institute.github.io/autoemulate/), including [installation](https://alan-turing-institute.github.io/autoemulate/getting-started/installation.html).
+
+## The AutoEmulate project
+
+- The AutoEmulate project is run out of the [Alan Turing Institute](https://www.turing.ac.uk/).
+- Visit [autoemulate.com](https://www.autoemulate.com/) to learn more.
+- We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626). 
+
+  Please cite this paper if you use the package in your work:
+
+  ```bibtex
+  @article{Stoffel2025, doi = {10.21105/joss.07626}, url = {https://doi.org/10.21105/joss.07626}, year = {2025}, publisher = {The Open Journal}, volume = {10}, number = {107}, pages = {7626}, author = {Martin A. Stoffel and Bryan M. Li and Kalle Westerling and Sophie Arana and Max Balmus and Eric Daub and Steve Niederer}, title = {AutoEmulate: A Python package for semi-automated emulation}, journal = {Journal of Open Source Software} }
+  ```
 
 ## Contributors
 
@@ -92,16 +45,16 @@ You can find tutorials, FAQs and the API reference [here](https://alan-turing-in
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/aduncan001"><img src="https://avatars.githubusercontent.com/u/2352812?v=4?s=100" width="100px;" alt="Andrew Duncan"/><br /><sub><b>Andrew Duncan</b></sub></a><br /><a href="#ideas-aduncan001" title="Ideas, Planning, & Feedback">🤔</a> <a href="#projectManagement-aduncan001" title="Project Management">📆</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/marjanfamili"><img src="https://avatars.githubusercontent.com/u/44607686?v=4?s=100" width="100px;" alt="Marjan Famili"/><br /><sub><b>Marjan Famili</b></sub></a><br /><a href="#code-marjanfamili" title="Code">💻</a> <a href="#ideas-marjanfamili" title="Ideas, Planning, & Feedback">🤔</a> <a href="#doc-marjanfamili" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/marjanfamili"><img src="https://avatars.githubusercontent.com/u/44607686?v=4?s=100" width="100px;" alt="Marjan Famili"/><br /><sub><b>Marjan Famili</b></sub></a><br /><a href="#code-marjanfamili" title="Code">💻</a> <a href="#ideas-marjanfamili" title="Ideas, Planning, & Feedback">🤔</a> <a href="#doc-marjanfamili" title="Documentation">📖</a> <a href="#review-marjanfamili" title="Reviewed Pull Requests">👀</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/radka-j"><img src="https://avatars.githubusercontent.com/u/29207091?v=4?s=100" width="100px;" alt="Radka Jersakova"/><br /><sub><b>Radka Jersakova</b></sub></a><br /><a href="#code-radka-j" title="Code">💻</a> <a href="#projectManagement-radka-j" title="Project Management">📆</a> <a href="#maintenance-radka-j" title="Maintenance">🚧</a> <a href="#ideas-radka-j" title="Ideas, Planning, & Feedback">🤔</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://cisprague.github.io/"><img src="https://avatars.githubusercontent.com/u/17131395?v=4?s=100" width="100px;" alt="Christopher Iliffe Sprague"/><br /><sub><b>Christopher Iliffe Sprague</b></sub></a><br /><a href="#code-cisprague" title="Code">💻</a> <a href="#design-cisprague" title="Design">🎨</a> <a href="#ideas-cisprague" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://cisprague.github.io/"><img src="https://avatars.githubusercontent.com/u/17131395?v=4?s=100" width="100px;" alt="Christopher Iliffe Sprague"/><br /><sub><b>Christopher Iliffe Sprague</b></sub></a><br /><a href="#code-cisprague" title="Code">💻</a> <a href="#design-cisprague" title="Design">🎨</a> <a href="#ideas-cisprague" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-cisprague" title="Reviewed Pull Requests">👀</a> <a href="#doc-cisprague" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://www.energy.kth.se/energy-systems"><img src="https://avatars.githubusercontent.com/u/3727919?v=4?s=100" width="100px;" alt="Will Usher"/><br /><sub><b>Will Usher</b></sub></a><br /><a href="#code-willu47" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/sgreenbury"><img src="https://avatars.githubusercontent.com/u/50113363?v=4?s=100" width="100px;" alt="Sam Greenbury"/><br /><sub><b>Sam Greenbury</b></sub></a><br /><a href="#code-sgreenbury" title="Code">💻</a> <a href="#ideas-sgreenbury" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-sgreenbury" title="Reviewed Pull Requests">👀</a> <a href="#projectManagement-sgreenbury" title="Project Management">📆</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://edchalstrey.com/"><img src="https://avatars.githubusercontent.com/u/5486164?v=4?s=100" width="100px;" alt="Ed Chalstrey"/><br /><sub><b>Ed Chalstrey</b></sub></a><br /><a href="#code-edwardchalstrey1" title="Code">💻</a> <a href="#design-edwardchalstrey1" title="Design">🎨</a> <a href="#review-edwardchalstrey1" title="Reviewed Pull Requests">👀</a> <a href="#doc-edwardchalstrey1" title="Documentation">📖</a></td>
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/EdwinB12"><img src="https://avatars.githubusercontent.com/u/64434531?v=4?s=100" width="100px;" alt="Edwin "/><br /><sub><b>Edwin </b></sub></a><br /><a href="#code-EdwinB12" title="Code">💻</a> <a href="#ideas-EdwinB12" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-EdwinB12" title="Reviewed Pull Requests">👀</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://paolo-conti.com/"><img src="https://avatars.githubusercontent.com/u/51111500?v=4?s=100" width="100px;" alt="Paolo Conti"/><br /><sub><b>Paolo Conti</b></sub></a><br /><a href="#code-ContiPaolo" title="Code">💻</a> <a href="#ideas-ContiPaolo" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-ContiPaolo" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://paolo-conti.com/"><img src="https://avatars.githubusercontent.com/u/51111500?v=4?s=100" width="100px;" alt="Paolo Conti"/><br /><sub><b>Paolo Conti</b></sub></a><br /><a href="#code-ContiPaolo" title="Code">💻</a> <a href="#ideas-ContiPaolo" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-ContiPaolo" title="Reviewed Pull Requests">👀</a> <a href="#doc-ContiPaolo" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

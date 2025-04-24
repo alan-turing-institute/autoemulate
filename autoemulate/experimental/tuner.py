@@ -64,6 +64,7 @@ class Tuner(InputTypeMixin):
             }
 
             # TODO: consider whether to pass as tensors or dataloader
+            # require training data for initialisation as well as fitting?
             m = model_class(train_x, train_y, **model_config)
             m.fit(train_x, train_y)
 
