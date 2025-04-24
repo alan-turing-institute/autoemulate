@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 
 from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
@@ -11,9 +12,10 @@ from autoemulate.experimental.types import (
     OutputLike,
     TuneConfig,
 )
+from autoemulate.utils import _denormalise_y, _normalise_y
 
 
-class Emulator(ABC):
+class Emulator(ABC, InputTypeMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
@@ -65,7 +67,7 @@ class Emulator(ABC):
         ...
 
 
-class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
+class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     """
     PyTorchBackend is a torch model and implements the base class.
     This provides default implementations to further subclasses.
@@ -187,6 +189,31 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
         self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
     ):
         pass
+
+    def check_and_convert(self, x: InputLike, y: InputLike | None):
+        x, y = self._convert_to_numpy(x, y)
+
+        # required for sklearn compatibility
+        self.n_features_in_ = x.shape[1]
+        self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
+
+        x, y = check_X_y(
+            x,
+            y,
+            y_numeric=True,
+            ensure_min_samples=2,
+        )
+
+        if self.normalise_y:
+            y, self.y_mean_, self.y_std_ = _normalise_y(y)
+        elif y is not None and isinstance(y, np.ndarray):
+            self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
+            self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
+        else:
+            msg = "Input 'y' must be a non-None NumPy array."
+            raise ValueError(msg)
+
+        return x, y
 
     def _fit(self, x: InputLike, y: InputLike | None):
         self.model.fit(x, y)

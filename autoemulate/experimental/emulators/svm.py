@@ -4,14 +4,13 @@ from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import (
-    InputTypeMixin,
     SklearnBackend,
 )
 from autoemulate.experimental.types import InputLike, OutputLike
 from autoemulate.utils import _denormalise_y, _normalise_y
 
 
-class SupportVectorMachines(SklearnBackend, InputTypeMixin):
+class SupportVectorMachines(SklearnBackend):
     """Support Vector Machines Emulator.
 
     Wraps Support Vector Regressor from scikit-learn.
@@ -62,27 +61,7 @@ class SupportVectorMachines(SklearnBackend, InputTypeMixin):
     def fit(self, x: InputLike, y: InputLike | None):
         """Fits the emulator to the data."""
 
-        x, y = self._convert_to_numpy(x, y)
-
-        # required for sklearn compatibility
-        self.n_features_in_ = x.shape[1]
-        self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
-
-        x, y = check_X_y(
-            x,
-            y,
-            y_numeric=True,
-            ensure_min_samples=2,
-        )
-
-        if self.normalise_y:
-            y, self.y_mean_, self.y_std_ = _normalise_y(y)
-        elif y is not None and isinstance(y, np.ndarray):
-            self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
-            self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
-        else:
-            msg = "Input 'y' must be a non-None NumPy array."
-            raise ValueError(msg)
+        x, y = self.check_and_convert(x, y)
 
         self._fit(x, y)
 
