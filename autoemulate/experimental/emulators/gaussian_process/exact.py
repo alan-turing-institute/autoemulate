@@ -157,6 +157,11 @@ class GaussianProcessExact(
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         x = self.preprocess(x)
+        assert isinstance(x, torch.Tensor)
+
+        # Set the training data in case changed since init
+        self.set_train_data(x, y, strict=False)
+
         for epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)

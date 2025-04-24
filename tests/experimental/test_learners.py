@@ -28,6 +28,10 @@ def emulator_config():
     }
 
 
+def get_emulator(x, y, config):
+    return GaussianProcessExact(x=x, y=y, **config)
+
+
 def test_learners(emulator_config):
     # Define a simple sine simulator.
     class Sin(Simulator):
@@ -64,8 +68,7 @@ def test_learners(emulator_config):
         Y_train = simulator.sample(X_train)
         yield stream.Random(
             simulator=simulator,
-            emulator_cls=GaussianProcessExact,
-            emulator_config=emulator_config,
+            emulator=get_emulator(X_train, Y_train, emulator_config),
             X_train=X_train,
             Y_train=Y_train,
             p_query=0.25,
@@ -73,40 +76,35 @@ def test_learners(emulator_config):
         if not adaptive_only:
             yield stream.Distance(
                 simulator=simulator,
-                emulator_cls=GaussianProcessExact,
-                emulator_config=emulator_config,
+                emulator=get_emulator(X_train, Y_train, emulator_config),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=0.5,
             )
             yield stream.A_Optimal(
                 simulator=simulator,
-                emulator_cls=GaussianProcessExact,
-                emulator_config=emulator_config,
+                emulator=get_emulator(X_train, Y_train, emulator_config),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=1.0,
             )
             yield stream.D_Optimal(
                 simulator=simulator,
-                emulator_cls=GaussianProcessExact,
-                emulator_config=emulator_config,
+                emulator=get_emulator(X_train, Y_train, emulator_config),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=-4.2,
             )
             yield stream.E_Optimal(
                 simulator=simulator,
-                emulator_cls=GaussianProcessExact,
-                emulator_config=emulator_config,
+                emulator=get_emulator(X_train, Y_train, emulator_config),
                 X_train=X_train,
                 Y_train=Y_train,
                 threshold=1.0,
             )
         yield stream.Adaptive_Distance(
             simulator=simulator,
-            emulator_cls=GaussianProcessExact,
-            emulator_config=emulator_config,
+            emulator=get_emulator(X_train, Y_train, emulator_config),
             X_train=X_train,
             Y_train=Y_train,
             threshold=0.5,
@@ -121,8 +119,7 @@ def test_learners(emulator_config):
         )
         yield stream.Adaptive_A_Optimal(
             simulator=simulator,
-            emulator_cls=GaussianProcessExact,
-            emulator_config=emulator_config,
+            emulator=get_emulator(X_train, Y_train, emulator_config),
             X_train=X_train,
             Y_train=Y_train,
             threshold=1e-1,
@@ -137,8 +134,7 @@ def test_learners(emulator_config):
         )
         yield stream.Adaptive_D_Optimal(
             simulator=simulator,
-            emulator_cls=GaussianProcessExact,
-            emulator_config=emulator_config,
+            emulator=get_emulator(X_train, Y_train, emulator_config),
             X_train=X_train,
             Y_train=Y_train,
             threshold=-4.0,
@@ -153,8 +149,7 @@ def test_learners(emulator_config):
         )
         yield stream.Adaptive_E_Optimal(
             simulator=simulator,
-            emulator_cls=GaussianProcessExact,
-            emulator_config=emulator_config,
+            emulator=get_emulator(X_train, Y_train, emulator_config),
             X_train=X_train,
             Y_train=Y_train,
             threshold=0.75 if isinstance(simulator, Sin) else 1000,
