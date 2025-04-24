@@ -1,3 +1,4 @@
+import sys
 from abc import ABC
 from abc import abstractmethod
 from copy import deepcopy
@@ -7,7 +8,10 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
+from tqdm import tqdm
+
 from autoemulate.simulations.base import Simulator
+
 
 class HistoryMatcher:
     def __init__(
@@ -203,83 +207,92 @@ class HistoryMatcher:
         # Generate initial samples
         current_samples = self.simulator.sample_inputs(n_samples_per_wave)
 
-        for wave in range(n_waves):
-            print(f"\n=== Wave {wave + 1}/{n_waves} ===")
+        with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
+            for wave in range(n_waves):
+                # Determine if we should use emulator
+                wave_use_emulator = use_emulator and (emulator is not None)
 
-            # Determine if we should use emulator
-            wave_use_emulator = use_emulator and (
-                emulator is not None
-            )  # Removed reference to train_emulator_after_wave
-
-            # Run the wave
-            successful_samples, impl_scores = self.run_wave(
-                current_samples, use_emulator=wave_use_emulator, emulator=emulator
-            )
-
-            # Handle case where no simulations were successful
-            if len(successful_samples) == 0:
-                print("Warning: No successful simulations in this wave")
-                if wave < n_waves - 1:
-                    current_samples = self.simulator.sample_inputs(
-                        n_samples_per_wave
-                    )
-                continue
-
-            print(f"Evaluated {len(successful_samples)} samples")
-            if len(impl_scores) > 0:  # Only try to calculate min/max if we have scores
-                print(
-                    f"Min implausibility: {np.min(impl_scores):.2f}",
-                    f"Max implausibility: {np.max(impl_scores):.2f}",
+                # Run the wave
+                successful_samples, impl_scores = self.run_wave(
+                    current_samples, use_emulator=wave_use_emulator, emulator=emulator
                 )
-            # Store results
-            all_samples.extend(successful_samples)
-            all_impl_scores.extend(impl_scores)
 
-            # Identify NROY points
-            if len(impl_scores) > 0:
-                nroy_mask = np.all(impl_scores <= self.threshold, axis=1)
-                nroy_samples = [s for s, m in zip(successful_samples, nroy_mask) if m]
-                print(f"NROY points: {len(nroy_samples)}")
-            else:
-                nroy_samples = []
-                print("NROY points: 0")
+                # Handle case where no simulations were successful
+                if len(successful_samples) == 0:
+                    tqdm.write("Warning: No successful simulations in this wave")
+                    if wave < n_waves - 1:
+                        current_samples = self.simulator.sample_inputs(
+                            n_samples_per_wave
+                        )
+                    pbar.update(1)
+                    continue
 
-            # After each wave, update your GP with new samples
-            if len(successful_samples) > 10:
-                print("Updating emulator with new samples...")
-                # Get outputs from simulator to train the emulator
-                X_train = np.array(
-                    [
-                        [sample[name] for name in self.simulator.param_names]
-                        for sample in successful_samples
+                # Store results
+                all_samples.extend(successful_samples)
+                all_impl_scores.extend(impl_scores)
+
+                # Update progress bar with informative statistics
+                if len(impl_scores) > 0:
+                    nroy_mask = np.all(impl_scores <= self.threshold, axis=1)
+                    nroy_samples = [
+                        s for s, m in zip(successful_samples, nroy_mask) if m
                     ]
-                )
 
-                # Get the simulator outputs (not implausibility scores)
-                y_train = np.array(
-                    [
-                        [
-                            self.simulator.sample_forward(params)[i]
-                            for i in range(len(self.simulator.output_names))
-                        ]
-                        for params in successful_samples
-                    ]
-                )
-
-                # Update the emulator with proper input-output pairs
-                emulator = self.update_emulator(emulator, X_train, y_train)
-
-            # Generate new samples for next wave if not last wave
-            if wave < n_waves - 1:
-                if len(nroy_samples) > 0:
-                    current_samples = self.generate_new_samples(
-                        nroy_samples, n_samples_per_wave
+                    pbar.set_postfix(
+                        samples=len(successful_samples),
+                        min_impl=f"{np.min(impl_scores):.2f}",
+                        max_impl=f"{np.max(impl_scores):.2f}",
+                        nroy=len(nroy_samples),
                     )
                 else:
-                    print("No NROY points - generating new random samples")
-                    current_samples = self.simulator.sample_inputs(
-                        n_samples_per_wave
+                    pbar.set_postfix(samples=len(successful_samples), nroy=0)
+
+                # After each wave, update your GP with new samples
+                if len(successful_samples) > 10:
+                    tqdm.write("Updating emulator with new samples...")
+                    # Get outputs from simulator to train the emulator
+                    X_train = np.array(
+                        [
+                            [sample[name] for name in self.simulator.param_names]
+                            for sample in successful_samples
+                        ]
                     )
+
+                    # Get the simulator outputs (not implausibility scores)
+                    y_train = np.array(
+                        [
+                            [
+                                self.simulator.sample_forward(params)[i]
+                                for i in range(len(self.simulator.output_names))
+                            ]
+                            for params in successful_samples
+                        ]
+                    )
+
+                    # Update the emulator with proper input-output pairs
+                    emulator = self.update_emulator(emulator, X_train, y_train)
+
+                # Generate new samples for next wave if not last wave
+                if wave < n_waves - 1:
+                    if len(nroy_samples) > 0:
+                        current_samples = self.generate_new_samples(
+                            nroy_samples, n_samples_per_wave
+                        )
+                    else:
+                        # Include this information in the postfix instead of printing it
+                        pbar.set_postfix(
+                            samples=len(successful_samples),
+                            min_impl=f"{np.min(impl_scores) if len(impl_scores) > 0 else 'N/A'}",
+                            max_impl=f"{np.max(impl_scores) if len(impl_scores) > 0 else 'N/A'}",
+                            nroy=0,
+                            status="generating new samples",
+                        )
+                        current_samples = self.simulator.sample_inputs(
+                            n_samples_per_wave
+                        )
+
+                # Update progress bar
+                pbar.update(1)
 
         # Return the updated emulator along with other results
         return all_samples, np.array(all_impl_scores), emulator
