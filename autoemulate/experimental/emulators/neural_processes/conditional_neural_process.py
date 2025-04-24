@@ -3,6 +3,135 @@ import torch.nn as nn
 
 from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.types import InputLike
+
+from torch.distributions.normal import Normal
+from torch.utils.data import DataLoader, Dataset
+import numpy as np
+
+
+class CNPDataset(Dataset):
+    """
+    Dataset for Conditional Neural Process (CNP).
+    Samples context points and target points for each episode.
+    """
+
+    def __init__(
+        self,
+        dataset: Dataset,
+        min_context_points: int,
+        max_context_points: int,
+        n_episode: int,
+    ):
+        """
+        Parameters
+        ----------
+        x: (n_samples, x_dim)
+            Input data
+        y: (n_samples, y_dim)
+            Output data
+        min_context_points: int
+            Minimum number of context points to sample
+        max_context_points: int
+            Maximum number of context points to sample
+        n_episode: int
+            Number of episodes to sample. Must be greater than max_context_points.
+        """
+        self.dataset = dataset
+        if max_context_points >= n_episode:
+            raise ValueError("max_context_points must be less than n_episode")
+        self.max_context_points = max_context_points
+        self.min_context_points = min_context_points
+        self.n_samples = len(self.dataset)
+        self.x_dim = dataset[0][0].shape[-1]
+        self.n_episode = n_episode
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx: int) -> tuple[dict, TensorLike]:
+        """
+        Get a sample from the dataset. Samples context points and target points.
+
+        Returns
+        -------
+        X: dict
+            Dictionary containing context and target points
+        y: Tensor
+            Target points
+        """
+
+        x, y = self.dataset[idx]
+
+        # sample context points
+        num_context = np.random.randint(
+            self.min_context_points, self.max_context_points + 1
+        )
+
+        # randomly select context
+        perm = torch.randperm(self.n_samples)
+        context_idxs = perm[:num_context]
+        target_idxs = perm[
+            : self.n_episode
+        ]  # including context points in targets helps with training
+
+        X_context = x[context_idxs]
+        y_context = y[context_idxs]
+        X_target = x[target_idxs]
+        y_target = y[target_idxs]
+
+        X = {"X_context": X_context, "y_context": y_context, "X_target": X_target}
+        return (X, y_target)
+
+
+def cnp_collate_fn(batch):
+    """
+    Collate function for CNP.
+
+    Handles different dimensions in each sample due to different numbers of context points.
+
+    TODO:
+    this currently just adds zeros. These shouldn't have an impact on the output as long as we don't
+    do layernorm or attention, but we should modify cnp etc. to handle this better.
+    """
+    X, y = zip(*batch)
+
+    # Get the maximum number of context and target points in the batch
+    max_context = max(x["X_context"].shape[0] for x in X)
+    max_target = max(x["X_target"].shape[0] for x in X)
+
+    # Initialize tensors to hold the batched data
+    X_context_batched = torch.zeros(len(batch), max_context, X[0]["X_context"].shape[1])
+    y_context_batched = torch.zeros(len(batch), max_context, X[0]["y_context"].shape[1])
+    X_target_batched = torch.zeros(len(batch), max_target, X[0]["X_target"].shape[1])
+    y_batched = torch.zeros(len(batch), max_target, y[0].shape[1])
+
+    # Create masks for context and target
+    context_mask = torch.zeros(len(batch), max_context, dtype=torch.bool)
+    target_mask = torch.zeros(len(batch), max_target, dtype=torch.bool)
+
+    # Fill in the batched tensors
+    for i, (x, yi) in enumerate(zip(X, y)):
+        n_context = x["X_context"].shape[0]
+        n_target = x["X_target"].shape[0]
+
+        X_context_batched[i, :n_context] = x["X_context"]
+        y_context_batched[i, :n_context] = x["y_context"]
+        X_target_batched[i, :n_target] = x["X_target"]
+        y_batched[i, :n_target] = yi
+
+        context_mask[i, :n_context] = True
+        target_mask[i, :n_target] = True
+
+    # Create a dictionary for X
+    X_batched = {
+        "X_context": X_context_batched,
+        "y_context": y_context_batched,
+        "X_target": X_target_batched,
+        "context_mask": context_mask,
+    }
+
+    return X_batched, y_batched
 
 
 class Encoder(nn.Module):
@@ -103,12 +232,12 @@ class Decoder(nn.Module):
 class CNPModule(PyTorchBackend):
     def __init__(
         self,
-        input_dim: int,
-        output_dim: int,
-        hidden_dim: int,
-        latent_dim: int,
-        hidden_layers_enc: int,
-        hidden_layers_dec: int,
+        input_dim: int = 1,
+        output_dim: int = 1,
+        hidden_dim: int = 32,
+        latent_dim: int = 16,
+        hidden_layers_enc: int = 2,
+        hidden_layers_dec: int = 2,
         activation: nn.Module = nn.ReLU,  # type: ignore
     ):
         super().__init__()
@@ -119,20 +248,40 @@ class CNPModule(PyTorchBackend):
             input_dim, latent_dim, hidden_dim, output_dim, hidden_layers_dec, activation
         )
 
+    def negative_log_likelihood_loss(self, mean, log_var, target_y):
+        """
+        Compute negative log-likelihood loss.
+
+        Args:
+            mean: Context x values [batch_size, num_context, x_dim]
+            log_var: Context y values [batch_size, num_context, y_dim]
+            target_y: Target y values [batch_size, num_target, y_dim]
+        Returns:
+            loss: Negative log-likelihood
+        """
+        # Compute negative log-likelihood
+        dist = Normal(mean, torch.exp(0.5 * log_var))
+        log_prob = dist.log_prob(target_y)
+
+        # Sum over y dimensions and average over batch and target points
+        loss = -log_prob.sum(dim=2).mean()
+
+        return loss
+
     def forward(
         self,
-        X_context: TensorLike,
-        y_context: TensorLike,
-        X_target: TensorLike,
+        context_x: TensorLike,
+        context_y: TensorLike,
+        target_x: TensorLike,
         context_mask: TensorLike | None = None,
-    ):
+    ) -> torch.distributions.MultivariateNormal:
         """
 
         Parameters
         ----------
-        X_context: (batch_size, n_context_points, input_dim)
-        y_context: (batch_size, n_context_points, output_dim)
-        X_target: (batch_size, n_points, input_dim)
+        context_x: (batch_size, n_context_points, input_dim)
+        context_y: (batch_size, n_context_points, output_dim)
+        target_x: (batch_size, n_points, input_dim)
         context_mask: (batch_size, n_context_points), currently unused,
         as we pad with 0's and don't have attention, layernorm yet.
 
@@ -141,6 +290,85 @@ class CNPModule(PyTorchBackend):
         mean: (batch_size, n_points, output_dim)
         logvar: (batch_size, n_points, output_dim)
         """
-        r = self.encoder(X_context, y_context, context_mask)
-        mean, logvar = self.decoder(r, X_target)
-        return mean, logvar
+        r = self.encoder(context_x, context_y, context_mask)
+        mean, logvar = self.decoder(r, target_x)
+        return torch.distributions.MultivariateNormal(mean, torch.exp(logvar))
+
+    def fit(
+        self,
+        x: InputLike,
+        y: InputLike | None,
+    ):
+        self.train()
+
+        # Convert to a dataset
+        dataset = self._convert_to_dataset(x, y)
+
+        # Convert dataset to CNP Dataset
+        dataset = CNPDataset(
+            dataset,
+            min_context_points=self.min_context_points,
+            max_context_points=self.max_context_points,
+            n_episode=self.n_episode,
+        )
+
+        # Training loop
+        for epoch in range(self.epochs):
+            epoch_loss = 0.0
+            batches = 0
+
+            for X_batch, y_batch in dataset:
+                # Unpack the batch
+                X_context = X_batch["X_context"]
+                y_context = X_batch["y_context"]
+                X_target = X_batch["X_target"]
+                context_mask = X_batch["context_mask"]
+
+                # Preprocess x_batch
+                # TODO: consider if this should be moved outside of dataloader iteration
+                # e.g. as part of the InputTypeMixin
+                X_context = self.preprocess(X_context)
+                X_target = self.preprocess(X_target)
+
+                # Forward pass
+                y_pred_dist = self.forward(X_context, y_context, X_target, context_mask)
+                loss = self.negative_log_likelihood_loss(
+                    y_pred_dist.mean, y_pred_dist.logvar, y_batch
+                )
+
+                # Backward pass and optimize
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                # Track loss
+                epoch_loss += loss.item()
+                batches += 1
+
+            # Average loss for the epoch
+            avg_epoch_loss = epoch_loss / batches
+            self.loss_history.append(avg_epoch_loss)
+
+            if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
+                print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
+
+    def predict(self, dataloader: DataLoader | None):
+        self.eval()
+        # X Input
+
+        # Split context and target - Custom Dataloader
+
+        # Sort splitting into context and target
+        return self.forward(X_context, y_context, X_target, context_mask)
+
+    @staticmethod
+    def get_tune_config():
+        return {
+            "input_dim": [],
+            "output_dim": [],
+            "hidden_dim": [],
+            "latent_dim": [],
+            "hidden_layers_enc": [],
+            "hidden_layers_dec": [],
+            "activation": [nn.ReLU],
+        }

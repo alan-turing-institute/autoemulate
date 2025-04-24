@@ -11,7 +11,7 @@ DistributionLike = torch.distributions.Distribution
 InputLike = (
     NumpyLike | TensorLike | torch.utils.data.DataLoader | torch.utils.data.Dataset
 )
-OutputLike = DistributionLike | TensorLike | tuple[TensorLike, TensorLike]
+OutputLike = DistributionLike | TensorLike
 ParamLike = Any
 TuneConfig = dict[str, list[ParamLike]]
 ModelConfig = dict[str, ParamLike]
