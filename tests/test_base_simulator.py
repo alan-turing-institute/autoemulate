@@ -13,40 +13,39 @@ from autoemulate.simulations.base import Simulator
 class MockSimulator(Simulator):
     """Mock implementation of Simulator for testing purposes"""
 
-    def __init__(self, param_ranges):
-        self._param_bounds = param_ranges
-        self._param_names_list = list(param_ranges.keys())
-        self._output_names_list = ["output1", "output2"]
+    def __init__(self, parameters_range, output_variables=None):
+        # Properly call the parent class constructor
+        super().__init__(parameters_range, output_variables)
 
-    @property
-    def param_names(self) -> List[str]:
-        return self._param_names_list
+        # If output_variables not provided, set default ones
+        if not self._output_variables:
+            self._output_variables = ["output1", "output2"]
 
-    @property
-    def output_names(self) -> List[str]:
-        return self._output_names_list
+        # Initialize output_names based on base class expectations
+        self._output_names = self._output_variables.copy()
+        self._has_sample_forward = True
 
     def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
         """Generate mock samples"""
         samples = []
-        for i in range(n_samples):
+        for _ in range(n_samples):
             sample = {}
-            for name in self._param_names_list:
+            for name in self._param_names:
                 min_val, max_val = self._param_bounds[name]
                 sample[name] = min_val + (max_val - min_val) * np.random.random()
             samples.append(sample)
         return samples
 
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
-        """Run mock simulation"""
+        """Run mock simulation and return numpy array as specified in the base class"""
         # Check that all required parameters are present
-        if not all(param in params for param in self._param_names_list):
+        if not all(param in params for param in self._param_names):
             return None
 
         # Simple deterministic output based on input parameters
         try:
             param_sum = sum(params.values())
-            # Return as numpy array instead of dictionary
+            # Return as numpy array as required by base class
             return np.array(
                 [param_sum / len(params), param_sum * 2]  # output1  # output2
             )
@@ -113,15 +112,15 @@ def test_sample_forward(mock_simulator):
     # Run simulation
     result = mock_simulator.sample_forward(params)
 
-    # Check result structure
-    assert isinstance(result, dict)
-    assert set(result.keys()) == set(mock_simulator.output_names)
+    # Check result structure - should be numpy array as specified in base class
+    assert isinstance(result, np.ndarray)
+    assert len(result) == len(mock_simulator.output_names)
 
     # Check specific values for this deterministic mock
     expected_output1 = (0.5 + 0.0 + 2.5) / 3
     expected_output2 = (0.5 + 0.0 + 2.5) * 2
-    assert result["output1"] == pytest.approx(expected_output1)
-    assert result["output2"] == pytest.approx(expected_output2)
+    assert result[0] == pytest.approx(expected_output1)
+    assert result[1] == pytest.approx(expected_output2)
 
 
 # Test sample_forward with invalid parameters
@@ -166,7 +165,18 @@ def test_end_to_end_workflow(mock_simulator):
 
     # Each result should have the expected structure
     for result in results:
-        assert isinstance(result, dict)
-        assert set(result.keys()) == set(mock_simulator.output_names)
-        assert "output1" in result
-        assert "output2" in result
+        assert isinstance(result, np.ndarray)
+        assert len(result) == len(mock_simulator.output_names)
+
+    # Test the get_results_dataframe method
+    results_array = np.array(results)
+    df = mock_simulator.get_results_dataframe(samples, results_array)
+
+    # Check DataFrame structure
+    assert len(df) == n_samples
+
+    # Should have columns for both parameters and outputs
+    assert set(mock_simulator.param_names).issubset(set(df.columns))
+    assert set(mock_simulator.output_names).issubset(set(df.columns)) or set(
+        f"output_{i}" for i in range(len(mock_simulator.output_names))
+    ).issubset(set(df.columns))
