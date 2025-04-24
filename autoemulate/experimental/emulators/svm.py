@@ -63,6 +63,16 @@ class SupportVectorMachines(SklearnBackend):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
         x, y = self.check_and_convert(x, y)
+
+        if y is None:
+            msg = "y must be provided."
+            raise ValueError(msg)
+        if y.ndim > 2:
+            msg = f"y must be 1D or 2D array. Found {y.ndim}D array."
+            raise ValueError(msg)
+        if y.ndim == 2:  # _convert_to_numpy may return 2D y
+            y = y.ravel()  # Ensure y is 1-dimensional
+
         x, y = check_X_y(
             x,
             y,
