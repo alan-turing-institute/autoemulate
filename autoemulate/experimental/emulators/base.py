@@ -12,7 +12,6 @@ from autoemulate.experimental.types import (
     OutputLike,
     TuneConfig,
 )
-from autoemulate.utils import _denormalise_y, _normalise_y
 
 
 class Emulator(ABC, InputTypeMixin):
@@ -223,14 +222,14 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
         x, y = self.check_and_convert(x, y)
         self._fit(x, y)
 
-    def predict(self, x: InputLike) -> OutputLike:
-        """Predicts the output of the emulator for a given input."""
+    def _predict(self, x: InputLike) -> OutputLike:
         check_is_fitted(self)
         x = check_array(x)
-        y_pred = self.model.predict(x)
+        return self.model.predict(x)
 
-        if self.normalise_y:
-            y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
+    def predict(self, x: InputLike) -> OutputLike:
+        """Predicts the output of the emulator for a given input."""
+        y_pred = self._predict(x)
 
         # Ensure the output is a 2D tensor array with shape (n_samples, 1)
         return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003

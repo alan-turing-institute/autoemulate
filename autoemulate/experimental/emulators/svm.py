@@ -1,10 +1,11 @@
 import numpy as np
 from sklearn.svm import SVR
+from torch import Tensor
 
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import InputLike
-
+from autoemulate.experimental.types import InputLike, OutputLike
 from autoemulate.utils import _denormalise_y, _normalise_y
+
 
 class SupportVectorMachines(SklearnBackend):
     """Support Vector Machines Emulator.
@@ -70,6 +71,16 @@ class SupportVectorMachines(SklearnBackend):
             msg = "Input 'y' must be a non-None NumPy array."
             raise ValueError(msg)
         self._fit(x, y)
+
+    def predict(self, x: InputLike) -> OutputLike:
+        """Predicts the output of the emulator for a given input."""
+        y_pred = self._predict(x)
+
+        if self.normalise_y:
+            y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
+
+        # Ensure the output is a 2D tensor array with shape (n_samples, 1)
+        return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
 
     @staticmethod
     def get_tune_config():
