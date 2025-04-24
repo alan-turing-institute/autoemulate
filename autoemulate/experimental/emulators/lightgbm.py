@@ -74,6 +74,15 @@ class LightGBM(Emulator, InputTypeMixin):
 
         x, y = self._convert_to_numpy(x, y)
 
+        if y is None:
+            msg = "y must be provided."
+            raise ValueError(msg)
+        if y.ndim > 2:
+            msg = f"y must be 1D or 2D array. Found {y.ndim}D array."
+            raise ValueError(msg)
+        if y.ndim == 2:  # _convert_to_numpy may return 2D y
+            y = y.ravel()  # Ensure y is 1-dimensional
+
         self.n_features_in_ = x.shape[1]
 
         x, y = check_X_y(x, y, y_numeric=True)
