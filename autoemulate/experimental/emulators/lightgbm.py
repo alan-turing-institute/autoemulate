@@ -37,7 +37,7 @@ class LightGBM(Emulator, InputTypeMixin):
         reg_alpha: float = 0.0,
         reg_lambda: float = 0.0,
         random_state: int | None = None,
-        n_jobs: int = 1,
+        n_jobs: int | None = 1,
         importance_type: str = "split",
         verbose: int = -1,
     ):
