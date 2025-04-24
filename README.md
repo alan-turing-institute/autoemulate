@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        4 |     96% |73, 274, 282, 289 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        5 |     95% |73, 274, 282, 289, 336 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |       10 |     90% |71, 240, 246, 250, 254, 259, 271, 278, 282, 286 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -35,11 +35,12 @@
 | autoemulate/emulators/support\_vector\_machines.py                           |       54 |        3 |     94% |     80-82 |
 | autoemulate/experimental/\_\_init\_\_.py                                     |        0 |        0 |    100% |           |
 | autoemulate/experimental/data/preprocessors.py                               |       25 |        3 |     88% |21, 23, 41 |
-| autoemulate/experimental/data/utils.py                                       |       56 |        7 |     88% |55, 74, 90-92, 115, 120 |
+| autoemulate/experimental/data/utils.py                                       |       65 |       10 |     85% |55, 74, 90-92, 105, 111-112, 133, 138 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                           |        0 |        0 |    100% |           |
-| autoemulate/experimental/emulators/base.py                                   |       61 |        8 |     87% |32, 60, 82, 149, 157-158, 162-166 |
+| autoemulate/experimental/emulators/base.py                                   |       64 |        8 |     88% |36, 64, 86, 153, 161-162, 166-170 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py         |        8 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/exact.py                |       85 |        4 |     95% |69, 100, 175-176 |
+| autoemulate/experimental/emulators/lightgbm.py                               |       51 |        4 |     92% |78-79, 81-82 |
 | autoemulate/experimental/learners/\_\_init\_\_.py                            |        3 |        0 |    100% |           |
 | autoemulate/experimental/learners/base.py                                    |      175 |       45 |     74% |40-44, 67, 69, 95-96, 127-128, 153, 156-158, 184, 187-189, 213-214, 217-219, 410-413, 424-428, 441-450, 537-538 |
 | autoemulate/experimental/learners/membership.py                              |        8 |        0 |    100% |           |
@@ -72,6 +73,7 @@
 | tests/experimental/conftest.py                                               |       19 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_base.py                               |       98 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_gaussian\_process\_exact.py           |       28 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_lightgbm.py                           |       19 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_model\_selection.py                   |       30 |        1 |     97% |        26 |
 | tests/models/test\_attn\_cnp.py                                              |      147 |        0 |    100% |           |
 | tests/models/test\_cnp.py                                                    |      108 |        0 |    100% |           |
@@ -100,7 +102,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **5596** |  **552** | **90%** |           |
+|                                                                    **TOTAL** | **5678** |  **560** | **90%** |           |
 
 
 ## Setup coverage badge

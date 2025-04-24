@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_b86468c12c81b0dd_types_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-23 14:21 +0000
+            created at 2025-04-24 10:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -146,18 +146,19 @@
     <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">            <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">            <span class="com"># TODO: consider whether to pass as tensors or dataloader</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">            <span class="nam">m</span> <span class="op">=</span> <span class="nam">model_class</span><span class="op">(</span><span class="nam">train_x</span><span class="op">,</span> <span class="nam">train_y</span><span class="op">,</span> <span class="op">**</span><span class="nam">model_config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">            <span class="nam">m</span><span class="op">.</span><span class="nam">fit</span><span class="op">(</span><span class="nam">train_x</span><span class="op">,</span> <span class="nam">train_y</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">            <span class="com"># evaluate</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">            <span class="nam">y_pred</span> <span class="op">=</span> <span class="nam">m</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">val_x</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">            <span class="nam">score</span> <span class="op">=</span> <span class="nam">evaluate</span><span class="op">(</span><span class="nam">val_y</span><span class="op">,</span> <span class="nam">y_pred</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">metric</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">            <span class="com"># record score and config</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">            <span class="nam">model_config_tested</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">model_config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">            <span class="nam">val_scores</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">score</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="key">return</span> <span class="nam">val_scores</span><span class="op">,</span> <span class="nam">model_config_tested</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">            <span class="com"># require training data for initialisation as well as fitting?</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">            <span class="nam">m</span> <span class="op">=</span> <span class="nam">model_class</span><span class="op">(</span><span class="nam">train_x</span><span class="op">,</span> <span class="nam">train_y</span><span class="op">,</span> <span class="op">**</span><span class="nam">model_config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">            <span class="nam">m</span><span class="op">.</span><span class="nam">fit</span><span class="op">(</span><span class="nam">train_x</span><span class="op">,</span> <span class="nam">train_y</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">            <span class="com"># evaluate</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">            <span class="nam">y_pred</span> <span class="op">=</span> <span class="nam">m</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">val_x</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">            <span class="nam">score</span> <span class="op">=</span> <span class="nam">evaluate</span><span class="op">(</span><span class="nam">val_y</span><span class="op">,</span> <span class="nam">y_pred</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">metric</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">            <span class="com"># record score and config</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">            <span class="nam">model_config_tested</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">model_config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">            <span class="nam">val_scores</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">score</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">return</span> <span class="nam">val_scores</span><span class="op">,</span> <span class="nam">model_config_tested</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -167,7 +168,7 @@
             <a class="nav" href="z_b86468c12c81b0dd_types_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-23 14:21 +0000
+            created at 2025-04-24 10:44 +0000
         </p>
     </div>
 </footer>
