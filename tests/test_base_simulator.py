@@ -4,247 +4,169 @@ from typing import Optional
 
 import numpy as np
 import pytest
-from autoemulate.history_matching import HistoryMatcher    
-from autoemulate.tests.test_base_simulator import MockSimulator
 
+from autoemulate.simulations.base import Simulator
+
+# In test_base_simulator.py, update the MockSimulator class:
+
+
+class MockSimulator(Simulator):
+    """Mock implementation of Simulator for testing purposes"""
+
+    def __init__(self, param_ranges):
+        self._param_bounds = param_ranges
+        self._param_names_list = list(param_ranges.keys())
+        self._output_names_list = ["output1", "output2"]
+
+    @property
+    def param_names(self) -> List[str]:
+        return self._param_names_list
+
+    @property
+    def output_names(self) -> List[str]:
+        return self._output_names_list
+
+    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
+        """Generate mock samples"""
+        samples = []
+        for i in range(n_samples):
+            sample = {}
+            for name in self._param_names_list:
+                min_val, max_val = self._param_bounds[name]
+                sample[name] = min_val + (max_val - min_val) * np.random.random()
+            samples.append(sample)
+        return samples
+
+    def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
+        """Run mock simulation"""
+        # Check that all required parameters are present
+        if not all(param in params for param in self._param_names_list):
+            return None
+
+        # Simple deterministic output based on input parameters
+        try:
+            param_sum = sum(params.values())
+            # Return as numpy array instead of dictionary
+            return np.array(
+                [param_sum / len(params), param_sum * 2]  # output1  # output2
+            )
+        except Exception:
+            return None
+
+
+# Fixture to create a mock simulator with test parameters
 @pytest.fixture
-def simple_matcher():
-    """Create a simple history matcher instance for testing"""
-    param_ranges = {"x1": (0.0, 1.0), "x2": (0.0, 1.0)}
-    simulator = MockSimulator(param_ranges)
-    observations = {
-        "output1": (0.5, 0.01),  # (mean, variance) 
-        "output2": (0.7, 0.01)
+def mock_simulator():
+    param_ranges = {"param1": (0.0, 1.0), "param2": (-10.0, 10.0), "param3": (0.5, 5.0)}
+    return MockSimulator(param_ranges)
+
+
+# Test creation of a concrete Simulator implementation
+def test_simulator_creation(mock_simulator):
+    """Test that a concrete simulator can be created"""
+    assert isinstance(mock_simulator, Simulator)
+    assert isinstance(mock_simulator, MockSimulator)
+
+
+# Test param_names property returns expected values
+def test_param_names(mock_simulator):
+    """Test that param_names property returns correct parameter names"""
+    expected = ["param1", "param2", "param3"]
+    assert mock_simulator.param_names == expected
+    assert len(mock_simulator.param_names) == 3
+
+
+# Test output_names property returns expected values
+def test_output_names(mock_simulator):
+    """Test that output_names property returns correct output names"""
+    expected = ["output1", "output2"]
+    assert mock_simulator.output_names == expected
+    assert len(mock_simulator.output_names) == 2
+
+
+# Test sample_inputs method returns correct structure
+def test_sample_inputs(mock_simulator):
+    """Test that sample_inputs returns correct number and structure of samples"""
+    n_samples = 5
+    samples = mock_simulator.sample_inputs(n_samples)
+
+    # Check number of samples
+    assert len(samples) == n_samples
+
+    # Check structure of each sample
+    for sample in samples:
+        assert isinstance(sample, dict)
+        assert set(sample.keys()) == set(mock_simulator.param_names)
+
+        # Check parameter bounds
+        assert 0.0 <= sample["param1"] <= 1.0
+        assert -10.0 <= sample["param2"] <= 10.0
+        assert 0.5 <= sample["param3"] <= 5.0
+
+
+# Test sample_forward method returns correct output structure
+def test_sample_forward(mock_simulator):
+    """Test that sample_forward returns correct output structure"""
+    # Create a test parameter set
+    params = {"param1": 0.5, "param2": 0.0, "param3": 2.5}
+
+    # Run simulation
+    result = mock_simulator.sample_forward(params)
+
+    # Check result structure
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(mock_simulator.output_names)
+
+    # Check specific values for this deterministic mock
+    expected_output1 = (0.5 + 0.0 + 2.5) / 3
+    expected_output2 = (0.5 + 0.0 + 2.5) * 2
+    assert result["output1"] == pytest.approx(expected_output1)
+    assert result["output2"] == pytest.approx(expected_output2)
+
+
+# Test sample_forward with invalid parameters
+def test_sample_forward_invalid_params(mock_simulator):
+    """Test that sample_forward handles invalid parameters gracefully"""
+    # Create an incomplete parameter set
+    params = {
+        "param1": 0.5,
+        # Missing param2 and param3
     }
-    matcher = HistoryMatcher(simulator, observations, threshold=3.0)
-    return matcher
 
-def test_init_value_error():
-    """Test constructor raises error when observations don't match simulator outputs"""
-    param_ranges = {"x1": (0.0, 1.0), "x2": (0.0, 1.0)}
-    simulator = MockSimulator(param_ranges)
-    
-    # Observation keys that are not a subset of simulator output names
-    observations = {
-        "output1": (0.5, 0.01),
-        "output3": (0.7, 0.01)  # output3 is not in simulator outputs
-    }
-    
-    with pytest.raises(ValueError) as excinfo:
-        HistoryMatcher(simulator, observations)
-    
-    assert "must be a subset of simulator output names" in str(excinfo.value)
+    # Run simulation with invalid parameters
+    result = mock_simulator.sample_forward(params)
+
+    # We expect it to return None for invalid parameters
+    assert result is None
 
 
-def test_calculate_implausibility(simple_matcher):
-    """Test implausibility calculation"""
-    predictions = {
-        "output1": (0.6, 0.01),  # Close to observation (0.5, 0.01)
-        "output2": (1.5, 0.01)   # Far from observation (0.7, 0.01)
-    }
-    
-    result = simple_matcher.calculate_implausibility(predictions)
-    
-    # Check returned structure
-    assert "I" in result
-    assert "NROY" in result
-    assert "RO" in result
-    
-    # Check implausibility values
-    np.testing.assert_almost_equal(result["I"][0], 0.1 / np.sqrt(0.02), decimal=2)
-    np.testing.assert_almost_equal(result["I"][1], 0.8 / np.sqrt(0.02), decimal=2)
+# Test attempting to instantiate abstract base class
+def test_abstract_class_instantiation():
+    """Test that Simulator cannot be instantiated directly"""
+    with pytest.raises(TypeError):
+        Simulator()  # Should raise TypeError
 
-    assert 0 in result["NROY"]
-    assert 1 in result["RO"]
-    
 
-def test_run_wave_with_simulator(simple_matcher):
-    """Test running a wave using the simulator"""
-    # Create sample parameters
-    params = [
-        {"x1": 0.5, "x2": 0.7},   # Should be close to observations
-        {"x1": 0.1, "x2": 0.2}    # Should be further from observations
-    ]
-    
-    # Mock the sample_forward method to return predictable values
-    with patch.object(simple_matcher.simulator, 'sample_forward') as mock_forward:
-        # Configure the mock to return values that match our test scenario
-        mock_forward.side_effect = [
-            {"output1": 0.6, "output2": 1.4},  # First sample
-            {"output1": 0.15, "output2": 0.6}  # Second sample
-        ]
-        
-        # Run the wave
-        successful_samples, impl_scores = simple_matcher.run_wave(
-            params, use_emulator=False
-        )
-        
-        # Check results
-        assert len(successful_samples) == 2
-        assert impl_scores.shape == (2, 2)  # 2 samples x 2 outputs
-        assert mock_forward.call_count == 2
-    
+# Integration test - generate samples and run simulations on them
+def test_end_to_end_workflow(mock_simulator):
+    """Test the end-to-end workflow of generating samples and running simulations"""
+    # Generate samples
+    n_samples = 10
+    samples = mock_simulator.sample_inputs(n_samples)
 
-def test_run_wave_with_emulator(simple_matcher):
-    """Test running a wave using an emulator"""
-    # Create mock emulator
-    mock_emulator = MagicMock()
-    # Setup predict to return means and stds for two outputs
-    mock_emulator.predict.return_value = (
-        np.array([[0.5, 0.7]]),  # means - close to observations
-        np.array([[0.1, 0.1]])   # stds
-    )
-    
-    # Create sample parameters
-    params = [{"x1": 0.5, "x2": 0.7}]
-    
-    # Run the wave
-    successful_samples, impl_scores = simple_matcher.run_wave(
-        params, use_emulator=True, emulator=mock_emulator
-    )
-    
-    # Check results
-    assert len(successful_samples) == 1
-    assert impl_scores.shape == (1, 2)  # 1 sample x 2 outputs
-    assert mock_emulator.predict.called
-        
+    # Run simulations on all samples
+    results = []
+    for sample in samples:
+        result = mock_simulator.sample_forward(sample)
+        if result is not None:
+            results.append(result)
 
-def test_generate_new_samples(simple_matcher):
-    """Test generating new samples within NROY space"""
-    # Create some NROY samples
-    nroy_samples = [
-        {"x1": 0.4, "x2": 0.6},
-        {"x1": 0.5, "x2": 0.7},
-        {"x1": 0.6, "x2": 0.8}
-    ]
-    
-    # Generate new samples
-    new_samples = simple_matcher.generate_new_samples(nroy_samples, n_samples=5)
-    
-    # Check results
-    assert len(new_samples) == 5
-    for sample in new_samples:
-        assert "x1" in sample
-        assert "x2" in sample
-        assert 0.4 <= sample["x1"] <= 0.6  # Within bounds of NROY samples
-        assert 0.6 <= sample["x2"] <= 0.8  # Within bounds of NROY samples
-        
+    # All simulations should succeed with our mock
+    assert len(results) == n_samples
 
-def test_generate_new_samples_empty_nroy(simple_matcher):
-    """Test generating new samples with empty NROY"""
-    # Generate new samples with empty NROY
-    new_samples = simple_matcher.generate_new_samples([], n_samples=5)
-    
-    # Should fall back to simulator.sample_inputs
-    assert len(new_samples) == 5
-    
-
-def test_run_history_matching(simple_matcher):
-    """Test full history matching process"""
-    # Create mock emulator - avoid comparing arrays directly
-    mock_emulator = MagicMock()
-    # Configure predict method to return appropriate data for single prediction
-    mock_emulator.predict.return_value = (
-        np.array([[0.5, 0.7]]),  # means
-        np.array([[0.1, 0.1]])   # stds
-    )
-    
-    # Don't use actual arrays for X_train_ and y_train_ to avoid array comparison issues
-    mock_emulator.X_train_ = np.array([[0.5, 0.7]])
-    mock_emulator.y_train_ = np.array([[0.5, 0.7]])
-    
-    # Mock update_emulator to avoid array comparisons in assertions
-    with patch.object(simple_matcher, 'update_emulator', return_value=mock_emulator) as mock_update:
-        # Run history matching with mocked update_emulator
-        # Use n_samples_per_wave=15 to ensure we have enough samples to trigger the emulator update
-        all_samples, all_impl_scores, updated_emulator = simple_matcher.run_history_matching(
-            n_waves=2, 
-            n_samples_per_wave=15,  # Increased from 5 to 15
-            use_emulator=True,
-            initial_emulator=mock_emulator
-        )
-        
-        # Check results - simple assertions that avoid array comparison
-        assert len(all_samples) > 0, "No samples were returned"
-        assert all_impl_scores.shape[1] == 2, "Expected 2 outputs"
-        assert updated_emulator is mock_emulator, "Emulator was not returned correctly"
-        
-        # Verify update_emulator was called at least once
-        assert mock_update.call_count > 0, "update_emulator was not called"
-    
-
-def test_update_emulator(simple_matcher):
-    """Test updating the emulator with new data"""
-    # Create mock emulator with stored training data
-    mock_emulator = MagicMock()
-    mock_emulator.X_train_ = np.array([[0.3, 0.4], [0.5, 0.6]])
-    mock_emulator.y_train_ = np.array([[0.3, 0.4], [0.5, 0.6]])
-    
-    # Create new samples and outputs
-    new_samples = np.array([[0.7, 0.8]])
-    new_outputs = np.array([[0.7, 0.8]])
-    
-    # Update emulator - proper mocking to check method calls
-    with patch.object(mock_emulator, 'update', create=True) as mock_update, \
-         patch.object(mock_emulator, 'partial_fit', create=True) as mock_partial_fit, \
-         patch.object(mock_emulator, 'fit', create=True) as mock_fit:
-            
-        updated_emulator = simple_matcher.update_emulator(
-            mock_emulator, new_samples, new_outputs
-        )
-        
-        # Check if any of the methods was called
-        methods_called = [
-            mock_update.call_count > 0,
-            mock_partial_fit.call_count > 0,
-            mock_fit.call_count > 0
-        ]
-        assert any(methods_called), "None of the expected methods were called"
-        
-        # Verify that X_train_ and y_train_ attributes exist
-        assert hasattr(updated_emulator, 'X_train_')
-        assert hasattr(updated_emulator, 'y_train_')
-    
-
-def test_update_emulator_dict_input(simple_matcher):
-    """Test updating the emulator with dictionary input"""
-    # Create mock emulator
-    mock_emulator = MagicMock()
-    mock_emulator.X_train_ = np.array([[0.3, 0.4]])
-    mock_emulator.y_train_ = np.array([0.3, 0.4])
-    
-    # Create new samples as dictionaries and outputs
-    new_samples = [{"x1": 0.7, "x2": 0.8}]
-    new_outputs = np.array([0.7, 0.8])
-    
-    # Update emulator
-    updated_emulator = simple_matcher.update_emulator(
-        mock_emulator, new_samples, new_outputs, include_previous_data=False
-    )
-    
-    # Check results - should only use new data
-    expected_X = np.array([[0.7, 0.8]])
-    np.testing.assert_array_equal(updated_emulator.X_train_, expected_X)
-    
-
-def test_update_emulator_refit_hyperparams(simple_matcher):
-    """Test updating the emulator with refit_hyperparams=True"""
-    # Create mock emulator
-    mock_emulator = MagicMock()
-    mock_emulator.X_train_ = np.array([[0.3, 0.4]])
-    mock_emulator.y_train_ = np.array([0.3, 0.4])
-    
-    # Make fit method that doesn't compare arrays directly
-    mock_emulator.fit = MagicMock()
-    
-    # Create new samples and outputs
-    new_samples = np.array([[0.7, 0.8]])
-    new_outputs = np.array([0.7, 0.8])
-    
-    # Update emulator with refit_hyperparams=True
-    updated_emulator = simple_matcher.update_emulator(
-        mock_emulator, new_samples, new_outputs, refit_hyperparams=True
-    )
-    
-    # Just check that fit was called
-    assert mock_emulator.fit.called, "fit method was not called"
+    # Each result should have the expected structure
+    for result in results:
+        assert isinstance(result, dict)
+        assert set(result.keys()) == set(mock_simulator.output_names)
+        assert "output1" in result
+        assert "output2" in result
