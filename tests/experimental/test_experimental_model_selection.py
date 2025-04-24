@@ -1,10 +1,9 @@
 import numpy as np
 import torch
-from sklearn.model_selection import KFold, LeavePOut
-from torch.utils.data import TensorDataset
-
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.model_selection import cross_validate
+from sklearn.model_selection import KFold, LeavePOut
+from torch.utils.data import TensorDataset
 
 
 def test_cross_validate():
@@ -13,6 +12,9 @@ def test_cross_validate():
     """
 
     class DummyEmulator(Emulator):
+        def __init__(self, x=None, y=None, **kwargs):
+            pass
+
         def fit(self, x, y):
             pass
 

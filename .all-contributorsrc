@@ -104,7 +104,8 @@
       "contributions": [
         "code",
         "ideas",
-        "doc"
+        "doc",
+        "review"
       ]
     },
     {
@@ -127,7 +128,9 @@
       "contributions": [
         "code",
         "design",
-        "ideas"
+        "ideas",
+        "review",
+        "doc"
       ]
     },
     {
@@ -182,7 +185,8 @@
       "contributions": [
         "code",
         "ideas",
-        "review"
+        "review",
+        "doc"
       ]
     }
   ]

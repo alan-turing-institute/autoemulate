@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -15,9 +17,11 @@ from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
-from autoemulate.model_processing import _process_models
+from autoemulate.model_processing import AutoEmulatePipeline
 from autoemulate.plotting import _plot_cv
 from autoemulate.plotting import _plot_model
+from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import NonTrainableTransformer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
 from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
@@ -55,6 +59,10 @@ class AutoEmulate:
         scaler=StandardScaler(),
         reduce_dim=False,
         dim_reducer=PCA(),
+        scale_output=True,
+        scaler_output=StandardScaler(),
+        reduce_dim_output=False,
+        preprocessing_methods=None,
         cross_validator=KFold(
             n_splits=5, shuffle=True, random_state=np.random.randint(1e5)
         ),
@@ -94,6 +102,15 @@ class AutoEmulate:
             explain 95% of the variance. Other methods can have slightly different n_components
             parameter inputs, see the sklearn documentation for more details. Dimension reduction
             is always performed after scaling.
+        scale_output : bool
+            Whether to scale the output data.
+        scaler_output : sklearn.preprocessing.StandardScaler
+            Scaler to use. Defaults to StandardScaler. Can be any sklearn scaler.
+        reduce_dim_output : bool
+            Whether to reduce the dimensionality of the output data.
+        preprocessing_methods : dict
+            List of dictionaries with preprocessing methods and their parameters.
+            Dimensionality reduction method to use for outputs. Can be PCA or Variational Autoencoder. #TODO: set PCA as default.
         cross_validator : sklearn.model_selection object
             Cross-validation strategy to use. Defaults to KFold with 5 splits and shuffle=True.
             Can be any object in `sklearn.model_selection` that generates train/test indices.
@@ -115,15 +132,29 @@ class AutoEmulate:
             self.X, test_size=self.test_set_size, random_state=42
         )
         self.model_names = self.model_registry.get_model_names(models, is_core=True)
-        self.models = _process_models(
+
+        if preprocessing_methods is None or len(preprocessing_methods) == 0:
+            preprocessing_methods = [{"name": "None", "params": {}}]
+        self.preprocessing_methods = preprocessing_methods
+
+        # Replaced `self.models = _process_models(...)` with:
+        self.ae_pipeline = AutoEmulatePipeline(
             model_registry=self.model_registry,
             model_names=list(self.model_names.keys()),
             y=self.y,
-            scale=scale,
-            scaler=scaler,
-            reduce_dim=reduce_dim,
-            dim_reducer=dim_reducer,
+            prep_config={"name": "None", "params": {}},
+            scale_input=scale,
+            scaler_input=scaler,
+            reduce_dim_input=reduce_dim,
+            dim_reducer_input=dim_reducer,
+            scale_output=scale_output,
+            scaler_output=scaler_output,
+            reduce_dim_output=reduce_dim_output,
         )
+        # to avoid confusion between the pipeline and the actual models (which are now components of the pipeline).
+        # The `AutoEmulatePipeline` class was created to wrap the pipeline creation logic and provide direct access
+        # to its components (e.g., models, reducers, scalers, etc.).
+
         self.metrics = self._get_metrics(METRIC_REGISTRY)
         self.cross_validator = _check_cv(cross_validator)
         self.param_search = param_search
@@ -136,6 +167,9 @@ class AutoEmulate:
         self.is_set_up = True
         self.dim_reducer = dim_reducer
         self.reduce_dim = reduce_dim
+        self.scale_output = scale_output
+        self.scaler_output = scaler_output
+        self.reduce_dim_output = reduce_dim_output
         self.cv_results = {}
 
         if print_setup:
@@ -192,11 +226,12 @@ class AutoEmulate:
 
         # Freshly initialise scores dataframe when running compare()
         self.scores_df = pd.DataFrame(
-            columns=["model", "short", "metric", "fold", "score"]
+            columns=["model", "short", "preprocessing", "metric", "fold", "score"]
         ).astype(
             {
                 "model": "object",
                 "short": "object",
+                "preprocessing": "object",
                 "metric": "object",
                 "fold": "int64",
                 "score": "float64",
@@ -208,97 +243,328 @@ class AutoEmulate:
         else:
             pb_text = "Cross-validating"
 
-        with tqdm(total=len(self.models), desc="Initializing") as pbar:
-            for i, model in enumerate(self.models):
-                model_name = get_model_name(model)
-                pbar.set_description(f"{pb_text} {model_name}")
-                with _redirect_warnings(self.logger):
-                    try:
-                        # hyperparameter search
-                        if self.param_search:
-                            self.models[i] = _optimize_params(
+        # Initialize dictionary to store results
+        self.preprocessing_results = {}
+
+        with tqdm(
+            total=len(self.ae_pipeline.models_piped) * len(self.preprocessing_methods),
+            desc=pb_text,
+        ) as pbar:
+            for prep_config in self.preprocessing_methods:
+                # Create the actual transformer instance and fit it
+                prep_name = prep_config["name"]
+                prep_params = prep_config.get("params", {})
+
+                # Outer loop training:
+                # Fit the scaler and reducer on the whole training set
+                if self.scale_output:
+                    fitted_scaler = self.scaler_output.fit(_ensure_2d(self.y))
+                    self.ae_pipeline.scaler_output = NonTrainableTransformer(
+                        fitted_scaler
+                    )
+                if self.reduce_dim_output:
+                    if self.scale_output:
+                        # Fit the dimensionality reducer on the scaled output
+                        fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(
+                            fitted_scaler.transform(self.y)
+                        )
+                    else:
+                        # Fit the dimensionality reducer on the original output
+                        fitted_reducer = get_dim_reducer(prep_name, **prep_params).fit(
+                            self.y
+                        )
+                    self.ae_pipeline.dim_reducer_output = NonTrainableTransformer(
+                        fitted_reducer
+                    )
+
+                if self.scale_output or self.reduce_dim_output:
+                    self.ae_pipeline._wrap_model_reducer_in_pipeline()
+
+                # Initialize storage for this preprocessing method
+                self.preprocessing_results[prep_name] = {
+                    "models": self.ae_pipeline.models_piped,
+                    "cv_results": {},
+                    "best_model": None,
+                    "transformer": self.ae_pipeline.dim_reducer_output,
+                    "params": prep_params,
+                }
+
+                # Process each model
+                for i, model in enumerate(
+                    self.preprocessing_results[prep_name]["models"]
+                ):
+                    model_name = get_model_name(model)
+
+                    # Update progress bar description
+                    if prep_name == "None":
+                        pbar.set_description(f"{pb_text} {model_name}")
+                    else:
+                        pbar.set_description(
+                            f"{pb_text} {prep_name} | Model: {model_name}"
+                        )
+
+                    with _redirect_warnings(self.logger):
+                        try:
+                            # hyperparameter search
+                            if self.param_search:
+                                model = _optimize_params(
+                                    X=self.X[self.train_idxs],
+                                    y=self.y[self.train_idxs],
+                                    cv=self.cross_validator,
+                                    model=model,
+                                    search_type=self.search_type,
+                                    niter=self.param_search_iters,
+                                    param_space=None,
+                                    n_jobs=self.n_jobs,
+                                    logger=self.logger,
+                                )
+
+                            # run cross validation
+                            fitted_model, cv_results = _run_cv(
                                 X=self.X[self.train_idxs],
                                 y=self.y[self.train_idxs],
                                 cv=self.cross_validator,
                                 model=model,
-                                search_type=self.search_type,
-                                niter=self.param_search_iters,
-                                param_space=None,
+                                metrics=self.metrics,
                                 n_jobs=self.n_jobs,
                                 logger=self.logger,
                             )
-                        # run cross validation
-                        fitted_model, cv_results = _run_cv(
-                            X=self.X[self.train_idxs],
-                            y=self.y[self.train_idxs],
-                            cv=self.cross_validator,
-                            model=self.models[i],
-                            metrics=self.metrics,
-                            n_jobs=self.n_jobs,
-                            logger=self.logger,
-                        )
-                    except Exception:
-                        self.logger.exception(
-                            f"Error cross-validating model {model_name}"
-                        )
-                        continue
-                    finally:
+                        except Exception:
+                            error_msg = f"Error cross-validating {model_name}"
+                            if prep_name != "None":
+                                error_msg = (
+                                    f"Error cross-validating {prep_name} - {model_name}"
+                                )
+                            self.logger.exception(error_msg)
+                            pbar.update(1)
+                            continue
+
+                        # Store the fitted model and results
+                        self.preprocessing_results[prep_name]["models"][
+                            i
+                        ] = fitted_model
+                        self.preprocessing_results[prep_name]["cv_results"][
+                            model_name
+                        ] = cv_results
+
+                        # Add results to scores_df with preprocessing method
+                        for metric_name, metric_values in cv_results.items():
+                            if metric_name.startswith("test_"):
+                                metric = metric_name.replace("test_", "")
+                                for fold_idx, fold_score in enumerate(metric_values):
+                                    new_row = {
+                                        "model": model_name,
+                                        "short": get_short_model_name(model),
+                                        "preprocessing": prep_name,
+                                        "metric": metric,
+                                        "fold": fold_idx,
+                                        "score": fold_score,
+                                    }
+                                    self.scores_df = pd.concat(
+                                        [self.scores_df, pd.DataFrame([new_row])],
+                                        ignore_index=True,
+                                    )
+
+                        # Update progress bar
                         pbar.update(1)
 
-                self.models[i] = fitted_model
-                self.cv_results[model_name] = cv_results
+                # Get best model for this preprocessing method
+                self.preprocessing_results[prep_name][
+                    "best_model"
+                ] = self.get_best_model_for_prep(
+                    prep_results=self.preprocessing_results[prep_name], metric="r2"
+                )
 
-        # get best model
-        self.best_model = self.get_model(rank=1, metric="r2")
+        # Find the overall best model and preprocessing method
+        (
+            self.best_prep_method,
+            self.best_model,
+            self.best_transformer,
+        ) = self.get_overall_best_model(metric="r2")
+
+        # Store additional information about the best combination
+        self.best_combination = {
+            "preprocessing": self.best_prep_method,
+            "model": get_model_name(self.best_model),
+            "transformer": self.best_transformer.base_transformer_name,
+        }
 
         return self.best_model
 
-    def get_model(self, name=None, rank=1, metric="r2"):
-        """Get a fitted model based on its name or rank in the comparison.
+    def get_model(self, name=None, rank=None, preprocessing=None, metric="r2"):
+        """Get a fitted model by name or rank, optionally from specific preprocessing.
 
         Parameters
         ----------
-        name : str
-            Name of the model to return. Can be full name or short name, e.g. "GaussianProcess" or "gp".
-            Short name abbreviations are the uppercase first letter of each word in the full name (e.g. "GaussianProcess" -> "gp").
-        rank : int
-            Rank of the model to return. Defaults to 1, which is the best model, 2 is the second best, etc.
-        metric : str
-            Metric to use for determining the best model.
+        name : str, optional
+            Model name to get (e.g., "GaussianProcess")
+        rank : int, optional
+            Rank of model to get (1 = best)
+        preprocessing : str, optional
+            Specific preprocessing method to use (None for best overall)
+        metric : str, optional
+            Metric to use for ranking ("r2" by default)
 
         Returns
         -------
-        model : object
-            Model fitted on full data.
+        Fitted model instance
         """
+        if not hasattr(self, "preprocessing_results"):
+            raise RuntimeError("Must run compare() first")
 
-        # get model by name
+        # Handle rank specification
+        if rank is not None:
+            if preprocessing is None:
+                # Get overall ranking across all preprocessing methods
+                summary = self.summarise_cv(sort_by=metric)
+                # Remove duplicate models from different preprocessing
+                summary = summary.drop_duplicates(
+                    subset=["model", "short"], keep="first"
+                )
+                if rank < 1 or rank > len(summary):
+                    raise RuntimeError(f"Rank must be between 1 and {len(summary)}")
+                name = summary.iloc[rank - 1]["model"]
+            else:
+                # Get ranking within specific preprocessing method
+                if preprocessing not in self.preprocessing_results:
+                    raise ValueError(
+                        f"Unknown preprocessing: {preprocessing}. "
+                        f"Available: {list(self.preprocessing_results.keys())}"
+                    )
+                summary = self.summarise_cv(preprocessing=preprocessing, sort_by=metric)
+                if rank < 1 or rank > len(summary):
+                    raise RuntimeError(
+                        f"Rank must be between 1 and {len(summary)} for preprocessing '{preprocessing}'"
+                    )
+                name = summary.iloc[rank - 1]["model"]
+
+        # Get model by name with optional preprocessing filter
         if name is not None:
-            if not isinstance(name, str):
-                raise ValueError("Name must be a string")
-            for model in self.models:
-                if get_model_name(model) == name or get_short_model_name(model) == name:
-                    return model
-            raise ValueError(f"Model {name} not found")
+            # Convert short name to full name if needed
+            full_name = _get_full_model_name(name, self.model_names)
+            if full_name is None:
+                raise ValueError(f"Model '{name}' not found in registered models")
 
-        # check that comparison has been run
-        if not hasattr(self, "cv_results") and name is None:
-            raise RuntimeError("Must run compare() before get_model()")
+            if preprocessing is not None:
+                # Get model from specific preprocessing method
+                if preprocessing not in self.preprocessing_results:
+                    raise ValueError(
+                        f"Unknown preprocessing: {preprocessing}. "
+                        f"Available: {list(self.preprocessing_results.keys())}"
+                    )
+                for model in self.preprocessing_results[preprocessing]["models"]:
+                    if get_model_name(model) == full_name:
+                        return model
+                raise ValueError(
+                    f"Model '{full_name}' not found in preprocessing '{preprocessing}'"
+                )
+            else:
+                # Search all preprocessing methods for the best instance of this model
+                best_score = -float("inf") if metric == "r2" else float("inf")
+                best_model = None
 
-        # get model by rank
-        means = _sum_cvs(self.cv_results, metric)
+                for prep_name, prep_data in self.preprocessing_results.items():
+                    # Get CV results for this preprocessing method
+                    cv_results = prep_data["cv_results"]
+                    if full_name not in cv_results:
+                        continue
 
-        if (rank > len(means)) or (rank < 1):
-            raise RuntimeError(f"Rank must be >= 1 and <= {len(means)}")
-        chosen_model_name = means.iloc[rank - 1]["model"]
+                    # Get mean score for this model+preprocessing combination
+                    means = _sum_cvs({full_name: cv_results[full_name]}, metric)
+                    current_score = means.iloc[0][f"{metric}"]
 
-        for model in self.models:
-            if get_model_name(model) == chosen_model_name:
-                chosen_model = model
-                break
+                    # Compare with current best
+                    if (metric == "r2" and current_score > best_score) or (
+                        metric != "r2" and current_score < best_score
+                    ):
+                        best_score = current_score
+                        for model in prep_data["models"]:
+                            if get_model_name(model) == full_name:
+                                best_model = model
+                                break
 
-        # check_is_fitted(chosen_model)
-        return chosen_model
+                if best_model is None:
+                    raise ValueError(
+                        f"Model '{full_name}' not found in any preprocessing method"
+                    )
+                return best_model
+
+        # Get best model for specific preprocessing or overall best
+        if preprocessing is not None:
+            if preprocessing not in self.preprocessing_results:
+                raise ValueError(
+                    f"Unknown preprocessing: {preprocessing}. "
+                    f"Available: {list(self.preprocessing_results.keys())}"
+                )
+            return self.get_best_model_for_prep(
+                prep_results=self.preprocessing_results[preprocessing], metric=metric
+            )
+        else:
+            # Get overall best model across all preprocessing methods
+            _, best_model, _ = self.get_overall_best_model(metric=metric)
+            return best_model
+
+    def get_best_model_for_prep(self, prep_results, metric="r2"):
+        """Get the best model for a specific preprocessing method.
+
+        Parameters
+        ----------
+        prep_results : dict
+            The preprocessing results dictionary containing 'cv_results'
+        metric : str
+            The metric to use for comparison (default: 'r2')
+
+        Returns
+        -------
+        object
+            The best model for this preprocessing method
+        """
+        cv_results = prep_results["cv_results"]
+
+        means = _sum_cvs(cv_results, metric)
+        best_model_name = means.iloc[0]["model"]
+
+        for model in prep_results["models"]:
+            if get_model_name(model) == best_model_name:
+                return model
+
+    def get_overall_best_model(self, metric="r2"):
+        """Get the best model across all preprocessing methods.
+
+        Parameters
+        ----------
+        metric : str
+            The metric to use for comparison (default: 'r2')
+
+        Returns
+        -------
+        tuple
+            (best_preprocessing_method, best_model, best_transformer)
+        """
+        best_score = -float("inf") if metric == "r2" else float("inf")
+        best_prep = None
+        best_model = None
+        best_transformer = None
+
+        for prep_name, prep_data in self.preprocessing_results.items():
+            # Get mean scores for this preprocessing method
+            cv_results = prep_data["cv_results"]
+            means = _sum_cvs(cv_results, metric)
+            # Get the best score for this preprocessing
+            top_score = means.iloc[0][f"{metric}"]
+            # Compare with current best
+            if (metric == "r2" and top_score > best_score) or (
+                metric != "r2" and top_score < best_score
+            ):
+                best_score = top_score
+                best_prep = prep_name
+                best_model = prep_data["best_model"]
+                best_transformer = prep_data["transformer"]
+
+        if best_model is None:
+            raise RuntimeError("No valid models found for comparison")
+
+        return best_prep, best_model, best_transformer
 
     def refit(self, model=None):
         """Refits model on full data. This is useful, as `compare()` runs only on the training data.
@@ -364,71 +630,180 @@ class AutoEmulate:
         """Print the parameters of the AutoEmulate object."""
         _print_setup(self)
 
-    def summarise_cv(self, model=None, sort_by="r2"):
-        """Summarise cv results.
+    def summarise_cv(self, model=None, preprocessing=None, sort_by="r2"):
+        """Summarise cross-validation results across models and preprocessing methods.
 
         Parameters
         ----------
         model : str, optional
-            Name of the model to get cv results for. If None, summarises results for all models.
+            Name of the model to get cv results for (can be full name like "GaussianProcess"
+            or short name like "gp"). If None, summarises results for all models.
+        preprocessing : str, optional
+            Name of preprocessing method to filter by. If None, includes all methods.
         sort_by : str, optional
             The metric to sort by. Default is "r2", can also be "rmse".
 
         Returns
         -------
         pandas.DataFrame
-            DataFrame summarising cv results.
+            DataFrame summarising cv results with preprocessing information.
         """
-        model_name = (
-            _get_full_model_name(model, self.model_names) if model is not None else None
+        if not hasattr(self, "preprocessing_results"):
+            raise RuntimeError("Must run compare() before summarise_cv()")
+
+        # Convert model short name to full name if needed
+        model_name = None
+        if model is not None:
+            model_name = _get_full_model_name(model, self.model_names)
+            if model_name is None:
+                raise ValueError(f"Model '{model}' not found in registered models")
+
+        all_results = []
+
+        for prep_name, prep_data in self.preprocessing_results.items():
+            # Skip if preprocessing filter doesn't match
+            if preprocessing is not None and prep_name != preprocessing:
+                continue
+
+            # Filter models if requested
+            for m_name, cv_res in prep_data["cv_results"].items():
+                if model_name is not None and m_name != model_name:
+                    continue
+
+                # Get the actual model object to determine short name
+                model_obj = next(
+                    (m for m in prep_data["models"] if get_model_name(m) == m_name),
+                    None,
+                )
+                if model_obj is None:
+                    continue
+
+                # Get summary for this model+preprocessing combination
+                model_summary = _sum_cv(cv_res)
+                model_summary["preprocessing"] = prep_name
+                model_summary["model"] = m_name
+                model_summary["short"] = get_short_model_name(model_obj)
+                all_results.append(model_summary)
+
+        if not all_results:
+            raise ValueError("No results found for the specified filters")
+
+        # Combine and sort results
+        full_results = pd.concat(all_results)
+        column_order = ["preprocessing", "model", "short"] + [
+            c
+            for c in full_results.columns
+            if c not in ["preprocessing", "model", "short"]
+        ]
+        full_results = full_results[column_order]
+
+        # Determine sort column and direction
+        sort_column = (
+            f"mean_{sort_by}" if f"mean_{sort_by}" in full_results.columns else sort_by
         )
+        ascending = sort_by.lower() != "r2"
 
-        if model_name is None:
-            cv = _sum_cvs(self.cv_results, sort_by)
-        else:
-            cv = _sum_cv(self.cv_results[model_name])
-
-        return cv
+        return full_results.sort_values(
+            by=["preprocessing", sort_column], ascending=[True, ascending]
+        ).reset_index(drop=True)
 
     summarize_cv = summarise_cv  # alias
 
     def plot_cv(
         self,
         model=None,
+        preprocessing=None,
         style="Xy",
         n_cols=3,
         figsize=None,
         output_index=0,
         input_index=0,
     ):
-        """Plots the results of the cross-validation.
+        """Plots the results of the cross-validation for a specific preprocessing method.
 
         Parameters
         ----------
         model : str
-            Name of the model to plot. If None, plots best folds of each models.
-            If a model name is specified, plots all folds of that model.
+            Name of the model to plot. If None, plots best folds of each model.
+        preprocessing : str
+            Name of preprocessing method to plot. If None, uses the best preprocessing method.
+            Use 'None' (string) for no preprocessing.
         style : str, optional
-            The type of plot to draw:
-            "Xy" for plotting observed and predicted values vs. features, including 2σ error bands where available (default).
-            "actual_vs_predicted" for plotting observed values (y-axis) vs. the predicted values (x-axis).
-            "residual_vs_predicted" for plotting the residuals, i.e. difference between observed and predicted values, (y-axis) vs. the predicted values (x-axis).
+            The type of plot to draw.
         n_cols : int
             Maximum number of columns in the plot grid.
         figsize : tuple, optional
-            Overrides the default figure size, in inches, e.g. (6, 4).
+            Overrides the default figure size.
         output_index : int
-            Index of the output to plot. Default is 0. Can be a single index or a list of indices.
+            Index of the output to plot.
         input_index : int
-            Index of the input to plot. Default is 0. Can be a single index or a list of indices.
+            Index of the input to plot.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The figure object containing the plot.
         """
+        if not hasattr(self, "preprocessing_results"):
+            raise RuntimeError("Must run compare() before plot_cv()")
+
+        # Handle preprocessing selection
+        if preprocessing is None:
+            preprocessing = self.best_prep_method
+            print(f"Using best preprocessing method: {preprocessing}")
+        elif preprocessing not in self.preprocessing_results:
+            raise ValueError(
+                f"Unknown preprocessing method: {preprocessing}. "
+                f"Available methods: {list(self.preprocessing_results.keys())}"
+            )
+
+        # Print preprocessing information
+        if preprocessing == "None":
+            print("\nNo preprocessing was applied (using raw target values)")
+        else:
+            prep_config = next(
+                m for m in self.preprocessing_methods if m["name"] == preprocessing
+            )
+            print("\nPreprocessing Configuration:")
+            print(f"Method: {preprocessing}")
+            print("Hyperparameters:")
+            for param, value in prep_config["params"].items():
+                print(f"  {param}: {value}")
+
+        # Get model name if specified
         model_name = (
             _get_full_model_name(model, self.model_names) if model is not None else None
         )
+
+        # Get the appropriate CV results
+        if model_name:
+            cv_results = self.preprocessing_results[preprocessing]["cv_results"].get(
+                model_name
+            )
+            if cv_results is None:
+                raise ValueError(
+                    f"Model {model_name} not found for preprocessing {preprocessing}"
+                )
+        else:
+            cv_results = {}
+            for m_name, m_results in self.preprocessing_results[preprocessing][
+                "cv_results"
+            ].items():
+                cv_results[m_name] = m_results
+
+        # Use original or transformed y values
+        y_train = self.y[self.train_idxs]
+        if preprocessing != "None":
+            transformer = self.preprocessing_results[preprocessing]["transformer"]
+            y_train = transformer.transform(y_train)
+
+        # Create the plot
         figure = _plot_cv(
-            self.cv_results,
+            self.preprocessing_results[preprocessing][
+                "cv_results"
+            ],  # TODO: debug why this and not directly cv_results
             self.X[self.train_idxs],
-            self.y[self.train_idxs],
+            y_train,
             model_name=model_name,
             n_cols=n_cols,
             style=style,
@@ -436,64 +811,116 @@ class AutoEmulate:
             output_index=output_index,
             input_index=input_index,
         )
+
+        # Add preprocessing info to title
+        prep_title = (
+            "No preprocessing"
+            if preprocessing == "None"
+            else f"Preprocessing: {preprocessing}"
+        )
+        if figure._suptitle is not None:
+            figure._suptitle.set_text(figure._suptitle.get_text() + f" | {prep_title}")
+        else:
+            figure.suptitle(prep_title)
+
         return figure
 
-    def evaluate(self, model=None, multioutput="uniform_average"):
+    def evaluate(self, model=None, preprocessing=None, multioutput="uniform_average"):
         """
-        Evaluates the model on the test set.
-
-        Test set size can be specified in `setup()` with `test_set_size`.
+        Evaluates the model on the test set, handling preprocessing transformations if any.
 
         Parameters
         ----------
-        model : object
-            Fitted model
+        model : object, optional
+            Fitted model to evaluate. If None, uses the best model from comparison.
+        preprocessing : str, optional
+            Name of preprocessing method used for the model. If None, uses the best preprocessing method
+            from comparison or assumes no preprocessing if none was specified.
         multioutput : str, optional
-            Defines aggregating of multiple output scores.
-            'raw_values' : returns scores for each target
-            'uniform_average' : scores are averaged uniformly
-            'variance_weighted' : scores are averaged weighted by their individual variances
+            Defines aggregating of multiple output scores:
+            - 'raw_values' : returns scores for each target
+            - 'uniform_average' : scores are averaged uniformly
+            - 'variance_weighted' : scores are averaged weighted by their individual variances
 
         Returns
         -------
-        scores_df : pandas.DataFrame
-            Dataframe containing the model scores on the test set.
+        pandas.DataFrame
+            DataFrame containing the model scores on the test set with columns:
+            - model: Model name
+            - short: Short model name
+            - preprocessing: Preprocessing method used (if any)
+            - target: Target/output name (if multioutput='raw_values')
+            - metric scores (e.g., r2, rmse)
         """
+        # select model and preprocessing method and transformer if available
         if model is None:
-            raise ValueError("Model must be provided")
-        if not isinstance(model, BaseEstimator):
-            raise ValueError("Model should be a fitted model")
+            model = self.best_model
 
+        if preprocessing is None:
+            if hasattr(self, "best_prep_method"):
+                preprocessing = self.best_prep_method
+            else:
+                preprocessing = "None"
+
+        transformer = None
+        if (
+            hasattr(self, "preprocessing_results")
+            and preprocessing in self.preprocessing_results
+        ):
+            transformer = self.preprocessing_results[preprocessing]["transformer"]
+
+        # Get true values (transform if needed)
+        # y_true = self.y[self.test_idxs]
+        # if transformer is not None:
+        #    _, y_true = transformer.transform(self.X[self.test_idxs], y_true)
+
+        # Get predictions
         y_pred = model.predict(self.X[self.test_idxs])
         y_true = self.y[self.test_idxs]
 
+        # If preprocessing was applied, inverse transform predictions for evaluation
+        # if transformer is not None and hasattr(transformer, "inverse_transform"):
+        #    y_pred = transformer.inverse_transform(self.X[self.test_idxs], y_pred)[1]
+        #   y_true = self.y[self.test_idxs]  # Revert to original y values
+
+        # Calculate metrics
         scores = {}
         for metric in self.metrics:
             scores[metric.__name__] = metric(y_true, y_pred, multioutput=multioutput)
 
-        # make sure scores are lists/arrays
+        # Prepare results dataframe
         scores = {
             k: [v] if not isinstance(v, (list, np.ndarray)) else v
             for k, v in scores.items()
         }
 
-        scores_df = (
-            pd.DataFrame(scores)
-            .assign(target=[f"y{i}" for i in range(len(scores[next(iter(scores))]))])
-            .assign(short=get_short_model_name(model))
-            .assign(model=get_model_name(model))
-            .reindex(columns=["model", "short", "target"] + list(scores.keys()))
-        ).round(4)
+        # Create base dataframe
+        scores_df = pd.DataFrame(scores)
 
-        # if multioutput is not raw_values, drop the target column
-        if multioutput != "raw_values":
-            scores_df = scores_df.drop(columns=["target"])
+        # Add target column if multioutput is raw_values
+        if multioutput == "raw_values":
+            scores_df["target"] = [
+                f"y{i}" for i in range(len(scores[next(iter(scores))]))
+            ]
+
+        # Add metadata columns
+        scores_df["model"] = get_model_name(model)
+        scores_df["short"] = get_short_model_name(model)
+        scores_df["preprocessing"] = preprocessing
+
+        # Reorder columns
+        cols = ["model", "short", "preprocessing"]
+        if multioutput == "raw_values":
+            cols.append("target")
+        cols.extend(list(scores.keys()))
+        scores_df = scores_df[cols].round(4)
 
         return scores_df
 
     def plot_eval(
         self,
-        model,
+        model=None,
+        preprocessing=None,
         style="Xy",
         n_cols=3,
         figsize=None,
@@ -518,6 +945,26 @@ class AutoEmulate:
         input_index : list, int
             Index of the input to plot. Either a single index or a list of indices. Only used if style="Xy".
         """
+        # select model and preprocessing method and transformer if available
+        if model is None:
+            model = self.best_model
+
+        """
+        transformer = None
+        if (
+            hasattr(self, "preprocessing_results")
+            and preprocessing in self.preprocessing_results
+        ):
+            transformer = self.preprocessing_results[preprocessing]["transformer"]
+
+        scaler_output = None
+        if (
+            hasattr(model.transformer.named_steps, "scaler_output")
+            and preprocessing in self.preprocessing_results
+        ):
+            scaler_output = model.transformer.named_steps["scaler_output"]
+        """
+
         fig = _plot_model(
             model,
             self.X[self.test_idxs],
