@@ -212,20 +212,16 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
             ensure_min_samples=2,
         )
 
-        if self.normalise_y:
-            y, self.y_mean_, self.y_std_ = _normalise_y(y)
-        elif y is not None and isinstance(y, np.ndarray):
-            self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
-            self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
-        else:
-            msg = "Input 'y' must be a non-None NumPy array."
-            raise ValueError(msg)
-
         return x, y
 
     def _fit(self, x: InputLike, y: InputLike | None):
         self.model.fit(x, y)
         self.is_fitted_ = True
+
+    def fit(self, x: InputLike, y: InputLike | None):
+        """Fits the emulator to the data."""
+        x, y = self.check_and_convert(x, y)
+        self._fit(x, y)
 
     def predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""

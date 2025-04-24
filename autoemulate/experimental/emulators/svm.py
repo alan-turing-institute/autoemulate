@@ -4,6 +4,7 @@ from sklearn.svm import SVR
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.types import InputLike
 
+from autoemulate.utils import _denormalise_y, _normalise_y
 
 class SupportVectorMachines(SklearnBackend):
     """Support Vector Machines Emulator.
@@ -60,6 +61,14 @@ class SupportVectorMachines(SklearnBackend):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
         x, y = self.check_and_convert(x, y)
+        if self.normalise_y:
+            y, self.y_mean_, self.y_std_ = _normalise_y(y)
+        elif y is not None and isinstance(y, np.ndarray):
+            self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
+            self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
+        else:
+            msg = "Input 'y' must be a non-None NumPy array."
+            raise ValueError(msg)
         self._fit(x, y)
 
     @staticmethod
