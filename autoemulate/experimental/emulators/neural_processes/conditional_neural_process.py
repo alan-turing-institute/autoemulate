@@ -462,6 +462,12 @@ class CNPModule(PyTorchBackend):
             reinterpreted_batch_ndims=1,
         )
 
+    def is_multioutput(self) -> bool:
+        """
+        Check if the model is a multi-output model.
+        """
+        return True
+
     @staticmethod
     def get_tune_config():
         return {
