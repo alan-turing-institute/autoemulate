@@ -239,6 +239,11 @@ class Decoder(nn.Module):
 
 
 class CNPModule(PyTorchBackend):
+    """ "
+    Implemntation of Conditional Neural Process (CNP) model.
+    The model is a deterministic encoder-decoder architecture.
+    """
+
     def __init__(  # noqa: PLR0913
         self,
         x: InputLike,
@@ -253,6 +258,34 @@ class CNPModule(PyTorchBackend):
         n_episodes: int = 12,
         batch_size: int = 4,
     ):
+        """
+        Parameters
+        ----------
+        x: (n_points, input_dim)
+            Input data of shape (n_points, input_dim).
+        y: (n_points, output_dim)
+            Output data of shape (n_points, output_dim).
+        hidden_dim: int
+            Hidden dimension of the encoder and decoder.
+        latent_dim: int
+            Latent dimension of the encoder and decoder.
+        hidden_layers_enc: int
+            Number of hidden layers in the encoder.
+        hidden_layers_dec: int
+            Number of hidden layers in the decoder.
+        activation: type[nn.Module]
+            Activation function to use in the encoder and decoder.
+        min_context_points: int
+            Minimum number of context points to sample.
+        offset_context_points: int
+            Offset for the maximum number of context points to sample.
+            max_context_points = min_context_points + offset_context_points
+        n_episodes: int
+            This is the length of the target sequence.
+            It must be greater than max_context_points.
+        batch_size: int
+            Batch size for training.
+        """
         super().__init__()
         x_, y_ = self._convert_to_tensors(x, y)
         self.input_dim = x_.shape[1]
@@ -320,8 +353,14 @@ class CNPModule(PyTorchBackend):
         y: InputLike | None,
     ):
         """
-        Fit the model to the data. x and y are expected to have shape:
-        (n_points, input_dim). The data is batched within the method.
+        Fit the model to the data.
+        Note the batching of data is done internally in the method.
+        Parameters
+        ----------
+        x: (n_points, input_dim)
+            Input data of shape (n_points, input_dim).
+        y: (n_points, output_dim)
+            Output data of shape (n_points, output_dim).
         """
         self.train()
 
@@ -378,11 +417,20 @@ class CNPModule(PyTorchBackend):
 
     def predict(self, x: InputLike) -> DistributionLike:
         """
-        Predict the output for the given input x. x is expected to have shape:
-        (n_points, input_dim).
-
         Predict uses the training data as the context data and the input x as the target
         data. The data is preprocessed within the method.
+
+        Parameters
+        ----------
+        x: (n_points, input_dim)
+            Input data of shape (n_points, input_dim).
+
+        Returns
+        -------
+        distribution: torch.distributions.Independent
+            Distribution of the output data.
+            Note the distribution is a single tensor of shape (n_points, output_dim).
+
         """
         if self.x_train is None or self.y_train is None:
             msg = "Model has not been trained. Please call fit() before predict()."
