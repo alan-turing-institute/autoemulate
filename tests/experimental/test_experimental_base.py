@@ -101,7 +101,7 @@ class TestPyTorchBackend:
             super().__init__()
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
-            self.loss_fn = nn.MSELoss()
+            self.loss_func = nn.MSELoss()
             self.optimizer = optim.SGD(self.parameters(), lr=0.01)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
