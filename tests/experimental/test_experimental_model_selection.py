@@ -25,6 +25,10 @@ def test_cross_validate():
         def get_tune_config():
             return {}
 
+        @staticmethod
+        def is_multioutput():
+            return False
+
     x = torch.tensor(np.arange(32)).float()
     y = 2 * x
     dataset = TensorDataset(x, y)

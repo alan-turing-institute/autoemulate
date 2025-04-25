@@ -119,6 +119,10 @@ class TestPyTorchBackend:
                 "batch_size": [16],
             }
 
+        @staticmethod
+        def is_multioutput():
+            return False
+
     def setup_method(self):
         """
         Define the PyTorchBackend instance.
