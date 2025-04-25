@@ -64,7 +64,8 @@ class LightGBM(Emulator, InputTypeMixin):
         self.importance_type = importance_type
         self.verbose = verbose
 
-    def is_multioutput(self) -> bool:
+    @staticmethod
+    def is_multioutput() -> bool:
         return False
 
     def fit(self, x: InputLike, y: InputLike | None):

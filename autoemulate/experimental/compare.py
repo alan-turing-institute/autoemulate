@@ -1,14 +1,13 @@
 import logging
+import warnings
 from typing import Any
 
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, KFold
 
 from autoemulate.experimental.data.utils import InputTypeMixin
+from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
-)
 from autoemulate.experimental.model_selection import cross_validate
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import InputLike
@@ -21,10 +20,45 @@ class AutoEmulate(InputTypeMixin):
         y: InputLike,
         models: list[type[Emulator]] | None = None,
     ):
-        if models is None:
-            models = [GaussianProcessExact]
-        self.models = models
+        # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
+        x, y = self._convert_to_tensors(x, y)
+
+        # Set default models if None
+        updated_models = self.get_models(models)
+
+        # Filter models to only be those that can handle multioutput data
+        if y.shape[1] > 1:
+            updated_models = self.filter_models_if_multioutput(
+                updated_models, models is not None
+            )
+
+        self.models = updated_models
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
+
+    @staticmethod
+    def all_emulators() -> list[type[Emulator]]:
+        return ALL_EMULATORS
+
+    def get_models(self, models: list[type[Emulator]] | None) -> list[type[Emulator]]:
+        if models is None:
+            return self.all_emulators()
+        return models
+
+    def filter_models_if_multioutput(
+        self, models: list[type[Emulator]], warn: bool
+    ) -> list[type[Emulator]]:
+        updated_models = []
+        for model in models:
+            if not model.is_multioutput():
+                if warn:
+                    msg = (
+                        f"Model ({model}) is not multioutput but the data is "
+                        f"multioutput. Skipping model ({model})..."
+                    )
+                    warnings.warn(msg, stacklevel=2)
+            else:
+                updated_models.append(model)
+        return updated_models
 
     def log_compare(self, model_cls, best_model_config, r2_score, rmse_score):
         logger = logging.getLogger(__name__)
