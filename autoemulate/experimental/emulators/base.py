@@ -5,11 +5,7 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.types import (
-    InputLike,
-    OutputLike,
-    TuneConfig,
-)
+from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
 
 
 class Emulator(ABC):
@@ -34,6 +30,10 @@ class Emulator(ABC):
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
         pass
+
+    def is_multioutput(self) -> bool:
+        """Flag to indicate if the model is multioutput or not."""
+        return False
 
     @staticmethod
     @abstractmethod
