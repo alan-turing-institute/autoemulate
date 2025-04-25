@@ -182,7 +182,7 @@ class Active(Learner):
         if isinstance(output, TensorLike):
             Y_pred = output
         elif isinstance(output, GaussianLike):
-            Y_pred, _ = output.mean, output.covariance_matrix
+            Y_pred, _ = output.mean, torch.sqrt(output.variance)
         else:
             msg = (
                 f"Output must be either `Tensor` or `MultivariateNormal` but got "
@@ -215,16 +215,11 @@ class Active(Learner):
 
         # If Gaussian output
         if isinstance(output, MultivariateNormal):
-            assert isinstance(output.covariance_matrix, TensorLike)
-            self.metrics["trace"].append(
-                self.trace(output.covariance_matrix, self.out_dim).item()
-            )
-            self.metrics["logdet"].append(
-                self.logdet(output.covariance_matrix, self.out_dim).item()
-            )
-            self.metrics["max_eigval"].append(
-                self.max_eigval(output.covariance_matrix).item()
-            )
+            assert isinstance(output.variance, TensorLike)
+            std = torch.sqrt(output.variance)
+            self.metrics["trace"].append(self.trace(std, self.out_dim).item())
+            self.metrics["logdet"].append(self.logdet(std, self.out_dim).item())
+            self.metrics["max_eigval"].append(self.max_eigval(std).item())
 
         # extra per-strategy metrics
         for k, v in extra.items():
