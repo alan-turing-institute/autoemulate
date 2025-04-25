@@ -2,6 +2,7 @@ import pytest
 from autoemulate.experimental.emulators.neural_processes.conditional_neural_process import (  # noqa: E501
     CNPModule,
 )
+from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
 
@@ -61,3 +62,11 @@ def test_cnp_module_predict_fails_with_calling_fit_first(sample_data_y1d):
         match=r"Model has not been trained. Please call fit\(\) before predict\(\).",
     ):
         cnp.predict(x)
+
+
+def test_tune_gp(sample_data_y1d):
+    x, y = sample_data_y1d
+    tuner = Tuner(x, y, n_iter=5)
+    scores, configs = tuner.run(CNPModule)
+    assert len(scores) == 5
+    assert len(configs) == 5

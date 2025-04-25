@@ -249,7 +249,7 @@ class CNPModule(PyTorchBackend):
         hidden_layers_dec: int = 2,
         activation: type[nn.Module] = nn.ReLU,
         min_context_points: int = 2,
-        max_context_points: int = 10,
+        offset_context_points: int = 2,
         n_episodes: int = 12,
         batch_size: int = 4,
     ):
@@ -275,7 +275,7 @@ class CNPModule(PyTorchBackend):
         )
 
         self.min_context_points = min_context_points
-        self.max_context_points = max_context_points
+        self.max_context_points = self.min_context_points + offset_context_points
         self.n_episode = n_episodes
         self.optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
 
@@ -417,11 +417,12 @@ class CNPModule(PyTorchBackend):
     @staticmethod
     def get_tune_config():
         return {
-            "input_dim": [],
-            "output_dim": [],
-            "hidden_dim": [],
-            "latent_dim": [],
-            "hidden_layers_enc": [],
-            "hidden_layers_dec": [],
+            "hidden_dim": [16, 32, 64],
+            "latent_dim": np.arange(8, 64, 8),
+            "hidden_layers_enc": [1, 2, 4],
+            "hidden_layers_dec": [1, 2, 4],
             "activation": [nn.ReLU],
+            "min_context_points": [4, 5, 6],
+            "offset_context_points": [4, 6],
+            "n_episodes": [12, 13, 14],
         }
