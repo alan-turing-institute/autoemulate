@@ -68,6 +68,7 @@ class InputTypeMixin:
         self,
         x: InputLike,
         y: InputLike | None = None,
+        dtype: torch.dtype = torch.float32,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Convert InputLike x, y to Tensor or tuple of Tensors.
@@ -101,11 +102,11 @@ class InputTypeMixin:
                 # Ensure always 2D tensors
                 if y.ndim == 1:
                     y = y.unsqueeze(1)
-                return x, y
+                return x.to(dtype), y.to(dtype)
             if len(dataset.tensors) == 1:
                 (x,) = dataset.tensors
                 assert x.ndim == 2
-                return x
+                return x.to(dtype)
             msg = "Number of tensors returned must be greater than zero."
             raise ValueError(msg)
         raise ValueError(
