@@ -31,9 +31,9 @@ class Emulator(ABC):
     def predict(self, x: InputLike) -> OutputLike:
         pass
 
+    @abstractmethod
     def is_multioutput(self) -> bool:
         """Flag to indicate if the model is multioutput or not."""
-        return False
 
     @staticmethod
     @abstractmethod
