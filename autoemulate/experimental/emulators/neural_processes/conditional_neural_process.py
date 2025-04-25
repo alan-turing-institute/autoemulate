@@ -478,6 +478,7 @@ class CNPModule(PyTorchBackend):
             "hidden_layers_dec": [1, 2, 4],
             "activation": [nn.ReLU],
             "min_context_points": [4, 5, 6],
-            "offset_context_points": [4, 6],
+            "offset_context_points": [4, 5],
+            # max_context_points must be less than n_episodes
             "n_episodes": [12, 13, 14],
         }
