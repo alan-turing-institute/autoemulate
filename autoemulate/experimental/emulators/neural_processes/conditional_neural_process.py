@@ -5,7 +5,6 @@ import torch.utils.data
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.types import DistributionLike, InputLike, TensorLike
 from torch import nn
-from torch.distributions.normal import Normal
 from torch.utils.data import Dataset
 
 
@@ -283,24 +282,6 @@ class CNPModule(PyTorchBackend):
         self.x_train = None
         self.y_train = None
         self.batch_size = batch_size
-
-    def negative_log_likelihood_loss(self, mean, log_var, target_y):
-        """
-        Compute negative log-likelihood loss.
-
-        Args:
-            mean: Context x values [batch_size, num_context, x_dim]
-            log_var: Context y values [batch_size, num_context, y_dim]
-            target_y: Target y values [batch_size, num_target, y_dim]
-        Returns:
-            loss: Negative log-likelihood
-        """
-        # Compute negative log-likelihood
-        dist = Normal(mean, torch.exp(0.5 * log_var))
-        log_prob = dist.log_prob(target_y)
-
-        # Sum over y dimensions and average over batch and target points
-        return -log_prob.sum(dim=2).mean()
 
     def forward(
         self,
