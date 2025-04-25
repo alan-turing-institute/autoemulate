@@ -24,6 +24,10 @@ class Emulator(ABC):
         self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
     ): ...
 
+    @classmethod
+    def model_name(cls) -> str:
+        return cls.__name__
+
     @abstractmethod
     def fit(self, x: InputLike, y: InputLike | None): ...
 
