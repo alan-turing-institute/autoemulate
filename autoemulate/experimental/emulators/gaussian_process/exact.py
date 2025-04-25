@@ -123,6 +123,10 @@ class GaussianProcessExact(
         self.batch_size = batch_size
         self.activation = activation
 
+    @staticmethod
+    def is_multioutput():
+        return True
+
     def preprocess(self, x: InputLike) -> InputLike:
         """Preprocess the input data using the preprocessor."""
         if self.preprocessor is not None:
