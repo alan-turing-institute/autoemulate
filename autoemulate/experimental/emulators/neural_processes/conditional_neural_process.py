@@ -311,7 +311,7 @@ class CNPModule(PyTorchBackend):
 
         return torch.distributions.Independent(
             torch.distributions.Normal(mean, torch.exp(0.5 * logvar)),
-            reinterpreted_batch_ndims=2,
+            reinterpreted_batch_ndims=1,
         )
 
     def fit(
@@ -358,7 +358,7 @@ class CNPModule(PyTorchBackend):
 
                 # Forward pass
                 y_pred = self.forward(x_context, y_context, x_target)
-                loss = -y_pred.log_prob(y_target).mean()
+                loss = -y_pred.log_prob(y_target).sum(1).mean()
 
                 # Backward pass and optimize
                 self.optimizer.zero_grad()
@@ -405,7 +405,14 @@ class CNPModule(PyTorchBackend):
         y_train = self.y_train.unsqueeze(0)
         x_target = x_target.unsqueeze(0)
 
-        return self.forward(x_train, y_train, x_target)
+        # Forward pass and drop the batch dimension
+        distribution = self.forward(x_train, y_train, x_target)
+        mean = distribution.mean.squeeze(0)  # Remove batch dimension
+        variance = distribution.variance.squeeze(0)  # Remove batch dimension
+        return torch.distributions.Independent(
+            torch.distributions.Normal(mean, variance.sqrt()),
+            reinterpreted_batch_ndims=1,
+        )
 
     @staticmethod
     def get_tune_config():
