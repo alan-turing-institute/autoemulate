@@ -183,7 +183,7 @@ class Active(Learner):
             Y_pred = output
         elif isinstance(output, GaussianLike):
             assert output.variance.ndim == 2
-            Y_pred, _ = output.mean, torch.sqrt(output.variance)
+            Y_pred, _ = output.mean, output.variance
         else:
             msg = (
                 f"Output must be either `Tensor` or `MultivariateNormal` but got "
@@ -215,14 +215,17 @@ class Active(Learner):
         self.metrics["n_queries"].append(self.n_queries)
 
         # If Gaussian output
+        # TODO: check generality for other GPs (e.g. with full covariance)
         if isinstance(output, MultivariateNormal):
             assert isinstance(output.variance, TensorLike)
             assert output.variance.ndim == 2
             assert output.variance.shape[1] == self.out_dim
-            std = torch.sqrt(output.variance)
-            self.metrics["trace"].append(self.trace(std, self.out_dim).item())
-            self.metrics["logdet"].append(self.logdet(std, self.out_dim).item())
-            self.metrics["max_eigval"].append(self.max_eigval(std).item())
+            # For Multivariate Normal, the variance property gives the correct value
+            # required here with shape: (batch, out_dim)
+            covariance = output.variance
+            self.metrics["trace"].append(self.trace(covariance, self.out_dim).item())
+            self.metrics["logdet"].append(self.logdet(covariance, self.out_dim).item())
+            self.metrics["max_eigval"].append(self.max_eigval(covariance).item())
 
         # extra per-strategy metrics
         for k, v in extra.items():
