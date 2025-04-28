@@ -182,6 +182,7 @@ class Active(Learner):
         if isinstance(output, TensorLike):
             Y_pred = output
         elif isinstance(output, GaussianLike):
+            assert output.variance.ndim == 2
             Y_pred, _ = output.mean, torch.sqrt(output.variance)
         else:
             msg = (
@@ -216,6 +217,8 @@ class Active(Learner):
         # If Gaussian output
         if isinstance(output, MultivariateNormal):
             assert isinstance(output.variance, TensorLike)
+            assert output.variance.ndim == 2
+            assert output.variance.shape[1] == self.out_dim
             std = torch.sqrt(output.variance)
             self.metrics["trace"].append(self.trace(std, self.out_dim).item())
             self.metrics["logdet"].append(self.logdet(std, self.out_dim).item())
