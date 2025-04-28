@@ -516,6 +516,19 @@ class Adaptive_A_Optimal(Adaptive, A_Optimal):
     (Inherits parameters from Adaptive and A_Optimal)
     """
 
+    def __post_init__(self):
+        if self.min_threshold is not None and self.min_threshold < 0.0:
+            msg = (
+                f"Minimum threashold ({self.min_threshold}) must be greater than or "
+                "equal to 0 since it uses trace of a positive semi-definite matrix."
+            )
+            raise ValueError(msg)
+
+        if self.min_threshold is None:
+            self.min_threshold = 0.0
+
+        A_Optimal.__post_init__(self)
+
 
 @dataclass(kw_only=True)
 class Adaptive_D_Optimal(Adaptive, D_Optimal):
@@ -537,3 +550,17 @@ class Adaptive_E_Optimal(Adaptive, E_Optimal):
     ----------
     (Inherits parameters from Adaptive and E_Optimal)
     """
+
+    def __post_init__(self):
+        if self.min_threshold is not None and self.min_threshold < 0.0:
+            msg = (
+                f"Minimum threshold ({self.min_threshold}) must be greater than or "
+                "equal to 0 since it uses max eigenvalue of a positive semi-definite "
+                "matrix."
+            )
+            raise ValueError(msg)
+
+        if self.min_threshold is None:
+            self.min_threshold = 0.0
+
+        E_Optimal.__post_init__(self)
