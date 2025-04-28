@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
-from tqdm.autonotebook import tqdm
+from tqdm.auto import tqdm
 
 from autoemulate.cross_validate import _run_cv
 from autoemulate.cross_validate import _sum_cv

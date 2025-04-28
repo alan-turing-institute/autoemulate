@@ -81,7 +81,7 @@ def _get_output_names(problem, num_outputs):
     """
     # check if output_names is given
     if "output_names" not in problem:
-        output_names = [f"y{i+1}" for i in range(num_outputs)]
+        output_names = [f"y{i + 1}" for i in range(num_outputs)]
     else:
         if isinstance(problem["output_names"], list):
             output_names = problem["output_names"]
@@ -100,7 +100,7 @@ def _generate_problem(X):
 
     return {
         "num_vars": X.shape[1],
-        "names": [f"X{i+1}" for i in range(X.shape[1])],
+        "names": [f"X{i + 1}" for i in range(X.shape[1])],
         "bounds": [[X[:, i].min(), X[:, i].max()] for i in range(X.shape[1])],
     }
 
@@ -249,7 +249,7 @@ def _create_bar_plot(ax, output_data, output_name):
     ax.set_title(f"Output: {output_name}")
 
 
-def _plot_sensitivity_analysis(results, problem, index="S1", n_cols=None, figsize=None):
+def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
     """
     Plot the sensitivity analysis results.
 
@@ -271,7 +271,7 @@ def _plot_sensitivity_analysis(results, problem, index="S1", n_cols=None, figsiz
     """
     with plt.style.context("fast"):
         # prepare data
-        results = _validate_input(results, problem, index)
+        results = _validate_input(results, index)
         unique_outputs = results["output"].unique()
         n_outputs = len(unique_outputs)
 
