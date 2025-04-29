@@ -234,29 +234,44 @@ class HistoryMatchingDashboard:
         # Hide all conditional controls by default
         self.wave_controls.layout.display = "none"
         self.radar_controls.layout.display = "none"
+        
+        # Default - hide NROY filter (hide for all plots initially)
+        self.nroy_filter.layout.display = "none"
 
         # Show controls based on plot type
         if plot_type == "3D Parameter Visualization":
             # Show all three parameters for 3D
             self.param_z.layout.display = "inline-flex"
+            # Show NROY filter for 3D viz
+            self.nroy_filter.layout.display = "flex"
 
         elif plot_type == "Implausibility Radar":
             # Show sample selector for radar plot
             self.radar_controls.layout.display = "flex"
+            # Don't show NROY filter (single sample)
 
         elif plot_type == "Wave Evolution":
             # Show wave controls for wave evolution plot
             self.wave_controls.layout.display = "flex"
             # Show parameter selection
             self.param_selection_controls.layout.display = "flex"
+            # Don't show NROY filter for wave evolution
 
-        elif plot_type in [
-            "Parameter Correlation Heatmap",
-            "Implausibility Distribution",
-        ]:
-            # Hide parameter selectors for plots that don't use them
+        elif plot_type == "Parameter Correlation Heatmap":
+            # Hide parameter selectors
             self.param_x.layout.display = "none"
             self.param_y.layout.display = "none"
+            # Don't show NROY filter for correlation heatmap
+            
+        elif plot_type == "Implausibility Distribution":
+            # Hide parameter selectors
+            self.param_x.layout.display = "none"
+            self.param_y.layout.display = "none"
+            # Don't show NROY filter for implausibility distribution
+            
+        elif plot_type in ["Parameter vs Implausibility", "Pairwise Parameters", "Bayesian Style Comparison", "Emulator Diagnostics"]:
+            # Show NROY filter only for these specific plots
+            self.nroy_filter.layout.display = "flex"
 
     def _update_plot(self, _):
         """Update the plot based on current widget values"""
@@ -1192,6 +1207,31 @@ class HistoryMatchingDashboard:
 
     def display(self):
         """Display the dashboard"""
+
+        heading = widgets.HTML(
+            value="<h2>History Matching Dashboard</h2>"
+        )
+        
+        instructions = widgets.HTML(
+            value="""
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <h3>Instructions:</h3>
+                <ul>
+                    <li><strong>Plot Type</strong>: Select the type of visualization from the dropdown.</li>
+                    <li><strong>Threshold</strong>: Adjust the implausibility threshold for NROY classification.</li>
+                    <li><strong>Parameters</strong>: Select parameters to visualize (availability depends on plot type).</li>
+                    <li><strong>Show only NROY points</strong>: When available, filters to show only viable parameter combinations.</li>
+                    <li><strong>Update Plot</strong>: Click to regenerate the visualization with current settings.</li>
+                </ul>
+                <p><em>Note: Some controls are only available for certain plot types.</em></p>
+            </div>
+            """
+        )
+        
+        # Display the heading and instructions first
+        display(heading)
+        display(instructions)
+    
         display(self.main_layout)
         # Initialize the first plot
         self._update_plot(None)
