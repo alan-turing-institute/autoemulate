@@ -234,7 +234,7 @@ class HistoryMatchingDashboard:
         # Hide all conditional controls by default
         self.wave_controls.layout.display = "none"
         self.radar_controls.layout.display = "none"
-        
+
         # Default - hide NROY filter (hide for all plots initially)
         self.nroy_filter.layout.display = "none"
 
@@ -257,19 +257,25 @@ class HistoryMatchingDashboard:
             self.param_selection_controls.layout.display = "flex"
             # Don't show NROY filter for wave evolution
 
-        elif plot_type == "Parameter Correlation Heatmap":
-            # Hide parameter selectors
-            self.param_x.layout.display = "none"
-            self.param_y.layout.display = "none"
-            # Don't show NROY filter for correlation heatmap
-            
-        elif plot_type == "Implausibility Distribution":
-            # Hide parameter selectors
-            self.param_x.layout.display = "none"
-            self.param_y.layout.display = "none"
-            # Don't show NROY filter for implausibility distribution
-            
-        elif plot_type in ["Parameter vs Implausibility", "Pairwise Parameters", "Bayesian Style Comparison", "Emulator Diagnostics"]:
+        elif plot_type in [
+            "Parameter Correlation Heatmap",
+            "Implausibility Distribution",
+            "Bayesian Style Comparison",
+        ]:
+            # Hide parameter selectors for plots that don't use them or where NROY isn't relevant
+            if plot_type in [
+                "Parameter Correlation Heatmap",
+                "Implausibility Distribution",
+            ]:
+                self.param_x.layout.display = "none"
+                self.param_y.layout.display = "none"
+            # Don't show NROY filter for these plots
+
+        elif plot_type in [
+            "Parameter vs Implausibility",
+            "Pairwise Parameters",
+            "Emulator Diagnostics",
+        ]:
             # Show NROY filter only for these specific plots
             self.nroy_filter.layout.display = "flex"
 
@@ -1208,10 +1214,8 @@ class HistoryMatchingDashboard:
     def display(self):
         """Display the dashboard"""
 
-        heading = widgets.HTML(
-            value="<h2>History Matching Dashboard</h2>"
-        )
-        
+        heading = widgets.HTML(value="<h2>History Matching Dashboard</h2>")
+
         instructions = widgets.HTML(
             value="""
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
@@ -1227,11 +1231,11 @@ class HistoryMatchingDashboard:
             </div>
             """
         )
-        
+
         # Display the heading and instructions first
         display(heading)
         display(instructions)
-    
+
         display(self.main_layout)
         # Initialize the first plot
         self._update_plot(None)
