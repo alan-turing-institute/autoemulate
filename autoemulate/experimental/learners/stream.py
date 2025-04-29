@@ -203,8 +203,8 @@ class Threshold(Stream):
         assert isinstance(X, torch.Tensor)
         output = self.emulator.predict(X)
         assert isinstance(output, GaussianLike)
-        assert isinstance(output.covariance_matrix, torch.Tensor)
-        score = self.score(X, output.mean, output.covariance_matrix)
+        assert isinstance(output.variance, torch.Tensor)
+        score = self.score(X, output.mean, output.variance)
         X = X if score > self.threshold else None
         return X, output, {"score": score.item()}
 
