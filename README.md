@@ -55,7 +55,7 @@
 | autoemulate/experimental/types.py                                                    |       16 |        0 |    100% |           |
 | autoemulate/experimental\_design.py                                                  |       19 |        3 |     84% |24, 35, 46 |
 | autoemulate/history\_matching.py                                                     |      155 |       64 |     59% |43, 76, 110-127, 164, 209-223, 233-234, 247-251, 265, 279-299, 311, 319, 350-419 |
-| autoemulate/history\_matching\_dashboard.py                                          |      522 |      522 |      0% |    1-1241 |
+| autoemulate/history\_matching\_dashboard.py                                          |      510 |      510 |      0% |    1-1229 |
 | autoemulate/hyperparam\_searching.py                                                 |       46 |        3 |     93% |93, 99-100 |
 | autoemulate/logging\_config.py                                                       |       43 |        4 |     91% |28, 56, 63-64 |
 | autoemulate/metrics.py                                                               |        7 |        0 |    100% |           |
@@ -89,7 +89,7 @@
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                        |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                                       |       88 |        2 |     98% |     52-53 |
-| tests/test\_compare.py                                                               |      183 |        5 |     97% |239, 263, 272, 377-378 |
+| tests/test\_compare.py                                                               |      183 |        3 |     98% |239, 263, 272 |
 | tests/test\_cross\_validate.py                                                       |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                              |       13 |        0 |    100% |           |
@@ -110,7 +110,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **6915** | **1392** | **80%** |           |
+|                                                                            **TOTAL** | **6903** | **1378** | **80%** |           |
 
 
 ## Setup coverage badge
