@@ -1,56 +1,187 @@
+from typing import Dict
+from typing import List
+from typing import Tuple
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
-from autoemulate.history_matching import history_matching
+from autoemulate.history_matching import HistoryMatcher
+from autoemulate.simulations.base import Simulator
+from tests.test_base_simulator import MockSimulator
+
+# Import the classes to test
 
 
 @pytest.fixture
-def sample_data_2d():
-    pred_mean = np.array([[1.0, 1.1], [2.0, 2.1], [3.0, 3.1], [4.0, 4.1], [5.0, 5.1]])
-    pred_std = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3], [0.4, 0.4], [0.5, 0.5]])
-    pred_var = np.square(pred_std)
-    predictions = (pred_mean, pred_var)
-    obs = [(1.5, 0.1), (2.5, 0.2)]
-    return predictions, obs
+def mock_simulator():
+    """Fixture for the mock simulator from test_base_simulator"""
+    param_ranges = {"param1": (0.0, 1.0), "param2": (-10.0, 10.0)}
+    return MockSimulator(param_ranges)
 
 
 @pytest.fixture
-def sample_data_1d():
-    pred_mean = np.array([[1.0], [2.0], [3.0], [4.0], [5.0]])
-    pred_std = np.array([[0.1], [0.2], [0.3], [0.4], [0.5]])
-    pred_var = np.square(pred_std)
-    predictions = (pred_mean, pred_var)
-    obs = ([1.5], [0.5])
-    return predictions, obs
+def basic_observations():
+    """Fixture for basic observation data matching mock simulator outputs"""
+    return {"output1": (0.5, 0.1), "output2": (0.6, 0.2)}  # (mean, variance)
 
 
-def test_history_matching_1d(sample_data_1d):
-    predictions, obs = sample_data_1d
-    result = history_matching(predictions=predictions, obs=obs, threshold=1.0)
-    assert "NROY" in result  # Ensure the key exists in the result
-    assert isinstance(result["NROY"], list)  # Validate that NROY is a list
-    assert len(result["NROY"]) > 0  # Ensure the list is not empty
+@pytest.fixture
+def history_matcher(mock_simulator, basic_observations):
+    """Fixture for a basic HistoryMatcher instance using the mock simulator"""
+    return HistoryMatcher(
+        simulator=mock_simulator,
+        observations=basic_observations,
+        threshold=3.0,
+        model_discrepancy=0.1,
+        rank=1,
+    )
 
 
-def test_history_matching_threshold_1d(sample_data_1d):
-    predictions, obs = sample_data_1d
-    result = history_matching(predictions=predictions, obs=obs, threshold=0.5)
-    assert "NROY" in result
+def test_run_wave_with_simulator(history_matcher, mock_simulator):
+    """Test running a wave with the mock simulator"""
+    parameter_samples = [
+        {"param1": 0.1, "param2": 0.2},
+        {"param1": 0.3, "param2": -0.4},
+    ]
+
+    successful_samples, impl_scores = history_matcher.run_wave(
+        parameter_samples, use_emulator=False
+    )
+
+    # With our mock simulator, all valid samples should succeed
+    assert len(successful_samples) == 2
+    assert len(impl_scores) == 2
+
+    # Check the implausibility scores shape
+    assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs
+
+
+def test_run_wave_with_missing_params(history_matcher, mock_simulator):
+    """Test running a wave with invalid parameters that should fail"""
+    parameter_samples = [
+        {"param1": 0.1},  # Missing param2 - should fail
+        {"param1": 0.3, "param2": -0.4},  # Valid
+    ]
+
+    successful_samples, impl_scores = history_matcher.run_wave(
+        parameter_samples, use_emulator=False
+    )
+
+    # Only the valid sample should succeed
+    assert len(successful_samples) == 1
+    assert len(impl_scores) == 1
+    assert successful_samples[0] == parameter_samples[1]
+
+
+def test_history_matcher_init(history_matcher, mock_simulator, basic_observations):
+    """Test initialization of HistoryMatcher with mock simulator"""
+    assert history_matcher.simulator == mock_simulator
+    assert history_matcher.observations == basic_observations
+    assert history_matcher.threshold == 3.0
+    assert history_matcher.discrepancy == 0.1
+    assert history_matcher.rank == 1
+
+
+def test_calculate_implausibility(history_matcher):
+    """Test implausibility calculation with mock simulator outputs"""
+    # Create predictions that match the mock simulator's output structure
+    predictions = {"output1": (0.4, 0.05), "output2": (0.7, 0.1)}  # (mean, variance)
+
+    result = history_matcher.calculate_implausibility(predictions)
+
+    # Check the structure of the result
+    assert set(result.keys()) == {"I", "NROY", "RO"}
+    assert isinstance(result["I"], np.ndarray)
     assert isinstance(result["NROY"], list)
-    assert len(result["NROY"]) <= len(predictions[0])
+    assert isinstance(result["RO"], list)
+    assert len(result["I"]) == 2  # Should have implausibility for both outputs
 
 
-def test_history_matching_2d(sample_data_2d):
-    predictions, obs = sample_data_2d
-    result = history_matching(predictions=predictions, obs=obs, threshold=1.0)
-    assert "NROY" in result  # Ensure the key exists in the result
-    assert isinstance(result["NROY"], list)  # Validate that NROY is a list
-    assert len(result["NROY"]) > 0  # Ensure the list is not empty
+def test_run_wave_with_simulator(history_matcher, mock_simulator):
+    """Test running a wave with the mock simulator"""
+    parameter_samples = [
+        {"param1": 0.1, "param2": 0.2},
+        {"param1": 0.3, "param2": -0.4},
+    ]
+
+    successful_samples, impl_scores = history_matcher.run_wave(
+        parameter_samples, use_emulator=False
+    )
+
+    # With our mock simulator, all samples should succeed
+    assert len(successful_samples) == 2
+    assert len(impl_scores) == 2
+
+    # Check the implausibility scores shape
+    assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs
 
 
-def test_history_matching_threshold_2d(sample_data_2d):
-    predictions, obs = sample_data_2d
-    result = history_matching(predictions=predictions, obs=obs, threshold=0.5)
-    assert "NROY" in result
-    assert isinstance(result["NROY"], list)
-    assert len(result["NROY"]) <= len(predictions[0])
+def test_run_wave_with_missing_params(history_matcher, mock_simulator):
+    """Test running a wave with invalid parameters that should fail"""
+    parameter_samples = [
+        {"param1": 0.1},  # Missing param2 - should fail
+        {"param1": 0.3, "param2": -0.4},  # Valid
+    ]
+
+    successful_samples, impl_scores = history_matcher.run_wave(
+        parameter_samples, use_emulator=False
+    )
+
+    # Only one sample should succeed
+    assert len(successful_samples) == 1
+    assert len(impl_scores) == 1
+
+
+@patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
+def test_run_history_matching(history_matcher):
+    """Test the full history matching process with mock simulator"""
+    n_waves = 2
+    n_samples_per_wave = 5
+
+    # Run history matching
+    (
+        all_samples,
+        all_impl_scores,
+        updated_emulator,
+    ) = history_matcher.run_history_matching(
+        n_waves=n_waves, n_samples_per_wave=n_samples_per_wave, use_emulator=False
+    )
+
+    # Check the basic structure of the results
+    assert isinstance(all_samples, list)
+    assert isinstance(all_impl_scores, np.ndarray)
+    assert updated_emulator is None  # Since we didn't use an emulator
+
+    # We should get results for all valid samples
+    assert len(all_samples) == n_waves * n_samples_per_wave
+    assert len(all_impl_scores) == n_waves * n_samples_per_wave
+
+
+def test_generate_new_samples(history_matcher, mock_simulator):
+    """Test generating new samples within NROY space using mock simulator"""
+    nroy_samples = [
+        {"param1": 0.1, "param2": 0.2},
+        {"param1": 0.3, "param2": -0.4},
+        {"param1": 0.2, "param2": 0.1},
+    ]
+
+    n_samples = 5
+    new_samples = history_matcher.generate_new_samples(nroy_samples, n_samples)
+
+    # Check the number of samples
+    assert len(new_samples) == n_samples
+
+    # Check that all samples are dictionaries with the right keys
+    for sample in new_samples:
+        assert isinstance(sample, dict)
+        assert set(sample.keys()) == set(mock_simulator.param_names)
+
+    # Check that values are within the bounds of NROY samples
+    param1_values = [s["param1"] for s in nroy_samples]
+    param2_values = [s["param2"] for s in nroy_samples]
+
+    for sample in new_samples:
+        assert min(param1_values) <= sample["param1"] <= max(param1_values)
+        assert min(param2_values) <= sample["param2"] <= max(param2_values)
