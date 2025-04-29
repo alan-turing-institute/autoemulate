@@ -397,6 +397,7 @@ class HistoryMatchingDashboard:
                     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
                 elif plot_type == "Wave Evolution":
                     self._plot_wave_evolution(filtered_df, filtered_scores)
+
             except Exception as e:
                 plt.figure(figsize=(10, 6))
                 plt.text(
@@ -449,7 +450,6 @@ class HistoryMatchingDashboard:
         plt.grid(True, alpha=0.3)
         plt.legend()
         plt.tight_layout()
-        plt.show()
 
     def _plot_pairwise_parameters(self, df, impl_scores):
         """Plot pairwise parameter visualization"""
@@ -505,7 +505,6 @@ class HistoryMatchingDashboard:
         if not nroy_points.empty:
             plt.legend()
         plt.tight_layout()
-        plt.show()
 
     def _plot_implausibility_distribution(self, impl_scores):
         """Plot implausibility distribution"""
@@ -546,7 +545,6 @@ class HistoryMatchingDashboard:
         plt.legend()
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.show()
 
     def _plot_parameter_correlation(self, df):
         """Plot parameter correlation heatmap"""
@@ -580,7 +578,6 @@ class HistoryMatchingDashboard:
         plt.title("Parameter Correlation Heatmap")
         plt.colorbar(label="Correlation")
         plt.tight_layout()
-        plt.show()
 
     def _plot_3d_visualization(self, df, impl_scores):
         """Create a 3D visualization of parameters"""
@@ -642,7 +639,6 @@ class HistoryMatchingDashboard:
             plt.legend()
 
         plt.tight_layout()
-        plt.show()
 
     def _plot_implausibility_radar(self, df, impl_scores):
         """Create radar plots showing implausibility for different outputs"""
@@ -714,7 +710,6 @@ class HistoryMatchingDashboard:
             plt.legend(loc="upper right")
 
             plt.tight_layout()
-            plt.show()
 
             # Also show a bar chart with the same data
             plt.figure(figsize=(12, 6))
@@ -737,7 +732,6 @@ class HistoryMatchingDashboard:
             plt.grid(True, alpha=0.3)
             plt.legend()
             plt.tight_layout()
-            plt.show()
         else:
             plt.figure(figsize=(10, 6))
             plt.text(
@@ -750,7 +744,6 @@ class HistoryMatchingDashboard:
             )
             plt.axis("off")
             plt.tight_layout()
-            plt.show()
 
     def _plot_emulator_diagnostics(self, df, impl_scores):
         """
@@ -892,7 +885,6 @@ class HistoryMatchingDashboard:
         ax2.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()  # Only one show() call for all plots
 
     def _plot_bayesian_style_comparison(self, df, impl_scores):
         """
@@ -1019,8 +1011,6 @@ class HistoryMatchingDashboard:
         if n_params > 1:
             plt.subplots_adjust(top=0.9)  # Make room for suptitle
 
-        plt.show()  # Only one show() call at the end
-
     def _plot_wave_evolution(self, df, impl_scores):
         """
         Plot matching Figure 6 style with:
@@ -1035,7 +1025,6 @@ class HistoryMatchingDashboard:
             plt.figure(figsize=(10, 6))
             plt.text(0.5, 0.5, "No parameters selected", ha="center", va="center")
             plt.axis("off")
-            plt.show()
             return
 
         # Filter param_names to only include selected ones
@@ -1209,7 +1198,6 @@ class HistoryMatchingDashboard:
 
         plt.tight_layout()
         plt.subplots_adjust(right=0.9)  # Make room for colorbar
-        plt.show()
 
     def display(self):
         """Display the dashboard"""
