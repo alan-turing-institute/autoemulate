@@ -84,7 +84,7 @@
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                        |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                                       |       89 |        2 |     98% |     49-50 |
-| tests/test\_compare.py                                                               |      183 |        5 |     97% |239, 263, 272, 377-378 |
+| tests/test\_compare.py                                                               |      183 |        3 |     98% |239, 263, 272 |
 | tests/test\_cross\_validate.py                                                       |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                              |       13 |        0 |    100% |           |
@@ -106,7 +106,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **5983** |  **566** | **91%** |           |
+|                                                                            **TOTAL** | **5983** |  **564** | **91%** |           |
 
 
 ## Setup coverage badge
