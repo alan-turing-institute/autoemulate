@@ -60,10 +60,10 @@ class GaussianProcessExact(
         covar_module_fn: CovarModuleFn = rbf,
         preprocessor_cls: type[Preprocessor] | None = None,
         random_state: int | None = None,
-        epochs: int = 10,
+        epochs: int = 50,
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
-        lr: float = 0.01,
+        lr: float = 2e-1,
     ):
         if random_state is not None:
             set_random_seed(random_state)
