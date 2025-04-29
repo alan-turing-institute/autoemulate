@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
@@ -7,6 +9,7 @@ from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
     DistributionLike,
     InputLike,
+    ModelConfig,
     OutputLike,
     TensorLike,
 )
@@ -60,8 +63,8 @@ def evaluate(
 def cross_validate(
     cv: BaseCrossValidator,
     dataset: Dataset,
-    model: Emulator,
-    batch_size: int = 16,
+    model: type[Emulator],
+    **kwargs: Any,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -81,7 +84,9 @@ def cross_validate(
     dict[str, list[float]]
        Contains r2 and rmse scores computed for each cross validation fold.
     """
+    best_model_config: ModelConfig = kwargs
     cv_results = {"r2": [], "rmse": []}
+    batch_size = best_model_config.get("batch_size", 16)
     for train_idx, val_idx in cv.split(dataset):  # type: ignore TODO: identify type handling here
         # create train/val data subsets
         # convert idx to list to satisfy type checker
@@ -91,13 +96,15 @@ def cross_validate(
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
         # fit model
-        model.fit(train_loader, y=None)
+        x, y = next(iter(train_loader))
+        m = model(x, y, **best_model_config)
+        m.fit(x, y)
 
         # evaluate on batches
         r2_metric = torchmetrics.R2Score()
         mse_metric = torchmetrics.MeanSquaredError()
         for x_batch, y_batch in val_loader:
-            y_batch_pred = model.predict(x_batch)
+            y_batch_pred = m.predict(x_batch)
             _update(y_batch, y_batch_pred, r2_metric)
             _update(y_batch, y_batch_pred, mse_metric)
 

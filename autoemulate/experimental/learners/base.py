@@ -4,219 +4,13 @@ from inspect import isabstract
 
 import torch
 from anytree import Node, RenderTree
+from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
-from ..types import TensorLike
+from autoemulate.experimental.data.validation import Base
+from autoemulate.experimental.emulators.base import Emulator
 
-
-@dataclass(kw_only=True)
-class Base:
-    """
-    Base class for active learning simulation and emulation.
-
-    Provides utility methods for tensor validation and design criteria computations.
-    """
-
-    @staticmethod
-    def check_vector(X: TensorLike) -> TensorLike:
-        """
-        Validate that the input is a 1D TensorLike.
-
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor to validate.
-
-        Returns
-        -------
-        TensorLike
-            Validated 1D tensor.
-
-        Raises
-        ------
-        ValueError
-            If X is not a TensorLike or is not 1-dimensional.
-        """
-        if not isinstance(X, TensorLike):
-            raise ValueError(f"Expected TensorLike, got {type(X)}")
-        if X.ndim != 1:
-            raise ValueError(f"Expected 1D tensor, got {X.ndim}D")
-        return X
-
-    @staticmethod
-    def check_matrix(X: TensorLike) -> TensorLike:
-        """
-        Validate that the input is a 2D TensorLike.
-
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor to validate.
-
-        Returns
-        -------
-        TensorLike
-            Validated 2D tensor.
-
-        Raises
-        ------
-        ValueError
-            If X is not a TensorLike or is not 2-dimensional.
-        """
-        if not isinstance(X, TensorLike):
-            raise ValueError(f"Expected TensorLike, got {type(X)}")
-        if X.ndim != 2:
-            raise ValueError(f"Expected 2D tensor, got {X.ndim}D")
-        return X
-
-    @staticmethod
-    def check_pair(X: TensorLike, Y: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Validate that two tensors have the same number of rows.
-
-        Parameters
-        ----------
-        X : TensorLike
-            First tensor.
-        Y : TensorLike
-            Second tensor.
-
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            The validated pair of tensors.
-
-        Raises
-        ------
-        ValueError
-            If X and Y do not have the same number of rows.
-        """
-        if X.shape[0] != Y.shape[0]:
-            msg = "X and Y must have the same number of rows"
-            raise ValueError(msg)
-        return X, Y
-
-    @staticmethod
-    def check_covariance(Y: TensorLike, Sigma: TensorLike) -> TensorLike:
-        """
-        Validate and return the covariance matrix.
-
-        Parameters
-        ----------
-        Y : TensorLike
-            Output tensor.
-        Sigma : TensorLike
-            Covariance matrix, which may be full, diagonal, or a scalar per sample.
-
-        Returns
-        -------
-        TensorLike
-            Validated covariance matrix.
-
-        Raises
-        ------
-        ValueError
-            If Sigma does not have a valid shape relative to Y.
-        """
-        if (
-            Sigma.shape == (Y.shape[0], Y.shape[1], Y.shape[1])
-            or Sigma.shape == (Y.shape[0], Y.shape[1])
-            or Sigma.shape == (Y.shape[0],)
-        ):
-            return Sigma
-        msg = "Invalid covariance matrix shape"
-        raise ValueError(msg)
-
-    @staticmethod
-    def trace(Sigma: TensorLike, d: int) -> TensorLike:
-        """
-        Compute the trace of the covariance matrix (A-optimal design criterion).
-
-        Parameters
-        ----------
-        Sigma : TensorLike
-            Covariance matrix (full, diagonal, or scalar).
-        d : int
-            Dimension of the output.
-
-        Returns
-        -------
-        TensorLike
-            The computed trace value.
-
-        Raises
-        ------
-        ValueError
-            If Sigma does not have a valid shape.
-        """
-        if Sigma.dim() == 3 and Sigma.shape[1:] == (d, d):
-            return torch.diagonal(Sigma, dim1=1, dim2=2).sum(dim=1).mean()
-        if Sigma.dim() == 2 and Sigma.shape[1] == d:
-            return Sigma.sum(dim=1).mean()
-        if Sigma.dim() == 1:
-            return d * Sigma.mean()
-        raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
-
-    @staticmethod
-    def logdet(Sigma: TensorLike, dim: int) -> TensorLike:
-        """
-        Compute the log-determinant of the covariance matrix (D-optimal design
-        criterion).
-
-        Parameters
-        ----------
-        Sigma : TensorLike
-            Covariance matrix (full, diagonal, or scalar).
-        dim : int
-            Dimension of the output.
-
-        Returns
-        -------
-        TensorLike
-            The computed log-determinant value.
-
-        Raises
-        ------
-        ValueError
-            If Sigma does not have a valid shape.
-        """
-        if len(Sigma.shape) == 3 and Sigma.shape[1:] == (dim, dim):
-            return torch.logdet(Sigma).mean()
-        if len(Sigma.shape) == 2 and Sigma.shape[1] == dim:
-            return torch.sum(torch.log(Sigma), dim=1).mean()
-        if len(Sigma.shape) == 1:
-            return dim * torch.log(Sigma).mean()
-        raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
-
-    @staticmethod
-    def max_eigval(Sigma: TensorLike) -> TensorLike:
-        """
-        Compute the maximum eigenvalue of the covariance matrix (E-optimal design
-        criterion).
-
-        Parameters
-        ----------
-        Sigma : TensorLike
-            Covariance matrix (full, diagonal, or scalar).
-
-        Returns
-        -------
-        TensorLike
-            The average maximum eigenvalue.
-
-        Raises
-        ------
-        ValueError
-            If Sigma does not have a valid shape.
-        """
-        if Sigma.dim() == 3 and Sigma.shape[1:] == (Sigma.shape[1], Sigma.shape[1]):
-            eigvals = torch.linalg.eigvalsh(Sigma)
-            return eigvals[:, -1].mean()  # Eigenvalues are sorted in ascending order
-        if Sigma.dim() == 2:
-            return Sigma.max(dim=1).values.mean()
-        if Sigma.dim() == 1:
-            return Sigma.mean()
-        raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
+from ..types import GaussianLike, TensorLike
 
 
 @dataclass(kw_only=True)
@@ -280,86 +74,6 @@ class Simulator(Base, ABC):
         -------
         TensorLike
             Random input tensor.
-        """
-
-
-@dataclass(kw_only=True)
-class Emulator(Base, ABC):
-    """
-    Emulator abstract class for approximating simulator outputs along with uncertainty.
-
-    Provides an interface for fitting an emulator model to training data and generating
-    predictions with associated covariance.
-
-    Parameters
-    ----------
-    (No additional parameters)
-    """
-
-    def sample(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Generate emulator predictions and covariance estimates for given inputs.
-
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor of shape (n_samples, n_features).
-
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            A tuple containing the predicted outputs and covariance estimates.
-        """
-        X = self.check_matrix(X)
-        Y, Sigma = self.sample_forward(X)
-        Y = self.check_matrix(Y)
-        X, Y = self.check_pair(X, Y)
-        Sigma = self.check_covariance(Y, Sigma)
-        return Y, Sigma
-
-    def fit(self, X_train: TensorLike, Y_train: TensorLike):
-        """
-        Fit the emulator model using the training data.
-
-        Parameters
-        ----------
-        X_train : TensorLike
-            Training input tensor.
-        Y_train : TensorLike
-            Training output tensor.
-        """
-        self.check_matrix(X_train)
-        self.check_matrix(Y_train)
-        self.check_pair(X_train, Y_train)
-        self.fit_forward(X_train, Y_train)
-
-    @abstractmethod
-    def fit_forward(self, X_train: TensorLike, Y_train: TensorLike):
-        """
-        Abstract method to fit the emulator model using training data.
-
-        Parameters
-        ----------
-        X_train : TensorLike
-            Training input tensor.
-        Y_train : TensorLike
-            Training output tensor.
-        """
-
-    @abstractmethod
-    def sample_forward(self, X: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Abstract method to generate predictions and covariance estimates.
-
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor.
-
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            Predicted outputs and covariance estimates.
         """
 
 
@@ -464,8 +178,21 @@ class Active(Learner):
 
     def fit(self, *args):
         # Query simulator and fit emulator
-        X, Y_pred, Sigma, extra = self.query(*args)
+        X, output, extra = self.query(*args)
+        if isinstance(output, TensorLike):
+            Y_pred = output
+        elif isinstance(output, GaussianLike):
+            assert output.variance.ndim == 2
+            Y_pred, _ = output.mean, output.variance
+        else:
+            msg = (
+                f"Output must be either `Tensor` or `MultivariateNormal` but got "
+                f"{type(output)}"
+            )
+            raise TypeError(msg)
+
         if X is not None:
+            # If X is not, we skip the point (typically for Stream learners)
             Y_true = self.simulator.sample(X)
             self.X_train = torch.cat([self.X_train, X])
             self.Y_train = torch.cat([self.Y_train, Y_true])
@@ -486,9 +213,19 @@ class Active(Learner):
         self.metrics["r2"].append(r2_val)
         self.metrics["rate"].append(self.n_queries / (len(self.metrics["rate"]) + 1))
         self.metrics["n_queries"].append(self.n_queries)
-        self.metrics["trace"].append(self.trace(Sigma, self.out_dim).item())
-        self.metrics["logdet"].append(self.logdet(Sigma, self.out_dim).item())
-        self.metrics["max_eigval"].append(self.max_eigval(Sigma).item())
+
+        # If Gaussian output
+        # TODO: check generality for other GPs (e.g. with full covariance)
+        if isinstance(output, MultivariateNormal):
+            assert isinstance(output.variance, TensorLike)
+            assert output.variance.ndim == 2
+            assert output.variance.shape[1] == self.out_dim
+            # For Multivariate Normal, the variance property gives the correct value
+            # required here with shape: (batch, out_dim)
+            covariance = output.variance
+            self.metrics["trace"].append(self.trace(covariance, self.out_dim).item())
+            self.metrics["logdet"].append(self.logdet(covariance, self.out_dim).item())
+            self.metrics["max_eigval"].append(self.max_eigval(covariance).item())
 
         # extra per-strategy metrics
         for k, v in extra.items():
@@ -551,7 +288,7 @@ class Active(Learner):
     @abstractmethod
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples.
 

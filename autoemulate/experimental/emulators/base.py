@@ -5,19 +5,27 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.types import (
-    InputLike,
-    OutputLike,
-    TuneConfig,
-)
+from autoemulate.experimental.data.validation import Base
+from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
 
 
-class Emulator(ABC):
+class Emulator(ABC, Base):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
+
+    # TODO: update emulators with these methods
+    # @abstractmethod
+    # def _fit(self, x: InputLike, y: InputLike | None): ...
+
+    # def fit(self, x: InputLike, y: InputLike | None):
+    #     self._check(x, y)
+    #     self._fit(x, y)
+
+    @abstractmethod
+    def fit(self, x: InputLike, y: InputLike | None): ...
 
     @abstractmethod
     def __init__(
@@ -28,12 +36,26 @@ class Emulator(ABC):
     def model_name(cls) -> str:
         return cls.__name__
 
-    @abstractmethod
-    def fit(self, x: InputLike, y: InputLike | None): ...
+    # TODO: update emulators with these methods
+    # @abstractmethod
+    # def _predict(self, x: InputLike) -> OutputLike:
+    #     pass
+
+    # def predict(self, x: InputLike) -> OutputLike:
+    #     self._check(x, None)
+    #     output = self.predict(x)
+    #     # Check that it is Gaussian or Y
+    #     self._check_output(output)
+    #     return output
 
     @abstractmethod
     def predict(self, x: InputLike) -> OutputLike:
         pass
+
+    @staticmethod
+    @abstractmethod
+    def is_multioutput() -> bool:
+        """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
     @abstractmethod
@@ -86,6 +108,13 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
             return x
         return self.preprocessor.preprocess(x)
 
+    def loss_func(self, y_pred, y_true):
+        """
+        Loss function to be used for training the model.
+        This can be overridden by subclasses to use a different loss function.
+        """
+        return nn.MSELoss()(y_pred, y_true)
+
     def fit(
         self,
         x: InputLike,
@@ -98,20 +127,9 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         ----------
             X: InputLike
                 Input features as numpy array, PyTorch tensor, or DataLoader.
-            y: OutputLine or None
+            y: OutputLike or None
                 Target values (not needed if x is a DataLoader).
-            batch_size: int
-                Batch size (used only when xis not a DataLoader).
-            shuffle: bool
-                Whether to shuffle the data.
-            epochs: int
-                Number of training epochs.
-            verbose: bool
-                Whether to print progress.
 
-        Returns:
-        -------
-            List of loss values per epoch.
         """
 
         self.train()  # Set model to training mode
@@ -134,7 +152,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
 
                 # Forward pass
                 y_pred = self.forward(X_batch)
-                loss = self.loss_fn(y_pred, y_batch)
+                loss = self.loss_func(y_pred, y_batch)
 
                 # Backward pass and optimize
                 self.optimizer.zero_grad()

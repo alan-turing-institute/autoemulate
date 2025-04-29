@@ -1,5 +1,9 @@
+from autoemulate.experimental.learners.base import Emulator
+
 from . import stream
-from .base import Emulator, Simulator
+
+# from .base import Emulator, Simulator
+from .base import Simulator
 
 # # TODO: automate this with Learner.hierarchy()
 # # lowercase classes below should correspond to abstract classesß
