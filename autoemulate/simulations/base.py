@@ -10,6 +10,8 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
+from autoemulate.experimental_design import LatinHypercube
+
 
 class Simulator(ABC):
     """
@@ -40,7 +42,8 @@ class Simulator(ABC):
             output_variables if output_variables is not None else []
         )
         self._output_names = []  # Will be populated after first simulation
-        
+        self._has_sample_forward = False
+
     @property
     def param_names(self) -> List[str]:
         """List of parameter names"""
@@ -57,19 +60,6 @@ class Simulator(ABC):
         return self._output_variables
 
     @abstractmethod
-    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
-        """
-        Generate random parameter samples within the defined bounds.
-
-        Args:
-            n_samples: Number of samples to generate
-
-        Returns:
-            List of parameter dictionaries
-        """
-        pass
-
-    @abstractmethod
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """
         Run a single simulation with the given parameters and return output statistics.
@@ -81,6 +71,30 @@ class Simulator(ABC):
             Array of output statistics or None if simulation fails
         """
         pass
+
+    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
+        """
+        Generate random samples within the parameter bounds using Latin Hypercube Sampling.
+
+        Args:
+            n_samples: Number of samples to generate
+
+        Returns:
+            List of parameter dictionaries
+        """
+        # Use LatinHypercube from autoemulate.experimental_design
+        lhd = LatinHypercube(list(self._param_bounds.values()))
+        sample_array = lhd.sample(n_samples)
+
+        # Convert the sample array to a list of parameter dictionaries
+        samples = []
+        for i in range(n_samples):
+            sample = {}
+            for j, name in enumerate(self._param_names):
+                sample[name] = sample_array[i, j]
+            samples.append(sample)
+
+        return samples
 
     def run_batch_simulations(
         self, samples: Union[List[Dict[str, float]], pd.DataFrame]

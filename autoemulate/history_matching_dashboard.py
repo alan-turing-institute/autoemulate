@@ -152,24 +152,21 @@ class HistoryMatchingDashboard:
                 value=True,  # Default all selected
                 description=param,
                 disabled=False,
-                indent=False
+                indent=False,
             )
             self.param_checkboxes.append(cb)
-        
+
         # Group checkboxes in a container with scroll
         self.param_checkbox_container = widgets.VBox(
             self.param_checkboxes,
             layout=widgets.Layout(
-                width='auto',
-                height='200px',
-                overflow_y='auto',
-                border='1px solid #ddd'
-            )
+                width="auto", height="200px", overflow_y="auto", border="1px solid #ddd"
+            ),
         )
 
         # Label for the checkbox group
         self.param_selection_label = widgets.Label("Select Parameters to Display:")
-        
+
         # NROY filter
         self.nroy_filter = widgets.Checkbox(
             value=False, description="Show only NROY points", disabled=False
@@ -208,17 +205,15 @@ class HistoryMatchingDashboard:
             ]
         )
         # Container for the parameter selection controls
-        self.param_selection_controls = widgets.VBox([
-            self.param_selection_label,
-            self.param_checkbox_container
-        ])
-
+        self.param_selection_controls = widgets.VBox(
+            [self.param_selection_label, self.param_checkbox_container]
+        )
 
         # Initially hide plot-specific controls
         self.wave_controls.layout.display = "none"
         self.radar_controls.layout.display = "none"
         self.param_z.layout.display = "none"  # Initially hide Z parameter (only for 3D)
-        self.param_selection_controls.layout.display = 'none'  # Initially hidden
+        self.param_selection_controls.layout.display = "none"  # Initially hidden
 
     def _update_visible_controls(self, change):
         """Show/hide controls based on selected plot type"""
@@ -228,7 +223,7 @@ class HistoryMatchingDashboard:
         self.param_x.layout.display = "inline-flex"
         self.param_y.layout.display = "inline-flex"
         self.param_z.layout.display = "none"
-        self.param_selection_controls.layout.display = 'none'
+        self.param_selection_controls.layout.display = "none"
 
         # Hide all conditional controls by default
         self.wave_controls.layout.display = "none"
@@ -247,7 +242,7 @@ class HistoryMatchingDashboard:
             # Show wave controls for wave evolution plot
             self.wave_controls.layout.display = "flex"
             # Show parameter selection
-            self.param_selection_controls.layout.display = 'flex' 
+            self.param_selection_controls.layout.display = "flex"
 
         elif plot_type in [
             "Parameter Correlation Heatmap",
@@ -998,6 +993,7 @@ class HistoryMatchingDashboard:
             plt.subplots_adjust(top=0.9)  # Make room for suptitle
 
         plt.show()  # Only one show() call at the end
+
     def _plot_wave_evolution(self, df, impl_scores):
         """
         Plot matching Figure 6 style with:
@@ -1006,17 +1002,15 @@ class HistoryMatchingDashboard:
         - Diagonal: Parameter histograms
         """
         # Get selected parameters
-        selected_params = [
-            cb.description for cb in self.param_checkboxes if cb.value
-        ]
-        
+        selected_params = [cb.description for cb in self.param_checkboxes if cb.value]
+
         if not selected_params:
             plt.figure(figsize=(10, 6))
             plt.text(0.5, 0.5, "No parameters selected", ha="center", va="center")
             plt.axis("off")
             plt.show()
             return
-        
+
         # Filter param_names to only include selected ones
         orig_param_names = self.param_names
         self.param_names = selected_params  # Temporarily override
@@ -1025,21 +1019,21 @@ class HistoryMatchingDashboard:
         import numpy as np
         from matplotlib.colors import LinearSegmentedColormap
         import matplotlib.gridspec as gridspec
-        
+
         n_params = len(self.param_names)
-        
+
         # Create figure with GridSpec
-        fig = plt.figure(figsize=(n_params*1.5, n_params*1.5))
+        fig = plt.figure(figsize=(n_params * 1.5, n_params * 1.5))
         gs = gridspec.GridSpec(n_params, n_params)
         gs.update(wspace=0.1, hspace=0.1)
-        
+
         # Create custom colormap for NROY densities
         nroy_cmap = plt.cm.viridis
-        nroy_cmap.set_under(color='lightgrey')  # For ruled-out areas
-        
+        nroy_cmap.set_under(color="lightgrey")  # For ruled-out areas
+
         # Create colormap for minimum implausibility
         impl_cmap = plt.cm.plasma
-        
+
         # Calculate parameter ranges
         param_ranges = {}
         for param in self.param_names:
@@ -1047,107 +1041,135 @@ class HistoryMatchingDashboard:
             param_max = df[param].max()
             padding = 0.05 * (param_max - param_min)
             param_ranges[param] = (param_min - padding, param_max + padding)
-        
+
         # Create common grid for all plots
         grid_size = 30
         grids = {}
         for param in self.param_names:
             x_min, x_max = param_ranges[param]
             grids[param] = np.linspace(x_min, x_max, grid_size)
-        
+
         # Prepare storage for NROY fractions and min implausibilities
         nroy_fractions = {}
         min_impls = {}
-        
+
         # Pre-compute all the data we'll need
         for i, param_y in enumerate(self.param_names):
             y_min, y_max = param_ranges[param_y]  # Get y-range for current parameter
-            
+
             for j, param_x in enumerate(self.param_names):
-                x_min, x_max = param_ranges[param_x]  # Get x-range for current parameter
-                
+                x_min, x_max = param_ranges[
+                    param_x
+                ]  # Get x-range for current parameter
+
                 if i < j:  # Upper triangle - NROY density
                     xx, yy = np.meshgrid(grids[param_x], grids[param_y])
-                    nroy_fractions[(i,j)] = np.zeros_like(xx)
-                    
+                    nroy_fractions[(i, j)] = np.zeros_like(xx)
+
                     # Calculate NROY fraction at each grid point
                     for xi in range(grid_size):
                         for yi in range(grid_size):
                             # Find points near this grid location
                             x_val = grids[param_x][xi]
                             y_val = grids[param_y][yi]
-                            
+
                             # Filter points close to these parameter values
-                            mask_x = (df[param_x] >= x_val - 0.5*(x_max-x_min)/grid_size) & \
-                                    (df[param_x] <= x_val + 0.5*(x_max-x_min)/grid_size)
-                            mask_y = (df[param_y] >= y_val - 0.5*(y_max-y_min)/grid_size) & \
-                                    (df[param_y] <= y_val + 0.5*(y_max-y_min)/grid_size)
-                            
+                            mask_x = (
+                                df[param_x] >= x_val - 0.5 * (x_max - x_min) / grid_size
+                            ) & (
+                                df[param_x] <= x_val + 0.5 * (x_max - x_min) / grid_size
+                            )
+                            mask_y = (
+                                df[param_y] >= y_val - 0.5 * (y_max - y_min) / grid_size
+                            ) & (
+                                df[param_y] <= y_val + 0.5 * (y_max - y_min) / grid_size
+                            )
+
                             nearby_points = df[mask_x & mask_y]
-                            
+
                             if len(nearby_points) > 0:
                                 # Calculate fraction of NROY points
-                                nroy_count = nearby_points['NROY'].sum()
-                                nroy_fractions[(i,j)][yi,xi] = nroy_count / len(nearby_points)
-                
+                                nroy_count = nearby_points["NROY"].sum()
+                                nroy_fractions[(i, j)][yi, xi] = nroy_count / len(
+                                    nearby_points
+                                )
+
                 elif i > j:  # Lower triangle - minimum implausibility
                     xx, yy = np.meshgrid(grids[param_x], grids[param_y])
-                    min_impls[(i,j)] = np.full_like(xx, np.inf)
-                    
+                    min_impls[(i, j)] = np.full_like(xx, np.inf)
+
                     # Find minimum implausibility at each grid point
                     for xi in range(grid_size):
                         for yi in range(grid_size):
                             x_val = grids[param_x][xi]
                             y_val = grids[param_y][yi]
-                            
-                            mask_x = (df[param_x] >= x_val - 0.5*(x_max-x_min)/grid_size) & \
-                                    (df[param_x] <= x_val + 0.5*(x_max-x_min)/grid_size)
-                            mask_y = (df[param_y] >= y_val - 0.5*(y_max-y_min)/grid_size) & \
-                                    (df[param_y] <= y_val + 0.5*(y_max-y_min)/grid_size)
-                            
+
+                            mask_x = (
+                                df[param_x] >= x_val - 0.5 * (x_max - x_min) / grid_size
+                            ) & (
+                                df[param_x] <= x_val + 0.5 * (x_max - x_min) / grid_size
+                            )
+                            mask_y = (
+                                df[param_y] >= y_val - 0.5 * (y_max - y_min) / grid_size
+                            ) & (
+                                df[param_y] <= y_val + 0.5 * (y_max - y_min) / grid_size
+                            )
+
                             nearby_points = df[mask_x & mask_y]
-                            
+
                             if len(nearby_points) > 0:
-                                min_impl = nearby_points['min_implausibility'].min()
-                                min_impls[(i,j)][yi,xi] = min_impl
-        
+                                min_impl = nearby_points["min_implausibility"].min()
+                                min_impls[(i, j)][yi, xi] = min_impl
+
         # Plotting loop
         for i, param_y in enumerate(self.param_names):
             for j, param_x in enumerate(self.param_names):
                 ax = plt.subplot(gs[i, j])
-                
+
                 # Set axis labels
                 if i == n_params - 1:  # Bottom row
                     ax.set_xlabel(param_x)
                 else:
                     ax.set_xticklabels([])
-                    
+
                 if j == 0:  # Left column
                     ax.set_ylabel(param_y)
                 else:
                     ax.set_yticklabels([])
-                
+
                 # Set axis limits
                 ax.set_xlim(param_ranges[param_x])
                 ax.set_ylim(param_ranges[param_y])
-                
+
                 if i == j:  # Diagonal - parameter histogram
-                    ax.hist(df[param_x], bins=20, density=True, 
-                        color='skyblue', edgecolor='none')
-                    
+                    ax.hist(
+                        df[param_x],
+                        bins=20,
+                        density=True,
+                        color="skyblue",
+                        edgecolor="none",
+                    )
+
                 elif i < j:  # Upper triangle - NROY density
                     # Plot NROY fraction
-                    im = ax.pcolormesh(grids[param_x], grids[param_y], 
-                                    nroy_fractions[(i,j)], 
-                                    cmap=nroy_cmap, 
-                                    vmin=0.01, vmax=1)  # Below 0.01 shows as grey
-                    
+                    im = ax.pcolormesh(
+                        grids[param_x],
+                        grids[param_y],
+                        nroy_fractions[(i, j)],
+                        cmap=nroy_cmap,
+                        vmin=0.01,
+                        vmax=1,
+                    )  # Below 0.01 shows as grey
+
                 else:  # Lower triangle - minimum implausibility
                     # Plot minimum implausibility
-                    im = ax.pcolormesh(grids[param_x], grids[param_y], 
-                                    min_impls[(i,j)], 
-                                    cmap=impl_cmap)
-        
+                    im = ax.pcolormesh(
+                        grids[param_x],
+                        grids[param_y],
+                        min_impls[(i, j)],
+                        cmap=impl_cmap,
+                    )
+
         # Restore original parameter names
         self.param_names = orig_param_names
 
@@ -1156,12 +1178,12 @@ class HistoryMatchingDashboard:
             # NROY density colorbar
             cax_nroy = fig.add_axes([0.92, 0.4, 0.02, 0.5])
             cbar_nroy = plt.colorbar(im, cax=cax_nroy)
-            cbar_nroy.set_label('NROY Fraction')
-            
+            cbar_nroy.set_label("NROY Fraction")
+
             # Min implausibility colorbar
             cax_impl = fig.add_axes([0.92, 0.1, 0.02, 0.2])
             cbar_impl = plt.colorbar(im, cax=cax_impl)
-            cbar_impl.set_label('Min Implausibility')
+            cbar_impl.set_label("Min Implausibility")
 
         plt.tight_layout()
         plt.subplots_adjust(right=0.9)  # Make room for colorbar
