@@ -11,7 +11,10 @@ from sklearn.decomposition import PCA
 
 class HistoryMatchingDashboard:
     """
-    Interactive dashboard for exploring history matching results
+    Interactive dashboard for exploring history matching results with improvements:
+    - Dynamic wave controls that only appear for Wave Evolution plot
+    - Automatic detection of max waves from data
+    - UI controls that adapt based on selected plot type
     """
 
     def __init__(self, samples, impl_scores, param_names, output_names, threshold=3.0):
@@ -30,6 +33,16 @@ class HistoryMatchingDashboard:
             self.samples_df = pd.DataFrame(samples)
         else:
             self.samples_df = samples.copy()
+
+        # Detect wave information if available
+        if "wave" in self.samples_df.columns:
+            self.has_wave_info = True
+            self.max_waves = int(self.samples_df["wave"].max())
+        else:
+            self.has_wave_info = False
+            # Estimate number of waves - can be adjusted
+            n_samples = len(self.samples_df)
+            self.max_waves = min(10, n_samples // 100) if n_samples > 100 else 5
 
         # Store other data
         self.impl_scores = impl_scores
@@ -54,7 +67,7 @@ class HistoryMatchingDashboard:
         self._create_ui()
 
     def _create_ui(self):
-        """Create the user interface widgets"""
+        """Create the user interface widgets with dynamic controls"""
         # Plot type selection
         self.plot_type = widgets.Dropdown(
             options=[
@@ -66,11 +79,15 @@ class HistoryMatchingDashboard:
                 "Implausibility Radar",
                 "Emulator Diagnostics",
                 "Bayesian Style Comparison",
+                "Wave Evolution",  # New plot type
             ],
             value="Parameter vs Implausibility",
             description="Plot Type:",
             style={"description_width": "initial"},
         )
+
+        # Add observer to show/hide plot-specific controls
+        self.plot_type.observe(self._update_visible_controls, names="value")
 
         # Parameter selection widgets
         self.param_x = widgets.Dropdown(
@@ -118,20 +135,41 @@ class HistoryMatchingDashboard:
             continuous_update=False,
         )
 
-        # Wave filter (assuming waves are chronological in the data)
-        n_samples = len(self.samples_df)
-        estimated_waves = min(5, n_samples // 20) if n_samples > 20 else 1
-
+        # Wave controls - only shown for Wave Evolution plot
         self.wave_selector = widgets.IntRangeSlider(
-            value=(1, estimated_waves),
+            value=(1, self.max_waves),
             min=1,
-            max=estimated_waves,
+            max=self.max_waves,
             step=1,
             description="Waves:",
             continuous_update=False,
             readout=True,
         )
 
+        self.param_checkboxes = []
+        for param in self.param_names:
+            cb = widgets.Checkbox(
+                value=True,  # Default all selected
+                description=param,
+                disabled=False,
+                indent=False
+            )
+            self.param_checkboxes.append(cb)
+        
+        # Group checkboxes in a container with scroll
+        self.param_checkbox_container = widgets.VBox(
+            self.param_checkboxes,
+            layout=widgets.Layout(
+                width='auto',
+                height='200px',
+                overflow_y='auto',
+                border='1px solid #ddd'
+            )
+        )
+
+        # Label for the checkbox group
+        self.param_selection_label = widgets.Label("Select Parameters to Display:")
+        
         # NROY filter
         self.nroy_filter = widgets.Checkbox(
             value=False, description="Show only NROY points", disabled=False
@@ -148,47 +186,150 @@ class HistoryMatchingDashboard:
         # Output area for the plot
         self.output = widgets.Output()
 
-        # Layout the UI
-        param_selectors = widgets.HBox([self.param_x, self.param_y, self.param_z])
-        controls_top = widgets.HBox([self.plot_type, self.threshold_slider])
-        controls_bottom = widgets.HBox(
-            [self.sample_selector, self.wave_selector, self.nroy_filter]
-        )
+        # Group controls for selective display
+        self.param_selectors = widgets.HBox([self.param_x, self.param_y, self.param_z])
+        self.wave_controls = widgets.HBox([self.wave_selector])
+        self.radar_controls = widgets.HBox([self.sample_selector])
 
-        # Main layout
+        # Main controls that are always visible
+        controls_top = widgets.HBox([self.plot_type, self.threshold_slider])
+        controls_bottom = widgets.HBox([self.nroy_filter])
+
+        # Main layout with placeholders for conditional controls
         self.main_layout = widgets.VBox(
             [
                 controls_top,
-                param_selectors,
+                self.param_selectors,
+                self.wave_controls,  # Only shown for Wave Evolution
+                self.radar_controls,  # Only shown for Implausibility Radar
                 controls_bottom,
                 self.update_button,
                 self.output,
             ]
         )
+        # Container for the parameter selection controls
+        self.param_selection_controls = widgets.VBox([
+            self.param_selection_label,
+            self.param_checkbox_container
+        ])
+
+
+        # Initially hide plot-specific controls
+        self.wave_controls.layout.display = "none"
+        self.radar_controls.layout.display = "none"
+        self.param_z.layout.display = "none"  # Initially hide Z parameter (only for 3D)
+        self.param_selection_controls.layout.display = 'none'  # Initially hidden
+
+    def _update_visible_controls(self, change):
+        """Show/hide controls based on selected plot type"""
+        plot_type = change["new"]
+
+        # Default - show X and Y parameters, hide Z parameter
+        self.param_x.layout.display = "inline-flex"
+        self.param_y.layout.display = "inline-flex"
+        self.param_z.layout.display = "none"
+        self.param_selection_controls.layout.display = 'none'
+
+        # Hide all conditional controls by default
+        self.wave_controls.layout.display = "none"
+        self.radar_controls.layout.display = "none"
+
+        # Show controls based on plot type
+        if plot_type == "3D Parameter Visualization":
+            # Show all three parameters for 3D
+            self.param_z.layout.display = "inline-flex"
+
+        elif plot_type == "Implausibility Radar":
+            # Show sample selector for radar plot
+            self.radar_controls.layout.display = "flex"
+
+        elif plot_type == "Wave Evolution":
+            # Show wave controls for wave evolution plot
+            self.wave_controls.layout.display = "flex"
+            # Show parameter selection
+            self.param_selection_controls.layout.display = 'flex' 
+
+        elif plot_type in [
+            "Parameter Correlation Heatmap",
+            "Implausibility Distribution",
+        ]:
+            # Hide parameter selectors for plots that don't use them
+            self.param_x.layout.display = "none"
+            self.param_y.layout.display = "none"
 
     def _update_plot(self, _):
         """Update the plot based on current widget values"""
         with self.output:
             clear_output(wait=True)
 
-            # Filter data based on wave selection
+            # Get current plot type
+            plot_type = self.plot_type.value
+
+            # If this is a wave evolution plot and we don't have wave data,
+            # we need to infer wave information
+            if plot_type == "Wave Evolution" and "wave" not in self.samples_df.columns:
+                # Add wave column if it doesn't exist
+                if "wave" not in self.samples_df.columns:
+                    n_samples = len(self.samples_df)
+                    samples_per_wave = n_samples // self.max_waves
+                    self.samples_df["wave"] = 0
+
+                    for wave in range(1, self.max_waves + 1):
+                        start_idx = (wave - 1) * samples_per_wave
+                        end_idx = min(wave * samples_per_wave, n_samples)
+                        self.samples_df.loc[start_idx : end_idx - 1, "wave"] = wave
+
+            # Get wave range from selector (only used for Wave Evolution)
             wave_start = self.wave_selector.value[0]
             wave_end = self.wave_selector.value[1]
 
-            n_samples = len(self.samples_df)
-            samples_per_wave = n_samples // self.wave_selector.max
+            # Filter based on selected waves if doing Wave Evolution
+            if plot_type == "Wave Evolution" and "wave" in self.samples_df.columns:
+                filtered_df = self.samples_df[
+                    (self.samples_df["wave"] >= wave_start)
+                    & (self.samples_df["wave"] <= wave_end)
+                ].copy()
 
-            start_idx = (wave_start - 1) * samples_per_wave
-            end_idx = min(wave_end * samples_per_wave, n_samples)
+                # Get corresponding implausibility scores
+                if len(self.impl_scores) == len(self.samples_df):
+                    filtered_indices = filtered_df.index
+                    filtered_scores = self.impl_scores[filtered_indices]
+                else:
+                    # Fall back to using all scores
+                    filtered_scores = self.impl_scores
+                    print(
+                        f"Warning: Implausibility score length ({len(self.impl_scores)}) "
+                        f"doesn't match DataFrame length ({len(self.samples_df)})"
+                    )
+            else:
+                # For other plots, filter based on chronological order (like before)
+                n_samples = len(self.samples_df)
+                samples_per_wave = n_samples // self.max_waves
 
-            filtered_df = self.samples_df.iloc[start_idx:end_idx].copy()
-            filtered_scores = self.impl_scores[start_idx:end_idx].copy()
+                start_idx = (wave_start - 1) * samples_per_wave
+                end_idx = min(wave_end * samples_per_wave, n_samples)
+
+                filtered_df = self.samples_df.iloc[start_idx:end_idx].copy()
+
+                # Get corresponding implausibility scores
+                if len(self.impl_scores) == len(self.samples_df):
+                    filtered_scores = self.impl_scores[start_idx:end_idx].copy()
+                else:
+                    # Fall back to using all scores
+                    filtered_scores = self.impl_scores
+                    print(
+                        f"Warning: Implausibility score length ({len(self.impl_scores)}) "
+                        f"doesn't match DataFrame length ({len(self.samples_df)})"
+                    )
 
             # Apply NROY filter if selected
             if self.nroy_filter.value:
                 nroy_mask = filtered_df["NROY"] == True
                 filtered_df = filtered_df[nroy_mask].copy()
-                filtered_scores = filtered_scores[nroy_mask.values].copy()
+
+                # Filter implausibility scores accordingly
+                if len(filtered_scores) == len(filtered_df.index.to_list()):
+                    filtered_scores = filtered_scores[nroy_mask.values].copy()
 
             # Update threshold
             threshold = self.threshold_slider.value
@@ -211,11 +352,10 @@ class HistoryMatchingDashboard:
                 )
                 plt.axis("off")
                 plt.tight_layout()
+                plt.show()
                 return
 
             # Generate the selected plot
-            plot_type = self.plot_type.value
-
             try:
                 if plot_type == "Parameter vs Implausibility":
                     self._plot_parameter_vs_implausibility(filtered_df, filtered_scores)
@@ -233,6 +373,8 @@ class HistoryMatchingDashboard:
                     self._plot_emulator_diagnostics(filtered_df, filtered_scores)
                 elif plot_type == "Bayesian Style Comparison":
                     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
+                elif plot_type == "Wave Evolution":
+                    self._plot_wave_evolution(filtered_df, filtered_scores)
             except Exception as e:
                 plt.figure(figsize=(10, 6))
                 plt.text(
@@ -245,6 +387,7 @@ class HistoryMatchingDashboard:
                 )
                 plt.axis("off")
                 plt.tight_layout()
+                plt.show()
 
     def _plot_parameter_vs_implausibility(self, df, impl_scores):
         """Plot parameter vs implausibility"""
@@ -855,6 +998,174 @@ class HistoryMatchingDashboard:
             plt.subplots_adjust(top=0.9)  # Make room for suptitle
 
         plt.show()  # Only one show() call at the end
+    def _plot_wave_evolution(self, df, impl_scores):
+        """
+        Plot matching Figure 6 style with:
+        - Upper triangle: NROY density plots
+        - Lower triangle: Minimum implausibility plots
+        - Diagonal: Parameter histograms
+        """
+        # Get selected parameters
+        selected_params = [
+            cb.description for cb in self.param_checkboxes if cb.value
+        ]
+        
+        if not selected_params:
+            plt.figure(figsize=(10, 6))
+            plt.text(0.5, 0.5, "No parameters selected", ha="center", va="center")
+            plt.axis("off")
+            plt.show()
+            return
+        
+        # Filter param_names to only include selected ones
+        orig_param_names = self.param_names
+        self.param_names = selected_params  # Temporarily override
+
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from matplotlib.colors import LinearSegmentedColormap
+        import matplotlib.gridspec as gridspec
+        
+        n_params = len(self.param_names)
+        
+        # Create figure with GridSpec
+        fig = plt.figure(figsize=(n_params*1.5, n_params*1.5))
+        gs = gridspec.GridSpec(n_params, n_params)
+        gs.update(wspace=0.1, hspace=0.1)
+        
+        # Create custom colormap for NROY densities
+        nroy_cmap = plt.cm.viridis
+        nroy_cmap.set_under(color='lightgrey')  # For ruled-out areas
+        
+        # Create colormap for minimum implausibility
+        impl_cmap = plt.cm.plasma
+        
+        # Calculate parameter ranges
+        param_ranges = {}
+        for param in self.param_names:
+            param_min = df[param].min()
+            param_max = df[param].max()
+            padding = 0.05 * (param_max - param_min)
+            param_ranges[param] = (param_min - padding, param_max + padding)
+        
+        # Create common grid for all plots
+        grid_size = 30
+        grids = {}
+        for param in self.param_names:
+            x_min, x_max = param_ranges[param]
+            grids[param] = np.linspace(x_min, x_max, grid_size)
+        
+        # Prepare storage for NROY fractions and min implausibilities
+        nroy_fractions = {}
+        min_impls = {}
+        
+        # Pre-compute all the data we'll need
+        for i, param_y in enumerate(self.param_names):
+            y_min, y_max = param_ranges[param_y]  # Get y-range for current parameter
+            
+            for j, param_x in enumerate(self.param_names):
+                x_min, x_max = param_ranges[param_x]  # Get x-range for current parameter
+                
+                if i < j:  # Upper triangle - NROY density
+                    xx, yy = np.meshgrid(grids[param_x], grids[param_y])
+                    nroy_fractions[(i,j)] = np.zeros_like(xx)
+                    
+                    # Calculate NROY fraction at each grid point
+                    for xi in range(grid_size):
+                        for yi in range(grid_size):
+                            # Find points near this grid location
+                            x_val = grids[param_x][xi]
+                            y_val = grids[param_y][yi]
+                            
+                            # Filter points close to these parameter values
+                            mask_x = (df[param_x] >= x_val - 0.5*(x_max-x_min)/grid_size) & \
+                                    (df[param_x] <= x_val + 0.5*(x_max-x_min)/grid_size)
+                            mask_y = (df[param_y] >= y_val - 0.5*(y_max-y_min)/grid_size) & \
+                                    (df[param_y] <= y_val + 0.5*(y_max-y_min)/grid_size)
+                            
+                            nearby_points = df[mask_x & mask_y]
+                            
+                            if len(nearby_points) > 0:
+                                # Calculate fraction of NROY points
+                                nroy_count = nearby_points['NROY'].sum()
+                                nroy_fractions[(i,j)][yi,xi] = nroy_count / len(nearby_points)
+                
+                elif i > j:  # Lower triangle - minimum implausibility
+                    xx, yy = np.meshgrid(grids[param_x], grids[param_y])
+                    min_impls[(i,j)] = np.full_like(xx, np.inf)
+                    
+                    # Find minimum implausibility at each grid point
+                    for xi in range(grid_size):
+                        for yi in range(grid_size):
+                            x_val = grids[param_x][xi]
+                            y_val = grids[param_y][yi]
+                            
+                            mask_x = (df[param_x] >= x_val - 0.5*(x_max-x_min)/grid_size) & \
+                                    (df[param_x] <= x_val + 0.5*(x_max-x_min)/grid_size)
+                            mask_y = (df[param_y] >= y_val - 0.5*(y_max-y_min)/grid_size) & \
+                                    (df[param_y] <= y_val + 0.5*(y_max-y_min)/grid_size)
+                            
+                            nearby_points = df[mask_x & mask_y]
+                            
+                            if len(nearby_points) > 0:
+                                min_impl = nearby_points['min_implausibility'].min()
+                                min_impls[(i,j)][yi,xi] = min_impl
+        
+        # Plotting loop
+        for i, param_y in enumerate(self.param_names):
+            for j, param_x in enumerate(self.param_names):
+                ax = plt.subplot(gs[i, j])
+                
+                # Set axis labels
+                if i == n_params - 1:  # Bottom row
+                    ax.set_xlabel(param_x)
+                else:
+                    ax.set_xticklabels([])
+                    
+                if j == 0:  # Left column
+                    ax.set_ylabel(param_y)
+                else:
+                    ax.set_yticklabels([])
+                
+                # Set axis limits
+                ax.set_xlim(param_ranges[param_x])
+                ax.set_ylim(param_ranges[param_y])
+                
+                if i == j:  # Diagonal - parameter histogram
+                    ax.hist(df[param_x], bins=20, density=True, 
+                        color='skyblue', edgecolor='none')
+                    
+                elif i < j:  # Upper triangle - NROY density
+                    # Plot NROY fraction
+                    im = ax.pcolormesh(grids[param_x], grids[param_y], 
+                                    nroy_fractions[(i,j)], 
+                                    cmap=nroy_cmap, 
+                                    vmin=0.01, vmax=1)  # Below 0.01 shows as grey
+                    
+                else:  # Lower triangle - minimum implausibility
+                    # Plot minimum implausibility
+                    im = ax.pcolormesh(grids[param_x], grids[param_y], 
+                                    min_impls[(i,j)], 
+                                    cmap=impl_cmap)
+        
+        # Restore original parameter names
+        self.param_names = orig_param_names
+
+        # Add colorbars
+        if n_params > 1:
+            # NROY density colorbar
+            cax_nroy = fig.add_axes([0.92, 0.4, 0.02, 0.5])
+            cbar_nroy = plt.colorbar(im, cax=cax_nroy)
+            cbar_nroy.set_label('NROY Fraction')
+            
+            # Min implausibility colorbar
+            cax_impl = fig.add_axes([0.92, 0.1, 0.02, 0.2])
+            cbar_impl = plt.colorbar(im, cax=cax_impl)
+            cbar_impl.set_label('Min Implausibility')
+
+        plt.tight_layout()
+        plt.subplots_adjust(right=0.9)  # Make room for colorbar
+        plt.show()
 
     def display(self):
         """Display the dashboard"""

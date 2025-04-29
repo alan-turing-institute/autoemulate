@@ -231,6 +231,10 @@ class HistoryMatcher:
                 all_samples.extend(successful_samples)
                 all_impl_scores.extend(impl_scores)
 
+                for sample in successful_samples:
+                    # Add wave information to each sample
+                    sample["wave"] = wave + 1  # 1-indexed waves
+
                 # Update progress bar with informative statistics
                 if len(impl_scores) > 0:
                     nroy_mask = np.all(impl_scores <= self.threshold, axis=1)
