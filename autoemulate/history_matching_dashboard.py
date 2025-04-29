@@ -1,11 +1,11 @@
 import ipywidgets as widgets
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from IPython.display import clear_output
 from IPython.display import display
-from matplotlib.colors import LinearSegmentedColormap
 from sklearn.decomposition import PCA
 
 
@@ -146,6 +146,7 @@ class HistoryMatchingDashboard:
             readout=True,
         )
 
+        # Create parameter checkboxes
         self.param_checkboxes = []
         for param in self.param_names:
             cb = widgets.Checkbox(
@@ -185,28 +186,33 @@ class HistoryMatchingDashboard:
 
         # Group controls for selective display
         self.param_selectors = widgets.HBox([self.param_x, self.param_y, self.param_z])
-        self.wave_controls = widgets.HBox([self.wave_selector])
+        # Container for the parameter selection controls
+        self.param_selection_controls = widgets.VBox(
+            [self.param_selection_label, self.param_checkbox_container]
+        )
+
+        self.wave_controls = widgets.VBox(
+            [
+                self.wave_selector,
+                self.param_selection_controls,  # Add parameter selection here
+            ]
+        )
         self.radar_controls = widgets.HBox([self.sample_selector])
 
         # Main controls that are always visible
         controls_top = widgets.HBox([self.plot_type, self.threshold_slider])
         controls_bottom = widgets.HBox([self.nroy_filter])
 
-        # Main layout with placeholders for conditional controls
         self.main_layout = widgets.VBox(
             [
                 controls_top,
                 self.param_selectors,
-                self.wave_controls,  # Only shown for Wave Evolution
-                self.radar_controls,  # Only shown for Implausibility Radar
+                self.wave_controls,
+                self.radar_controls,
                 controls_bottom,
                 self.update_button,
                 self.output,
             ]
-        )
-        # Container for the parameter selection controls
-        self.param_selection_controls = widgets.VBox(
-            [self.param_selection_label, self.param_checkbox_container]
         )
 
         # Initially hide plot-specific controls
@@ -1014,11 +1020,6 @@ class HistoryMatchingDashboard:
         # Filter param_names to only include selected ones
         orig_param_names = self.param_names
         self.param_names = selected_params  # Temporarily override
-
-        import matplotlib.pyplot as plt
-        import numpy as np
-        from matplotlib.colors import LinearSegmentedColormap
-        import matplotlib.gridspec as gridspec
 
         n_params = len(self.param_names)
 
