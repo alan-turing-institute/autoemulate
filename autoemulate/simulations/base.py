@@ -40,8 +40,7 @@ class Simulator(ABC):
             output_variables if output_variables is not None else []
         )
         self._output_names = []  # Will be populated after first simulation
-        self._has_sample_forward = False
-
+        
     @property
     def param_names(self) -> List[str]:
         """List of parameter names"""
