@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import torch
@@ -18,6 +18,8 @@ class Stream(Active):
     ----------
     (Inherits parameters from Active)
     """
+
+    show_progress: bool = field(default=True)
 
     @abstractmethod
     def query(
@@ -51,7 +53,14 @@ class Stream(Active):
             Stream of input samples.
         """
         X = self.check_matrix(X)
-        for x in (pb := tqdm(X, desc=self.__class__.__name__, leave=True)):
+        for x in (
+            pb := tqdm(
+                X,
+                desc=self.__class__.__name__,
+                leave=True,
+                disable=not self.show_progress,
+            )
+        ):
             self.fit(x.reshape(1, -1))
             pb.set_postfix(
                 ordered_dict={key: val[-1] for key, val in self.metrics.items()}
@@ -76,6 +85,7 @@ class Stream(Active):
             pb := tqdm(
                 range(0, X.shape[0], batch_size),
                 desc=f"{self.__class__.__name__} (batches)",
+                disable=not self.show_progress,
             )
         ):
             batch = X[i : i + batch_size]
