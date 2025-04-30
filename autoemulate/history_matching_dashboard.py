@@ -397,6 +397,7 @@ class HistoryMatchingDashboard:
                     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
                 elif plot_type == "Wave Evolution":
                     self._plot_wave_evolution(filtered_df, filtered_scores)
+
             except Exception as e:
                 plt.figure(figsize=(10, 6))
                 plt.text(
@@ -1010,7 +1011,6 @@ class HistoryMatchingDashboard:
         if n_params > 1:
             plt.subplots_adjust(top=0.9)  # Make room for suptitle
 
-
     def _plot_wave_evolution(self, df, impl_scores):
         """
         Plot matching Figure 6 style with:
@@ -1025,7 +1025,6 @@ class HistoryMatchingDashboard:
             plt.figure(figsize=(10, 6))
             plt.text(0.5, 0.5, "No parameters selected", ha="center", va="center")
             plt.axis("off")
-            plt.show()
             return
 
         # Filter param_names to only include selected ones
