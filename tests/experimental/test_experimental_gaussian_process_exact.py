@@ -5,6 +5,7 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
 )
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
+from torch.utils.data import TensorDataset
 
 
 def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
@@ -42,8 +43,8 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
 
 def test_tune_gp(sample_data_y1d):
     x, y = sample_data_y1d
-    # TODO: move x and y into a Dataset(x, y)
-    tuner = Tuner(x, n_iter=5)
+    dataset = TensorDataset(x, y)
+    tuner = Tuner(dataset, n_iter=5)
     scores, configs = tuner.run(GaussianProcessExact)
     assert len(scores) == 5
     assert len(configs) == 5
