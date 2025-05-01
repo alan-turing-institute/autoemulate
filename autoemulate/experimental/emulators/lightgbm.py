@@ -3,11 +3,8 @@ from lightgbm import LGBMRegressor
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
-from autoemulate.experimental.emulators.base import (
-    Emulator,
-    InputTypeMixin,
-)
-from autoemulate.experimental.types import InputLike, OutputLike
+from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.types import OutputLike, TensorLike
 
 
 class LightGBM(Emulator, InputTypeMixin):
@@ -20,8 +17,8 @@ class LightGBM(Emulator, InputTypeMixin):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        x: InputLike | None = None,
-        y: InputLike | None = None,
+        x: TensorLike | None = None,
+        y: TensorLike | None = None,
         boosting_type: str = "gbdt",
         num_leaves: int = 31,
         max_depth: int = -1,
@@ -68,7 +65,7 @@ class LightGBM(Emulator, InputTypeMixin):
     def is_multioutput() -> bool:
         return False
 
-    def _fit(self, x: InputLike, y: InputLike | None):
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Fits the emulator to the data.
         The model expects the input data to be:
@@ -116,7 +113,7 @@ class LightGBM(Emulator, InputTypeMixin):
         self.model_.fit(x, y)
         self.is_fitted_ = True
 
-    def _predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         x = check_array(x)
         check_is_fitted(self, "is_fitted_")

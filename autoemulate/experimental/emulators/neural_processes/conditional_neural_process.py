@@ -3,7 +3,7 @@ import torch
 import torch.utils
 import torch.utils.data
 from autoemulate.experimental.emulators.base import PyTorchBackend
-from autoemulate.experimental.types import DistributionLike, InputLike, TensorLike
+from autoemulate.experimental.types import DistributionLike, TensorLike
 from torch import nn
 from torch.utils.data import Dataset
 
@@ -246,8 +246,8 @@ class CNPModule(PyTorchBackend):
 
     def __init__(  # noqa: PLR0913
         self,
-        x: InputLike,
-        y: InputLike,
+        x: TensorLike,
+        y: TensorLike,
         hidden_dim: int = 32,
         latent_dim: int = 16,
         hidden_layers_enc: int = 2,
@@ -349,8 +349,8 @@ class CNPModule(PyTorchBackend):
 
     def _fit(
         self,
-        x: InputLike,
-        y: InputLike | None,
+        x: TensorLike,
+        y: TensorLike,
     ):
         """
         Fit the model to the data.
@@ -415,7 +415,7 @@ class CNPModule(PyTorchBackend):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def _predict(self, x: InputLike) -> DistributionLike:
+    def _predict(self, x: TensorLike) -> DistributionLike:
         """
         Predict uses the training data as the context data and the input x as the target
         data. The data is preprocessed within the method.
