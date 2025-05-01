@@ -1,10 +1,11 @@
 import numpy as np
+from torch.utils.data import DataLoader, Dataset
 from torchmetrics import R2Score
 from tqdm import tqdm
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
-from autoemulate.experimental.types import InputLike, ModelConfig, TuneConfig
+from autoemulate.experimental.types import ModelConfig, TensorLike, TuneConfig
 
 
 class Tuner(InputTypeMixin):
@@ -13,19 +14,19 @@ class Tuner(InputTypeMixin):
 
     Parameters
     ----------
-    X: InputLike
-        Input features as numpy array, PyTorch tensor, or Dataset.
+    X: DataLoader | Dataset
+        Input features as DataLoader or Dataset.
     y: OutputLine or None
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
     """
 
-    def __init__(self, x: InputLike, y: InputLike | None, n_iter: int):
+    def __init__(self, x: DataLoader | Dataset, n_iter: int):
         self.n_iter = n_iter
         # Convert input types, convert to tensors to ensure correct shapes, convert back
         # to dataset. TODO: consider if this is the best way to do this.
-        dataset = self._convert_to_dataset(x, y)
+        dataset = self._convert_to_dataset(x)
         x_tensor, y_tensor = self._convert_to_tensors(dataset)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
@@ -47,7 +48,13 @@ class Tuner(InputTypeMixin):
         # split data into train/validation sets
         # batch size defaults to size of train data if not otherwise specified
         train_loader, val_loader = self._random_split(self.dataset)
+
+        train_x: TensorLike
+        train_y: TensorLike
         train_x, train_y = next(iter(train_loader))
+
+        val_x: TensorLike
+        val_y: TensorLike
         val_x, val_y = next(iter(val_loader))
 
         # get all the available hyperparameter options

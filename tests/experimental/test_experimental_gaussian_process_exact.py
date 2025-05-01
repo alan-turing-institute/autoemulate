@@ -42,7 +42,8 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
 
 def test_tune_gp(sample_data_y1d):
     x, y = sample_data_y1d
-    tuner = Tuner(x, y, n_iter=5)
+    # TODO: move x and y into a Dataset(x, y)
+    tuner = Tuner(x, n_iter=5)
     scores, configs = tuner.run(GaussianProcessExact)
     assert len(scores) == 5
     assert len(configs) == 5
