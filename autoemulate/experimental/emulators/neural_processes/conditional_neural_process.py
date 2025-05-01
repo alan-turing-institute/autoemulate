@@ -347,7 +347,7 @@ class CNPModule(PyTorchBackend):
             reinterpreted_batch_ndims=1,
         )
 
-    def fit(
+    def _fit(
         self,
         x: InputLike,
         y: InputLike | None,
@@ -415,7 +415,7 @@ class CNPModule(PyTorchBackend):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def predict(self, x: InputLike) -> DistributionLike:
+    def _predict(self, x: InputLike) -> DistributionLike:
         """
         Predict uses the training data as the context data and the input x as the target
         data. The data is preprocessed within the method.
