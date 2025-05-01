@@ -7,14 +7,14 @@ from anytree import Node, RenderTree
 from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
-from autoemulate.experimental.data.validation import Base
+from autoemulate.experimental.data.validation import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
 
 from ..types import GaussianLike, TensorLike
 
 
 @dataclass(kw_only=True)
-class Simulator(Base, ABC):
+class Simulator(ValidationMixin, ABC):
     """
     Simulator abstract class for generating outputs from inputs.
 
@@ -78,7 +78,7 @@ class Simulator(Base, ABC):
 
 
 @dataclass(kw_only=True)
-class Learner(Base, ABC):
+class Learner(ValidationMixin, ABC):
     """
     Learner class that combines a simulator and an emulator for active learning.
 

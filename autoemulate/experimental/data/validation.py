@@ -2,7 +2,7 @@ import torch
 from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
 
 
-class Base:
+class ValidationMixin:
     """
     Base class for active learning simulation and emulation.
 
