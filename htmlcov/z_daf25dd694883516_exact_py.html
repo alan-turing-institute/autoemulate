@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_83818e0a597de9e5_lightgbm_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-30 17:00 +0000
+            created at 2025-05-02 10:21 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -235,7 +235,7 @@
     <p class="pln"><span class="n"><a id="t153" href="#t153">153</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t154" href="#t154">154</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="nam">msg</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t155" href="#t155">155</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t">    <span class="key">def</span> <span class="nam">fit</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">InputLike</span><span class="op">,</span> <span class="nam">y</span><span class="op">:</span> <span class="nam">InputLike</span> <span class="op">|</span> <span class="key">None</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t">    <span class="key">def</span> <span class="nam">_fit</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">InputLike</span><span class="op">,</span> <span class="nam">y</span><span class="op">:</span> <span class="nam">InputLike</span> <span class="op">|</span> <span class="key">None</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t157" href="#t157">157</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">train</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">likelihood</span><span class="op">.</span><span class="nam">train</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">        <span class="com"># Ensure tensors and correct shapes</span>&nbsp;</span><span class="r"></span></p>
@@ -258,7 +258,7 @@
     <p class="run"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">log_epoch</span><span class="op">(</span><span class="nam">epoch</span><span class="op">,</span> <span class="nam">loss</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">            <span class="nam">optimizer</span><span class="op">.</span><span class="nam">step</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">    <span class="key">def</span> <span class="nam">predict</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">InputLike</span><span class="op">)</span> <span class="op">-></span> <span class="nam">OutputLike</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">    <span class="key">def</span> <span class="nam">_predict</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">InputLike</span><span class="op">)</span> <span class="op">-></span> <span class="nam">OutputLike</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">eval</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">        <span class="nam">x</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">preprocess</span><span class="op">(</span><span class="nam">x</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t182" href="#t182">182</a></span><span class="t">        <span class="nam">x_tensor</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_convert_to_tensors</span><span class="op">(</span><span class="nam">x</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -305,7 +305,7 @@
             <a class="nav" href="z_83818e0a597de9e5_lightgbm_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-30 17:00 +0000
+            created at 2025-05-02 10:21 +0000
         </p>
     </div>
 </footer>

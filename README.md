@@ -37,9 +37,9 @@
 | autoemulate/experimental/compare.py                                                  |       51 |        0 |    100% |           |
 | autoemulate/experimental/data/preprocessors.py                                       |       25 |        3 |     88% |21, 23, 41 |
 | autoemulate/experimental/data/utils.py                                               |       76 |       11 |     86% |59, 88, 94, 110-112, 125, 131-132, 153, 158 |
-| autoemulate/experimental/data/validation.py                                          |       63 |       28 |     56% |15, 20, 42-46, 69, 71, 97-98, 123-130, 155, 158-160, 186, 189-191, 215-216, 219-221 |
+| autoemulate/experimental/data/validation.py                                          |       63 |       26 |     59% |46-50, 73, 75, 101-102, 127-134, 159, 162-164, 190, 193-195, 219-220, 223-225 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                                   |        4 |        0 |    100% |           |
-| autoemulate/experimental/emulators/base.py                                           |       70 |        7 |     90% |53, 86, 171, 179-180, 184-188 |
+| autoemulate/experimental/emulators/base.py                                           |       75 |        5 |     93% |37, 76, 161, 170-174 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py                 |        8 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/exact.py                        |       90 |        4 |     96% |69, 100, 184-185 |
 | autoemulate/experimental/emulators/lightgbm.py                                       |       54 |        4 |     93% |82-83, 85-86 |
@@ -77,7 +77,7 @@
 | autoemulate/utils.py                                                                 |      159 |       12 |     92% |59, 67, 100, 184, 190, 228, 375-376, 403, 450, 459, 473 |
 | tests/\_\_init\_\_.py                                                                |        0 |        0 |    100% |           |
 | tests/experimental/conftest.py                                                       |       19 |        0 |    100% |           |
-| tests/experimental/test\_experimental\_base.py                                       |      101 |        1 |     99% |       124 |
+| tests/experimental/test\_experimental\_base.py                                       |      101 |        1 |     99% |       113 |
 | tests/experimental/test\_experimental\_compare.py                                    |       20 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_conditional\_neural\_process.py               |       37 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_gaussian\_process\_exact.py                   |       28 |        0 |    100% |           |
@@ -110,7 +110,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **6903** | **1380** | **80%** |           |
+|                                                                            **TOTAL** | **6908** | **1376** | **80%** |           |
 
 
 ## Setup coverage badge
