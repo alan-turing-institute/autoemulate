@@ -62,7 +62,7 @@ class SupportVectorMachines(SklearnBackend):
     def fit(self, x: InputLike, y: InputLike | None):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
-        x, y = self.check_and_convert(x, y)
+        x, y = self.sklearn_fit_checks(x, y)
 
         x, y = check_X_y(
             x,

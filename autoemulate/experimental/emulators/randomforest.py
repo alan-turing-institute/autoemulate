@@ -51,7 +51,7 @@ class RandomForest(SklearnBackend):
 
     def fit(self, x: InputLike, y: InputLike | None):
         """Fits the emulator to the data."""
-        x, y = self.check_and_convert(x, y)
+        x, y = self.sklearn_fit_checks(x, y)
         x, y = check_X_y(
             x,
             y,
