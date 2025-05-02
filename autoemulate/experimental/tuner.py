@@ -16,7 +16,7 @@ class Tuner(InputTypeMixin):
     ----------
     X: DataLoader | Dataset
         Input features as DataLoader or Dataset.
-    y: OutputLine or None
+    y: OutputLike or None
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
