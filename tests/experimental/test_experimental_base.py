@@ -122,8 +122,8 @@ class TestPyTorchBackend:
         """
         Test the fit method of PyTorchBackend.
         """
-        x = np.array([[1.0], [2.0], [3.0]])
-        y = np.array([[2.0], [4.0], [6.0]])
+        x = torch.Tensor(np.array([[1.0], [2.0], [3.0]]))
+        y = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         self.model.fit(x, y)
 
         assert isinstance(self.model.loss_history, list)
@@ -134,8 +134,8 @@ class TestPyTorchBackend:
         """
         Test the predict method of PyTorchBackend.
         """
-        x_train = np.array([[1.0], [2.0], [3.0]])
-        y_train = np.array([[2.0], [4.0], [6.0]])
+        x_train = torch.Tensor(np.array([[1.0], [2.0], [3.0]]))
+        y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         self.model.fit(x_train, y_train)
 
         X_test = torch.tensor([[4.0]])
@@ -147,7 +147,7 @@ class TestPyTorchBackend:
 
     def test_tune_xy(self):
         """
-        Test that Tuner accepts X,Y inputs.
+        Test that Tuner accepts x,y inputs.
         """
         x_train = torch.Tensor(np.arange(16).reshape(-1, 1))
         y_train = 2 * x_train

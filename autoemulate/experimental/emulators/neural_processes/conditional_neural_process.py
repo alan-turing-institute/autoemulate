@@ -3,7 +3,7 @@ import torch
 import torch.utils
 import torch.utils.data
 from autoemulate.experimental.emulators.base import PyTorchBackend
-from autoemulate.experimental.types import DistributionLike, InputLike, TensorLike
+from autoemulate.experimental.types import DistributionLike, TensorLike
 from torch import nn
 from torch.utils.data import Dataset
 
@@ -246,8 +246,8 @@ class CNPModule(PyTorchBackend):
 
     def __init__(  # noqa: PLR0913
         self,
-        x: InputLike,
-        y: InputLike,
+        x: TensorLike,
+        y: TensorLike,
         hidden_dim: int = 32,
         latent_dim: int = 16,
         hidden_layers_enc: int = 2,
@@ -287,9 +287,10 @@ class CNPModule(PyTorchBackend):
             Batch size for training.
         """
         super().__init__()
-        x_, y_ = self._convert_to_tensors(x, y)
-        self.input_dim = x_.shape[1]
-        self.output_dim = y_.shape[1]
+        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
+        x, y = self._convert_to_tensors(x, y)
+        self.input_dim = x.shape[1]
+        self.output_dim = y.shape[1]
         self.encoder = Encoder(
             self.input_dim,
             self.output_dim,
@@ -347,11 +348,7 @@ class CNPModule(PyTorchBackend):
             reinterpreted_batch_ndims=1,
         )
 
-    def _fit(
-        self,
-        x: InputLike,
-        y: InputLike | None,
-    ):
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Fit the model to the data.
         Note the batching of data is done internally in the method.
@@ -364,8 +361,8 @@ class CNPModule(PyTorchBackend):
         """
         self.train()
 
-        # TODO: revisit as part of https://github.com/alan-turing-institute/autoemulate/issues/400
         # Save off all X_train and y_train
+        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         self.x_train, self.y_train = self._convert_to_tensors(x, y)
 
         # Convert dataset to CNP Dataset
@@ -415,7 +412,7 @@ class CNPModule(PyTorchBackend):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def _predict(self, x: InputLike) -> DistributionLike:
+    def _predict(self, x: TensorLike) -> DistributionLike:
         """
         Predict uses the training data as the context data and the input x as the target
         data. The data is preprocessed within the method.
@@ -432,6 +429,7 @@ class CNPModule(PyTorchBackend):
             Note the distribution is a single tensor of shape (n_points, output_dim).
 
         """
+        # TODO: add to validation _check
         if self.x_train is None or self.y_train is None:
             msg = "Model has not been trained. Please call fit() before predict()."
             raise ValueError(msg)
@@ -439,7 +437,7 @@ class CNPModule(PyTorchBackend):
         self.eval()
         x = self.preprocess(x)
 
-        # Convert x to a dataset
+        # TODO: add to validation _check
         x_target = self._convert_to_tensors(x)
 
         # Sort splitting into context and target

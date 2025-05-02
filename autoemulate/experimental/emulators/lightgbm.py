@@ -3,11 +3,8 @@ from lightgbm import LGBMRegressor
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
-from autoemulate.experimental.emulators.base import (
-    Emulator,
-    InputTypeMixin,
-)
-from autoemulate.experimental.types import InputLike, OutputLike
+from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.types import OutputLike, TensorLike
 
 
 class LightGBM(Emulator, InputTypeMixin):
@@ -20,8 +17,8 @@ class LightGBM(Emulator, InputTypeMixin):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        x: InputLike | None = None,
-        y: InputLike | None = None,
+        x: TensorLike | None = None,
+        y: TensorLike | None = None,
         boosting_type: str = "gbdt",
         num_leaves: int = 31,
         max_depth: int = -1,
@@ -68,7 +65,7 @@ class LightGBM(Emulator, InputTypeMixin):
     def is_multioutput() -> bool:
         return False
 
-    def _fit(self, x: InputLike, y: InputLike | None):
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Fits the emulator to the data.
         The model expects the input data to be:
@@ -76,20 +73,22 @@ class LightGBM(Emulator, InputTypeMixin):
             y (target): 1D array
         """
 
-        x, y = self._convert_to_numpy(x, y)
+        x_np, y_np = self._convert_to_numpy(x, y)
 
-        if y is None:
+        # TODO (#422): move to validation
+        if y_np is None:
             msg = "y must be provided."
             raise ValueError(msg)
-        if y.ndim > 2:
-            msg = f"y must be 1D or 2D array. Found {y.ndim}D array."
+        if y_np.ndim > 2:
+            msg = f"y must be 1D or 2D array. Found {y_np.ndim}D array."
             raise ValueError(msg)
-        if y.ndim == 2:  # _convert_to_numpy may return 2D y
-            y = y.ravel()  # Ensure y is 1-dimensional
+        if y_np.ndim == 2:  # _convert_to_numpy may return 2D y
+            y_np = y_np.ravel()  # Ensure y is 1-dimensional
 
-        self.n_features_in_ = x.shape[1]
+        self.n_features_in_ = x_np.shape[1]
 
-        x, y = check_X_y(x, y, y_numeric=True)
+        # TODO (#422): move to validation
+        x_np, y_np = check_X_y(x_np, y_np, y_numeric=True)
 
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
@@ -113,12 +112,13 @@ class LightGBM(Emulator, InputTypeMixin):
             verbose=self.verbose,
         )
 
-        self.model_.fit(x, y)
+        self.model_.fit(x_np, y_np)
         self.is_fitted_ = True
 
-    def _predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         x = check_array(x)
+        # TODO (#422): move to predict() and consider if required
         check_is_fitted(self, "is_fitted_")
         y_pred = self.model_.predict(x)
         # Ensure the output is a 2D tensor array with shape (n_samples, 1)

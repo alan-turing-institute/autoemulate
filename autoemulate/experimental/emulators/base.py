@@ -6,7 +6,7 @@ from torch import nn, optim
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
 from autoemulate.experimental.data.validation import ValidationMixin
-from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
+from autoemulate.experimental.types import OutputLike, TensorLike, TuneConfig
 
 
 class Emulator(ABC, ValidationMixin):
@@ -17,15 +17,15 @@ class Emulator(ABC, ValidationMixin):
     """
 
     @abstractmethod
-    def _fit(self, x: InputLike, y: InputLike | None): ...
+    def _fit(self, x: TensorLike, y: TensorLike): ...
 
-    def fit(self, x: InputLike, y: InputLike | None):
+    def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
         self._fit(x, y)
 
     @abstractmethod
     def __init__(
-        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+        self, x: TensorLike | None = None, y: TensorLike | None = None, **kwargs
     ): ...
 
     @classmethod
@@ -33,10 +33,10 @@ class Emulator(ABC, ValidationMixin):
         return cls.__name__
 
     @abstractmethod
-    def _predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         pass
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def predict(self, x: TensorLike) -> OutputLike:
         self._check(x, None)
         output = self._predict(x)
         self._check_output(output)
@@ -93,7 +93,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     loss_fn: nn.Module = nn.MSELoss()
     optimizer: optim.Optimizer
 
-    def preprocess(self, x):
+    def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
             return x
         return self.preprocessor.preprocess(x)
@@ -107,15 +107,15 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
 
     def _fit(
         self,
-        x: InputLike,
-        y: InputLike | None,
+        x: TensorLike,
+        y: TensorLike,
     ):
         """
         Train a PyTorchBackend model.
 
         Parameters
         ----------
-            X: InputLike
+            X: TensorLike
                 Input features as numpy array, PyTorch tensor, or DataLoader.
             y: OutputLike or None
                 Target values (not needed if x is a DataLoader).
@@ -160,7 +160,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def _predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
         return self(x)

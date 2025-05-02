@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 import torch
-from autoemulate.experimental.types import InputLike
+from autoemulate.experimental.types import TensorLike
 
 
 class Preprocessor(ABC):
@@ -9,7 +9,7 @@ class Preprocessor(ABC):
     def __init__(*args, **kwargs): ...
 
     @abstractmethod
-    def preprocess(self, x: InputLike) -> InputLike: ...
+    def preprocess(self, x: TensorLike) -> TensorLike: ...
 
 
 class Standardizer(Preprocessor):
