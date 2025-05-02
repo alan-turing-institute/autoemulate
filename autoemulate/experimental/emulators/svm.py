@@ -64,6 +64,8 @@ class SupportVectorMachines(SklearnBackend):
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
         x, y = self.sklearn_fit_checks(x, y)
 
+        y = y.ravel()  # Ensure y is 1-dimensional
+
         x, y = check_X_y(
             x,
             y,
@@ -78,8 +80,7 @@ class SupportVectorMachines(SklearnBackend):
         else:
             msg = "Input 'y' must be a non-None NumPy array."
             raise ValueError(msg)
-        if y.ndim == 2:  # _convert_to_numpy may return 2D y
-            y = y.ravel()  # Ensure y is 1-dimensional
+
         self._fit(x, y)
 
     def predict(self, x: InputLike) -> OutputLike:
