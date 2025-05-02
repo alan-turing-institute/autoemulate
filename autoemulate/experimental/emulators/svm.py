@@ -4,7 +4,7 @@ from sklearn.utils.validation import check_X_y
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import InputLike, OutputLike
+from autoemulate.experimental.types import OutputLike, TensorLike
 from autoemulate.utils import _denormalise_y, _normalise_y
 
 
@@ -16,8 +16,8 @@ class SupportVectorMachines(SklearnBackend):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        x: InputLike,
-        y: InputLike | None,
+        x: TensorLike,
+        y: TensorLike | None,
         kernel="rbf",
         degree=3,
         gamma="scale",
@@ -59,7 +59,7 @@ class SupportVectorMachines(SklearnBackend):
             max_iter=self.max_iter,
         )
 
-    def fit(self, x: InputLike, y: InputLike | None):
+    def fit(self, x: TensorLike, y: TensorLike | None):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
         x, y = self._convert_to_numpy(x, y)
@@ -84,7 +84,7 @@ class SupportVectorMachines(SklearnBackend):
 
         self._fit(x, y)
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         y_pred = self._predict(x)
 

@@ -3,7 +3,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import InputLike
+from autoemulate.experimental.types import TensorLike
 
 
 class RandomForest(SklearnBackend):
@@ -14,8 +14,8 @@ class RandomForest(SklearnBackend):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        x: InputLike,
-        y: InputLike | None,
+        x: TensorLike,
+        y: TensorLike | None,
         n_estimators=100,
         criterion="squared_error",
         max_depth=None,
@@ -49,7 +49,7 @@ class RandomForest(SklearnBackend):
             random_state=self.random_state,
         )
 
-    def fit(self, x: InputLike, y: InputLike | None):
+    def fit(self, x: TensorLike, y: TensorLike | None):
         """Fits the emulator to the data."""
         x, y = self._convert_to_numpy(x, y)
         self.n_features_in_ = x.shape[1]
