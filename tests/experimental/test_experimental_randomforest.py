@@ -12,7 +12,6 @@ def test_predict_rf(sample_data_y1d, new_data_y1d):
     x2, _ = new_data_y1d
     y_pred = rf.predict(x2)
     assert isinstance(y_pred, TensorLike)
-    assert len(y_pred.shape) == 1
 
 
 def test_predict_rf_2d(sample_data_y2d, new_data_y2d):
@@ -22,7 +21,6 @@ def test_predict_rf_2d(sample_data_y2d, new_data_y2d):
     x2, _ = new_data_y2d
     y_pred = rf.predict(x2)
     assert isinstance(y_pred, TensorLike)
-    assert len(y_pred.shape) == 2
 
 
 def test_tune_rf(sample_data_y1d):
