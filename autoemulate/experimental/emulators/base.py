@@ -5,27 +5,23 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.data.validation import Base
+from autoemulate.experimental.data.validation import ValidationMixin
 from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
 
 
-class Emulator(ABC, Base):
+class Emulator(ABC, ValidationMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
 
-    # TODO: update emulators with these methods
-    # @abstractmethod
-    # def _fit(self, x: InputLike, y: InputLike | None): ...
-
-    # def fit(self, x: InputLike, y: InputLike | None):
-    #     self._check(x, y)
-    #     self._fit(x, y)
-
     @abstractmethod
-    def fit(self, x: InputLike, y: InputLike | None): ...
+    def _fit(self, x: InputLike, y: InputLike | None): ...
+
+    def fit(self, x: InputLike, y: InputLike | None):
+        self._check(x, y)
+        self._fit(x, y)
 
     @abstractmethod
     def __init__(
@@ -36,21 +32,15 @@ class Emulator(ABC, Base):
     def model_name(cls) -> str:
         return cls.__name__
 
-    # TODO: update emulators with these methods
-    # @abstractmethod
-    # def _predict(self, x: InputLike) -> OutputLike:
-    #     pass
-
-    # def predict(self, x: InputLike) -> OutputLike:
-    #     self._check(x, None)
-    #     output = self.predict(x)
-    #     # Check that it is Gaussian or Y
-    #     self._check_output(output)
-    #     return output
-
     @abstractmethod
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: InputLike) -> OutputLike:
         pass
+
+    def predict(self, x: InputLike) -> OutputLike:
+        self._check(x, None)
+        output = self._predict(x)
+        self._check_output(output)
+        return output
 
     @staticmethod
     @abstractmethod
@@ -115,7 +105,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         """
         return nn.MSELoss()(y_pred, y_true)
 
-    def fit(
+    def _fit(
         self,
         x: InputLike,
         y: InputLike | None,
@@ -170,14 +160,10 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: InputLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
         return self(x)
-
-    def cross_validate(self, x: InputLike) -> None:
-        msg = "This function is not yet implemented."
-        raise NotImplementedError(msg)
 
     @staticmethod
     def get_tune_config():

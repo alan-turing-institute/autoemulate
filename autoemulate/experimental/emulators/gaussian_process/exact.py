@@ -153,7 +153,7 @@ class GaussianProcessExact(
         )
         logger.info(msg)
 
-    def fit(self, x: InputLike, y: InputLike | None):
+    def _fit(self, x: InputLike, y: InputLike | None):
         self.train()
         self.likelihood.train()
         # Ensure tensors and correct shapes
@@ -176,7 +176,7 @@ class GaussianProcessExact(
             self.log_epoch(epoch, loss)
             optimizer.step()
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: InputLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
         x_tensor = self._convert_to_tensors(x)

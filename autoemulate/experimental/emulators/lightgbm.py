@@ -68,7 +68,7 @@ class LightGBM(Emulator, InputTypeMixin):
     def is_multioutput() -> bool:
         return False
 
-    def fit(self, x: InputLike, y: InputLike | None):
+    def _fit(self, x: InputLike, y: InputLike | None):
         """
         Fits the emulator to the data.
         The model expects the input data to be:
@@ -116,7 +116,7 @@ class LightGBM(Emulator, InputTypeMixin):
         self.model_.fit(x, y)
         self.is_fitted_ = True
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: InputLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         x = check_array(x)
         check_is_fitted(self, "is_fitted_")

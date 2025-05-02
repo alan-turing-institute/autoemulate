@@ -7,17 +7,6 @@ from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-# @pytest.fixture
-# def model_config() -> M:
-#     return {
-#         "epochs": 10,
-#         "batch_size": 2,
-#         "shuffle": False,
-#         "verbose": False,
-#         "optimizer": torch.optim.Adam,
-#         "criterion": torch.nn.MSELoss,
-#     }
-
 
 class TestInputTypeMixin:
     """
