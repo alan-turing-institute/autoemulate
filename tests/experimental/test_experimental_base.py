@@ -145,6 +145,15 @@ class TestPyTorchBackend:
         assert y_pred.shape == (1, 1)
         assert y_pred.shape == (1, 1)
 
+    def test_tune_xy(self):
+        """
+        Test that Tuner accepts x,y inputs.
+        """
+        x_train = torch.Tensor(np.arange(16).reshape(-1, 1))
+        y_train = 2 * x_train
+        tuner = Tuner(x_train, y_train, n_iter=10)
+        tuner.run(self.DummyModel)
+
     def test_standardizer(self):
         x_train = torch.Tensor(
             [[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]]
@@ -170,5 +179,5 @@ class TestPyTorchBackend:
         x_train = torch.Tensor(np.arange(16).reshape(-1, 1))
         y_train = 2 * x_train
         dataset = self.model._convert_to_dataset(x_train, y_train)
-        tuner = Tuner(x=dataset, n_iter=10)
+        tuner = Tuner(x=dataset, y=None, n_iter=10)
         tuner.run(self.DummyModel)

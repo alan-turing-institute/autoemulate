@@ -4,7 +4,6 @@ from autoemulate.experimental.emulators.neural_processes.conditional_neural_proc
 )
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
-from torch.utils.data import TensorDataset
 
 
 def test_cnp_module_fit_and_predict(sample_data_y1d, new_data_y1d):
@@ -67,8 +66,7 @@ def test_cnp_module_predict_fails_with_calling_fit_first(sample_data_y1d):
 
 def test_tune_gp(sample_data_y1d):
     x, y = sample_data_y1d
-    dataset = TensorDataset(x, y)
-    tuner = Tuner(dataset, n_iter=20)
+    tuner = Tuner(x, y, n_iter=20)
     scores, configs = tuner.run(CNPModule)
     assert len(scores) == 20
     assert len(configs) == 20

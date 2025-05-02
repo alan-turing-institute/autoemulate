@@ -1,11 +1,15 @@
 import numpy as np
-from torch.utils.data import DataLoader, Dataset
 from torchmetrics import R2Score
 from tqdm import tqdm
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
-from autoemulate.experimental.types import ModelConfig, TensorLike, TuneConfig
+from autoemulate.experimental.types import (
+    InputLike,
+    ModelConfig,
+    TensorLike,
+    TuneConfig,
+)
 
 
 class Tuner(InputTypeMixin):
@@ -14,19 +18,19 @@ class Tuner(InputTypeMixin):
 
     Parameters
     ----------
-    X: DataLoader | Dataset
-        Input features as DataLoader or Dataset.
+    x: InputLike
+        Input features.
     y: OutputLike or None
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
     """
 
-    def __init__(self, x: DataLoader | Dataset, n_iter: int):
+    def __init__(self, x: InputLike, y: InputLike | None, n_iter: int = 10):
         self.n_iter = n_iter
         # Convert input types, convert to tensors to ensure correct shapes, convert back
         # to dataset. TODO: consider if this is the best way to do this.
-        dataset = self._convert_to_dataset(x)
+        dataset = self._convert_to_dataset(x, y)
         x_tensor, y_tensor = self._convert_to_tensors(dataset)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
