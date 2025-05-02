@@ -44,10 +44,11 @@ class Emulator(ABC, ValidationMixin, InputTypeMixin):
         self._check_output(output)
         return output
 
-    @staticmethod
-    @abstractmethod
-    def is_multioutput() -> bool:
-        """Flag to indicate if the model is multioutput or not."""
+    # TODO: restore this
+    # @staticmethod
+    # @abstractmethod
+    # def is_multioutput() -> bool:
+    #     """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
     @abstractmethod
@@ -195,26 +196,12 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
 
     def check_and_convert(self, x: TensorLike, y: TensorLike | None):
         x, y = self._convert_to_numpy(x, y)
-        # if y is None:
-        #     msg = "y must be provided."
-        #     raise ValueError(msg)
-        # if y.ndim > 2:
-        #     msg = f"y must be 1D or 2D array. Found {y.ndim}D array."
-        #     raise ValueError(msg)
-        # if y.ndim == 2:  # _convert_to_numpy may return 2D y
-        #     y = y.ravel()  # Ensure y is 1-dimensional
         self.n_features_in_ = x.shape[1]
-
         return x, y
 
     def _fit(self, x: TensorLike, y: TensorLike | None):
         self.model.fit(x, y)
         self.is_fitted_ = True
-
-    # def fit(self, x: TensorLike, y: TensorLike | None):
-    #     """Fits the emulator to the data."""
-    #     x, y = self.check_and_convert(x, y)
-    #     self._fit(x, y)
 
     def _predict(self, x: TensorLike) -> OutputLike:
         check_is_fitted(self)

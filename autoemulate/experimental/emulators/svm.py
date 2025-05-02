@@ -78,6 +78,8 @@ class SupportVectorMachines(SklearnBackend):
         else:
             msg = "Input 'y' must be a non-None NumPy array."
             raise ValueError(msg)
+        if y.ndim == 2:  # _convert_to_numpy may return 2D y
+            y = y.ravel()  # Ensure y is 1-dimensional
         self._fit(x, y)
 
     def predict(self, x: InputLike) -> OutputLike:
