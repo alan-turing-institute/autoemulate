@@ -11,7 +11,7 @@ from autoemulate.experimental.data.validation import Base
 from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
 
 
-class Emulator(ABC, InputTypeMixin):
+class Emulator(ABC, Base, InputTypeMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
