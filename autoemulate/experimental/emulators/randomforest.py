@@ -53,6 +53,9 @@ class RandomForest(SklearnBackend):
         """Fits the emulator to the data."""
         x, y = self._convert_to_numpy(x, y)
         self.n_features_in_ = x.shape[1]
+
+        # y = y.ravel()  # Ensure y is 1-dimensional
+
         x, y = check_X_y(
             x,
             y,
