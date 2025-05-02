@@ -15,10 +15,10 @@ def test_cross_validate():
         def __init__(self, x=None, y=None, **kwargs):
             pass
 
-        def fit(self, x, y):
+        def _fit(self, x, y):
             pass
 
-        def predict(self, x):
+        def _predict(self, x):
             return torch.tensor([val * 2 for val in x])
 
         @staticmethod

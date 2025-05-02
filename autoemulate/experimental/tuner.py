@@ -4,7 +4,12 @@ from tqdm import tqdm
 
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
-from autoemulate.experimental.types import InputLike, ModelConfig, TuneConfig
+from autoemulate.experimental.types import (
+    InputLike,
+    ModelConfig,
+    TensorLike,
+    TuneConfig,
+)
 
 
 class Tuner(InputTypeMixin):
@@ -13,15 +18,15 @@ class Tuner(InputTypeMixin):
 
     Parameters
     ----------
-    X: InputLike
-        Input features as numpy array, PyTorch tensor, or Dataset.
-    y: OutputLine or None
+    x: InputLike
+        Input features.
+    y: OutputLike or None
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
     """
 
-    def __init__(self, x: InputLike, y: InputLike | None, n_iter: int):
+    def __init__(self, x: InputLike, y: InputLike | None, n_iter: int = 10):
         self.n_iter = n_iter
         # Convert input types, convert to tensors to ensure correct shapes, convert back
         # to dataset. TODO: consider if this is the best way to do this.
@@ -47,7 +52,13 @@ class Tuner(InputTypeMixin):
         # split data into train/validation sets
         # batch size defaults to size of train data if not otherwise specified
         train_loader, val_loader = self._random_split(self.dataset)
+
+        train_x: TensorLike
+        train_y: TensorLike
         train_x, train_y = next(iter(train_loader))
+
+        val_x: TensorLike
+        val_y: TensorLike
         val_x, val_y = next(iter(val_loader))
 
         # get all the available hyperparameter options

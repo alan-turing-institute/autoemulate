@@ -1,6 +1,4 @@
-from autoemulate.experimental.emulators.lightgbm import (
-    LightGBM,
-)
+from autoemulate.experimental.emulators.lightgbm import LightGBM
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
 

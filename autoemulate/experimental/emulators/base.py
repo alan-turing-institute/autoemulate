@@ -7,52 +7,42 @@ from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.data.validation import Base
-from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
+from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.types import OutputLike, TensorLike, TuneConfig
 
 
-class Emulator(ABC, Base, InputTypeMixin):
+class Emulator(ABC, ValidationMixin, InputTypeMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
 
-    # TODO: update emulators with these methods
-    # @abstractmethod
-    # def _fit(self, x: InputLike, y: InputLike | None): ...
-
-    # def fit(self, x: InputLike, y: InputLike | None):
-    #     self._check(x, y)
-    #     self._fit(x, y)
-
     @abstractmethod
-    def fit(self, x: InputLike, y: InputLike | None): ...
+    def _fit(self, x: TensorLike, y: TensorLike): ...
+
+    def fit(self, x: TensorLike, y: TensorLike):
+        self._check(x, y)
+        self._fit(x, y)
 
     @abstractmethod
     def __init__(
-        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+        self, x: TensorLike | None = None, y: TensorLike | None = None, **kwargs
     ): ...
 
     @classmethod
     def model_name(cls) -> str:
         return cls.__name__
 
-    # TODO: update emulators with these methods
-    # @abstractmethod
-    # def _predict(self, x: InputLike) -> OutputLike:
-    #     pass
-
-    # def predict(self, x: InputLike) -> OutputLike:
-    #     self._check(x, None)
-    #     output = self.predict(x)
-    #     # Check that it is Gaussian or Y
-    #     self._check_output(output)
-    #     return output
-
     @abstractmethod
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         pass
+
+    def predict(self, x: TensorLike) -> OutputLike:
+        self._check(x, None)
+        output = self._predict(x)
+        self._check_output(output)
+        return output
 
     @staticmethod
     @abstractmethod
@@ -105,7 +95,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     loss_fn: nn.Module = nn.MSELoss()
     optimizer: optim.Optimizer
 
-    def preprocess(self, x):
+    def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
             return x
         return self.preprocessor.preprocess(x)
@@ -117,17 +107,17 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         """
         return nn.MSELoss()(y_pred, y_true)
 
-    def fit(
+    def _fit(
         self,
-        x: InputLike,
-        y: InputLike | None,
+        x: TensorLike,
+        y: TensorLike,
     ):
         """
         Train a PyTorchBackend model.
 
         Parameters
         ----------
-            X: InputLike
+            X: TensorLike
                 Input features as numpy array, PyTorch tensor, or DataLoader.
             y: OutputLike or None
                 Target values (not needed if x is a DataLoader).
@@ -172,14 +162,10 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
         return self(x)
-
-    def cross_validate(self, x: InputLike) -> None:
-        msg = "This function is not yet implemented."
-        raise NotImplementedError(msg)
 
     @staticmethod
     def get_tune_config():
