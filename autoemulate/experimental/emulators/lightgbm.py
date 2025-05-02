@@ -75,6 +75,7 @@ class LightGBM(Emulator, InputTypeMixin):
 
         x_np, y_np = self._convert_to_numpy(x, y)
 
+        # TODO (#422): move to validation
         if y_np is None:
             msg = "y must be provided."
             raise ValueError(msg)
@@ -86,6 +87,7 @@ class LightGBM(Emulator, InputTypeMixin):
 
         self.n_features_in_ = x_np.shape[1]
 
+        # TODO (#422): move to validation
         x_np, y_np = check_X_y(x_np, y_np, y_numeric=True)
 
         self.model_ = LGBMRegressor(
@@ -116,6 +118,7 @@ class LightGBM(Emulator, InputTypeMixin):
     def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         x = check_array(x)
+        # TODO (#422): move to predict() and consider if required
         check_is_fitted(self, "is_fitted_")
         y_pred = self.model_.predict(x)
         # Ensure the output is a 2D tensor array with shape (n_samples, 1)

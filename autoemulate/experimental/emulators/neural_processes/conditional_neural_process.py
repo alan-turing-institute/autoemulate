@@ -287,9 +287,10 @@ class CNPModule(PyTorchBackend):
             Batch size for training.
         """
         super().__init__()
-        x_, y_ = self._convert_to_tensors(x, y)
-        self.input_dim = x_.shape[1]
-        self.output_dim = y_.shape[1]
+        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
+        x, y = self._convert_to_tensors(x, y)
+        self.input_dim = x.shape[1]
+        self.output_dim = y.shape[1]
         self.encoder = Encoder(
             self.input_dim,
             self.output_dim,
@@ -347,11 +348,7 @@ class CNPModule(PyTorchBackend):
             reinterpreted_batch_ndims=1,
         )
 
-    def _fit(
-        self,
-        x: TensorLike,
-        y: TensorLike,
-    ):
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Fit the model to the data.
         Note the batching of data is done internally in the method.
@@ -364,8 +361,8 @@ class CNPModule(PyTorchBackend):
         """
         self.train()
 
-        # TODO: revisit as part of https://github.com/alan-turing-institute/autoemulate/issues/400
         # Save off all X_train and y_train
+        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         self.x_train, self.y_train = self._convert_to_tensors(x, y)
 
         # Convert dataset to CNP Dataset
@@ -432,6 +429,7 @@ class CNPModule(PyTorchBackend):
             Note the distribution is a single tensor of shape (n_points, output_dim).
 
         """
+        # TODO: add to validation _check
         if self.x_train is None or self.y_train is None:
             msg = "Model has not been trained. Please call fit() before predict()."
             raise ValueError(msg)
@@ -439,7 +437,7 @@ class CNPModule(PyTorchBackend):
         self.eval()
         x = self.preprocess(x)
 
-        # Convert x to a dataset
+        # TODO: add to validation _check
         x_target = self._convert_to_tensors(x)
 
         # Sort splitting into context and target
