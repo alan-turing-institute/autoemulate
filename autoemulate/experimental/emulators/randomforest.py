@@ -56,12 +56,7 @@ class RandomForest(SklearnBackend):
 
         # y = y.ravel()  # Ensure y is 1-dimensional
 
-        x, y = check_X_y(
-            x,
-            y,
-            multi_output=True,
-            y_numeric=True
-        )
+        x, y = check_X_y(x, y, multi_output=True, y_numeric=True)
         self._fit(x, y)
 
     @staticmethod
@@ -76,4 +71,3 @@ class RandomForest(SklearnBackend):
             "max_depth": [None, *list(range(5, 30, 5))],  # None plus a range of depths
             "max_samples": [None, 0.5, 0.7, 0.9],
         }
-

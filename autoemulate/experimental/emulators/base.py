@@ -179,6 +179,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
 # class SklearnEstimator(BaseEstimator, RegressorMixin): ...
 
+
 class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     """
     SklearnBackend is a sklearn model and implements the base class.
@@ -213,4 +214,3 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     @staticmethod
     def get_tune_config() -> TuneConfig:
         return {}
-
