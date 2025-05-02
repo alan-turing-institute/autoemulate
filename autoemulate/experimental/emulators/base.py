@@ -194,11 +194,6 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     ):
         pass
 
-    def sklearn_fit_checks(self, x: TensorLike, y: TensorLike | None):
-        x, y = self._convert_to_numpy(x, y)
-        self.n_features_in_ = x.shape[1]
-        return x, y
-
     def _fit(self, x: TensorLike, y: TensorLike | None):
         self.model.fit(x, y)
         self.is_fitted_ = True
