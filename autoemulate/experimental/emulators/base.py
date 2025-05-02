@@ -189,11 +189,11 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     # model: SklearnEstimator
 
     def __init__(
-        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+        self, x: TensorLike | None = None, y: TensorLike | None = None, **kwargs
     ):
         pass
 
-    def check_and_convert(self, x: InputLike, y: InputLike | None):
+    def check_and_convert(self, x: TensorLike, y: TensorLike | None):
         x, y = self._convert_to_numpy(x, y)
         # if y is None:
         #     msg = "y must be provided."
@@ -207,21 +207,21 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
 
         return x, y
 
-    def _fit(self, x: InputLike, y: InputLike | None):
+    def _fit(self, x: TensorLike, y: TensorLike | None):
         self.model.fit(x, y)
         self.is_fitted_ = True
 
-    # def fit(self, x: InputLike, y: InputLike | None):
+    # def fit(self, x: TensorLike, y: TensorLike | None):
     #     """Fits the emulator to the data."""
     #     x, y = self.check_and_convert(x, y)
     #     self._fit(x, y)
 
-    def _predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         check_is_fitted(self)
         x = check_array(x)
         return self.model.predict(x)
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         y_pred = self._predict(x)
 
