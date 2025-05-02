@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from ..types import TensorLike
+from ..types import GaussianLike, TensorLike
 from .base import Active
 
 
@@ -18,7 +18,7 @@ class Pool(Active):
     @abstractmethod
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples from a given pool.
 

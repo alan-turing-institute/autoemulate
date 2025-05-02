@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from ..types import TensorLike
+from ..types import GaussianLike, TensorLike
 from .base import Active
 
 
@@ -22,7 +22,7 @@ class Stream(Active):
     @abstractmethod
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples from a stream.
 
@@ -98,7 +98,7 @@ class Random(Stream):
 
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor, dict[str, float]]:
+    ) -> tuple[torch.Tensor | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Query new samples randomly based on a fixed probability.
 
@@ -116,10 +116,13 @@ class Random(Stream):
             - The covariance estimates,
             - An empty dictionary of additional metrics.
         """
-        assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
-        Y, Sigma = self.emulator.sample(X)
+        assert isinstance(X, TensorLike)
+        # TODO: move handling to check method in base class
+        output = self.emulator.predict(X)
+        assert isinstance(output, TensorLike | GaussianLike)
+        # assert isinstance(output, TensorLike | DistributionLike)
         X = X if np.random.rand() < self.p_query else None
-        return X, Y, Sigma, {}
+        return X, output, {}
 
 
 @dataclass(kw_only=True)
@@ -174,7 +177,11 @@ class Threshold(Stream):
 
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor, dict[str, float]]:
+    ) -> tuple[
+        torch.Tensor | None,
+        torch.Tensor | GaussianLike,
+        dict[str, float],
+    ]:
         """
         Query new samples based on whether the computed score exceeds a threshold.
 
@@ -192,11 +199,14 @@ class Threshold(Stream):
             - The covariance estimates,
             - A dictionary with the computed score.
         """
-        assert isinstance(X, torch.Tensor), "X must be a torch.Tensor"
-        Y, Sigma = self.emulator.sample(X)
-        score = self.score(X, Y, Sigma)
+        # TODO: move handling to check method in base class
+        assert isinstance(X, torch.Tensor)
+        output = self.emulator.predict(X)
+        assert isinstance(output, GaussianLike)
+        assert isinstance(output.variance, torch.Tensor)
+        score = self.score(X, output.mean, output.variance)
         X = X if score > self.threshold else None
-        return X, Y, Sigma, {"score": score.item()}
+        return X, output, {"score": score.item()}
 
 
 @dataclass(kw_only=True)
@@ -427,7 +437,7 @@ class Adaptive(Threshold):
 
     def query(
         self, X: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike, TensorLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Query new samples and adapt the threshold using a PID controller with a sliding
         window for error computation.
@@ -448,7 +458,7 @@ class Adaptive(Threshold):
         """
         # Call the parent query (e.g., from Threshold) to get initial values and
         # metrics.
-        X, Y, Sigma, metrics = super().query(X)
+        X, output, metrics = super().query(X)
 
         # Retrieve the error history for the specified metric.
         error_list = self.metrics.get(self.key, [])
@@ -482,7 +492,7 @@ class Adaptive(Threshold):
                 "error_deriv": ed,
             }
         )
-        return X, Y, Sigma, metrics
+        return X, output, metrics
 
 
 @dataclass(kw_only=True)
@@ -506,6 +516,19 @@ class Adaptive_A_Optimal(Adaptive, A_Optimal):
     (Inherits parameters from Adaptive and A_Optimal)
     """
 
+    def __post_init__(self):
+        if self.min_threshold is not None and self.min_threshold < 0.0:
+            msg = (
+                f"Minimum threashold ({self.min_threshold}) must be greater than or "
+                "equal to 0 since it uses trace of a positive semi-definite matrix."
+            )
+            raise ValueError(msg)
+
+        if self.min_threshold is None:
+            self.min_threshold = 0.0
+
+        A_Optimal.__post_init__(self)
+
 
 @dataclass(kw_only=True)
 class Adaptive_D_Optimal(Adaptive, D_Optimal):
@@ -527,3 +550,17 @@ class Adaptive_E_Optimal(Adaptive, E_Optimal):
     ----------
     (Inherits parameters from Adaptive and E_Optimal)
     """
+
+    def __post_init__(self):
+        if self.min_threshold is not None and self.min_threshold < 0.0:
+            msg = (
+                f"Minimum threshold ({self.min_threshold}) must be greater than or "
+                "equal to 0 since it uses max eigenvalue of a positive semi-definite "
+                "matrix."
+            )
+            raise ValueError(msg)
+
+        if self.min_threshold is None:
+            self.min_threshold = 0.0
+
+        E_Optimal.__post_init__(self)

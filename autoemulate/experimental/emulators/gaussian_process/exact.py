@@ -55,15 +55,15 @@ class GaussianProcessExact(
         self,
         x: InputLike,
         y: InputLike,
-        likelihood_cls: type[MultitaskGaussianLikelihood],
-        mean_module_fn: MeanModuleFn,
-        covar_module_fn: CovarModuleFn,
+        likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
+        mean_module_fn: MeanModuleFn = constant_mean,
+        covar_module_fn: CovarModuleFn = rbf,
         preprocessor_cls: type[Preprocessor] | None = None,
         random_state: int | None = None,
-        epochs: int = 10,
+        epochs: int = 50,
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
-        lr: float = 0.01,
+        lr: float = 2e-1,
     ):
         if random_state is not None:
             set_random_seed(random_state)
@@ -123,6 +123,10 @@ class GaussianProcessExact(
         self.batch_size = batch_size
         self.activation = activation
 
+    @staticmethod
+    def is_multioutput():
+        return True
+
     def preprocess(self, x: InputLike) -> InputLike:
         """Preprocess the input data using the preprocessor."""
         if self.preprocessor is not None:
@@ -157,6 +161,11 @@ class GaussianProcessExact(
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         x = self.preprocess(x)
+        assert isinstance(x, torch.Tensor)
+
+        # Set the training data in case changed since init
+        self.set_train_data(x, y, strict=False)
+
         for epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)
