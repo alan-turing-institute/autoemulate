@@ -24,7 +24,7 @@ from autoemulate.emulators.gaussian_process import (
     zero_mean,
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
-from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
