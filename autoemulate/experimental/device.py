@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 
 from autoemulate.experimental.types import DeviceLike
 
@@ -67,3 +68,25 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
     if device == "cuda":
         return torch.cuda.is_available()
     raise TorchDeviceError(device)
+
+
+def check_model_device(model: nn.Module, expected_device: DeviceLike) -> bool:
+    """
+    Checks if the model is on the expected device.
+
+    Parameters
+    ----------
+    model : nn.Module
+        The model to check.
+    expected_device : str
+        The expected device.
+
+    Returns
+    -------
+    bool
+        True if the model is on the expected device, False otherwise.
+    """
+    return (
+        str(next(model.parameters()).device).split(":")[0]
+        == str(expected_device).split(":")[0]
+    )

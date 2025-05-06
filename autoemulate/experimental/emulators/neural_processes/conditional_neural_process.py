@@ -296,12 +296,15 @@ class CNPModule(PyTorchBackend):
             Device to use for training. If None, use the default device.
         """
         super().__init__()
-        device = get_torch_device(device)
+        self.device = get_torch_device(device)
         x, y = x.to(device), y.to(device)
+
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
         self.output_dim = y.shape[1]
+
+        # To device
         self.encoder = Encoder(
             self.input_dim,
             self.output_dim,
@@ -309,7 +312,7 @@ class CNPModule(PyTorchBackend):
             latent_dim,
             hidden_layers_enc,
             activation,
-        ).to(device)
+        ).to(self.device)
         self.decoder = Decoder(
             self.input_dim,
             latent_dim,
@@ -317,7 +320,8 @@ class CNPModule(PyTorchBackend):
             self.output_dim,
             hidden_layers_dec,
             activation,
-        ).to(device)
+        ).to(self.device)
+        self.to(self.device)
 
         self.min_context_points = min_context_points
         self.max_context_points = self.min_context_points + offset_context_points
@@ -327,7 +331,6 @@ class CNPModule(PyTorchBackend):
         self.x_train = None
         self.y_train = None
         self.batch_size = batch_size
-        self.device = device
 
     def forward(
         self,

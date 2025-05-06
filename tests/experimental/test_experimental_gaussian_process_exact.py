@@ -1,7 +1,10 @@
 import gpytorch
 import pytest
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
-from autoemulate.experimental.device import check_torch_device_is_available
+from autoemulate.experimental.device import (
+    check_model_device,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -57,7 +60,7 @@ def test_device(sample_data_y2d, new_data_y2d, device):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
     gp = GaussianProcessExact(x, y, device=device)
-    assert str(next(gp.parameters()).device).split(":")[0] == device
+    assert check_model_device(gp, device)
     gp.fit(x, y)
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
