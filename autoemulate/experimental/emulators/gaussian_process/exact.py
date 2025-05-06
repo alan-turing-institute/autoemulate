@@ -24,12 +24,13 @@ from autoemulate.emulators.gaussian_process import (
     zero_mean,
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
+from autoemulate.experimental.device import get_torch_device
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
-from autoemulate.experimental.types import OutputLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 from autoemulate.utils import set_random_seed
 
 
@@ -59,9 +60,14 @@ class GaussianProcessExact(
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        device: DeviceLike | None = None,
     ):
         if random_state is not None:
             set_random_seed(random_state)
+
+        # Init device
+        self.device = get_torch_device(device)
+        x, y = x.to(self.device), y.to(self.device)
 
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
@@ -98,14 +104,14 @@ class GaussianProcessExact(
             self.preprocessor = None
 
         # Init likelihood
-        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1]).to(self.device)
 
         # Init must be called with preprocessed data
         x_preprocessed = self.preprocess(x)
         gpytorch.models.ExactGP.__init__(
             self,
-            train_inputs=x_preprocessed,
-            train_targets=y,
+            train_inputs=x_preprocessed.to(self.device),
+            train_targets=y.to(self.device),
             likelihood=likelihood,
         )
         self.likelihood = likelihood
@@ -115,6 +121,7 @@ class GaussianProcessExact(
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.to(self.device)
 
     @staticmethod
     def is_multioutput():
@@ -146,6 +153,7 @@ class GaussianProcessExact(
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
+        x, y = x.to(self.device), y.to(self.device)
 
         # TODO: move conversion out of _fit() and instead rely on for impl check
         x, y = self._convert_to_tensors(x, y)
@@ -169,6 +177,7 @@ class GaussianProcessExact(
 
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
+        x = x.to(self.device)
         # TODO: remove upon implmenting validation
         if not isinstance(x, torch.Tensor):
             msg = f"x ({x}) must be a torch.Tensor"

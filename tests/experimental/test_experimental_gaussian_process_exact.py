@@ -1,5 +1,7 @@
 import gpytorch
+import pytest
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
+from autoemulate.experimental.device import check_torch_device_is_available
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -46,3 +48,17 @@ def test_tune_gp(sample_data_y1d):
     scores, configs = tuner.run(GaussianProcessExact)
     assert len(scores) == 5
     assert len(configs) == 5
+
+
+@pytest.mark.parametrize("device", ["mps", "cuda"])
+def test_device(sample_data_y2d, new_data_y2d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    gp = GaussianProcessExact(x, y, device=device)
+    assert str(next(gp.parameters()).device).split(":")[0] == device
+    gp.fit(x, y)
+    y_pred = gp.predict(x2)
+    assert isinstance(y_pred, DistributionLike)
+    assert y_pred.mean.shape == (20, 2)
