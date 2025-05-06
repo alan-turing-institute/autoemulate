@@ -62,6 +62,7 @@ class GaussianProcessExact(
         lr: float = 2e-1,
         device: DeviceLike | None = None,
     ):
+        # Init random state
         if random_state is not None:
             set_random_seed(random_state)
 
@@ -90,7 +91,7 @@ class GaussianProcessExact(
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
-        # Initialize preprocessor
+        # Init preprocessor
         if preprocessor_cls is not None:
             if issubclass(preprocessor_cls, Standardizer):
                 self.preprocessor = preprocessor_cls(
