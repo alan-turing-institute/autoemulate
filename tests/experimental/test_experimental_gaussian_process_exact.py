@@ -45,9 +45,12 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_tune_gp(sample_data_y1d):
+@pytest.mark.parametrize("device", ["cpu", "mps", "cuda"])
+def test_tune_gp(sample_data_y1d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
-    tuner = Tuner(x, y, n_iter=5)
+    tuner = Tuner(x, y, n_iter=5, device=device)
     scores, configs = tuner.run(GaussianProcessExact)
     assert len(scores) == 5
     assert len(configs) == 5

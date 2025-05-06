@@ -2,9 +2,11 @@ import numpy as np
 from torchmetrics import R2Score
 from tqdm import tqdm
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.types import (
+    DeviceLike,
     InputLike,
     ModelConfig,
     TensorLike,
@@ -12,7 +14,7 @@ from autoemulate.experimental.types import (
 )
 
 
-class Tuner(InputTypeMixin):
+class Tuner(InputTypeMixin, TorchDeviceMixin):
     """
     Run randomised hyperparameter search for a given model.
 
@@ -26,12 +28,21 @@ class Tuner(InputTypeMixin):
         Number of parameter settings to randomly sample and test.
     """
 
-    def __init__(self, x: InputLike, y: InputLike | None, n_iter: int = 10):
+    def __init__(
+        self,
+        x: InputLike,
+        y: InputLike | None,
+        n_iter: int = 10,
+        device: DeviceLike | None = None,
+    ):
         self.n_iter = n_iter
-        # Convert input types, convert to tensors to ensure correct shapes, convert back
-        # to dataset. TODO: consider if this is the best way to do this.
+        TorchDeviceMixin.__init__(self, device=device)
+        # Convert input types, convert to tensors to ensure correct shapes, move to
+        # device and convert back to dataset. TODO: consider if this is the best way to
+        # do this.
         dataset = self._convert_to_dataset(x, y)
         x_tensor, y_tensor = self._convert_to_tensors(dataset)
+        x_tensor, y_tensor = x_tensor.to(self.device), y_tensor.to(self.device)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
         # Q: should users be able to choose a different validation metric?
@@ -76,7 +87,8 @@ class Tuner(InputTypeMixin):
 
             # TODO: consider whether to pass as tensors or dataloader
             # require training data for initialisation as well as fitting?
-            m = model_class(train_x, train_y, **model_config)
+            # TODO: fix handling for non-torch devices
+            m = model_class(train_x, train_y, device=self.device, **model_config)
             m.fit(train_x, train_y)
 
             # evaluate
