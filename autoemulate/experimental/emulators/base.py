@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+from sklearn.utils.validation import check_array, check_is_fitted
 from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
