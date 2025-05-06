@@ -44,11 +44,10 @@ class Emulator(ABC, ValidationMixin, InputTypeMixin):
         self._check_output(output)
         return output
 
-    # TODO: restore this
-    # @staticmethod
-    # @abstractmethod
-    # def is_multioutput() -> bool:
-    #     """Flag to indicate if the model is multioutput or not."""
+    @staticmethod
+    @abstractmethod
+    def is_multioutput() -> bool:
+        """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
     @abstractmethod

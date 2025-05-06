@@ -59,6 +59,10 @@ class SupportVectorMachines(SklearnBackend):
             max_iter=self.max_iter,
         )
 
+    @staticmethod
+    def is_multioutput() -> bool:
+        return False
+
     def fit(self, x: TensorLike, y: TensorLike | None):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1

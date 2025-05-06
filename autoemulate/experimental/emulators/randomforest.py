@@ -49,6 +49,10 @@ class RandomForest(SklearnBackend):
             random_state=self.random_state,
         )
 
+    @staticmethod
+    def is_multioutput() -> bool:
+        return False
+
     def fit(self, x: TensorLike, y: TensorLike | None):
         """Fits the emulator to the data."""
         x, y = self._convert_to_numpy(x, y)
