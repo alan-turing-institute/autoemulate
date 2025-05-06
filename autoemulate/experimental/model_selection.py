@@ -5,8 +5,10 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
+from autoemulate.experimental.device import get_torch_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
+    DeviceLike,
     DistributionLike,
     InputLike,
     ModelConfig,
@@ -64,6 +66,7 @@ def cross_validate(
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
+    device: DeviceLike | None = None,
     **kwargs: Any,
 ):
     """
@@ -97,7 +100,7 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        m = model(x, y, **best_model_config)
+        m = model(x, y, device=get_torch_device(device), **best_model_config)
         m.fit(x, y)
 
         # evaluate on batches

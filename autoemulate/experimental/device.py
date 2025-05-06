@@ -1,3 +1,5 @@
+import logging
+
 import torch
 from torch import nn
 
@@ -61,16 +63,20 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
         If the device is not a valid torch device.
 
     """
-    if isinstance(device, torch.device) or device == "cpu":
+    if device == "cpu" or device == torch.device("cpu"):
         return True
-    if device == "mps":
+    if device == "mps" or device == torch.device("mps"):
         return torch.backends.mps.is_available()
     if device == "cuda":
         return torch.cuda.is_available()
-    raise TorchDeviceError(device)
+    if device == "xpu" or device == torch.device("xpu"):
+        return torch.xpu.is_available() if hasattr(torch, "xpu") else False
+    if isinstance(device, torch.device) and device.type == "cuda":
+        return device.index < torch.cuda.device_count()
+    raise TorchDeviceError(str(device))
 
 
-def check_model_device(model: nn.Module, expected_device: DeviceLike) -> bool:
+def check_model_device(model: nn.Module, expected_device: str) -> bool:
     """
     Checks if the model is on the expected device.
 
@@ -108,7 +114,21 @@ class TorchDeviceMixin:
 
     """
 
-    def __init__(self, device: DeviceLike | None = None):
-        self.device = get_torch_device(device)
+    def __init__(self, device: DeviceLike | None = None, cpu_only: bool = False):
+        # Warn if given device not CPU and cpu_only
+        if cpu_only and (
+            (isinstance(device, str) and device != "cpu")
+            or (isinstance(device, torch.device) and torch.device("cpu") != device)
+        ):
+            msg = (
+                f"The device ({device}) must be CPU for given model. Setting device as "
+                "'cpu'."
+            )
+            # warnings.warn(msg, stacklevel=2)
+            logging.warning(msg)
+            self.device = torch.device("cpu")
+        else:
+            self.device = get_torch_device(device)
+
         if not check_torch_device_is_available(self.device):
             raise TorchDeviceError(str(self.device))
