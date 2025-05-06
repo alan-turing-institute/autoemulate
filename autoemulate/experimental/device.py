@@ -90,3 +90,25 @@ def check_model_device(model: nn.Module, expected_device: DeviceLike) -> bool:
         str(next(model.parameters()).device).split(":")[0]
         == str(expected_device).split(":")[0]
     )
+
+
+class TorchDeviceMixin:
+    """
+    Mixin class to add device management to a PyTorch model.
+
+    Attributes
+    ----------
+    device : torch.device
+        The device to use. If None, the default torch device is used.
+
+    Raises
+    ------
+    TorchDeviceError
+        If the device is not a valid torch device.
+
+    """
+
+    def __init__(self, device: DeviceLike | None = None):
+        self.device = get_torch_device(device)
+        if not check_torch_device_is_available(self.device):
+            raise TorchDeviceError(str(self.device))

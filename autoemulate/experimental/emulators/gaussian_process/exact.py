@@ -24,7 +24,7 @@ from autoemulate.emulators.gaussian_process import (
     zero_mean,
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
-from autoemulate.experimental.device import get_torch_device
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
@@ -67,7 +67,7 @@ class GaussianProcessExact(
             set_random_seed(random_state)
 
         # Init device
-        self.device = get_torch_device(device)
+        TorchDeviceMixin.__init__(self, device=device)
         x, y = x.to(self.device), y.to(self.device)
 
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`

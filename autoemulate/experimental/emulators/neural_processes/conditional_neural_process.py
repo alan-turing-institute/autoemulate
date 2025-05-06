@@ -4,14 +4,14 @@ import numpy as np
 import torch
 import torch.utils
 import torch.utils.data
-from autoemulate.experimental.device import get_torch_device
+from autoemulate.experimental.device import TorchDeviceMixin, get_torch_device
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 from torch import nn
 from torch.utils.data import Dataset
 
 
-class CNPDataset(Dataset):
+class CNPDataset(Dataset, TorchDeviceMixin):
     """
     Dataset for Conditional Neural Process (CNP).
     Samples context points and target points for
@@ -41,7 +41,7 @@ class CNPDataset(Dataset):
         n_episode: int
             Number of episodes to sample. Must be greater than max_context_points.
         """
-        self.device = get_torch_device(device)
+        TorchDeviceMixin.__init__(self, device=device)
         self.x = x.to(self.device)
         self.y = y.to(self.device)
         if max_context_points >= n_episode:
@@ -296,8 +296,8 @@ class CNPModule(PyTorchBackend):
             Device to use for training. If None, use the default device.
         """
         super().__init__()
-        self.device = get_torch_device(device)
-        x, y = x.to(device), y.to(device)
+        TorchDeviceMixin.__init__(self, device=device)
+        x, y = x.to(self.device), y.to(self.device)
 
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
