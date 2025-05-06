@@ -176,9 +176,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         raise NotImplementedError(msg)
 
 
-# class SklearnEstimator(BaseEstimator, RegressorMixin): ...
-
-
 class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     """
     SklearnBackend is a sklearn model and implements the base class.
@@ -187,14 +184,17 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # model: SklearnEstimator
-
     def __init__(
-        self, x: TensorLike | None = None, y: TensorLike | None = None, **kwargs
+        self,
+        x: TensorLike | None = None,
+        y: TensorLike | None = None,
+        **kwargs,
     ):
-        pass
+        self.model: BaseEstimator | None = (None,)
 
     def _fit(self, x: TensorLike, y: TensorLike | None):
+        x, y = self._convert_to_numpy(x, y)
+        self.n_features_in_ = x.shape[1]
         self.model.fit(x, y)
         self.is_fitted_ = True
 
