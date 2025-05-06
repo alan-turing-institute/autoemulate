@@ -1,9 +1,12 @@
+import functools
+
 import numpy as np
 import torch
 import torch.utils
 import torch.utils.data
+from autoemulate.experimental.device import get_torch_device
 from autoemulate.experimental.emulators.base import PyTorchBackend
-from autoemulate.experimental.types import DistributionLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 from torch import nn
 from torch.utils.data import Dataset
 
@@ -15,13 +18,14 @@ class CNPDataset(Dataset):
     each episode.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
         min_context_points: int,
         max_context_points: int,
         n_episode: int,
+        device: DeviceLike | None = None,
     ):
         """
         Parameters
@@ -37,8 +41,9 @@ class CNPDataset(Dataset):
         n_episode: int
             Number of episodes to sample. Must be greater than max_context_points.
         """
-        self.x = x
-        self.y = y
+        self.device = get_torch_device(device)
+        self.x = x.to(self.device)
+        self.y = y.to(self.device)
         if max_context_points >= n_episode:
             msg = "max_context_points must be less than n_episode"
             raise ValueError(msg)
@@ -91,7 +96,7 @@ class CNPDataset(Dataset):
         return (x, y_target)
 
 
-def cnp_collate_fn(batch):
+def cnp_collate_fn(batch, device: DeviceLike | None = None):
     """
     Collate function for CNP.
 
@@ -104,6 +109,7 @@ def cnp_collate_fn(batch):
     better.
     """
     X, y = zip(*batch)
+    device = get_torch_device(device)
 
     # Get the maximum number of context and target points in the batch
     max_context = max(x["x_context"].shape[0] for x in X)
@@ -134,13 +140,13 @@ def cnp_collate_fn(batch):
 
     # Create a dictionary for X
     x_batched = {
-        "x_context": x_context_batched,
-        "y_context": y_context_batched,
-        "x_target": x_target_batched,
-        "context_mask": context_mask,
+        "x_context": x_context_batched.to(device),
+        "y_context": y_context_batched.to(device),
+        "x_target": x_target_batched.to(device),
+        "context_mask": context_mask.to(device),
     }
 
-    return x_batched, y_batched
+    return x_batched, y_batched.to(device)
 
 
 class Encoder(nn.Module):
@@ -257,6 +263,7 @@ class CNPModule(PyTorchBackend):
         offset_context_points: int = 2,
         n_episodes: int = 12,
         batch_size: int = 4,
+        device: DeviceLike | None = None,
     ):
         """
         Parameters
@@ -285,8 +292,12 @@ class CNPModule(PyTorchBackend):
             It must be greater than max_context_points.
         batch_size: int
             Batch size for training.
+        device: DeviceLike | None
+            Device to use for training. If None, use the default device.
         """
         super().__init__()
+        device = get_torch_device(device)
+        x, y = x.to(device), y.to(device)
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
@@ -298,7 +309,7 @@ class CNPModule(PyTorchBackend):
             latent_dim,
             hidden_layers_enc,
             activation,
-        )
+        ).to(device)
         self.decoder = Decoder(
             self.input_dim,
             latent_dim,
@@ -306,7 +317,7 @@ class CNPModule(PyTorchBackend):
             self.output_dim,
             hidden_layers_dec,
             activation,
-        )
+        ).to(device)
 
         self.min_context_points = min_context_points
         self.max_context_points = self.min_context_points + offset_context_points
@@ -316,6 +327,7 @@ class CNPModule(PyTorchBackend):
         self.x_train = None
         self.y_train = None
         self.batch_size = batch_size
+        self.device = device
 
     def forward(
         self,
@@ -360,6 +372,7 @@ class CNPModule(PyTorchBackend):
             Output data of shape (n_points, output_dim).
         """
         self.train()
+        x, y = x.to(self.device), y.to(self.device)
 
         # Save off all X_train and y_train
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
@@ -380,7 +393,9 @@ class CNPModule(PyTorchBackend):
             batches = 0
 
             for x_batch, y_target in torch.utils.data.DataLoader(
-                dataset, batch_size=self.batch_size, collate_fn=cnp_collate_fn
+                dataset,
+                batch_size=self.batch_size,
+                collate_fn=functools.partial(cnp_collate_fn, device=self.device),
             ):
                 x_context = x_batch["x_context"]
                 y_context = x_batch["y_context"]
@@ -435,6 +450,7 @@ class CNPModule(PyTorchBackend):
             raise ValueError(msg)
 
         self.eval()
+        x = x.to(self.device)
         x = self.preprocess(x)
 
         # TODO: add to validation _check
