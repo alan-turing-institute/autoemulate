@@ -111,7 +111,3 @@ class SupportVectorMachines(SklearnBackend):
             "shrinking": [True, False],
             "max_iter": [-1],
         }
-
-    @property
-    def model_name(self):
-        return self.__class__.__name__
