@@ -47,7 +47,7 @@ def get_torch_device(device: DeviceLike | None) -> torch.device:
 
 def check_torch_device_is_available(device: DeviceLike) -> bool:
     """
-    Checks if the given device is available.
+    Checks if the given device type is available.
 
     Parameters
     ----------
@@ -65,16 +65,24 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
         If the device is not a valid torch device.
 
     """
-    if device == "cpu" or device == torch.device("cpu"):
+    if device == "cpu" or (
+        isinstance(device, torch.device) and device.type == torch.device("cpu").type
+    ):
         return True
-    if device == "mps" or device == torch.device("mps"):
+    if device == "mps" or (
+        isinstance(device, torch.device) and device.type == torch.device("mps").type
+    ):
         return torch.backends.mps.is_available()
     if device == "cuda":
         return torch.cuda.is_available()
-    if device == "xpu" or device == torch.device("xpu"):
-        return torch.xpu.is_available() if hasattr(torch, "xpu") else False
     if isinstance(device, torch.device) and device.type == "cuda":
-        return device.index < torch.cuda.device_count()
+        if device.index is not None:
+            return device.index < torch.cuda.device_count()
+        return True
+    if device == "xpu" or (
+        isinstance(device, torch.device) and device.type == torch.device("xpu").type
+    ):
+        return torch.xpu.is_available() if hasattr(torch, "xpu") else False
     raise TorchDeviceError(str(device))
 
 
@@ -92,7 +100,8 @@ def check_model_device(model: nn.Module, expected_device: str) -> bool:
     Returns
     -------
     bool
-        True if the model is on the expected device, False otherwise.
+        True if the model is on the expected device (ignoring device index), False
+        otherwise.
     """
     return (
         str(next(model.parameters()).device).split(":")[0]
