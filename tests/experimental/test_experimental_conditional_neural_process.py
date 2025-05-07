@@ -1,7 +1,9 @@
 import pytest
-from autoemulate.experimental.emulators.neural_processes.conditional_neural_process import (  # noqa: E501
-    CNPModule,
+from autoemulate.experimental.device import (
+    check_model_device,
+    check_torch_device_is_available,
 )
+from autoemulate.experimental.emulators import CNPModule
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
@@ -70,3 +72,17 @@ def test_tune_gp(sample_data_y1d):
     scores, configs = tuner.run(CNPModule)
     assert len(scores) == 20
     assert len(configs) == 20
+
+
+@pytest.mark.parametrize("device", ["mps", "cuda"])
+def test_device(sample_data_y2d, new_data_y2d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    cnp = CNPModule(x, y, device=device)
+    assert check_model_device(cnp, device)
+    cnp.fit(x, y)
+    y_pred = cnp.predict(x2)
+    assert isinstance(y_pred, DistributionLike)
+    assert y_pred.mean.shape == (20, 2)

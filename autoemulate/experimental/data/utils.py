@@ -1,7 +1,5 @@
 import numpy as np
 import torch
-import torch.utils
-import torch.utils.data
 from autoemulate.experimental.types import InputLike
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 

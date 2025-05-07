@@ -6,10 +6,11 @@ from torch import nn, optim
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
 from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import OutputLike, TensorLike, TuneConfig
 
 
-class Emulator(ABC, ValidationMixin):
+class Emulator(ABC, ValidationMixin, TorchDeviceMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:

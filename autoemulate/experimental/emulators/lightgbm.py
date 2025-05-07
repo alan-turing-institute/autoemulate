@@ -3,11 +3,12 @@ from lightgbm import LGBMRegressor
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
-from autoemulate.experimental.types import OutputLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
-class LightGBM(Emulator, InputTypeMixin):
+class LightGBM(Emulator, InputTypeMixin, TorchDeviceMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
@@ -38,6 +39,7 @@ class LightGBM(Emulator, InputTypeMixin):
         n_jobs: int | None = 1,
         importance_type: str = "split",
         verbose: int = -1,
+        device: DeviceLike | None = None,
     ):
         """Initializes a LightGBM object."""
         _, _ = x, y  # ignore unused arguments
@@ -60,6 +62,7 @@ class LightGBM(Emulator, InputTypeMixin):
         self.n_jobs = n_jobs
         self.importance_type = importance_type
         self.verbose = verbose
+        TorchDeviceMixin.__init__(self, device, cpu_only=True)
 
     @staticmethod
     def is_multioutput() -> bool:
