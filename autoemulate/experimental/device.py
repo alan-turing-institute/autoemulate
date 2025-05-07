@@ -5,6 +5,8 @@ from torch import nn
 
 from autoemulate.experimental.types import DeviceLike
 
+SUPPORTED_DEVICES: list[str] = ["cpu", "mps", "cuda", "xpu"]
+
 
 class TorchDeviceError(NotImplementedError):
     """Exception raised when the device is not implemented in torch."""
@@ -38,7 +40,7 @@ def get_torch_device(device: DeviceLike | None) -> torch.device:
         return device
     if device is None:
         return torch.get_default_device()
-    if device in ["cpu", "mps", "cuda"]:
+    if device in SUPPORTED_DEVICES:
         return torch.device(device)
     raise TorchDeviceError(device)
 

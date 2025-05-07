@@ -1,10 +1,13 @@
 import pytest
 from autoemulate.experimental.compare import AutoEmulate
-from autoemulate.experimental.device import check_torch_device_is_available
+from autoemulate.experimental.device import (
+    SUPPORTED_DEVICES,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators import ALL_EMULATORS
 
 
-@pytest.mark.parametrize("device", ["cpu", "mps", "cuda"])
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
 def test_compare(sample_data_y2d, device):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
@@ -28,7 +31,7 @@ def test_compare_user_models(sample_data_y2d, recwarn):
     )
 
 
-@pytest.mark.parametrize("device", ["cpu", "mps", "cuda"])
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
 def test_compare_y1d(sample_data_y1d, device):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
