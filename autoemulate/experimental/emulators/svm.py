@@ -63,15 +63,6 @@ class SupportVectorMachines(SklearnBackend):
     def is_multioutput() -> bool:
         return False
 
-    # def _predict(self, x: TensorLike) -> OutputLike:
-    #     """Predicts the output of the emulator for a given input."""
-    #     y_pred = SklearnBackend._predict(self, x)
-    #     assert isinstance(y_pred, TensorLike)
-
-    #     if self.normalise_y:
-    #         y_pred = self._normalize(y_pred)
-    #     return y_pred
-
     def _model_specific_check(self, x, y):
         check_X_y(x, y, ensure_min_samples=2)
 
