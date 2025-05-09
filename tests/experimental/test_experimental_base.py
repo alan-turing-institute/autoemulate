@@ -86,7 +86,7 @@ class TestInputTypeMixin:
 
     def test_convert_to_numpy_2d(self, sample_data_y2d):
         x, y = sample_data_y2d
-        x_np, y_np =self.mixin._convert_to_numpy(x, y)
+        x_np, y_np = self.mixin._convert_to_numpy(x, y)
         assert isinstance(x_np, NumpyLike)
         assert isinstance(y_np, NumpyLike)
         assert x_np.shape == (20, 5)
