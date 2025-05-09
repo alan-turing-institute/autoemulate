@@ -28,7 +28,7 @@ class SupportVectorMachines(SklearnBackend):
         shrinking=True,
         cache_size=200,
         verbose=False,
-        max_iter=1,
+        max_iter=100,
         normalise_y=True,
     ):
         """Initializes a SupportVectorMachines object."""
@@ -64,6 +64,8 @@ class SupportVectorMachines(SklearnBackend):
         return False
 
     def _model_specific_check(self, x, y):
+        print("IN SVM")
+        print(x.shape, y.shape)
         check_X_y(x, y, ensure_min_samples=2)
 
     @staticmethod

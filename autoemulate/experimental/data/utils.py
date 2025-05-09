@@ -3,6 +3,7 @@ import torch
 import torch.utils
 import torch.utils.data
 from autoemulate.experimental.types import InputLike, TensorLike
+from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
@@ -117,6 +118,7 @@ class InputTypeMixin:
         self,
         x: InputLike,
         y: InputLike | None = None,
+        reshape: bool = True,
     ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Convert InputLike x, y to tuple of numpy arrays.
@@ -125,9 +127,14 @@ class InputTypeMixin:
             return x, y
 
         result = self._convert_to_tensors(x, y)
-        if isinstance(result, tuple):
+        if reshape and isinstance(result, tuple):
             x, y = result
-            return x.numpy(), y.numpy()
+            x, y = x.numpy(), y.numpy()
+            if (y.ndim == 2 and y.shape[1] == 1) or y.ndim == 1:
+                y = y.ravel()  # Ensure y is 1-dimensional
+                return check_X_y(x, y, multi_output=False, y_numeric=True)
+            return check_X_y(x, y, multi_output=True, y_numeric=True)
+
         x = result
         return x.numpy(), None
 

@@ -3,7 +3,7 @@ from typing import ClassVar
 
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.utils.validation import check_array, check_X_y
+from sklearn.utils.validation import check_array
 from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
@@ -202,15 +202,9 @@ class SklearnBackend(Emulator):
         x_np, y_np = self._convert_to_numpy(x, y)
         assert isinstance(x_np, np.ndarray)
         assert isinstance(y_np, np.ndarray)
-        self.n_features_in_ = x.shape[1]
+        self.n_features_in_ = x_np.shape[1]
 
-        if (y_np.ndim == 2 and y_np.shape[1] == 1) or y_np.ndim == 1:
-            y_np = y_np.ravel()  # Ensure y is 1-dimensional
-            x_np, y_np = check_X_y(x_np, y_np, multi_output=False, y_numeric=True)
-        else:
-            x_np, y_np = check_X_y(x_np, y_np, multi_output=True, y_numeric=True)
-
-        self._model_specific_check(x, y)
+        self._model_specific_check(x_np, y_np)
 
         self.model.fit(x_np, y_np)  # type: ignore PGH003
         self.is_fitted_ = True
@@ -219,8 +213,7 @@ class SklearnBackend(Emulator):
         if not self.is_fitted_:
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
-        # x_np = self._convert_to_numpy(x, None)
-        x_np = x
+        x_np, _ = self._convert_to_numpy(x, None)
         x_np = check_array(x_np)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         y_pred = Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003

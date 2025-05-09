@@ -7,6 +7,7 @@ from autoemulate.experimental.types import TensorLike
 
 def test_predict_svm(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
+    y = y.reshape(-1, 1)
     svm = SupportVectorMachines(x, y)
     svm.fit(x, y)
     x2, _ = new_data_y1d
