@@ -2,7 +2,8 @@ import numpy as np
 import torch
 import torch.utils
 import torch.utils.data
-from autoemulate.experimental.types import InputLike
+from autoemulate.experimental.types import InputLike, TensorLike
+from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
@@ -126,10 +127,15 @@ class InputTypeMixin:
 
         result = self._convert_to_tensors(x, y)
         if isinstance(result, tuple):
-            x, y = result
-            return x.numpy(), y.numpy()
-        x = result
-        return x.numpy(), None
+            x_tensor, y_tensor = result
+            x_np, y_np = x_tensor.numpy(), y_tensor.numpy()
+            if (y_np.ndim == 2 and y_np.shape[1] == 1) or y_np.ndim == 1:
+                y_np = y_np.ravel()  # Ensure y is 1-dimensional
+                return check_X_y(x_np, y_np, multi_output=False, y_numeric=True)
+            return check_X_y(x_np, y_np, multi_output=True, y_numeric=True)
+
+        x_tensor = result
+        return x_tensor.numpy(), None
 
     def _random_split(
         self,
@@ -164,6 +170,18 @@ class InputTypeMixin:
         train_loader = self._convert_to_dataloader(train, batch_size=batch_size)
         test_loader = self._convert_to_dataloader(test, batch_size=batch_size)
         return train_loader, test_loader
+
+    @staticmethod
+    def _normalize(x: TensorLike) -> tuple[TensorLike, TensorLike, TensorLike]:
+        x_mean = x.mean(0, keepdim=True)
+        x_std = x.std(0, keepdim=True)
+        return (x - x_mean) / x_std, x_mean, x_std
+
+    @staticmethod
+    def _denormalize(
+        x: TensorLike, x_mean: TensorLike, x_std: TensorLike
+    ) -> TensorLike:
+        return (x * x_std) + x_mean
 
     # TODO: consider possible method for predict
     # def convert_x(self, y: np.ndarray | torch.Tensor | Data) -> torch.Tensor:
