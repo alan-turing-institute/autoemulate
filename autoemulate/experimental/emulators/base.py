@@ -187,7 +187,7 @@ class SklearnBackend(Emulator):
 
     # TODO: consider if we also need to inherit from other classes
     model: BaseEstimator
-    normalise_y: bool = False
+    normalize_y: bool = False
     y_mean: TensorLike
     y_std: TensorLike
 
@@ -195,7 +195,7 @@ class SklearnBackend(Emulator):
         _, _ = x, y
 
     def _fit(self, x: TensorLike, y: TensorLike):
-        if self.normalise_y:
+        if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean
             self.y_std = y_std
@@ -219,7 +219,7 @@ class SklearnBackend(Emulator):
         if y_pred.ndim == 1:
             y_pred = y_pred.reshape(-1, 1)
         y_pred = Tensor(y_pred)
-        if self.normalise_y:
+        if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred
 
