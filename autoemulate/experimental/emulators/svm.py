@@ -28,7 +28,7 @@ class SupportVectorMachines(SklearnBackend):
         shrinking=True,
         cache_size=200,
         verbose=False,
-        max_iter=-1,
+        max_iter=1,
         normalise_y=True,
     ):
         """Initializes a SupportVectorMachines object."""
@@ -63,31 +63,17 @@ class SupportVectorMachines(SklearnBackend):
     def is_multioutput() -> bool:
         return False
 
-    def _fit(self, x: TensorLike, y: TensorLike):
-        """Fits the emulator to the data."""
-        self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
+    # def _predict(self, x: TensorLike) -> OutputLike:
+    #     """Predicts the output of the emulator for a given input."""
+    #     y_pred = SklearnBackend._predict(self, x)
+    #     assert isinstance(y_pred, TensorLike)
 
-        y = y.ravel()  # Ensure y is 1-dimensional
+    #     if self.normalise_y:
+    #         y_pred = self._normalize(y_pred)
+    #     return y_pred
 
-        if self.normalise_y:
-            y = self._normalize(y)
-        elif y is not None and isinstance(y, np.ndarray):
-            self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
-            self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
-        else:
-            msg = "Input 'y' must be a non-None NumPy array."
-            raise ValueError(msg)
-
-        SklearnBackend._fit(self, x, y)
-
-    def _predict(self, x: TensorLike) -> OutputLike:
-        """Predicts the output of the emulator for a given input."""
-        y_pred = SklearnBackend._predict(self, x)
-        assert isinstance(y_pred, TensorLike)
-
-        if self.normalise_y:
-            y_pred = self._normalize(y_pred)
-        return y_pred
+    def _model_specific_check(self, x, y):
+        check_X_y(x, y, ensure_min_samples=2)
 
     @staticmethod
     def get_tune_config():

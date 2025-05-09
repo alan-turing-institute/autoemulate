@@ -166,10 +166,14 @@ class InputTypeMixin:
         return train_loader, test_loader
 
     @staticmethod
-    def _normalize(x: TensorLike) -> TensorLike:
+    def _normalize(x: TensorLike) -> tuple[TensorLike, TensorLike, TensorLike]:
         x_mean = x.mean(0, keepdim=True)
         x_std = x.std(0, keepdim=True)
-        return (x - x_mean) / x_std
+        return (x - x_mean) / x_std, x_mean, x_std
+
+    @staticmethod
+    def _denormalize(x: TensorLike, x_mean: TensorLike, x_std: TensorLike) -> TensorLike:
+        return (x * x_std) + x_mean
 
     # TODO: consider possible method for predict
     # def convert_x(self, y: np.ndarray | torch.Tensor | Data) -> torch.Tensor:
