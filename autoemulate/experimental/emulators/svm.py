@@ -69,12 +69,6 @@ class SupportVectorMachines(SklearnBackend):
 
         y = y.ravel()  # Ensure y is 1-dimensional
 
-        x, y = check_X_y(
-            x,
-            y,
-            y_numeric=True,
-            ensure_min_samples=2,
-        )
         if self.normalise_y:
             y = self._normalize(y)
         elif y is not None and isinstance(y, np.ndarray):

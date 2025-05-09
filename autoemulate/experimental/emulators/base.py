@@ -3,6 +3,7 @@ from typing import ClassVar
 
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.svm import SVR
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor, nn, optim
 
@@ -199,6 +200,10 @@ class SklearnBackend(Emulator):
             x_np, y_np = check_X_y(x_np, y_np, multi_output=False, y_numeric=True)
         else:
             x_np, y_np = check_X_y(x_np, y_np, multi_output=True, y_numeric=True)
+
+        if isinstance(self, SVR):
+            x_np, y_np = check_X_y(x_np, y_np, ensure_min_samples=2)
+
         self.model.fit(x_np, y_np)  # type: ignore PGH003
         self.is_fitted_ = True
 
