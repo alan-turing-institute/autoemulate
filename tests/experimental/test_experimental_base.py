@@ -4,6 +4,7 @@ import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
 from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
+from autoemulate.experimental.types import NumpyLike
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -74,6 +75,22 @@ class TestInputTypeMixin:
         X = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for x."):
             self.mixin._convert_to_dataloader(X)  # type: ignore - test for invalid type
+
+    def test_convert_to_numpy_1d(self, sample_data_y1d):
+        x, y = sample_data_y1d
+        x_np, y_np = self.mixin._convert_to_numpy(x, y)
+        assert isinstance(x_np, NumpyLike)
+        assert isinstance(y_np, NumpyLike)
+        assert x_np.shape == (20, 5)
+        assert y_np.shape == (20,)
+
+    def test_convert_to_numpy_2d(self, sample_data_y2d):
+        x, y = sample_data_y2d
+        x_np, y_np =self.mixin._convert_to_numpy(x, y)
+        assert isinstance(x_np, NumpyLike)
+        assert isinstance(y_np, NumpyLike)
+        assert x_np.shape == (20, 5)
+        assert y_np.shape == (20, 2)
 
 
 class TestPyTorchBackend:
