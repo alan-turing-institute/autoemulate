@@ -62,8 +62,6 @@ class SupportVectorMachines(SklearnBackend):
         return False
 
     def _model_specific_check(self, x, y):
-        print("IN SVM")
-        print(x.shape, y.shape)
         check_X_y(x, y, ensure_min_samples=2)
 
     @staticmethod
