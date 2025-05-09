@@ -3,9 +3,8 @@ from typing import ClassVar
 
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.utils.validation import check_array, check_is_fitted
+from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor, nn, optim
-from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
