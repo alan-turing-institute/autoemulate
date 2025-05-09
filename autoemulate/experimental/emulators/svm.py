@@ -63,7 +63,7 @@ class SupportVectorMachines(SklearnBackend):
     def is_multioutput() -> bool:
         return False
 
-    def fit(self, x: TensorLike, y: TensorLike | None):
+    def _fit(self, x: TensorLike, y: TensorLike):
         """Fits the emulator to the data."""
         self.n_iter_ = self.max_iter if self.max_iter > 0 else 1
 
@@ -84,7 +84,7 @@ class SupportVectorMachines(SklearnBackend):
             msg = "Input 'y' must be a non-None NumPy array."
             raise ValueError(msg)
 
-        self._fit(x, y)
+        SklearnBackend._fit(self, x, y)
 
     def predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
