@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.utils
 import torch.utils.data
-from autoemulate.experimental.types import InputLike
+from autoemulate.experimental.types import InputLike, TensorLike
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
@@ -164,6 +164,12 @@ class InputTypeMixin:
         train_loader = self._convert_to_dataloader(train, batch_size=batch_size)
         test_loader = self._convert_to_dataloader(test, batch_size=batch_size)
         return train_loader, test_loader
+
+    @staticmethod
+    def _normalize(x: TensorLike) -> TensorLike:
+        x_mean = x.mean(0, keepdim=True)
+        x_std = x.std(0, keepdim=True)
+        return (x - x_mean) / x_std
 
     # TODO: consider possible method for predict
     # def convert_x(self, y: np.ndarray | torch.Tensor | Data) -> torch.Tensor:

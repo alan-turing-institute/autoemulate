@@ -76,7 +76,7 @@ class SupportVectorMachines(SklearnBackend):
             ensure_min_samples=2,
         )
         if self.normalise_y:
-            y, self.y_mean_, self.y_std_ = _normalise_y(y)
+            y = self._normalize(y)
         elif y is not None and isinstance(y, np.ndarray):
             self.y_mean_ = np.zeros(y.shape[1]) if y.ndim > 1 else 0
             self.y_std_ = np.ones(y.shape[1]) if y.ndim > 1 else 1
@@ -86,15 +86,14 @@ class SupportVectorMachines(SklearnBackend):
 
         SklearnBackend._fit(self, x, y)
 
-    def predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
-        y_pred = self._predict(x)
+        y_pred = SklearnBackend._predict(self, x)
+        assert isinstance(y_pred, TensorLike)
 
         if self.normalise_y:
-            y_pred = _denormalise_y(y_pred, self.y_mean_, self.y_std_)
-
-        # Ensure the output is a 2D tensor array with shape (n_samples, 1)
-        return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
+            y_pred = self._normalize(y_pred)
+        return y_pred
 
     @staticmethod
     def get_tune_config():
