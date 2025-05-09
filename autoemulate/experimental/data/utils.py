@@ -118,7 +118,6 @@ class InputTypeMixin:
         self,
         x: InputLike,
         y: InputLike | None = None,
-        reshape: bool = True,
     ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Convert InputLike x, y to tuple of numpy arrays.
@@ -127,7 +126,7 @@ class InputTypeMixin:
             return x, y
 
         result = self._convert_to_tensors(x, y)
-        if reshape and isinstance(result, tuple):
+        if isinstance(result, tuple):
             x, y = result
             x, y = x.numpy(), y.numpy()
             if (y.ndim == 2 and y.shape[1] == 1) or y.ndim == 1:
