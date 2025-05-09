@@ -51,7 +51,6 @@ class Emulator(ABC, ValidationMixin, InputTypeMixin):
         """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
-    @abstractmethod
     def get_tune_config() -> TuneConfig:
         """
         The keys in the TuneConfig must be implemented as keyword arguments in the
@@ -75,8 +74,11 @@ class Emulator(ABC, ValidationMixin, InputTypeMixin):
                 self.lr = lr
                 self.batch_size = batch_size
         """
-
-        ...
+        msg = (
+            "Subclasses should implement for generating tuning config specific to "
+            "each subclass."
+        )
+        raise NotImplementedError(msg)
 
 
 class PyTorchBackend(nn.Module, Emulator, Preprocessor):
@@ -168,14 +170,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         x = self.preprocess(x)
         return self(x)
 
-    @staticmethod
-    def get_tune_config():
-        msg = (
-            "Subclasses should implement for generating tuning config specific to "
-            "each subclass."
-        )
-        raise NotImplementedError(msg)
-
 
 class SklearnBackend(Emulator):
     """
@@ -222,7 +216,3 @@ class SklearnBackend(Emulator):
         if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred
-
-    @staticmethod
-    def get_tune_config() -> TuneConfig:
-        return {}
