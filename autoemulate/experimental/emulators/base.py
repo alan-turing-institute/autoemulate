@@ -218,7 +218,7 @@ class SklearnBackend(Emulator):
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         if y_pred.ndim == 1:
             y_pred = y_pred.reshape(-1, 1)
-        y_pred = Tensor(y_pred)  # type: ignore PGH003
+        y_pred = Tensor(y_pred)
         if self.normalise_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred
