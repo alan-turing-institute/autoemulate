@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar
+from typing import ClassVar, Protocol
 
+import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 from torch import Tensor, nn, optim
@@ -176,13 +177,25 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         raise NotImplementedError(msg)
 
 
-class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
+
+class SklearnProtocol(Protocol):
+    def fit(self, x, y): ...
+
+    def predict(self, x) -> np.ndarray: ...
+
+
+class SklearnEstimator(BaseEstimator, RegressorMixin, SklearnProtocol): ...
+
+
+class SklearnBackend(Emulator):
     """
     SklearnBackend is a sklearn model and implements the base class.
     This provides default implementations to further subclasses.
     This means that models can subclass and only need to implement
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
+
+    model: SklearnEstimator
 
     def _fit(self, x: TensorLike, y: TensorLike | None):
         x_np, y_np = self._convert_to_numpy(x, y)
@@ -193,13 +206,7 @@ class SklearnBackend(Emulator, BaseEstimator, RegressorMixin):
     def _predict(self, x: TensorLike) -> OutputLike:
         check_is_fitted(self)
         x = check_array(x)
-        return self.model.predict(x)
-
-    def predict(self, x: TensorLike) -> OutputLike:
-        """Predicts the output of the emulator for a given input."""
-        y_pred = self._predict(x)
-
-        # Ensure the output is a 2D tensor array with shape (n_samples, 1)
+        y_pred = self.model.predict(x)
         return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
 
     @staticmethod
