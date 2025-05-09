@@ -1,11 +1,9 @@
 import numpy as np
 from sklearn.svm import SVR
 from sklearn.utils.validation import check_X_y
-from torch import Tensor
 
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import OutputLike, TensorLike
-from autoemulate.utils import _denormalise_y, _normalise_y
+from autoemulate.experimental.types import TensorLike
 
 
 class SupportVectorMachines(SklearnBackend):
