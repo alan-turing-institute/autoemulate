@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Protocol
+from typing import ClassVar
 
-import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 from torch import Tensor, nn, optim
@@ -177,14 +176,23 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         raise NotImplementedError(msg)
 
 
+# class SklearnProtocol(Protocol):
+#     def fit(self, x, y): ...
 
-class SklearnProtocol(Protocol):
-    def fit(self, x, y): ...
-
-    def predict(self, x) -> np.ndarray: ...
+#     def predict(self, x) -> np.ndarray: ...
 
 
-class SklearnEstimator(BaseEstimator, RegressorMixin, SklearnProtocol): ...
+# class SklearnEstimator(BaseEstimator, RegressorMixin, SklearnProtocol): ...
+
+
+# ----
+# class SklearnProtocol(Protocol):
+#     def fit(self, x, y): ...
+
+#     def predict(self, x) -> np.ndarray: ...
+
+
+class SklearnEstimator(BaseEstimator, RegressorMixin): ...
 
 
 class SklearnBackend(Emulator):
@@ -200,13 +208,13 @@ class SklearnBackend(Emulator):
     def _fit(self, x: TensorLike, y: TensorLike | None):
         x_np, y_np = self._convert_to_numpy(x, y)
         self.n_features_in_ = x.shape[1]
-        self.model.fit(x_np, y_np)
+        self.model.fit(x_np, y_np)  # type: ignore PGH003
         self.is_fitted_ = True
 
     def _predict(self, x: TensorLike) -> OutputLike:
         check_is_fitted(self)
         x = check_array(x)
-        y_pred = self.model.predict(x)
+        y_pred = self.model.predict(x)  # type: ignore PGH003
         return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
 
     @staticmethod

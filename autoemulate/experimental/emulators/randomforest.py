@@ -55,6 +55,7 @@ class RandomForest(SklearnBackend):
 
     def fit(self, x: TensorLike, y: TensorLike | None):
         """Fits the emulator to the data."""
+        # TODO: add if statement for dimensionality but use existing autoemulate check handling
         # y = y.ravel()  # Ensure y is 1-dimensional
 
         x, y = check_X_y(x, y, multi_output=True, y_numeric=True)
