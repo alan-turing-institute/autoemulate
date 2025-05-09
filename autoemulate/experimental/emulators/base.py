@@ -9,7 +9,7 @@ from torch import Tensor, nn, optim
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
 from autoemulate.experimental.data.validation import ValidationMixin
-from autoemulate.experimental.types import OutputLike, TensorLike, TuneConfig
+from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
 class Emulator(ABC, ValidationMixin, InputTypeMixin):
@@ -191,7 +191,7 @@ class SklearnBackend(Emulator):
     y_mean: TensorLike
     y_std: TensorLike
 
-    def _model_specific_check(self, x, y):
+    def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
     def _fit(self, x: TensorLike, y: TensorLike):

@@ -50,7 +50,7 @@ class RandomForest(SklearnBackend):
 
     @staticmethod
     def is_multioutput() -> bool:
-        return False
+        return True
 
     @staticmethod
     def get_tune_config():

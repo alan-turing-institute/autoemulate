@@ -3,10 +3,10 @@ from sklearn.svm import SVR
 from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import NumpyLike, TensorLike
 
 
-class SupportVectorMachines(SklearnBackend):
+class SupportVectorMachine(SklearnBackend):
     """Support Vector Machines Emulator.
 
     Wraps Support Vector Regressor from scikit-learn.
@@ -16,18 +16,18 @@ class SupportVectorMachines(SklearnBackend):
         self,
         x: TensorLike,
         y: TensorLike | None,
-        kernel="rbf",
-        degree=3,
-        gamma="scale",
-        coef0=0.0,
-        tol=1e-3,
-        C=1.0,
-        epsilon=0.1,
-        shrinking=True,
-        cache_size=200,
-        verbose=False,
-        max_iter=100,
-        normalise_y=True,
+        kernel: str="rbf",
+        degree: int=3,
+        gamma: str="scale",
+        coef0: float=0.0,
+        tol: float=1e-3,
+        C: float=1.0,
+        epsilon: float=0.1,
+        shrinking: bool=True,
+        cache_size: int=200,
+        verbose: bool=False,
+        max_iter: int=100,
+        normalise_y: bool=True,
     ):
         """Initializes a SupportVectorMachines object."""
         _, _ = x, y  # ignore unused arguments
@@ -61,7 +61,7 @@ class SupportVectorMachines(SklearnBackend):
     def is_multioutput() -> bool:
         return False
 
-    def _model_specific_check(self, x, y):
+    def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         check_X_y(x, y, ensure_min_samples=2)
 
     @staticmethod
