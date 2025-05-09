@@ -12,7 +12,6 @@ def test_predict_svm(sample_data_y1d, new_data_y1d):
     svm.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = svm.predict(x2)
-    print(type(y_pred))
     assert isinstance(y_pred, TensorLike)
 
 
