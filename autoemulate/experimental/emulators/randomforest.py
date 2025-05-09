@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.types import TensorLike
@@ -15,7 +14,7 @@ class RandomForest(SklearnBackend):
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         x: TensorLike,
-        y: TensorLike | None,
+        y: TensorLike,
         n_estimators=100,
         criterion="squared_error",
         max_depth=None,
@@ -52,14 +51,6 @@ class RandomForest(SklearnBackend):
     @staticmethod
     def is_multioutput() -> bool:
         return False
-
-    def fit(self, x: TensorLike, y: TensorLike | None):
-        """Fits the emulator to the data."""
-        # TODO: add if statement for dimensionality but use existing autoemulate check handling
-        # y = y.ravel()  # Ensure y is 1-dimensional
-
-        x, y = check_X_y(x, y, multi_output=True, y_numeric=True)
-        self._fit(x, y)
 
     @staticmethod
     def get_tune_config():

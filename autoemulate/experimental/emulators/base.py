@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from sklearn.base import BaseEstimator, RegressorMixin
+import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_array, check_is_fitted
 from torch import Tensor, nn, optim
+from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import InputTypeMixin
@@ -187,9 +189,17 @@ class SklearnBackend(Emulator):
     # TODO: consider if we also need to inherit from other classes
     model: BaseEstimator
 
-    def _fit(self, x: TensorLike, y: TensorLike | None):
+    def _fit(self, x: TensorLike, y: TensorLike):
         x_np, y_np = self._convert_to_numpy(x, y)
+        assert isinstance(x_np, np.ndarray)
+        assert isinstance(y_np, np.ndarray)
         self.n_features_in_ = x.shape[1]
+
+        if (y_np.ndim == 2 and y_np.shape[1] == 1) or y_np.ndim == 1:
+            y_np = y_np.ravel()  # Ensure y is 1-dimensional
+            x_np, y_np = check_X_y(x_np, y_np, multi_output=False, y_numeric=True)
+        else:
+            x_np, y_np = check_X_y(x_np, y_np, multi_output=True, y_numeric=True)
         self.model.fit(x_np, y_np)  # type: ignore PGH003
         self.is_fitted_ = True
 
