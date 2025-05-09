@@ -178,7 +178,9 @@ class InputTypeMixin:
         return (x - x_mean) / x_std, x_mean, x_std
 
     @staticmethod
-    def _denormalize(x: TensorLike, x_mean: TensorLike, x_std: TensorLike) -> TensorLike:
+    def _denormalize(
+        x: TensorLike, x_mean: TensorLike, x_std: TensorLike
+    ) -> TensorLike:
         return (x * x_std) + x_mean
 
     # TODO: consider possible method for predict
