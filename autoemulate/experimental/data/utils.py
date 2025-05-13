@@ -1,7 +1,5 @@
 import numpy as np
 import torch
-import torch.utils
-import torch.utils.data
 from autoemulate.experimental.types import InputLike, TensorLike
 from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
