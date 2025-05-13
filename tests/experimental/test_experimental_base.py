@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
-from autoemulate.experimental.emulators.base import ConversionMixin, PyTorchBackend
+from autoemulate.experimental.data.utils import ConversionMixin
+from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import NumpyLike
 from torch import nn, optim
