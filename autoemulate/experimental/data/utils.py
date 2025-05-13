@@ -190,3 +190,42 @@ class ConversionMixin:
     #             "Unsupported type for X. Must be numpy array, PyTorch tensor"
     #         )
     #     return y
+
+
+class ValidationMixin:
+    """
+    Mixin class to validate input data.
+    """
+
+    ### Validation methods from old utils.py ###
+
+    # def _ensure_2d(arr):
+    #     """Ensure that arr is a 2D."""
+    #     if arr.ndim == 1:
+    #         arr = arr.reshape(-1, 1)
+    #     return arr
+
+    # def _ensure_1d_if_column_vec(arr):
+    #     """Ensure that arr is 1D if shape is (n, 1)."""
+    #     if arr.ndim == 2 and arr.shape[1] == 1:
+    #         arr = arr.ravel()
+    #     if arr.ndim > 2 or arr.ndim < 1:
+    #         raise ValueError(
+    #             f"arr should be 1D or 2D. Found {arr.ndim}D array with shape {arr.shape}"  # noqa: E501
+    #         )
+    #     return arr
+
+    # def _check_cv(cv):
+    #     """Ensure that cross-validation method is valid"""
+    #     if cv is None:
+    #         msg = "cross_validator cannot be None"
+    #         raise ValueError(msg)
+    #     if not isinstance(cv, KFold):
+    #         msg = (
+    #             "cross_validator should be an instance of KFold cross-validation. We do not "  # noqa: E501
+    #             "currently support other cross-validation methods."
+    #         )
+    #         raise ValueError(
+    #             msg
+    #         )
+    #     return cv
