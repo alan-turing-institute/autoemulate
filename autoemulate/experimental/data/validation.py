@@ -11,7 +11,7 @@ class ValidationMixin:
 
     @staticmethod
     def _check(x: InputLike, y: InputLike | None):
-        # TODO: compare with InputTypeMixin and consider additional implementation
+        # TODO: compare with ConversionMixin and consider additional implementation
 
         # Convert to required types
 
@@ -20,7 +20,7 @@ class ValidationMixin:
 
     @staticmethod
     def _check_output(output: OutputLike):
-        # TODO: compare with InputTypeMixin and consider additional implementation
+        # TODO: compare with ConversionMixin and consider additional implementation
         ...
 
     @staticmethod

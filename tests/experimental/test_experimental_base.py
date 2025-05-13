@@ -2,23 +2,23 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
-from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
+from autoemulate.experimental.emulators.base import ConversionMixin, PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import NumpyLike
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
 
-class TestInputTypeMixin:
+class TestConversionMixin:
     """
-    Class to test the InputTypeMixin class.
+    Class to test the ConversionMixin class.
     """
 
     def setup_method(self):
         """
-        Define the InputTypeMixin instance.
+        Define the ConversionMixin instance.
         """
-        self.mixin = InputTypeMixin()
+        self.mixin = ConversionMixin()
 
     def test_convert_numpy_array(self):
         """

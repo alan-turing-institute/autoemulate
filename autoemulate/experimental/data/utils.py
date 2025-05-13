@@ -5,7 +5,7 @@ from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
-class InputTypeMixin:
+class ConversionMixin:
     """
     Mixin class to convert input data to pytorch Datasets and DataLoaders.
     """

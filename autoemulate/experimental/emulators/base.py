@@ -7,12 +7,12 @@ from sklearn.utils.validation import check_array
 from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import InputTypeMixin
+from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.data.validation import ValidationMixin
 from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
-class Emulator(ABC, ValidationMixin, InputTypeMixin):
+class Emulator(ABC, ValidationMixin, ConversionMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
@@ -142,7 +142,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             for X_batch, y_batch in dataloader:
                 # Preprocess x_batch
                 # TODO: consider if this should be moved outside of dataloader iteration
-                # e.g. as part of the InputTypeMixin
+                # e.g. as part of the ConversionMixin
                 x = self.preprocess(X_batch)
 
                 # Forward pass

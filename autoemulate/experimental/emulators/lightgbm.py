@@ -3,11 +3,11 @@ from lightgbm import LGBMRegressor
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from torch import Tensor
 
-from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.types import OutputLike, TensorLike
 
 
-class LightGBM(Emulator, InputTypeMixin):
+class LightGBM(Emulator, ConversionMixin):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
