@@ -7,8 +7,7 @@ from sklearn.utils.validation import check_array
 from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import ConversionMixin
-from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
