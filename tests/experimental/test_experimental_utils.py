@@ -102,6 +102,7 @@ class TestConversionMixin:
 
         assert isinstance(train_loader, DataLoader)
         assert isinstance(test_loader, DataLoader)
+        # Weird this needed to be ignored, there was an error calling len on the dataset
         assert len(train_loader.dataset) == 3  # type: ignore PGH003
         assert len(test_loader.dataset) == 2  # type: ignore PGH003
 
