@@ -60,23 +60,6 @@ class LightGBM(Emulator, ConversionMixin):
         self.n_jobs = n_jobs
         self.importance_type = importance_type
         self.verbose = verbose
-
-    @staticmethod
-    def is_multioutput() -> bool:
-        return False
-
-    def _fit(self, x: TensorLike, y: TensorLike):
-        """
-        Fits the emulator to the data.
-        The model expects the input data to be:
-            x (features): 2D array
-            y (target): 1D array
-        """
-
-        x_np, y_np = self._convert_to_numpy(x, y)
-
-        self.n_features_in_ = x_np.shape[1]
-
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
             num_leaves=self.num_leaves,
@@ -98,6 +81,22 @@ class LightGBM(Emulator, ConversionMixin):
             importance_type=self.importance_type,
             verbose=self.verbose,
         )
+
+    @staticmethod
+    def is_multioutput() -> bool:
+        return False
+
+    def _fit(self, x: TensorLike, y: TensorLike):
+        """
+        Fits the emulator to the data.
+        The model expects the input data to be:
+            x (features): 2D array
+            y (target): 1D array
+        """
+
+        x_np, y_np = self._convert_to_numpy(x, y)
+
+        self.n_features_in_ = x_np.shape[1]
 
         self.model_.fit(x_np, y_np)
 
