@@ -42,6 +42,9 @@ class Emulator(ABC, ValidationMixin, ConversionMixin):
         pass
 
     def predict(self, x: TensorLike) -> OutputLike:
+        if not self.is_fitted_:
+            msg = "Model is not fitted yet. Call fit() before predict()."
+            raise RuntimeError(msg)
         self._check(x, None)
         output = self._predict(x)
         self._check_output(output)
@@ -205,9 +208,6 @@ class SklearnBackend(Emulator):
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
     def _predict(self, x: TensorLike) -> OutputLike:
-        if not self.is_fitted_:
-            msg = "Model is not fitted yet. Call fit() before predict()."
-            raise RuntimeError(msg)
         x_np, _ = self._convert_to_numpy(x, None)
         x_np = check_array(x_np)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
