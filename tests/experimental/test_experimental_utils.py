@@ -17,6 +17,76 @@ class TestConversionMixin:
         """
         self.mixin = ConversionMixin()
 
+    def test_convert_to_dataset_numpy(self):
+        """
+        Test converting numpy arrays to a Dataset.
+        """
+        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+        y = np.array([1.0, 2.0])
+        dataset = self.mixin._convert_to_dataset(X, y)
+
+        # TODO: is the distinction between TensorDataset and Dataset important?
+        assert isinstance(dataset, TensorDataset)
+        assert torch.equal(dataset.tensors[0], torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
+        assert torch.equal(dataset.tensors[1], torch.tensor([1.0, 2.0]))
+
+    def test_convert_to_dataset_tensor(self):
+        """
+        Test converting torch tensors to a Dataset.
+        """
+        X = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        y = torch.tensor([1.0, 2.0])
+        dataset = self.mixin._convert_to_dataset(X, y)
+
+        assert isinstance(dataset, TensorDataset)
+        assert torch.equal(dataset.tensors[0], X)
+        assert torch.equal(dataset.tensors[1], y)
+
+    def test_convert_to_dataset_invalid(self):
+        """
+        Test invalid input to _convert_to_dataset.
+        """
+        X = "invalid input"
+        with pytest.raises(ValueError, match="Unsupported type for x"):
+            self.mixin._convert_to_dataset(X)  # type: ignore - test for invalid type
+
+    def test_convert_to_tensors(self):
+        """
+        Test converting input data to tensors.
+        """
+        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+        y = np.array([1.0, 2.0])
+        x_tensor, y_tensor = self.mixin._convert_to_tensors(X, y)
+
+        assert isinstance(x_tensor, torch.Tensor)
+        assert isinstance(y_tensor, torch.Tensor)
+        assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
+        assert torch.equal(y_tensor, torch.tensor([[1.0], [2.0]]))
+
+    # def test_convert_to_tensors_subset(self):
+    #     """
+    #     Test converting a Subset of a TensorDataset to tensors.
+    #     """
+    #     X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+    #     y = torch.tensor([1.0, 2.0, 3.0])
+    #     dataset = TensorDataset(X, y)
+    #     subset = Subset(dataset, [0, 1])
+    #     x_tensor, y_tensor = self.mixin._convert_to_tensors(subset)
+
+    #     assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
+    #     assert torch.equal(y_tensor, torch.tensor([[1.0], [3.0]]))
+
+    # def test_convert_to_tensors_invalid(self):
+    #     """
+    #     Test invalid input to _convert_to_tensors.
+    #     """
+    #     # TODO: should this just raise the error from test_convert_to_dataset_invalid
+    #     # TODO: can we ensure all warning messages are tested?
+    #     X = "invalid input"
+    #     msg = f"Unsupported type for dataset ({type(X)}). Must be TensorDataset."
+    #     with pytest.raises(ValueError, match=msg):
+    #         self.mixin._convert_to_tensors(X)  # type: ignore - test for invalid type
+
     def test_convert_numpy_array(self):
         """
         Test converting a numpy array to a DataLoader object.

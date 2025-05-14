@@ -10,6 +10,7 @@ class ConversionMixin:
     Mixin class to convert input data to pytorch Datasets and DataLoaders.
     """
 
+    # TODO: is the distinction between TensorDataset and Dataset important?
     def _convert_to_dataset(
         self,
         x: InputLike,
@@ -108,6 +109,8 @@ class ConversionMixin:
                 return x.to(dtype)
             msg = "Number of tensors returned must be greater than zero."
             raise ValueError(msg)
+        # TODO: this error message will never be raised because of
+        # of the value error in _convert_to_dataset
         raise ValueError(
             f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
         )
