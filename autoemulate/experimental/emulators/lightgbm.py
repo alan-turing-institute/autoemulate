@@ -91,11 +91,8 @@ class LightGBM(Emulator, ConversionMixin):
             x (features): 2D array
             y (target): 1D array
         """
-
         x_np, y_np = self._convert_to_numpy(x, y)
-
         self.n_features_in_ = x_np.shape[1]
-
         self.model_.fit(x_np, y_np)
 
     def _predict(self, x: TensorLike) -> OutputLike:
