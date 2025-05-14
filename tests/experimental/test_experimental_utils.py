@@ -88,3 +88,42 @@ class TestConversionMixin:
         assert isinstance(y_np, NumpyLike)
         assert x_np.shape == (20, 5)
         assert y_np.shape == (20, 2)
+
+    def test_random_split(self):
+        """
+        Test splitting a dataset into train and test DataLoaders.
+        """
+        X = torch.tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        y = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0])
+        dataset = TensorDataset(X, y)
+        train_loader, test_loader = self.mixin._random_split(
+            dataset, train_size=0.6, test_size=0.4
+        )
+
+        assert isinstance(train_loader, DataLoader)
+        assert isinstance(test_loader, DataLoader)
+        assert len(train_loader.dataset) == 3  # type: ignore PGH003
+        assert len(test_loader.dataset) == 2  # type: ignore PGH003
+
+    def test_normalize(self):
+        """
+        Test normalizing a tensor.
+        """
+        X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        normalized, mean, std = self.mixin._normalize(X)
+
+        # we use torch.allclose to compare tensors
+        assert torch.allclose(mean, torch.tensor([[3.0, 4.0]]))
+        assert torch.allclose(std, torch.tensor([[2.0, 2.0]]))
+        assert torch.allclose(normalized, (X - mean) / std)
+
+    def test_denormalize(self):
+        """
+        Test denormalizing a tensor.
+        """
+        X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        mean = torch.tensor([[3.0, 4.0]])
+        std = torch.tensor([[2.0, 2.0]])
+        denormalized = self.mixin._denormalize((X - mean) / std, mean, std)
+
+        assert torch.allclose(denormalized, X)
