@@ -1,6 +1,6 @@
 import numpy as np
 from lightgbm import LGBMRegressor
-from sklearn.utils.validation import check_array, check_X_y
+from sklearn.utils.validation import check_array
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
@@ -75,20 +75,7 @@ class LightGBM(Emulator, ConversionMixin):
 
         x_np, y_np = self._convert_to_numpy(x, y)
 
-        # TODO (#422): move to validation
-        if y_np is None:
-            msg = "y must be provided."
-            raise ValueError(msg)
-        if y_np.ndim > 2:
-            msg = f"y must be 1D or 2D array. Found {y_np.ndim}D array."
-            raise ValueError(msg)
-        if y_np.ndim == 2:  # _convert_to_numpy may return 2D y
-            y_np = y_np.ravel()  # Ensure y is 1-dimensional
-
         self.n_features_in_ = x_np.shape[1]
-
-        # TODO (#422): move to validation
-        x_np, y_np = check_X_y(x_np, y_np, y_numeric=True)
 
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
