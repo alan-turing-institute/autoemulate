@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
-from sklearn.utils.validation import check_X_y
+from sklearn.utils.validation import check_array, check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
@@ -208,12 +208,21 @@ class ValidationMixin:
 
     @staticmethod
     def _check(x: InputLike, y: InputLike | None):
-        # TODO: compare with ConversionMixin and consider additional implementation
+        """
+        Check the types and shape are correct
+        for the input data.
+        """
 
-        # Convert to required types
+        ### CHECK 1: ###
+        # TODO: check if check_array is needed, this:
+        # checks array is non-empty array containing only finite values.
+        # If the dtype of the array is object,
+        # attempt converting to float, raising on failure.
+        x = check_array(x, ensure_2d=False)
+        if y is not None:
+            y = check_array(y, ensure_2d=False)
 
-        # Check the types and shape are correct
-        ...
+        return x, y
 
     @staticmethod
     def _check_output(output: OutputLike):

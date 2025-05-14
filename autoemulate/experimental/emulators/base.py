@@ -3,7 +3,6 @@ from typing import ClassVar
 
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.utils.validation import check_array
 from torch import Tensor, nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
@@ -209,7 +208,6 @@ class SklearnBackend(Emulator):
 
     def _predict(self, x: TensorLike) -> OutputLike:
         x_np, _ = self._convert_to_numpy(x, None)
-        x_np = check_array(x_np)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         if y_pred.ndim == 1:
             y_pred = y_pred.reshape(-1, 1)

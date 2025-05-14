@@ -1,6 +1,5 @@
 import numpy as np
 from lightgbm import LGBMRegressor
-from sklearn.utils.validation import check_array
 from torch import Tensor
 
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
@@ -102,7 +101,6 @@ class LightGBM(Emulator, ConversionMixin):
 
     def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
-        x = check_array(x)
         y_pred = self.model_.predict(x)
         # Ensure the output is a 2D tensor array with shape (n_samples, 1)
         return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
