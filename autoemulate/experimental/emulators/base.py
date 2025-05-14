@@ -18,12 +18,15 @@ class Emulator(ABC, ValidationMixin, ConversionMixin):
     - `AutoEmulate`
     """
 
+    is_fitted_: bool = False
+
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
 
     def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
         self._fit(x, y)
+        self.is_fitted_ = True
 
     @abstractmethod
     def __init__(
@@ -200,7 +203,6 @@ class SklearnBackend(Emulator):
         self._model_specific_check(x_np, y_np)
 
         self.model.fit(x_np, y_np)  # type: ignore PGH003
-        self.is_fitted_ = True
 
     def _predict(self, x: TensorLike) -> OutputLike:
         if not self.is_fitted_:
