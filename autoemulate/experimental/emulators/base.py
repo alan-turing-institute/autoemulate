@@ -201,9 +201,7 @@ class SklearnBackend(Emulator):
         assert isinstance(x_np, np.ndarray)
         assert isinstance(y_np, np.ndarray)
         self.n_features_in_ = x_np.shape[1]
-
         self._model_specific_check(x_np, y_np)
-
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
     def _predict(self, x: TensorLike) -> OutputLike:
