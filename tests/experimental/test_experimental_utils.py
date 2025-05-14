@@ -3,7 +3,7 @@ import pytest
 import torch
 from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.types import NumpyLike
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, Subset, TensorDataset
 
 
 class TestConversionMixin:
@@ -63,18 +63,18 @@ class TestConversionMixin:
         assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
         assert torch.equal(y_tensor, torch.tensor([[1.0], [2.0]]))
 
-    # def test_convert_to_tensors_subset(self):
-    #     """
-    #     Test converting a Subset of a TensorDataset to tensors.
-    #     """
-    #     X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
-    #     y = torch.tensor([1.0, 2.0, 3.0])
-    #     dataset = TensorDataset(X, y)
-    #     subset = Subset(dataset, [0, 1])
-    #     x_tensor, y_tensor = self.mixin._convert_to_tensors(subset)
+    def test_convert_to_tensors_subset(self):
+        """
+        Test converting a Subset of a TensorDataset to tensors.
+        """
+        X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        y = torch.tensor([1.0, 2.0, 3.0])
+        dataset = TensorDataset(X, y)
+        subset = Subset(dataset, [0, 1])
+        x_tensor, y_tensor = self.mixin._convert_to_tensors(subset)
 
-    #     assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
-    #     assert torch.equal(y_tensor, torch.tensor([[1.0], [3.0]]))
+        assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
+        assert torch.equal(y_tensor, torch.tensor([[1.0], [2.0]]))
 
     # def test_convert_to_tensors_invalid(self):
     #     """
