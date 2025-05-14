@@ -167,10 +167,6 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
 
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
-        # TODO: remove upon implmenting validation
-        if not isinstance(x, torch.Tensor):
-            msg = f"x ({x}) must be a torch.Tensor"
-            raise ValueError(msg)
         x = self.preprocess(x)
         return self(x)
 
