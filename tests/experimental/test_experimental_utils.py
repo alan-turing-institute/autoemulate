@@ -306,3 +306,50 @@ class TestValidationMixin:
             ValueError, match="X and Y must have the same number of rows"
         ):
             self.mixin.check_pair(x, y)
+
+    def test_check_covariance_valid(self):
+        """
+        Test check_covariance with valid covariance matrices.
+
+        Explanation:
+        - `sigma_full`: Represents a full covariance matrix for each sample in `y`.
+          It has a shape of (n_samples, n_features, n_features), where each sample
+          has a full covariance matrix.
+        - `sigma_diag`: Represents a diagonal covariance matrix for each sample in `y`.
+          It has a shape of (n_samples, n_features), where each row corresponds to
+          the diagonal elements of the covariance matrix for a sample.
+        - `sigma_scalar`: Represents a scalar covariance value for each sample in `y`.
+          It has a shape of (n_samples,), where each value corresponds to the same
+          scalar covariance for all features of a sample.
+
+        The test ensures that the `check_covariance` method correctly validates and
+        returns these different types of covariance matrices without modification.
+        """
+        y = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+
+        # Full covariance matrix: shape (n_samples, n_features, n_features)
+        sigma_full = torch.eye(2).repeat(2, 1, 1)
+
+        # Diagonal covariance matrix: shape (n_samples, n_features)
+        sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+
+        # Scalar covariance: shape (n_samples,)
+        sigma_scalar = torch.tensor([1.0, 2.0])
+
+        # Assert that the method returns the same full covariance matrix
+        assert torch.equal(self.mixin.check_covariance(y, sigma_full), sigma_full)
+
+        # Assert that the method returns the same diagonal covariance matrix
+        assert torch.equal(self.mixin.check_covariance(y, sigma_diag), sigma_diag)
+
+        # Assert that the method returns the same scalar covariance values
+        assert torch.equal(self.mixin.check_covariance(y, sigma_scalar), sigma_scalar)
+
+    def test_check_covariance_invalid(self):
+        """
+        Test check_covariance with an invalid covariance matrix.
+        """
+        y = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        sigma = torch.tensor([[1.0, 2.0]])
+        with pytest.raises(ValueError, match="Invalid covariance matrix shape"):
+            self.mixin.check_covariance(y, sigma)
