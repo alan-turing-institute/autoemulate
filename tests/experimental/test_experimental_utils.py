@@ -252,8 +252,35 @@ class TestValidationMixin:
 
     def test_check_vector_invalid_dim(self):
         """
-        Test check_vector with an invalid input.
+        Test check_vector with wrong dims.
         """
         x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
         with pytest.raises(ValueError, match="Expected 1D tensor"):
             self.mixin.check_vector(x)
+
+    def test_check_matrix_valid(self):
+        """
+        Test check_matrix with a valid 2D tensor.
+        """
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        result = self.mixin.check_matrix(x)
+
+        assert torch.equal(result, x)
+
+    def test_check_matrix_invalid_type(self):
+        """
+        Test check_vector with an invalid input.
+        """
+        x = np.array([[1.0, 2.0], [3.0, 4.0]])
+        with pytest.raises(
+            ValueError, match="Expected TensorLike, got <class 'numpy.ndarray'>"
+        ):
+            self.mixin.check_matrix(x)  # type: ignore PGH003
+
+    def test_check_matrix_invalid_dim(self):
+        """
+        Test check_matrix with wrong dims.
+        """
+        x = torch.tensor([1.0, 2.0, 3.0])
+        with pytest.raises(ValueError, match="Expected 2D tensor"):
+            self.mixin.check_matrix(x)
