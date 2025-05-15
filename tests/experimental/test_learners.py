@@ -16,16 +16,16 @@ from tqdm import tqdm
 
 # Define a simple sine simulator.
 class Sin(Simulator):
-    def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
-        return torch.sin(X)
+    def _forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.sin(x)
 
     def sample_inputs(self, n: int) -> torch.Tensor:
         return torch.Tensor(LatinHypercube([(0.0, 50.0)]).sample(n))
 
 
 class Projectile(Simulator):
-    def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
-        return torch.tensor([simulate_projectile_multioutput(x) for x in X])
+    def _forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.tensor([simulate_projectile_multioutput(x) for x in x])
 
     def sample_inputs(self, n: int) -> torch.Tensor:
         return torch.Tensor(LatinHypercube([(-5.0, 1.0), (0.0, 1000.0)]).sample(n))
@@ -35,7 +35,7 @@ def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
     X_train = simulator.sample_inputs(n_initial_samples)
-    Y_train = simulator.sample(X_train)
+    Y_train = simulator.forward(X_train)
     yield stream.Random(
         simulator=simulator,
         emulator=GaussianProcessExact(X_train, Y_train),
