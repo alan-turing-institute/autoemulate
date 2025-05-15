@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.data.utils import ConversionMixin
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.types import NumpyLike
 from torch.utils.data import DataLoader, Subset, TensorDataset
 
@@ -198,3 +198,35 @@ class TestConversionMixin:
         denormalized = self.mixin._denormalize((X - mean) / std, mean, std)
 
         assert torch.allclose(denormalized, X)
+
+
+class TestValidationMixin:
+    """
+    Class to test the ValidationMixin class.
+    """
+
+    def setup_method(self):
+        """
+        Define the ValidationMixin instance.
+        """
+        self.mixin = ValidationMixin()
+
+    def test_check_y1d(self, sample_data_y1d):
+        """
+        Test _check does not alter inputs, y is 1d.
+        """
+        x, y = sample_data_y1d
+        x_checked, y_checked = self.mixin._check(x, y)
+
+        assert torch.equal(x_checked, x)  # type: ignore PGH003
+        assert torch.equal(y_checked, y)  # type: ignore PGH003
+
+    def test_check_y2d(self, sample_data_y2d):
+        """
+        Test _check does not alter inputs, y is 2d.
+        """
+        x, y = sample_data_y2d
+        x_checked, y_checked = self.mixin._check(x, y)
+
+        assert torch.equal(x_checked, x)  # type: ignore PGH003
+        assert torch.equal(y_checked, y)  # type: ignore PGH003

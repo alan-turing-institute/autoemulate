@@ -209,7 +209,7 @@ class ValidationMixin:
     """
 
     @staticmethod
-    def _check(x: InputLike, y: InputLike | None):
+    def _check(x: TensorLike, y: TensorLike | None):
         """
         Check the types and shape are correct
         for the input data.
