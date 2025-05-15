@@ -1,7 +1,9 @@
 import numpy as np
 import torch
 from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
-from sklearn.utils.validation import check_array, check_X_y
+
+# from sklearn.utils.validation import check_array, check_X_y
+from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
 
@@ -214,13 +216,16 @@ class ValidationMixin:
         """
 
         ### CHECK 1: ###
+
         # TODO: check if check_array is needed, this:
         # checks array is non-empty array containing only finite values.
         # If the dtype of the array is object,
         # attempt converting to float, raising on failure.
-        x = check_array(x, ensure_2d=False)
-        if y is not None:
-            y = check_array(y, ensure_2d=False)
+
+        # TODO: this actually ends up converting to numpy array
+        # x = check_array(x, ensure_2d=False)
+        # if y is not None:
+        #     y = check_array(y, ensure_2d=False)
 
         return x, y
 
