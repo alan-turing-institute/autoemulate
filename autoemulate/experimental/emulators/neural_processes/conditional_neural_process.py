@@ -429,10 +429,6 @@ class CNPModule(PyTorchBackend):
             Note the distribution is a single tensor of shape (n_points, output_dim).
 
         """
-        # TODO: add to validation _check
-        if self.x_train is None or self.y_train is None:
-            msg = "Model has not been trained. Please call fit() before predict()."
-            raise ValueError(msg)
 
         self.eval()
         x = self.preprocess(x)
@@ -447,8 +443,8 @@ class CNPModule(PyTorchBackend):
             raise ValueError(msg)
 
         # Unsqueeze the batch dimension for x_train, y_train and x_target
-        x_train = self.x_train.unsqueeze(0)
-        y_train = self.y_train.unsqueeze(0)
+        x_train = self.x_train.unsqueeze(0)  # type: ignore PGH003
+        y_train = self.y_train.unsqueeze(0)  # type: ignore PGH003
         x_target = x_target.unsqueeze(0)
 
         # Forward pass and drop the batch dimension

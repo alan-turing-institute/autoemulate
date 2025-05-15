@@ -7,7 +7,7 @@ from anytree import Node, RenderTree
 from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
-from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
 
 from ..types import GaussianLike, TensorLike
