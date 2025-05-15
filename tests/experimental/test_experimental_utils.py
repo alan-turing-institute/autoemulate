@@ -284,3 +284,25 @@ class TestValidationMixin:
         x = torch.tensor([1.0, 2.0, 3.0])
         with pytest.raises(ValueError, match="Expected 2D tensor"):
             self.mixin.check_matrix(x)
+
+    def test_check_pair_valid(self):
+        """
+        Test check_pair with valid tensors.
+        """
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        y = torch.tensor([[5.0, 6.0], [7.0, 8.0]])
+        x_checked, y_checked = self.mixin.check_pair(x, y)
+
+        assert torch.equal(x_checked, x)
+        assert torch.equal(y_checked, y)
+
+    def test_check_pair_invalid(self):
+        """
+        Test check_pair with tensors of mismatched rows.
+        """
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        y = torch.tensor([[5.0, 6.0]])
+        with pytest.raises(
+            ValueError, match="X and Y must have the same number of rows"
+        ):
+            self.mixin.check_pair(x, y)
