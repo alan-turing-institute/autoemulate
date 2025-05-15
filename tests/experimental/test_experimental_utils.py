@@ -230,3 +230,30 @@ class TestValidationMixin:
 
         assert torch.equal(x_checked, x)  # type: ignore PGH003
         assert torch.equal(y_checked, y)  # type: ignore PGH003
+
+    def test_check_vector_valid(self):
+        """
+        Test check_vector with a valid 1D tensor.
+        """
+        x = torch.tensor([1.0, 2.0, 3.0])
+        result = self.mixin.check_vector(x)
+
+        assert torch.equal(result, x)
+
+    def test_check_vector_invalid_type(self):
+        """
+        Test check_vector with an invalid input.
+        """
+        x = np.array([1.0, 2.0, 3.0])
+        with pytest.raises(
+            ValueError, match="Expected TensorLike, got <class 'numpy.ndarray'>"
+        ):
+            self.mixin.check_vector(x)  # type: ignore PGH003
+
+    def test_check_vector_invalid_dim(self):
+        """
+        Test check_vector with an invalid input.
+        """
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        with pytest.raises(ValueError, match="Expected 1D tensor"):
+            self.mixin.check_vector(x)
