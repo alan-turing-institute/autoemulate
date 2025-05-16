@@ -53,3 +53,29 @@ class PCATransform(AutoEmulateTransform):
         mean_orig = mean_pca @ self.components.T  # (n, n_c) x (n_c, d)
 
         return GaussianLike(mean_orig, cov_orig)
+
+    def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
+        mean_pca = x.mean
+        cov_pca = x.covariance_matrix
+        mean_orig = mean_pca @ self.components.T
+        assert isinstance(mean_pca, TensorLike)
+        assert isinstance(cov_pca, TensorLike)
+
+        def sample_cov():
+            sample_pca = x.sample()
+            sample = sample_pca @ self.components.T + mean_orig
+            mean_reshaped = mean_orig.view(-1, 1)
+            return (
+                (sample - mean_reshaped)
+                @ (sample - mean_reshaped).T
+                / (sample.shape[0] - 1)
+            )
+
+        # Generate samples and take the mean to estimate covariance in original space
+        cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).mean(0)
+
+        # Ensure positive definiteness
+        # TODO: check how to make this more robust
+        cov_orig = cov_orig + 1e-4 * torch.eye(cov_orig.shape[0])
+
+        return GaussianLike(mean_orig, cov_orig)
