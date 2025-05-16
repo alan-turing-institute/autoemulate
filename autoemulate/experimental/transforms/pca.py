@@ -47,7 +47,8 @@ class PCATransform(AutoEmulateTransform):
         # Transform covariance
         cov_orig = components_expanded @ cov_pca @ components_expanded.T
         # Ensure positive definiteness
-        cov_orig = cov_orig + 1e-5 * torch.eye(cov_orig.shape[0])
+        # TODO: check how to make this more robust
+        cov_orig = cov_orig + 1e-4 * torch.eye(cov_orig.shape[0])
         # Transform mean
         mean_orig = mean_pca @ self.components.T  # (n, n_c) x (n_c, d)
 

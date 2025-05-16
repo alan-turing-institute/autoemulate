@@ -25,6 +25,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         transforms: list[AutoEmulateTransform],
         target_transforms: list[AutoEmulateTransform],
         model: type[Emulator],
+        **kwargs,
     ):
         self.transforms = transforms
         self.target_transforms = target_transforms
@@ -39,7 +40,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             transform.fit(current_y)
             current_y = transform(current_y)
 
-        self.model = model(self._transform_x(x), self._transform_y_tensor(y))
+        self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
 
     def _transform_x(self, x: TensorLike) -> TensorLike:
         # TODO: consider removing cast and either creating new class or not subclassing
