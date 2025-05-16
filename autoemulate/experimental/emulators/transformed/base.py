@@ -18,6 +18,20 @@ class TransformedEmulator(Emulator, ValidationMixin):
     model: Emulator
     target_transforms: list[AutoEmulateTransform]
 
+    def refit(self, x: TensorLike, y: TensorLike, retrain_transforms: bool = False):
+        # Retrain transforms if requested
+        if not retrain_transforms:
+            # TODO: add fit method for composed transforms
+            # self.transforms.fit(x)
+            # self.target_transforms.fit(y)
+            ...
+
+        # Fit on transformed variables
+        self.model.fit(x, y)
+        # TODO: add implementation
+        msg = "refit not implemented yet"
+        raise NotImplementedError(msg)
+
     def __init__(
         self,
         x,
