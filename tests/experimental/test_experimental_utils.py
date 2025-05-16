@@ -353,3 +353,40 @@ class TestValidationMixin:
         sigma = torch.tensor([[1.0, 2.0]])
         with pytest.raises(ValueError, match="Invalid covariance matrix shape"):
             self.mixin.check_covariance(y, sigma)
+
+    # def test_trace(self):
+    #     """
+    #     Test trace computation for covariance matrices.
+    #     """
+    #     sigma_full = torch.eye(2).repeat(2, 1, 1)
+    #     print(sigma_full)
+    #     sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+    #     sigma_scalar = torch.tensor([1.0, 2.0])
+
+    #     assert torch.isclose(self.mixin.trace(sigma_full, 2), torch.tensor(1.0))
+    #     assert torch.isclose(self.mixin.trace(sigma_diag, 2), torch.tensor(5.0))
+    #     assert torch.isclose(self.mixin.trace(sigma_scalar, 2), torch.tensor(4.0))
+
+    # def test_logdet(self):
+    #     """
+    #     Test log-determinant computation for covariance matrices.
+    #     """
+    #     sigma_full = torch.eye(2).repeat(2, 1, 1)
+    #     sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+    #     sigma_scalar = torch.tensor([1.0, 2.0])
+
+    #     assert torch.isclose(self.mixin.logdet(sigma_full, 2), torch.tensor(0.0))
+    #     assert torch.isclose(self.mixin.logdet(sigma_diag, 2), torch.tensor(0.6931), atol=1e-4)  # noqa: E501
+    #     assert torch.isclose(self.mixin.logdet(sigma_scalar, 2), torch.tensor(0.6931), atol=1e-4)  # noqa: E501
+
+    # def test_max_eigval(self):
+    #     """
+    #     Test maximum eigenvalue computation for covariance matrices.
+    #     """
+    #     sigma_full = torch.eye(2).repeat(2, 1, 1)
+    #     sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+    #     sigma_scalar = torch.tensor([1.0, 2.0])
+
+    #     assert torch.isclose(self.mixin.max_eigval(sigma_full), torch.tensor(1.0))
+    #     assert torch.isclose(self.mixin.max_eigval(sigma_diag), torch.tensor(3.0))
+    #     assert torch.isclose(self.mixin.max_eigval(sigma_scalar), torch.tensor(1.5))
