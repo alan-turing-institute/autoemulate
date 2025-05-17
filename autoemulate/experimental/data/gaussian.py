@@ -1,114 +1,166 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Type, TypeVar
+
+# from dataclasses import dataclass, field
+from typing import Self
 
 import torch
 from torch import Tensor
 
-T = TypeVar("T", bound="Gaussian")
-
 
 class Gaussian(ABC):
-    """Abstract base for a Gaussian emulator over n inputs and d outputs."""
-
     def __init__(self, mean: Tensor):
-        if not isinstance(mean, Tensor) or mean.ndim != 2:
-            raise ValueError("`mean` must be a 2D torch.Tensor of shape [n, d]")
-        self.mean = mean
+        if mean.ndim == 2:
+            self.mean = mean
+        else:
+            s = "`mean` must have shape (n, d)."
+            raise ValueError(s)
 
     @abstractmethod
-    def logdet(self) -> Tensor:
-        """Log‐determinant of the full covariance."""
-        ...
+    def logdet(self) -> Tensor: ...
 
     @abstractmethod
-    def trace(self) -> Tensor:
-        """Trace of the full covariance."""
-        ...
+    def trace(self) -> Tensor: ...
 
     @abstractmethod
-    def max_eig(self) -> Tensor:
-        """Largest eigenvalue (spectral norm) of the full covariance."""
-        ...
-
-    @abstractmethod
-    def to_dense(self) -> Tensor:
-        """Converts covariance representation to full dense covariance."""
-        ...
+    def max_eig(self) -> Tensor: ...
 
 
 class Dense(Gaussian):
-    def __init__(self, mean: Tensor, cov: Tensor):
+    def __init__(self, mean: Tensor, covariance: Tensor):
         super().__init__(mean)
-        nd = self.mean.shape[0] * self.mean.shape[1]
-        if cov.shape != (nd, nd):
-            raise ValueError(f"`cov` must be square of shape ({nd}, {nd})")
-        self.cov = cov
+        n, d = self.mean.shape
+        nd = n * d
+        if covariance.shape == (nd, nd):
+            self.covariance = covariance
+        else:
+            s = f"`covariance` must be ({nd}, {nd}); got {tuple(covariance.shape)}"
+            raise ValueError(s)
 
     def logdet(self) -> Tensor:
-        return self.cov.logdet()
+        return self.covariance.logdet()
 
     def trace(self) -> Tensor:
-        return self.cov.trace()
+        return self.covariance.trace()
 
     def max_eig(self) -> Tensor:
-        return torch.linalg.norm(self.cov, ord=2)
-
-    def to_dense(self) -> Tensor:
-        return self.cov
+        return torch.linalg.norm(self.covariance, ord=2)
 
 
-class Block_Diagonal(Gaussian):
-    def __init__(self, mean: Tensor, cov: Tensor):
+class Empirical(Dense):
+    def __init__(self, samples: Tensor):
+        # Checks
+        if samples.ndim != 3:
+            s = "`samples` must have shape (k, n, d)."
+            raise ValueError(s)
+        k, n, d = samples.shape
+
+        # Mean and covaraince
+        mean = samples.mean(dim=0)
+        mu = (samples - mean).reshape(k, n * d)
+        covariance = (mu.T @ mu) / (k - 1)
+        super().__init__(mean, covariance)
+
+
+class Structured(Gaussian):
+    @abstractmethod
+    def to_dense(self) -> Dense: ...
+
+    @classmethod
+    @abstractmethod
+    def from_dense(cls, dense: Dense) -> Self: ...
+
+
+class Ensemble(Empirical):
+    def __init__(self, gaussians: list[Dense | Structured]):
+        if all(isinstance(dist, (Dense, Structured)) for dist in gaussians):
+            # Epistemic
+            dists: list[Dense] = [
+                dist.to_dense() if isinstance(dist, Structured) else dist
+                for dist in gaussians
+            ]
+            means = torch.stack([dist.mean for dist in gaussians])
+            super().__init__(means)
+
+            # Aleatoric
+            self.covariance += torch.stack([dist.covariance for dist in dists]).mean(
+                dim=0
+            )
+
+        else:
+            s = "gaussians must be dense or structured."
+            raise ValueError(s)
+
+
+class Block_Diagonal(Structured):
+    def __init__(self, mean: Tensor, covariance: Tensor) -> None:
         super().__init__(mean)
-        n, d = mean.shape
-        if cov.shape != (n, d, d):
-            raise ValueError(f"`cov` must have shape ({n}, {d}, {d})")
-        self.cov = cov
+        n, d = self.mean.shape
+        if covariance.shape != (n, d, d):
+            s = f"`covariance` must have shape ({n}, {d}, {d})."
+            raise ValueError(s)
+        self.covariance = covariance
 
     def logdet(self) -> Tensor:
-        return self.cov.logdet().sum()
+        return self.covariance.logdet().sum()
 
     def trace(self) -> Tensor:
-        return self.cov.diagonal(dim1=-2, dim2=-1).sum()
+        return self.covariance.diagonal(dim1=-2, dim2=-1).sum()
 
     def max_eig(self) -> Tensor:
-        return torch.linalg.norm(self.cov, ord=2, dim=(-2, -1)).max()
+        return torch.linalg.norm(self.covariance, ord=2, dim=(-2, -1)).max()
 
-    def to_dense(self) -> Tensor:
-        return torch.block_diag(*self.cov)
+    def to_dense(self) -> Dense:
+        return Dense(self.mean, torch.block_diag(*self.covariance))
+
+    @classmethod
+    def from_dense(cls, dense: Dense) -> Self:
+        mean, (n, d) = dense.mean, dense.mean.shape
+        covariance = (
+            dense.covariance.reshape(n, d, n, d)
+            .diagonal(dim1=0, dim2=2)
+            .permute(2, 0, 1)
+        )
+        return cls(mean, covariance)
 
 
-class Diagonal(Gaussian):
-    def __init__(self, mean: Tensor, cov: Tensor):
+class Diagonal(Structured):
+    def __init__(self, mean: Tensor, covariance: Tensor) -> None:
         super().__init__(mean)
-        n, d = mean.shape
-        if cov.shape != (n, d):
-            raise ValueError(f"`cov` must have shape ({n}, {d})")
-        self.cov = cov
+        n, d = self.mean.shape
+        if covariance.shape == (n, d):
+            self.covariance = covariance
+        else:
+            s = f"`covariance` must have shape ({n}, {d})."
+            raise ValueError(s)
 
     def logdet(self) -> Tensor:
-        return self.cov.log().sum()
+        return self.covariance.log().sum()
 
     def trace(self) -> Tensor:
-        return self.cov.sum()
+        return self.covariance.sum()
 
     def max_eig(self) -> Tensor:
-        return self.cov.max()
+        return self.covariance.max()
 
-    def to_dense(self) -> Tensor:
-        return self.cov.reshape(-1).diag()
+    def to_dense(self) -> Dense:
+        return Dense(self.mean, self.covariance.reshape(-1).diag())
+
+    @classmethod
+    def from_dense(cls, dense: Dense):
+        mean, (n, d) = dense.mean, dense.mean.shape
+        covariance = dense.covariance.diag().reshape(n, d)
+        return cls(mean, covariance)
 
 
-class Separable(Gaussian):
+class Separable(Structured):
     def __init__(self, mean: Tensor, cov_n: Tensor, cov_d: Tensor):
         super().__init__(mean)
-        n, d = mean.shape
-        if cov_n.shape != (n, n) or cov_d.shape != (d, d):
-            raise ValueError(
-                f"`cov_n` must be ({n}, {n}) and `cov_d` must be ({d}, {d})"
-            )
-        self.cov_n, self.cov_d = cov_n, cov_d
+        n, d = self.mean.shape
+        if cov_n.shape == (n, n) and cov_d.shape == (d, d):
+            self.cov_n, self.cov_d = cov_n, cov_d
+        else:
+            s = f"`cov_n` must be ({n}, {n}) and `cov_d` must be ({d}, {d})"
+            raise ValueError(s)
 
     def logdet(self) -> Tensor:
         n, d = self.mean.shape
@@ -120,14 +172,46 @@ class Separable(Gaussian):
     def max_eig(self) -> Tensor:
         norm_n = torch.linalg.norm(self.cov_n, ord=2)
         norm_d = torch.linalg.norm(self.cov_d, ord=2)
-        norm = norm_n * norm_d
-        return norm
+        return norm_n * norm_d
 
-    def to_dense(self):
-        return torch.kron(self.cov_n, self.cov_d)
+    def to_dense(self) -> Dense:
+        return Dense(self.mean, torch.kron(self.cov_n, self.cov_d))
+
+    @classmethod
+    def from_dense(cls, dense: Dense) -> Self:
+        s = "Separable covariance not implemented yet."
+        raise NotImplementedError(s)
+
+        # # Factorize covariance
+        # mean, (n, d) = dense.mean, dense.mean.shape
+        # M = (
+        #     dense.covariance
+        #     .reshape(n, d, n, d) # (n, d, n, d)
+        #     .permute(0, 2, 1, 3) # (n, n, d, d)
+        #     .reshape(n*n, d*d) # (n^2, d^2)
+        # )
+
+        # # Top singular vector of M gives vec(Cn) and vec(Cd):
+        # U, S, Vh = torch.linalg.svd(M, full_matrices=False)
+        # s0 = S[0].sqrt()
+        # u0 = U[:, 0] * s0           # length n^2
+        # v0 = Vh[0, :] * s0          # length d^2
+        # cov_n = u0.reshape(n, n)
+        # cov_d = v0.reshape(d, d)
+
+        # # make them symmetric
+        # cov_n = (cov_n + cov_n.T) / 2
+        # cov_d = (cov_d + cov_d.T) / 2
+
+        # # add tiny epsilon on the diagonal
+        # eps = 1e-6
+        # cov_n = cov_n + eps * torch.eye(n, device=cov_n.device)
+        # cov_d = cov_d + eps * torch.eye(d, device=cov_d.device)
+
+        # return cls(mean, cov_n, cov_d)
 
 
-class Dirac(Gaussian):
+class Dirac(Structured):
     def __init__(self, mean: Tensor):
         super().__init__(mean)
 
@@ -142,56 +226,13 @@ class Dirac(Gaussian):
     def max_eig(self) -> Tensor:
         return torch.tensor(0.0, device=self.mean.device, dtype=self.mean.dtype)
 
-    def to_dense(self):
+    def to_dense(self) -> Dense:
         n, d = self.mean.shape
-        return torch.zeros(n * d, n * d, device=self.mean.device, dtype=self.mean.dtype)
-
-
-class Empirical:
-    def __init__(self, samples: Tensor):
-        # Checks
-        if samples.ndim != 3:
-            raise ValueError("Samples must have 3 dimension: (k, n, d).")
-        k, n, d = samples.shape
-
-        # Mean and covaraince
-        self.mean = samples.mean(dim=0)
-        mu = (samples - self.mean).reshape(k, n * d)
-        self.cov = (mu.T @ mu) / (k - 1)
-
-
-class Ensemble(Empirical, Dense):
-    def __init__(self, gaussians: list[Gaussian]):
-        # Epistemic mean and covariance
-        means = torch.stack([dist.mean for dist in gaussians])
-        Empirical.__init__(self, means)
-
-        # Add aleatoric covariance
-        self.cov = self.cov + torch.stack([dist.to_dense() for dist in gaussians]).mean(
-            dim=0
+        return Dense(
+            self.mean,
+            torch.zeros(n * d, n * d, device=self.mean.device, dtype=self.mean.dtype),
         )
-        Dense.__init__(self, self.mean, self.cov)
 
-
-class Empirical_Dense(Empirical, Dense):
-    def __init__(self, samples: Tensor):
-        Empirical.__init__(self, samples)
-        Dense.__init__(self, self.mean, self.cov)
-
-
-class Empirical_Block_Diagonal(Empirical, Block_Diagonal):
-    def __init__(self, samples: Tensor):
-        Empirical.__init__(self, samples)
-        n, d = self.mean.shape
-        self.cov = (
-            self.cov.reshape(n, d, n, d).diagonal(dim1=0, dim2=2).permute(2, 0, 1)
-        )
-        Block_Diagonal.__init__(self, self.mean, self.cov)
-
-
-class Empirical_Diagonal(Empirical, Diagonal):
-    def __init__(self, samples: Tensor):
-        Empirical.__init__(self, samples)
-        n, d = self.mean.shape
-        self.cov = self.cov.diagonal().reshape(n, d)
-        Diagonal.__init__(self, self.mean, self.cov)
+    @classmethod
+    def from_dense(cls, dense: Dense):
+        return cls(dense.mean)
