@@ -182,34 +182,6 @@ class Separable(Structured):
         s = "Separable covariance not implemented yet."
         raise NotImplementedError(s)
 
-        # # Factorize covariance
-        # mean, (n, d) = dense.mean, dense.mean.shape
-        # M = (
-        #     dense.covariance
-        #     .reshape(n, d, n, d) # (n, d, n, d)
-        #     .permute(0, 2, 1, 3) # (n, n, d, d)
-        #     .reshape(n*n, d*d) # (n^2, d^2)
-        # )
-
-        # # Top singular vector of M gives vec(Cn) and vec(Cd):
-        # U, S, Vh = torch.linalg.svd(M, full_matrices=False)
-        # s0 = S[0].sqrt()
-        # u0 = U[:, 0] * s0           # length n^2
-        # v0 = Vh[0, :] * s0          # length d^2
-        # cov_n = u0.reshape(n, n)
-        # cov_d = v0.reshape(d, d)
-
-        # # make them symmetric
-        # cov_n = (cov_n + cov_n.T) / 2
-        # cov_d = (cov_d + cov_d.T) / 2
-
-        # # add tiny epsilon on the diagonal
-        # eps = 1e-6
-        # cov_n = cov_n + eps * torch.eye(n, device=cov_n.device)
-        # cov_d = cov_d + eps * torch.eye(d, device=cov_d.device)
-
-        # return cls(mean, cov_n, cov_d)
-
 
 class Dirac(Structured):
     def __init__(self, mean: Tensor):
