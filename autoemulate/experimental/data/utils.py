@@ -438,6 +438,7 @@ class ValidationMixin:
         raise ValueError(f"Invalid covariance matrix shape: {Sigma.shape}")
 
     ### Validation methods from old utils.py ###
+    ### Leave here in case want to restore/refactor later ###
 
     # def _ensure_2d(arr):
     #     """Ensure that arr is a 2D."""
