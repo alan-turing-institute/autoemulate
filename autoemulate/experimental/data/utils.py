@@ -497,7 +497,7 @@ class Standardizer(Preprocessor):
         self.mean = mean
         self.std = std
 
-    def preprocess(self, x):
+    def preprocess(self, x: torch.Tensor) -> torch.Tensor:
         """
         Parameters
         ----------
