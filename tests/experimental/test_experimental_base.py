@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.data.preprocessors import Standardizer
+from autoemulate.experimental.data.utils import Standardizer
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
