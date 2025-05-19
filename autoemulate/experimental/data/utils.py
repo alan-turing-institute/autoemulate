@@ -186,12 +186,9 @@ class ConversionMixin:
 
 class ValidationMixin:
     """
-    TODO: update docstring
     Mixin class for validation methods.
-
-    Base class for active learning simulation and emulation.
-
-    Provides utility methods for tensor validation and design criteria computations.
+    This class provides static methods for checking the types and shapes of
+    input and output data, as well as validating specific tensor shapes.
     """
 
     @staticmethod
