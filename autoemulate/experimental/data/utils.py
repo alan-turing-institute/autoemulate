@@ -194,21 +194,33 @@ class ValidationMixin:
     @staticmethod
     def _check(x: TensorLike, y: TensorLike | None):
         """
-        Check the types and shape are correct
-        for the input data.
+        Check the types and shape are correct for the input data.
+        Checks are equivalent to sklearn's check_array.
+        Type hinting already ensures that x and y are tensors
         """
 
-        ### CHECK 1: ###
+        # Check x
+        if not torch.isfinite(x).all():
+            msg = "Input tensor x contains non-finite values"
+            raise ValueError(msg)
+        if x.dtype not in (torch.float32, torch.float64, torch.int32, torch.int64):
+            msg = (
+                f"Input tensor x has unsupported dtype {x.dtype}. "
+                "Expected float32, float64, int32, or int64."
+            )
+            raise ValueError(msg)
 
-        # TODO: check if check_array is needed, this:
-        # checks array is non-empty array containing only finite values.
-        # If the dtype of the array is object,
-        # attempt converting to float, raising on failure.
-
-        # TODO: this actually ends up converting to numpy array
-        # x = check_array(x, ensure_2d=False)
-        # if y is not None:
-        #     y = check_array(y, ensure_2d=False)
+        # Check y if not None
+        if y is not None:
+            if not torch.isfinite(y).all():
+                msg = "Input tensor y contains non-finite values"
+                raise ValueError(msg)
+            if y.dtype not in (torch.float32, torch.float64, torch.int32, torch.int64):
+                msg = (
+                    f"Input tensor y has unsupported dtype {y.dtype}. "
+                    "Expected float32, float64, int32, or int64."
+                )
+                raise ValueError(msg)
 
         return x, y
 

@@ -211,25 +211,70 @@ class TestValidationMixin:
         """
         self.mixin = ValidationMixin()
 
-    def test_check_y1d(self, sample_data_y1d):
+    def test_check_valid(self, tensor_2d, tensor_1d):
         """
-        Test _check does not alter inputs, y is 1d.
+        Test _check with valid finite tensors and supported dtypes.
         """
-        x, y = sample_data_y1d
+        x = tensor_2d.clone().to(torch.float32)
+        y = tensor_1d.clone().to(torch.float64)
         x_checked, y_checked = self.mixin._check(x, y)
+        assert torch.equal(x_checked, x)
+        assert isinstance(y_checked, torch.Tensor)
+        assert torch.equal(y_checked, y)
 
-        assert torch.equal(x_checked, x)  # type: ignore PGH003
-        assert torch.equal(y_checked, y)  # type: ignore PGH003
-
-    def test_check_y2d(self, sample_data_y2d):
+    def test_check_valid_y_none(self, tensor_2d):
         """
-        Test _check does not alter inputs, y is 2d.
+        Test _check with y=None.
         """
-        x, y = sample_data_y2d
-        x_checked, y_checked = self.mixin._check(x, y)
+        x = tensor_2d.clone().to(torch.float32)
+        x_checked, y_checked = self.mixin._check(x, None)
+        assert torch.equal(x_checked, x)
+        assert y_checked is None
 
-        assert torch.equal(x_checked, x)  # type: ignore PGH003
-        assert torch.equal(y_checked, y)  # type: ignore PGH003
+    def test_check_invalid_x_nonfinite(self, tensor_2d):
+        """
+        Test _check raises if x contains non-finite values.
+        """
+        x = tensor_2d.clone()
+        x[0, 0] = float("nan")
+        y = torch.tensor([1.0, 2.0])
+        msg = "Input tensor x contains non-finite values"
+        with pytest.raises(ValueError, match=msg):
+            self.mixin._check(x, y)
+
+    def test_check_invalid_y_nonfinite(self, tensor_2d):
+        """
+        Test _check raises if y contains non-finite values.
+        """
+        x = tensor_2d
+        y = torch.tensor([1.0, float("inf")])
+        msg = "Input tensor y contains non-finite values"
+        with pytest.raises(ValueError, match=msg):
+            self.mixin._check(x, y)
+
+    def test_check_invalid_x_dtype(self, tensor_2d):
+        """
+        Test _check raises if x has unsupported dtype.
+        """
+        x = tensor_2d.clone().to(torch.uint8)
+        y = torch.tensor([1.0, 2.0])
+        with pytest.raises(ValueError, match="Input tensor x has unsupported dtype"):
+            self.mixin._check(x, y)
+
+    def test_check_invalid_y_dtype(self, tensor_2d):
+        """
+        Test _check raises if y has unsupported dtype.
+        """
+        x = tensor_2d
+        y = torch.tensor([1, 2], dtype=torch.uint8)
+        with pytest.raises(ValueError, match="Input tensor y has unsupported dtype"):
+            self.mixin._check(x, y)
+
+    def test_check_output(self):
+        """
+        Test _check_output returns the output unchanged.
+        """
+        # TODO: add test for _check_output once the method is implemented
 
     def test_check_vector_valid(self, tensor_1d):
         """
