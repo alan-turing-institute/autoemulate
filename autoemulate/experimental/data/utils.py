@@ -1,8 +1,6 @@
 import numpy as np
 import torch
 from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
-
-# from sklearn.utils.validation import check_array, check_X_y
 from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
