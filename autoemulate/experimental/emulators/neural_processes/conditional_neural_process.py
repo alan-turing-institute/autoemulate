@@ -362,7 +362,6 @@ class CNPModule(PyTorchBackend):
         self.train()
 
         # Save off all X_train and y_train
-        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         self.x_train, self.y_train = self._convert_to_tensors(x, y)
 
         # Convert dataset to CNP Dataset

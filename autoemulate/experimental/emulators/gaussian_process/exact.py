@@ -61,7 +61,6 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         if random_state is not None:
             set_random_seed(random_state)
 
-        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
 
         # Initialize the mean and covariance modules
