@@ -1,11 +1,11 @@
 import numpy as np
 from lightgbm import LGBMRegressor
 
-from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import OutputLike, TensorLike
 
 
-class LightGBM(Emulator, ConversionMixin):
+class LightGBM(Emulator):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
