@@ -287,7 +287,6 @@ class CNPModule(PyTorchBackend):
             Batch size for training.
         """
         super().__init__()
-        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
         self.output_dim = y.shape[1]
@@ -432,7 +431,6 @@ class CNPModule(PyTorchBackend):
         self.eval()
         x = self.preprocess(x)
 
-        # TODO: add to validation _check
         x_target = self._convert_to_tensors(x)
 
         # Sort splitting into context and target
