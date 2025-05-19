@@ -340,27 +340,17 @@ class TestValidationMixin:
         with pytest.raises(ValueError, match="Invalid covariance matrix shape"):
             self.mixin.check_covariance(tensor_2d, sigma)
 
-    # def test_trace(self, sigma_full, tensor_2d, tensor_1d):
-    #     """
-    #     Test trace computation for covariance matrices.
-    #     """
-    #     sigma_diag = tensor_2d
-    #     sigma_scalar = tensor_1d
+    def test_trace(self, sigma_full, tensor_2d, tensor_1d):
+        """
+        Test trace computation for covariance matrices.
+        """
+        # TODO: add test for trace
 
-    #     assert torch.isclose(self.mixin.trace(sigma_full, 2), torch.tensor(1.0))
-    #     assert torch.isclose(self.mixin.trace(sigma_diag, 2), torch.tensor(5.0))
-    #     assert torch.isclose(self.mixin.trace(sigma_scalar, 2), torch.tensor(4.0))
-
-    # def test_logdet(self, sigma_full, tensor_2d, tensor_1d):
-    #     """
-    #     Test log-determinant computation for covariance matrices.
-    #     """
-    #     sigma_diag = tensor_2d
-    #     sigma_scalar = tensor_1d
-
-    #     assert torch.isclose(self.mixin.logdet(sigma_full, 2), torch.tensor(0.0))
-    #     assert torch.isclose(self.mixin.logdet(sigma_diag, 2), torch.tensor(0.6931), atol=1e-4)  # noqa: E501
-    #     assert torch.isclose(self.mixin.logdet(sigma_scalar, 2), torch.tensor(0.6931), atol=1e-4)  # noqa: E501
+    def test_logdet(self, sigma_full, tensor_2d, tensor_1d):
+        """
+        Test log-determinant computation for covariance matrices.
+        """
+        # TODO: add test for logdet
 
     def test_max_eigval(self, sigma_full, tensor_2d, tensor_1d):
         """
