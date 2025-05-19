@@ -231,83 +231,73 @@ class TestValidationMixin:
         assert torch.equal(x_checked, x)  # type: ignore PGH003
         assert torch.equal(y_checked, y)  # type: ignore PGH003
 
-    def test_check_vector_valid(self):
+    def test_check_vector_valid(self, tensor_1d):
         """
         Test check_vector with a valid 1D tensor.
         """
-        x = torch.tensor([1.0, 2.0, 3.0])
-        result = self.mixin.check_vector(x)
+        result = self.mixin.check_vector(tensor_1d)
 
-        assert torch.equal(result, x)
+        assert torch.equal(result, tensor_1d)
 
-    def test_check_vector_invalid_type(self):
+    def test_check_vector_invalid_type(self, np_1d):
         """
         Test check_vector with an invalid input.
         """
-        x = np.array([1.0, 2.0, 3.0])
         with pytest.raises(
             ValueError, match="Expected TensorLike, got <class 'numpy.ndarray'>"
         ):
-            self.mixin.check_vector(x)  # type: ignore PGH003
+            self.mixin.check_vector(np_1d)  # type: ignore PGH003
 
-    def test_check_vector_invalid_dim(self):
+    def test_check_vector_invalid_dim(self, tensor_2d):
         """
         Test check_vector with wrong dims.
         """
-        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
         with pytest.raises(ValueError, match="Expected 1D tensor"):
-            self.mixin.check_vector(x)
+            self.mixin.check_vector(tensor_2d)
 
-    def test_check_matrix_valid(self):
+    def test_check_matrix_valid(self, tensor_2d):
         """
         Test check_matrix with a valid 2D tensor.
         """
-        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
-        result = self.mixin.check_matrix(x)
+        result = self.mixin.check_matrix(tensor_2d)
 
-        assert torch.equal(result, x)
+        assert torch.equal(result, tensor_2d)
 
-    def test_check_matrix_invalid_type(self):
+    def test_check_matrix_invalid_type(self, np_2d):
         """
         Test check_vector with an invalid input.
         """
-        x = np.array([[1.0, 2.0], [3.0, 4.0]])
         with pytest.raises(
             ValueError, match="Expected TensorLike, got <class 'numpy.ndarray'>"
         ):
-            self.mixin.check_matrix(x)  # type: ignore PGH003
+            self.mixin.check_matrix(np_2d)  # type: ignore PGH003
 
-    def test_check_matrix_invalid_dim(self):
+    def test_check_matrix_invalid_dim(self, tensor_1d):
         """
         Test check_matrix with wrong dims.
         """
-        x = torch.tensor([1.0, 2.0, 3.0])
         with pytest.raises(ValueError, match="Expected 2D tensor"):
-            self.mixin.check_matrix(x)
+            self.mixin.check_matrix(tensor_1d)
 
-    def test_check_pair_valid(self):
+    def test_check_pair_valid(self, tensor_2d, tensor_2d_pair):
         """
         Test check_pair with valid tensors.
         """
-        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
-        y = torch.tensor([[5.0, 6.0], [7.0, 8.0]])
-        x_checked, y_checked = self.mixin.check_pair(x, y)
+        x_checked, y_checked = self.mixin.check_pair(tensor_2d, tensor_2d_pair)
 
-        assert torch.equal(x_checked, x)
-        assert torch.equal(y_checked, y)
+        assert torch.equal(x_checked, tensor_2d)
+        assert torch.equal(y_checked, tensor_2d_pair)
 
-    def test_check_pair_invalid(self):
+    def test_check_pair_invalid(self, tensor_2d, tensor_2d_mismatch):
         """
         Test check_pair with tensors of mismatched rows.
         """
-        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
-        y = torch.tensor([[5.0, 6.0]])
         with pytest.raises(
             ValueError, match="X and Y must have the same number of rows"
         ):
-            self.mixin.check_pair(x, y)
+            self.mixin.check_pair(tensor_2d, tensor_2d_mismatch)
 
-    def test_check_covariance_valid(self):
+    def test_check_covariance_valid(self, sigma_full, tensor_2d, tensor_1d):
         """
         Test check_covariance with valid covariance matrices.
 
@@ -327,14 +317,11 @@ class TestValidationMixin:
         """
         y = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
 
-        # Full covariance matrix: shape (n_samples, n_features, n_features)
-        sigma_full = torch.eye(2).repeat(2, 1, 1)
-
         # Diagonal covariance matrix: shape (n_samples, n_features)
-        sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        sigma_diag = tensor_2d
 
         # Scalar covariance: shape (n_samples,)
-        sigma_scalar = torch.tensor([1.0, 2.0])
+        sigma_scalar = tensor_1d
 
         # Assert that the method returns the same full covariance matrix
         assert torch.equal(self.mixin.check_covariance(y, sigma_full), sigma_full)
@@ -345,46 +332,42 @@ class TestValidationMixin:
         # Assert that the method returns the same scalar covariance values
         assert torch.equal(self.mixin.check_covariance(y, sigma_scalar), sigma_scalar)
 
-    def test_check_covariance_invalid(self):
+    def test_check_covariance_invalid(self, tensor_2d):
         """
         Test check_covariance with an invalid covariance matrix.
         """
-        y = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
         sigma = torch.tensor([[1.0, 2.0]])
         with pytest.raises(ValueError, match="Invalid covariance matrix shape"):
-            self.mixin.check_covariance(y, sigma)
+            self.mixin.check_covariance(tensor_2d, sigma)
 
-    # def test_trace(self):
+    # def test_trace(self, sigma_full, tensor_2d, tensor_1d):
     #     """
     #     Test trace computation for covariance matrices.
     #     """
-    #     sigma_full = torch.eye(2).repeat(2, 1, 1)
-    #     sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
-    #     sigma_scalar = torch.tensor([1.0, 2.0])
+    #     sigma_diag = tensor_2d
+    #     sigma_scalar = tensor_1d
 
     #     assert torch.isclose(self.mixin.trace(sigma_full, 2), torch.tensor(1.0))
     #     assert torch.isclose(self.mixin.trace(sigma_diag, 2), torch.tensor(5.0))
     #     assert torch.isclose(self.mixin.trace(sigma_scalar, 2), torch.tensor(4.0))
 
-    # def test_logdet(self):
+    # def test_logdet(self, sigma_full, tensor_2d, tensor_1d):
     #     """
     #     Test log-determinant computation for covariance matrices.
     #     """
-    #     sigma_full = torch.eye(2).repeat(2, 1, 1)
-    #     sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
-    #     sigma_scalar = torch.tensor([1.0, 2.0])
+    #     sigma_diag = tensor_2d
+    #     sigma_scalar = tensor_1d
 
     #     assert torch.isclose(self.mixin.logdet(sigma_full, 2), torch.tensor(0.0))
     #     assert torch.isclose(self.mixin.logdet(sigma_diag, 2), torch.tensor(0.6931), atol=1e-4)  # noqa: E501
     #     assert torch.isclose(self.mixin.logdet(sigma_scalar, 2), torch.tensor(0.6931), atol=1e-4)  # noqa: E501
 
-    def test_max_eigval(self):
+    def test_max_eigval(self, sigma_full, tensor_2d, tensor_1d):
         """
         Test maximum eigenvalue computation for covariance matrices.
         """
-        sigma_full = torch.eye(2).repeat(2, 1, 1)
-        sigma_diag = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
-        sigma_scalar = torch.tensor([1.0, 2.0])
+        sigma_diag = tensor_2d
+        sigma_scalar = tensor_1d
 
         assert torch.isclose(self.mixin.max_eigval(sigma_full), torch.tensor(1.0))
         assert torch.isclose(self.mixin.max_eigval(sigma_diag), torch.tensor(3.0))
