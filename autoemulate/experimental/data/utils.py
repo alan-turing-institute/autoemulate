@@ -110,9 +110,6 @@ class ConversionMixin:
                 return x.to(dtype)
             msg = "Number of tensors returned must be greater than zero."
             raise ValueError(msg)
-        # TODO: this error message will never be raised because of
-        # of the value error in _convert_to_dataset
-        # If I remove it, Ruff complains that a return statement is missing
         raise ValueError(
             f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
         )
