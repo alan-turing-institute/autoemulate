@@ -270,6 +270,26 @@ class TestValidationMixin:
         with pytest.raises(ValueError, match="Input tensor y has unsupported dtype"):
             self.mixin._check(x, y)
 
+    def test_check_invalid_x_type(self, tensor_1d):
+        """
+        Test _check raises if x is not a TensorLike.
+        """
+        x = [1.0, 2.0]  # Not a TensorLike
+        y = tensor_1d
+        msg = "Expected x to be TensorLike, got <class 'list'>"
+        with pytest.raises(ValueError, match=msg):
+            self.mixin._check(x, y)  # type: ignore PGH003
+
+    def test_check_invalid_y_type(self, tensor_2d):
+        """
+        Test _check raises if y is not a TensorLike.
+        """
+        x = tensor_2d
+        y = [1.0, 2.0]  # Not a TensorLike
+        msg = "Expected y to be TensorLike, got <class 'list'>"
+        with pytest.raises(ValueError, match=msg):
+            self.mixin._check(x, y)  # type: ignore PGH003
+
     def test_check_output(self):
         """
         Test _check_output returns the output unchanged.

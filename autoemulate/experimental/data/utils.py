@@ -196,8 +196,13 @@ class ValidationMixin:
         """
         Check the types and shape are correct for the input data.
         Checks are equivalent to sklearn's check_array.
-        Type hinting already ensures that x and y are tensors
         """
+
+        if not isinstance(x, TensorLike):
+            raise ValueError(f"Expected x to be TensorLike, got {type(x)}")
+
+        if y is not None and not isinstance(y, TensorLike):
+            raise ValueError(f"Expected y to be TensorLike, got {type(y)}")
 
         # Check x
         if not torch.isfinite(x).all():
