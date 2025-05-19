@@ -230,9 +230,11 @@ class ValidationMixin:
 
     @staticmethod
     def _check_output(output: OutputLike):
-        # TODO: compare with ConversionMixin and consider additional implementation
-        # TODO: is this needed or is it covered by having tests?
-        ...
+        """
+        Check the types and shape are correct
+        for the output data.
+        """
+        # TODO: add any common checks for output data
 
     @staticmethod
     def check_vector(X: TensorLike) -> TensorLike:
