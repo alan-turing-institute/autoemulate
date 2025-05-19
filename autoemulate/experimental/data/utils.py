@@ -183,16 +183,6 @@ class ConversionMixin:
     ) -> TensorLike:
         return (x * x_std) + x_mean
 
-    # TODO: consider possible method for predict
-    # def convert_x(self, y: np.ndarray | torch.Tensor | Data) -> torch.Tensor:
-    #     if isinstance(y, np.ndarray):
-    #         y = torch.tensor(y, dtype=torch.float32)
-    #     else:
-    #         raise ValueError(
-    #             "Unsupported type for X. Must be numpy array, PyTorch tensor"
-    #         )
-    #     return y
-
 
 class ValidationMixin:
     """
