@@ -1,5 +1,3 @@
-from abc import abstractmethod
-from copy import deepcopy
 from typing import Optional
 
 import numpy as np
@@ -403,6 +401,7 @@ class HistoryMatching:
             X_combined = np.vstack((existing_emulator.X_train_, X_new))
 
             # Check if we're dealing with multi-output or single-output
+            # TODO: can we always just use vstack here?
             if len(existing_emulator.y_train_.shape) > 1 and len(y_new.shape) > 1:
                 y_combined = np.vstack((existing_emulator.y_train_, y_new))
             else:
