@@ -116,7 +116,7 @@ def test_run_wave_with_simulator(history_matcher, mock_simulator):
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
-def test_run_history_matching(history_matcher):
+def test_run(history_matcher):
     """Test the full history matching process with mock simulator"""
     n_waves = 2
     n_samples_per_wave = 5
@@ -126,7 +126,7 @@ def test_run_history_matching(history_matcher):
         all_samples,
         all_impl_scores,
         updated_emulator,
-    ) = history_matcher.run_history_matching(
+    ) = history_matcher.run(
         n_waves=n_waves, n_samples_per_wave=n_samples_per_wave, use_emulator=False
     )
 

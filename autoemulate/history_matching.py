@@ -11,8 +11,8 @@ from autoemulate.simulations.base import Simulator
 
 class HistoryMatching:
     """
-    History matching is a model calibration method. It uses observed data to rule out
-    parameters values which are `implausible`. The implausability metric is:
+    History matching is a model calibration method, which uses observed data to rule out
+    parameter values which are `implausible`. The implausability metric is:
 
     .. math::
         I_i(\bar{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\bar{x_0}))|}
@@ -33,15 +33,16 @@ class HistoryMatching:
         """
         Initialize the history matcher.
 
-        TODO: we need mean + variance for history matching, should we do some check
-              on what an emulator returns (should this always be a GP ??!!)
-        TODO: make this work with current emulators (keep old simulator until refactor)
+        TODO for #406:
+        - make this work with experimental GP emulators + refactor to use torch
+        - add check that emulator returns distribution (need mean + variance)
+        - make this work with(updated Simulator (after #414 is merged)
 
         Parameters
         ----------
-            simulator: BaseSimulator
+            simulator: Simulator
                 Simulator
-            observations: Dictionary
+            observations: dict
                 Maps output names to (mean, variance) pairs.
             threshold: float
                 Implausibility threshold (query points with implausability scores that
@@ -90,7 +91,7 @@ class HistoryMatching:
 
         Returns
         -------
-            Dictionary with:
+            dict with:
             - 'I': array of implausibility scores [n_samples, n_outputs]
             - 'NROY': indices of Not Ruled Out Yet points
             - 'RO': indices of Ruled Out points
@@ -109,7 +110,8 @@ class HistoryMatching:
             # First-order implausibility: all outputs must satisfy threshold
             nroy_mask = np.all(I <= self.threshold, axis=1)
         else:
-            # Higher-order implausibility: the nth highest implausibility must satisfy threshold
+            # Higher-order implausibility:
+            # - the nth highest implausibility must satisfy threshold
             # Sort implausibilities for each sample (descending)
             I_sorted = np.sort(I, axis=1)[:, ::-1]
             # The rank-th highest implausibility must be <= threshold
@@ -140,7 +142,8 @@ class HistoryMatching:
 
         Returns
         -------
-            List of new parameter dictionaries
+            list
+                New parameter dictionaries
         """
         if not nroy_samples:
             return self.simulator.sample_inputs(n_samples)
@@ -238,15 +241,16 @@ class HistoryMatching:
 
         return nroy_samples, all_impl_scores
 
-    def run_history_matching(
+    def run(
         self,
         n_waves: int = 3,
         n_samples_per_wave: int = 100,
+        # TODO: maybe don't need the bool, check whether emulator was passed
         use_emulator: bool = True,
-        initial_emulator=None,
+        initial_emulator: Optional[object] = None,
     ):
         """
-        Run iterative history matching using the updated implausibility calculation.
+        Run iterative history matching.
 
         Parameters
         ----------
@@ -344,12 +348,12 @@ class HistoryMatching:
         return all_samples, final_impl_scores, emulator
 
     def update_emulator(
-        # TODO: add type hints
+        # TODO: finish type hints
         self,
-        existing_emulator,
-        new_samples,
-        new_outputs,
-        include_previous_data=True,
+        existing_emulator: object,
+        new_samples: list[dict],
+        new_outputs: list[dict],
+        include_previous_data: bool = True,
     ):
         """
         Update an existing GP emulator with new training data.
