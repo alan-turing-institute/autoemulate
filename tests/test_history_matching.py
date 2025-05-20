@@ -1,5 +1,8 @@
-from typing import Dict, List, Tuple
-from unittest.mock import MagicMock, patch
+from typing import Dict
+from typing import List
+from typing import Tuple
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import numpy as np
 import pytest
