@@ -33,9 +33,8 @@ class HistoryMatching:
         """
         Initialize the history matcher.
 
-        TODO: say a bit about the method here (+ what the various params mean)
         TODO: we need mean + variance for history matching, should we do some check
-              on what an emulator returns
+              on what an emulator returns (should this always be a GP ??!!)
         TODO: make this work with current emulators (keep old simulator until refactor)
 
         Parameters
@@ -43,20 +42,30 @@ class HistoryMatching:
             simulator: Simulator instance that implements BaseSimulator
             observations: Dictionary mapping output names to (mean, variance) pairs
             threshold: Implausibility threshold
-            model_discrepancy: Model discrepancy term
-            rank: Rank for history matching
+            model_discrepancy: Model discrepancy term - TODO: say more
+            rank: Rank for history matching - TODO: say more
         """
         self.simulator = simulator
-        self.observations = observations
         self.threshold = threshold
         self.discrepancy = model_discrepancy
         self.rank = rank
 
-        if not set(self.observations.keys()).issubset(set(self.simulator.output_names)):
+        # TODO: double check that need to do all this
+        # save mean and variance of observations
+        if not set(observations.keys()).issubset(set(self.simulator.output_names)):
             raise ValueError(
-                f"Observation keys {set(self.observations.keys())} must be a subset of ",
+                f"Observation keys {set(observations.keys())} must be a subset of ",
                 f"simulator output names {set(self.simulator.output_names)}",
             )
+        obs_means = np.array(
+            [observations[name][0] for name in self.simulator.output_names]
+        )
+        obs_vars = np.array(
+            [observations[name][1] for name in self.simulator.output_names]
+        )
+        # Reshape observation arrays for broadcasting
+        self.obs_means = obs_means.reshape(1, -1)  # [1, n_outputs]
+        self.obs_vars = obs_vars.reshape(1, -1)  # [1, n_outputs]
 
     def calculate_implausibility(
         self,
@@ -78,27 +87,14 @@ class HistoryMatching:
             - 'NROY': indices of Not Ruled Out Yet points
             - 'RO': indices of Ruled Out points
         """
-        # Get observation means and variances
-        obs_means = np.array(
-            [self.observations[name][0] for name in self.simulator.output_names]
-        )
-        obs_vars = np.array(
-            [self.observations[name][1] for name in self.simulator.output_names]
-        )
-
         # Add model discrepancy
-        discrepancy = np.full_like(obs_vars, self.discrepancy)
-
-        # Reshape observation arrays for broadcasting
-        obs_means = obs_means.reshape(1, -1)  # [1, n_outputs]
-        obs_vars = obs_vars.reshape(1, -1)  # [1, n_outputs]
-        discrepancy = discrepancy.reshape(1, -1)  # [1, n_outputs]
+        discrepancy = np.full_like(self.obs_vars, self.discrepancy)
 
         # Calculate total variance
-        Vs = pred_vars + discrepancy + obs_vars
+        Vs = pred_vars + discrepancy + self.obs_vars
 
         # Calculate implausibility
-        I = np.abs(obs_means - pred_means) / np.sqrt(Vs)
+        I = np.abs(self.obs_means - pred_means) / np.sqrt(Vs)
 
         # Determine NROY points based on rank parameter
         if self.rank == 1:
@@ -349,6 +345,7 @@ class HistoryMatching:
 
         Parameters
         ----------
+            TODO: change emulator here to autoemulate.GaussianProcessExact
             existing_emulator: Trained GP emulator (assumes sklearn.gaussian_process or similar API)
             new_samples: List of dictionaries with parameter values or numpy array
             new_outputs: Array of corresponding output values
