@@ -1,8 +1,5 @@
-from typing import Dict
-from typing import List
-from typing import Tuple
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from typing import Dict, List, Tuple
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -86,10 +83,12 @@ def test_history_matcher_init(history_matcher, mock_simulator, basic_observation
 
 def test_calculate_implausibility(history_matcher):
     """Test implausibility calculation with mock simulator outputs"""
-    # Create predictions that match the mock simulator's output structure
-    predictions = {"output1": (0.4, 0.05), "output2": (0.7, 0.1)}  # (mean, variance)
 
-    result = history_matcher.calculate_implausibility(predictions)
+    # Shape [n_samples, n_outputs]
+    pred_means = np.array([[0.4], [0.7]])
+    pred_vars = np.array([[0.05], [0.1]])
+
+    result = history_matcher.calculate_implausibility(pred_means, pred_vars)
 
     # Check the structure of the result
     assert set(result.keys()) == {"I", "NROY", "RO"}
