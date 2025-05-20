@@ -39,11 +39,17 @@ class HistoryMatching:
 
         Parameters
         ----------
-            simulator: Simulator instance that implements BaseSimulator
-            observations: Dictionary mapping output names to (mean, variance) pairs
-            threshold: Implausibility threshold
-            model_discrepancy: Model discrepancy term - TODO: say more
-            rank: Rank for history matching - TODO: say more
+            simulator: BaseSimulator
+                Simulator
+            observations: Dictionary
+                Maps output names to (mean, variance) pairs.
+            threshold: float
+                Implausibility threshold (query points with implausability scores that
+                exceeding this value are ruled out).
+            model_discrepancy: float
+                Additional variance to include in the implausability calculation.
+            rank: int
+                Rank for history matching - TODO: say more
         """
         self.simulator = simulator
         self.threshold = threshold
@@ -77,8 +83,10 @@ class HistoryMatching:
 
         Parameters
         ----------
-            pred_means: Array of prediction means [n_samples, n_outputs]
-            pred_vars: Array of prediction variances [n_samples, n_outputs]
+            pred_means: np.ndarray
+                Array of prediction means [n_samples, n_outputs]
+            pred_vars: np.ndarray
+                Array of prediction variances [n_samples, n_outputs]
 
         Returns
         -------
@@ -125,8 +133,10 @@ class HistoryMatching:
 
         Parameters
         ----------
-            nroy_samples: List of NROY parameter sets
-            n_samples: Number of new samples to generate
+            nroy_samples: list[dist[str, float]]
+                TODO: NROY parameter sets
+            n_samples: int
+                Number of new samples to generate
 
         Returns
         -------
@@ -334,6 +344,7 @@ class HistoryMatching:
         return all_samples, final_impl_scores, emulator
 
     def update_emulator(
+        # TODO: add type hints
         self,
         existing_emulator,
         new_samples,
@@ -345,11 +356,15 @@ class HistoryMatching:
 
         Parameters
         ----------
-            TODO: change emulator here to autoemulate.GaussianProcessExact
-            existing_emulator: Trained GP emulator (assumes sklearn.gaussian_process or similar API)
-            new_samples: List of dictionaries with parameter values or numpy array
-            new_outputs: Array of corresponding output values
-            include_previous_data: Whether to include previous training data (default: True)
+            TODO: update code to expect the below GP type
+            existing_emulator: autoemulate.GaussianProcessExact
+                Trained GP emulator.
+            new_samples: TODO
+                List of dictionaries with parameter values or numpy array
+            new_outputs: TODO
+                Array of corresponding output values
+            include_previous_data: bool
+                Whether to include previous training data (default: True)
 
         Returns
         -------
