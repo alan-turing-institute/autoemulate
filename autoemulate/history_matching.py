@@ -10,6 +10,18 @@ from autoemulate.simulations.base import Simulator
 
 
 class HistoryMatching:
+    """
+    History matching is a model calibration method. It uses observed data to rule out
+    parameters values which are `implausible`. The implausability metric is:
+
+    .. math::
+        I_i(\bar{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\bar{x_0}))|}
+        {\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\bar{x_0}))]}}
+
+    Query points above a given implausibility threshold are ruled out (RO) whereas
+    all other points are marked as not ruled out yet (NORY).
+    """
+
     def __init__(
         self,
         simulator: Simulator,
@@ -19,14 +31,7 @@ class HistoryMatching:
         rank: int = 1,
     ):
         """
-        Initialize the history matcher
-
-        Implausibility metric is calculated using the following relation for each set of parameter:
-
-        $I_i(\overline{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\overline{x_0}))|}{\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\overline{x_0}))]}}$
-
-        Where if implosibility ($I_i$) exceeds a threshhold value, the points will be rulled out.
-        The outcome of history matching are the NORY (Not Ruled Out Yet) and RO (Ruled Out) points.
+        Initialize the history matcher.
 
         TODO: say a bit about the method here (+ what the various params mean)
         TODO: we need mean + variance for history matching, should we do some check
