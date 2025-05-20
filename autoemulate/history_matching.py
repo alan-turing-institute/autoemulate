@@ -129,12 +129,14 @@ class HistoryMatching:
         self, nroy_samples: list[dict[str, float]], n_samples: int
     ) -> list[dict[str, float]]:
         """
+        TODO: update method to fix #460
+
         Generate new parameter samples within NROY space
 
         Parameters
         ----------
             nroy_samples: list[dist[str, float]]
-                TODO: NROY parameter sets
+                TODO: more info here... NROY parameter sets
             n_samples: int
                 Number of new samples to generate
 
@@ -204,6 +206,7 @@ class HistoryMatching:
                 pred_vars = pred_vars.reshape(-1, 1)
 
         else:
+            # TODO: avoid using pandas here (method also accepts dict)
             sample_df = pd.DataFrame(parameter_samples)
             results = self.simulator.run_batch_simulations(sample_df)
 
