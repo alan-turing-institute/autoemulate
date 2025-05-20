@@ -1,14 +1,9 @@
 import json
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from ModularCirc.Models.NaghaviModel import NaghaviModel
-from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental_design import LatinHypercube
@@ -63,30 +58,6 @@ class NaghaviSimulator(Simulator):
             "dt": dt,
             "export_min": 1,
         }
-
-    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
-        """
-        Generate random samples within the parameter bounds using Latin Hypercube Sampling.
-
-        Args:
-            n_samples: Number of samples to generate
-
-        Returns:
-            List of parameter dictionaries
-        """
-        # Use LatinHypercube from autoemulate.experimental_design
-        lhd = LatinHypercube(list(self._param_bounds.values()))
-        sample_array = lhd.sample(n_samples)
-
-        # Convert the sample array to a list of parameter dictionaries
-        samples = []
-        for i in range(n_samples):
-            sample = {}
-            for j, name in enumerate(self._param_names):
-                sample[name] = sample_array[i, j]
-            samples.append(sample)
-
-        return samples
 
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """
