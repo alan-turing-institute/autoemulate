@@ -1,14 +1,9 @@
-from typing import Dict
-from typing import List
-from typing import Tuple
-from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from autoemulate.history_matching import HistoryMatcher
-from autoemulate.simulations.base import Simulator
 from tests.test_base_simulator import MockSimulator
 
 # Import the classes to test
