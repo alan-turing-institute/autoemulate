@@ -9,7 +9,7 @@ from tqdm import tqdm
 from autoemulate.simulations.base import Simulator
 
 
-class HistoryMatcher:
+class HistoryMatching:
     def __init__(
         self,
         simulator: Simulator,
@@ -20,6 +20,18 @@ class HistoryMatcher:
     ):
         """
         Initialize the history matcher
+
+        Implausibility metric is calculated using the following relation for each set of parameter:
+
+        $I_i(\overline{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\overline{x_0}))|}{\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\overline{x_0}))]}}$
+
+        Where if implosibility ($I_i$) exceeds a threshhold value, the points will be rulled out.
+        The outcome of history matching are the NORY (Not Ruled Out Yet) and RO (Ruled Out) points.
+
+        TODO: say a bit about the method here (+ what the various params mean)
+        TODO: we need mean + variance for history matching, should we do some check
+              on what an emulator returns
+        TODO: make this work with current emulators (keep old simulator until refactor)
 
         Args:
             simulator: Simulator instance that implements BaseSimulator
@@ -34,7 +46,6 @@ class HistoryMatcher:
         self.discrepancy = model_discrepancy
         self.rank = rank
 
-        # In your code, modify HistoryMatcher.__init__ to change this line:
         if not set(self.observations.keys()).issubset(set(self.simulator.output_names)):
             raise ValueError(
                 f"Observation keys {set(self.observations.keys())} must be a subset of simulator output names {set(self.simulator.output_names)}"
