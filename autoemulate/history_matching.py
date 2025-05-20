@@ -1,11 +1,7 @@
 import sys
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -149,6 +145,8 @@ class HistoryMatcher:
         """Run a wave of simulations or emulator predictions with batch support."""
         if not parameter_samples:
             return [], np.array([])
+
+        # TODO: raise error if invalid parameter names passed here
 
         # Convert samples to array format for batch processing
         X = np.array(
