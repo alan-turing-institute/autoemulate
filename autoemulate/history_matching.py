@@ -19,7 +19,7 @@ class HistoryMatching:
         {\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\bar{x_0}))]}}
 
     Query points above a given implausibility threshold are ruled out (RO) whereas
-    all other points are marked as not ruled out yet (NORY).
+    all other points are marked as not ruled out yet (NROY).
     """
 
     def __init__(
@@ -38,7 +38,8 @@ class HistoryMatching:
               on what an emulator returns
         TODO: make this work with current emulators (keep old simulator until refactor)
 
-        Args:
+        Parameters
+        ----------
             simulator: Simulator instance that implements BaseSimulator
             observations: Dictionary mapping output names to (mean, variance) pairs
             threshold: Implausibility threshold
@@ -53,7 +54,8 @@ class HistoryMatching:
 
         if not set(self.observations.keys()).issubset(set(self.simulator.output_names)):
             raise ValueError(
-                f"Observation keys {set(self.observations.keys())} must be a subset of simulator output names {set(self.simulator.output_names)}"
+                f"Observation keys {set(self.observations.keys())} must be a subset of ",
+                f"simulator output names {set(self.simulator.output_names)}",
             )
 
     def calculate_implausibility(
@@ -64,11 +66,13 @@ class HistoryMatching:
         """
         Calculate implausibility and identify NROY points
 
-        Args:
+        Parameters
+        ----------
             pred_means: Array of prediction means [n_samples, n_outputs]
             pred_vars: Array of prediction variances [n_samples, n_outputs]
 
-        Returns:
+        Returns
+        -------
             Dictionary with:
             - 'I': array of implausibility scores [n_samples, n_outputs]
             - 'NROY': indices of Not Ruled Out Yet points
@@ -123,11 +127,13 @@ class HistoryMatching:
         """
         Generate new parameter samples within NROY space
 
-        Args:
+        Parameters
+        ----------
             nroy_samples: List of NROY parameter sets
             n_samples: Number of new samples to generate
 
-        Returns:
+        Returns
+        -------
             List of new parameter dictionaries
         """
         if not nroy_samples:
@@ -157,7 +163,17 @@ class HistoryMatching:
         use_emulator: bool = False,
         emulator: Optional[object] = None,
     ) -> tuple[list[dict[str, float]], np.ndarray]:
-        """Run a wave of simulations or emulator predictions with batch support."""
+        """
+        Run a wave of simulations or emulator predictions with batch support.
+
+        Parameters
+        ----------
+        TODO
+
+        Returns
+        -------
+        TODO
+        """
         if not parameter_samples:
             return [], np.array([])
 
@@ -223,7 +239,17 @@ class HistoryMatching:
         use_emulator: bool = True,
         initial_emulator=None,
     ):
-        """Run iterative history matching using the updated implausibility calculation."""
+        """
+        Run iterative history matching using the updated implausibility calculation.
+
+        Parameters
+        ----------
+        TODO
+
+        Returns
+        -------
+        TODO
+        """
         all_samples = []
         all_impl_scores = []
         emulator = initial_emulator
@@ -321,13 +347,15 @@ class HistoryMatching:
         """
         Update an existing GP emulator with new training data.
 
-        Args:
+        Parameters
+        ----------
             existing_emulator: Trained GP emulator (assumes sklearn.gaussian_process or similar API)
             new_samples: List of dictionaries with parameter values or numpy array
             new_outputs: Array of corresponding output values
             include_previous_data: Whether to include previous training data (default: True)
 
-        Returns:
+        Returns
+        -------
             Updated GP emulator
         """
         # Instead of deepcopy, we'll create a new instance if needed
