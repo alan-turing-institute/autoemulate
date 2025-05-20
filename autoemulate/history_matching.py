@@ -6,8 +6,9 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 from autoemulate.simulations.base import Simulator
@@ -43,14 +44,15 @@ class HistoryMatcher:
             raise ValueError(
                 f"Observation keys {set(self.observations.keys())} must be a subset of simulator output names {set(self.simulator.output_names)}"
             )
+
     def calculate_implausibility(
-        self, 
+        self,
         pred_means: np.ndarray,  # Shape [n_samples, n_outputs]
-        pred_vars: np.ndarray,   # Shape [n_samples, n_outputs]
+        pred_vars: np.ndarray,  # Shape [n_samples, n_outputs]
     ) -> Dict[str, np.ndarray]:
         """
         Calculate implausibility and identify NROY points
-        
+
         Args:
             pred_means: Array of prediction means [n_samples, n_outputs]
             pred_vars: Array of prediction variances [n_samples, n_outputs]
@@ -62,23 +64,27 @@ class HistoryMatcher:
             - 'RO': indices of Ruled Out points
         """
         # Get observation means and variances
-        obs_means = np.array([self.observations[name][0] for name in self.simulator.output_names])
-        obs_vars = np.array([self.observations[name][1] for name in self.simulator.output_names])
-        
+        obs_means = np.array(
+            [self.observations[name][0] for name in self.simulator.output_names]
+        )
+        obs_vars = np.array(
+            [self.observations[name][1] for name in self.simulator.output_names]
+        )
+
         # Add model discrepancy
         discrepancy = np.full_like(obs_vars, self.discrepancy)
-        
+
         # Reshape observation arrays for broadcasting
         obs_means = obs_means.reshape(1, -1)  # [1, n_outputs]
-        obs_vars = obs_vars.reshape(1, -1)    # [1, n_outputs]
+        obs_vars = obs_vars.reshape(1, -1)  # [1, n_outputs]
         discrepancy = discrepancy.reshape(1, -1)  # [1, n_outputs]
-        
+
         # Calculate total variance
         Vs = pred_vars + discrepancy + obs_vars
-        
+
         # Calculate implausibility
         I = np.abs(obs_means - pred_means) / np.sqrt(Vs)
-        
+
         # Determine NROY points based on rank parameter
         if self.rank == 1:
             # First-order implausibility: all outputs must satisfy threshold
@@ -88,18 +94,17 @@ class HistoryMatcher:
             # Sort implausibilities for each sample (descending)
             I_sorted = np.sort(I, axis=1)[:, ::-1]
             # The rank-th highest implausibility must be <= threshold
-            nroy_mask = I_sorted[:, self.rank-1] <= self.threshold
-        
+            nroy_mask = I_sorted[:, self.rank - 1] <= self.threshold
+
         # Get indices of NROY and RO points
         NROY = np.where(nroy_mask)[0]
         RO = np.where(~nroy_mask)[0]
-        
-        return {
-            "I": I,               # Implausibility scores
-            "NROY": list(NROY),   # Indices of NROY points
-            "RO": list(RO)        # Indices of RO points
-        }
 
+        return {
+            "I": I,  # Implausibility scores
+            "NROY": list(NROY),  # Indices of NROY points
+            "RO": list(RO),  # Indices of RO points
+        }
 
     def generate_new_samples(
         self, nroy_samples: List[Dict[str, float]], n_samples: int
@@ -134,7 +139,7 @@ class HistoryMatcher:
 
         # Convert back to dictionaries
         return [dict(zip(self.simulator.param_names, sample)) for sample in new_samples]
-        
+
     def run_wave(
         self,
         parameter_samples: List[Dict[str, float]],
@@ -146,53 +151,56 @@ class HistoryMatcher:
             return [], np.array([])
 
         # Convert samples to array format for batch processing
-        X = np.array([
-            [params[name] for name in self.simulator.param_names]
-            for params in parameter_samples
-        ])
-        
+        X = np.array(
+            [
+                [params[name] for name in self.simulator.param_names]
+                for params in parameter_samples
+            ]
+        )
+
         if use_emulator and emulator is not None:
             pred_means, pred_stds = emulator.predict(X, return_std=True)
             pred_vars = pred_stds**2
-            
+
             # Ensure correct shape for single output case
             if len(pred_means.shape) == 1:
                 pred_means = pred_means.reshape(-1, 1)
                 pred_vars = pred_vars.reshape(-1, 1)
 
         else:
-
             sample_df = pd.DataFrame(parameter_samples)
             results = self.simulator.run_batch_simulations(sample_df)
-            
+
             # Filter out failed simulations
             valid_indices = [i for i, x in enumerate(results) if x is not None]
             valid_samples = [parameter_samples[i] for i in valid_indices]
             valid_results = [results[i] for i in valid_indices]
-            
+
             if not valid_results:
                 return [], np.array([])
-                
+
             pred_means = np.array(valid_results)
             pred_vars = np.full_like(pred_means, 0.01)  # Small fixed variance
-            
+
             # Update X to only include valid samples
-            X = np.array([
-                [params[name] for name in self.simulator.param_names]
-                for params in valid_samples
-            ])
-            
+            X = np.array(
+                [
+                    [params[name] for name in self.simulator.param_names]
+                    for params in valid_samples
+                ]
+            )
+
             parameter_samples = valid_samples
 
         # Calculate implausibility in batch
         implausibility = self.calculate_implausibility(pred_means, pred_vars)
-        
+
         # Get NROY samples
         nroy_samples = [parameter_samples[i] for i in implausibility["NROY"]]
-        
+
         # Get all implausibility scores
         all_impl_scores = implausibility["I"]
-        
+
         return nroy_samples, all_impl_scores
 
     def run_history_matching(
@@ -211,47 +219,61 @@ class HistoryMatcher:
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 wave_use_emulator = use_emulator and (emulator is not None)
-                
+
                 # Run wave using batch processing
                 successful_samples, impl_scores = self.run_wave(
                     parameter_samples=current_samples,
                     use_emulator=wave_use_emulator,
-                    emulator=emulator
+                    emulator=emulator,
                 )
-                
+
                 # Update tracking metrics
                 nroy_count = len(successful_samples)
                 total_samples = len(current_samples)
-                failed_count = total_samples - len(impl_scores) if impl_scores.size > 0 else total_samples
-                
+                failed_count = (
+                    total_samples - len(impl_scores)
+                    if impl_scores.size > 0
+                    else total_samples
+                )
+
                 # Update progress bar
-                pbar.set_postfix({
-                    "samples": len(impl_scores) if impl_scores.size > 0 else 0,
-                    "failed": failed_count,
-                    "NROY": nroy_count,
-                    "min_impl": f"{np.min(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
-                    "max_impl": f"{np.max(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
-                })
+                pbar.set_postfix(
+                    {
+                        "samples": len(impl_scores) if impl_scores.size > 0 else 0,
+                        "failed": failed_count,
+                        "NROY": nroy_count,
+                        "min_impl": f"{np.min(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
+                        "max_impl": f"{np.max(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
+                    }
+                )
 
                 # Store results
                 if impl_scores.size > 0:
-                    all_samples.extend([
-                        {**params, "wave": wave + 1}
-                        for params in current_samples[:len(impl_scores)]  # Only include samples with scores
-                    ])
+                    all_samples.extend(
+                        [
+                            {**params, "wave": wave + 1}
+                            for params in current_samples[
+                                : len(impl_scores)
+                            ]  # Only include samples with scores
+                        ]
+                    )
                     all_impl_scores.append(impl_scores)
 
                     # Update emulator if not using emulator in this wave
                     if not wave_use_emulator and len(successful_samples) > 10:
-                        X_train = np.array([
-                            [s[name] for name in self.simulator.param_names]
-                            for s in successful_samples
-                        ])
-                        y_train = np.array([
-                            self.simulator.sample_forward(s)
-                            for s in successful_samples
-                        ])
-                        
+                        X_train = np.array(
+                            [
+                                [s[name] for name in self.simulator.param_names]
+                                for s in successful_samples
+                            ]
+                        )
+                        y_train = np.array(
+                            [
+                                self.simulator.sample_forward(s)
+                                for s in successful_samples
+                            ]
+                        )
+
                         if len(y_train) > 0:
                             emulator = self.update_emulator(emulator, X_train, y_train)
 
@@ -259,20 +281,22 @@ class HistoryMatcher:
                 if wave < n_waves - 1:
                     if successful_samples:
                         current_samples = self.generate_new_samples(
-                            successful_samples, 
-                            n_samples_per_wave
+                            successful_samples, n_samples_per_wave
                         )
                     else:
                         # If no NROY points, sample from full space
-                        current_samples = self.simulator.sample_inputs(n_samples_per_wave)
+                        current_samples = self.simulator.sample_inputs(
+                            n_samples_per_wave
+                        )
 
                 pbar.update(1)
 
         # Concatenate all implausibility scores
-        final_impl_scores = np.concatenate(all_impl_scores) if all_impl_scores else np.array([])
-        
-        return all_samples, final_impl_scores, emulator   
+        final_impl_scores = (
+            np.concatenate(all_impl_scores) if all_impl_scores else np.array([])
+        )
 
+        return all_samples, final_impl_scores, emulator
 
     def update_emulator(
         self,
@@ -339,5 +363,5 @@ class HistoryMatcher:
             print(f"Error refitting model: {e}")
             # If refitting fails, just return the original model
             return existing_emulator
-            
+
         return updated_emulator
