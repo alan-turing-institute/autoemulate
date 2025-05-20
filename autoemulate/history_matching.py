@@ -1,11 +1,6 @@
-import sys
-from abc import ABC
 from abc import abstractmethod
 from copy import deepcopy
-from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,7 +13,7 @@ class HistoryMatcher:
     def __init__(
         self,
         simulator: Simulator,
-        observations: Dict[str, Tuple[float, float]],
+        observations: dict[str, tuple[float, float]],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
@@ -49,7 +44,7 @@ class HistoryMatcher:
         self,
         pred_means: np.ndarray,  # Shape [n_samples, n_outputs]
         pred_vars: np.ndarray,  # Shape [n_samples, n_outputs]
-    ) -> Dict[str, np.ndarray]:
+    ) -> dict[str, np.ndarray]:
         """
         Calculate implausibility and identify NROY points
 
@@ -107,8 +102,8 @@ class HistoryMatcher:
         }
 
     def generate_new_samples(
-        self, nroy_samples: List[Dict[str, float]], n_samples: int
-    ) -> List[Dict[str, float]]:
+        self, nroy_samples: list[dict[str, float]], n_samples: int
+    ) -> list[dict[str, float]]:
         """
         Generate new parameter samples within NROY space
 
@@ -142,10 +137,10 @@ class HistoryMatcher:
 
     def run_wave(
         self,
-        parameter_samples: List[Dict[str, float]],
+        parameter_samples: list[dict[str, float]],
         use_emulator: bool = False,
         emulator: Optional[object] = None,
-    ) -> Tuple[List[Dict[str, float]], np.ndarray]:
+    ) -> tuple[list[dict[str, float]], np.ndarray]:
         """Run a wave of simulations or emulator predictions with batch support."""
         if not parameter_samples:
             return [], np.array([])
