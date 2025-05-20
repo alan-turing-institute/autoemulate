@@ -6,7 +6,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
-
+import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
@@ -43,109 +43,63 @@ class HistoryMatcher:
             raise ValueError(
                 f"Observation keys {set(self.observations.keys())} must be a subset of simulator output names {set(self.simulator.output_names)}"
             )
-
     def calculate_implausibility(
-        self, predictions: Dict[str, Tuple[float, float]]
-    ) -> Dict[str, float]:
+        self, 
+        pred_means: np.ndarray,  # Shape [n_samples, n_outputs]
+        pred_vars: np.ndarray,   # Shape [n_samples, n_outputs]
+    ) -> Dict[str, np.ndarray]:
         """
-        Calculate implausibility for given predictions
-
+        Calculate implausibility and identify NROY points
+        
         Args:
-            predictions: Dictionary mapping output names to (mean, variance) pairs
+            pred_means: Array of prediction means [n_samples, n_outputs]
+            pred_vars: Array of prediction variances [n_samples, n_outputs]
 
         Returns:
             Dictionary with:
-            - 'I': array of implausibility scores
+            - 'I': array of implausibility scores [n_samples, n_outputs]
             - 'NROY': indices of Not Ruled Out Yet points
             - 'RO': indices of Ruled Out points
         """
-        obs_means = np.array(
-            [self.observations[name][0] for name in self.simulator.output_names]
-        )
-        obs_vars = np.array(
-            [self.observations[name][1] for name in self.simulator.output_names]
-        )
-        pred_means = np.array(
-            [predictions[name][0] for name in self.simulator.output_names]
-        )
-        pred_vars = np.array(
-            [predictions[name][1] for name in self.simulator.output_names]
-        )
-
-        if len(obs_means) != len(pred_means):
-            raise ValueError("Mismatch between observations and predictions")
-
-        discrepancy = np.full(len(obs_means), self.discrepancy)
+        # Get observation means and variances
+        obs_means = np.array([self.observations[name][0] for name in self.simulator.output_names])
+        obs_vars = np.array([self.observations[name][1] for name in self.simulator.output_names])
+        
+        # Add model discrepancy
+        discrepancy = np.full_like(obs_vars, self.discrepancy)
+        
+        # Reshape observation arrays for broadcasting
+        obs_means = obs_means.reshape(1, -1)  # [1, n_outputs]
+        obs_vars = obs_vars.reshape(1, -1)    # [1, n_outputs]
+        discrepancy = discrepancy.reshape(1, -1)  # [1, n_outputs]
+        
+        # Calculate total variance
         Vs = pred_vars + discrepancy + obs_vars
+        
+        # Calculate implausibility
         I = np.abs(obs_means - pred_means) / np.sqrt(Vs)
+        
+        # Determine NROY points based on rank parameter
+        if self.rank == 1:
+            # First-order implausibility: all outputs must satisfy threshold
+            nroy_mask = np.all(I <= self.threshold, axis=1)
+        else:
+            # Higher-order implausibility: the nth highest implausibility must satisfy threshold
+            # Sort implausibilities for each sample (descending)
+            I_sorted = np.sort(I, axis=1)[:, ::-1]
+            # The rank-th highest implausibility must be <= threshold
+            nroy_mask = I_sorted[:, self.rank-1] <= self.threshold
+        
+        # Get indices of NROY and RO points
+        NROY = np.where(nroy_mask)[0]
+        RO = np.where(~nroy_mask)[0]
+        
+        return {
+            "I": I,               # Implausibility scores
+            "NROY": list(NROY),   # Indices of NROY points
+            "RO": list(RO)        # Indices of RO points
+        }
 
-        NROY = np.where(I <= self.threshold)[0]
-        RO = np.where(I > self.threshold)[0]
-
-        return {"I": I, "NROY": list(NROY), "RO": list(RO)}
-
-    def run_wave(
-        self,
-        parameter_samples: List[Dict[str, float]],
-        use_emulator: bool = False,
-        emulator: Optional[object] = None,
-    ) -> Tuple[List[Dict[str, float]], np.ndarray]:
-        """
-        Run a wave of simulations or emulator predictions
-
-        Args:
-            parameter_samples: List of parameter dictionaries to evaluate
-            use_emulator: Whether to use emulator instead of simulations
-            emulator: Trained emulator object (if use_emulator is True)
-
-        Returns:
-            Tuple of (successful_samples, impl_scores)
-        """
-        successful_samples = []
-        impl_scores = []
-
-        for params in parameter_samples:
-            if use_emulator and emulator is not None:
-                # Use emulator for predictions
-                X = np.array(
-                    [params[name] for name in self.simulator.param_names]
-                ).reshape(1, -1)
-
-                # Handle both single-output and multi-output cases
-                pred_means, pred_stds = emulator.predict(X, return_std=True)
-                pred_vars = pred_stds**2
-
-                # Check if we're dealing with 1D arrays (single output) or 2D arrays (multi-output)
-                if len(pred_means.shape) == 1:
-                    # Single output case - each output has its own emulator
-                    predictions = {
-                        name: (pred_means[i], pred_vars[i])
-                        for i, name in enumerate(self.simulator.output_names)
-                    }
-                else:
-                    # Multi-output case - one emulator for all outputs
-                    predictions = {
-                        name: (pred_means[0, i], pred_vars[0, i])
-                        for i, name in enumerate(self.simulator.output_names)
-                    }
-            else:
-                # Run actual simulation
-                outputs = self.simulator.sample_forward(params)
-                if outputs is None:
-                    continue
-
-                # Create predictions dictionary
-                predictions = {
-                    name: (outputs[i], 0.01)  # Small fixed variance
-                    for i, name in enumerate(self.simulator.output_names)
-                }
-
-            # Calculate implausibility
-            result = self.calculate_implausibility(predictions)
-            impl_scores.append(result["I"])
-            successful_samples.append(params)
-
-        return successful_samples, np.array(impl_scores)
 
     def generate_new_samples(
         self, nroy_samples: List[Dict[str, float]], n_samples: int
@@ -180,6 +134,66 @@ class HistoryMatcher:
 
         # Convert back to dictionaries
         return [dict(zip(self.simulator.param_names, sample)) for sample in new_samples]
+        
+    def run_wave(
+        self,
+        parameter_samples: List[Dict[str, float]],
+        use_emulator: bool = False,
+        emulator: Optional[object] = None,
+    ) -> Tuple[List[Dict[str, float]], np.ndarray]:
+        """Run a wave of simulations or emulator predictions with batch support."""
+        if not parameter_samples:
+            return [], np.array([])
+
+        # Convert samples to array format for batch processing
+        X = np.array([
+            [params[name] for name in self.simulator.param_names]
+            for params in parameter_samples
+        ])
+        
+        if use_emulator and emulator is not None:
+            pred_means, pred_stds = emulator.predict(X, return_std=True)
+            pred_vars = pred_stds**2
+            
+            # Ensure correct shape for single output case
+            if len(pred_means.shape) == 1:
+                pred_means = pred_means.reshape(-1, 1)
+                pred_vars = pred_vars.reshape(-1, 1)
+
+        else:
+
+            sample_df = pd.DataFrame(parameter_samples)
+            results = self.simulator.run_batch_simulations(sample_df)
+            
+            # Filter out failed simulations
+            valid_indices = [i for i, x in enumerate(results) if x is not None]
+            valid_samples = [parameter_samples[i] for i in valid_indices]
+            valid_results = [results[i] for i in valid_indices]
+            
+            if not valid_results:
+                return [], np.array([])
+                
+            pred_means = np.array(valid_results)
+            pred_vars = np.full_like(pred_means, 0.01)  # Small fixed variance
+            
+            # Update X to only include valid samples
+            X = np.array([
+                [params[name] for name in self.simulator.param_names]
+                for params in valid_samples
+            ])
+            
+            parameter_samples = valid_samples
+
+        # Calculate implausibility in batch
+        implausibility = self.calculate_implausibility(pred_means, pred_vars)
+        
+        # Get NROY samples
+        nroy_samples = [parameter_samples[i] for i in implausibility["NROY"]]
+        
+        # Get all implausibility scores
+        all_impl_scores = implausibility["I"]
+        
+        return nroy_samples, all_impl_scores
 
     def run_history_matching(
         self,
@@ -188,7 +202,7 @@ class HistoryMatcher:
         use_emulator: bool = True,
         initial_emulator=None,
     ):
-        """Run iterative history matching with an existing emulator."""
+        """Run iterative history matching using the updated implausibility calculation."""
         all_samples = []
         all_impl_scores = []
         emulator = initial_emulator
@@ -197,132 +211,68 @@ class HistoryMatcher:
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 wave_use_emulator = use_emulator and (emulator is not None)
-                successful_samples = []
-                impl_scores = []
-                failed_samples = 0
-                nroy_count = 0  # Track NROY points
-
-                for params in current_samples:
-                    try:
-                        if wave_use_emulator:
-                            # Emulator prediction
-                            X = np.array(
-                                [params[name] for name in self.simulator.param_names]
-                            ).reshape(1, -1)
-                            pred_means, pred_stds = emulator.predict(X, return_std=True)
-                            pred_vars = pred_stds**2
-
-                            if len(pred_means.shape) == 1:
-                                predictions = {
-                                    name: (pred_means[i], pred_vars[i])
-                                    for i, name in enumerate(
-                                        self.simulator.output_names
-                                    )
-                                }
-                            else:
-                                predictions = {
-                                    name: (pred_means[0, i], pred_vars[0, i])
-                                    for i, name in enumerate(
-                                        self.simulator.output_names
-                                    )
-                                }
-                        else:
-                            # Direct simulation
-                            outputs = self.simulator.sample_forward(params)
-                            if outputs is None:
-                                failed_samples += 1
-                                continue
-
-                            predictions = {
-                                name: (outputs[i], 0.01)
-                                for i, name in enumerate(self.simulator.output_names)
-                            }
-
-                        result = self.calculate_implausibility(predictions)
-                        impl_scores.append(result["I"])
-                        successful_samples.append(params)
-
-                        # Count NROY points
-                        if np.all(result["I"] <= self.threshold):
-                            nroy_count += 1
-
-                    except Exception as e:
-                        failed_samples += 1
-                        continue
-
-                # Update progress bar with NROY count
-                pbar.set_postfix(
-                    {
-                        "samples": len(successful_samples),
-                        "failed": failed_samples,
-                        "NROY": nroy_count,
-                        "min_impl": f"{np.min(impl_scores) if impl_scores else 'NaN':.2f}",
-                        "max_impl": f"{np.max(impl_scores) if impl_scores else 'NaN':.2f}",
-                    }
+                
+                # Run wave using batch processing
+                successful_samples, impl_scores = self.run_wave(
+                    parameter_samples=current_samples,
+                    use_emulator=wave_use_emulator,
+                    emulator=emulator
                 )
+                
+                # Update tracking metrics
+                nroy_count = len(successful_samples)
+                total_samples = len(current_samples)
+                failed_count = total_samples - len(impl_scores) if impl_scores.size > 0 else total_samples
+                
+                # Update progress bar
+                pbar.set_postfix({
+                    "samples": len(impl_scores) if impl_scores.size > 0 else 0,
+                    "failed": failed_count,
+                    "NROY": nroy_count,
+                    "min_impl": f"{np.min(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
+                    "max_impl": f"{np.max(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
+                })
 
-                if failed_samples > 0:
-                    tqdm.write(
-                        f"Wave {wave+1}: Skipped {failed_samples} failed simulations"
-                    )
+                # Store results
+                if impl_scores.size > 0:
+                    all_samples.extend([
+                        {**params, "wave": wave + 1}
+                        for params in current_samples[:len(impl_scores)]  # Only include samples with scores
+                    ])
+                    all_impl_scores.append(impl_scores)
 
-                # Handle results
-                if successful_samples:
-                    all_samples.extend(successful_samples)
-                    all_impl_scores.extend(impl_scores)
-
-                    for sample in successful_samples:
-                        sample["wave"] = wave + 1
-
-                    # Update emulator with successful samples
+                    # Update emulator if not using emulator in this wave
                     if not wave_use_emulator and len(successful_samples) > 10:
-                        X_train = np.array(
-                            [
-                                [s[name] for name in self.simulator.param_names]
-                                for s in successful_samples
-                            ]
-                        )
-                        y_train = []
-
-                        for params in successful_samples:
-                            output = self.simulator.sample_forward(params)
-                            if output is not None:
-                                y_train.append(
-                                    [
-                                        output[i]
-                                        for i in range(len(self.simulator.output_names))
-                                    ]
-                                )
-
-                        if y_train:
-                            y_train = np.array(y_train)
+                        X_train = np.array([
+                            [s[name] for name in self.simulator.param_names]
+                            for s in successful_samples
+                        ])
+                        y_train = np.array([
+                            self.simulator.sample_forward(s)
+                            for s in successful_samples
+                        ])
+                        
+                        if len(y_train) > 0:
                             emulator = self.update_emulator(emulator, X_train, y_train)
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
                     if successful_samples:
-                        impl_array = np.array(impl_scores)
-                        nroy_mask = np.all(impl_array <= self.threshold, axis=1)
-                        nroy_samples = [
-                            s for s, m in zip(successful_samples, nroy_mask) if m
-                        ]
-
-                        if nroy_samples:
-                            current_samples = self.generate_new_samples(
-                                nroy_samples, n_samples_per_wave
-                            )
-                        else:
-                            current_samples = self.simulator.sample_inputs(
-                                n_samples_per_wave
-                            )
-                    else:
-                        current_samples = self.simulator.sample_inputs(
+                        current_samples = self.generate_new_samples(
+                            successful_samples, 
                             n_samples_per_wave
                         )
+                    else:
+                        # If no NROY points, sample from full space
+                        current_samples = self.simulator.sample_inputs(n_samples_per_wave)
 
                 pbar.update(1)
 
-        return all_samples, np.array(all_impl_scores), emulator
+        # Concatenate all implausibility scores
+        final_impl_scores = np.concatenate(all_impl_scores) if all_impl_scores else np.array([])
+        
+        return all_samples, final_impl_scores, emulator   
+
 
     def update_emulator(
         self,
@@ -330,7 +280,6 @@ class HistoryMatcher:
         new_samples,
         new_outputs,
         include_previous_data=True,
-        refit_hyperparams=False,
     ):
         """
         Update an existing GP emulator with new training data.
@@ -340,7 +289,6 @@ class HistoryMatcher:
             new_samples: List of dictionaries with parameter values or numpy array
             new_outputs: Array of corresponding output values
             include_previous_data: Whether to include previous training data (default: True)
-            refit_hyperparams: Whether to refit hyperparameters on the combined dataset (default: False)
 
         Returns:
             Updated GP emulator
@@ -384,36 +332,12 @@ class HistoryMatcher:
             y_combined = y_new
 
         # Update the emulator
-        if refit_hyperparams:
-            try:
-                # Refit the entire model with new hyperparameters
-                updated_emulator.fit(X_combined, y_combined)
-            except Exception as e:
-                print(f"Error refitting model: {e}")
-                # If refitting fails, just return the original model
-                return existing_emulator
-        else:
-            # For models without an explicit update method, we'll try a simpler approach
-            try:
-                # Store the training data for future reference
-                updated_emulator.X_train_ = X_combined
-                updated_emulator.y_train_ = y_combined
-
-                # Some models might have methods like update or partial_fit
-                if hasattr(updated_emulator, "update") and callable(
-                    getattr(updated_emulator, "update")
-                ):
-                    updated_emulator.update(X_new, y_new)
-                elif hasattr(updated_emulator, "partial_fit") and callable(
-                    getattr(updated_emulator, "partial_fit")
-                ):
-                    updated_emulator.partial_fit(X_new, y_new)
-                else:
-                    # As a fallback, attempt to refit
-                    updated_emulator.fit(X_combined, y_combined)
-            except Exception as e:
-                print(f"Error updating model: {e}")
-                # If updating fails, just return the original model
-                return existing_emulator
-
+        try:
+            # Refit the entire model with new hyperparameters
+            updated_emulator.fit(X_combined, y_combined)
+        except Exception as e:
+            print(f"Error refitting model: {e}")
+            # If refitting fails, just return the original model
+            return existing_emulator
+            
         return updated_emulator
