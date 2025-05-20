@@ -1,9 +1,14 @@
 import json
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel
+from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental_design import LatinHypercube
