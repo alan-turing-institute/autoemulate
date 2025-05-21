@@ -106,6 +106,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     preprocessor: Preprocessor | None = None
     loss_fn: nn.Module = nn.MSELoss()
     optimizer: optim.Optimizer
+    random_state: int | None = None
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
@@ -135,6 +136,9 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 Target values (not needed if x is a DataLoader).
 
         """
+
+        if self.random_state is not None:
+            self.set_random_seed(self.random_state)
 
         self.train()  # Set model to training mode
 
