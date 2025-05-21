@@ -17,9 +17,8 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self, x=None, y=None, **kwargs):
-            self.random_state = kwargs.get("random_state")
-            super().__init__(random_state=self.random_state)
+        def __init__(self, x=None, y=None, random_state=None, **kwargs):
+            super().__init__(random_state=random_state)
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
