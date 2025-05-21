@@ -1,4 +1,5 @@
 import pytest
+import torch
 from autoemulate.experimental.emulators.neural_processes.conditional_neural_process import (  # noqa: E501
     CNPModule,
 )
@@ -70,3 +71,18 @@ def test_tune_gp(sample_data_y1d):
     scores, configs = tuner.run(CNPModule)
     assert len(scores) == 20
     assert len(configs) == 20
+
+
+def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    x, y = sample_data_y1d
+    x2, _ = new_data_y1d
+    model1 = CNPModule(x, y, random_state=123)
+    model2 = CNPModule(x, y, random_state=123)
+    model1.fit(x, y)
+    model2.fit(x, y)
+    pred1 = model1.predict(x2)
+    pred2 = model2.predict(x2)
+    assert isinstance(pred1, DistributionLike)
+    assert isinstance(pred2, DistributionLike)
+    assert torch.allclose(pred1.mean, pred2.mean)
+    assert torch.allclose(pred1.variance, pred2.variance)
