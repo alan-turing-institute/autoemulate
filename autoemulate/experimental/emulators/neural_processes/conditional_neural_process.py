@@ -257,6 +257,7 @@ class CNPModule(PyTorchBackend):
         offset_context_points: int = 2,
         n_episodes: int = 12,
         batch_size: int = 4,
+        random_state: int | None = None,
     ):
         """
         Parameters
@@ -286,7 +287,7 @@ class CNPModule(PyTorchBackend):
         batch_size: int
             Batch size for training.
         """
-        super().__init__()
+        super().__init__(random_state=random_state)
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
         self.output_dim = y.shape[1]
