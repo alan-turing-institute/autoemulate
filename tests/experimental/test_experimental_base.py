@@ -18,7 +18,8 @@ class TestPyTorchBackend:
         """
 
         def __init__(self, x=None, y=None, **kwargs):
-            super().__init__()
+            self.random_state = kwargs.get("random_state")
+            super().__init__(random_state=self.random_state)
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
