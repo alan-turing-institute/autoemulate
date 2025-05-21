@@ -89,6 +89,23 @@ class Emulator(ABC, ValidationMixin, ConversionMixin):
         )
         raise NotImplementedError(msg)
 
+    def set_random_seed(self, seed: int, deterministic: bool = False):
+        """Set random seed for Python and PyTorch.
+
+        Parameters
+        ----------
+        seed : int
+            The random seed to use.
+        deterministic : bool
+            Use "deterministic" algorithms in PyTorch.
+        """
+        random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        if deterministic:
+            torch.backends.cudnn.benchmark = False
+            torch.use_deterministic_algorithms(True)
+
 
 class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     """
@@ -176,23 +193,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         self.eval()
         x = self.preprocess(x)
         return self(x)
-
-    def set_random_seed(self, seed: int, deterministic: bool = False):
-        """Set random seed for Python and PyTorch.
-
-        Parameters
-        ----------
-        seed : int
-            The random seed to use.
-        deterministic : bool
-            Use "deterministic" algorithms in PyTorch.
-        """
-        random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        if deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.use_deterministic_algorithms(True)
 
 
 class SklearnBackend(Emulator):
