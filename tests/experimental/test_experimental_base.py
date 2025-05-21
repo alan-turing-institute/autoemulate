@@ -122,13 +122,11 @@ class TestPyTorchBackend:
         y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         x_test = torch.tensor([[4.0]])
 
-        model1 = self.DummyModel()
-        model1.random_state = 123
+        model1 = self.DummyModel(random_state=123)
         model1.fit(x_train, y_train)
         pred1 = model1.predict(x_test)
 
-        model2 = self.DummyModel()
-        model2.random_state = 123
+        model2 = self.DummyModel(random_state=123)
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)
 

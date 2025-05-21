@@ -108,6 +108,14 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     optimizer: optim.Optimizer
     random_state: int | None = None
 
+    def __init__(self, *args, random_state=None, **kwargs):
+        # Set the random seed before any layer/parameter initialization
+        self.random_state = random_state
+        if self.random_state is not None:
+            self.set_random_seed(self.random_state)
+        super().__init__(*args, **kwargs)
+        # Subclasses should call super().__init__() first!
+
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
             return x
@@ -136,9 +144,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 Target values (not needed if x is a DataLoader).
 
         """
-
-        if self.random_state is not None:
-            self.set_random_seed(self.random_state)
 
         self.train()  # Set model to training mode
 
