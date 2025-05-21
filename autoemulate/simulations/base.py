@@ -35,7 +35,7 @@ class Simulator(ABC):
             output_variables: Optional list of specific output variables to track
         """
         self._param_bounds = parameters_range
-        self._param_names = list(self._param_bounds.keys())
+        self._param_names = list(self.param_bounds.keys())
 
         # Output configuration
         self._output_variables = (
@@ -90,7 +90,7 @@ class Simulator(ABC):
         samples = []
         for i in range(n_samples):
             sample = {}
-            for j, name in enumerate(self._param_names):
+            for j, name in enumerate(self.param_names):
                 sample[name] = sample_array[i, j]
             samples.append(sample)
 

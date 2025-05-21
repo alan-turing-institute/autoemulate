@@ -10,7 +10,7 @@ from autoemulate.simulations.base import Simulator
 class HistoryMatching:
     """
     History matching is a model calibration method, which uses observed data to rule out
-    parameter values which are `implausible`. The implausability metric is:
+    parameter values which are ``implausible``. The implausability metric is:
 
     .. math::
         I_i(\bar{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\bar{x_0}))|}
@@ -32,23 +32,29 @@ class HistoryMatching:
         Initialize the history matcher.
 
         TODO for #406:
-        - make this work with experimental GP emulators + refactor to use torch
+        - make this work with experimental GP emulators
+        - refactor to use torch
         - add check that emulator returns distribution (need mean + variance)
-        - make this work with(updated Simulator (after #414 is merged)
+        - make this work with (updated) Simulator (after #414 is merged)
 
         Parameters
         ----------
             simulator: Simulator
-                Simulator
+                The simulation to emulate.
             observations: dict
                 Maps output names to (mean, variance) pairs.
             threshold: float
                 Implausibility threshold (query points with implausability scores that
-                exceeding this value are ruled out).
+                exceed this value are ruled out).
             model_discrepancy: float
                 Additional variance to include in the implausability calculation.
             rank: int
-                Rank for history matching - TODO: say more
+                TODO: is the below correct? adapted from mogp_emulator docs
+                Scoring method for multiple outputs. Must be a non-negative
+                integer less than the number of observations, which denotes
+                the location in the rank ordering of implausibility values
+                where the score is evaluated (i.e. the default value of ``1``
+                indicates that the largest implausibility will be used).
         """
         self.simulator = simulator
         self.threshold = threshold
@@ -89,10 +95,11 @@ class HistoryMatching:
 
         Returns
         -------
-            dict with:
-            - 'I': array of implausibility scores [n_samples, n_outputs]
-            - 'NROY': indices of Not Ruled Out Yet points
-            - 'RO': indices of Ruled Out points
+            dict[str, union[list, np.ndarray]]
+                Contains the following key, value pairs:
+                - 'I': array of implausibility scores [n_samples, n_outputs]
+                - 'NROY': list of indices of Not Ruled Out Yet points
+                - 'RO': list of indices of Ruled Out points
         """
         # Add model discrepancy
         discrepancy = np.full_like(self.obs_vars, self.discrepancy)
@@ -136,14 +143,14 @@ class HistoryMatching:
         Parameters
         ----------
             nroy_samples: list[dist[str, float]]
-                TODO: more info here... NROY parameter sets
+                TODO: more info here... NROY parameter sets... seems to be optional
             n_samples: int
                 Number of new samples to generate
 
         Returns
         -------
             list
-                New parameter dictionaries
+                TODO: more info... New parameter dictionaries
         """
         if not nroy_samples:
             return self.simulator.sample_inputs(n_samples)
@@ -170,6 +177,7 @@ class HistoryMatching:
         self,
         parameter_samples: list[dict[str, float]],
         use_emulator: bool = False,
+        # TODO: update emulator passed here
         emulator: Optional[object] = None,
     ) -> tuple[list[dict[str, float]], np.ndarray]:
         """
@@ -206,7 +214,7 @@ class HistoryMatching:
                 pred_vars = pred_vars.reshape(-1, 1)
 
         else:
-            # TODO: avoid using pandas here (method also accepts dict)
+            # TODO: avoid using pandas here (method also accepts dict) ?
             sample_df = pd.DataFrame(parameter_samples)
             results = self.simulator.run_batch_simulations(sample_df)
 
@@ -246,8 +254,9 @@ class HistoryMatching:
         self,
         n_waves: int = 3,
         n_samples_per_wave: int = 100,
-        # TODO: maybe don't need the bool, check whether emulator was passed
+        # TODO: maybe don't need the bool, check whether emulator was passed instead?
         use_emulator: bool = True,
+        # TODO: update emulator type passed here
         initial_emulator: Optional[object] = None,
     ):
         """
@@ -351,6 +360,7 @@ class HistoryMatching:
     def update_emulator(
         # TODO: finish type hints
         self,
+        # TODO: update emulator type passed here
         existing_emulator: object,
         new_samples: list[dict],
         new_outputs: list[dict],
@@ -361,8 +371,8 @@ class HistoryMatching:
 
         Parameters
         ----------
-            TODO: update code to expect the below GP type
-            existing_emulator: autoemulate.GaussianProcessExact
+            TODO: eventually this should be autoemulate.GaussianProcessExact
+            existing_emulator: Gaussian Process from sklearn
                 Trained GP emulator.
             new_samples: TODO
                 List of dictionaries with parameter values or numpy array
