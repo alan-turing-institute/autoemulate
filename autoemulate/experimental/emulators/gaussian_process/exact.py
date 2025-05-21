@@ -30,7 +30,6 @@ from autoemulate.experimental.emulators.gaussian_process import (
     MeanModuleFn,
 )
 from autoemulate.experimental.types import OutputLike, TensorLike
-from autoemulate.utils import set_random_seed
 
 
 class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
@@ -59,7 +58,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         lr: float = 2e-1,
     ):
         if random_state is not None:
-            set_random_seed(random_state)
+            self.set_random_seed(random_state)
 
         x, y = self._convert_to_tensors(x, y)
 
