@@ -90,7 +90,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin):
         raise NotImplementedError(msg)
 
     def set_random_seed(self, seed: int, deterministic: bool = False):
-        """Set random seed for Python and PyTorch.
+        """Set random seed for Python, NumPy and PyTorch.
 
         Parameters
         ----------
@@ -100,6 +100,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin):
             Use "deterministic" algorithms in PyTorch.
         """
         random.seed(seed)
+        np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         if deterministic:
