@@ -1,7 +1,9 @@
+import random
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
 import numpy as np
+import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
 
@@ -174,6 +176,23 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         self.eval()
         x = self.preprocess(x)
         return self(x)
+
+    def set_random_seed(self, seed: int, deterministic: bool = False):
+        """Set random seed for Python and PyTorch.
+
+        Parameters
+        ----------
+        seed : int
+            The random seed to use.
+        deterministic : bool
+            Use "deterministic" algorithms in PyTorch.
+        """
+        random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        if deterministic:
+            torch.backends.cudnn.benchmark = False
+            torch.use_deterministic_algorithms(True)
 
 
 class SklearnBackend(Emulator):
