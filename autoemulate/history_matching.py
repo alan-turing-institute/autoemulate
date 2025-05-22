@@ -139,7 +139,7 @@ class HistoryMatching:
         n_samples: int,
     ) -> np.ndarray:
         """
-        TODO: update method to fix #460 issues
+        TODO: update method to fix issues listed in #460
 
         Generate new parameter samples within NROY space.
 
@@ -148,7 +148,7 @@ class HistoryMatching:
             nroy_samples: np.ndarray
                 Array of parameter samples in the NROY space [n_samples, n_parameters].
             n_samples: int
-                Number of new samples to generate.
+                Number of new samples to generate within the NROY bounds.
 
         Returns
         -------
@@ -167,38 +167,33 @@ class HistoryMatching:
 
     def run_wave(
         self,
-        parameter_samples: list[dict[str, float]],
-        use_emulator: bool = False,
-        # TODO: update emulator passed here
+        X: np.ndarray,
+        # TODO: update emulator object passed here
         emulator: Optional[object] = None,
-    ) -> tuple[list[dict[str, float]], np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Run a wave of simulations or emulator predictions with batch support.
+        Using simulator to make predictions unless emulator object is passed.
 
         Parameters
         ----------
-        TODO
+        X: np.ndarray
+            Array of parameter samples to simulate/emulate [n_samples, n_parameters]
+            returned by `self.simulator.sample_inputs` method.
+        TODO: update emulator type and description
+        emulator: optional object
+            Gaussian process emulator to use to make predictions.
 
         Returns
         -------
-        TODO
+        tuple[np.ndarray, np.ndarray]
+            Array of NROY samples and Array of all implausibility scores.
         """
-        if not parameter_samples:
-            return [], np.array([])
+        # TODO: check when does this happen? do we need this?
+        if X.shape[0] == 0:
+            return np.array([]), np.array([])
 
-        # TODO: raise error if invalid parameter names passed here
-
-        # TODO: update to take array as input
-
-        # Convert samples to array format for batch processing
-        X = np.array(
-            [
-                [params[name] for name in self.simulator.param_names]
-                for params in parameter_samples
-            ]
-        )
-
-        if use_emulator and emulator is not None:
+        if emulator is not None:
             pred_means, pred_stds = emulator.predict(X, return_std=True)
             pred_vars = pred_stds**2
 
@@ -206,38 +201,24 @@ class HistoryMatching:
             if len(pred_means.shape) == 1:
                 pred_means = pred_means.reshape(-1, 1)
                 pred_vars = pred_vars.reshape(-1, 1)
-
         else:
-            # TODO: avoid using pandas here (method also accepts dict) ?
-            sample_df = pd.DataFrame(parameter_samples)
-            results = self.simulator.run_batch_simulations(sample_df)
+            # returns array of output stats [n_samples, n_stats]
+            results = self.simulator.run_batch_simulations(X)
 
             # Filter out failed simulations
             valid_indices = [i for i, x in enumerate(results) if x is not None]
-            valid_samples = [parameter_samples[i] for i in valid_indices]
-            valid_results = [results[i] for i in valid_indices]
-
-            if not valid_results:
-                return [], np.array([])
-
-            pred_means = np.array(valid_results)
+            X = X[valid_indices]
+            pred_means = results[valid_indices]
             pred_vars = np.full_like(pred_means, 0.01)  # Small fixed variance
-
-            # Update X to only include valid samples
-            X = np.array(
-                [
-                    [params[name] for name in self.simulator.param_names]
-                    for params in valid_samples
-                ]
-            )
-
-            parameter_samples = valid_samples
+            if pred_means.shape[0] == 0:
+                # all simulations failed
+                return np.array([]), np.array([])
 
         # Calculate implausibility in batch
         implausibility = self.calculate_implausibility(pred_means, pred_vars)
 
         # Get NROY samples
-        nroy_samples = [parameter_samples[i] for i in implausibility["NROY"]]
+        nroy_samples = X[implausibility["NROY"]]
 
         # Get all implausibility scores
         all_impl_scores = implausibility["I"]
@@ -275,8 +256,7 @@ class HistoryMatching:
 
                 # Run wave using batch processing
                 successful_samples, impl_scores = self.run_wave(
-                    parameter_samples=current_samples,
-                    use_emulator=wave_use_emulator,
+                    X=current_samples,
                     emulator=emulator,
                 )
 
