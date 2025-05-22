@@ -144,17 +144,18 @@ def test_sample_nroy(history_matcher, mock_simulator):
 
     # Check the number of samples
     assert new_samples.shape[0] == n_samples
-
-    # TODO: update test after refactor
-    # Check that all samples are dictionaries with the right keys
-    # for sample in new_samples:
-    # assert isinstance(sample, dict)
-    # assert set(sample.keys()) == set(mock_simulator.param_names)
+    assert new_samples.shape[1] == len(mock_simulator.param_names)
 
     # Check that values are within the bounds of NROY samples
-    # param1_values = [s["param1"] for s in nroy_samples]
-    # param2_values = [s["param2"] for s in nroy_samples]
+    param1_values = [s["param1"] for s in nroy_samples]
+    param2_values = [s["param2"] for s in nroy_samples]
 
-    # for sample in new_samples:
-    #     assert min(param1_values) <= sample["param1"] <= max(param1_values)
-    #     assert min(param2_values) <= sample["param2"] <= max(param2_values)
+    assert (
+        (min(param1_values) <= new_samples[:, 0])
+        & (new_samples[:, 0] <= max(param1_values))
+    ).all()
+
+    assert (
+        (min(param2_values) <= new_samples[:, 1])
+        & (new_samples[:, 1] <= max(param2_values))
+    ).all()
