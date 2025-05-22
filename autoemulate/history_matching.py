@@ -331,15 +331,15 @@ class HistoryMatching:
             np.concatenate(all_impl_scores) if all_impl_scores else np.array([])
         )
 
+        # Q: what should all samples be returned as ?
         return all_samples, final_impl_scores, emulator
 
     def update_emulator(
-        # TODO: finish type hints
         self,
         # TODO: update emulator type passed here
         existing_emulator: object,
-        new_samples: list[dict],
-        new_outputs: list[dict],
+        X: np.ndarray,
+        y: np.ndarray,
         include_previous_data: bool = True,
     ):
         """
@@ -350,10 +350,10 @@ class HistoryMatching:
             TODO: eventually this should be autoemulate.GaussianProcessExact
             existing_emulator: Gaussian Process from sklearn
                 Trained GP emulator.
-            new_samples: TODO
-                List of dictionaries with parameter values or numpy array
-            new_outputs: TODO
-                Array of corresponding output values
+            X: np.ndarray
+                Array of parameter values to train emulator on.
+            y: np.ndarray
+                Array of output values.
             include_previous_data: bool
                 Whether to include previous training data (default: True)
 
@@ -365,21 +365,6 @@ class HistoryMatching:
         # For now, just use the existing model as is
         updated_emulator = existing_emulator
 
-        # Convert new_samples to numpy array if it's a list of dictionaries
-        if isinstance(new_samples[0], dict):
-            # Extract parameter names from the first dictionary
-            param_names = list(new_samples[0].keys())
-            # Convert to numpy array
-            X_new = np.array(
-                [[sample[name] for name in param_names] for sample in new_samples]
-            )
-        else:
-            # Already a numpy array
-            X_new = np.array(new_samples)
-
-        # Convert new_outputs to numpy array if needed
-        y_new = np.array(new_outputs)
-
         # If we need to include previous data and emulator has stored training data
         if (
             include_previous_data
@@ -387,18 +372,18 @@ class HistoryMatching:
             and hasattr(existing_emulator, "y_train_")
         ):
             # Combine old and new training data
-            X_combined = np.vstack((existing_emulator.X_train_, X_new))
+            X_combined = np.vstack((existing_emulator.X_train_, X))
 
             # Check if we're dealing with multi-output or single-output
             # TODO: can we always just use vstack here?
-            if len(existing_emulator.y_train_.shape) > 1 and len(y_new.shape) > 1:
-                y_combined = np.vstack((existing_emulator.y_train_, y_new))
+            if len(existing_emulator.y_train_.shape) > 1 and len(y.shape) > 1:
+                y_combined = np.vstack((existing_emulator.y_train_, y))
             else:
-                y_combined = np.concatenate((existing_emulator.y_train_, y_new))
+                y_combined = np.concatenate((existing_emulator.y_train_, y))
         else:
             # Just use new data
-            X_combined = X_new
-            y_combined = y_new
+            X_combined = X
+            y_combined = y
 
         # Update the emulator
         try:
