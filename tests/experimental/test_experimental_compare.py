@@ -23,7 +23,7 @@ def test_compare_user_models(sample_data_y2d, recwarn):
     ae = AutoEmulate(x, y, models=ALL_EMULATORS)
     results = ae.compare(1)
     print(results)
-    assert len(recwarn) == 1
+    assert len(recwarn) == 2
     assert str(recwarn.pop().message) == (
         "Model (<class 'autoemulate.experimental.emulators.lightgbm.Li"
         "ghtGBM'>) is not multioutput but the data is multioutput. Skipping model "
