@@ -2,7 +2,6 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
 from autoemulate.simulations.base import Simulator
