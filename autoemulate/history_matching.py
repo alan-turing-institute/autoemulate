@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -51,18 +50,16 @@ class HistoryMatching:
             model_discrepancy: float
                 Additional variance to include in the implausability calculation.
             rank: int
-                TODO is the below correct? adapted from mogp_emulator docs:
-                NOTE that mogp_emulator has a different default (2nd largest score)
-                Scoring method for multiple outputs. Must be a non-negative
-                integer less than the number of observations, which denotes
-                the location in the rank ordering of implausibility values
-                where the score is evaluated (i.e. the default value of ``1``
-                indicates that the largest implausibility will be used).
+                Scoring method for multi-output problems. Must be a non-negative
+                integer less than the number of outputs. When the implausability
+                scores are ordered across outputs, it indicates which rank to use
+                when determining whether the query point is NROY. The default value
+                of ``1`` indicates that the largest implausibility will be used.
         """
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
-        # TODO: rank should relate to observations?
+        # TODO: rank can't be more than output dimension, add a check
         self.rank = rank
 
         # save mean and variance of observations
@@ -118,8 +115,6 @@ class HistoryMatching:
             # First-order implausibility: all outputs must satisfy threshold
             nroy_mask = np.all(I <= self.threshold, axis=1)
         else:
-            # Higher-order implausibility:
-            # - the nth highest implausibility must satisfy threshold
             # Sort implausibilities for each sample (descending)
             I_sorted = np.sort(I, axis=1)[:, ::-1]
             # The rank-th highest implausibility must be <= threshold
@@ -142,7 +137,7 @@ class HistoryMatching:
     ) -> np.ndarray:
         """
         TODO: update method to fix issues listed in #460
-        TODO: we do random sampling here so need to fix rando seed
+        TODO: we do random sampling here so need to fix random seed somewhere
 
         Generate new parameter samples within NROY space.
 
@@ -193,7 +188,7 @@ class HistoryMatching:
             Arrays of predicted means and variances as well as the input data for
             which predictions were made succesfully.
         """
-        # TODO: check when does this happen? do we need this?
+        # TODO: when does this happen? do we need this?
         if X.shape[0] == 0:
             return np.array([]), np.array([])
 
@@ -231,8 +226,7 @@ class HistoryMatching:
         emulator_predict: bool = True,
         # TODO: update emulator type passed here
         initial_emulator: Optional[object] = None,
-    ):
-        # TODO: add return types
+    ) -> tuple[np.ndarray, np.ndarray, Union[object, None]]:
         """
         Run iterative history matching. In each wave:
             - sample parameter values to test from the NROY space
@@ -257,12 +251,13 @@ class HistoryMatching:
         TODO: update emulator type and description below
         initial_emulator: optional object
             Gaussian Process emulator pre-trained on `self.simulator` data.
-            - if `emulator_predict=True`, GP is used to make predictions.
+            - if `emulator_predict=True`, the GP is used to make predictions.
             - if `emulator_predict=False`, `self.simulator` is used to make
-              predictions and GP is retrained on the simulated data.
+              predictions and the GP is retrained on the simulated data.
 
         Returns
         -------
+        TODO: can we simplify this?
         tuple[np.ndarray, np.ndarray, union[object, None]]
             - Array of all parameter samples for which predictions were made
             - Array of all implausability scores
