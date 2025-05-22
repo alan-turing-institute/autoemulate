@@ -42,13 +42,14 @@ class VAETransform(AutoEmulateTransform):
         self.verbose = verbose
 
         # Initialized during fit
+        # TODO: consider this can be init here instead of fit
         self.vae = None
         self.input_dim = None
         self.is_fitted_ = False
 
     def _init_vae(self, intput_dim: int):
         self.input_dim = intput_dim
-        VAE(intput_dim, self.hidden_layers, self.latent_dim)
+        self.vae = VAE(intput_dim, self.hidden_layers, self.latent_dim)
 
     def fit(self, x: TensorLike):
         """
