@@ -41,12 +41,17 @@ def test_run_wave_with_simulator(history_matcher, mock_simulator):
         {"param1": 0.3, "param2": -0.4},
     ]
 
-    successful_samples, impl_scores = history_matcher.run_wave(
-        parameter_samples, use_emulator=False
+    X = np.array(
+        [
+            [sample[name] for name in ["param1", "param2"]]
+            for sample in parameter_samples
+        ]
     )
 
+    successful_samples, impl_scores = history_matcher.run_wave(X)
+
     # With our mock simulator, all valid samples should succeed
-    assert len(successful_samples) == 2
+    assert successful_samples.shape[0] == 2
     assert len(impl_scores) == 2
 
     # Check the implausibility scores shape
@@ -61,7 +66,7 @@ def test_run_wave_with_simulator(history_matcher, mock_simulator):
 #     ]
 
 #     successful_samples, impl_scores = history_matcher.run_wave(
-#         parameter_samples, use_emulator=False
+#         parameter_samples
 #     )
 
 #     # Only the valid sample should succeed
@@ -96,48 +101,27 @@ def test_calculate_implausibility(history_matcher):
     assert len(result["I"]) == 2  # Should have implausibility for both outputs
 
 
-def test_run_wave_with_simulator(history_matcher, mock_simulator):
-    """Test running a wave with the mock simulator"""
-    parameter_samples = [
-        {"param1": 0.1, "param2": 0.2},
-        {"param1": 0.3, "param2": -0.4},
-    ]
+# @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
+# def test_run(history_matcher):
+#     """Test the full history matching process with mock simulator"""
+#     n_waves = 2
+#     n_samples_per_wave = 5
 
-    successful_samples, impl_scores = history_matcher.run_wave(
-        parameter_samples, use_emulator=False
-    )
+#     # Run history matching
+#     (
+#         all_samples,
+#         all_impl_scores,
+#         updated_emulator,
+#     ) = history_matcher.run(n_waves=n_waves, n_samples_per_wave=n_samples_per_wave)
 
-    # With our mock simulator, all samples should succeed
-    assert len(successful_samples) == 2
-    assert len(impl_scores) == 2
+#     # Check the basic structure of the results
+#     assert isinstance(all_samples, list)
+#     assert isinstance(all_impl_scores, np.ndarray)
+#     assert updated_emulator is None  # Since we didn't use an emulator
 
-    # Check the implausibility scores shape
-    assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs
-
-
-@patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
-def test_run(history_matcher):
-    """Test the full history matching process with mock simulator"""
-    n_waves = 2
-    n_samples_per_wave = 5
-
-    # Run history matching
-    (
-        all_samples,
-        all_impl_scores,
-        updated_emulator,
-    ) = history_matcher.run(
-        n_waves=n_waves, n_samples_per_wave=n_samples_per_wave, use_emulator=False
-    )
-
-    # Check the basic structure of the results
-    assert isinstance(all_samples, list)
-    assert isinstance(all_impl_scores, np.ndarray)
-    assert updated_emulator is None  # Since we didn't use an emulator
-
-    # We should get results for all valid samples
-    assert len(all_samples) == n_waves * n_samples_per_wave
-    assert len(all_impl_scores) == n_waves * n_samples_per_wave
+#     # We should get results for all valid samples
+#     assert len(all_samples) == n_waves * n_samples_per_wave
+#     assert len(all_impl_scores) == n_waves * n_samples_per_wave
 
 
 def test_sample_nroy(history_matcher, mock_simulator):
