@@ -48,7 +48,7 @@ def test_predict_with_simulator(history_matcher, mock_simulator):
         ]
     )
 
-    successful_samples, impl_scores = history_matcher.predict(X)
+    successful_samples, impl_scores, X = history_matcher.predict(X)
 
     # With our mock simulator, all valid samples should succeed
     assert successful_samples.shape[0] == 2

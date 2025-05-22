@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 import numpy as np
 from tqdm import tqdm
@@ -172,7 +173,7 @@ class HistoryMatching:
         X: np.ndarray,
         # TODO: update emulator object passed here
         emulator: Optional[object] = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Make predictions for a batch of inputs X. Uses `self.simulator` unless
         an emulator trained on `self.simulator` data is provided.
@@ -188,8 +189,9 @@ class HistoryMatching:
 
         Returns
         -------
-        tuple[np.ndarray, np.ndarray]
-            Arrays of NROY parameters and of all implausibility scores.
+        tuple[np.ndarray, np.ndarray, np.ndarray]
+            Arrays of predicted means and variances as well as the input data for
+            which predictions were made succesfully.
         """
         # TODO: check when does this happen? do we need this?
         if X.shape[0] == 0:
@@ -219,29 +221,29 @@ class HistoryMatching:
                 # All simulations failed
                 return np.array([]), np.array([])
 
-        # Calculate implausibility in batch
-        implausibility = self.calculate_implausibility(pred_means, pred_vars)
-
-        # NROY parameters and implausibility scores for all parameters
-        return X[implausibility["NROY"]], implausibility["I"]
+        # Also return input vector in case simulation failed for some inputs
+        return pred_means, pred_vars, X
 
     def run(
         self,
         n_waves: int = 3,
         n_samples_per_wave: int = 100,
+        emulator_predict: bool = True,
         # TODO: update emulator type passed here
         initial_emulator: Optional[object] = None,
     ):
         # TODO: add return types
         """
-        TODO: clarify the correct workflow here
         Run iterative history matching. In each wave:
-            - sample parameter values to test from NROY space
+            - sample parameter values to test from the NROY space
                 - at the start, NROY is the entire parameter space
-            - make predictions for the sampled parameters
-                - if no emulator is provided, use `self.simulator` to make predictions
-                - otherwise use the provided emulator
-            - compute implausability scores
+            - make predictions for the sampled parameters:
+                - either, use the provided emulator to make predictions
+                - or, use `self.simulator` to make predictions and update
+                  the emulator after each wave (if there are enough
+                  succesful samples)
+            - compute implausability scores for predictions and further
+              reduce NROY space
 
         Parameters
         ----------
@@ -249,15 +251,25 @@ class HistoryMatching:
             Number of iterations of history matching to run.
         n_samples_per_wave: int
             Number of parameter samples to make predictions for in each wave.
+        emulator_predict: bool = True
+            Whether to use the emulator to make predictions. If False, use
+            `self.simulator` instead.
         TODO: update emulator type and description below
         initial_emulator: optional object
-            Gaussian Process emulator pre-trained on `self.simulator` data. If None,
-            then a GP emulator is trained during the first wave.
+            Gaussian Process emulator pre-trained on `self.simulator` data.
+            - if `emulator_predict=True`, GP is used to make predictions.
+            - if `emulator_predict=False`, `self.simulator` is used to make
+              predictions and GP is retrained on the simulated data.
 
         Returns
         -------
         TODO
         """
+        if emulator_predict and initial_emulator is None:
+            raise ValueError(
+                "Need to pass a GP emulator object when `emulator_predict=True`"
+            )
+
         all_samples = []
         all_impl_scores = []
         emulator = initial_emulator
@@ -266,13 +278,19 @@ class HistoryMatching:
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 # Run wave using batch processing
-                # TODO: should the emulator always be used for prediction ?
-                successful_samples, impl_scores = self.predict(
+                pred_means, pred_vars, X = self.predict(
                     X=current_samples,
-                    emulator=emulator,
+                    # simulate predictions unless emulator_predict=True
+                    emulator=emulator if emulator_predict else None,
                 )
 
-                # Update tracking metrics
+                # Calculate implausibility in batch
+                implausibility = self.calculate_implausibility(pred_means, pred_vars)
+
+                # NROY parameters and implausibility scores for all parameters
+                successful_samples = X[implausibility["NROY"]]
+                impl_scores = implausibility["I"]
+
                 nroy_count = len(successful_samples)
                 total_samples = len(current_samples)
                 failed_count = (
@@ -304,16 +322,10 @@ class HistoryMatching:
                     )
                     all_impl_scores.append(impl_scores)
 
-                    # TODO: review when/how emulator is updated and used
-                    # Update emulator if not using emulator in this wave
-                    # Only (re)train on simulated data --> then use emulator ever after
-                    if (emulator is None) and len(successful_samples) > 10:
-                        X_train = successful_samples
-                        y_train = self.simulator.run_batch_simulations(
-                            successful_samples
-                        )
-                        if len(y_train) > 0:
-                            emulator = self.update_emulator(emulator, X_train, y_train)
+                    # Update emulator if simulated data (succesfully)
+                    if (not emulator_predict) and len(successful_samples) > 10:
+                        y = pred_means
+                        emulator = self.update_emulator(emulator, X, y)
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
