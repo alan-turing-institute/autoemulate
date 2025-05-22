@@ -55,6 +55,7 @@ def test_predict_with_simulator(history_matcher, mock_simulator):
     assert impl_scores.shape[0] == 2
 
     # Check the implausibility scores shape
+    assert successful_samples.shape == (2, 2)  # 2 samples, 2 outputs
     assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs
 
 
