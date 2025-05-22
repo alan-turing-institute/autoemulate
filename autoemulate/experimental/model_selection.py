@@ -97,6 +97,8 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
+        # TODO: should we set random_state in the models?
+        # m = model(x, y, random_state=123, **best_model_config)
         m = model(x, y, **best_model_config)
         m.fit(x, y)
 
