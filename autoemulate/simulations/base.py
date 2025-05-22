@@ -59,6 +59,11 @@ class Simulator(ABC):
         """List of original output variables without statistic suffixes"""
         return self._output_variables
 
+    @property
+    def param_bounds(self) -> Dict[str, Tuple[float, float]]:
+        """Get the parameter bounds"""
+        return self._param_bounds
+
     @abstractmethod
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """
@@ -83,7 +88,7 @@ class Simulator(ABC):
             List of parameter dictionaries
         """
         # Use LatinHypercube from autoemulate.experimental_design
-        lhd = LatinHypercube(list(self._param_bounds.values()))
+        lhd = LatinHypercube(list(self.param_bounds.values()))
         sample_array = lhd.sample(n_samples)
 
         # Convert the sample array to a list of parameter dictionaries
@@ -170,10 +175,6 @@ class Simulator(ABC):
         ]
 
         return stats, stat_names
-
-    def get_param_bounds(self) -> Dict[str, Tuple[float, float]]:
-        """Get the parameter bounds"""
-        return self._param_bounds
 
     def get_results_dataframe(
         self, samples: List[Dict[str, float]], results: np.ndarray
