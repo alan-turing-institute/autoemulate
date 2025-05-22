@@ -288,7 +288,7 @@ class CNPModule(PyTorchBackend):
             Batch size for training.
         """
         if random_state is not None:
-            self.set_random_seed(random_state)
+            self.set_random_seed(random_state, deterministic=True)
         super().__init__()
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
