@@ -33,8 +33,8 @@ class HistoryMatching:
 
         TODO in separate PR for #406:
         - make this work with experimental GP emulators
-             - add check that provided emulator returns distribution (need mean + variance)
-        - refactor to use torch instead of numpy
+             - add check that provided emulator returns distribution (mean + variance)
+        - refactor to use tensors instead of numpy arrays
         - make this work with updated Simulator class (after #414 is merged)
 
         Parameters
@@ -97,9 +97,9 @@ class HistoryMatching:
         -------
             dict[str, union[np.ndarray, list[int]]]
                 Contains the following key, value pairs:
-                - 'I': array of implausibility scores [n_samples, n_outputs]
-                - 'NROY': list of indices of Not Ruled Out Yet points
-                - 'RO': list of indices of Ruled Out points
+                    - 'I': array of implausibility scores [n_samples, n_outputs]
+                    - 'NROY': list of indices of Not Ruled Out Yet points
+                    - 'RO': list of indices of Ruled Out points
         """
         # Add model discrepancy
         discrepancy = np.full_like(self.obs_vars, self.discrepancy)
@@ -164,24 +164,24 @@ class HistoryMatching:
 
         return new_samples
 
-    def run_wave(
+    def predict(
         self,
         X: np.ndarray,
         # TODO: update emulator object passed here
         emulator: Optional[object] = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Run a wave of simulations or emulator predictions with batch support.
-        Using simulator to make predictions unless emulator object is passed.
+        Make predictions for a batch of inputs X. Uses `self.simulator` unless
+        an emulator trained on `self.simulator` data is provided.
 
         Parameters
         ----------
         X: np.ndarray
             Array of parameter samples to simulate/emulate [n_samples, n_parameters]
-            returned by `self.simulator.sample_inputs` method.
+            returned by `self.simulator.sample_inputs` or `self.sample_nroy` methods.
         TODO: update emulator type and description below
         emulator: optional object
-            Gaussian process emulator to use to make predictions.
+            Gaussian process emulator trained on self.simulator data.
 
         Returns
         -------
@@ -201,10 +201,9 @@ class HistoryMatching:
             if len(pred_means.shape) == 1:
                 pred_means = pred_means.reshape(-1, 1)
                 pred_vars = pred_vars.reshape(-1, 1)
+
         # Make predictions using simulator
-        # Requires checking if simulation failed
         else:
-            # Returns array of output stats [n_samples, n_stats]
             results = self.simulator.run_batch_simulations(X)
 
             # Filter out failed simulations
@@ -219,7 +218,7 @@ class HistoryMatching:
         # Calculate implausibility in batch
         implausibility = self.calculate_implausibility(pred_means, pred_vars)
 
-        # NROY parameters and all parameter implausibility scores
+        # NROY parameters and implausibility scores for all parameters
         return X[implausibility["NROY"]], implausibility["I"]
 
     def run(
@@ -229,10 +228,11 @@ class HistoryMatching:
         # TODO: update emulator type passed here
         initial_emulator: Optional[object] = None,
     ):
-        # TODO: add return type
+        # TODO: add return types
         """
         Run iterative history matching. In each wave:
-            - sample parameter values to test
+            - sample parameter values to test from NROY space
+                - at the start, NROY is the entire parameter space
             - make predictions for the parameter samples
                 - if no `initial_emulator` is passed, use simulator to make
                   predictions in the first wave, otherwise use emulator
@@ -247,9 +247,9 @@ class HistoryMatching:
             Number of parameter samples to make predictions for in each wave.
         TODO: update emulator type and description below
         initial_emulator: optional object
-            A pre-trained Gaussian process emulator to use to make predictions.
-            If not passed then an emulator is trained during the first wave. In
-            all consecutive waves, the passed or created enmulator is updated.
+            Gaussian Process emulator pre-trained on self.simulator data. If None,
+            then a GP emulator is trained during the first wave. In all consecutive
+            waves, the passed or created enmulator is updated.
 
         Returns
         -------
@@ -263,7 +263,7 @@ class HistoryMatching:
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 # Run wave using batch processing
-                successful_samples, impl_scores = self.run_wave(
+                successful_samples, impl_scores = self.predict(
                     X=current_samples,
                     emulator=emulator,
                 )
@@ -365,6 +365,7 @@ class HistoryMatching:
         updated_emulator = existing_emulator
 
         # If we need to include previous data and emulator has stored training data
+        # TODO: should data be stored in HistoryMatcher (same as ActiveLearner)
         if (
             include_previous_data
             and hasattr(existing_emulator, "X_train_")
@@ -374,7 +375,6 @@ class HistoryMatching:
             X_combined = np.vstack((existing_emulator.X_train_, X))
 
             # Check if we're dealing with multi-output or single-output
-            # TODO: can we always just use vstack here?
             if len(existing_emulator.y_train_.shape) > 1 and len(y.shape) > 1:
                 y_combined = np.vstack((existing_emulator.y_train_, y))
             else:
