@@ -2,6 +2,7 @@ import torch
 from torch.distributions import Transform, constraints
 
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import GaussianLike, TensorLike
 
 
@@ -78,7 +79,6 @@ class PCATransform(AutoEmulateTransform):
         cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).mean(0)
 
         # Ensure positive definiteness
-        # TODO: check how to make this more robust
-        cov_orig = cov_orig + 1e-4 * torch.eye(cov_orig.shape[0])
+        cov_orig = make_positive_definite(cov_orig)
 
         return GaussianLike(mean_orig, cov_orig)
