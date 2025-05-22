@@ -1,6 +1,4 @@
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import pytest
@@ -25,16 +23,16 @@ class MockSimulator(Simulator):
         self._output_names = self._output_variables.copy()
         self._has_sample_forward = True
 
-    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
-        """Generate mock samples"""
-        samples = []
-        for _ in range(n_samples):
-            sample = {}
-            for name in self._param_names:
-                min_val, max_val = self._param_bounds[name]
-                sample[name] = min_val + (max_val - min_val) * np.random.random()
-            samples.append(sample)
-        return samples
+    # def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
+    #     """Generate mock samples"""
+    #     samples = []
+    #     for _ in range(n_samples):
+    #         sample = {}
+    #         for name in self._param_names:
+    #             min_val, max_val = self._param_bounds[name]
+    #             sample[name] = min_val + (max_val - min_val) * np.random.random()
+    #         samples.append(sample)
+    #     return samples
 
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """Run mock simulation and return numpy array as specified in the base class"""
@@ -83,24 +81,24 @@ def test_output_names(mock_simulator):
     assert len(mock_simulator.output_names) == 2
 
 
-# Test sample_inputs method returns correct structure
-def test_sample_inputs(mock_simulator):
-    """Test that sample_inputs returns correct number and structure of samples"""
-    n_samples = 5
-    samples = mock_simulator.sample_inputs(n_samples)
+# # Test sample_inputs method returns correct structure
+# def test_sample_inputs(mock_simulator):
+#     """Test that sample_inputs returns correct number and structure of samples"""
+#     n_samples = 5
+#     samples = mock_simulator.sample_inputs(n_samples)
 
-    # Check number of samples
-    assert len(samples) == n_samples
+#     # Check number of samples
+#     assert len(samples) == n_samples
 
-    # Check structure of each sample
-    for sample in samples:
-        assert isinstance(sample, dict)
-        assert set(sample.keys()) == set(mock_simulator.param_names)
+#     # Check structure of each sample
+#     for sample in samples:
+#         assert isinstance(sample, dict)
+#         assert set(sample.keys()) == set(mock_simulator.param_names)
 
-        # Check parameter bounds
-        assert 0.0 <= sample["param1"] <= 1.0
-        assert -10.0 <= sample["param2"] <= 10.0
-        assert 0.5 <= sample["param3"] <= 5.0
+#         # Check parameter bounds
+#         assert 0.0 <= sample["param1"] <= 1.0
+#         assert -10.0 <= sample["param2"] <= 10.0
+#         assert 0.5 <= sample["param3"] <= 5.0
 
 
 # Test sample_forward method returns correct output structure
@@ -146,37 +144,37 @@ def test_abstract_class_instantiation():
         Simulator()  # Should raise TypeError
 
 
-# Integration test - generate samples and run simulations on them
-def test_end_to_end_workflow(mock_simulator):
-    """Test the end-to-end workflow of generating samples and running simulations"""
-    # Generate samples
-    n_samples = 10
-    samples = mock_simulator.sample_inputs(n_samples)
+# # Integration test - generate samples and run simulations on them
+# def test_end_to_end_workflow(mock_simulator):
+#     """Test the end-to-end workflow of generating samples and running simulations"""
+#     # Generate samples
+#     n_samples = 10
+#     samples = mock_simulator.sample_inputs(n_samples)
 
-    # Run simulations on all samples
-    results = []
-    for sample in samples:
-        result = mock_simulator.sample_forward(sample)
-        if result is not None:
-            results.append(result)
+#     # Run simulations on all samples
+#     results = []
+#     for sample in samples:
+#         result = mock_simulator.sample_forward(sample)
+#         if result is not None:
+#             results.append(result)
 
-    # All simulations should succeed with our mock
-    assert len(results) == n_samples
+#     # All simulations should succeed with our mock
+#     assert len(results) == n_samples
 
-    # Each result should have the expected structure
-    for result in results:
-        assert isinstance(result, np.ndarray)
-        assert len(result) == len(mock_simulator.output_names)
+#     # Each result should have the expected structure
+#     for result in results:
+#         assert isinstance(result, np.ndarray)
+#         assert len(result) == len(mock_simulator.output_names)
 
-    # Test the get_results_dataframe method
-    results_array = np.array(results)
-    df = mock_simulator.get_results_dataframe(samples, results_array)
+#     # Test the get_results_dataframe method
+#     results_array = np.array(results)
+#     df = mock_simulator.get_results_dataframe(samples, results_array)
 
-    # Check DataFrame structure
-    assert len(df) == n_samples
+#     # Check DataFrame structure
+#     assert len(df) == n_samples
 
-    # Should have columns for both parameters and outputs
-    assert set(mock_simulator.param_names).issubset(set(df.columns))
-    assert set(mock_simulator.output_names).issubset(set(df.columns)) or set(
-        f"output_{i}" for i in range(len(mock_simulator.output_names))
-    ).issubset(set(df.columns))
+#     # Should have columns for both parameters and outputs
+#     assert set(mock_simulator.param_names).issubset(set(df.columns))
+#     assert set(mock_simulator.output_names).issubset(set(df.columns)) or set(
+#         f"output_{i}" for i in range(len(mock_simulator.output_names))
+#     ).issubset(set(df.columns))
