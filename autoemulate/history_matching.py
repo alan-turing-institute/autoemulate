@@ -289,21 +289,8 @@ class HistoryMatching:
                 nroy_samples = successful_samples[implausibility["NROY"]]
                 impl_scores = implausibility["I"]
 
-                # Update progress bar
-                total_samples = len(current_samples)
-                failed_count = (
-                    total_samples - len(impl_scores)
-                    if impl_scores.size > 0
-                    else total_samples
-                )
-                pbar.set_postfix(
-                    {
-                        "samples": len(impl_scores),
-                        "failed": failed_count,
-                        "NROY": len(nroy_samples),
-                        "min_impl": f"{np.min(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
-                        "max_impl": f"{np.max(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
-                    }
+                self.update_progress_bar(
+                    pbar, current_samples, impl_scores, nroy_samples
                 )
 
                 # Store results
@@ -319,7 +306,6 @@ class HistoryMatching:
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
-                    # TODO: is this correct?
                     if nroy_samples.size > 0:
                         current_samples = self.sample_nroy(
                             nroy_samples, n_samples_per_wave
@@ -403,3 +389,21 @@ class HistoryMatching:
             return existing_emulator
 
         return updated_emulator
+
+    def update_progress_bar(self, pbar, current_samples, impl_scores, nroy_samples):
+        """
+        Updates the progress bar.
+        """
+        total_samples = len(current_samples)
+        failed_count = (
+            total_samples - len(impl_scores) if impl_scores.size > 0 else total_samples
+        )
+        pbar.set_postfix(
+            {
+                "samples": len(impl_scores),
+                "failed": failed_count,
+                "NROY": len(nroy_samples),
+                "min_impl": f"{np.min(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
+                "max_impl": f"{np.max(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
+            }
+        )
