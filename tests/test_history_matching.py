@@ -52,7 +52,7 @@ def test_run_wave_with_simulator(history_matcher, mock_simulator):
 
     # With our mock simulator, all valid samples should succeed
     assert successful_samples.shape[0] == 2
-    assert len(impl_scores) == 2
+    assert impl_scores.shape[0] == 2
 
     # Check the implausibility scores shape
     assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs

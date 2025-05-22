@@ -263,8 +263,6 @@ class HistoryMatching:
 
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
-                wave_use_emulator = emulator is not None
-
                 # Run wave using batch processing
                 successful_samples, impl_scores = self.run_wave(
                     X=current_samples,
@@ -304,20 +302,11 @@ class HistoryMatching:
                     all_impl_scores.append(impl_scores)
 
                     # Update emulator if not using emulator in this wave
-                    if not wave_use_emulator and len(successful_samples) > 10:
-                        X_train = np.array(
-                            [
-                                [s[name] for name in self.simulator.param_names]
-                                for s in successful_samples
-                            ]
+                    if (emulator is None) and len(successful_samples) > 10:
+                        X_train = successful_samples
+                        y_train = self.simulator.run_batch_simulations(
+                            successful_samples
                         )
-                        y_train = np.array(
-                            [
-                                self.simulator.sample_forward(s)
-                                for s in successful_samples
-                            ]
-                        )
-
                         if len(y_train) > 0:
                             emulator = self.update_emulator(emulator, X_train, y_train)
 
