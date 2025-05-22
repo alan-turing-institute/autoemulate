@@ -1,5 +1,11 @@
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union
+from abc import ABC
+from abc import abstractmethod
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -82,8 +88,7 @@ class Simulator(ABC):
             np.ndarray: Parameter samples (column order is given by self.param_names)
         """
 
-        # make sure that params are passed in the order of self.param_names
-        # TODO: double check LatinHypercube returns params in the passed order
+        # TODO: check that sample_array has params self.param_names order
         lhd = LatinHypercube([self.param_bounds[name] for name in self.param_names])
         sample_array = lhd.sample(n_samples)
         return sample_array
