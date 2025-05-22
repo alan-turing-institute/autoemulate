@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -41,11 +40,13 @@ class HistoryMatching:
         ----------
             simulator: Simulator
                 The simulation to emulate.
+            TODO: could one ever pass multiple observations?
             observations: dict[str, tuple[float, float]]
-                Maps output names to (mean, variance) pairs.
+                For each output variable, specifies observed [mean, variance] values.
             threshold: float
                 Implausibility threshold (query points with implausability scores that
-                exceed this value are ruled out).
+                exceed this value are ruled out). Defaults to 3, which is considered
+                good value for simulations with a single output.
             model_discrepancy: float
                 Additional variance to include in the implausability calculation.
             rank: int
@@ -60,6 +61,7 @@ class HistoryMatching:
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
+        # TODO: rank should relate to observations?
         self.rank = rank
 
         # save mean and variance of observations
@@ -139,6 +141,7 @@ class HistoryMatching:
     ) -> np.ndarray:
         """
         TODO: update method to fix issues listed in #460
+        TODO: we do random sampling here so need to fix rando seed
 
         Generate new parameter samples within NROY space.
 
@@ -197,6 +200,7 @@ class HistoryMatching:
             pred_means, pred_stds = emulator.predict(X, return_std=True)
             pred_vars = pred_stds**2
 
+            # TODO: don't need this once remove sklearn dependence
             # Ensure correct shape for single output case
             if len(pred_means.shape) == 1:
                 pred_means = pred_means.reshape(-1, 1)
@@ -230,14 +234,14 @@ class HistoryMatching:
     ):
         # TODO: add return types
         """
+        TODO: clarify the correct workflow here
         Run iterative history matching. In each wave:
             - sample parameter values to test from NROY space
                 - at the start, NROY is the entire parameter space
-            - make predictions for the parameter samples
-                - if no `initial_emulator` is passed, use simulator to make
-                  predictions in the first wave, otherwise use emulator
+            - make predictions for the sampled parameters
+                - if no emulator is provided, use `self.simulator` to make predictions
+                - otherwise use the provided emulator
             - compute implausability scores
-            - (re)train emulator using all data
 
         Parameters
         ----------
@@ -247,9 +251,8 @@ class HistoryMatching:
             Number of parameter samples to make predictions for in each wave.
         TODO: update emulator type and description below
         initial_emulator: optional object
-            Gaussian Process emulator pre-trained on self.simulator data. If None,
-            then a GP emulator is trained during the first wave. In all consecutive
-            waves, the passed or created enmulator is updated.
+            Gaussian Process emulator pre-trained on `self.simulator` data. If None,
+            then a GP emulator is trained during the first wave.
 
         Returns
         -------
@@ -263,6 +266,7 @@ class HistoryMatching:
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 # Run wave using batch processing
+                # TODO: should the emulator always be used for prediction ?
                 successful_samples, impl_scores = self.predict(
                     X=current_samples,
                     emulator=emulator,
@@ -300,9 +304,9 @@ class HistoryMatching:
                     )
                     all_impl_scores.append(impl_scores)
 
+                    # TODO: review when/how emulator is updated and used
                     # Update emulator if not using emulator in this wave
-                    # TODO: shouldn't this always be updated, not just if
-                    # no emulator was available to begin with?
+                    # Only (re)train on simulated data --> then use emulator ever after
                     if (emulator is None) and len(successful_samples) > 10:
                         X_train = successful_samples
                         y_train = self.simulator.run_batch_simulations(
@@ -365,7 +369,7 @@ class HistoryMatching:
         updated_emulator = existing_emulator
 
         # If we need to include previous data and emulator has stored training data
-        # TODO: should data be stored in HistoryMatcher (same as ActiveLearner)
+        # TODO: should data be stored in HistoryMatcher (same as ActiveLearner)?
         if (
             include_previous_data
             and hasattr(existing_emulator, "X_train_")
