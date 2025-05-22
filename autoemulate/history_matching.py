@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -82,7 +81,7 @@ class HistoryMatching:
     def calculate_implausibility(
         self,
         pred_means: np.ndarray,  # Shape [n_samples, n_outputs]
-        pred_vars: np.ndarray,  # Shape [n_samples, n_outputs]
+        pred_vars: Optional[np.ndarray] = None,  # Shape [n_samples, n_outputs]
     ) -> dict[str, Union[np.ndarray, list[int]]]:
         """
         Calculate implausibility scores and identify NROY points.
@@ -91,8 +90,9 @@ class HistoryMatching:
         ----------
             pred_means: np.ndarray
                 Array of prediction means [n_samples, n_outputs]
-            pred_vars: np.ndarray
-                Array of prediction variances [n_samples, n_outputs]
+            pred_vars: optional np.ndarray
+                Array of prediction variances [n_samples, n_outputs].
+                If not provided, all variances are set to 0.01.
 
         Returns
         -------
@@ -102,6 +102,9 @@ class HistoryMatching:
                     - 'NROY': list of indices of Not Ruled Out Yet points
                     - 'RO': list of indices of Ruled Out points
         """
+        if pred_vars is None:
+            pred_vars = np.full_like(pred_means, 0.01)
+
         # Add model discrepancy
         discrepancy = np.full_like(self.obs_vars, self.discrepancy)
 
@@ -137,7 +140,6 @@ class HistoryMatching:
         n_samples: int,
     ) -> np.ndarray:
         """
-        TODO: update method to fix issues listed in #460
         TODO: we do random sampling here so need to fix random seed somewhere
 
         Generate new parameter samples within NROY space.
@@ -155,14 +157,26 @@ class HistoryMatching:
                 Array of parameter samples [n_samples, n_parameters].
         """
 
-        # Sample uniformly within NROY bounds
         min_bounds = np.min(nroy_samples, axis=0)
         max_bounds = np.max(nroy_samples, axis=0)
-        new_samples = np.random.uniform(
-            min_bounds, max_bounds, size=(n_samples, nroy_samples.shape[1])
-        )
+        valid_samples = np.empty((0, nroy_samples.shape[1]))
 
-        return new_samples
+        while len(valid_samples) < n_samples:
+            # Generate candidates
+            candidate_samples = np.random.uniform(
+                min_bounds, max_bounds, size=(n_samples, nroy_samples.shape[1])
+            )
+
+            # Filter valid samples based on implausibility and concatenate
+            implausibility = self.calculate_implausibility(candidate_samples)
+            valid_candidates = candidate_samples[implausibility["NROY"]]
+            valid_samples = np.concatenate((valid_samples, valid_candidates), axis=0)
+
+            # Only return required number of samples
+            if len(valid_samples) > n_samples:
+                valid_samples = valid_samples[:n_samples]
+
+        return valid_samples
 
     def predict(
         self,
@@ -212,7 +226,7 @@ class HistoryMatching:
             valid_indices = [i for i, x in enumerate(results) if x is not None]
             X = X[valid_indices]
             pred_means = results[valid_indices]
-            pred_vars = np.full_like(pred_means, 0.01)  # Small fixed variance
+            pred_vars = None
             if pred_means.shape[0] == 0:
                 # All simulations failed
                 return np.array([]), np.array([]), np.array([])

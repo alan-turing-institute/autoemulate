@@ -48,15 +48,15 @@ def test_predict_with_simulator(history_matcher, mock_simulator):
         ]
     )
 
-    successful_samples, impl_scores, X = history_matcher.predict(X)
+    pred_means, pred_vars, successful_samples = history_matcher.predict(X)
 
     # With our mock simulator, all valid samples should succeed
     assert successful_samples.shape[0] == 2
-    assert impl_scores.shape[0] == 2
-
-    # Check the implausibility scores shape
+    assert pred_means.shape[0] == 2
     assert successful_samples.shape == (2, 2)  # 2 samples, 2 outputs
-    assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs
+
+    # When using simulator, no variance is returns
+    assert pred_vars is None
 
 
 # def test_predict_with_missing_params(history_matcher, mock_simulator):
