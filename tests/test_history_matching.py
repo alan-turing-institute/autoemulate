@@ -34,7 +34,7 @@ def history_matcher(mock_simulator, basic_observations):
     )
 
 
-def test_run_wave_with_simulator(history_matcher, mock_simulator):
+def test_predict_with_simulator(history_matcher, mock_simulator):
     """Test running a wave with the mock simulator"""
     parameter_samples = [
         {"param1": 0.1, "param2": 0.2},
@@ -48,7 +48,7 @@ def test_run_wave_with_simulator(history_matcher, mock_simulator):
         ]
     )
 
-    successful_samples, impl_scores = history_matcher.run_wave(X)
+    successful_samples, impl_scores = history_matcher.predict(X)
 
     # With our mock simulator, all valid samples should succeed
     assert successful_samples.shape[0] == 2
@@ -58,14 +58,14 @@ def test_run_wave_with_simulator(history_matcher, mock_simulator):
     assert impl_scores.shape == (2, 2)  # 2 samples, 2 outputs
 
 
-# def test_run_wave_with_missing_params(history_matcher, mock_simulator):
+# def test_predict_with_missing_params(history_matcher, mock_simulator):
 #     """Test running a wave with invalid parameters that should fail"""
 #     parameter_samples = [
 #         {"param1": 0.1},  # Missing param2 - should fail
 #         {"param1": 0.3, "param2": -0.4},  # Valid
 #     ]
 
-#     successful_samples, impl_scores = history_matcher.run_wave(
+#     successful_samples, impl_scores = history_matcher.predict(
 #         parameter_samples
 #     )
 
