@@ -263,7 +263,10 @@ class HistoryMatching:
 
         Returns
         -------
-        TODO
+        tuple[np.ndarray, np.ndarray, union[object, None]]
+            - Array of all parameter samples for which predictions were made
+            - Array of all implausability scores
+            - a GP emulator (retrained on new data if `emulator_predict=False`) or None
         """
         if emulator_predict and initial_emulator is None:
             raise ValueError(
@@ -278,9 +281,9 @@ class HistoryMatching:
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 # Run wave using batch processing
-                pred_means, pred_vars, X = self.predict(
+                pred_means, pred_vars, successful_samples = self.predict(
                     X=current_samples,
-                    # simulate predictions unless emulator_predict=True
+                    # Emulate predictions unless emulator_predict=False
                     emulator=emulator if emulator_predict else None,
                 )
 
@@ -288,23 +291,21 @@ class HistoryMatching:
                 implausibility = self.calculate_implausibility(pred_means, pred_vars)
 
                 # NROY parameters and implausibility scores for all parameters
-                successful_samples = X[implausibility["NROY"]]
+                nroy_samples = successful_samples[implausibility["NROY"]]
                 impl_scores = implausibility["I"]
 
-                nroy_count = len(successful_samples)
+                # Update progress bar
                 total_samples = len(current_samples)
                 failed_count = (
                     total_samples - len(impl_scores)
                     if impl_scores.size > 0
                     else total_samples
                 )
-
-                # Update progress bar
                 pbar.set_postfix(
                     {
-                        "samples": len(impl_scores) if impl_scores.size > 0 else 0,
+                        "samples": len(impl_scores),
                         "failed": failed_count,
-                        "NROY": nroy_count,
+                        "NROY": len(nroy_samples),
                         "min_impl": f"{np.min(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
                         "max_impl": f"{np.max(impl_scores) if impl_scores.size > 0 else 'NaN':.2f}",
                     }
@@ -312,26 +313,21 @@ class HistoryMatching:
 
                 # Store results
                 if impl_scores.size > 0:
-                    all_samples.extend(
-                        [
-                            {**params, "wave": wave + 1}
-                            for params in current_samples[
-                                : len(impl_scores)
-                            ]  # Only include samples with scores
-                        ]
-                    )
+                    # Only include samples with scores
+                    all_samples.append(successful_samples)
                     all_impl_scores.append(impl_scores)
 
                     # Update emulator if simulated data (succesfully)
-                    if (not emulator_predict) and len(successful_samples) > 10:
+                    if (not emulator_predict) and len(nroy_samples) > 10:
                         y = pred_means
                         emulator = self.update_emulator(emulator, X, y)
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
-                    if successful_samples:
+                    # TODO: is this correct?
+                    if nroy_samples.size > 0:
                         current_samples = self.sample_nroy(
-                            successful_samples, n_samples_per_wave
+                            nroy_samples, n_samples_per_wave
                         )
                     else:
                         # If no NROY points, sample from full space
@@ -341,13 +337,15 @@ class HistoryMatching:
 
                 pbar.update(1)
 
-        # Concatenate all implausibility scores
+        # Concatenate all samples and implausibility scores
+        # TODO: should this include wave information in some form?
+        final_samples = np.concatenate(all_samples) if all_samples else np.array([])
+
         final_impl_scores = (
             np.concatenate(all_impl_scores) if all_impl_scores else np.array([])
         )
 
-        # Q: what should all samples be returned as ?
-        return all_samples, final_impl_scores, emulator
+        return final_samples, final_impl_scores, emulator
 
     def update_emulator(
         self,

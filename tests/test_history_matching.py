@@ -101,27 +101,29 @@ def test_calculate_implausibility(history_matcher):
     assert len(result["I"]) == 2  # Should have implausibility for both outputs
 
 
-# @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
-# def test_run(history_matcher):
-#     """Test the full history matching process with mock simulator"""
-#     n_waves = 2
-#     n_samples_per_wave = 5
+@patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
+def test_run(history_matcher):
+    """Test the full history matching process with mock simulator"""
+    n_waves = 2
+    n_samples_per_wave = 5
 
-#     # Run history matching
-#     (
-#         all_samples,
-#         all_impl_scores,
-#         updated_emulator,
-#     ) = history_matcher.run(n_waves=n_waves, n_samples_per_wave=n_samples_per_wave)
+    # Run history matching
+    (
+        all_samples,
+        all_impl_scores,
+        updated_emulator,
+    ) = history_matcher.run(
+        n_waves=n_waves, n_samples_per_wave=n_samples_per_wave, emulator_predict=False
+    )
 
-#     # Check the basic structure of the results
-#     assert isinstance(all_samples, list)
-#     assert isinstance(all_impl_scores, np.ndarray)
-#     assert updated_emulator is None  # Since we didn't use an emulator
+    # Check the basic structure of the results
+    assert isinstance(all_samples, np.ndarray)
+    assert isinstance(all_impl_scores, np.ndarray)
+    assert updated_emulator is None  # Since we didn't use an emulator
 
-#     # We should get results for all valid samples
-#     assert len(all_samples) == n_waves * n_samples_per_wave
-#     assert len(all_impl_scores) == n_waves * n_samples_per_wave
+    # We should get results for all valid samples
+    assert len(all_samples) == n_waves * n_samples_per_wave
+    assert len(all_impl_scores) == n_waves * n_samples_per_wave
 
 
 def test_sample_nroy(history_matcher, mock_simulator):
