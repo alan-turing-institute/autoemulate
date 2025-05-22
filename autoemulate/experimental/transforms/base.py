@@ -9,6 +9,12 @@ from autoemulate.experimental.types import GaussianLike, TensorLike
 class AutoEmulateTransform(Transform, ABC):
     is_fitted_: bool = False
 
+    # TODO: consider if the override also needs to consider DistributionLike case
+    def __call__(self, x: TensorLike) -> TensorLike:
+        output = super().__call__(x)
+        assert isinstance(output, TensorLike)
+        return output
+
     @abstractmethod
     def fit(self, x: TensorLike): ...
 

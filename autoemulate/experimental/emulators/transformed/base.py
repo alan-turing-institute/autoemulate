@@ -34,8 +34,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
     def __init__(
         self,
-        x,
-        y,
+        x: TensorLike,
+        y: TensorLike,
         transforms: list[AutoEmulateTransform],
         target_transforms: list[AutoEmulateTransform],
         model: type[Emulator],
