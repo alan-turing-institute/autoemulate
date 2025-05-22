@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 import numpy as np
 from tqdm import tqdm
@@ -301,8 +302,9 @@ class HistoryMatching:
 
                     # Update emulator if simulated data (succesfully)
                     if (not emulator_predict) and len(nroy_samples) > 10:
-                        y = pred_means
-                        emulator = self.update_emulator(emulator, X, y)
+                        emulator = self.update_emulator(
+                            emulator, successful_samples, pred_means
+                        )
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
