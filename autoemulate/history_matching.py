@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -31,17 +32,17 @@ class HistoryMatching:
         """
         Initialize the history matcher.
 
-        TODO for #406:
+        TODO in separate PR for #406:
         - make this work with experimental GP emulators
-        - refactor to use torch
-        - add check that emulator returns distribution (need mean + variance)
-        - make this work with (updated) Simulator (after #414 is merged)
+             - add check that provided emulator returns distribution (need mean + variance)
+        - refactor to use torch instead of numpy
+        - make this work with updated Simulator class (after #414 is merged)
 
         Parameters
         ----------
             simulator: Simulator
                 The simulation to emulate.
-            observations: dict
+            observations: dict[str, tuple[float, float]]
                 Maps output names to (mean, variance) pairs.
             threshold: float
                 Implausibility threshold (query points with implausability scores that
@@ -49,7 +50,8 @@ class HistoryMatching:
             model_discrepancy: float
                 Additional variance to include in the implausability calculation.
             rank: int
-                TODO: is the below correct? adapted from mogp_emulator docs
+                TODO is the below correct? adapted from mogp_emulator docs:
+                NOTE that mogp_emulator has a different default (2nd largest score)
                 Scoring method for multiple outputs. Must be a non-negative
                 integer less than the number of observations, which denotes
                 the location in the rank ordering of implausibility values
@@ -61,7 +63,6 @@ class HistoryMatching:
         self.discrepancy = model_discrepancy
         self.rank = rank
 
-        # TODO: double check that need to do all this
         # save mean and variance of observations
         if not set(observations.keys()).issubset(set(self.simulator.output_names)):
             raise ValueError(
@@ -82,9 +83,9 @@ class HistoryMatching:
         self,
         pred_means: np.ndarray,  # Shape [n_samples, n_outputs]
         pred_vars: np.ndarray,  # Shape [n_samples, n_outputs]
-    ) -> dict[str, np.ndarray]:
+    ) -> dict[str, Union[np.ndarray, list[int]]]:
         """
-        Calculate implausibility and identify NROY points
+        Calculate implausibility scores and identify NROY points.
 
         Parameters
         ----------
@@ -95,7 +96,7 @@ class HistoryMatching:
 
         Returns
         -------
-            dict[str, union[list, np.ndarray]]
+            dict[str, union[np.ndarray, list[int]]]
                 Contains the following key, value pairs:
                 - 'I': array of implausibility scores [n_samples, n_outputs]
                 - 'NROY': list of indices of Not Ruled Out Yet points
@@ -132,46 +133,37 @@ class HistoryMatching:
             "RO": list(RO),  # Indices of RO points
         }
 
-    def generate_new_samples(
-        self, nroy_samples: list[dict[str, float]], n_samples: int
-    ) -> list[dict[str, float]]:
+    def sample_nroy(
+        self,
+        nroy_samples: np.ndarray,
+        n_samples: int,
+    ) -> np.ndarray:
         """
-        TODO: update method to fix #460
+        TODO: update method to fix #460 issues
 
-        Generate new parameter samples within NROY space
+        Generate new parameter samples within NROY space.
 
         Parameters
         ----------
-            nroy_samples: list[dist[str, float]]
-                TODO: more info here... NROY parameter sets... seems to be optional
+            nroy_samples: np.ndarray
+                Array of parameter samples in the NROY space [n_samples, n_parameters].
             n_samples: int
-                Number of new samples to generate
+                Number of new samples to generate.
 
         Returns
         -------
-            list
-                TODO: more info... New parameter dictionaries
+            np.ndarray
+                Array of parameter samples [n_samples, n_parameters].
         """
-        if not nroy_samples:
-            return self.simulator.sample_inputs(n_samples)
-
-        # Convert to array
-        X_nroy = np.array(
-            [
-                [sample[name] for name in self.simulator.param_names]
-                for sample in nroy_samples
-            ]
-        )
 
         # Sample uniformly within NROY bounds
-        min_bounds = np.min(X_nroy, axis=0)
-        max_bounds = np.max(X_nroy, axis=0)
+        min_bounds = np.min(nroy_samples, axis=0)
+        max_bounds = np.max(nroy_samples, axis=0)
         new_samples = np.random.uniform(
-            min_bounds, max_bounds, size=(n_samples, X_nroy.shape[1])
+            min_bounds, max_bounds, size=(n_samples, nroy_samples.shape[1])
         )
 
-        # Convert back to dictionaries
-        return [dict(zip(self.simulator.param_names, sample)) for sample in new_samples]
+        return new_samples
 
     def run_wave(
         self,
@@ -195,6 +187,8 @@ class HistoryMatching:
             return [], np.array([])
 
         # TODO: raise error if invalid parameter names passed here
+
+        # TODO: update to take array as input
 
         # Convert samples to array format for batch processing
         X = np.array(
@@ -339,7 +333,7 @@ class HistoryMatching:
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
                     if successful_samples:
-                        current_samples = self.generate_new_samples(
+                        current_samples = self.sample_nroy(
                             successful_samples, n_samples_per_wave
                         )
                     else:
