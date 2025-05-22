@@ -5,6 +5,7 @@ from torch.distributions import Transform, constraints
 from torch.utils.data import DataLoader, TensorDataset
 
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import GaussianLike, TensorLike
 from autoemulate.preprocess_target import VAE
 
@@ -114,7 +115,24 @@ class VAETransform(AutoEmulateTransform):
         raise RuntimeError(msg)
 
     def _inverse_gaussian(self, x: GaussianLike) -> GaussianLike:
-        return self._inverse_sample(x)
+        """
+        Inverse transform for Gaussian-like distributions.
+        """
+        self._check_is_fitted()
+        assert self.vae is not None
+        mean_z: TensorLike = x.mean
+        cov_z = x.covariance_matrix
+        mean_orig: TensorLike = self.vae.decode(mean_z)
+        assert isinstance(mean_z, TensorLike)
+        assert isinstance(cov_z, TensorLike)
+
+        # Delta method to compute covariance in original space
+        # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
+        jacobian_z = torch.autograd.functional.jacobian(self.vae.decode, mean_z)
+        # Reshape jacobian to match the shape of cov_z (n_tasks x n_samples)
+        jacobian_z = jacobian_z.view(jacobian_z.shape[0] * jacobian_z.shape[1], -1)
+        cov_orig = jacobian_z @ cov_z @ jacobian_z.T
+        return GaussianLike(mean_orig, make_positive_definite(cov_orig))
 
     # TODO: refactor as default impl or free function as repetition with PCA impl
     def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
@@ -141,7 +159,6 @@ class VAETransform(AutoEmulateTransform):
         cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).mean(0)
 
         # Ensure positive definiteness
-        # TODO: check how to make this more robust
-        cov_orig = cov_orig + 1e-4 * torch.eye(cov_orig.shape[0])
+        cov_orig = make_positive_definite(cov_orig)
 
         return GaussianLike(mean_orig, cov_orig)
