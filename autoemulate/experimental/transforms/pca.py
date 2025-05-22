@@ -17,18 +17,19 @@ class PCATransform(AutoEmulateTransform):
     def __init__(self, n_components, cache_size: int = 0):
         Transform.__init__(self, cache_size=cache_size)
         self.n_components = n_components  # n_c
-        self.fitted = False
 
     def fit(self, x: TensorLike):
         self.mean = x.mean(0)
         _, _, v = torch.pca_lowrank(x, q=self.n_components)
         self.components = v[:, : self.n_components]  # (d, n_c)
-        self.fitted = True
+        self.is_fitted_ = True
 
     def _call(self, x):
+        self._check_is_fitted()
         return (x - self.mean) @ self.components
 
     def _inverse(self, y):
+        self._check_is_fitted()
         # (n, n_c) x (n_c, d) + (n_c,)
         return y @ self.components.T + self.mean
 
@@ -38,6 +39,7 @@ class PCATransform(AutoEmulateTransform):
         raise RuntimeError(msg)
 
     def _inverse_gaussian(self, x: GaussianLike) -> GaussianLike:
+        self._check_is_fitted()
         mean_pca = x.mean
         cov_pca = x.covariance_matrix
         assert isinstance(mean_pca, TensorLike)
@@ -55,6 +57,7 @@ class PCATransform(AutoEmulateTransform):
         return GaussianLike(mean_orig, cov_orig)
 
     def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
+        self._check_is_fitted()
         mean_pca = x.mean
         cov_pca = x.covariance_matrix
         mean_orig = mean_pca @ self.components.T

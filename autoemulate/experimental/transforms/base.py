@@ -3,12 +3,19 @@ from abc import ABC, abstractmethod
 from pyro.distributions import TransformModule
 from torch.distributions import Transform
 
-from autoemulate.experimental.types import GaussianLike
+from autoemulate.experimental.types import GaussianLike, TensorLike
 
 
 class AutoEmulateTransform(Transform, ABC):
+    is_fitted_: bool = False
+
     @abstractmethod
-    def fit(self, x): ...
+    def fit(self, x: TensorLike): ...
+
+    def _check_is_fitted(self):
+        if not self.is_fitted_:
+            msg = f"Transform ({self.__name__}) has not been fitted yet."
+            raise ValueError(msg)
 
     def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
         msg = "This method should be implemented in subclasses."
