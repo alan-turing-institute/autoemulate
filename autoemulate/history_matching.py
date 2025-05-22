@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -302,6 +301,8 @@ class HistoryMatching:
                     all_impl_scores.append(impl_scores)
 
                     # Update emulator if not using emulator in this wave
+                    # TODO: shouldn't this always be updated, not just if
+                    # no emulator was available to begin with?
                     if (emulator is None) and len(successful_samples) > 10:
                         X_train = successful_samples
                         y_train = self.simulator.run_batch_simulations(
