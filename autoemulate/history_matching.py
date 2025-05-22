@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -191,7 +190,7 @@ class HistoryMatching:
         """
         # TODO: when does this happen? do we need this?
         if X.shape[0] == 0:
-            return np.array([]), np.array([])
+            return np.array([]), np.array([]), np.array([])
 
         # Make predictions using emulator
         if emulator is not None:
@@ -215,7 +214,7 @@ class HistoryMatching:
             pred_vars = np.full_like(pred_means, 0.01)  # Small fixed variance
             if pred_means.shape[0] == 0:
                 # All simulations failed
-                return np.array([]), np.array([])
+                return np.array([]), np.array([]), np.array([])
 
         # Also return input vector in case simulation failed for some inputs
         return pred_means, pred_vars, X
