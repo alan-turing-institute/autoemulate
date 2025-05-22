@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -180,19 +179,20 @@ class HistoryMatching:
         X: np.ndarray
             Array of parameter samples to simulate/emulate [n_samples, n_parameters]
             returned by `self.simulator.sample_inputs` method.
-        TODO: update emulator type and description
+        TODO: update emulator type and description below
         emulator: optional object
             Gaussian process emulator to use to make predictions.
 
         Returns
         -------
         tuple[np.ndarray, np.ndarray]
-            Array of NROY samples and Array of all implausibility scores.
+            Arrays of NROY parameters and of all implausibility scores.
         """
         # TODO: check when does this happen? do we need this?
         if X.shape[0] == 0:
             return np.array([]), np.array([])
 
+        # Make predictions using emulator
         if emulator is not None:
             pred_means, pred_stds = emulator.predict(X, return_std=True)
             pred_vars = pred_stds**2
@@ -201,8 +201,10 @@ class HistoryMatching:
             if len(pred_means.shape) == 1:
                 pred_means = pred_means.reshape(-1, 1)
                 pred_vars = pred_vars.reshape(-1, 1)
+        # Make predictions using simulator
+        # Requires checking if simulation failed
         else:
-            # returns array of output stats [n_samples, n_stats]
+            # Returns array of output stats [n_samples, n_stats]
             results = self.simulator.run_batch_simulations(X)
 
             # Filter out failed simulations
@@ -211,35 +213,43 @@ class HistoryMatching:
             pred_means = results[valid_indices]
             pred_vars = np.full_like(pred_means, 0.01)  # Small fixed variance
             if pred_means.shape[0] == 0:
-                # all simulations failed
+                # All simulations failed
                 return np.array([]), np.array([])
 
         # Calculate implausibility in batch
         implausibility = self.calculate_implausibility(pred_means, pred_vars)
 
-        # Get NROY samples
-        nroy_samples = X[implausibility["NROY"]]
-
-        # Get all implausibility scores
-        all_impl_scores = implausibility["I"]
-
-        return nroy_samples, all_impl_scores
+        # NROY parameters and all parameter implausibility scores
+        return X[implausibility["NROY"]], implausibility["I"]
 
     def run(
         self,
         n_waves: int = 3,
         n_samples_per_wave: int = 100,
-        # TODO: maybe don't need the bool, check whether emulator was passed instead?
-        use_emulator: bool = True,
         # TODO: update emulator type passed here
         initial_emulator: Optional[object] = None,
     ):
+        # TODO: add return type
         """
-        Run iterative history matching.
+        Run iterative history matching. In each wave:
+            - sample parameter values to test
+            - make predictions for the parameter samples
+                - if no `initial_emulator` is passed, use simulator to make
+                  predictions in the first wave, otherwise use emulator
+            - compute implausability scores
+            - (re)train emulator using all data
 
         Parameters
         ----------
-        TODO
+        n_waves: int
+            Number of iterations of history matching to run.
+        n_samples_per_wave: int
+            Number of parameter samples to make predictions for in each wave.
+        TODO: update emulator type and description below
+        initial_emulator: optional object
+            A pre-trained Gaussian process emulator to use to make predictions.
+            If not passed then an emulator is trained during the first wave. In
+            all consecutive waves, the passed or created enmulator is updated.
 
         Returns
         -------
@@ -252,7 +262,7 @@ class HistoryMatching:
 
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
-                wave_use_emulator = use_emulator and (emulator is not None)
+                wave_use_emulator = emulator is not None
 
                 # Run wave using batch processing
                 successful_samples, impl_scores = self.run_wave(
