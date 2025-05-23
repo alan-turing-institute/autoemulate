@@ -126,13 +126,22 @@ class VAETransform(AutoEmulateTransform):
         assert isinstance(mean_z, TensorLike)
         assert isinstance(cov_z, TensorLike)
 
-        # Delta method to compute covariance in original space
-        # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
-        jacobian_z = torch.autograd.functional.jacobian(self.vae.decode, mean_z)
-        # Reshape jacobian to match the shape of cov_z (n_tasks x n_samples)
-        jacobian_z = jacobian_z.view(jacobian_z.shape[0] * jacobian_z.shape[1], -1)
-        cov_orig = jacobian_z @ cov_z @ jacobian_z.T
-        return GaussianLike(mean_orig, make_positive_definite(cov_orig))
+        try:
+            # Delta method to compute covariance in original space
+            # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
+            jacobian_z = torch.autograd.functional.jacobian(self.vae.decode, mean_z)
+            # Reshape jacobian to match the shape of cov_z (n_tasks x n_samples)
+            jacobian_z = jacobian_z.view(jacobian_z.shape[0] * jacobian_z.shape[1], -1)
+            cov_orig = jacobian_z @ cov_z @ jacobian_z.T
+            return GaussianLike(mean_orig, make_positive_definite(cov_orig))
+        except RuntimeError as e:
+            msg = (
+                "Failed to make positive definite covariance. Falling back to "
+                "sampling method. "
+                f"Error: {e}"
+            )
+            logging.warning(msg)
+            return self._inverse_sample(x)
 
     # TODO: refactor as default impl or free function as repetition with PCA impl
     def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:

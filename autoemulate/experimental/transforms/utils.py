@@ -1,7 +1,7 @@
 import torch
 
 
-def make_positive_definite(cov, epsilon=1e-6, max_tries=3):
+def make_positive_definite(cov, epsilon=1e-6, min_eigval=1e-6, max_tries=3):
     # Attempt with epsilon first
     for _ in range(max_tries):
         try:
@@ -15,18 +15,16 @@ def make_positive_definite(cov, epsilon=1e-6, max_tries=3):
             # cov = (cov + cov.T) / 2
             epsilon *= 10
 
-    # Spectral approach max eigenvalue
-    epsilon = 1e-6
+    # Spectral approach by clamping eigenvalues
+    min_eigval = 1e-6
     for _ in range(max_tries):
         try:
             torch.linalg.cholesky(cov)
             return cov
         except RuntimeError:
-            eigvals, eigvecs = torch.linalg.eigh(
-                cov, device=cov.device, dtype=cov.dtype
-            )
-            eigvals = torch.clamp(eigvals, min=epsilon)
+            eigvals, eigvecs = torch.linalg.eigh(cov)
+            eigvals = torch.clamp(eigvals, min=min_eigval)
             cov = eigvecs @ torch.diag(eigvals) @ eigvecs.T
-            epsilon *= 10
+            min_eigval *= 10
     msg = "Matrix could not be made positive definite."
     raise RuntimeError(msg)
