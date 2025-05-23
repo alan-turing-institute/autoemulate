@@ -27,13 +27,13 @@ class HistoryMatching:
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
+        random_seed: Optional[int] = None,
     ):
         """
         Initialize the history matcher.
 
         TODO in separate PR for #406:
         - make this work with experimental GP emulators
-             - add check that provided emulator returns distribution (mean + variance)
         - refactor to use tensors instead of numpy arrays
         - make this work with updated Simulator class (after #414 is merged)
 
@@ -41,13 +41,12 @@ class HistoryMatching:
         ----------
             simulator: Simulator
                 The simulation to emulate.
-            TODO: could one ever pass multiple observations?
             observations: dict[str, tuple[float, float]]
                 For each output variable, specifies observed [mean, variance] values.
             threshold: float
                 Implausibility threshold (query points with implausability scores that
                 exceed this value are ruled out). Defaults to 3, which is considered
-                good value for simulations with a single output.
+                a good value for simulations with a single output.
             model_discrepancy: float
                 Additional variance to include in the implausability calculation.
             rank: int
@@ -56,14 +55,18 @@ class HistoryMatching:
                 scores are ordered across outputs, it indicates which rank to use
                 when determining whether the query point is NROY. The default value
                 of ``1`` indicates that the largest implausibility will be used.
+            random_seed: optional int
+                Random seed to set for reproducibility of sampling.
         """
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
         # TODO: rank can't be more than output dimension, add a check
         self.rank = rank
+        if random_seed is not None:
+            np.random.seed(random_seed)
 
-        # save mean and variance of observations
+        # Save mean and variance of observations
         if not set(observations.keys()).issubset(set(self.simulator.output_names)):
             raise ValueError(
                 f"Observation keys {set(observations.keys())} must be a subset of ",
@@ -83,17 +86,21 @@ class HistoryMatching:
         self,
         pred_means: np.ndarray,  # Shape [n_samples, n_outputs]
         pred_vars: Optional[np.ndarray] = None,  # Shape [n_samples, n_outputs]
+        default_var: float = 0.01,
     ) -> dict[str, Union[np.ndarray, list[int]]]:
         """
-        Calculate implausibility scores and identify NROY points.
+        Calculate implausibility scores and identify RO and NROY points.
 
         Parameters
         ----------
             pred_means: np.ndarray
                 Array of prediction means [n_samples, n_outputs]
             pred_vars: optional np.ndarray
-                Array of prediction variances [n_samples, n_outputs].
-                If not provided, all variances are set to 0.01.
+                Array of prediction variances [n_samples, n_outputs]. If not
+                provided (e.g., when predictions are made by a deterministic
+                simulator), all variances are set to `default_var`.
+            default_var: int
+                Prediction variance to set if not provided.
 
         Returns
         -------
@@ -103,8 +110,9 @@ class HistoryMatching:
                     - 'NROY': list of indices of Not Ruled Out Yet points
                     - 'RO': list of indices of Ruled Out points
         """
+        # Set variances if not provided
         if pred_vars is None:
-            pred_vars = np.full_like(pred_means, 0.01)
+            pred_vars = np.full_like(pred_means, default_var)
 
         # Add model discrepancy
         discrepancy = np.full_like(self.obs_vars, self.discrepancy)
@@ -141,8 +149,6 @@ class HistoryMatching:
         n_samples: int,
     ) -> np.ndarray:
         """
-        TODO: we do random sampling here so need to fix random seed somewhere
-
         Generate new parameter samples within NROY space.
 
         Parameters
@@ -160,8 +166,10 @@ class HistoryMatching:
 
         min_bounds = np.min(nroy_samples, axis=0)
         max_bounds = np.max(nroy_samples, axis=0)
-        valid_samples = np.empty((0, nroy_samples.shape[1]))
 
+        # Need to handle discontinuous NROY spaces
+        # i.e., region within min/max bounds is RO
+        valid_samples = np.empty((0, nroy_samples.shape[1]))
         while len(valid_samples) < n_samples:
             # Generate candidates
             candidate_samples = np.random.uniform(
@@ -204,11 +212,10 @@ class HistoryMatching:
             Arrays of predicted means and variances as well as the input data for
             which predictions were made succesfully.
         """
-        # TODO: when does this happen? do we need this?
         if x.shape[0] == 0:
             return np.array([]), np.array([]), np.array([])
 
-        # Make predictions using emulator
+        # Make predictions using an emulator
         if emulator is not None:
             pred_means, pred_stds = emulator.predict(x, return_std=True)
             pred_vars = pred_stds**2
@@ -219,7 +226,7 @@ class HistoryMatching:
                 pred_means = pred_means.reshape(-1, 1)
                 pred_vars = pred_vars.reshape(-1, 1)
 
-        # Make predictions using simulator
+        # Make predictions using the simulator
         else:
             results = self.simulator.run_batch_simulations(x)
 
@@ -315,7 +322,7 @@ class HistoryMatching:
                     all_samples.append(successful_samples)
                     all_impl_scores.append(impl_scores)
 
-                    # Update emulator if simulated data (succesfully)
+                    # Update emulator if simulated (enough) data
                     if (not emulator_predict) and len(nroy_samples) > 10:
                         emulator = self.update_emulator(
                             emulator, successful_samples, pred_means
@@ -336,7 +343,7 @@ class HistoryMatching:
                 pbar.update(1)
 
         # Concatenate all samples and implausibility scores
-        # TODO: should this include wave information in some form?
+        # TODO: should this include wave information?
         final_samples = np.concatenate(all_samples) if all_samples else np.array([])
 
         final_impl_scores = (
@@ -378,6 +385,7 @@ class HistoryMatching:
 
         # If we need to include previous data and emulator has stored training data
         # TODO: should data be stored in HistoryMatcher (same as ActiveLearner)?
+        # that way can make sure we keep appending data to it on each retrain
         if (
             include_previous_data
             and hasattr(existing_emulator, "X_train_")
@@ -385,12 +393,8 @@ class HistoryMatching:
         ):
             # Combine old and new training data
             X_combined = np.vstack((existing_emulator.X_train_, x))
-
-            # Check if we're dealing with multi-output or single-output
-            if len(existing_emulator.y_train_.shape) > 1 and len(y.shape) > 1:
-                y_combined = np.vstack((existing_emulator.y_train_, y))
-            else:
-                y_combined = np.concatenate((existing_emulator.y_train_, y))
+            # Handle both singlue and multi output cases
+            y_combined = np.concatenate((existing_emulator.y_train_, y), axis=0)
         else:
             # Just use new data
             X_combined = x
@@ -398,7 +402,7 @@ class HistoryMatching:
 
         # Update the emulator
         try:
-            # Refit the entire model with new hyperparameters
+            # Refit the entire model, includes hyperparameter optim
             updated_emulator.fit(X_combined, y_combined)
         except Exception as e:
             print(f"Error refitting model: {e}")
