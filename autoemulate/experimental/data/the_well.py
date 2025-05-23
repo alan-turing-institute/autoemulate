@@ -34,9 +34,8 @@ class AutoEmulateWellDatasetTabular(WellDataset):
         )
         ts = torch.arange(self.n_steps_input)
         x = torch.concat([constant_scalars_interleave, ts.reshape(-1, 1)], 1)
-        chosen_field_ints = [0]
-        input_fields_reshaped = input_fields[..., chosen_field_ints].view(
-            -1, input_fields.shape[-3], input_fields.shape[-2], len(chosen_field_ints)
+        input_fields_reshaped = input_fields[..., self.field_indices].view(
+            -1, input_fields.shape[-3], input_fields.shape[-2], len(self.field_indices)
         )
         y = input_fields_reshaped.view(input_fields_reshaped.shape[0], -1)
         return x, y
