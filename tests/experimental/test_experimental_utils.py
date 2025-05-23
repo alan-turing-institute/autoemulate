@@ -29,7 +29,6 @@ class TestConversionMixin:
         y = np.array([1.0, 2.0])
         dataset = self.mixin._convert_to_dataset(X, y)
 
-        # TODO: is the distinction between TensorDataset and Dataset important?
         assert isinstance(dataset, TensorDataset)
         assert torch.equal(dataset.tensors[0], torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
         assert torch.equal(dataset.tensors[1], torch.tensor([1.0, 2.0]))
