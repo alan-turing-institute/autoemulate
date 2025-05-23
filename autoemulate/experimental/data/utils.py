@@ -175,7 +175,8 @@ class ConversionMixin:
     def _normalize(x: TensorLike) -> tuple[TensorLike, TensorLike, TensorLike]:
         x_mean = x.mean(0, keepdim=True)
         x_std = x.std(0, keepdim=True)
-        return (x - x_mean) / x_std, x_mean, x_std
+        s = Standardizer(x_mean, x_std)
+        return s.preprocess(x), s.mean, s.std
 
     @staticmethod
     def _denormalize(
