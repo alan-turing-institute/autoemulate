@@ -93,7 +93,7 @@ class Tuner(InputTypeMixin, TorchDeviceMixin):
 
             # evaluate
             y_pred = m.predict(val_x)
-            score = evaluate(val_y, y_pred, self.metric)
+            score = evaluate(val_y, y_pred, self.metric, self.device)
 
             # record score and config
             model_config_tested.append(model_config)

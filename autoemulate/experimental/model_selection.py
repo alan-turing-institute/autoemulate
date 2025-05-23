@@ -38,7 +38,10 @@ def _update(
 
 
 def evaluate(
-    y_true: InputLike, y_pred: OutputLike, metric: type[torchmetrics.Metric]
+    y_true: InputLike,
+    y_pred: OutputLike,
+    metric: type[torchmetrics.Metric],
+    device: DeviceLike,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -57,7 +60,7 @@ def evaluate(
     float
     """
 
-    metric_instance = metric()
+    metric_instance = metric().to(device)
     _update(y_true, y_pred, metric_instance)
     return metric_instance.compute().item()
 
@@ -100,12 +103,13 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        m = model(x, y, device=get_torch_device(device), **best_model_config)
+        device = get_torch_device(device)
+        m = model(x, y, device=device, **best_model_config)
         m.fit(x, y)
 
         # evaluate on batches
-        r2_metric = torchmetrics.R2Score()
-        mse_metric = torchmetrics.MeanSquaredError()
+        r2_metric = torchmetrics.R2Score().to(device)
+        mse_metric = torchmetrics.MeanSquaredError().to(device)
         for x_batch, y_batch in val_loader:
             y_batch_pred = m.predict(x_batch)
             _update(y_batch, y_batch_pred, r2_metric)
