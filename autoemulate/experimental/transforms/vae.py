@@ -147,7 +147,7 @@ class VAETransform(AutoEmulateTransform):
         def sample_cov():
             sample_z = x.sample()
             assert self.vae is not None
-            sample = self.vae.decode(sample_z)
+            sample = self.vae.decode(sample_z).view(-1, 1)
             mean_reshaped = mean_orig.view(-1, 1)
             return (
                 (sample - mean_reshaped)

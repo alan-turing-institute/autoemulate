@@ -67,7 +67,7 @@ class PCATransform(AutoEmulateTransform):
 
         def sample_cov():
             sample_pca = x.sample()
-            sample = sample_pca @ self.components.T + mean_orig
+            sample = (sample_pca @ self.components.T + mean_orig).view(-1, 1)
             mean_reshaped = mean_orig.view(-1, 1)
             return (
                 (sample - mean_reshaped)
