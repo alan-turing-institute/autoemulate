@@ -318,14 +318,14 @@ class NaghaviSimulator(Simulator):
         if len(results) > 0 and len(self._output_names) == results.shape[1]:
             df_results = pd.DataFrame(
                 results,
-                columns=self._output_names,  # type: ignore[reportArgumentType]
+                columns=self._output_names,  # type: ignore[reportArgumentType] Pyright doesn't seem to like having a list of strings as type of columns.
             )
             # Combine parameters and results
             return pd.concat([df_params, df_results], axis=1)
         if len(results) > 0:
             # If output names are not set or don't match, use generic column names
             result_cols = [f"output_{i}" for i in range(results.shape[1])]
-            df_results = pd.DataFrame(results, columns=result_cols)  # type: ignore[reportArgumentType]
+            df_results = pd.DataFrame(results, columns=result_cols)  # type: ignore[reportArgumentType] Pyright doesn't seem to like having a list of strings as type of columns.
             return pd.concat([df_params, df_results], axis=1)
         return df_params
 
