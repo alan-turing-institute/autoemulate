@@ -126,14 +126,14 @@ class InputTypeMixin:
         result = self._convert_to_tensors(x, y)
         if isinstance(result, tuple):
             x_tensor, y_tensor = result
-            x_np, y_np = x_tensor.numpy(), y_tensor.numpy()
+            x_np, y_np = x_tensor.cpu().numpy(), y_tensor.cpu().numpy()
             if (y_np.ndim == 2 and y_np.shape[1] == 1) or y_np.ndim == 1:
                 y_np = y_np.ravel()  # Ensure y is 1-dimensional
                 return check_X_y(x_np, y_np, multi_output=False, y_numeric=True)
             return check_X_y(x_np, y_np, multi_output=True, y_numeric=True)
 
         x_tensor = result
-        return x_tensor.numpy(), None
+        return x_tensor.cpu().numpy(), None
 
     def _random_split(
         self,
