@@ -287,7 +287,6 @@ class CNPModule(PyTorchBackend):
             Batch size for training.
         """
         super().__init__()
-        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
         self.output_dim = y.shape[1]
@@ -362,7 +361,6 @@ class CNPModule(PyTorchBackend):
         self.train()
 
         # Save off all X_train and y_train
-        # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         self.x_train, self.y_train = self._convert_to_tensors(x, y)
 
         # Convert dataset to CNP Dataset
@@ -429,15 +427,10 @@ class CNPModule(PyTorchBackend):
             Note the distribution is a single tensor of shape (n_points, output_dim).
 
         """
-        # TODO: add to validation _check
-        if self.x_train is None or self.y_train is None:
-            msg = "Model has not been trained. Please call fit() before predict()."
-            raise ValueError(msg)
 
         self.eval()
         x = self.preprocess(x)
 
-        # TODO: add to validation _check
         x_target = self._convert_to_tensors(x)
 
         # Sort splitting into context and target
@@ -447,6 +440,8 @@ class CNPModule(PyTorchBackend):
             raise ValueError(msg)
 
         # Unsqueeze the batch dimension for x_train, y_train and x_target
+        assert isinstance(self.x_train, TensorLike)
+        assert isinstance(self.y_train, TensorLike)
         x_train = self.x_train.unsqueeze(0)
         y_train = self.y_train.unsqueeze(0)
         x_target = x_target.unsqueeze(0)

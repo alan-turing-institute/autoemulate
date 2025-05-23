@@ -3,21 +3,24 @@ from typing import ClassVar
 
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.utils.validation import check_array
-from torch import Tensor, nn, optim
+from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.data.utils import (
+    ConversionMixin,
+    ValidationMixin,
+)
 from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
-class Emulator(ABC, ValidationMixin, InputTypeMixin):
+class Emulator(ABC, ValidationMixin, ConversionMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
+
+    is_fitted_: bool = False
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -25,6 +28,7 @@ class Emulator(ABC, ValidationMixin, InputTypeMixin):
     def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
         self._fit(x, y)
+        self.is_fitted_ = True
 
     @abstractmethod
     def __init__(
@@ -40,6 +44,9 @@ class Emulator(ABC, ValidationMixin, InputTypeMixin):
         pass
 
     def predict(self, x: TensorLike) -> OutputLike:
+        if not self.is_fitted_:
+            msg = "Model is not fitted yet. Call fit() before predict()."
+            raise RuntimeError(msg)
         self._check(x, None)
         output = self._predict(x)
         self._check_output(output)
@@ -141,8 +148,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
             for X_batch, y_batch in dataloader:
                 # Preprocess x_batch
-                # TODO: consider if this should be moved outside of dataloader iteration
-                # e.g. as part of the InputTypeMixin
                 x = self.preprocess(X_batch)
 
                 # Forward pass
@@ -197,22 +202,13 @@ class SklearnBackend(Emulator):
         assert isinstance(x_np, np.ndarray)
         assert isinstance(y_np, np.ndarray)
         self.n_features_in_ = x_np.shape[1]
-
         self._model_specific_check(x_np, y_np)
-
         self.model.fit(x_np, y_np)  # type: ignore PGH003
-        self.is_fitted_ = True
 
     def _predict(self, x: TensorLike) -> OutputLike:
-        if not self.is_fitted_:
-            msg = "Model is not fitted yet. Call fit() before predict()."
-            raise RuntimeError(msg)
         x_np, _ = self._convert_to_numpy(x, None)
-        x_np = check_array(x_np)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
-        if y_pred.ndim == 1:
-            y_pred = y_pred.reshape(-1, 1)
-        y_pred = Tensor(y_pred)
+        _, y_pred = self._convert_to_tensors(x, y_pred)  # type: ignore PGH003
         if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred
