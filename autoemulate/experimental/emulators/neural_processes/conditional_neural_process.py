@@ -443,8 +443,10 @@ class CNPModule(PyTorchBackend):
             raise ValueError(msg)
 
         # Unsqueeze the batch dimension for x_train, y_train and x_target
-        x_train = self.x_train.unsqueeze(0)  # type: ignore PGH003
-        y_train = self.y_train.unsqueeze(0)  # type: ignore PGH003
+        assert isinstance(self.x_train, TensorLike)
+        assert isinstance(self.y_train, TensorLike)
+        x_train = self.x_train.unsqueeze(0)
+        y_train = self.y_train.unsqueeze(0)
         x_target = x_target.unsqueeze(0)
 
         # Forward pass and drop the batch dimension

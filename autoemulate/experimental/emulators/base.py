@@ -7,9 +7,9 @@ import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
 
+from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import (
     ConversionMixin,
-    Preprocessor,
     ValidationMixin,
 )
 from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig

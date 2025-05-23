@@ -3,7 +3,6 @@ import pytest
 import torch
 from autoemulate.experimental.data.utils import (
     ConversionMixin,
-    Standardizer,
     ValidationMixin,
 )
 from autoemulate.experimental.types import NumpyLike
@@ -29,7 +28,6 @@ class TestConversionMixin:
         y = np.array([1.0, 2.0])
         dataset = self.mixin._convert_to_dataset(X, y)
 
-        # TODO: is the distinction between TensorDataset and Dataset important?
         assert isinstance(dataset, TensorDataset)
         assert torch.equal(dataset.tensors[0], torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
         assert torch.equal(dataset.tensors[1], torch.tensor([1.0, 2.0]))
@@ -80,16 +78,13 @@ class TestConversionMixin:
         assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
         assert torch.equal(y_tensor, torch.tensor([[1.0], [2.0]]))
 
-    # def test_convert_to_tensors_invalid(self):
-    #     """
-    #     Test invalid input to _convert_to_tensors.
-    #     """
-    #     # TODO: should this just raise the error from test_convert_to_dataset_invalid
-    #     # TODO: can we ensure all warning messages are tested?
-    #     X = "invalid input"
-    #     msg = f"Unsupported type for dataset ({type(X)}). Must be TensorDataset."
-    #     with pytest.raises(ValueError, match=msg):
-    #         self.mixin._convert_to_tensors(X)  # type: ignore - test for invalid type
+    def test_convert_to_tensors_invalid(self):
+        """
+        Test invalid input to _convert_to_tensors.
+        """
+        X = "invalid input"
+        with pytest.raises(ValueError, match="Unsupported type for x"):
+            self.mixin._convert_to_dataset(X)  # type: ignore - test for invalid type
 
     def test_convert_numpy_array(self):
         """
@@ -431,78 +426,3 @@ class TestValidationMixin:
         assert torch.isclose(self.mixin.max_eigval(sigma_full), torch.tensor(1.0))
         assert torch.isclose(self.mixin.max_eigval(sigma_diag), torch.tensor(3.0))
         assert torch.isclose(self.mixin.max_eigval(sigma_scalar), torch.tensor(1.5))
-
-
-class TestStandardizer:
-    def test_init_valid(self):
-        """
-        Test Standardizer initialization with valid mean and std.
-        """
-        mean = torch.zeros((2, 2))
-        std = torch.ones((2, 2))
-        s = Standardizer(mean, std)
-        assert torch.equal(s.mean, mean)
-        assert torch.equal(s.std, std)
-
-    def test_init_invalid_mean_shape(self):
-        """
-        Test Standardizer raises ValueError if mean is not 2D.
-        """
-        mean = torch.zeros((2,))
-        std = torch.ones((2, 2))
-        with pytest.raises(ValueError, match="mean is expected to be 2D"):
-            Standardizer(mean, std)
-
-    def test_init_invalid_std_shape(self):
-        """
-        Test Standardizer raises ValueError if std is not 2D.
-        """
-        mean = torch.zeros((2, 2))
-        std = torch.ones((2,))
-        with pytest.raises(ValueError, match="std is expected to be 2D"):
-            Standardizer(mean, std)
-
-    def test_small_std_replaced(self):
-        """
-        Test that small std values are replaced with 1.0.
-        """
-        mean = torch.zeros((1, 2))
-        std = torch.tensor([[1e-40, 2.0]], dtype=torch.float32)
-        s = Standardizer(mean, std)
-        assert s.std[0, 0] == 1.0
-        assert s.std[0, 1] == 2.0
-
-    def test_preprocess_valid(self):
-        """
-        Test Standardizer preprocess with valid input.
-        """
-        mean = torch.tensor([[1.0, 2.0]])
-        std = torch.tensor([[2.0, 4.0]])
-        s = Standardizer(mean, std)
-        x = torch.tensor([[3.0, 6.0]])
-        out = s.preprocess(x)
-        expected = (x - mean) / std
-        assert torch.allclose(out, expected)
-
-    def test_preprocess_invalid_type(self):
-        """
-        Test Standardizer preprocess raises ValueError if input is not a torch.Tensor.
-        """
-        mean = torch.zeros((1, 2))
-        std = torch.ones((1, 2))
-        s = Standardizer(mean, std)
-        msg = "Expected 2D torch.Tensor, actual type <class 'list'>"
-        with pytest.raises(ValueError, match=msg):
-            s.preprocess([[1.0, 2.0]])  # type: ignore PGH003
-
-    def test_preprocess_invalid_dim(self):
-        """
-        Test Standardizer preprocess raises ValueError if input is not 2D.
-        """
-        mean = torch.zeros((1, 2))
-        std = torch.ones((1, 2))
-        s = Standardizer(mean, std)
-        x = torch.tensor([1.0, 2.0])
-        msg = "Expected 2D torch.Tensor, actual shape dim 1"
-        with pytest.raises(ValueError, match=msg):
-            s.preprocess(x)

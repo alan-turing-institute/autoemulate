@@ -1,8 +1,11 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 import torch
-from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
+from autoemulate.experimental.types import (
+    InputLike,
+    OutputLike,
+    TensorLike,
+    TorchScalarDType,
+)
 from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
@@ -110,8 +113,11 @@ class ConversionMixin:
                 return x.to(dtype)
             msg = "Number of tensors returned must be greater than zero."
             raise ValueError(msg)
+        # Note: this error will never be raised, the same error is raised in
+        # _convert_to_dataset
         raise ValueError(
-            f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
+            f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch "
+            "tensor."
         )
 
     def _convert_to_numpy(
@@ -208,7 +214,7 @@ class ValidationMixin:
         if not torch.isfinite(x).all():
             msg = "Input tensor x contains non-finite values"
             raise ValueError(msg)
-        if x.dtype not in (torch.float32, torch.float64, torch.int32, torch.int64):
+        if x.dtype not in TorchScalarDType:
             msg = (
                 f"Input tensor x has unsupported dtype {x.dtype}. "
                 "Expected float32, float64, int32, or int64."
@@ -220,7 +226,7 @@ class ValidationMixin:
             if not torch.isfinite(y).all():
                 msg = "Input tensor y contains non-finite values"
                 raise ValueError(msg)
-            if y.dtype not in (torch.float32, torch.float64, torch.int32, torch.int64):
+            if y.dtype not in TorchScalarDType:
                 msg = (
                     f"Input tensor y has unsupported dtype {y.dtype}. "
                     "Expected float32, float64, int32, or int64."
@@ -471,45 +477,3 @@ class ValidationMixin:
     #             msg
     #         )
     #     return cv
-
-
-class Preprocessor(ABC):
-    @abstractmethod
-    def __init__(*args, **kwargs): ...
-
-    @abstractmethod
-    def preprocess(self, x: TensorLike) -> TensorLike: ...
-
-
-class Standardizer(Preprocessor):
-    mean: torch.Tensor
-    std: torch.Tensor
-
-    def __init__(self, mean: torch.Tensor, std: torch.Tensor):
-        if len(mean.shape) != 2:
-            raise ValueError(f"mean is expected to be 2D, shape passed ({mean.shape})")
-        if len(std.shape) != 2:
-            raise ValueError(f"std is expected to be 2D, shape passed ({std.shape})")
-
-        # Set small values in std as 1.0 instead, see:
-        # https://github.com/scikit-learn/scikit-learn/blob/812ff67e6725a8ca207a37f5ed4bfeafc5d1265d/sklearn/preprocessing/_data.py#L111
-        std[std < 10 * torch.finfo(std.dtype).eps] = 1.0
-        self.mean = mean
-        self.std = std
-
-    def preprocess(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Parameters
-        ----------
-
-        x : torch.Tensor
-            The input tensor to be standardized.
-
-        """
-        if not isinstance(x, torch.Tensor):
-            raise ValueError(f"Expected 2D torch.Tensor, actual type {type(x)}")
-        if len(x.shape) != 2:
-            raise ValueError(
-                f"Expected 2D torch.Tensor, actual shape dim {len(x.shape)}"
-            )
-        return (x - self.mean) / self.std

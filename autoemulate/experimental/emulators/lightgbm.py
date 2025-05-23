@@ -1,5 +1,6 @@
 import numpy as np
 from lightgbm import LGBMRegressor
+from scipy.sparse import spmatrix
 
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import OutputLike, TensorLike
@@ -98,7 +99,8 @@ class LightGBM(Emulator):
     def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         y_pred = self.model_.predict(x)
-        _, y = self._convert_to_tensors(x, y_pred)  # type: ignore PGH003
+        assert not isinstance(y_pred, (spmatrix, list))
+        _, y = self._convert_to_tensors(x, y_pred)
         return y
 
     @staticmethod

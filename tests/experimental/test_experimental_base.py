@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.data.utils import Standardizer
+from autoemulate.experimental.data.preprocessors import Standardizer
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
@@ -101,7 +101,7 @@ class TestPyTorchBackend:
     def test_standardizer_fail(self):
         x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
         with pytest.raises(
-            ValueError, match="Expected 2D torch.Tensor, actual shape dim 1"
+            ValueError, match="Expected 2D TensorLike, actual shape dim 1"
         ):
             self.model.preprocess(x_train)
 
