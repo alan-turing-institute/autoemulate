@@ -486,12 +486,12 @@ class TestStandardizer:
 
     def test_preprocess_invalid_type(self):
         """
-        Test Standardizer preprocess raises ValueError if input is not a torch.Tensor.
+        Test Standardizer preprocess raises ValueError if input is not a TensorLike.
         """
         mean = torch.zeros((1, 2))
         std = torch.ones((1, 2))
         s = Standardizer(mean, std)
-        msg = "Expected 2D torch.Tensor, actual type <class 'list'>"
+        msg = "Expected 2D TensorLike, actual type <class 'list'>"
         with pytest.raises(ValueError, match=msg):
             s.preprocess([[1.0, 2.0]])  # type: ignore PGH003
 
@@ -503,6 +503,6 @@ class TestStandardizer:
         std = torch.ones((1, 2))
         s = Standardizer(mean, std)
         x = torch.tensor([1.0, 2.0])
-        msg = "Expected 2D torch.Tensor, actual shape dim 1"
+        msg = "Expected 2D TensorLike, actual shape dim 1"
         with pytest.raises(ValueError, match=msg):
             s.preprocess(x)
