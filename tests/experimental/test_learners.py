@@ -9,7 +9,6 @@ from autoemulate.experimental.learners import (
     Simulator,
     stream,
 )
-from autoemulate.experimental_design import LatinHypercube
 from autoemulate.simulations.projectile import simulate_projectile_multioutput
 from tqdm import tqdm
 
@@ -19,16 +18,10 @@ class Sin(Simulator):
     def _forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.sin(x)
 
-    def sample_inputs(self, n: int) -> torch.Tensor:
-        return torch.Tensor(LatinHypercube([(0.0, 50.0)]).sample(n))
-
 
 class Projectile(Simulator):
     def _forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.tensor([simulate_projectile_multioutput(x) for x in x])
-
-    def sample_inputs(self, n: int) -> torch.Tensor:
-        return torch.Tensor(LatinHypercube([(-5.0, 1.0), (0.0, 1000.0)]).sample(n))
 
 
 def learners(
@@ -161,7 +154,7 @@ def run_experiment(
 
 def test_learners_sin():
     metrics, summary = run_experiment(
-        simulator=Sin(),
+        simulator=Sin(parameters_range={"X": (0, 50.0)}, output_variables=["Y"]),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
@@ -171,7 +164,9 @@ def test_learners_sin():
 
 def test_learners_projectile():
     metrics, summary = run_experiment(
-        simulator=Projectile(),
+        simulator=Projectile(
+            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_variables=["Y"]
+        ),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
