@@ -181,17 +181,17 @@ class HistoryMatching:
 
     def predict(
         self,
-        X: np.ndarray,
+        x: np.ndarray,
         # TODO: update emulator object passed here
         emulator: Optional[object] = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Make predictions for a batch of inputs X. Uses `self.simulator` unless
+        Make predictions for a batch of inputs x. Uses `self.simulator` unless
         an emulator trained on `self.simulator` data is provided.
 
         Parameters
         ----------
-        X: np.ndarray
+        x: np.ndarray
             Array of parameter samples to simulate/emulate [n_samples, n_parameters]
             returned by `self.simulator.sample_inputs` or `self.sample_nroy` methods.
         TODO: update emulator type and description below
@@ -205,12 +205,12 @@ class HistoryMatching:
             which predictions were made succesfully.
         """
         # TODO: when does this happen? do we need this?
-        if X.shape[0] == 0:
+        if x.shape[0] == 0:
             return np.array([]), np.array([]), np.array([])
 
         # Make predictions using emulator
         if emulator is not None:
-            pred_means, pred_stds = emulator.predict(X, return_std=True)
+            pred_means, pred_stds = emulator.predict(x, return_std=True)
             pred_vars = pred_stds**2
 
             # TODO: don't need this once remove sklearn dependence
@@ -221,11 +221,11 @@ class HistoryMatching:
 
         # Make predictions using simulator
         else:
-            results = self.simulator.run_batch_simulations(X)
+            results = self.simulator.run_batch_simulations(x)
 
             # Filter out failed simulations
-            valid_indices = [i for i, x in enumerate(results) if x is not None]
-            X = X[valid_indices]
+            valid_indices = [i for i, res in enumerate(results) if res is not None]
+            x = x[valid_indices]
             pred_means = results[valid_indices]
             pred_vars = None
             if pred_means.shape[0] == 0:
@@ -233,7 +233,7 @@ class HistoryMatching:
                 return np.array([]), np.array([]), np.array([])
 
         # Also return input vector in case simulation failed for some inputs
-        return pred_means, pred_vars, X
+        return pred_means, pred_vars, x
 
     def run(
         self,
@@ -293,7 +293,7 @@ class HistoryMatching:
             for wave in range(n_waves):
                 # Run wave using batch processing
                 pred_means, pred_vars, successful_samples = self.predict(
-                    X=current_samples,
+                    x=current_samples,
                     # Emulate predictions unless emulator_predict=False
                     emulator=emulator if emulator_predict else None,
                 )
@@ -349,7 +349,7 @@ class HistoryMatching:
         self,
         # TODO: update emulator type passed here
         existing_emulator: object,
-        X: np.ndarray,
+        x: np.ndarray,
         y: np.ndarray,
         include_previous_data: bool = True,
     ):
@@ -361,7 +361,7 @@ class HistoryMatching:
             TODO: eventually this should be autoemulate.GaussianProcessExact
             existing_emulator: Gaussian Process from sklearn
                 Trained GP emulator.
-            X: np.ndarray
+            x: np.ndarray
                 Array of parameter values to train emulator on.
             y: np.ndarray
                 Array of output values.
@@ -384,7 +384,7 @@ class HistoryMatching:
             and hasattr(existing_emulator, "y_train_")
         ):
             # Combine old and new training data
-            X_combined = np.vstack((existing_emulator.X_train_, X))
+            X_combined = np.vstack((existing_emulator.X_train_, x))
 
             # Check if we're dealing with multi-output or single-output
             if len(existing_emulator.y_train_.shape) > 1 and len(y.shape) > 1:
@@ -393,7 +393,7 @@ class HistoryMatching:
                 y_combined = np.concatenate((existing_emulator.y_train_, y))
         else:
             # Just use new data
-            X_combined = X
+            X_combined = x
             y_combined = y
 
         # Update the emulator
