@@ -2,7 +2,12 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
-from autoemulate.experimental.types import InputLike, OutputLike, TensorLike
+from autoemulate.experimental.types import (
+    InputLike,
+    OutputLike,
+    TensorLike,
+    TorchScalarDType,
+)
 from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
@@ -212,7 +217,7 @@ class ValidationMixin:
         if not torch.isfinite(x).all():
             msg = "Input tensor x contains non-finite values"
             raise ValueError(msg)
-        if x.dtype not in (torch.float32, torch.float64, torch.int32, torch.int64):
+        if x.dtype not in TorchScalarDType:
             msg = (
                 f"Input tensor x has unsupported dtype {x.dtype}. "
                 "Expected float32, float64, int32, or int64."
@@ -224,7 +229,7 @@ class ValidationMixin:
             if not torch.isfinite(y).all():
                 msg = "Input tensor y contains non-finite values"
                 raise ValueError(msg)
-            if y.dtype not in (torch.float32, torch.float64, torch.int32, torch.int64):
+            if y.dtype not in TorchScalarDType:
                 msg = (
                     f"Input tensor y has unsupported dtype {y.dtype}. "
                     "Expected float32, float64, int32, or int64."
