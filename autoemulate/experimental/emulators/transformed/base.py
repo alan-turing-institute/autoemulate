@@ -36,13 +36,15 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self,
         x: TensorLike,
         y: TensorLike,
-        transforms: list[AutoEmulateTransform],
-        target_transforms: list[AutoEmulateTransform],
+        transforms: list[AutoEmulateTransform] | None,
+        target_transforms: list[AutoEmulateTransform] | None,
         model: type[Emulator],
         **kwargs,
     ):
-        self.transforms = transforms
-        self.target_transforms = target_transforms
+        self.transforms = transforms if transforms is not None else []
+        self.target_transforms = (
+            target_transforms if target_transforms is not None else []
+        )
 
         # Fit transforms and target_transform at init
         current_x = x
