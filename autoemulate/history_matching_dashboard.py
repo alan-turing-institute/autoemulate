@@ -22,15 +22,15 @@ class HistoryMatchingDashboard:
         Initialize the dashboard
 
         Args:
-            samples: DataFrame or list of dictionaries with parameter samples
+            samples: DataFrame or numpy array with parameter samples
             impl_scores: Array of implausibility scores
             param_names: List of parameter names
             output_names: List of output names
             threshold: Implausibility threshold
         """
-        # Convert samples to DataFrame if it's a list
-        if isinstance(samples, list):
-            self.samples_df = pd.DataFrame(samples)
+        # Convert samples to DataFrame if it's an array
+        if isinstance(samples, np.ndarray):
+            self.samples_df = pd.DataFrame(samples, columns=param_names)
         else:
             self.samples_df = samples.copy()
 
@@ -99,18 +99,22 @@ class HistoryMatchingDashboard:
 
         self.param_y = widgets.Dropdown(
             options=self.param_names,
-            value=self.param_names[1]
-            if len(self.param_names) > 1
-            else self.param_names[0],
+            value=(
+                self.param_names[1]
+                if len(self.param_names) > 1
+                else self.param_names[0]
+            ),
             description="Y Parameter:",
             disabled=False,
         )
 
         self.param_z = widgets.Dropdown(
             options=self.param_names,
-            value=self.param_names[2]
-            if len(self.param_names) > 2
-            else self.param_names[0],
+            value=(
+                self.param_names[2]
+                if len(self.param_names) > 2
+                else self.param_names[0]
+            ),
             description="Z Parameter:",
             disabled=False,
         )
