@@ -110,8 +110,11 @@ class ConversionMixin:
                 return x.to(dtype)
             msg = "Number of tensors returned must be greater than zero."
             raise ValueError(msg)
+        # Note: this error will never be raised, the same error is raised in
+        # _convert_to_dataset
         raise ValueError(
-            f"Unsupported type for dataset ({type(dataset)}). Must be TensorDataset."
+            f"Unsupported type for x ({type(x)}). Must be numpy array or PyTorch "
+            "tensor."
         )
 
     def _convert_to_numpy(

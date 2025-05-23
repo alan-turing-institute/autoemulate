@@ -80,16 +80,13 @@ class TestConversionMixin:
         assert torch.equal(x_tensor, torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
         assert torch.equal(y_tensor, torch.tensor([[1.0], [2.0]]))
 
-    # def test_convert_to_tensors_invalid(self):
-    #     """
-    #     Test invalid input to _convert_to_tensors.
-    #     """
-    #     # TODO: should this just raise the error from test_convert_to_dataset_invalid
-    #     # TODO: can we ensure all warning messages are tested?
-    #     X = "invalid input"
-    #     msg = f"Unsupported type for dataset ({type(X)}). Must be TensorDataset."
-    #     with pytest.raises(ValueError, match=msg):
-    #         self.mixin._convert_to_tensors(X)  # type: ignore - test for invalid type
+    def test_convert_to_tensors_invalid(self):
+        """
+        Test invalid input to _convert_to_tensors.
+        """
+        X = "invalid input"
+        with pytest.raises(ValueError, match="Unsupported type for x"):
+            self.mixin._convert_to_dataset(X)  # type: ignore - test for invalid type
 
     def test_convert_numpy_array(self):
         """
