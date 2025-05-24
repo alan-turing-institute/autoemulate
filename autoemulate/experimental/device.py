@@ -3,7 +3,7 @@ import logging
 import torch
 from torch import nn
 
-from autoemulate.experimental.types import DeviceLike
+from autoemulate.experimental.types import DeviceLike, TensorLike
 
 SUPPORTED_DEVICES: list[str] = ["cpu", "mps", "cuda", "xpu"]
 
@@ -43,6 +43,25 @@ def get_torch_device(device: DeviceLike | None) -> torch.device:
     if device in SUPPORTED_DEVICES:
         return torch.device(device)
     raise TorchDeviceError(device)
+
+
+def move_tensors_to_device(
+    *args: TensorLike, device: torch.device
+) -> tuple[TensorLike, ...]:
+    """
+    Moves the given tensor to the device.
+
+    Parameters
+    ----------
+    *args : TensorLike
+        The tensors to move.
+
+    Returns
+    -------
+    tuple[TensorLike, ...]
+        The tensors on the device.
+    """
+    return tuple(tensor.to(device) for tensor in args)
 
 
 def check_torch_device_is_available(device: DeviceLike) -> bool:
@@ -127,6 +146,7 @@ class TorchDeviceMixin:
 
     def __init__(self, device: DeviceLike | None = None, cpu_only: bool = False):
         # Warn if given device not CPU and cpu_only
+        # TODO: check handling
         if cpu_only and (
             (isinstance(device, str) and device != "cpu")
             or (isinstance(device, torch.device) and torch.device("cpu") != device)
@@ -137,9 +157,24 @@ class TorchDeviceMixin:
             )
             # warnings.warn(msg, stacklevel=2)
             logging.warning(msg)
-            self.device = torch.device("cpu")
-        else:
-            self.device = get_torch_device(device)
+
+        self.device = get_torch_device(device)
 
         if not check_torch_device_is_available(self.device):
             raise TorchDeviceError(str(self.device))
+
+    def _move_tensors_to_device(self, *args: TensorLike) -> tuple[TensorLike, ...]:
+        """
+        Moves the given tensor to the device.
+
+        Parameters
+        ----------
+        *args : TensorLike
+            The tensors to move.
+
+        Returns
+        -------
+        tuple[TensorLike, ...]
+            The tensors on the device.
+        """
+        return move_tensors_to_device(*args, device=self.device)

@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.svm import SVR
 from sklearn.utils.validation import check_X_y
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.types import DeviceLike, NumpyLike, TensorLike
 
@@ -28,10 +29,11 @@ class SupportVectorMachine(SklearnBackend):
         verbose: bool = False,
         max_iter: int = 100,
         normalise_y: bool = True,
-        device: DeviceLike | None = None,
+        device: DeviceLike = "cpu",
     ):
         """Initializes a SupportVectorMachines object."""
         _, _, _ = x, y, device  # ignore unused arguments
+        TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
         self.kernel = kernel
         self.degree = degree
         self.gamma = gamma

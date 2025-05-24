@@ -5,7 +5,7 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from autoemulate.experimental.device import get_torch_device
+from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
     DeviceLike,
@@ -69,7 +69,7 @@ def cross_validate(
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
-    device: DeviceLike | None = None,
+    device: DeviceLike = "cpu",
     **kwargs: Any,
 ):
     """
@@ -84,7 +84,8 @@ def cross_validate(
         The data to use for model training and validation.
     model: Emulator
         An instance of an Emulator subclass.
-
+    device: DeviceLike
+        The device to use for model training and evaluation.
     Returns
     -------
     dict[str, list[float]]
@@ -93,6 +94,7 @@ def cross_validate(
     best_model_config: ModelConfig = kwargs
     cv_results = {"r2": [], "rmse": []}
     batch_size = best_model_config.get("batch_size", 16)
+    device = get_torch_device(device)
     for train_idx, val_idx in cv.split(dataset):  # type: ignore TODO: identify type handling here
         # create train/val data subsets
         # convert idx to list to satisfy type checker
@@ -103,17 +105,17 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        device = get_torch_device(device)
         m = model(x, y, device=device, **best_model_config)
         m.fit(x, y)
 
         # evaluate on batches
         r2_metric = torchmetrics.R2Score().to(device)
         mse_metric = torchmetrics.MeanSquaredError().to(device)
-        for x_batch, y_batch in val_loader:
-            y_batch_pred = m.predict(x_batch)
-            _update(y_batch, y_batch_pred, r2_metric)
-            _update(y_batch, y_batch_pred, mse_metric)
+        for x_b, y_b in val_loader:
+            x_b_device, y_b_device = move_tensors_to_device(x_b, y_b, device=device)
+            y_batch_pred = m.predict(x_b_device)
+            _update(y_b_device, y_batch_pred, r2_metric)
+            _update(y_b_device, y_batch_pred, mse_metric)
 
         # compute and save results
         r2 = r2_metric.compute().item()

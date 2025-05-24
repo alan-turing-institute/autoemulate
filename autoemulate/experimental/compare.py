@@ -25,6 +25,7 @@ class AutoEmulate(InputTypeMixin, TorchDeviceMixin):
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
         x, y = self._convert_to_tensors(x, y)
+        x, y = self._move_tensors_to_device(x, y)
 
         # Set default models if None
         updated_models = self.get_models(models)

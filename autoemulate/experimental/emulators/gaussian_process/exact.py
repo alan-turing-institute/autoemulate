@@ -66,10 +66,10 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
 
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
-        x, y = x.to(self.device), y.to(self.device)
 
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
+        x, y = self._move_tensors_to_device(x, y)
 
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
@@ -103,14 +103,15 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
             self.preprocessor = None
 
         # Init likelihood
-        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1]).to(self.device)
+        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+        likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
         x_preprocessed = self.preprocess(x)
         gpytorch.models.ExactGP.__init__(
             self,
-            train_inputs=x_preprocessed.to(self.device),
-            train_targets=y.to(self.device),
+            train_inputs=x_preprocessed,
+            train_targets=y,
             likelihood=likelihood,
         )
         self.likelihood = likelihood
@@ -152,7 +153,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
-        x, y = x.to(self.device), y.to(self.device)
+        x, y = self._move_tensors_to_device(x, y)
 
         # TODO: move conversion out of _fit() and instead rely on for impl check
         x, y = self._convert_to_tensors(x, y)

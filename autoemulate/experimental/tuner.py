@@ -35,14 +35,15 @@ class Tuner(InputTypeMixin, TorchDeviceMixin):
         n_iter: int = 10,
         device: DeviceLike | None = None,
     ):
-        self.n_iter = n_iter
         TorchDeviceMixin.__init__(self, device=device)
+        self.n_iter = n_iter
+
         # Convert input types, convert to tensors to ensure correct shapes, move to
         # device and convert back to dataset. TODO: consider if this is the best way to
         # do this.
         dataset = self._convert_to_dataset(x, y)
         x_tensor, y_tensor = self._convert_to_tensors(dataset)
-        x_tensor, y_tensor = x_tensor.to(self.device), y_tensor.to(self.device)
+        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
         # Q: should users be able to choose a different validation metric?
@@ -84,10 +85,6 @@ class Tuner(InputTypeMixin, TorchDeviceMixin):
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
-
-            # TODO: consider whether to pass as tensors or dataloader
-            # require training data for initialisation as well as fitting?
-            # TODO: fix handling for non-torch devices
             m = model_class(train_x, train_y, device=self.device, **model_config)
             m.fit(train_x, train_y)
 

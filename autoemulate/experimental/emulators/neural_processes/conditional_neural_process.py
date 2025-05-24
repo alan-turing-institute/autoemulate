@@ -42,8 +42,7 @@ class CNPDataset(Dataset, TorchDeviceMixin):
             Number of episodes to sample. Must be greater than max_context_points.
         """
         TorchDeviceMixin.__init__(self, device=device)
-        self.x = x.to(self.device)
-        self.y = y.to(self.device)
+        self.x, self.y = self._move_tensors_to_device(x, y)
         if max_context_points >= n_episode:
             msg = "max_context_points must be less than n_episode"
             raise ValueError(msg)
@@ -297,14 +296,13 @@ class CNPModule(PyTorchBackend):
         """
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
-        x, y = x.to(self.device), y.to(self.device)
+        x, y = self._move_tensors_to_device(x, y)
 
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         x, y = self._convert_to_tensors(x, y)
         self.input_dim = x.shape[1]
         self.output_dim = y.shape[1]
 
-        # To device
         self.encoder = Encoder(
             self.input_dim,
             self.output_dim,
@@ -312,7 +310,7 @@ class CNPModule(PyTorchBackend):
             latent_dim,
             hidden_layers_enc,
             activation,
-        ).to(self.device)
+        )
         self.decoder = Decoder(
             self.input_dim,
             latent_dim,
@@ -320,7 +318,11 @@ class CNPModule(PyTorchBackend):
             self.output_dim,
             hidden_layers_dec,
             activation,
-        ).to(self.device)
+        )
+
+        # Move to device
+        self.encoder.to(self.device)
+        self.decoder.to(self.device)
         self.to(self.device)
 
         self.min_context_points = min_context_points
@@ -375,11 +377,14 @@ class CNPModule(PyTorchBackend):
             Output data of shape (n_points, output_dim).
         """
         self.train()
-        x, y = x.to(self.device), y.to(self.device)
+        x, y = self._move_tensors_to_device(x, y)
 
         # Save off all X_train and y_train
         # TODO (#422): update the call here to check or call e.g. `_ensure_2d`
         self.x_train, self.y_train = self._convert_to_tensors(x, y)
+        self.x_train, self.y_train = self._move_tensors_to_device(
+            self.x_train, self.y_train
+        )
 
         # Convert dataset to CNP Dataset
         dataset = CNPDataset(

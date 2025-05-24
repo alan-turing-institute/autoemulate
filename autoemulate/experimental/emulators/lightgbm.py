@@ -39,10 +39,11 @@ class LightGBM(Emulator, InputTypeMixin, TorchDeviceMixin):
         n_jobs: int | None = 1,
         importance_type: str = "split",
         verbose: int = -1,
-        device: DeviceLike | None = None,
+        device: DeviceLike = "cpu",
     ):
         """Initializes a LightGBM object."""
         _, _ = x, y  # ignore unused arguments
+        TorchDeviceMixin.__init__(self, device=device)
         self.boosting_type = boosting_type
         self.num_leaves = num_leaves
         self.max_depth = max_depth
@@ -62,7 +63,6 @@ class LightGBM(Emulator, InputTypeMixin, TorchDeviceMixin):
         self.n_jobs = n_jobs
         self.importance_type = importance_type
         self.verbose = verbose
-        TorchDeviceMixin.__init__(self, device, cpu_only=True)
 
     @staticmethod
     def is_multioutput() -> bool:
