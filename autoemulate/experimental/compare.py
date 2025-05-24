@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, KFold
 
-from autoemulate.experimental.data.utils import InputTypeMixin
+from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
@@ -14,7 +14,7 @@ from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
 
 
-class AutoEmulate(InputTypeMixin, TorchDeviceMixin):
+class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     def __init__(
         self,
         x: InputLike,

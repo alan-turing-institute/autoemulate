@@ -1,14 +1,13 @@
 import numpy as np
 from lightgbm import LGBMRegressor
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from torch import Tensor
+from scipy.sparse import spmatrix
 
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import Emulator, InputTypeMixin
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
-class LightGBM(Emulator, InputTypeMixin, TorchDeviceMixin):
+class LightGBM(Emulator):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
@@ -63,36 +62,6 @@ class LightGBM(Emulator, InputTypeMixin, TorchDeviceMixin):
         self.n_jobs = n_jobs
         self.importance_type = importance_type
         self.verbose = verbose
-
-    @staticmethod
-    def is_multioutput() -> bool:
-        return False
-
-    def _fit(self, x: TensorLike, y: TensorLike):
-        """
-        Fits the emulator to the data.
-        The model expects the input data to be:
-            x (features): 2D array
-            y (target): 1D array
-        """
-
-        x_np, y_np = self._convert_to_numpy(x, y)
-
-        # TODO (#422): move to validation
-        if y_np is None:
-            msg = "y must be provided."
-            raise ValueError(msg)
-        if y_np.ndim > 2:
-            msg = f"y must be 1D or 2D array. Found {y_np.ndim}D array."
-            raise ValueError(msg)
-        if y_np.ndim == 2:  # _convert_to_numpy may return 2D y
-            y_np = y_np.ravel()  # Ensure y is 1-dimensional
-
-        self.n_features_in_ = x_np.shape[1]
-
-        # TODO (#422): move to validation
-        x_np, y_np = check_X_y(x_np, y_np, y_numeric=True)
-
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
             num_leaves=self.num_leaves,
@@ -115,17 +84,27 @@ class LightGBM(Emulator, InputTypeMixin, TorchDeviceMixin):
             verbose=self.verbose,
         )
 
+    @staticmethod
+    def is_multioutput() -> bool:
+        return False
+
+    def _fit(self, x: TensorLike, y: TensorLike):
+        """
+        Fits the emulator to the data.
+        The model expects the input data to be:
+            x (features): 2D array
+            y (target): 1D array
+        """
+        x_np, y_np = self._convert_to_numpy(x, y)
+        self.n_features_in_ = x_np.shape[1]
         self.model_.fit(x_np, y_np)
-        self.is_fitted_ = True
 
     def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
-        x = check_array(x)
-        # TODO (#422): move to predict() and consider if required
-        check_is_fitted(self, "is_fitted_")
         y_pred = self.model_.predict(x)
-        # Ensure the output is a 2D tensor array with shape (n_samples, 1)
-        return Tensor(y_pred.reshape(-1, 1))  # type: ignore PGH003
+        assert not isinstance(y_pred, (spmatrix, list))
+        _, y = self._convert_to_tensors(x, y_pred)
+        return y
 
     @staticmethod
     def get_tune_config():

@@ -60,8 +60,8 @@ def test_cnp_module_predict_fails_with_calling_fit_first(sample_data_y1d):
     cnp = CNPModule(x, y)
 
     with pytest.raises(
-        ValueError,
-        match=r"Model has not been trained. Please call fit\(\) before predict\(\).",
+        RuntimeError,
+        match=r"Model is not fitted yet. Call fit\(\) before predict\(\).",
     ):
         cnp.predict(x)
 
