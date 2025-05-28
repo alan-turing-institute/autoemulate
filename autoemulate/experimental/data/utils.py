@@ -241,7 +241,8 @@ class ValidationMixin:
         Check the types and shape are correct
         for the output data.
         """
-        # TODO: add any common checks for output data
+        if not isinstance(output, OutputLike):
+            raise ValueError(f"Expected OutputLike, got {type(output)}")
 
     @staticmethod
     def check_vector(X: TensorLike) -> TensorLike:
