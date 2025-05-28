@@ -244,6 +244,9 @@ class ValidationMixin:
         if not isinstance(output, OutputLike):
             raise ValueError(f"Expected OutputLike, got {type(output)}")
 
+        if isinstance(output, TensorLike) and output.ndim != 2:
+            raise ValueError(f"Expected output to be 2D tensor, got {output.ndim}D")
+
     @staticmethod
     def check_vector(X: TensorLike) -> TensorLike:
         """
