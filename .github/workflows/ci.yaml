@@ -52,7 +52,7 @@ jobs:
         run: |
           poetry remove torch
           poetry source add -p explicit pytorch https://download.pytorch.org/whl/cpu
-          poetry add --source pytorch "torch==2.2.1"
+          poetry add --source pytorch "torch==2.6.0"
 
       - name: Install dependencies
         run: |
