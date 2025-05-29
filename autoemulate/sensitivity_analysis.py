@@ -3,7 +3,9 @@ from typing import Dict
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze
+from SALib.sample.morris import sample as morris_sample
 from SALib.sample.sobol import sample
 from SALib.util import ResultDict
 
@@ -12,7 +14,7 @@ from autoemulate.utils import _ensure_2d
 
 
 def _sensitivity_analysis(
-    model, problem=None, X=None, N=1024, conf_level=0.95, as_df=True
+    model, method="sobol", problem=None, X=None, N=1024, conf_level=0.95, as_df=True
 ):
     """Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -20,6 +22,8 @@ def _sensitivity_analysis(
     -----------
     model : fitted emulator model
         The emulator model to analyze.
+    method : str, optional
+        Sensitivity analysis method. Either 'sobol' or 'morris' (default is 'sobol').
     problem : dict
         The problem definition, including 'num_vars', 'names', and 'bounds', optional 'output_names'.
         Example:
@@ -45,10 +49,29 @@ def _sensitivity_analysis(
         containing the Sobol indices keys ‘S1’, ‘S1_conf’, ‘ST’, and ‘ST_conf’, where each entry
         is a list of length corresponding to the number of parameters.
     """
+
+    # choose method
+    if method == "sobol":
+        results = _sobol_analysis(model, problem, X, N, conf_level)
+    elif method == "morris":
+        results = _morris_analysis(model, problem, X, N)
+    else:
+        raise ValueError(f"Unknown method: {method}. Must be 'sobol' or 'morris'.")
+
     Si = _sobol_analysis(model, problem, X, N, conf_level)
 
     if as_df:
-        return _sobol_results_to_df(Si)
+        if method == "sobol":
+            return _sobol_results_to_df(Si)
+        elif method == "morris":
+            # Need problem for morris conversion
+            if problem is None and X is not None:
+                problem = _generate_problem(X)
+            elif problem is None:
+                raise ValueError(
+                    "Problem definition required for Morris method when as_df=True"
+                )
+            return _morris_results_to_df(results, problem)
     else:
         return Si
 
@@ -249,7 +272,7 @@ def _create_bar_plot(ax, output_data, output_name):
     ax.set_title(f"Output: {output_name}")
 
 
-def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
+def _plot_sobol_analysis(results, index="S1", n_cols=None, figsize=None):
     """
     Plot the sensitivity analysis results.
 
@@ -308,3 +331,228 @@ def _plot_sensitivity_analysis(results, index="S1", n_cols=None, figsize=None):
         plt.tight_layout()
 
     return _display_figure(fig)
+
+
+"""
+Morris sensitivity analysis
+"""
+
+
+def _morris_analysis(model, problem=None, X=None, N=1024) -> Dict[str, ResultDict]:
+    """
+    Perform Morris sensitivity analysis on a fitted emulator.
+
+    Parameters:
+    -----------
+    model : fitted emulator model
+        The emulator model to analyze.
+    problem : dict
+        The problem definition, including 'num_vars', 'names', and 'bounds'.
+    X : array-like, optional
+        Training data to generate problem definition if problem is None.
+    N : int, optional
+        The number of trajectories to generate (default is 1024).
+
+    Returns:
+    --------
+    dict
+        A dictionary where each key is the name of an output variable and each value is a dictionary
+        containing the Morris indices keys 'mu', 'mu_star', 'sigma', 'mu_star_conf'.
+    """
+    # get problem
+    if problem is not None:
+        problem = _check_problem(problem)
+    elif X is not None:
+        problem = _generate_problem(X)
+    else:
+        raise ValueError("Either problem or X must be provided.")
+
+    # Morris sampling
+    param_values = morris_sample(problem, N)
+
+    # evaluate
+    Y = model.predict(param_values)
+    Y = _ensure_2d(Y)
+
+    num_outputs = Y.shape[1]
+    output_names = _get_output_names(problem, num_outputs)
+
+    # single or multiple output morris analysis
+    results = {}
+    for i in range(num_outputs):
+        Si = morris_analyze(problem, param_values, Y[:, i])
+        results[output_names[i]] = Si
+
+    return results
+
+
+def _morris_results_to_df(
+    results: Dict[str, ResultDict], problem: dict
+) -> pd.DataFrame:
+    """
+    Convert Morris results to a (long-format) pandas DataFrame.
+
+    Parameters:
+    -----------
+    results : dict
+        The Morris indices returned by morris_analysis.
+    problem : dict
+        The problem definition, including 'names'.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame with columns: 'output', 'parameter', 'mu', 'mu_star', 'sigma', 'mu_star_conf'.
+    """
+    rows = []
+    parameter_names = problem["names"]
+
+    for output, result in results.items():
+        df_data = {
+            "output": [output] * len(parameter_names),
+            "parameter": parameter_names,
+            "mu": result["mu"],
+            "mu_star": result["mu_star"],
+            "sigma": result["sigma"],
+            "mu_star_conf": result["mu_star_conf"],
+        }
+
+        df = pd.DataFrame(df_data)
+        rows.append(df)
+
+    return pd.concat(rows, ignore_index=True)
+
+
+def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None):
+    """
+    Plot the Morris sensitivity analysis results.
+
+    Parameters:
+    -----------
+    results : pd.DataFrame
+        The results from morris_results_to_df.
+    param_groups : dict, optional
+        Dictionary mapping parameter names to groups for coloring.
+    n_cols : int, optional
+        The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
+        otherwise the number of outputs.
+    figsize : tuple, optional
+        Figure size as (width, height) in inches. If None, automatically calculated.
+    """
+    with plt.style.context("fast"):
+        unique_outputs = results["output"].unique()
+        n_outputs = len(unique_outputs)
+
+        # layout
+        n_rows, n_cols = _calculate_layout(n_outputs, n_cols)
+        figsize = figsize or (4.5 * n_cols, 4 * n_rows)
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        if isinstance(axes, np.ndarray):
+            axes = axes.flatten()
+        elif n_outputs == 1:
+            axes = [axes]
+
+        for ax, output in zip(axes, unique_outputs):
+            output_data = results[results["output"] == output]
+            _create_morris_plot(ax, output_data, output, param_groups)
+
+        # remove any empty subplots
+        for idx in range(len(unique_outputs), len(axes)):
+            fig.delaxes(axes[idx])
+
+        # title
+        fig.suptitle(
+            r"Morris Sensitivity Analysis ($\mu^*$ vs $\sigma$)",
+            fontsize=14,
+        )
+
+        plt.tight_layout()
+
+    return _display_figure(fig)
+
+
+def _create_morris_plot(ax, output_data, output_name, param_groups=None):
+    """Create a Morris plot (mu_star vs sigma) for a single output."""
+    
+    # Default colors - expanded palette for more variety
+    colors = ['#4C4B63', '#E63946', '#F77F00', '#FCBF49', '#06D6A0', '#118AB2', '#073B4C',
+              '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
+    
+    if param_groups is None:
+        # Different color for each parameter when no groups specified
+        unique_params = output_data['parameter'].unique()
+        param_colors = {param: colors[i % len(colors)] for i, param in enumerate(unique_params)}
+        
+        for _, row in output_data.iterrows():
+            param_name = row['parameter']
+            color = param_colors[param_name]
+            
+            ax.scatter(
+                row["sigma"],
+                row["mu_star"],
+                color=color,
+                alpha=0.7,
+                s=60,
+                label=param_name
+            )
+    else:
+        # Color by parameter groups
+        unique_groups = list(set(param_groups.values()))
+        group_colors = {group: colors[i % len(colors)] for i, group in enumerate(unique_groups)}
+        
+        for _, row in output_data.iterrows():
+            param_name = row['parameter']
+            group = param_groups.get(param_name, 'default')
+            color = group_colors.get(group, colors[0])
+            
+            ax.scatter(
+                row["sigma"],
+                row["mu_star"],
+                color=color,
+                alpha=0.7,
+                s=60,
+                label=group if group not in ax.get_legend_handles_labels()[1] else ""
+            )
+    
+    # Add parameter labels with matching colors
+    for _, row in output_data.iterrows():
+        param_name = row['parameter']
+        
+        if param_groups is None:
+            # Use same color as the dot (individual parameter color)
+            label_color = param_colors[param_name]
+        else:
+            # Use group color
+            group = param_groups.get(param_name, 'default')
+            label_color = group_colors.get(group, colors[0])
+        
+        ax.annotate(
+            param_name,
+            (row["sigma"], row["mu_star"]),
+            xytext=(5, 5),
+            textcoords='offset points',
+            fontsize=8,
+            alpha=0.9,
+            color=label_color,
+            fontweight='bold'
+        )
+    
+    ax.set_xlabel("σ (Standard Deviation)")
+    ax.set_ylabel("μ* (Modified Mean)")
+    ax.set_title(f"Output: {output_name}")
+    ax.grid(True, alpha=0.3)
+    
+    # Add legend
+    handles, labels = ax.get_legend_handles_labels()
+    if labels:
+        # Remove duplicates while preserving order
+        unique_labels = []
+        unique_handles = []
+        for handle, label in zip(handles, labels):
+            if label not in unique_labels:
+                unique_labels.append(label)
+                unique_handles.append(handle)
+        
+        ax.legend(unique_handles, unique_labels, loc='best', framealpha=0.9)
+
