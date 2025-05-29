@@ -454,26 +454,50 @@ def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None)
             axes = [axes]
 
         # Create color mappings once for all plots
-        colors = ['#4C4B63', '#E63946', '#F77F00', '#FCBF49', '#06D6A0', '#118AB2', '#073B4C',
-                  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
-        
+        colors = [
+            "#4C4B63",
+            "#E63946",
+            "#F77F00",
+            "#FCBF49",
+            "#06D6A0",
+            "#118AB2",
+            "#073B4C",
+            "#FF6B6B",
+            "#4ECDC4",
+            "#45B7D1",
+            "#96CEB4",
+            "#FFEAA7",
+            "#DDA0DD",
+            "#98D8C8",
+        ]
+
         if param_groups is None:
             # Different color for each parameter
-            all_params = results['parameter'].unique()
-            param_colors = {param: colors[i % len(colors)] for i, param in enumerate(all_params)}
+            all_params = results["parameter"].unique()
+            param_colors = {
+                param: colors[i % len(colors)] for i, param in enumerate(all_params)
+            }
             legend_items = [(param, param_colors[param]) for param in all_params]
             legend_title = "Parameters"
         else:
             # Color by parameter groups
             unique_groups = list(set(param_groups.values()))
-            group_colors = {group: colors[i % len(colors)] for i, group in enumerate(unique_groups)}
+            group_colors = {
+                group: colors[i % len(colors)] for i, group in enumerate(unique_groups)
+            }
             legend_items = [(group, group_colors[group]) for group in unique_groups]
             legend_title = "Parameter Groups"
 
         # Plot each output
         for ax, output in zip(axes, unique_outputs):
             output_data = results[results["output"] == output]
-            _create_morris_plot(ax, output_data, output, param_groups, param_colors if param_groups is None else group_colors)
+            _create_morris_plot(
+                ax,
+                output_data,
+                output,
+                param_groups,
+                param_colors if param_groups is None else group_colors,
+            )
 
         # remove any empty subplots
         for idx in range(len(unique_outputs), len(axes)):
@@ -483,19 +507,29 @@ def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None)
         legend_handles = []
         legend_labels = []
         for label, color in legend_items:
-            handle = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, 
-                              markersize=8, alpha=0.7, linewidth=0)
+            handle = plt.Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor=color,
+                markersize=8,
+                alpha=0.7,
+                linewidth=0,
+            )
             legend_handles.append(handle)
             legend_labels.append(label)
 
         # Add legend to the right of the plots
-        fig.legend(legend_handles, legend_labels, 
-                  loc='center right', 
-                  bbox_to_anchor=(0.98, 0.5),
-                  title=legend_title,
-                  framealpha=0.9,
-                  fontsize=10)
-
+        fig.legend(
+            legend_handles,
+            legend_labels,
+            loc="center right",
+            bbox_to_anchor=(0.98, 0.5),
+            title=legend_title,
+            framealpha=0.9,
+            fontsize=10,
+        )
 
         # title
         fig.suptitle(
@@ -508,67 +542,81 @@ def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None)
     return _display_figure(fig)
 
 
-def _create_morris_plot(ax, output_data, output_name, param_groups=None, color_mapping=None):
+def _create_morris_plot(
+    ax, output_data, output_name, param_groups=None, color_mapping=None
+):
     """Create a Morris plot (mu_star vs sigma) for a single output."""
-    
+
     # Default colors - expanded palette for more variety
-    colors = ['#4C4B63', '#E63946', '#F77F00', '#FCBF49', '#06D6A0', '#118AB2', '#073B4C',
-              '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
-    
+    colors = [
+        "#4C4B63",
+        "#E63946",
+        "#F77F00",
+        "#FCBF49",
+        "#06D6A0",
+        "#118AB2",
+        "#073B4C",
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#96CEB4",
+        "#FFEAA7",
+        "#DDA0DD",
+        "#98D8C8",
+    ]
+
     # Use provided color mapping or create default
     if color_mapping is None:
         if param_groups is None:
             # Different color for each parameter when no groups specified
-            unique_params = output_data['parameter'].unique()
-            param_colors = {param: colors[i % len(colors)] for i, param in enumerate(unique_params)}
+            unique_params = output_data["parameter"].unique()
+            param_colors = {
+                param: colors[i % len(colors)] for i, param in enumerate(unique_params)
+            }
             color_mapping = param_colors
         else:
             # Color by parameter groups
             unique_groups = list(set(param_groups.values()))
-            group_colors = {group: colors[i % len(colors)] for i, group in enumerate(unique_groups)}
+            group_colors = {
+                group: colors[i % len(colors)] for i, group in enumerate(unique_groups)
+            }
             color_mapping = group_colors
-    
+
     # Plot points without labels for legend (legend is handled at figure level)
     for _, row in output_data.iterrows():
-        param_name = row['parameter']
-        
+        param_name = row["parameter"]
+
         if param_groups is None:
             color = color_mapping[param_name]
         else:
-            group = param_groups.get(param_name, 'default')
+            group = param_groups.get(param_name, "default")
             color = color_mapping.get(group, colors[0])
-        
-        ax.scatter(
-            row["sigma"],
-            row["mu_star"],
-            color=color,
-            alpha=0.7,
-            s=60
-        )
-    
+
+        ax.scatter(row["sigma"], row["mu_star"], color=color, alpha=0.7, s=60)
+
     # Add parameter labels with matching colors
     for _, row in output_data.iterrows():
-        param_name = row['parameter']
-        
+        param_name = row["parameter"]
+
         if param_groups is None:
             # Use same color as the dot (individual parameter color)
             label_color = color_mapping[param_name]
         else:
             # Use group color
-            group = param_groups.get(param_name, 'default')
+            group = param_groups.get(param_name, "default")
             label_color = color_mapping.get(group, colors[0])
-        
+
         ax.annotate(
             param_name,
             (row["sigma"], row["mu_star"]),
             xytext=(5, 5),
-            textcoords='offset points',
+            textcoords="offset points",
             fontsize=8,
             alpha=0.9,
             color=label_color,
-            fontweight='bold'
+            fontweight="bold",
         )
-    
+
     ax.set_xlabel("σ (Standard Deviation)")
     ax.set_ylabel("μ* (Modified Mean)")
     ax.set_title(f"Output: {output_name}")
