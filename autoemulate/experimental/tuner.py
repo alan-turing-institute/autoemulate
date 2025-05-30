@@ -2,9 +2,11 @@ import numpy as np
 from torchmetrics import R2Score
 from tqdm import tqdm
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.types import (
+    DeviceLike,
     InputLike,
     ModelConfig,
     TensorLike,
@@ -12,7 +14,7 @@ from autoemulate.experimental.types import (
 )
 
 
-class Tuner(ConversionMixin):
+class Tuner(ConversionMixin, TorchDeviceMixin):
     """
     Run randomised hyperparameter search for a given model.
 
@@ -26,12 +28,22 @@ class Tuner(ConversionMixin):
         Number of parameter settings to randomly sample and test.
     """
 
-    def __init__(self, x: InputLike, y: InputLike | None, n_iter: int = 10):
+    def __init__(
+        self,
+        x: InputLike,
+        y: InputLike | None,
+        n_iter: int = 10,
+        device: DeviceLike | None = None,
+    ):
+        TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter
-        # Convert input types, convert to tensors to ensure correct shapes, convert back
-        # to dataset. TODO: consider if this is the best way to do this.
+
+        # Convert input types, convert to tensors to ensure correct shapes, move to
+        # device and convert back to dataset. TODO: consider if this is the best way to
+        # do this.
         dataset = self._convert_to_dataset(x, y)
         x_tensor, y_tensor = self._convert_to_tensors(dataset)
+        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
         # Q: should users be able to choose a different validation metric?
@@ -73,17 +85,12 @@ class Tuner(ConversionMixin):
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
-
-            # TODO: consider whether to pass as tensors or dataloader
-            # require training data for initialisation as well as fitting?
-            m = model_class(train_x, train_y, **model_config)
-            # TODO: should we set random_state in the models?
-            # m = model(x, y, random_state=123, **best_model_config)
+            m = model_class(train_x, train_y, device=self.device, **model_config)
             m.fit(train_x, train_y)
 
             # evaluate
             y_pred = m.predict(val_x)
-            score = evaluate(val_y, y_pred, self.metric)
+            score = evaluate(val_y, y_pred, self.metric, self.device)
 
             # record score and config
             model_config_tested.append(model_config)

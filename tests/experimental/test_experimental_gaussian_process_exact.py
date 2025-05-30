@@ -1,6 +1,12 @@
 import gpytorch
+import pytest
 import torch
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
+from autoemulate.experimental.device import (
+    SUPPORTED_DEVICES,
+    check_model_device,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -41,12 +47,29 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_tune_gp(sample_data_y1d):
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_tune_gp(sample_data_y1d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
-    tuner = Tuner(x, y, n_iter=5)
+    tuner = Tuner(x, y, n_iter=5, device=device)
     scores, configs = tuner.run(GaussianProcessExact)
     assert len(scores) == 5
     assert len(configs) == 5
+
+
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_device(sample_data_y2d, new_data_y2d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    gp = GaussianProcessExact(x, y, device=device)
+    assert check_model_device(gp, device)
+    gp.fit(x, y)
+    y_pred = gp.predict(x2)
+    assert isinstance(y_pred, DistributionLike)
+    assert y_pred.mean.shape == (20, 2)
 
 
 def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):

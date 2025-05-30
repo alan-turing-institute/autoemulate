@@ -12,10 +12,11 @@ from autoemulate.experimental.data.utils import (
     ConversionMixin,
     ValidationMixin,
 )
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
-class Emulator(ABC, ValidationMixin, ConversionMixin):
+class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
@@ -228,7 +229,7 @@ class SklearnBackend(Emulator):
     def _predict(self, x: TensorLike) -> OutputLike:
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
-        _, y_pred = self._convert_to_tensors(x, y_pred)  # type: ignore PGH003
+        _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
         if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred

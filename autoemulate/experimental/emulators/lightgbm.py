@@ -2,8 +2,9 @@ import numpy as np
 from lightgbm import LGBMRegressor
 from scipy.sparse import spmatrix
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import OutputLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
 class LightGBM(Emulator):
@@ -37,9 +38,11 @@ class LightGBM(Emulator):
         n_jobs: int | None = 1,
         importance_type: str = "split",
         verbose: int = -1,
+        device: DeviceLike = "cpu",
     ):
         """Initializes a LightGBM object."""
         _, _ = x, y  # ignore unused arguments
+        TorchDeviceMixin.__init__(self, device=device)
         self.boosting_type = boosting_type
         self.num_leaves = num_leaves
         self.max_depth = max_depth

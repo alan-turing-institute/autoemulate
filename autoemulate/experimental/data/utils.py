@@ -134,14 +134,14 @@ class ConversionMixin:
         result = self._convert_to_tensors(x, y)
         if isinstance(result, tuple):
             x_tensor, y_tensor = result
-            x_np, y_np = x_tensor.numpy(), y_tensor.numpy()
+            x_np, y_np = x_tensor.cpu().numpy(), y_tensor.cpu().numpy()
             if (y_np.ndim == 2 and y_np.shape[1] == 1) or y_np.ndim == 1:
                 y_np = y_np.ravel()  # Ensure y is 1-dimensional
                 return check_X_y(x_np, y_np, multi_output=False, y_numeric=True)
             return check_X_y(x_np, y_np, multi_output=True, y_numeric=True)
 
         x_tensor = result
-        return x_tensor.numpy(), None
+        return x_tensor.cpu().numpy(), None
 
     def _random_split(
         self,
@@ -241,7 +241,11 @@ class ValidationMixin:
         Check the types and shape are correct
         for the output data.
         """
-        # TODO: add any common checks for output data
+        if not isinstance(output, OutputLike):
+            raise ValueError(f"Expected OutputLike, got {type(output)}")
+
+        if isinstance(output, TensorLike) and output.ndim != 2:
+            raise ValueError(f"Expected output to be 2D tensor, got {output.ndim}D")
 
     @staticmethod
     def check_vector(X: TensorLike) -> TensorLike:
