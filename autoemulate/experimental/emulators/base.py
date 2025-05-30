@@ -90,7 +90,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         )
         raise NotImplementedError(msg)
 
-    def set_random_seed(self, seed: int, deterministic: bool = False):
+    @staticmethod
+    def set_random_seed(seed: int, deterministic: bool = False):
         """Set random seed for Python, NumPy and PyTorch.
 
         Parameters
