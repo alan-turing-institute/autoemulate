@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import torch
 from tqdm import tqdm
 
-from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
 
