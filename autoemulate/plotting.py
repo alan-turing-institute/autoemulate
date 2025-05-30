@@ -619,6 +619,6 @@ def _display_figure(fig):
         return fig
     else:
         # in terminal, show the plot
-        plt.show()
         plt.close(fig)
+        plt.show()
         return fig

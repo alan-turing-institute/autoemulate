@@ -24,7 +24,8 @@ from autoemulate.preprocess_target import get_dim_reducer
 from autoemulate.preprocess_target import NonTrainableTransformer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.sensitivity_analysis import _plot_sensitivity_analysis
+from autoemulate.sensitivity_analysis import _plot_morris_analysis
+from autoemulate.sensitivity_analysis import _plot_sobol_analysis
 from autoemulate.sensitivity_analysis import _sensitivity_analysis
 from autoemulate.utils import _check_cv
 from autoemulate.utils import _ensure_2d
@@ -979,7 +980,14 @@ class AutoEmulate:
         return fig
 
     def sensitivity_analysis(
-        self, model=None, problem=None, N=1024, conf_level=0.95, as_df=True
+        self,
+        model=None,
+        method="sobol",
+        problem=None,
+        N=1024,
+        conf_level=0.95,
+        as_df=True,
+        **plot_kwargs,
     ):
         """Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -1038,6 +1046,10 @@ class AutoEmulate:
         The analysis requires N * (2D + 2) model evaluations, where D is the number of input
         parameters. For example, with N=1024 and 5 parameters, this requires 12,288 evaluations.
         """
+        self.method = method
+        if method not in ["sobol", "morris"]:
+            raise ValueError(f"Unknown method: {method}. Must be 'sobol' or 'morris'.")
+
         if model is None:
             if not hasattr(self, "best_model"):
                 raise RuntimeError("Must run compare() before sensitivity_analysis()")
@@ -1045,10 +1057,22 @@ class AutoEmulate:
             self.logger.info(
                 f"No model provided, using {get_model_name(model)}, which had the highest average cross-validation score, refitted on full data."
             )
-        Si = _sensitivity_analysis(model, problem, self.X, N, conf_level, as_df)
-        return Si
 
-    def plot_sensitivity_analysis(self, results, index="S1", n_cols=None, figsize=None):
+        df_results = _sensitivity_analysis(
+            model=model,
+            method=method,
+            problem=problem,
+            X=self.X,
+            N=N,
+            conf_level=conf_level,
+            as_df=as_df,
+        )
+
+        return df_results
+
+    def plot_sensitivity_analysis(
+        self, results, index="S1", param_groups=None, n_cols=None, figsize=None
+    ):
         """
         Plot the sensitivity analysis results.
 
@@ -1068,4 +1092,7 @@ class AutoEmulate:
             Figure size as (width, height) in inches.If None, automatically calculated.
 
         """
-        return _plot_sensitivity_analysis(results, index, n_cols, figsize)
+        if self.method == "sobol":
+            return _plot_sobol_analysis(results, index, n_cols, figsize)
+        elif self.method == "morris":
+            return _plot_morris_analysis(results, param_groups, n_cols, figsize)
