@@ -52,7 +52,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         preprocessor_cls: type[Preprocessor] | None = None,
-        random_state: int | None = None,
+        random_seed: int | None = None,
         epochs: int = 50,
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
@@ -60,8 +60,8 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         device: DeviceLike | None = None,
     ):
         # Init random state
-        if random_state is not None:
-            self.set_random_seed(random_state)
+        if random_seed is not None:
+            self.set_random_seed(random_seed)
 
         # Init device
         TorchDeviceMixin.__init__(self, device=device)

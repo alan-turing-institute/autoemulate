@@ -58,12 +58,10 @@ class CNPDataset(Dataset, TorchDeviceMixin):
     def __getitem__(self, idx):
         return self.sample()
 
-    def sample(self, seed=None):
+    def sample(self):
         """
         From the full dataset, sample context and target points.
         """
-        if seed is not None:
-            np.random.seed(seed)
 
         x = self.x
         y = self.y
@@ -262,7 +260,7 @@ class CNPModule(PyTorchBackend):
         offset_context_points: int = 2,
         n_episodes: int = 12,
         batch_size: int = 4,
-        random_state: int | None = None,
+        random_seed: int | None = None,
         device: DeviceLike | None = None,
     ):
         """
@@ -295,8 +293,8 @@ class CNPModule(PyTorchBackend):
         device: DeviceLike | None
             Device to use for training. If None, use the default device.
         """
-        if random_state is not None:
-            self.set_random_seed(random_state, deterministic=True)
+        if random_seed is not None:
+            self.set_random_seed(random_seed, deterministic=True)
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
         x, y = self._move_tensors_to_device(x, y)

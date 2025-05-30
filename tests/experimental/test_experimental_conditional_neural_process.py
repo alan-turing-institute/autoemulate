@@ -92,8 +92,8 @@ def test_device(sample_data_y2d, new_data_y2d, device):
 def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
-    model1 = CNPModule(x, y, random_state=123)
-    model2 = CNPModule(x, y, random_state=123)
+    model1 = CNPModule(x, y, random_seed=123)
+    model2 = CNPModule(x, y, random_seed=123)
     model1.fit(x, y)
     model2.fit(x, y)
     pred1 = model1.predict(x2)

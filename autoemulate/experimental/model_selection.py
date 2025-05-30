@@ -105,9 +105,9 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        # TODO: should we set random_state in the models?
+        # TODO: should we set random_seed in the models?
         rs = np.random.randint(int(1e5))
-        m = model(x, y, device=device, random_state=rs, **best_model_config)
+        m = model(x, y, device=device, random_seed=rs, **best_model_config)
         m.fit(x, y)
 
         # evaluate on batches

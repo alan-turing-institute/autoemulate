@@ -76,14 +76,14 @@ def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
     # TODO: investigate why this test passes even when
-    # random_state unset or set differently
+    # random_seed unset or set differently
     model1 = GaussianProcessExact(
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf,
-        # random_state=124,
+        # random_seed=124,
     )
     model2 = GaussianProcessExact(
         x,
@@ -91,7 +91,7 @@ def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
         gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf,
-        # random_state=123,
+        # random_seed=123,
     )
     model1.fit(x, y)
     model2.fit(x, y)
