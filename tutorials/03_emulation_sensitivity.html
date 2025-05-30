@@ -1,0 +1,1787 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Scaling Sensitivity Analysis with Emulation &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/03_emulation_sensitivity';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Active Learning with AutoEmulate" href="04_active_learning.html" />
+    <link rel="prev" title="Minimising computation time" href="02_speed.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../getting-started/index.html">Getting started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started/installation.html">Installation instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started/quickstart.html">Quickstart</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="01_start.html">A deeper dive into <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code></a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="02_speed.html">Minimising computation time</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Scaling Sensitivity Analysis with Emulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_reaction_diffusion.html">Reduced-dimension Emulator: Reaction-Diffusion example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_AE_workflow.html">Integrating a user-provided simulator in an end-to-end AutoEmulate workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/contributing-emulators.html">Contributing Emulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/compare.html">autoemulate.compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/datasets.html">autoemulate.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/history_matching.html"><code class="docutils literal notranslate"><span class="pre">HistoryMatching</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/sensitivity_analysis.html">autoemulate.sensitivity_analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/simulations/index.html">autoemulate.simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/emulators/index.html">autoemulate.emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/rbf.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/support_vector_machines.html">autoemulate.emulators.support_vector_machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/light_gbm.html">autoemulate.emulators.light_gbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/conditional_neural_process.html">autoemulate.emulators.conditional_neural_process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/conditional_neural_process_attn.html">autoemulate.emulators.conditional_neural_process_attn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gaussian_process.html">autoemulate.emulators.gaussian_process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gaussian_process_mt.html">autoemulate.emulators.gaussian_process_mt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/neural_net_sk.html">autoemulate.emulators.neural_net_sk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gaussian_process_sklearn.html">autoemulate.emulators.gaussian_process</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/03_emulation_sensitivity.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/03_emulation_sensitivity.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Scaling Sensitivity Analysis with Emulation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-problem">The Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#content">Content</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-your-simulator">Define your simulator</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary-conditions">Boundary conditions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#the-setup">The setup</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solve">Solve</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting-pressure-and-flow-rate">Plotting Pressure and flow rate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#experimental-design">Experimental Design</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling-parameters">Sampling parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enforcing-relationship-between-correlated-parameters">Enforcing relationship between correlated parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate">Simulate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#emulate-validate">Emulate &amp; Validate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis">Sensitivity Analysis</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="scaling-sensitivity-analysis-with-emulation">
+<h1>Scaling Sensitivity Analysis with Emulation<a class="headerlink" href="#scaling-sensitivity-analysis-with-emulation" title="Link to this heading">#</a></h1>
+<p>In this tutorial we demonstrate how <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> can facilitate finding the best emulator for the simulation of fluid flow in a cardiovascular system.</p>
+<p>By the end of this tutorial:</p>
+<ul class="simple">
+<li><p>Participants will learn how to use <code class="docutils literal notranslate"><span class="pre">Autoemulate</span></code> for the emulation of a real-world simulation in an end-to-end pipeline.</p></li>
+<li><p>Participants will learn how to explore the relationship between underlying cardiac health parameters and non-invasive measures using synthetic data, with a focus on how these insights can improve understanding and estimation of key cardiovascular dynamics</p></li>
+</ul>
+<section id="the-problem">
+<h2>The Problem<a class="headerlink" href="#the-problem" title="Link to this heading">#</a></h2>
+<p>In the field of cardiovascular modeling, capturing the dynamics of blood flow and the associated pressures and volumes within the vascular system is crucial for understanding heart function and disease. Physics-based models that accurately represent these dynamics often require significant computational resources, making them challenging to apply in large-scale or real-time scenarios. Emulation techniques provide a way to achieve high-fidelity simulations of the cardiovascular system, allowing for efficient and accurate analysis of key hemodynamic parameters.</p>
+</section>
+<section id="content">
+<h2>Content<a class="headerlink" href="#content" title="Link to this heading">#</a></h2>
+<p>This tutorial includes:</p>
+<ol class="arabic simple">
+<li><p>Setting up a simulation : The system simulated is a tube with an input flow rate at any given time. The tube is divided to 10 compartments which allows for the study of the pressure and flow rate at various points in the tube.</p></li>
+<li><p>Running the simulation for 60 sets of parameters sampled from the parameter space.</p></li>
+<li><p>Using Autoemulate to find the best emulator fot this simulation</p></li>
+<li><p>Assessing model accuracy, performing sensitivity analysis.</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sb</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoEmulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">r2_score</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.experimental_design</span><span class="w"> </span><span class="kn">import</span> <span class="n">LatinHypercube</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.flow_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlowProblem</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="define-your-simulator">
+<h3>Define your simulator<a class="headerlink" href="#define-your-simulator" title="Link to this heading">#</a></h3>
+<p>This simulator simulates a vessel divided to 10 compartments.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h4>
+<p>The simulation parameters include :</p>
+<ol class="arabic simple">
+<li><p>R (Resistance):
+Represents the resistance to blood flow in blood vessels, akin to the hydraulic resistance caused by vessel diameter and blood viscosity (Analogous to electrical resistor).</p></li>
+<li><p>L (Inductance):
+Represents the inertial effects of blood flow, capturing how blood resists changes in its velocity (Analogous to electrical inductor).</p></li>
+<li><p>C (Capacitance):
+Represents the compliance or elasticity of blood vessels, primarily large arteries, which store and release blood volume with changes in pressure (Analogous to a capacitor).</p></li>
+</ol>
+</section>
+<section id="boundary-conditions">
+<h4>Boundary conditions<a class="headerlink" href="#boundary-conditions" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p>Neumann boundary condition : Specifies the derivative of the variable at the boundary.</p></li>
+<li><p>Dirichlet Boundary condition : Specifies the value of the variable directly at the boundary.</p></li>
+</ol>
+</section>
+<section id="the-setup">
+<h4>The setup<a class="headerlink" href="#the-setup" title="Link to this heading">#</a></h4>
+<p>The input flow rate in each compartment is <span class="math notranslate nohighlight">\(Q_i(t)\)</span> for the <span class="math notranslate nohighlight">\(i^{th}\)</span> compartment and the output flow rate is  <span class="math notranslate nohighlight">\(Q_{i+1}(t)\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(Q_0(t) = 
+\begin{cases} 
+A \cdot \sin^2\left(\frac{\pi}{t_d} t\right), &amp; \text{if } 0 \leq t &lt; T, \\
+0, &amp; \text{otherwise}.
+\end{cases}\)</span></p>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(Q_0(t)\)</span>  is the input pulse function (flow rate) at time  t</p></li>
+<li><p>A   is the amplitude of the pulse</p></li>
+<li><p><span class="math notranslate nohighlight">\(t_d\)</span>  is the pulse duration.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fp</span> <span class="o">=</span> <span class="n">FlowProblem</span><span class="p">(</span><span class="n">ncycles</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ncomp</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">amp</span><span class="o">=</span><span class="mf">900.</span><span class="p">)</span>
+<span class="n">fp</span><span class="o">.</span><span class="n">generate_pulse_function</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="solve">
+<h3>Solve<a class="headerlink" href="#solve" title="Link to this heading">#</a></h3>
+<p>Pressure in Each Compartment (<span class="math notranslate nohighlight">\(P_i\)</span>): This determines how the pressure in each compartment evolves over time, based on the inflow (<span class="math notranslate nohighlight">\(Q_i(t)\)</span>) and the outflow (<span class="math notranslate nohighlight">\(Q_{i+1}(t)\)</span>). where <span class="math notranslate nohighlight">\(i\)</span> is the number of compartment.</p>
+<img src="../../misc/circuit.jpg" alt="Circuit Diagram" style="width:60%;"/>
+<p><span class="math notranslate nohighlight">\(\frac{dP_i}{dt} = \frac{1}{C_n} \left( Q_i(t) - Q_{i+1}(t) \right)\)</span> where, <span class="math notranslate nohighlight">\(C_n = \frac{C}{n_\text{comp}}\)</span></p>
+<p>Flow rate equation (<span class="math notranslate nohighlight">\(Q_i\)</span>): This governs how the flow in each compartment changes over time, depending on the pressures in the neighboring compartments and the resistance and inertance properties of each compartment.</p>
+<p><span class="math notranslate nohighlight">\(\frac{dQ_i}{dt} = \frac{1}{L_n} \left( P_i - P_{10} - R_n Q_i(t) \right)\)</span>, where <span class="math notranslate nohighlight">\(L_n = \frac{L}{n_\text{comp}}, \quad R_n = \frac{R}{n_\text{comp}}\)</span></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fp</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="plotting-pressure-and-flow-rate">
+<h3>Plotting Pressure and flow rate<a class="headerlink" href="#plotting-pressure-and-flow-rate" title="Link to this heading">#</a></h3>
+<p>Here the pressure and flow rate have been plotted for all 10 compartments (the colour of the line fades for later compartments). As it is apaprent from the figure the peak pressure as well as the flow rate drops for the later compartments.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">plot_res</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/73103a2b078c0b378bab29fb2e1335ea58faf696404f53b73cdc53705348b6b1.png" src="../_images/73103a2b078c0b378bab29fb2e1335ea58faf696404f53b73cdc53705348b6b1.png" />
+</div>
+</div>
+</section>
+<section id="experimental-design">
+<h3>Experimental Design<a class="headerlink" href="#experimental-design" title="Link to this heading">#</a></h3>
+<p>We set up the parameters for the simulation and their range. The range is set to the domain of interest for the problem we are solving. Furthermore, it is important to restrict the range to enhance the fitting of the model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## specify valid parameter ranges</span>
+<span class="c1"># Dictionary with parameters and their scaled ranges for the blood flow model</span>
+<span class="n">parameters_range</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;T&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># Cardiac cycle period (s)</span>
+    <span class="s1">&#39;td&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">),</span>  <span class="c1"># Pulse duration (s)</span>
+    <span class="s1">&#39;amp&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">900.0</span><span class="p">),</span>  <span class="c1"># Amplitude (e.g., pressure or flow rate)</span>
+    <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.001</span><span class="p">),</span>  <span class="c1"># Time step (s)</span>
+    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">38.0</span><span class="p">),</span>  <span class="c1"># Compliance (unit varies based on context)</span>
+    <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.06</span><span class="p">),</span>  <span class="c1"># Resistance (unit varies based on context)</span>
+    <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.0017</span><span class="p">),</span>  <span class="c1"># Inductance (unit varies based on context)</span>
+    <span class="s1">&#39;R_o&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.025</span><span class="p">),</span>  <span class="c1"># Outflow resistance (unit varies based on context)</span>
+    <span class="s1">&#39;p_o&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">])</span> <span class="o">*</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># Initial pressure (unit varies based on context)</span>
+<span class="p">}</span>
+
+<span class="c1"># Output the dictionary for verification</span>
+
+<span class="n">parameters_range</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;T&#39;: (0.5, 1.5),
+ &#39;td&#39;: (0.16000000000000003, 0.24),
+ &#39;amp&#39;: (720.0, 1080.0),
+ &#39;dt&#39;: (0.0005, 0.0015),
+ &#39;C&#39;: (30.400000000000002, 45.6),
+ &#39;R&#39;: (0.048, 0.072),
+ &#39;L&#39;: (0.00136, 0.0020399999999999997),
+ &#39;R_o&#39;: (0.020000000000000004, 0.03),
+ &#39;p_o&#39;: (9.0, 11.0)}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="sampling-parameters">
+<h3>Sampling parameters<a class="headerlink" href="#sampling-parameters" title="Link to this heading">#</a></h3>
+<p>Secondly we sample the parameter space usning the Latin hypercube sampling (LHS) method.</p>
+<p>Latin Hypercube Sampling (LHS) is a statistical method used for generating a sample of plausible values from a multidimensional distribution and guarantees that every sample is drawn from a different quantile of the underlying distribution. It is particularly effective for uncertainty quantification, sensitivity analysis, and simulation studies where the goal is to explore the behavior of a system or a model across a wide range of input parameter values.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## sample from parameter range</span>
+
+<span class="n">N_samples</span> <span class="o">=</span> <span class="mi">60</span>
+<span class="n">lhd</span> <span class="o">=</span> <span class="n">LatinHypercube</span><span class="p">(</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="n">sample_array</span> <span class="o">=</span> <span class="n">lhd</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N_samples</span><span class="p">)</span>
+<span class="n">sample_df</span>    <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sample_array</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of parameters&quot;</span><span class="p">,</span> <span class="n">sample_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;Number of samples from each parameter&quot;</span><span class="p">,</span> <span class="n">sample_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">sample_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of parameters 9 Number of samples from each parameter 60
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>T</th>
+      <th>td</th>
+      <th>amp</th>
+      <th>dt</th>
+      <th>C</th>
+      <th>R</th>
+      <th>L</th>
+      <th>R_o</th>
+      <th>p_o</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.078371</td>
+      <td>0.179061</td>
+      <td>803.263624</td>
+      <td>0.000759</td>
+      <td>33.612657</td>
+      <td>0.061407</td>
+      <td>0.001965</td>
+      <td>0.020758</td>
+      <td>9.026535</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.530640</td>
+      <td>0.198942</td>
+      <td>844.526377</td>
+      <td>0.001375</td>
+      <td>35.830789</td>
+      <td>0.057073</td>
+      <td>0.002032</td>
+      <td>0.021821</td>
+      <td>10.850939</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.361265</td>
+      <td>0.164018</td>
+      <td>1017.327348</td>
+      <td>0.000555</td>
+      <td>45.188371</td>
+      <td>0.063796</td>
+      <td>0.001745</td>
+      <td>0.022860</td>
+      <td>10.471797</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.014375</td>
+      <td>0.187115</td>
+      <td>756.949710</td>
+      <td>0.001044</td>
+      <td>34.579278</td>
+      <td>0.067588</td>
+      <td>0.002007</td>
+      <td>0.025781</td>
+      <td>10.932655</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.488616</td>
+      <td>0.198242</td>
+      <td>811.629336</td>
+      <td>0.000907</td>
+      <td>35.372583</td>
+      <td>0.061190</td>
+      <td>0.001591</td>
+      <td>0.025406</td>
+      <td>10.974837</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="enforcing-relationship-between-correlated-parameters">
+<h3>Enforcing relationship between correlated parameters<a class="headerlink" href="#enforcing-relationship-between-correlated-parameters" title="Link to this heading">#</a></h3>
+<p>The parameters are randomly sampled from the parameter space. However, some of the parameters are by nature correlated. For example in our simulation the duration of the pulse <span class="math notranslate nohighlight">\(t_d\)</span> is directly correlated with <span class="math notranslate nohighlight">\(T\)</span> which is the length of a full cycle. In this cell, we enforce the relationship between these two parameters. In otherwords scale <span class="math notranslate nohighlight">\(t_d\)</span> in accordance with the value of <span class="math notranslate nohighlight">\(T\)</span>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># enforce parameter relations (eg td &lt;= T)</span>
+<span class="n">sample_df</span><span class="p">[</span><span class="s1">&#39;td&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;td&#39;</span><span class="p">]</span><span class="o">*</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="simulate">
+<h3>Simulate<a class="headerlink" href="#simulate" title="Link to this heading">#</a></h3>
+<p>Here we run the simulation which involves:<br />
+1- Generating the pulse functions.<br />
+2- Solving the differential equations.<br />
+3- Returning the pressure and flow rate in y for every set of parameters sampled (every row of sample_df data frame).</p>
+<p>The full output of the simulation is quite large for fitting an emulator model. Therefore, it is standard practice to grab the most relavant information for training the emulator. Here we have chosen to train the emulator on the maximum pressure in each compartment. There are a variety of outputs that could be considered (max / min / average /mean / median / gradiant / PCA ).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fixed parameters: Number of compartments and cycles</span>
+<span class="n">ncomp</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">ncycles</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Function to run a simulation for a given set of parameters</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">param_dict</span><span class="p">):</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">FlowProblem</span><span class="p">(</span><span class="n">ncycles</span><span class="o">=</span><span class="n">ncycles</span><span class="p">,</span> <span class="n">ncomp</span><span class="o">=</span><span class="n">ncomp</span><span class="p">,</span> <span class="o">**</span><span class="n">param_dict</span><span class="p">)</span>
+    <span class="n">fp</span><span class="o">.</span><span class="n">generate_pulse_function</span><span class="p">()</span>
+    <span class="n">fp</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fp</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">fp</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">y</span>
+
+<span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c1"># Iterate over each sample of parameters</span>
+<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">sample_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_df</span><span class="p">)):</span>
+    <span class="n">param_dict</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> 
+    <span class="n">fp</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="n">param_dict</span><span class="p">)</span> 
+    <span class="c1"># extract peak pressure</span>
+    <span class="n">peak_pressure</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:</span><span class="n">ncomp</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peak_pressure</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 60/60 [00:49&lt;00:00,  1.22it/s]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="emulate-validate">
+<h3>Emulate &amp; Validate<a class="headerlink" href="#emulate-validate" title="Link to this heading">#</a></h3>
+<p>Here we setup Autoemulate.</p>
+<p>The models currently available for performing cross-validation are as follows:</p>
+<ul class="simple">
+<li><p>sop: SecondOrderPolynomial</p></li>
+<li><p>rbf: RadialBasisFunctions</p></li>
+<li><p>rf: RandomForest</p></li>
+<li><p>gb: GradientBoosting</p></li>
+<li><p>lgbm: LightGBM</p></li>
+<li><p>svm: SupportVectorMachines</p></li>
+<li><p>gp: GaussianProcess</p></li>
+<li><p>cnp: ConditionalNeuralProcess</p></li>
+<li><p>acnp: AttentiveConditionalNeuralProcess</p></li>
+<li><p>gpmt: GaussianProcessMT</p></li>
+<li><p>gps: GaussianProcessSklearn</p></li>
+<li><p>nns: NeuralNetSk</p></li>
+</ul>
+<p>We have selected four of these models for cross-validation, feel free to explore more!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">em</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">()</span>
+<span class="n">parameter_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">em</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">sample_df</span><span class="p">[</span><span class="n">parameter_names</span><span class="p">],</span> <span class="n">Y</span><span class="p">,</span> <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gp&#39;</span><span class="p">,</span><span class="s1">&#39;cnp&#39;</span><span class="p">,</span><span class="s1">&#39;svm&#39;</span><span class="p">,</span><span class="s1">&#39;lgbm&#39;</span><span class="p">])</span>
+<span class="n">best_model</span> <span class="o">=</span> <span class="n">em</span><span class="o">.</span><span class="n">compare</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><p>AutoEmulate is set up with the following settings:</p></div><div class="output text_html"><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Values</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Simulation input shape (X)</th>
+      <td>(60, 9)</td>
+    </tr>
+    <tr>
+      <th>Simulation output shape (y)</th>
+      <td>(60,)</td>
+    </tr>
+    <tr>
+      <th>Proportion of data for testing (test_set_size)</th>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>Scale input data (scale)</th>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>Scaler (scaler)</th>
+      <td>StandardScaler</td>
+    </tr>
+    <tr>
+      <th>Scale output data (scale_output)</th>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>Scaler output (scaler_output)</th>
+      <td>StandardScaler</td>
+    </tr>
+    <tr>
+      <th>Do hyperparameter search (param_search)</th>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>Reduce input dimensionality (reduce_dim)</th>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>Reduce output dimensionality (reduce_dim_output)</th>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>Cross validator (cross_validator)</th>
+      <td>KFold</td>
+    </tr>
+    <tr>
+      <th>Parallel jobs (n_jobs)</th>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table></div><script type="application/vnd.jupyter.widget-view+json">{"model_id": "1c643da7ad4f45cd840e2da820af7a0a", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">em</span><span class="o">.</span><span class="n">summarise_cv</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>preprocessing</th>
+      <th>model</th>
+      <th>short</th>
+      <th>fold</th>
+      <th>rmse</th>
+      <th>r2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>None</td>
+      <td>ConditionalNeuralProcess</td>
+      <td>cnp</td>
+      <td>3</td>
+      <td>4.560392</td>
+      <td>0.997178</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>None</td>
+      <td>GaussianProcess</td>
+      <td>gp</td>
+      <td>3</td>
+      <td>6.580276</td>
+      <td>0.994124</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>None</td>
+      <td>GaussianProcess</td>
+      <td>gp</td>
+      <td>2</td>
+      <td>5.840839</td>
+      <td>0.993465</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>None</td>
+      <td>GaussianProcess</td>
+      <td>gp</td>
+      <td>0</td>
+      <td>10.820508</td>
+      <td>0.991767</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>None</td>
+      <td>GaussianProcess</td>
+      <td>gp</td>
+      <td>4</td>
+      <td>7.217839</td>
+      <td>0.987873</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>None</td>
+      <td>GaussianProcess</td>
+      <td>gp</td>
+      <td>1</td>
+      <td>8.055320</td>
+      <td>0.985911</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>None</td>
+      <td>ConditionalNeuralProcess</td>
+      <td>cnp</td>
+      <td>0</td>
+      <td>25.517669</td>
+      <td>0.954214</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>None</td>
+      <td>ConditionalNeuralProcess</td>
+      <td>cnp</td>
+      <td>2</td>
+      <td>18.712580</td>
+      <td>0.932923</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>None</td>
+      <td>SupportVectorMachines</td>
+      <td>svm</td>
+      <td>3</td>
+      <td>27.525519</td>
+      <td>0.897189</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>None</td>
+      <td>ConditionalNeuralProcess</td>
+      <td>cnp</td>
+      <td>1</td>
+      <td>24.127199</td>
+      <td>0.873607</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>None</td>
+      <td>ConditionalNeuralProcess</td>
+      <td>cnp</td>
+      <td>4</td>
+      <td>23.509929</td>
+      <td>0.871344</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>None</td>
+      <td>SupportVectorMachines</td>
+      <td>svm</td>
+      <td>2</td>
+      <td>29.993836</td>
+      <td>0.827666</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>None</td>
+      <td>SupportVectorMachines</td>
+      <td>svm</td>
+      <td>0</td>
+      <td>53.122914</td>
+      <td>0.801568</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>None</td>
+      <td>SupportVectorMachines</td>
+      <td>svm</td>
+      <td>4</td>
+      <td>30.260837</td>
+      <td>0.786848</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>None</td>
+      <td>SupportVectorMachines</td>
+      <td>svm</td>
+      <td>1</td>
+      <td>46.239078</td>
+      <td>0.535776</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>None</td>
+      <td>LightGBM</td>
+      <td>lgbm</td>
+      <td>0</td>
+      <td>120.198344</td>
+      <td>-0.015883</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>None</td>
+      <td>LightGBM</td>
+      <td>lgbm</td>
+      <td>3</td>
+      <td>92.218745</td>
+      <td>-0.154002</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>None</td>
+      <td>LightGBM</td>
+      <td>lgbm</td>
+      <td>1</td>
+      <td>76.130926</td>
+      <td>-0.258436</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>None</td>
+      <td>LightGBM</td>
+      <td>lgbm</td>
+      <td>4</td>
+      <td>77.045392</td>
+      <td>-0.381721</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>None</td>
+      <td>LightGBM</td>
+      <td>lgbm</td>
+      <td>2</td>
+      <td>87.329130</td>
+      <td>-0.460916</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gp</span> <span class="o">=</span> <span class="n">em</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s2">&quot;GaussianProcess&quot;</span><span class="p">)</span>
+<span class="n">em</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>model</th>
+      <th>short</th>
+      <th>preprocessing</th>
+      <th>rmse</th>
+      <th>r2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>GaussianProcess</td>
+      <td>gp</td>
+      <td>None</td>
+      <td>4.4152</td>
+      <td>0.9952</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">em</span><span class="o">.</span><span class="n">plot_eval</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/b1b8bc8e5bdc6da295330f39c94d8e367fba384b8f15b293fb7c69ae72f6d287.png" src="../_images/b1b8bc8e5bdc6da295330f39c94d8e367fba384b8f15b293fb7c69ae72f6d287.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best_emulator</span> <span class="o">=</span> <span class="n">em</span><span class="o">.</span><span class="n">refit</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="sensitivity-analysis">
+<h3>Sensitivity Analysis<a class="headerlink" href="#sensitivity-analysis" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Define the problem by creating a dictionary which contains the names and the boundaries of the parameters</p></li>
+<li><p>contribution of each parameter , importance of each parameter</p>
+<ul class="simple">
+<li><p>S₁: First-order sensitivity index.</p></li>
+<li><p>S₂: Second-order sensitivity index.</p></li>
+<li><p>Sₜ: Total sensitivity index.</p></li>
+</ul>
+</li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract parameter names and bounds from the dictionary</span>
+<span class="n">parameter_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">parameter_bounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<span class="c1"># Define the problem dictionary for Sobol sensitivity analysis</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;num_vars&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">),</span>
+    <span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="n">parameter_names</span><span class="p">,</span>
+    <span class="s1">&#39;bounds&#39;</span><span class="p">:</span> <span class="n">parameter_bounds</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">em</span><span class="o">.</span><span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>output</th>
+      <th>parameter</th>
+      <th>index</th>
+      <th>value</th>
+      <th>confidence</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>y1</td>
+      <td>T</td>
+      <td>S1</td>
+      <td>0.003793</td>
+      <td>0.000379</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>y1</td>
+      <td>td</td>
+      <td>S1</td>
+      <td>0.024640</td>
+      <td>0.002530</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>y1</td>
+      <td>amp</td>
+      <td>S1</td>
+      <td>0.893082</td>
+      <td>0.061964</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>y1</td>
+      <td>dt</td>
+      <td>S1</td>
+      <td>0.000372</td>
+      <td>0.000059</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>y1</td>
+      <td>C</td>
+      <td>S1</td>
+      <td>0.028867</td>
+      <td>0.002382</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>y1</td>
+      <td>R</td>
+      <td>S1</td>
+      <td>0.048604</td>
+      <td>0.004261</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>y1</td>
+      <td>L</td>
+      <td>S1</td>
+      <td>0.002155</td>
+      <td>0.000243</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>y1</td>
+      <td>R_o</td>
+      <td>S1</td>
+      <td>0.000089</td>
+      <td>0.000014</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>y1</td>
+      <td>p_o</td>
+      <td>S1</td>
+      <td>0.000237</td>
+      <td>0.000029</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>y1</td>
+      <td>T</td>
+      <td>ST</td>
+      <td>0.003250</td>
+      <td>0.005674</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>y1</td>
+      <td>td</td>
+      <td>ST</td>
+      <td>0.023463</td>
+      <td>0.013052</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>y1</td>
+      <td>amp</td>
+      <td>ST</td>
+      <td>0.893304</td>
+      <td>0.069595</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>y1</td>
+      <td>dt</td>
+      <td>ST</td>
+      <td>-0.000073</td>
+      <td>0.001720</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>y1</td>
+      <td>C</td>
+      <td>ST</td>
+      <td>0.028134</td>
+      <td>0.014233</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>y1</td>
+      <td>R</td>
+      <td>ST</td>
+      <td>0.048360</td>
+      <td>0.019052</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>y1</td>
+      <td>L</td>
+      <td>ST</td>
+      <td>0.001506</td>
+      <td>0.004328</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>y1</td>
+      <td>R_o</td>
+      <td>ST</td>
+      <td>-0.000368</td>
+      <td>0.000799</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>y1</td>
+      <td>p_o</td>
+      <td>ST</td>
+      <td>-0.002123</td>
+      <td>0.001339</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>y1</td>
+      <td>(T, td)</td>
+      <td>S2</td>
+      <td>-0.000055</td>
+      <td>0.007540</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>y1</td>
+      <td>(T, amp)</td>
+      <td>S2</td>
+      <td>-0.000390</td>
+      <td>0.010885</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>y1</td>
+      <td>(T, dt)</td>
+      <td>S2</td>
+      <td>-0.000085</td>
+      <td>0.007441</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>y1</td>
+      <td>(T, C)</td>
+      <td>S2</td>
+      <td>-0.000229</td>
+      <td>0.007275</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>y1</td>
+      <td>(T, R)</td>
+      <td>S2</td>
+      <td>-0.000636</td>
+      <td>0.007819</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>y1</td>
+      <td>(T, L)</td>
+      <td>S2</td>
+      <td>-0.000171</td>
+      <td>0.007454</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>y1</td>
+      <td>(T, R_o)</td>
+      <td>S2</td>
+      <td>-0.000157</td>
+      <td>0.007444</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>y1</td>
+      <td>(T, p_o)</td>
+      <td>S2</td>
+      <td>-0.000115</td>
+      <td>0.007434</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>y1</td>
+      <td>(td, amp)</td>
+      <td>S2</td>
+      <td>0.000693</td>
+      <td>0.025017</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>y1</td>
+      <td>(td, dt)</td>
+      <td>S2</td>
+      <td>0.000479</td>
+      <td>0.019280</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>y1</td>
+      <td>(td, C)</td>
+      <td>S2</td>
+      <td>0.000715</td>
+      <td>0.019898</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>y1</td>
+      <td>(td, R)</td>
+      <td>S2</td>
+      <td>-0.000077</td>
+      <td>0.019744</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>y1</td>
+      <td>(td, L)</td>
+      <td>S2</td>
+      <td>0.000469</td>
+      <td>0.019261</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>y1</td>
+      <td>(td, R_o)</td>
+      <td>S2</td>
+      <td>0.000416</td>
+      <td>0.019239</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>y1</td>
+      <td>(td, p_o)</td>
+      <td>S2</td>
+      <td>0.000400</td>
+      <td>0.019213</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>y1</td>
+      <td>(amp, dt)</td>
+      <td>S2</td>
+      <td>0.000922</td>
+      <td>0.073855</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>y1</td>
+      <td>(amp, C)</td>
+      <td>S2</td>
+      <td>0.000853</td>
+      <td>0.073387</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>y1</td>
+      <td>(amp, R)</td>
+      <td>S2</td>
+      <td>0.001235</td>
+      <td>0.075641</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>y1</td>
+      <td>(amp, L)</td>
+      <td>S2</td>
+      <td>0.000967</td>
+      <td>0.074229</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>y1</td>
+      <td>(amp, R_o)</td>
+      <td>S2</td>
+      <td>0.000954</td>
+      <td>0.073460</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>y1</td>
+      <td>(amp, p_o)</td>
+      <td>S2</td>
+      <td>0.002929</td>
+      <td>0.073982</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>y1</td>
+      <td>(dt, C)</td>
+      <td>S2</td>
+      <td>0.000266</td>
+      <td>0.002515</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>y1</td>
+      <td>(dt, R)</td>
+      <td>S2</td>
+      <td>0.000259</td>
+      <td>0.002566</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>y1</td>
+      <td>(dt, L)</td>
+      <td>S2</td>
+      <td>0.000181</td>
+      <td>0.002595</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>y1</td>
+      <td>(dt, R_o)</td>
+      <td>S2</td>
+      <td>0.000284</td>
+      <td>0.002598</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>y1</td>
+      <td>(dt, p_o)</td>
+      <td>S2</td>
+      <td>0.000279</td>
+      <td>0.002592</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>y1</td>
+      <td>(C, R)</td>
+      <td>S2</td>
+      <td>0.000155</td>
+      <td>0.019744</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>y1</td>
+      <td>(C, L)</td>
+      <td>S2</td>
+      <td>0.000345</td>
+      <td>0.018837</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>y1</td>
+      <td>(C, R_o)</td>
+      <td>S2</td>
+      <td>0.000172</td>
+      <td>0.018937</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>y1</td>
+      <td>(C, p_o)</td>
+      <td>S2</td>
+      <td>0.000274</td>
+      <td>0.018967</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>y1</td>
+      <td>(R, L)</td>
+      <td>S2</td>
+      <td>-0.000257</td>
+      <td>0.028458</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>y1</td>
+      <td>(R, R_o)</td>
+      <td>S2</td>
+      <td>-0.000203</td>
+      <td>0.028525</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>y1</td>
+      <td>(R, p_o)</td>
+      <td>S2</td>
+      <td>-0.000377</td>
+      <td>0.028469</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>y1</td>
+      <td>(L, R_o)</td>
+      <td>S2</td>
+      <td>0.000003</td>
+      <td>0.005687</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>y1</td>
+      <td>(L, p_o)</td>
+      <td>S2</td>
+      <td>-0.000053</td>
+      <td>0.005682</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>y1</td>
+      <td>(R_o, p_o)</td>
+      <td>S2</td>
+      <td>0.000371</td>
+      <td>0.001240</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="02_speed.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Minimising computation time</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="04_active_learning.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Active Learning with AutoEmulate</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-problem">The Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#content">Content</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#define-your-simulator">Define your simulator</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary-conditions">Boundary conditions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#the-setup">The setup</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solve">Solve</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting-pressure-and-flow-rate">Plotting Pressure and flow rate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#experimental-design">Experimental Design</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling-parameters">Sampling parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enforcing-relationship-between-correlated-parameters">Enforcing relationship between correlated parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate">Simulate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#emulate-validate">Emulate &amp; Validate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis">Sensitivity Analysis</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
