@@ -35,7 +35,7 @@ class Simulator(ABC):
             output_variables: Optional list of specific output variables to track
         """
         self._param_bounds = parameters_range
-        self._param_names = list(self._param_bounds.keys())
+        self._param_names = list(self.param_bounds.keys())
 
         # Output configuration
         self._output_variables = (
@@ -59,6 +59,11 @@ class Simulator(ABC):
         """List of original output variables without statistic suffixes"""
         return self._output_variables
 
+    @property
+    def param_bounds(self) -> Dict[str, Tuple[float, float]]:
+        """Get the parameter bounds"""
+        return self._param_bounds
+
     @abstractmethod
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """
@@ -72,7 +77,7 @@ class Simulator(ABC):
         """
         pass
 
-    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
+    def sample_inputs(self, n_samples: int) -> np.ndarray:
         """
         Generate random samples within the parameter bounds using Latin Hypercube Sampling.
 
@@ -80,25 +85,35 @@ class Simulator(ABC):
             n_samples: Number of samples to generate
 
         Returns:
-            List of parameter dictionaries
+            np.ndarray: Parameter samples (column order is given by self.param_names)
         """
-        # Use LatinHypercube from autoemulate.experimental_design
-        lhd = LatinHypercube(list(self._param_bounds.values()))
+
+        # TODO: check that sample_array has params self.param_names order
+        lhd = LatinHypercube([self.param_bounds[name] for name in self.param_names])
         sample_array = lhd.sample(n_samples)
+        return sample_array
 
-        # Convert the sample array to a list of parameter dictionaries
-        samples = []
-        for i in range(n_samples):
-            sample = {}
-            for j, name in enumerate(self._param_names):
-                sample[name] = sample_array[i, j]
-            samples.append(sample)
+    def convert_samples(
+        self, samples: Union[np.ndarray, pd.DataFrame]
+    ) -> list[dict[str, float]]:
+        """
+        Convert the sample array or dataframe to a list of parameter dictionaries.
+        """
+        if isinstance(samples, pd.DataFrame):
+            return samples.to_dict(orient="records")
 
-        return samples
+        elif isinstance(samples, np.ndarray):
+            samples_list = []
+            for i in range(len(samples)):
+                sample = {}
+                for j, name in enumerate(self.param_names):
+                    sample[name] = samples[i, j]
+                samples_list.append(sample)
+            return samples_list
+        else:
+            raise ValueError("samples must be an array or pandas dataframe")
 
-    def run_batch_simulations(
-        self, samples: Union[List[Dict[str, float]], pd.DataFrame]
-    ) -> np.ndarray:
+    def run_batch_simulations(self, samples: np.ndarray) -> np.ndarray:
         """
         Run multiple simulations with different parameters.
 
@@ -108,8 +123,9 @@ class Simulator(ABC):
         Returns:
             2D array of simulation results
         """
-        if isinstance(samples, pd.DataFrame):
-            samples = samples.to_dict(orient="records")
+
+        # convert inputs to list of dictionaries
+        samples = self.convert_samples(samples)
 
         results = []
         successful = 0
@@ -170,10 +186,6 @@ class Simulator(ABC):
         ]
 
         return stats, stat_names
-
-    def get_param_bounds(self) -> Dict[str, Tuple[float, float]]:
-        """Get the parameter bounds"""
-        return self._param_bounds
 
     def get_results_dataframe(
         self, samples: List[Dict[str, float]], results: np.ndarray
