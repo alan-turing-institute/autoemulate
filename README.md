@@ -5,7 +5,7 @@
 | Name                                                                                 |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                                                          |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                                               |      333 |       74 |     78% |266-276, 332-340, 429-439, 446, 450-458, 470, 487, 494-499, 505, 565, 581, 583, 586, 604, 608, 611, 625, 652, 657-659, 666, 671, 679, 689, 748, 754-755, 764-771, 784, 797-798, 822, 857, 863, 949-979, 1041-1049, 1071 |
+| autoemulate/compare.py                                                               |      340 |       80 |     76% |267-277, 333-341, 430-440, 447, 451-459, 471, 488, 495-500, 506, 566, 582, 584, 587, 605, 609, 612, 626, 653, 658-660, 667, 672, 680, 690, 749, 755-756, 765-772, 785, 798-799, 823, 858, 864, 950-980, 1049-1071, 1095-1098 |
 | autoemulate/cross\_validate.py                                                       |       46 |        3 |     93% |81-82, 153 |
 | autoemulate/data\_splitting.py                                                       |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                                              |       12 |        0 |    100% |           |
@@ -67,7 +67,7 @@
 | autoemulate/preprocess\_target.py                                                    |      260 |       28 |     89% |84, 96, 116, 176, 208-209, 216, 256, 281, 319, 449-470, 485, 490, 520, 523, 526, 566, 607 |
 | autoemulate/printing.py                                                              |       41 |       14 |     66% |7, 12, 17-26, 40, 128, 137-139 |
 | autoemulate/save.py                                                                  |       36 |        3 |     92% |     28-30 |
-| autoemulate/sensitivity\_analysis.py                                                 |      111 |       39 |     65% |48-53, 61, 64, 66, 71, 99, 133-136, 235-249, 272-310 |
+| autoemulate/sensitivity\_analysis.py                                                 |      214 |      135 |     37% |54-76, 84, 87, 89, 94, 122, 156-159, 258-272, 295-333, 363-386, 407-423, 442-542, 551-623 |
 | autoemulate/simulations/\_\_init\_\_.py                                              |        0 |        0 |    100% |           |
 | autoemulate/simulations/base.py                                                      |       81 |       20 |     75% |60, 78, 103, 114, 136-139, 157, 172-188, 204-217 |
 | autoemulate/simulations/circ\_utils.py                                               |       94 |       94 |      0% |     4-233 |
@@ -96,7 +96,7 @@
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                        |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                                       |       52 |        2 |     96% |     52-53 |
-| tests/test\_compare.py                                                               |      183 |        3 |     98% |239, 263, 272 |
+| tests/test\_compare.py                                                               |      183 |        5 |     97% |239, 263, 272, 377-378 |
 | tests/test\_cross\_validate.py                                                       |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                              |       13 |        0 |    100% |           |
@@ -117,7 +117,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **7309** | **1288** | **82%** |           |
+|                                                                            **TOTAL** | **7419** | **1392** | **81%** |           |
 
 
 ## Setup coverage badge
