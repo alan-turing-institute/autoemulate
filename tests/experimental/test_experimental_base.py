@@ -2,89 +2,9 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
-from autoemulate.experimental.emulators.base import InputTypeMixin, PyTorchBackend
+from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
-from torch.utils.data import DataLoader, TensorDataset
-
-# @pytest.fixture
-# def model_config() -> M:
-#     return {
-#         "epochs": 10,
-#         "batch_size": 2,
-#         "shuffle": False,
-#         "verbose": False,
-#         "optimizer": torch.optim.Adam,
-#         "criterion": torch.nn.MSELoss,
-#     }
-
-
-class TestInputTypeMixin:
-    """
-    Class to test the InputTypeMixin class.
-    """
-
-    def setup_method(self):
-        """
-        Define the InputTypeMixin instance.
-        """
-        self.mixin = InputTypeMixin()
-
-    def test_convert_numpy_array(self):
-        """
-        Test converting a numpy array to a DataLoader object.
-        """
-        X = np.array([[1.0], [2.0], [3.0]])
-        y = np.array([1.0, 2.0, 3.0])
-        dataloader = self.mixin._convert_to_dataloader(
-            X, y, batch_size=2, shuffle=False
-        )
-
-        assert isinstance(dataloader, DataLoader)
-        batches = list(dataloader)
-        assert len(batches) == 2
-        assert torch.equal(batches[0][0], torch.tensor([[1.0], [2.0]]))
-        assert torch.equal(batches[0][1], torch.tensor([1.0, 2.0]))
-
-    def test_convert_torch_tensor(self):
-        """
-        Test converting a torch tensor to a DataLoader object.
-        """
-        X = torch.tensor([[1.0], [2.0], [3.0]])
-        y = torch.tensor([1.0, 2.0, 3.0])
-        dataloader = self.mixin._convert_to_dataloader(
-            X, y, batch_size=2, shuffle=False
-        )
-
-        assert isinstance(dataloader, DataLoader)
-        batches = list(dataloader)
-        assert len(batches) == 2
-        assert torch.equal(batches[0][0], torch.tensor([[1.0], [2.0]]))
-        assert torch.equal(batches[0][1], torch.tensor([1.0, 2.0]))
-
-    def test_convert_dataloader(self):
-        """
-        Test converting a DataLoader object to itself.
-        """
-        X = torch.tensor([[1.0], [2.0], [3.0]])
-        y = torch.tensor([1.0, 2.0, 3.0])
-        dataset = TensorDataset(X, y)
-        dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
-
-        result = self.mixin._convert_to_dataloader(dataloader)
-        assert isinstance(result, DataLoader)
-        batches = list(result)
-        assert len(batches) == 2
-        assert torch.equal(batches[0][0], torch.tensor([[1.0], [2.0]]))
-        assert torch.equal(batches[0][1], torch.tensor([1.0, 2.0]))
-
-    def test_convert_invalid_input(self):
-        """
-        Test converting an invalid input type.
-        """
-        X = "invalid input"
-        with pytest.raises(ValueError, match="Unsupported type for x."):
-            self.mixin._convert_to_dataloader(X)  # type: ignore - test for invalid type
 
 
 class TestPyTorchBackend:
@@ -133,8 +53,8 @@ class TestPyTorchBackend:
         """
         Test the fit method of PyTorchBackend.
         """
-        x = np.array([[1.0], [2.0], [3.0]])
-        y = np.array([[2.0], [4.0], [6.0]])
+        x = torch.Tensor(np.array([[1.0], [2.0], [3.0]]))
+        y = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         self.model.fit(x, y)
 
         assert isinstance(self.model.loss_history, list)
@@ -145,8 +65,8 @@ class TestPyTorchBackend:
         """
         Test the predict method of PyTorchBackend.
         """
-        x_train = np.array([[1.0], [2.0], [3.0]])
-        y_train = np.array([[2.0], [4.0], [6.0]])
+        x_train = torch.Tensor(np.array([[1.0], [2.0], [3.0]]))
+        y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         self.model.fit(x_train, y_train)
 
         X_test = torch.tensor([[4.0]])
@@ -158,7 +78,7 @@ class TestPyTorchBackend:
 
     def test_tune_xy(self):
         """
-        Test that Tuner accepts X,Y inputs.
+        Test that Tuner accepts x,y inputs.
         """
         x_train = torch.Tensor(np.arange(16).reshape(-1, 1))
         y_train = 2 * x_train
@@ -179,7 +99,7 @@ class TestPyTorchBackend:
     def test_standardizer_fail(self):
         x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
         with pytest.raises(
-            ValueError, match="Expected 2D torch.Tensor, actual shape dim 1"
+            ValueError, match="Expected 2D TensorLike, actual shape dim 1"
         ):
             self.model.preprocess(x_train)
 

@@ -1,56 +1,57 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
+import numpy as np
+from sklearn.base import BaseEstimator
 from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import InputTypeMixin
-from autoemulate.experimental.data.validation import Base
-from autoemulate.experimental.types import InputLike, OutputLike, TuneConfig
+from autoemulate.experimental.data.utils import (
+    ConversionMixin,
+    ValidationMixin,
+)
+from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
-class Emulator(ABC, Base):
+class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
     - `AutoEmulate`
     """
 
-    # TODO: update emulators with these methods
-    # @abstractmethod
-    # def _fit(self, x: InputLike, y: InputLike | None): ...
-
-    # def fit(self, x: InputLike, y: InputLike | None):
-    #     self._check(x, y)
-    #     self._fit(x, y)
+    is_fitted_: bool = False
 
     @abstractmethod
-    def fit(self, x: InputLike, y: InputLike | None): ...
+    def _fit(self, x: TensorLike, y: TensorLike): ...
+
+    def fit(self, x: TensorLike, y: TensorLike):
+        self._check(x, y)
+        self._fit(x, y)
+        self.is_fitted_ = True
 
     @abstractmethod
     def __init__(
-        self, x: InputLike | None = None, y: InputLike | None = None, **kwargs
+        self, x: TensorLike | None = None, y: TensorLike | None = None, **kwargs
     ): ...
 
     @classmethod
     def model_name(cls) -> str:
         return cls.__name__
 
-    # TODO: update emulators with these methods
-    # @abstractmethod
-    # def _predict(self, x: InputLike) -> OutputLike:
-    #     pass
-
-    # def predict(self, x: InputLike) -> OutputLike:
-    #     self._check(x, None)
-    #     output = self.predict(x)
-    #     # Check that it is Gaussian or Y
-    #     self._check_output(output)
-    #     return output
-
     @abstractmethod
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         pass
+
+    def predict(self, x: TensorLike) -> OutputLike:
+        if not self.is_fitted_:
+            msg = "Model is not fitted yet. Call fit() before predict()."
+            raise RuntimeError(msg)
+        self._check(x, None)
+        output = self._predict(x)
+        self._check_output(output)
+        return output
 
     @staticmethod
     @abstractmethod
@@ -58,7 +59,6 @@ class Emulator(ABC, Base):
         """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
-    @abstractmethod
     def get_tune_config() -> TuneConfig:
         """
         The keys in the TuneConfig must be implemented as keyword arguments in the
@@ -82,11 +82,14 @@ class Emulator(ABC, Base):
                 self.lr = lr
                 self.batch_size = batch_size
         """
+        msg = (
+            "Subclasses should implement for generating tuning config specific to "
+            "each subclass."
+        )
+        raise NotImplementedError(msg)
 
-        ...
 
-
-class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
+class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     """
     PyTorchBackend is a torch model and implements the base class.
     This provides default implementations to further subclasses.
@@ -103,7 +106,7 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
     loss_fn: nn.Module = nn.MSELoss()
     optimizer: optim.Optimizer
 
-    def preprocess(self, x):
+    def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
             return x
         return self.preprocessor.preprocess(x)
@@ -115,17 +118,17 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
         """
         return nn.MSELoss()(y_pred, y_true)
 
-    def fit(
+    def _fit(
         self,
-        x: InputLike,
-        y: InputLike | None,
+        x: TensorLike,
+        y: TensorLike,
     ):
         """
         Train a PyTorchBackend model.
 
         Parameters
         ----------
-            X: InputLike
+            X: TensorLike
                 Input features as numpy array, PyTorch tensor, or DataLoader.
             y: OutputLike or None
                 Target values (not needed if x is a DataLoader).
@@ -146,8 +149,6 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
 
             for X_batch, y_batch in dataloader:
                 # Preprocess x_batch
-                # TODO: consider if this should be moved outside of dataloader iteration
-                # e.g. as part of the InputTypeMixin
                 x = self.preprocess(X_batch)
 
                 # Forward pass
@@ -170,19 +171,45 @@ class PyTorchBackend(nn.Module, Emulator, InputTypeMixin, Preprocessor):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
         return self(x)
 
-    def cross_validate(self, x: InputLike) -> None:
-        msg = "This function is not yet implemented."
-        raise NotImplementedError(msg)
 
-    @staticmethod
-    def get_tune_config():
-        msg = (
-            "Subclasses should implement for generating tuning config specific to "
-            "each subclass."
-        )
-        raise NotImplementedError(msg)
+class SklearnBackend(Emulator):
+    """
+    SklearnBackend is a sklearn model and implements the base class.
+    This provides default implementations to further subclasses.
+    This means that models can subclass and only need to implement
+    `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
+    """
+
+    # TODO: consider if we also need to inherit from other classes
+    model: BaseEstimator
+    normalize_y: bool = False
+    y_mean: TensorLike
+    y_std: TensorLike
+
+    def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
+        _, _ = x, y
+
+    def _fit(self, x: TensorLike, y: TensorLike):
+        if self.normalize_y:
+            y, y_mean, y_std = self._normalize(y)
+            self.y_mean = y_mean
+            self.y_std = y_std
+        x_np, y_np = self._convert_to_numpy(x, y)
+        assert isinstance(x_np, np.ndarray)
+        assert isinstance(y_np, np.ndarray)
+        self.n_features_in_ = x_np.shape[1]
+        self._model_specific_check(x_np, y_np)
+        self.model.fit(x_np, y_np)  # type: ignore PGH003
+
+    def _predict(self, x: TensorLike) -> OutputLike:
+        x_np, _ = self._convert_to_numpy(x, None)
+        y_pred = self.model.predict(x_np)  # type: ignore PGH003
+        _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
+        if self.normalize_y:
+            y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
+        return y_pred

@@ -5,9 +5,7 @@ import numpy as np
 import torch
 from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
-from gpytorch.kernels import (
-    ScaleKernel,
-)
+from gpytorch.kernels import ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from torch import nn
 
@@ -26,21 +24,17 @@ from autoemulate.emulators.gaussian_process import (
     zero_mean,
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
-from autoemulate.experimental.emulators.base import (
-    Emulator,
-    InputTypeMixin,
-)
+from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
-from autoemulate.experimental.types import InputLike, OutputLike
+from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 from autoemulate.utils import set_random_seed
 
 
-class GaussianProcessExact(
-    Emulator, InputTypeMixin, gpytorch.models.ExactGP, Preprocessor
-):
+class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
     """
     Gaussian Process Exact Emulator
     This class implements an exact Gaussian Process emulator using the GPyTorch library
@@ -53,8 +47,8 @@ class GaussianProcessExact(
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        x: InputLike,
-        y: InputLike,
+        x: TensorLike,
+        y: TensorLike,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
@@ -64,11 +58,17 @@ class GaussianProcessExact(
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        device: DeviceLike | None = None,
     ):
+        # Init random state
         if random_state is not None:
             set_random_seed(random_state)
 
+        # Init device
+        TorchDeviceMixin.__init__(self, device=device)
+
         x, y = self._convert_to_tensors(x, y)
+        x, y = self._move_tensors_to_device(x, y)
 
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
@@ -85,12 +85,10 @@ class GaussianProcessExact(
             )
         )
 
-        assert isinstance(y, torch.Tensor)
-        assert isinstance(x, torch.Tensor)
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
-        # Initialize preprocessor
+        # Init preprocessor
         if preprocessor_cls is not None:
             if issubclass(preprocessor_cls, Standardizer):
                 self.preprocessor = preprocessor_cls(
@@ -105,10 +103,10 @@ class GaussianProcessExact(
 
         # Init likelihood
         likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+        likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
         x_preprocessed = self.preprocess(x)
-        assert isinstance(x_preprocessed, torch.Tensor)
         gpytorch.models.ExactGP.__init__(
             self,
             train_inputs=x_preprocessed,
@@ -122,29 +120,27 @@ class GaussianProcessExact(
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.to(self.device)
 
     @staticmethod
     def is_multioutput():
         return True
 
-    def preprocess(self, x: InputLike) -> InputLike:
+    def preprocess(self, x: TensorLike) -> TensorLike:
         """Preprocess the input data using the preprocessor."""
         if self.preprocessor is not None:
             x = self.preprocessor.preprocess(x)
         return x
 
-    def forward(self, x: InputLike):
-        assert isinstance(x, torch.Tensor)
+    def forward(self, x: TensorLike):
         mean = self.mean_module(x)
-
         assert isinstance(mean, torch.Tensor)
         covar = self.covar_module(x)
-
         return MultitaskMultivariateNormal.from_batch_mvn(
             MultivariateNormal(mean, covar)
         )
 
-    def log_epoch(self, epoch: int, loss: torch.Tensor):
+    def log_epoch(self, epoch: int, loss: TensorLike):
         logger = logging.getLogger(__name__)
         assert self.likelihood.noise is not None
         msg = (
@@ -153,15 +149,17 @@ class GaussianProcessExact(
         )
         logger.info(msg)
 
-    def fit(self, x: InputLike, y: InputLike | None):
+    def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
-        # Ensure tensors and correct shapes
-        x, y = self._convert_to_tensors(self._convert_to_dataset(x, y))
+        x, y = self._move_tensors_to_device(x, y)
+
+        # TODO: move conversion out of _fit() and instead rely on for impl check
+        x, y = self._convert_to_tensors(x, y)
+
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         x = self.preprocess(x)
-        assert isinstance(x, torch.Tensor)
 
         # Set the training data in case changed since init
         self.set_train_data(x, y, strict=False)
@@ -176,14 +174,11 @@ class GaussianProcessExact(
             self.log_epoch(epoch, loss)
             optimizer.step()
 
-    def predict(self, x: InputLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
+        x = x.to(self.device)
         x = self.preprocess(x)
-        x_tensor = self._convert_to_tensors(x)
-        if not isinstance(x, torch.Tensor):
-            msg = f"x ({x}) must be a torch.Tensor"
-            raise ValueError(msg)
-        return self(x_tensor)
+        return self(x)
 
     @staticmethod
     def get_tune_config():

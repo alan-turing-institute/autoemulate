@@ -64,30 +64,6 @@ class NaghaviSimulator(Simulator):
             "export_min": 1,
         }
 
-    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
-        """
-        Generate random samples within the parameter bounds using Latin Hypercube Sampling.
-
-        Args:
-            n_samples: Number of samples to generate
-
-        Returns:
-            List of parameter dictionaries
-        """
-        # Use LatinHypercube from autoemulate.experimental_design
-        lhd = LatinHypercube(list(self._param_bounds.values()))
-        sample_array = lhd.sample(n_samples)
-
-        # Convert the sample array to a list of parameter dictionaries
-        samples = []
-        for i in range(n_samples):
-            sample = {}
-            for j, name in enumerate(self._param_names):
-                sample[name] = sample_array[i, j]
-            samples.append(sample)
-
-        return samples
-
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """
         Run a single Naghavi model simulation and return output statistics.

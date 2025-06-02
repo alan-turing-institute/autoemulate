@@ -15,11 +15,15 @@ def test_cross_validate():
         def __init__(self, x=None, y=None, **kwargs):
             pass
 
-        def fit(self, x, y):
+        def _fit(self, x, y):
             pass
 
-        def predict(self, x):
-            return torch.tensor([val * 2 for val in x])
+        def _predict(self, x):
+            """
+            Dummy predict that always returns
+            a 2D tensor.
+            """
+            return x.unsqueeze(1)
 
         @staticmethod
         def get_tune_config():
@@ -30,7 +34,7 @@ def test_cross_validate():
             return False
 
     x = torch.tensor(np.arange(32)).float()
-    y = 2 * x
+    y = x.unsqueeze(1)  # Dummy target, same shape as _predict output
     dataset = TensorDataset(x, y)
 
     emulator_cls = DummyEmulator
