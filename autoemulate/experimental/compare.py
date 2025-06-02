@@ -6,22 +6,26 @@ import numpy as np
 from sklearn.model_selection import BaseCrossValidator, KFold
 
 from autoemulate.experimental.data.utils import ConversionMixin
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.model_selection import cross_validate
 from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import InputLike
+from autoemulate.experimental.types import DeviceLike, InputLike
 
 
-class AutoEmulate(ConversionMixin):
+class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     def __init__(
         self,
         x: InputLike,
         y: InputLike,
         models: list[type[Emulator]] | None = None,
+        device: DeviceLike | None = None,
     ):
+        TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
         x, y = self._convert_to_tensors(x, y)
+        x, y = self._move_tensors_to_device(x, y)
 
         # Set default models if None
         updated_models = self.get_models(models)
@@ -73,7 +77,7 @@ class AutoEmulate(ConversionMixin):
     def compare(
         self, n_iter: int = 10, cv: type[BaseCrossValidator] = KFold
     ) -> dict[str, dict[str, Any]]:
-        tuner = Tuner(self.train_val, y=None, n_iter=n_iter)
+        tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         models_evaluated = {}
         for model_cls in self.models:
             scores, configs = tuner.run(model_cls)

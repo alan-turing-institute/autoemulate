@@ -24,12 +24,13 @@ from autoemulate.emulators.gaussian_process import (
     zero_mean,
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
-from autoemulate.experimental.types import OutputLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 from autoemulate.utils import set_random_seed
 
 
@@ -57,11 +58,17 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        device: DeviceLike | None = None,
     ):
+        # Init random state
         if random_state is not None:
             set_random_seed(random_state)
 
+        # Init device
+        TorchDeviceMixin.__init__(self, device=device)
+
         x, y = self._convert_to_tensors(x, y)
+        x, y = self._move_tensors_to_device(x, y)
 
         # Initialize the mean and covariance modules
         # TODO: consider refactoring to only pass torch tensors x and y
@@ -81,7 +88,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
-        # Initialize preprocessor
+        # Init preprocessor
         if preprocessor_cls is not None:
             if issubclass(preprocessor_cls, Standardizer):
                 self.preprocessor = preprocessor_cls(
@@ -96,6 +103,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
 
         # Init likelihood
         likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+        likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
         x_preprocessed = self.preprocess(x)
@@ -112,6 +120,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.to(self.device)
 
     @staticmethod
     def is_multioutput():
@@ -143,6 +152,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
+        x, y = self._move_tensors_to_device(x, y)
 
         # TODO: move conversion out of _fit() and instead rely on for impl check
         x, y = self._convert_to_tensors(x, y)
@@ -166,6 +176,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
 
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
+        x = x.to(self.device)
         x = self.preprocess(x)
         return self(x)
 

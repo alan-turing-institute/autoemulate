@@ -473,15 +473,15 @@ class AutoEmulate:
                     means = _sum_cvs({full_name: cv_results[full_name]}, metric)
                     current_score = means.iloc[0][f"{metric}"]
 
-                    # Compare with current best
-                    if (metric == "r2" and current_score > best_score) or (
-                        metric != "r2" and current_score < best_score
-                    ):
-                        best_score = current_score
-                        for model in prep_data["models"]:
-                            if get_model_name(model) == full_name:
+                    # Find the model with the correct name that has the best score
+                    for model in prep_data["models"]:
+                        if get_model_name(model) == full_name:
+                            if (metric == "r2" and current_score > best_score) or (
+                                metric != "r2" and current_score < best_score
+                            ):
+                                best_score = current_score
                                 best_model = model
-                                break
+                            break
 
                 if best_model is None:
                     raise ValueError(
