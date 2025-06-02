@@ -50,7 +50,7 @@
 | autoemulate/experimental/learners/base.py                                            |      116 |       22 |     81% |124-127, 138-142, 155-164, 183, 188-192 |
 | autoemulate/experimental/learners/membership.py                                      |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/pool.py                                            |        8 |        8 |      0% |      1-19 |
-| autoemulate/experimental/learners/stream.py                                          |      127 |       12 |     91% |74-83, 470, 521-525, 528, 556-561, 564 |
+| autoemulate/experimental/learners/stream.py                                          |      128 |       12 |     91% |83-93, 480, 531-535, 538, 566-571, 574 |
 | autoemulate/experimental/model\_selection.py                                         |       45 |        3 |     93% |     30-37 |
 | autoemulate/experimental/simulations/\_\_init\_\_.py                                 |        0 |        0 |    100% |           |
 | autoemulate/experimental/tuner.py                                                    |       32 |        0 |    100% |           |
@@ -117,7 +117,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **7419** | **1392** | **81%** |           |
+|                                                                            **TOTAL** | **7420** | **1392** | **81%** |           |
 
 
 ## Setup coverage badge
