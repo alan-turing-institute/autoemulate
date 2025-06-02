@@ -2,7 +2,7 @@ from typing import cast
 
 from torch.distributions import ComposeTransform, Transform, TransformedDistribution
 
-from autoemulate.experimental.data.validation import ValidationMixin
+from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import (
