@@ -36,12 +36,6 @@ jobs:
             run: |
               poetry config virtualenvs.in-project true
 
-          - name: Switch to CPU version of PyTorch
-            run: |
-              poetry remove torch
-              poetry source add -p explicit pytorch https://download.pytorch.org/whl/cpu
-              poetry add --source pytorch "torch==2.2.1"
-
           - name: Install dependencies
             run: |
               poetry install --with dev

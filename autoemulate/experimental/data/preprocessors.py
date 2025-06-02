@@ -13,10 +13,10 @@ class Preprocessor(ABC):
 
 
 class Standardizer(Preprocessor):
-    mean: torch.Tensor
-    std: torch.Tensor
+    mean: TensorLike
+    std: TensorLike
 
-    def __init__(self, mean: torch.Tensor, std: torch.Tensor):
+    def __init__(self, mean: TensorLike, std: TensorLike):
         if len(mean.shape) != 2:
             raise ValueError(f"mean is expected to be 2D, shape passed ({mean.shape})")
         if len(std.shape) != 2:
@@ -28,19 +28,17 @@ class Standardizer(Preprocessor):
         self.mean = mean
         self.std = std
 
-    def preprocess(self, x):
+    def preprocess(self, x: TensorLike) -> TensorLike:
         """
         Parameters
         ----------
 
-        x : torch.Tensor
+        x : TensorLike
             The input tensor to be standardized.
 
         """
-        if not isinstance(x, torch.Tensor):
-            raise ValueError(f"Expected 2D torch.Tensor, actual type {type(x)}")
+        if not isinstance(x, TensorLike):
+            raise ValueError(f"Expected 2D TensorLike, actual type {type(x)}")
         if len(x.shape) != 2:
-            raise ValueError(
-                f"Expected 2D torch.Tensor, actual shape dim {len(x.shape)}"
-            )
+            raise ValueError(f"Expected 2D TensorLike, actual shape dim {len(x.shape)}")
         return (x - self.mean) / self.std

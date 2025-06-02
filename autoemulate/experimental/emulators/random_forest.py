@@ -1,8 +1,9 @@
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class RandomForest(SklearnBackend):
@@ -25,10 +26,11 @@ class RandomForest(SklearnBackend):
         oob_score: bool = False,
         max_samples: int | None = None,
         random_state: int | np.random.RandomState | None = None,
-        **kwargs,
+        device: DeviceLike = "cpu",
     ):
         """Initializes a RandomForest object."""
         _, _ = x, y  # ignore unused arguments
+        TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
         self.n_estimators = n_estimators
         self.criterion = criterion
         self.max_depth = max_depth
