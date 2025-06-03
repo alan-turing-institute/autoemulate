@@ -91,7 +91,7 @@ class HistoryMatching:
         self.tested_params = torch.empty((0, self.in_dim))
         self.impl_scores = torch.empty((0, self.out_dim))
 
-    def create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
+    def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
         """
         Create mask for NROY points based on rank.
 
@@ -128,7 +128,7 @@ class HistoryMatching:
         TensorLike
             Indices of NROY points.
         """
-        nroy_mask = self.create_nroy_mask(implausability)
+        nroy_mask = self._create_nroy_mask(implausability)
         return torch.where(nroy_mask)[0]
 
     def get_ro_idx(self, implausability: TensorLike) -> TensorLike:
@@ -145,7 +145,7 @@ class HistoryMatching:
         TensorLike
             Indices of RO points.
         """
-        nroy_mask = self.create_nroy_mask(implausability)
+        nroy_mask = self._create_nroy_mask(implausability)
         return torch.where(~nroy_mask)[0]
 
     def calculate_implausibility(
@@ -222,8 +222,8 @@ class HistoryMatching:
 
             # Filter valid samples based on implausibility and concatenate
             impl_scores = self.calculate_implausibility(candidate_samples)
-            nroy = self.get_nroy_idx(impl_scores)
-            valid_candidates = candidate_samples[nroy]
+            nroy_idx = self.get_nroy_idx(impl_scores)
+            valid_candidates = candidate_samples[nroy_idx]
             valid_samples = torch.cat([valid_samples, valid_candidates], dim=0)
 
             # Only return required number of samples
@@ -291,21 +291,20 @@ class HistoryMatching:
 
         # Make predictions using the simulator
         else:
-            # TODO: remove numpy conversion
+            # TODO: remove numpy conversions once merged with #414
             results = self.simulator.run_batch_simulations(x.numpy())
             results = torch.from_numpy(results)
+            pred_vars = None
 
-            # Filter out failed simulations
+            # Filter out failed simulations (discard inputs and results)
             # TODO: should the simulator handle this?
             valid_indices = [i for i, res in enumerate(results) if res is not None]
-            x = x[valid_indices]
-            pred_means = results[valid_indices]
-            pred_vars = None
+            pred_means, x = results[valid_indices], x[valid_indices]
+
+            # All simulations failed
             if pred_means.shape[0] == 0:
-                # All simulations failed
                 return torch.empty(0), torch.empty(0), torch.empty(0)
 
-        # Also return input vector in case simulation failed for some inputs
         return pred_means, pred_vars, x
 
     def run(
@@ -314,7 +313,7 @@ class HistoryMatching:
         n_samples_per_wave: int = 100,
         emulator_predict: bool = True,
         initial_emulator: Optional[GaussianProcessExact] = None,
-    ) -> Union[object, None]:
+    ) -> Union[GaussianProcessExact, None]:
         """
         Run iterative history matching. In each wave:
             - sample parameter values to test from the NROY space
@@ -345,7 +344,7 @@ class HistoryMatching:
 
         Returns
         -------
-        union[object, None]
+        union[GaussianProcessExact, None]
             - a GP emulator (retrained on new data if `emulator_predict=False`) or None
         """
         if emulator_predict and initial_emulator is None:
@@ -357,9 +356,6 @@ class HistoryMatching:
         emulator = initial_emulator
         current_samples = self.sample_params(n_samples_per_wave)
 
-        # TODO: revisit where expect things to fail and handle appropriately
-        # e.g., if succesful samples=0. will calculate_implausability handle it?
-        # can we remove the if impl_scores.size(0) > 0 statement?
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 # Run wave using batch processing
@@ -369,35 +365,27 @@ class HistoryMatching:
                     emulator=emulator if emulator_predict else None,
                 )
 
-                # Calculate implausibility in batch
+                # Calculate implausibility in batch and identify NROY points
                 impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                nroy = self.get_nroy_idx(impl_scores)
-
-                # NROY parameters and implausibility scores for all parameters
-                nroy_samples = successful_samples[nroy]
-
-                self.update_progress_bar(
-                    pbar, impl_scores, current_samples.size(0), nroy_samples.size(0)
-                )
+                nroy_idx = self.get_nroy_idx(impl_scores)
+                nroy_samples = successful_samples[nroy_idx]
 
                 # Store results
-                if impl_scores.size(0) > 0:
-                    # Only include samples with scores
-                    self.tested_params = torch.cat(
-                        [self.tested_params, successful_samples], dim=0
-                    )
-                    self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
+                self.tested_params = torch.cat(
+                    [self.tested_params, successful_samples], dim=0
+                )
+                self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
-                    # Update emulator if simulated (enough) data
-                    if (
-                        (not emulator_predict)
-                        and (emulator is not None)
-                        and nroy_samples.size(0) > 10
-                    ):
-                        # QUESTION: shouldn't we be training on all the simulated
-                        # data collected across all the waves?
-                        # in that case, we need to store all pred_means too
-                        emulator.fit(successful_samples, pred_means)
+                # Update emulator if simulated (enough) data
+                if (
+                    (not emulator_predict)
+                    and (emulator is not None)
+                    and nroy_samples.size(0) > 10
+                ):
+                    # QUESTION: shouldn't we be training on all the simulated
+                    # data collected across all the waves?
+                    # in that case, we need to store all pred_means too
+                    emulator.fit(successful_samples, pred_means)
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
@@ -405,12 +393,15 @@ class HistoryMatching:
                         n_samples_per_wave, nroy_samples
                     )
 
+                # Update progress bar
+                self._update_progress_bar(
+                    pbar, impl_scores, current_samples.size(0), nroy_samples.size(0)
+                )
                 pbar.update(1)
 
-        # QUESTION: maybe not return anything?
         return emulator
 
-    def update_progress_bar(
+    def _update_progress_bar(
         self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
     ):
         """

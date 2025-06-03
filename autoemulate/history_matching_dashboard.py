@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from IPython.display import clear_output
-from IPython.display import display
+from IPython.display import clear_output, display
 from sklearn.decomposition import PCA
 
 from autoemulate.experimental.types import TensorLike
@@ -22,6 +21,8 @@ class HistoryMatchingDashboard:
     def __init__(self, samples, impl_scores, param_names, output_names, threshold=3.0):
         """
         Initialize the dashboard
+
+        TODO: shouldn't this include rank as input?
 
         Args:
             samples: DataFrame or numpy array with parameter samples
