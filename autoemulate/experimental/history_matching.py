@@ -3,7 +3,8 @@ from typing import Optional, Union
 import torch
 from tqdm import tqdm
 
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.emulators import GaussianProcessExact
+from autoemulate.experimental.types import GaussianLike, TensorLike
 from autoemulate.simulations.base import Simulator
 
 
@@ -89,7 +90,7 @@ class HistoryMatching:
         self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
 
         # Quantities to track
-        self.tested_params = torch.empty((0, self.out_dim))
+        self.tested_params = torch.empty((0, self.in_dim))
         self.impl_scores = torch.empty((0, self.out_dim))
 
     def calculate_implausibility(
@@ -221,8 +222,7 @@ class HistoryMatching:
     def predict(
         self,
         x: TensorLike,
-        # TODO: update emulator object passed here
-        emulator: Optional[object] = None,
+        emulator: Optional[GaussianProcessExact] = None,
     ) -> tuple[TensorLike, TensorLike, TensorLike]:
         """
         Make predictions for a batch of inputs x. Uses `self.simulator` unless
@@ -232,9 +232,9 @@ class HistoryMatching:
         ----------
         x: TensorLike
             Tensor of parameters to simulate/emulate returned by `self.sample`.
-        TODO: update emulator type and description below
-        emulator: optional object
+        emulator: optional GaussianProcessExact
             Gaussian process emulator trained on `self.simulator` output data.
+            NOTE: this can be other GP emulators when implemented.
 
         Returns
         -------
@@ -247,18 +247,10 @@ class HistoryMatching:
 
         # Make predictions using an emulator
         if emulator is not None:
-            # TODO: remove numpy conversion
-            pred_means, pred_stds = emulator.predict(x.numpy(), return_std=True)
-            pred_vars = pred_stds**2
-            # TODO: remove numpy conversion
-            pred_means = torch.from_numpy(pred_means)
-            pred_vars = torch.from_numpy(pred_vars)
-
-            # TODO: don't need this once remove sklearn dependence
-            # Ensure correct shape for single output case
-            if len(pred_means.shape) == 1:
-                pred_means = pred_means.view(-1, 1)
-                pred_vars = pred_vars.view(-1, 1)
+            output = emulator.predict(x)
+            assert isinstance(output, GaussianLike)
+            assert output.variance.ndim == 2
+            pred_means, pred_vars = output.mean, output.variance
 
         # Make predictions using the simulator
         else:
@@ -284,8 +276,7 @@ class HistoryMatching:
         n_waves: int = 3,
         n_samples_per_wave: int = 100,
         emulator_predict: bool = True,
-        # TODO: update emulator type passed here
-        initial_emulator: Optional[object] = None,
+        initial_emulator: Optional[GaussianProcessExact] = None,
     ) -> tuple[TensorLike, TensorLike, Union[object, None]]:
         """
         Run iterative history matching. In each wave:
@@ -309,8 +300,9 @@ class HistoryMatching:
             Whether to use the emulator to make predictions. If False, use
             `self.simulator` instead.
         TODO: update emulator type and description below
-        initial_emulator: optional object
+        initial_emulator: optional GaussianProcessExact
             Gaussian Process emulator pre-trained on `self.simulator` data.
+            NOTE: this can be other GP emulators when implemented.
             - if `emulator_predict=True`, the GP is used to make predictions.
             - if `emulator_predict=False`, `self.simulator` is used to make
               predictions and the GP is retrained on the simulated data.
@@ -364,9 +356,8 @@ class HistoryMatching:
 
                     # Update emulator if simulated (enough) data
                     if (not emulator_predict) and nroy_samples.size(0) > 10:
-                        emulator = self.update_emulator(
-                            emulator, successful_samples, pred_means
-                        )
+                        # QUESTION: should we expect this to ever fail?
+                        emulator.fit(successful_samples, pred_means)
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
@@ -378,46 +369,6 @@ class HistoryMatching:
 
         # TODO: maybe not return anything?
         return self.tested_params, self.impl_scores, emulator
-
-    def update_emulator(
-        self,
-        # TODO: update emulator type passed here
-        existing_emulator: object,
-        x: TensorLike,
-        y: TensorLike,
-    ):
-        """
-        Update an existing GP emulator with new training data.
-
-        Parameters
-        ----------
-            TODO: eventually this should be autoemulate.GaussianProcessExact
-            existing_emulator: Gaussian Process from sklearn
-                Trained GP emulator.
-            x: TensorLike
-                Tensor of parameter values to train emulator on.
-            y: TensorLike
-                Tensor of output values.
-
-        Returns
-        -------
-            Updated GP emulator
-        """
-        # Instead of deepcopy, we'll create a new instance if needed
-        # For now, just use the existing model as is
-        updated_emulator = existing_emulator
-
-        # Update the emulator
-        try:
-            # Refit the entire model, includes hyperparameter optim
-            # TODO: remove numpy conversion
-            updated_emulator.fit(x.numpy(), y.numpy())
-        except Exception as e:
-            print(f"Error refitting model: {e}")
-            # If refitting fails, just return the original model
-            return existing_emulator
-
-        return updated_emulator
 
     def update_progress_bar(
         self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
