@@ -35,7 +35,6 @@ class HistoryMatching:
 
         TODO in separate PR for #406:
         - make this work with experimental GP emulators
-        - refactor to use tensors instead of numpy arrays
         - make this work with updated Simulator class (after #414 is merged)
         - check whether should handle device throughout
 
@@ -147,18 +146,18 @@ class HistoryMatching:
 
     def sample_nroy(
         self,
-        nroy_samples: TensorLike,
         n_samples: int,
+        nroy_samples: TensorLike,
     ) -> TensorLike:
         """
         Generate new parameter samples within NROY space.
 
         Parameters
         ----------
-            nroy_samples: TensorLike
-                Tensor of parameter samples in the NROY space [n_samples, n_parameters].
             n_samples: int
                 Number of new samples to generate within the NROY bounds.
+            nroy_samples: TensorLike
+                Tensor of parameter samples in the NROY space [n_samples, n_parameters].
 
         Returns
         -------
@@ -194,6 +193,35 @@ class HistoryMatching:
                 valid_samples = valid_samples[:n_samples]
 
         return valid_samples
+
+    def sample(self, n_samples: int, nroy_samples: Optional[TensorLike] = None):
+        """
+        Generate new parameter samples, either using `self.simulator` or from
+        within NROY space if `nroy_samples` is provided and it is not empty.
+
+        Parameters
+        ----------
+            n_samples: int
+                Number of new samples to generate within the NROY bounds.
+            nroy_samples: optional[TensorLike]
+                Optional tensor of parameter samples in the NROY space
+                [n_samples, n_parameters]. If provided, sample from within
+                this space.
+
+        Returns
+        -------
+            TensorLike
+                Tensor of parameter samples [n_samples, n_parameters].
+        """
+        # TODO: remove numpy conversions once merged with #414
+        if nroy_samples is None:
+            samples = self.simulator.sample_inputs(n_samples)
+            return torch.from_numpy(samples)
+        elif nroy_samples.size(0) == 0:
+            samples = self.simulator.sample_inputs(n_samples)
+            return torch.from_numpy(samples)
+        else:
+            return self.sample_nroy(n_samples, nroy_samples)
 
     def predict(
         self,
@@ -309,8 +337,7 @@ class HistoryMatching:
         all_samples = []
         all_impl_scores = []
         emulator = initial_emulator
-        current_samples = self.simulator.sample_inputs(n_samples_per_wave)
-        current_samples = torch.from_numpy(current_samples)
+        current_samples = self.sample(n_samples_per_wave)
 
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
@@ -346,16 +373,7 @@ class HistoryMatching:
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
-                    if nroy_samples.size(0) > 0:
-                        current_samples = self.sample_nroy(
-                            nroy_samples, n_samples_per_wave
-                        )
-                    else:
-                        # If no NROY points, sample from full space
-                        current_samples = self.simulator.sample_inputs(
-                            n_samples_per_wave
-                        )
-                        current_samples = torch.from_numpy(current_samples)
+                    current_samples = self.sample(n_samples_per_wave, nroy_samples)
 
                 pbar.update(1)
 

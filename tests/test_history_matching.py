@@ -143,7 +143,7 @@ def test_sample_nroy(history_matcher, mock_simulator):
     )
 
     n_samples = 5
-    new_samples = history_matcher.sample_nroy(X_nroy, n_samples)
+    new_samples = history_matcher.sample_nroy(n_samples, X_nroy)
 
     # Check the number of samples
     assert new_samples.shape[0] == n_samples
