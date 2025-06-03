@@ -7,14 +7,15 @@ from autoemulate.experimental.types import TensorLike
 from autoemulate.simulations.base import Simulator
 
 
+# TODO: should we use ValidationMixin here?
 class HistoryMatching:
     """
     History matching is a model calibration method, which uses observed data to rule out
     parameter values which are ``implausible``. The implausability metric is:
 
     .. math::
-        I_i(\bar{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\bar{x_0}))|}
-        {\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\bar{x_0}))]}}
+        I_i(\bar{x_0}) = \frac{|z_i - \\mathbb{E}(f_i(\bar{x_0}))|}
+        {\\sqrt{\text{Var}[z_i - \\mathbb{E}(f_i(\bar{x_0}))]}}
 
     Query points above a given implausibility threshold are ruled out (RO) whereas
     all other points are marked as not ruled out yet (NROY).
@@ -31,13 +32,11 @@ class HistoryMatching:
         """
         Initialize the history matcher.
 
-        TODO: move this class to experimental before 1.0 release.
-
-        TODO in separate PR for #406:
+        TODO:
         - make this work with experimental GP emulators
         - make this work with updated Simulator class (after #414 is merged)
-        - check whether should handle device throughout
-        - add random seed
+        - add device handling
+        - add random seed following #479
 
         Parameters
         ----------
@@ -57,8 +56,6 @@ class HistoryMatching:
                 scores are ordered across outputs, it indicates which rank to use
                 when determining whether the query point is NROY. The default value
                 of ``1`` indicates that the largest implausibility will be used.
-            random_seed: optional int
-                Random seed to set for reproducibility of sampling.
         """
         self.simulator = simulator
         self.threshold = threshold
@@ -89,8 +86,8 @@ class HistoryMatching:
 
     def calculate_implausibility(
         self,
-        pred_means: TensorLike,  # Shape [n_samples, n_outputs]
-        pred_vars: Optional[TensorLike] = None,  # Shape [n_samples, n_outputs]
+        pred_means: TensorLike,  # [n_samples, n_outputs]
+        pred_vars: Optional[TensorLike] = None,  # [n_samples, n_outputs]
         default_var: float = 0.01,
     ) -> dict[str, TensorLike]:
         """
@@ -131,21 +128,17 @@ class HistoryMatching:
         # Determine NROY points based on rank parameter
         if self.rank == 1:
             # First-order implausibility: all outputs must satisfy threshold
-            nroy_mask = torch.all(I <= self.threshold, dim=1)
+            nroy_mask = torch.all(self.threshold >= I, dim=1)
         else:
             # Sort implausibilities for each sample (descending)
             I_sorted = torch.sort(I, dim=1, descending=True)
             # The rank-th highest implausibility must be <= threshold
             nroy_mask = I_sorted[:, self.rank - 1] <= self.threshold
 
-        # Get indices of NROY and RO samples
-        NROY = torch.where(nroy_mask)[0]
-        RO = torch.where(~nroy_mask)[0]
-
         return {
             "I": I,  # Implausibility scores
-            "NROY": NROY,  # Indices of NROY points
-            "RO": RO,  # Indices of RO points
+            "NROY": torch.where(nroy_mask)[0],  # Indices of NROY points
+            "RO": torch.where(~nroy_mask)[0],  # Indices of RO points
         }
 
     def sample_nroy(
@@ -161,7 +154,7 @@ class HistoryMatching:
             n_samples: int
                 Number of new samples to generate within the NROY bounds.
             nroy_samples: TensorLike
-                Tensor of parameter samples in the NROY space [n_samples, n_parameters].
+                Tensor of parameter samples in the NROY space [samples, parameters].
 
         Returns
         -------
@@ -172,8 +165,8 @@ class HistoryMatching:
         min_bounds, _ = torch.min(nroy_samples, dim=0)
         max_bounds, _ = torch.max(nroy_samples, dim=0)
 
-        # Need to handle discontinuous NROY spaces
-        # i.e., a region within min/max bounds is RO
+        # Need to handle possible discontinuous NROY spaces
+        # i.e., a region within min/max bounds is not valid (RO)
         valid_samples = torch.empty((0, nroy_samples.shape[1]))
         while len(valid_samples) < n_samples:
             # Generate candidates
@@ -202,11 +195,10 @@ class HistoryMatching:
         Parameters
         ----------
             n_samples: int
-                Number of new samples to generate within the NROY bounds.
+                Number of new samples to generate.
             nroy_samples: optional[TensorLike]
-                Optional tensor of parameter samples in the NROY space
-                [n_samples, n_parameters]. If provided, sample from within
-                this space.
+                Optional tensor of parameter samples in the NROY space. If
+                provided, sample from within this space.
 
         Returns
         -------
@@ -214,14 +206,10 @@ class HistoryMatching:
                 Tensor of parameter samples [n_samples, n_parameters].
         """
         # TODO: remove numpy conversions once merged with #414
-        if nroy_samples is None:
+        if nroy_samples is None or nroy_samples.size(0) == 0:
             samples = self.simulator.sample_inputs(n_samples)
             return torch.from_numpy(samples)
-        elif nroy_samples.size(0) == 0:
-            samples = self.simulator.sample_inputs(n_samples)
-            return torch.from_numpy(samples)
-        else:
-            return self.sample_nroy(n_samples, nroy_samples)
+        return self.sample_nroy(n_samples, nroy_samples)
 
     def predict(
         self,
@@ -236,11 +224,10 @@ class HistoryMatching:
         Parameters
         ----------
         x: TensorLike
-            Tensor of parameter samples to simulate/emulate [n_samples, n_parameters]
-            returned by `self.simulator.sample_inputs` or `self.sample_nroy` methods.
+            Tensor of parameters to simulate/emulate returned by `self.sample`.
         TODO: update emulator type and description below
         emulator: optional object
-            Gaussian process emulator trained on self.simulator data.
+            Gaussian process emulator trained on `self.simulator` output data.
 
         Returns
         -------
@@ -249,7 +236,6 @@ class HistoryMatching:
             which predictions were made succesfully.
         """
         if x.shape[0] == 0:
-            # TODO: use torch.empty here?
             return torch.Tensor([]), torch.Tensor([]), torch.Tensor([])
 
         # Make predictions using an emulator
@@ -274,6 +260,7 @@ class HistoryMatching:
             results = torch.from_numpy(results)
 
             # Filter out failed simulations
+            # TODO: should the simulator handle this?
             valid_indices = [i for i, res in enumerate(results) if res is not None]
             x = x[valid_indices]
             pred_means = results[valid_indices]
@@ -323,7 +310,6 @@ class HistoryMatching:
 
         Returns
         -------
-        TODO: can we simplify this?
         tuple[TensorLike, TensorLike, union[object, None]]
             - Tensor of all parameter samples for which predictions were made
             - Tensor of all implausability scores
