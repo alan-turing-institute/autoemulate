@@ -183,7 +183,7 @@ class HistoryMatching:
             # Filter valid samples based on implausibility and concatenate
             implausibility = self.calculate_implausibility(candidate_samples)
             valid_candidates = candidate_samples[implausibility["NROY"]]
-            valid_samples = torch.cat((valid_samples, valid_candidates), dim=0)
+            valid_samples = torch.cat([valid_samples, valid_candidates], dim=0)
 
             # Only return required number of samples
             if len(valid_samples) > n_samples:
@@ -355,9 +355,9 @@ class HistoryMatching:
                 if impl_scores.size(0) > 0:
                     # Only include samples with scores
                     self.tested_params = torch.cat(
-                        (self.tested_params, successful_samples), dim=0
+                        [self.tested_params, successful_samples], dim=0
                     )
-                    self.impl_scores = torch.cat((self.impl_scores, impl_scores), dim=0)
+                    self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
                     # Update emulator if simulated (enough) data
                     if (not emulator_predict) and nroy_samples.size(0) > 10:
@@ -382,7 +382,6 @@ class HistoryMatching:
         existing_emulator: object,
         x: TensorLike,
         y: TensorLike,
-        include_previous_data: bool = True,
     ):
         """
         Update an existing GP emulator with new training data.
@@ -396,8 +395,6 @@ class HistoryMatching:
                 Tensor of parameter values to train emulator on.
             y: TensorLike
                 Tensor of output values.
-            include_previous_data: bool
-                Whether to include previous training data (default: True)
 
         Returns
         -------
@@ -407,32 +404,11 @@ class HistoryMatching:
         # For now, just use the existing model as is
         updated_emulator = existing_emulator
 
-        # If we need to include previous data and emulator has stored training data
-        # TODO: should data be stored in HistoryMatcher (same as ActiveLearner)?
-        # that way can make sure we keep appending data to it on each retrain
-        if (
-            include_previous_data
-            and hasattr(existing_emulator, "X_train_")
-            and hasattr(existing_emulator, "y_train_")
-        ):
-            # Combine old and new training data
-            # TODO: remove numpy conversion
-            X_combined = torch.cat(
-                (torch.from_numpy(existing_emulator.X_train_), x), dim=0
-            )
-            y_combined = torch.cat(
-                (torch.from_numpy(existing_emulator.y_train_), y), dim=0
-            )
-        else:
-            # Just use new data
-            X_combined = x
-            y_combined = y
-
         # Update the emulator
         try:
             # Refit the entire model, includes hyperparameter optim
             # TODO: remove numpy conversion
-            updated_emulator.fit(X_combined.numpy(), y_combined.numpy())
+            updated_emulator.fit(x.numpy(), y.numpy())
         except Exception as e:
             print(f"Error refitting model: {e}")
             # If refitting fails, just return the original model
