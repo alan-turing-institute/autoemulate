@@ -27,7 +27,6 @@ class HistoryMatching:
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
-        random_seed: Optional[int] = None,
     ):
         """
         Initialize the history matcher.
@@ -38,6 +37,7 @@ class HistoryMatching:
         - make this work with experimental GP emulators
         - make this work with updated Simulator class (after #414 is merged)
         - check whether should handle device throughout
+        - add random seed
 
         Parameters
         ----------
@@ -71,8 +71,6 @@ class HistoryMatching:
             )
         self.rank = rank
 
-        # TODO: handle random seed (used when sampling)
-
         # Save mean and variance of observations
         if not set(observations.keys()).issubset(set(self.simulator.output_names)):
             raise ValueError(
@@ -94,7 +92,7 @@ class HistoryMatching:
         pred_means: TensorLike,  # Shape [n_samples, n_outputs]
         pred_vars: Optional[TensorLike] = None,  # Shape [n_samples, n_outputs]
         default_var: float = 0.01,
-    ) -> dict[str, Union[TensorLike, list[int]]]:
+    ) -> dict[str, TensorLike]:
         """
         Calculate implausibility scores and identify RO and NROY points.
 
@@ -111,11 +109,11 @@ class HistoryMatching:
 
         Returns
         -------
-            dict[str, union[TensorLike, list[int]]]
+            dict[str, TensorLike]
                 Contains the following key, value pairs:
                     - 'I': tensor of implausibility scores [n_samples, n_outputs]
-                    - 'NROY': list of indices of Not Ruled Out Yet points
-                    - 'RO': list of indices of Ruled Out points
+                    - 'NROY': tensor of indices of Not Ruled Out Yet points
+                    - 'RO': tensor of indices of Ruled Out points
         """
         # Set variances if not provided
         if pred_vars is None:
@@ -146,9 +144,8 @@ class HistoryMatching:
 
         return {
             "I": I,  # Implausibility scores
-            # TODO: do we need to turn these into lists?
-            "NROY": NROY.tolist(),  # Indices of NROY points
-            "RO": RO.tolist(),  # Indices of RO points
+            "NROY": NROY,  # Indices of NROY points
+            "RO": RO,  # Indices of RO points
         }
 
     def sample_nroy(
@@ -177,11 +174,7 @@ class HistoryMatching:
 
         # Need to handle discontinuous NROY spaces
         # i.e., a region within min/max bounds is RO
-        valid_samples = torch.empty(
-            (0, nroy_samples.shape[1]),
-            dtype=nroy_samples.dtype,
-            device=nroy_samples.device,
-        )
+        valid_samples = torch.empty((0, nroy_samples.shape[1]))
         while len(valid_samples) < n_samples:
             # Generate candidates
             candidate_samples = (
@@ -341,8 +334,8 @@ class HistoryMatching:
                 "Need to pass a GP emulator object when `emulator_predict=True`"
             )
 
-        all_samples = []
-        all_impl_scores = []
+        all_samples = torch.empty((0, len(self.simulator.output_names)))
+        all_impl_scores = torch.empty((0, len(self.simulator.output_names)))
         emulator = initial_emulator
         current_samples = self.sample(n_samples_per_wave)
 
@@ -363,17 +356,17 @@ class HistoryMatching:
                 impl_scores = implausibility["I"]
 
                 self.update_progress_bar(
-                    pbar, impl_scores, len(current_samples), len(nroy_samples)
+                    pbar, impl_scores, current_samples.size(0), nroy_samples.size(0)
                 )
 
                 # Store results
                 if impl_scores.size(0) > 0:
                     # Only include samples with scores
-                    all_samples.append(successful_samples)
-                    all_impl_scores.append(impl_scores)
+                    all_samples = torch.cat((all_samples, successful_samples), dim=0)
+                    all_impl_scores = torch.cat((all_impl_scores, impl_scores), dim=0)
 
                     # Update emulator if simulated (enough) data
-                    if (not emulator_predict) and len(nroy_samples) > 10:
+                    if (not emulator_predict) and nroy_samples.size(0) > 10:
                         emulator = self.update_emulator(
                             emulator, successful_samples, pred_means
                         )
@@ -384,15 +377,7 @@ class HistoryMatching:
 
                 pbar.update(1)
 
-        # Concatenate all samples and implausibility scores
-        # TODO: should this include wave information?
-        final_samples = torch.cat(all_samples) if all_samples else torch.Tensor([])
-
-        final_impl_scores = (
-            torch.cat(all_impl_scores) if all_impl_scores else torch.Tensor([])
-        )
-
-        return final_samples, final_impl_scores, emulator
+        return all_samples, all_impl_scores, emulator
 
     def update_emulator(
         self,
@@ -459,7 +444,7 @@ class HistoryMatching:
         return updated_emulator
 
     def update_progress_bar(
-        self, pbar: tqdm, impl_scores: list[float], n_samples: int, n_nroy_samples: int
+        self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
     ):
         """
         Updates the progress bar.
@@ -468,17 +453,14 @@ class HistoryMatching:
         ----------
         pbar: tqdm
             The progress bar.
-        impl_scores: list[float]
-            List of implausibility scores for succesful parameter samples.
+        impl_scores: TensorLike
+            Tensor of implausibility scores for succesful parameter samples.
         n_samples: int
             Total number of tested parameter samples.
         n_nroy_samples: int
             Number of parameter samples in the NROY space.
         """
-        failed_count = (
-            n_samples - len(impl_scores) if impl_scores.size(0) > 0 else n_samples
-        )
-        # TODO: check if min/max works correctly here (i.e., what is dim of impl_scores)
+        failed_count = n_samples - impl_scores.size(0)
         pbar.set_postfix(
             {
                 "samples": n_samples,
