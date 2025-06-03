@@ -132,20 +132,20 @@ class HistoryMatching:
         Vs = pred_vars + discrepancy + self.obs_vars
 
         # Calculate implausibility
-        I = torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
+        implausability = torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
 
         # Determine NROY points based on rank parameter
         if self.rank == 1:
             # First-order implausibility: all outputs must satisfy threshold
-            nroy_mask = torch.all(self.threshold >= I, dim=1)
+            nroy_mask = torch.all(self.threshold >= implausability, dim=1)
         else:
             # Sort implausibilities for each sample (descending)
-            I_sorted, _ = torch.sort(I, dim=1, descending=True)
+            I_sorted, _ = torch.sort(implausability, dim=1, descending=True)
             # The rank-th highest implausibility must be <= threshold
             nroy_mask = I_sorted[:, self.rank - 1] <= self.threshold
 
         return {
-            "I": I,  # Implausibility scores
+            "I": implausability,  # Implausibility scores
             "NROY": torch.where(nroy_mask)[0],  # Indices of NROY points
             "RO": torch.where(~nroy_mask)[0],  # Indices of RO points
         }
@@ -314,9 +314,10 @@ class HistoryMatching:
             - a GP emulator (retrained on new data if `emulator_predict=False`) or None
         """
         if emulator_predict and initial_emulator is None:
-            raise ValueError(
+            error_message = (
                 "Need to pass a GP emulator object when `emulator_predict=True`"
             )
+            raise ValueError(error_message)
 
         # TODO: should emulator be passed at initialisation?
         emulator = initial_emulator
