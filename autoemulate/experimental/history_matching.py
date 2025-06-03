@@ -30,7 +30,7 @@ class HistoryMatching:
         rank: int = 1,
     ):
         """
-        Initialize the history matcher.
+        Initialize the history matching object.
 
         TODO:
         - make this work with experimental GP emulators
@@ -61,10 +61,14 @@ class HistoryMatching:
         self.threshold = threshold
         self.discrepancy = model_discrepancy
 
-        if rank > len(self.simulator.output_names):
+        # TODO: should this be in Simulator?
+        self.in_dim = len(self.simulator.param_names)
+        self.out_dim = len(self.simulator.output_names)
+
+        if rank > self.out_dim:
             raise ValueError(
                 f"Rank {rank} is more than the simulator output dimension of ",
-                f"{len(self.simulator.output_names)}",
+                f"{self.out_dim}",
             )
         self.rank = rank
 
@@ -85,8 +89,8 @@ class HistoryMatching:
         self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
 
         # Quantities to track
-        self.tested_params = torch.empty((0, len(self.simulator.output_names)))
-        self.impl_scores = torch.empty((0, len(self.simulator.output_names)))
+        self.tested_params = torch.empty((0, self.out_dim))
+        self.impl_scores = torch.empty((0, self.out_dim))
 
     def calculate_implausibility(
         self,
@@ -171,12 +175,11 @@ class HistoryMatching:
 
         # Need to handle possible discontinuous NROY spaces
         # i.e., a region within min/max bounds is not valid (RO)
-        valid_samples = torch.empty((0, nroy_samples.shape[1]))
+        valid_samples = torch.empty((0, self.in_dim))
         while len(valid_samples) < n_samples:
             # Generate candidates
             candidate_samples = (
-                torch.rand((n_samples, nroy_samples.shape[1]))
-                * (max_bounds - min_bounds)
+                torch.rand((n_samples, self.in_dim)) * (max_bounds - min_bounds)
                 + min_bounds
             )
 
