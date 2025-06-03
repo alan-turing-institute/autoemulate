@@ -25,13 +25,15 @@ class HistoryMatchingDashboard:
 
         Args:
             samples: DataFrame or numpy array with parameter samples
-            impl_scores: Tensor of implausibility scores
+            impl_scores: Array or Tensor of implausibility scores
             param_names: List of parameter names
             output_names: List of output names
             threshold: Implausibility threshold
         """
         # Convert samples to DataFrame if it's an array
-        if isinstance(samples, TensorLike):
+        if isinstance(samples, np.ndarray):
+            self.samples_df = pd.DataFrame(samples, columns=param_names)
+        elif isinstance(samples, TensorLike):
             self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)
         else:
             self.samples_df = samples.copy()
