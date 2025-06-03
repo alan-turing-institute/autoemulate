@@ -33,6 +33,8 @@ class HistoryMatching:
         """
         Initialize the history matcher.
 
+        TODO: move this class to experimental before 1.0 release.
+
         TODO in separate PR for #406:
         - make this work with experimental GP emulators
         - make this work with updated Simulator class (after #414 is merged)
@@ -362,7 +364,7 @@ class HistoryMatching:
                 impl_scores = implausibility["I"]
 
                 self.update_progress_bar(
-                    pbar, current_samples, impl_scores, nroy_samples
+                    pbar, impl_scores, len(current_samples), len(nroy_samples)
                 )
 
                 # Store results
@@ -457,22 +459,32 @@ class HistoryMatching:
 
         return updated_emulator
 
-    def update_progress_bar(self, pbar, current_samples, impl_scores, nroy_samples):
+    def update_progress_bar(
+        self, pbar: tqdm, impl_scores: list[float], n_samples: int, n_nroy_samples: int
+    ):
         """
         Updates the progress bar.
+
+        Parameters
+        ----------
+        pbar: tqdm
+            The progress bar.
+        impl_scores: list[float]
+            List of implausibility scores for succesful parameter samples.
+        n_samples: int
+            Total number of tested parameter samples.
+        n_nroy_samples: int
+            Number of parameter samples in the NROY space.
         """
-        total_samples = len(current_samples)
         failed_count = (
-            total_samples - len(impl_scores)
-            if impl_scores.size(0) > 0
-            else total_samples
+            n_samples - len(impl_scores) if impl_scores.size(0) > 0 else n_samples
         )
         # TODO: check if min/max works correctly here (i.e., what is dim of impl_scores)
         pbar.set_postfix(
             {
-                "samples": len(impl_scores),
+                "samples": n_samples,
                 "failed": failed_count,
-                "NROY": len(nroy_samples),
+                "NROY": n_nroy_samples,
                 "min_impl": f"{torch.min(impl_scores) if impl_scores.size(0) > 0 else 'NaN':.2f}",
                 "max_impl": f"{torch.max(impl_scores) if impl_scores.size(0) > 0 else 'NaN':.2f}",
             }
