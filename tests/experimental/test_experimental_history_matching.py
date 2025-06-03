@@ -95,11 +95,11 @@ def test_calculate_implausibility(history_matcher):
     result = history_matcher.calculate_implausibility(pred_means, pred_vars)
 
     # Check the structure of the result
-    assert set(result.keys()) == {"I", "NROY", "RO"}
-    assert isinstance(result["I"], TensorLike)
-    assert isinstance(result["NROY"], TensorLike)
-    assert isinstance(result["RO"], TensorLike)
-    assert len(result["I"]) == 2  # Should have implausibility for both outputs
+    # assert set(result.keys()) == {"I", "NROY", "RO"}
+    assert isinstance(result, TensorLike)
+    # assert isinstance(result["NROY"], TensorLike)
+    # assert isinstance(result["RO"], TensorLike)
+    assert len(result) == 2  # Should have implausibility for both outputs
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
@@ -109,13 +109,11 @@ def test_run(history_matcher):
     n_samples_per_wave = 5
 
     # Run history matching
-    (
-        all_samples,
-        all_impl_scores,
-        updated_emulator,
-    ) = history_matcher.run(
+    updated_emulator = history_matcher.run(
         n_waves=n_waves, n_samples_per_wave=n_samples_per_wave, emulator_predict=False
     )
+    all_samples = history_matcher.tested_params
+    all_impl_scores = history_matcher.impl_scores
 
     # Check the basic structure of the results
     assert isinstance(all_samples, TensorLike)

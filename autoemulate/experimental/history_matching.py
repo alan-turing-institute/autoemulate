@@ -61,8 +61,6 @@ class HistoryMatching:
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
-
-        # TODO: should this be in Simulator?
         self.in_dim = len(self.simulator.param_names)
         self.out_dim = len(self.simulator.output_names)
 
@@ -85,41 +83,95 @@ class HistoryMatching:
         obs_vars = torch.tensor(
             [observations[name][1] for name in self.simulator.output_names]
         )
-        # Reshape observation arrays for broadcasting
+        # Reshape observation tensors for broadcasting
         self.obs_means = obs_means.view(1, -1)  # [1, n_outputs]
         self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
 
-        # Quantities to track
+        # Track tested parameter values and their implausability scores
         self.tested_params = torch.empty((0, self.in_dim))
         self.impl_scores = torch.empty((0, self.out_dim))
+
+    def create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
+        """
+        Create mask for NROY points based on rank.
+
+        Parameters
+        ----------
+        implausability: TensorLike
+            Tensor of implausability scores for tested parameters.
+
+        Returns
+        -------
+        TensorLike
+            Tensor indicating whether each parameter point is NROY given
+            self.rank and self.threshold values.
+        """
+        if self.rank == 1:
+            # First-order implausibility: all outputs must satisfy threshold
+            return torch.all(self.threshold >= implausability, dim=1)
+        # Sort implausibilities for each sample (descending)
+        I_sorted, _ = torch.sort(implausability, dim=1, descending=True)
+        # The rank-th highest implausibility must be <= threshold
+        return I_sorted[:, self.rank - 1] <= self.threshold
+
+    def get_nroy_idx(self, implausability: TensorLike) -> TensorLike:
+        """
+        Get indices of NROY points from implausability scores.
+
+        Parameters
+        ----------
+        implausability: TensorLike
+            Tensor of implausability scores for tested parameters.
+
+        Returns
+        -------
+        TensorLike
+            Indices of NROY points.
+        """
+        nroy_mask = self.create_nroy_mask(implausability)
+        return torch.where(nroy_mask)[0]
+
+    def get_ro_idx(self, implausability: TensorLike) -> TensorLike:
+        """
+        Get indices of RO points from implausability scores.
+
+        Parameters
+        ----------
+        implausability: TensorLike
+            Tensor of implausability scores for tested parameters.
+
+        Returns
+        -------
+        TensorLike
+            Indices of RO points.
+        """
+        nroy_mask = self.create_nroy_mask(implausability)
+        return torch.where(~nroy_mask)[0]
 
     def calculate_implausibility(
         self,
         pred_means: TensorLike,  # [n_samples, n_outputs]
         pred_vars: Optional[TensorLike] = None,  # [n_samples, n_outputs]
         default_var: float = 0.01,
-    ) -> dict[str, TensorLike]:
+    ) -> TensorLike:
         """
-        Calculate implausibility scores and identify RO and NROY points.
+        Calculate implausibility scores.
 
         Parameters
         ----------
-            pred_means: TensorLike
-                Tensor of prediction means [n_samples, n_outputs]
-            pred_vars: optional TensorLike
-                Tensor of prediction variances [n_samples, n_outputs]. If not
-                provided (e.g., when predictions are made by a deterministic
-                simulator), all variances are set to `default_var`.
-            default_var: int
-                Prediction variance to set if not provided.
+        pred_means: TensorLike
+            Tensor of prediction means [n_samples, n_outputs]
+        pred_vars: optional[TensorLike]
+            Tensor of prediction variances [n_samples, n_outputs]. If not
+            provided (e.g., when predictions are made by a deterministic
+            simulator), all variances are set to `default_var`.
+        default_var: int
+            Prediction variance to set if not provided.
 
         Returns
         -------
-            dict[str, TensorLike]
-                Contains the following key, value pairs:
-                    - 'I': tensor of implausibility scores [n_samples, n_outputs]
-                    - 'NROY': tensor of indices of Not Ruled Out Yet points
-                    - 'RO': tensor of indices of Ruled Out points
+        TensorLike
+            Tensor of implausibility scores.
         """
         # Set variances if not provided
         if pred_vars is None:
@@ -132,23 +184,7 @@ class HistoryMatching:
         Vs = pred_vars + discrepancy + self.obs_vars
 
         # Calculate implausibility
-        implausability = torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
-
-        # Determine NROY points based on rank parameter
-        if self.rank == 1:
-            # First-order implausibility: all outputs must satisfy threshold
-            nroy_mask = torch.all(self.threshold >= implausability, dim=1)
-        else:
-            # Sort implausibilities for each sample (descending)
-            I_sorted, _ = torch.sort(implausability, dim=1, descending=True)
-            # The rank-th highest implausibility must be <= threshold
-            nroy_mask = I_sorted[:, self.rank - 1] <= self.threshold
-
-        return {
-            "I": implausability,  # Implausibility scores
-            "NROY": torch.where(nroy_mask)[0],  # Indices of NROY points
-            "RO": torch.where(~nroy_mask)[0],  # Indices of RO points
-        }
+        return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
 
     def sample_nroy(
         self,
@@ -185,8 +221,9 @@ class HistoryMatching:
             )
 
             # Filter valid samples based on implausibility and concatenate
-            implausibility = self.calculate_implausibility(candidate_samples)
-            valid_candidates = candidate_samples[implausibility["NROY"]]
+            impl_scores = self.calculate_implausibility(candidate_samples)
+            nroy = self.get_nroy_idx(impl_scores)
+            valid_candidates = candidate_samples[nroy]
             valid_samples = torch.cat([valid_samples, valid_candidates], dim=0)
 
             # Only return required number of samples
@@ -232,9 +269,9 @@ class HistoryMatching:
         ----------
         x: TensorLike
             Tensor of parameters to simulate/emulate returned by `self.sample`.
-        emulator: optional GaussianProcessExact
-            Gaussian process emulator trained on `self.simulator` output data.
+        emulator: optional[GaussianProcessExact]
             NOTE: this can be other GP emulators when implemented.
+            Gaussian process emulator trained on `self.simulator` output data.
 
         Returns
         -------
@@ -245,7 +282,7 @@ class HistoryMatching:
         if x.shape[0] == 0:
             return torch.empty(0), torch.empty(0), torch.empty(0)
 
-        # Make predictions using an emulator
+        # Make predictions using a GP emulator
         if emulator is not None:
             output = emulator.predict(x)
             assert isinstance(output, GaussianLike)
@@ -277,7 +314,7 @@ class HistoryMatching:
         n_samples_per_wave: int = 100,
         emulator_predict: bool = True,
         initial_emulator: Optional[GaussianProcessExact] = None,
-    ) -> tuple[TensorLike, TensorLike, Union[object, None]]:
+    ) -> Union[object, None]:
         """
         Run iterative history matching. In each wave:
             - sample parameter values to test from the NROY space
@@ -300,17 +337,15 @@ class HistoryMatching:
             Whether to use the emulator to make predictions. If False, use
             `self.simulator` instead.
         initial_emulator: optional GaussianProcessExact
-            Gaussian Process emulator pre-trained on `self.simulator` data.
             NOTE: this can be other GP emulators when implemented.
+            Gaussian Process emulator pre-trained on `self.simulator` data.
             - if `emulator_predict=True`, the GP is used to make predictions.
             - if `emulator_predict=False`, `self.simulator` is used to make
               predictions and the GP is retrained on the simulated data.
 
         Returns
         -------
-        tuple[TensorLike, TensorLike, union[object, None]]
-            - Tensor of all parameter samples for which predictions were made
-            - Tensor of all implausability scores
+        union[object, None]
             - a GP emulator (retrained on new data if `emulator_predict=False`) or None
         """
         if emulator_predict and initial_emulator is None:
@@ -319,7 +354,6 @@ class HistoryMatching:
             )
             raise ValueError(error_message)
 
-        # TODO: should emulator be passed at initialisation?
         emulator = initial_emulator
         current_samples = self.sample_params(n_samples_per_wave)
 
@@ -336,11 +370,11 @@ class HistoryMatching:
                 )
 
                 # Calculate implausibility in batch
-                implausibility = self.calculate_implausibility(pred_means, pred_vars)
+                impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+                nroy = self.get_nroy_idx(impl_scores)
 
                 # NROY parameters and implausibility scores for all parameters
-                nroy_samples = successful_samples[implausibility["NROY"]]
-                impl_scores = implausibility["I"]
+                nroy_samples = successful_samples[nroy]
 
                 self.update_progress_bar(
                     pbar, impl_scores, current_samples.size(0), nroy_samples.size(0)
@@ -360,6 +394,9 @@ class HistoryMatching:
                         and (emulator is not None)
                         and nroy_samples.size(0) > 10
                     ):
+                        # QUESTION: shouldn't we be training on all the simulated
+                        # data collected across all the waves?
+                        # in that case, we need to store all pred_means too
                         emulator.fit(successful_samples, pred_means)
 
                 # Generate new samples for next wave
@@ -370,8 +407,8 @@ class HistoryMatching:
 
                 pbar.update(1)
 
-        # TODO: maybe not return anything?
-        return self.tested_params, self.impl_scores, emulator
+        # QUESTION: maybe not return anything?
+        return emulator
 
     def update_progress_bar(
         self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
