@@ -62,9 +62,15 @@ class HistoryMatching:
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
-        # TODO: rank can't be more than output dimension, add a check
+
+        if rank > len(self.simulator.output_names):
+            raise ValueError(
+                f"Rank {rank} is more than the simulator output dimension of ",
+                f"{len(self.simulator.output_names)}",
+            )
         self.rank = rank
-        # TODO: handle random seed (only used when sampling)
+
+        # TODO: handle random seed (used when sampling)
 
         # Save mean and variance of observations
         if not set(observations.keys()).issubset(set(self.simulator.output_names)):
