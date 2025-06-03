@@ -84,6 +84,10 @@ class HistoryMatching:
         self.obs_means = obs_means.view(1, -1)  # [1, n_outputs]
         self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
 
+        # Quantities to track
+        self.tested_params = torch.empty((0, len(self.simulator.output_names)))
+        self.impl_scores = torch.empty((0, len(self.simulator.output_names)))
+
     def calculate_implausibility(
         self,
         pred_means: TensorLike,  # [n_samples, n_outputs]
@@ -187,7 +191,7 @@ class HistoryMatching:
 
         return valid_samples
 
-    def sample(self, n_samples: int, nroy_samples: Optional[TensorLike] = None):
+    def sample_params(self, n_samples: int, nroy_samples: Optional[TensorLike] = None):
         """
         Generate new parameter samples, either using `self.simulator` or from
         within NROY space if `nroy_samples` is provided and it is not empty.
@@ -320,11 +324,13 @@ class HistoryMatching:
                 "Need to pass a GP emulator object when `emulator_predict=True`"
             )
 
-        all_samples = torch.empty((0, len(self.simulator.output_names)))
-        all_impl_scores = torch.empty((0, len(self.simulator.output_names)))
+        # TODO: should emulator be passed at initialisation?
         emulator = initial_emulator
-        current_samples = self.sample(n_samples_per_wave)
+        current_samples = self.sample_params(n_samples_per_wave)
 
+        # TODO: revisit where expect things to fail and handle appropriately
+        # e.g., if succesful samples=0. will calculate_implausability handle it?
+        # can we remove the if impl_scores.size(0) > 0 statement?
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
                 # Run wave using batch processing
@@ -348,8 +354,10 @@ class HistoryMatching:
                 # Store results
                 if impl_scores.size(0) > 0:
                     # Only include samples with scores
-                    all_samples = torch.cat((all_samples, successful_samples), dim=0)
-                    all_impl_scores = torch.cat((all_impl_scores, impl_scores), dim=0)
+                    self.tested_params = torch.cat(
+                        (self.tested_params, successful_samples), dim=0
+                    )
+                    self.impl_scores = torch.cat((self.impl_scores, impl_scores), dim=0)
 
                     # Update emulator if simulated (enough) data
                     if (not emulator_predict) and nroy_samples.size(0) > 10:
@@ -359,11 +367,14 @@ class HistoryMatching:
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:
-                    current_samples = self.sample(n_samples_per_wave, nroy_samples)
+                    current_samples = self.sample_params(
+                        n_samples_per_wave, nroy_samples
+                    )
 
                 pbar.update(1)
 
-        return all_samples, all_impl_scores, emulator
+        # TODO: maybe not return anything?
+        return self.tested_params, self.impl_scores, emulator
 
     def update_emulator(
         self,
