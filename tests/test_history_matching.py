@@ -2,7 +2,9 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+import torch
 
+from autoemulate.experimental.types import TensorLike
 from autoemulate.history_matching import HistoryMatching
 from tests.test_base_simulator import MockSimulator
 
@@ -41,7 +43,7 @@ def test_predict_with_simulator(history_matcher, mock_simulator):
         {"param1": 0.3, "param2": -0.4},
     ]
 
-    X = np.array(
+    X = torch.tensor(
         [
             [sample[name] for name in ["param1", "param2"]]
             for sample in parameter_samples
@@ -89,14 +91,14 @@ def test_calculate_implausibility(history_matcher):
     """Test implausibility calculation with mock simulator outputs"""
 
     # Shape [n_samples, n_outputs]
-    pred_means = np.array([[0.4], [0.7]])
-    pred_vars = np.array([[0.05], [0.1]])
+    pred_means = torch.Tensor([[0.4], [0.7]])
+    pred_vars = torch.Tensor([[0.05], [0.1]])
 
     result = history_matcher.calculate_implausibility(pred_means, pred_vars)
 
     # Check the structure of the result
     assert set(result.keys()) == {"I", "NROY", "RO"}
-    assert isinstance(result["I"], np.ndarray)
+    assert isinstance(result["I"], TensorLike)
     assert isinstance(result["NROY"], list)
     assert isinstance(result["RO"], list)
     assert len(result["I"]) == 2  # Should have implausibility for both outputs
@@ -118,8 +120,8 @@ def test_run(history_matcher):
     )
 
     # Check the basic structure of the results
-    assert isinstance(all_samples, np.ndarray)
-    assert isinstance(all_impl_scores, np.ndarray)
+    assert isinstance(all_samples, TensorLike)
+    assert isinstance(all_impl_scores, TensorLike)
     assert updated_emulator is None  # Since we didn't use an emulator
 
     # We should get results for all valid samples
@@ -136,7 +138,7 @@ def test_sample_nroy(history_matcher, mock_simulator):
         {"param1": 0.2, "param2": 0.1},
     ]
 
-    X_nroy = np.array(
+    X_nroy = torch.Tensor(
         [[sample[name] for name in ["param1", "param2"]] for sample in nroy_samples]
     )
 
