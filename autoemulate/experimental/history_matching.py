@@ -34,9 +34,9 @@ class HistoryMatching:
         Initialize the history matching object.
 
         TODO:
-        - make this work with experimental GP emulators
-        - make this work with updated Simulator class (after #414 is merged)
         - add device handling
+        - update tests
+        - make this work with updated Simulator class (after #414 is merged)
         - add random seed following #479
 
         Parameters
@@ -140,7 +140,7 @@ class HistoryMatching:
             nroy_mask = torch.all(self.threshold >= I, dim=1)
         else:
             # Sort implausibilities for each sample (descending)
-            I_sorted = torch.sort(I, dim=1, descending=True)
+            I_sorted, _ = torch.sort(I, dim=1, descending=True)
             # The rank-th highest implausibility must be <= threshold
             nroy_mask = I_sorted[:, self.rank - 1] <= self.threshold
 
@@ -223,7 +223,7 @@ class HistoryMatching:
         self,
         x: TensorLike,
         emulator: Optional[GaussianProcessExact] = None,
-    ) -> tuple[TensorLike, TensorLike, TensorLike]:
+    ) -> tuple[TensorLike, Optional[TensorLike], TensorLike]:
         """
         Make predictions for a batch of inputs x. Uses `self.simulator` unless
         an emulator trained on `self.simulator` data is provided.
@@ -238,12 +238,12 @@ class HistoryMatching:
 
         Returns
         -------
-        tuple[TensorLike, TensorLike, TensorLike]
-            Arrays of predicted means and variances as well as the input data for
-            which predictions were made succesfully.
+        tuple[TensorLike, optional[TensorLike], TensorLike]
+            Arrays of predicted means and optionally variances as well as the input
+            data for which predictions were made succesfully.
         """
         if x.shape[0] == 0:
-            return torch.Tensor([]), torch.Tensor([]), torch.Tensor([])
+            return torch.empty(0), torch.empty(0), torch.empty(0)
 
         # Make predictions using an emulator
         if emulator is not None:
@@ -266,7 +266,7 @@ class HistoryMatching:
             pred_vars = None
             if pred_means.shape[0] == 0:
                 # All simulations failed
-                return torch.Tensor([]), torch.Tensor([]), torch.Tensor([])
+                return torch.empty(0), torch.empty(0), torch.empty(0)
 
         # Also return input vector in case simulation failed for some inputs
         return pred_means, pred_vars, x
@@ -299,7 +299,6 @@ class HistoryMatching:
         emulator_predict: bool = True
             Whether to use the emulator to make predictions. If False, use
             `self.simulator` instead.
-        TODO: update emulator type and description below
         initial_emulator: optional GaussianProcessExact
             Gaussian Process emulator pre-trained on `self.simulator` data.
             NOTE: this can be other GP emulators when implemented.
@@ -355,8 +354,11 @@ class HistoryMatching:
                     self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
                     # Update emulator if simulated (enough) data
-                    if (not emulator_predict) and nroy_samples.size(0) > 10:
-                        # QUESTION: should we expect this to ever fail?
+                    if (
+                        (not emulator_predict)
+                        and (emulator is not None)
+                        and nroy_samples.size(0) > 10
+                    ):
                         emulator.fit(successful_samples, pred_means)
 
                 # Generate new samples for next wave
@@ -388,12 +390,14 @@ class HistoryMatching:
             Number of parameter samples in the NROY space.
         """
         failed_count = n_samples - impl_scores.size(0)
+        min_impl = torch.min(impl_scores) if impl_scores.size(0) > 0 else "NaN"
+        max_impl = torch.max(impl_scores) if impl_scores.size(0) > 0 else "NaN"
         pbar.set_postfix(
             {
                 "samples": n_samples,
                 "failed": failed_count,
                 "NROY": n_nroy_samples,
-                "min_impl": f"{torch.min(impl_scores) if impl_scores.size(0) > 0 else 'NaN':.2f}",
-                "max_impl": f"{torch.max(impl_scores) if impl_scores.size(0) > 0 else 'NaN':.2f}",
+                "min_impl": f"{min_impl:.2f}",
+                "max_impl": f"{max_impl:.2f}",
             }
         )

@@ -35,7 +35,7 @@ def history_matcher(mock_simulator, basic_observations):
     )
 
 
-def test_predict_with_simulator(history_matcher, mock_simulator):
+def test_predict_with_simulator(history_matcher):
     """Test running a wave with the mock simulator"""
     parameter_samples = [
         {"param1": 0.1, "param2": 0.2},
@@ -77,10 +77,9 @@ def test_predict_with_simulator(history_matcher, mock_simulator):
 #     assert successful_samples[0] == parameter_samples[1]
 
 
-def test_history_matcher_init(history_matcher, mock_simulator, basic_observations):
+def test_history_matcher_init(history_matcher, mock_simulator):
     """Test initialization of HistoryMatching with mock simulator"""
     assert history_matcher.simulator == mock_simulator
-    # assert history_matcher.observations == basic_observations
     assert history_matcher.threshold == 3.0
     assert history_matcher.discrepancy == 0.1
     assert history_matcher.rank == 1
