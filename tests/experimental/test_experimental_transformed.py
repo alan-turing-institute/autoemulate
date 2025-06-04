@@ -3,7 +3,11 @@ import itertools
 import pytest
 from autoemulate.experimental.emulators import GaussianProcessExact
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.transforms import PCATransform, VAETransform
+from autoemulate.experimental.transforms import (
+    PCATransform,
+    StandardizeTransform,
+    VAETransform,
+)
 
 # from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
@@ -13,14 +17,24 @@ from autoemulate.experimental.types import DistributionLike
     ("model", "transform", "target_transforms"),
     itertools.product(
         # [GaussianProcessExact, CNPModule, LightGBM],
+        # ALL_EMULATORS,
         [GaussianProcessExact],
         [
             None,
             [PCATransform(n_components=3)],
             [VAETransform(latent_dim=3)],
-            [PCATransform(n_components=3), VAETransform(latent_dim=2)],
+            [
+                StandardizeTransform(),
+                PCATransform(n_components=3),
+                VAETransform(latent_dim=2),
+            ],
         ],
-        [None, [PCATransform(n_components=1)], [VAETransform(latent_dim=1)]],
+        [
+            None,
+            [PCATransform(n_components=1)],
+            [VAETransform(latent_dim=1)],
+            [StandardizeTransform(), VAETransform(latent_dim=1)],
+        ],
     ),
 )
 def test_transformed_emulator(

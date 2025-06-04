@@ -1,7 +1,10 @@
 import pytest
 from autoemulate.experimental.emulators import GaussianProcessExact
-from autoemulate.experimental.transforms import PCATransform, VAETransform
-from autoemulate.experimental.transforms.standardize import StandardizeTransform
+from autoemulate.experimental.transforms import (
+    PCATransform,
+    StandardizeTransform,
+    VAETransform,
+)
 
 
 @pytest.mark.parametrize(
