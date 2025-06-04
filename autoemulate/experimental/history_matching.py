@@ -8,7 +8,7 @@ from autoemulate.experimental.types import GaussianLike, TensorLike
 from autoemulate.simulations.base import Simulator
 
 
-# TODO: should we use ValidationMixin here?
+# TODO: add ValidationMixin and TorchMixin here
 class HistoryMatching:
     """
     History matching is a model calibration method, which uses observed data to rule out
@@ -35,6 +35,8 @@ class HistoryMatching:
 
         TODO:
         - add device handling
+        - ensure consistency of tensor types
+        - add checks for inputs
         - update tests
         - make this work with updated Simulator class (after #414 is merged)
         - add random seed following #479
@@ -61,6 +63,8 @@ class HistoryMatching:
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
+
+        # TODO: currently output_names is not populated if sim is not run
         self.in_dim = len(self.simulator.param_names)
         self.out_dim = len(self.simulator.output_names)
 
@@ -253,7 +257,7 @@ class HistoryMatching:
         # TODO: remove numpy conversions once merged with #414
         if nroy_samples is None or nroy_samples.size(0) == 0:
             samples = self.simulator.sample_inputs(n_samples)
-            return torch.from_numpy(samples)
+            return torch.from_numpy(samples).float()
         return self.sample_nroy(n_samples, nroy_samples)
 
     def predict(
@@ -287,17 +291,19 @@ class HistoryMatching:
             output = emulator.predict(x)
             assert isinstance(output, GaussianLike)
             assert output.variance.ndim == 2
-            pred_means, pred_vars = output.mean, output.variance
+            pred_means, pred_vars = (
+                output.mean.float().detach(),
+                output.variance.float().detach(),
+            )
 
         # Make predictions using the simulator
         else:
             # TODO: remove numpy conversions once merged with #414
             results = self.simulator.run_batch_simulations(x.numpy())
-            results = torch.from_numpy(results)
+            results = torch.from_numpy(results).float()
             pred_vars = None
 
             # Filter out failed simulations (discard inputs and results)
-            # TODO: should the simulator handle this?
             valid_indices = [i for i, res in enumerate(results) if res is not None]
             pred_means, x = results[valid_indices], x[valid_indices]
 
@@ -335,7 +341,7 @@ class HistoryMatching:
         emulator_predict: bool = True
             Whether to use the emulator to make predictions. If False, use
             `self.simulator` instead.
-        initial_emulator: optional GaussianProcessExact
+        initial_emulator: optional[GaussianProcessExact]
             NOTE: this can be other GP emulators when implemented.
             Gaussian Process emulator pre-trained on `self.simulator` data.
             - if `emulator_predict=True`, the GP is used to make predictions.
@@ -355,6 +361,9 @@ class HistoryMatching:
 
         emulator = initial_emulator
         current_samples = self.sample_params(n_samples_per_wave)
+
+        # Keep track of predictions in case refitting emulator
+        ys = torch.empty(0)
 
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
@@ -376,16 +385,15 @@ class HistoryMatching:
                 )
                 self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
-                # Update emulator if simulated (enough) data
+                # Refit emulator
                 if (
                     (not emulator_predict)
                     and (emulator is not None)
-                    and nroy_samples.size(0) > 10
+                    # QUESTION: should we have this?
+                    # and nroy_samples.size(0) > 10
                 ):
-                    # QUESTION: shouldn't we be training on all the simulated
-                    # data collected across all the waves?
-                    # in that case, we need to store all pred_means too
-                    emulator.fit(successful_samples, pred_means)
+                    ys = torch.cat([ys, pred_means], dim=0)
+                    emulator.fit(self.tested_params, ys)
 
                 # Generate new samples for next wave
                 if wave < n_waves - 1:

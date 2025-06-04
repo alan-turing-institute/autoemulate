@@ -25,8 +25,8 @@ class HistoryMatchingDashboard:
         TODO: shouldn't this include rank as input?
 
         Args:
-            samples: DataFrame or numpy array with parameter samples
-            impl_scores: Array or Tensor of implausibility scores
+            samples: DataFrame or numpy array or tensor with parameter samples
+            impl_scores: Array or tensor of implausibility scores
             param_names: List of parameter names
             output_names: List of output names
             threshold: Implausibility threshold
@@ -50,18 +50,21 @@ class HistoryMatchingDashboard:
             self.max_waves = min(10, n_samples // 100) if n_samples > 100 else 5
 
         # Store other data
-        self.impl_scores = impl_scores
+        if isinstance(impl_scores, TensorLike):
+            self.impl_scores = impl_scores.numpy()
+        else:
+            self.impl_scores = impl_scores
         self.param_names = param_names
         self.output_names = output_names
         self.threshold = threshold
 
         # Calculate minimum implausibility for each sample
-        if len(impl_scores.shape) > 1:
-            self.min_impl = np.min(impl_scores, axis=1)
-            self.max_impl = np.max(impl_scores, axis=1)
+        if len(self.impl_scores.shape) > 1:
+            self.min_impl = np.min(self.impl_scores, axis=1)
+            self.max_impl = np.max(self.impl_scores, axis=1)
         else:
-            self.min_impl = impl_scores
-            self.max_impl = impl_scores
+            self.min_impl = self.impl_scores
+            self.max_impl = self.impl_scores
 
         # Add implausibility to DataFrame
         self.samples_df["min_implausibility"] = self.min_impl
