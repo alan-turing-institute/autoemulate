@@ -1,7 +1,7 @@
 import torch
 
 
-def make_positive_definite(cov, epsilon=1e-6, min_eigval=1e-6, max_tries=3):
+def make_positive_definite(cov, epsilon=1e-6, min_eigval=1e-6, max_tries=4):
     # Attempt with epsilon first
     for _ in range(max_tries):
         try:
@@ -26,5 +26,5 @@ def make_positive_definite(cov, epsilon=1e-6, min_eigval=1e-6, max_tries=3):
             eigvals = torch.clamp(eigvals, min=min_eigval)
             cov = eigvecs @ torch.diag(eigvals) @ eigvecs.T
             min_eigval *= 10
-    msg = "Matrix could not be made positive definite."
+    msg = f"Matrix could not be made positive definite:\n{cov}"
     raise RuntimeError(msg)
