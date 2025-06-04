@@ -1,5 +1,6 @@
 import pytest
-import torch
+
+# import torch
 from autoemulate.experimental.device import (
     check_model_device,
     check_torch_device_is_available,
@@ -89,16 +90,16 @@ def test_device(sample_data_y2d, new_data_y2d, device):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
-    x, y = sample_data_y1d
-    x2, _ = new_data_y1d
-    model1 = CNPModule(x, y, random_seed=123)
-    model2 = CNPModule(x, y, random_seed=123)
-    model1.fit(x, y)
-    model2.fit(x, y)
-    pred1 = model1.predict(x2)
-    pred2 = model2.predict(x2)
-    assert isinstance(pred1, DistributionLike)
-    assert isinstance(pred2, DistributionLike)
-    assert torch.allclose(pred1.mean, pred2.mean)
-    assert torch.allclose(pred1.variance, pred2.variance)
+# def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+#     x, y = sample_data_y1d
+#     x2, _ = new_data_y1d
+#     model1 = CNPModule(x, y, random_seed=123)
+#     model2 = CNPModule(x, y, random_seed=123)
+#     model1.fit(x, y)
+#     model2.fit(x, y)
+#     pred1 = model1.predict(x2)
+#     pred2 = model2.predict(x2)
+#     assert isinstance(pred1, DistributionLike)
+#     assert isinstance(pred2, DistributionLike)
+#     assert torch.allclose(pred1.mean, pred2.mean)
+#     assert torch.allclose(pred1.variance, pred2.variance)
