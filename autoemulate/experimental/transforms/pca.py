@@ -36,6 +36,7 @@ class PCATransform(AutoEmulateTransform):
         msg = "log det Jacobian not computable for n_components < d as not bijective."
         raise RuntimeError(msg)
 
-    def _expanded_basis_matrix(self, x: TensorLike) -> TensorLike:
+    @property
+    def _basis_matrix(self) -> TensorLike:
         self._check_is_fitted()
-        return torch.kron(torch.eye(x.shape[0]), self.components)
+        return self.components

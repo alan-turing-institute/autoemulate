@@ -36,7 +36,6 @@ class StandardizeTransform(AutoEmulateTransform):
         self._check_is_fitted()
         return torch.abs(self.std).log().sum(dim=self._event_dim, keepdim=True)
 
-    def _expanded_basis_matrix(self, x: TensorLike) -> TensorLike:
-        return torch.kron(
-            torch.eye(x.shape[0]), torch.eye(self.std.shape[1]) * self.std
-        )
+    @property
+    def _basis_matrix(self) -> TensorLike:
+        return torch.eye(self.std.shape[1]) * self.std

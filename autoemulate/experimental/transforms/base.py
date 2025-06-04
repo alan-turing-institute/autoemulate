@@ -25,10 +25,31 @@ class AutoEmulateTransform(Transform, ABC):
             msg = f"Transform ({self.__name__}) has not been fitted yet."
             raise ValueError(msg)
 
-    def _expanded_basis_matrix(self, x: TensorLike) -> TensorLike:
-        """Get the basis matrix for the transformation."""
+    @property
+    def _basis_matrix(self) -> TensorLike:
+        """Constant basis matrix for transforming matrices. Subclasses should implement
+        this property (if possible) to return the appropriate basis matrix.
+        """
         msg = "This method should be implemented in subclasses."
         raise NotImplementedError(msg)
+
+    def _expanded_basis_matrix(self, x: TensorLike) -> TensorLike:
+        """Expanded basis matrix for the transformation given x sample tensor.
+
+        Given n samples in x, this returns a Kronecker product of the identity matrix
+        with the basis matrix, effectively expanding the basis matrix to match the
+        number of samples in x.
+
+        Parameters
+        ----------
+            x (TensorLike): Input tensor to determine the number of samples.
+
+        Returns
+        -------
+            TensorLike: Expanded basis matrix.
+        """
+        self._check_is_fitted()
+        return torch.kron(torch.eye(x.shape[0]), self._basis_matrix)
 
     def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
         """Generate samples from a Gaussian distribution."""
