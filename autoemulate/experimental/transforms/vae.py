@@ -5,8 +5,7 @@ from torch.distributions import Transform, constraints
 from torch.utils.data import DataLoader, TensorDataset
 
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import GaussianLike, TensorLike
+from autoemulate.experimental.types import TensorLike
 from autoemulate.preprocess_target import VAE
 
 
@@ -114,60 +113,11 @@ class VAETransform(AutoEmulateTransform):
         msg = "log det Jacobian not computable since transform is not bijective."
         raise RuntimeError(msg)
 
-    def _inverse_gaussian(self, x: GaussianLike) -> GaussianLike:
-        """
-        Inverse transform for Gaussian-like distributions.
-        """
+    def _expanded_basis_matrix(self, x):
+        # Delta method to compute covariance in original space
+        # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
         self._check_is_fitted()
         assert self.vae is not None
-        mean_z: TensorLike = x.mean
-        cov_z = x.covariance_matrix
-        mean_orig: TensorLike = self.vae.decode(mean_z)
-        assert isinstance(mean_z, TensorLike)
-        assert isinstance(cov_z, TensorLike)
-
-        try:
-            # Delta method to compute covariance in original space
-            # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
-            jacobian_z = torch.autograd.functional.jacobian(self.vae.decode, mean_z)
-            # Reshape jacobian to match the shape of cov_z (n_tasks x n_samples)
-            jacobian_z = jacobian_z.view(jacobian_z.shape[0] * jacobian_z.shape[1], -1)
-            cov_orig = jacobian_z @ cov_z @ jacobian_z.T
-            return GaussianLike(mean_orig, make_positive_definite(cov_orig))
-        except RuntimeError as e:
-            msg = (
-                "Failed to make positive definite covariance. Falling back to "
-                "sampling method. "
-                f"Error: {e}"
-            )
-            logging.warning(msg)
-            return self._inverse_sample(x)
-
-    # TODO: refactor as default impl or free function as repetition with PCA impl
-    def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
-        self._check_is_fitted()
-        assert self.vae is not None
-        mean_z: TensorLike = x.mean
-        cov_z = x.covariance_matrix
-        mean_orig: TensorLike = self.vae.decode(mean_z)
-        assert isinstance(mean_z, TensorLike)
-        assert isinstance(cov_z, TensorLike)
-
-        def sample_cov():
-            sample_z = x.sample()
-            assert self.vae is not None
-            sample = self.vae.decode(sample_z).view(-1, 1)
-            mean_reshaped = mean_orig.view(-1, 1)
-            return (
-                (sample - mean_reshaped)
-                @ (sample - mean_reshaped).T
-                / (sample.shape[0] - 1)
-            )
-
-        # Generate samples and take the mean to estimate covariance in original space
-        cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).mean(0)
-
-        # Ensure positive definiteness
-        cov_orig = make_positive_definite(cov_orig)
-
-        return GaussianLike(mean_orig, cov_orig)
+        jacobian_z = torch.autograd.functional.jacobian(self.vae.decode, x)
+        # Reshape jacobian to match the shape of cov_z (n_tasks x n_samples)
+        return jacobian_z.view(jacobian_z.shape[0] * jacobian_z.shape[1], -1)
