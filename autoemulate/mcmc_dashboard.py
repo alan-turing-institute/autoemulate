@@ -111,8 +111,8 @@ class MCMCVisualizationDashboard:
         # Figure size controls
         self.fig_width = widgets.IntSlider(
             value=12,
-            min=6,
-            max=20,
+            min=2,
+            max=15,
             step=2,
             description='Width:',
             style={'description_width': 'initial'}
@@ -120,8 +120,8 @@ class MCMCVisualizationDashboard:
         
         self.fig_height = widgets.IntSlider(
             value=10,
-            min=6,
-            max=20, 
+            min=2,
+            max=15, 
             step=2,
             description='Height:',
             style={'description_width': 'initial'}
@@ -153,13 +153,6 @@ class MCMCVisualizationDashboard:
         self.sample_size = widgets.IntText(
             value=1000,
             description='Sample Size:',
-            style={'description_width': 'initial'}
-        )
-        
-        # Quantiles for corner plots
-        self.quantiles_text = widgets.Text(
-            value='0.025,0.5,0.975',
-            description='Quantiles:',
             style={'description_width': 'initial'}
         )
         
@@ -198,6 +191,12 @@ class MCMCVisualizationDashboard:
         # Label for the checkbox group
         self.param_selection_label = widgets.Label('Select Parameters to Display:')
         
+        # Plot explanation box
+        self.plot_explanation = widgets.HTML(
+            value="<div style='background-color: #e8f4f8; padding: 10px; border-radius: 5px; border-left: 4px solid #2196F3;'><b>Corner Plot:</b> Shows joint and marginal posterior distributions. Diagonal shows individual parameter distributions, off-diagonal shows parameter correlations.</div>",
+            layout=widgets.Layout(width='400px', margin='10px 0px')
+        )
+        
         # Update button
         self.update_button = widgets.Button(
             description='Update Plot',
@@ -221,10 +220,15 @@ class MCMCVisualizationDashboard:
             self.param_checkbox_container
         ])
         
+        # Container for parameter selection + explanation (side by side)
+        self.param_and_explanation = widgets.HBox([
+            self.param_selection_controls,
+            self.plot_explanation
+        ])
+        
         # Container for corner plot specific controls
         self.corner_controls = widgets.VBox([
-            self.sample_size,
-            self.quantiles_text
+            self.sample_size
         ])
         
         # Container for trace plot specific controls  
@@ -242,7 +246,7 @@ class MCMCVisualizationDashboard:
             self.param_selectors,
             self.plot_controls,
             self.advanced_controls,
-            self.param_selection_controls,
+            self.param_and_explanation,  # Use combined container
             self.corner_controls,
             self.trace_controls,
             self.update_button,
@@ -256,32 +260,55 @@ class MCMCVisualizationDashboard:
         """Show/hide controls based on selected plot type"""
         plot_type = change['new']
         
+        # Update plot explanation based on plot type
+        explanations = {
+            'corner': "<div style='background-color: #e8f4f8; padding: 10px; border-radius: 5px; border-left: 4px solid #2196F3;'><b>Corner Plot:</b> Shows joint and marginal posterior distributions. Diagonal shows individual parameter distributions, off-diagonal shows parameter correlations and dependencies.</div>",
+            
+            'traces': "<div style='background-color: #f0f8e8; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;'><b>Trace Plots:</b> Shows MCMC chain evolution over iterations. Good traces should look like 'white noise' around a stable mean. Use burn-in to remove initial non-converged samples.</div>",
+            
+            'posteriors': "<div style='background-color: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;'><b>Posterior Distributions:</b> Shows individual parameter posterior distributions as histograms with optional KDE smoothing. Compare with uniform priors to see parameter learning.</div>",
+            
+            'correlations': "<div style='background-color: #fce4ec; padding: 10px; border-radius: 5px; border-left: 4px solid #E91E63;'><b>Correlation Heatmap:</b> Shows linear correlations between all parameters. Values close to ±1 indicate strong correlations, near 0 indicates independence.</div>",
+            
+            'pairwise': "<div style='background-color: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 4px solid #9C27B0;'><b>Pairwise Plots:</b> Comprehensive view with scatter plots (upper), KDE contours (lower), and histograms (diagonal). Shows both linear and non-linear relationships.</div>",
+            
+            'convergence': "<div style='background-color: #e0f2f1; padding: 10px; border-radius: 5px; border-left: 4px solid #009688;'><b>Convergence Diagnostics:</b> Running means (top) should stabilize, autocorrelations (bottom) should decay quickly. Helps assess if MCMC has converged properly.</div>",
+            
+            'evolution': "<div style='background-color: #e8eaf6; padding: 10px; border-radius: 5px; border-left: 4px solid #3F51B5;'><b>Parameter Evolution:</b> Shows normalized parameter traces on same plot. Useful for comparing convergence rates and identifying problematic parameters.</div>",
+            
+            'vs_prior': "<div style='background-color: #fff8e1; padding: 10px; border-radius: 5px; border-left: 4px solid #FFC107;'><b>Posterior vs Prior:</b> Compares learned posteriors with original priors. Large differences indicate strong data influence; similar shapes suggest weak data information.</div>",
+            
+            'summary': "<div style='background-color: #efebe9; padding: 10px; border-radius: 5px; border-left: 4px solid #795548;'><b>Summary Statistics:</b> Displays tabular summary of posterior statistics including means, standard deviations, credible intervals, and convergence diagnostics.</div>"
+        }
+        
+        self.plot_explanation.value = explanations.get(plot_type, explanations['corner'])
+        
         # Default - show basic parameter selectors
         self.param_selectors.layout.display = 'flex'
         self.plot_controls.layout.display = 'flex'
         self.advanced_controls.layout.display = 'none'
         
         # Hide all conditional controls by default
-        self.param_selection_controls.layout.display = 'none'
+        self.param_and_explanation.layout.display = 'none'
         self.corner_controls.layout.display = 'none'
         self.trace_controls.layout.display = 'none'
         
         # Show controls based on plot type
         if plot_type == 'corner':
             # Corner plot: show parameter selection and corner-specific controls
-            self.param_selection_controls.layout.display = 'flex'
+            self.param_and_explanation.layout.display = 'flex'
             self.corner_controls.layout.display = 'flex'
             self.param_selectors.layout.display = 'none'  # Use checkboxes instead
             
         elif plot_type == 'traces':
             # Trace plots: show parameter selection and burnin control
-            self.param_selection_controls.layout.display = 'flex'
+            self.param_and_explanation.layout.display = 'flex'
             self.trace_controls.layout.display = 'flex'
             self.param_selectors.layout.display = 'none'
             
         elif plot_type == 'posteriors':
             # Posterior plots: show parameter selection and advanced controls
-            self.param_selection_controls.layout.display = 'flex'
+            self.param_and_explanation.layout.display = 'flex'
             self.advanced_controls.layout.display = 'flex'
             self.param_selectors.layout.display = 'none'
             
@@ -292,17 +319,17 @@ class MCMCVisualizationDashboard:
             
         elif plot_type in ['pairwise', 'evolution']:
             # These use parameter selection checkboxes
-            self.param_selection_controls.layout.display = 'flex'
+            self.param_and_explanation.layout.display = 'flex'
             self.param_selectors.layout.display = 'none'
             
         elif plot_type == 'convergence':
             # Convergence diagnostics
-            self.param_selection_controls.layout.display = 'flex'
+            self.param_and_explanation.layout.display = 'flex'
             self.param_selectors.layout.display = 'none'
             
         elif plot_type == 'vs_prior':
             # Prior comparison
-            self.param_selection_controls.layout.display = 'flex'
+            self.param_and_explanation.layout.display = 'flex'
             self.advanced_controls.layout.display = 'flex'
             self.param_selectors.layout.display = 'none'
     
@@ -388,11 +415,8 @@ class MCMCVisualizationDashboard:
             indices = np.random.choice(len(samples_array), size=self.sample_size.value, replace=False)
             samples_array = samples_array[indices]
         
-        # Parse quantiles
-        try:
-            quantiles = [float(q.strip()) for q in self.quantiles_text.value.split(',')]
-        except:
-            quantiles = [0.025, 0.5, 0.975]
+        # Use default quantiles
+        quantiles = [0.025, 0.5, 0.975]
         
         fig = corner.corner(
             samples_array,
@@ -719,7 +743,8 @@ class MCMCVisualizationDashboard:
     def display(self):
         """Display the dashboard"""
         heading = widgets.HTML(value="<h2> MCMC Visualization Dashboard</h2>")
-                
+        
+
         # Display the heading and instructions first
         display(heading)
         display(self.main_layout)
