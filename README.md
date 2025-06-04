@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                                |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                                |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                          |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                           |      104 |        2 |     98% |   73, 310 |
+| autoemulate/emulators/gaussian\_process.py                                           |      104 |        1 |     99% |        73 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                                     |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                                       |       97 |       10 |     90% |71, 246, 250, 254, 259, 265, 271, 282, 286, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                                  |       42 |        0 |    100% |           |
@@ -96,7 +96,7 @@
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                        |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                                       |       52 |        2 |     96% |     52-53 |
-| tests/test\_compare.py                                                               |      183 |        5 |     97% |239, 263, 272, 377-378 |
+| tests/test\_compare.py                                                               |      183 |        3 |     98% |239, 263, 272 |
 | tests/test\_cross\_validate.py                                                       |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                              |       13 |        0 |    100% |           |
@@ -117,7 +117,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **7420** | **1392** | **81%** |           |
+|                                                                            **TOTAL** | **7420** | **1389** | **81%** |           |
 
 
 ## Setup coverage badge
