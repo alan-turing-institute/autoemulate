@@ -72,7 +72,7 @@ def test_device(sample_data_y2d, new_data_y2d, device):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
     # TODO: investigate why this test passes even when

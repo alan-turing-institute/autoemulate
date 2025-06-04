@@ -26,7 +26,7 @@ def test_lightgm_class_name_returned():
     assert lgbm.model_name() == "LightGBM"
 
 
-def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+def test_lgbm_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
     model1 = LightGBM(random_seed=42)

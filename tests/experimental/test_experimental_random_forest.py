@@ -33,7 +33,7 @@ def test_tune_rf(sample_data_y1d):
     assert len(configs) == 5
 
 
-def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
     model1 = RandomForest(x, y, random_seed=42)
