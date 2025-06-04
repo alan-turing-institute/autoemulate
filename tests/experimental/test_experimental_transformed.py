@@ -1,7 +1,7 @@
 import itertools
 
 import pytest
-from autoemulate.experimental.emulators import GaussianProcessExact
+from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -10,15 +10,13 @@ from autoemulate.experimental.transforms import (
 )
 
 # from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike
+from autoemulate.experimental.types import DistributionLike, TensorLike
 
 
 @pytest.mark.parametrize(
     ("model", "transform", "target_transforms"),
     itertools.product(
-        # [GaussianProcessExact, CNPModule, LightGBM],
-        # ALL_EMULATORS,
-        [GaussianProcessExact],
+        [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
             None,
             [PCATransform(n_components=3)],
@@ -51,8 +49,12 @@ def test_transformed_emulator(
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    assert isinstance(y_pred, DistributionLike)
-    assert y_pred.mean.shape == (20, 2)
+    if model is GaussianProcessExact:
+        assert isinstance(y_pred, DistributionLike)
+        assert y_pred.mean.shape == (20, 2)
+    else:
+        assert isinstance(y_pred, TensorLike)
+        assert y_pred.shape == (20, 2)
 
 
 # def test_tune_transformed_gp(sample_data_y2d):
