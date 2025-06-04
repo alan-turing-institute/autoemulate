@@ -18,17 +18,17 @@ def mock_simulator():
 
 
 @pytest.fixture
-def basic_observations():
-    """Fixture for basic observation data matching mock simulator outputs"""
+def observations():
+    """Fixture for observations data matching mock simulator outputs"""
     return {"output1": (0.5, 0.1), "output2": (0.6, 0.2)}  # (mean, variance)
 
 
 @pytest.fixture
-def history_matcher(mock_simulator, basic_observations):
+def history_matcher(mock_simulator, observations):
     """Fixture for a basic HistoryMatching instance using the mock simulator"""
     return HistoryMatching(
         simulator=mock_simulator,
-        observations=basic_observations,
+        observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
         rank=1,
@@ -37,19 +37,9 @@ def history_matcher(mock_simulator, basic_observations):
 
 def test_predict_with_simulator(history_matcher):
     """Test running a wave with the mock simulator"""
-    parameter_samples = [
-        {"param1": 0.1, "param2": 0.2},
-        {"param1": 0.3, "param2": -0.4},
-    ]
 
-    X = torch.tensor(
-        [
-            [sample[name] for name in ["param1", "param2"]]
-            for sample in parameter_samples
-        ]
-    )
-
-    pred_means, pred_vars, successful_samples = history_matcher.predict(X)
+    x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])  # [n_sample, n_output]
+    pred_means, pred_vars, successful_samples = history_matcher.predict(x)
 
     # With our mock simulator, all valid samples should succeed
     assert successful_samples.shape[0] == 2
@@ -72,28 +62,46 @@ def test_history_matcher_init(history_matcher, mock_simulator):
     assert history_matcher.obs_vars.shape == (1, 2)
 
 
-def test_calculate_implausibility(history_matcher):
+def test_calculate_implausibility(history_matcher, observations):
     """Test implausibility calculation with mock simulator outputs"""
 
-    # Shape [n_samples, n_outputs]
-    pred_means = torch.Tensor([[0.4], [0.7]])
-    pred_vars = torch.Tensor([[0.05], [0.1]])
+    # have 1 sample of 2 outputs arranged as [n_samples, n_outputs]
+    pred_means = torch.Tensor([[0.4, 0.7]])
+    pred_vars = torch.Tensor([[0.05, 0.1]])
 
-    result = history_matcher.calculate_implausibility(pred_means, pred_vars)
+    impl_scores = history_matcher.calculate_implausibility(pred_means, pred_vars)
+    assert impl_scores.shape == (1, 2)
 
-    # Check the structure of the result
-    assert isinstance(result, TensorLike)
-    assert len(result) == 2  # Should have implausibility for both outputs
+    assert impl_scores[0][0] == (
+        abs(pred_means[0][0] - observations["output1"][0])
+        # have an extra term in the denominator for model discrepancy
+        / (pred_vars[0][0] + observations["output1"][1] + 0.1) ** 0.5
+    )
+
+    assert impl_scores[0][1] == (
+        abs(pred_means[0][1] - observations["output2"][0])
+        # have an extra term in the denominator for model discrepancy
+        / (pred_vars[0][1] + observations["output2"][1] + 0.1) ** 0.5
+    )
 
 
-def test_get_nroy(history_matcher):
-    # TODO
-    pass
+def test_get_indices(history_matcher):
+    impl_scores = torch.tensor([[1, 5], [1, 2], [4, 2]])
 
+    # rank = 1
+    nroy = history_matcher.get_nroy(impl_scores)
+    assert len(nroy) == 1
+    assert nroy[0] == 1
 
-def test_get_ro(history_matcher):
-    # TODO
-    pass
+    ro = history_matcher.get_ro(impl_scores)
+    assert len(ro) == 2
+    assert ro[0] == 0
+    assert ro[1] == 2
+
+    # rank = n
+    history_matcher.rank = 2
+    assert len(history_matcher.get_nroy(impl_scores)) == 3
+    assert len(history_matcher.get_ro(impl_scores)) == 0
 
 
 def test_invalid_inputs(history_matcher):
@@ -103,7 +111,7 @@ def test_invalid_inputs(history_matcher):
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
 def test_run(history_matcher):
-    """Test the full history matching process with mock simulator"""
+    """Test the full history matching process with a mock simulator"""
     n_waves = 2
     n_samples_per_wave = 5
 
@@ -114,7 +122,7 @@ def test_run(history_matcher):
     all_samples = history_matcher.tested_params
     all_impl_scores = history_matcher.impl_scores
 
-    # Check the basic structure of the results
+    # Check basic structure of results
     assert isinstance(all_samples, TensorLike)
     assert isinstance(all_impl_scores, TensorLike)
     assert updated_emulator is None  # Since we didn't use an emulator
@@ -127,15 +135,7 @@ def test_run(history_matcher):
 def test_sample_nroy(history_matcher, mock_simulator):
     """Test generating new samples within NROY space using mock simulator"""
 
-    nroy_samples = [
-        {"param1": 0.1, "param2": 0.2},
-        {"param1": 0.3, "param2": -0.4},
-        {"param1": 0.2, "param2": 0.1},
-    ]
-
-    X_nroy = torch.Tensor(
-        [[sample[name] for name in ["param1", "param2"]] for sample in nroy_samples]
-    )
+    X_nroy = torch.tensor([[0.1, 0.2], [0.3, -0.4], [0.2, 0.1]])
 
     n_samples = 5
     new_samples = history_matcher.sample_nroy(n_samples, X_nroy)
@@ -145,15 +145,12 @@ def test_sample_nroy(history_matcher, mock_simulator):
     assert new_samples.shape[1] == len(mock_simulator.param_names)
 
     # Check that values are within the bounds of NROY samples
-    param1_values = [s["param1"] for s in nroy_samples]
-    param2_values = [s["param2"] for s in nroy_samples]
-
     assert (
-        (min(param1_values) <= new_samples[:, 0])
-        & (new_samples[:, 0] <= max(param1_values))
+        (torch.min(X_nroy[:, 0]) <= new_samples[:, 0])
+        & (new_samples[:, 0] <= torch.max(X_nroy[:, 0]))
     ).all()
 
     assert (
-        (min(param2_values) <= new_samples[:, 1])
-        & (new_samples[:, 1] <= max(param2_values))
+        (torch.min(X_nroy[:, 1]) <= new_samples[:, 1])
+        & (new_samples[:, 1] <= torch.max(X_nroy[:, 1]))
     ).all()
