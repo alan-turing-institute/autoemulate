@@ -118,7 +118,7 @@ class HistoryMatching:
         # The rank-th highest implausibility must be <= threshold
         return I_sorted[:, self.rank - 1] <= self.threshold
 
-    def get_nroy_idx(self, implausability: TensorLike) -> TensorLike:
+    def get_nroy(self, implausability: TensorLike) -> TensorLike:
         """
         Get indices of NROY points from implausability scores.
 
@@ -135,7 +135,7 @@ class HistoryMatching:
         nroy_mask = self._create_nroy_mask(implausability)
         return torch.where(nroy_mask)[0]
 
-    def get_ro_idx(self, implausability: TensorLike) -> TensorLike:
+    def get_ro(self, implausability: TensorLike) -> TensorLike:
         """
         Get indices of RO points from implausability scores.
 
@@ -226,7 +226,7 @@ class HistoryMatching:
 
             # Filter valid samples based on implausibility and concatenate
             impl_scores = self.calculate_implausibility(candidate_samples)
-            nroy_idx = self.get_nroy_idx(impl_scores)
+            nroy_idx = self.get_nroy(impl_scores)
             valid_candidates = candidate_samples[nroy_idx]
             valid_samples = torch.cat([valid_samples, valid_candidates], dim=0)
 
@@ -318,7 +318,7 @@ class HistoryMatching:
         n_waves: int = 3,
         n_samples_per_wave: int = 100,
         emulator_predict: bool = True,
-        initial_emulator: Optional[GaussianProcessExact] = None,
+        emulator: Optional[GaussianProcessExact] = None,
     ) -> Union[GaussianProcessExact, None]:
         """
         Run iterative history matching. In each wave:
@@ -341,7 +341,7 @@ class HistoryMatching:
         emulator_predict: bool = True
             Whether to use the emulator to make predictions. If False, use
             `self.simulator` instead.
-        initial_emulator: optional[GaussianProcessExact]
+        emulator: optional[GaussianProcessExact]
             NOTE: this can be other GP emulators when implemented.
             Gaussian Process emulator pre-trained on `self.simulator` data.
             - if `emulator_predict=True`, the GP is used to make predictions.
@@ -353,30 +353,29 @@ class HistoryMatching:
         union[GaussianProcessExact, None]
             - a GP emulator (retrained on new data if `emulator_predict=False`) or None
         """
-        if emulator_predict and initial_emulator is None:
+        if emulator_predict and emulator is None:
             error_message = (
                 "Need to pass a GP emulator object when `emulator_predict=True`"
             )
             raise ValueError(error_message)
 
-        emulator = initial_emulator
-        current_samples = self.sample_params(n_samples_per_wave)
-
+        nroy_samples = None
         # Keep track of predictions in case refitting emulator
         ys = torch.empty(0)
 
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
-            for wave in range(n_waves):
-                # Run wave using batch processing
+            for _ in range(n_waves):
+                samples = self.sample_params(n_samples_per_wave, nroy_samples)
+
+                # Emulate predictions unless emulator_predict=False
                 pred_means, pred_vars, successful_samples = self.predict(
-                    x=current_samples,
-                    # Emulate predictions unless emulator_predict=False
+                    x=samples,
                     emulator=emulator if emulator_predict else None,
                 )
 
-                # Calculate implausibility in batch and identify NROY points
+                # Calculate implausibility and identify NROY points
                 impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                nroy_idx = self.get_nroy_idx(impl_scores)
+                nroy_idx = self.get_nroy(impl_scores)
                 nroy_samples = successful_samples[nroy_idx]
 
                 # Store results
@@ -386,24 +385,13 @@ class HistoryMatching:
                 self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
                 # Refit emulator
-                if (
-                    (not emulator_predict)
-                    and (emulator is not None)
-                    # QUESTION: should we have this?
-                    # and nroy_samples.size(0) > 10
-                ):
+                if (not emulator_predict) and (emulator is not None):
                     ys = torch.cat([ys, pred_means], dim=0)
                     emulator.fit(self.tested_params, ys)
 
-                # Generate new samples for next wave
-                if wave < n_waves - 1:
-                    current_samples = self.sample_params(
-                        n_samples_per_wave, nroy_samples
-                    )
-
                 # Update progress bar
                 self._update_progress_bar(
-                    pbar, impl_scores, current_samples.size(0), nroy_samples.size(0)
+                    pbar, impl_scores, samples.size(0), nroy_samples.size(0)
                 )
                 pbar.update(1)
 
