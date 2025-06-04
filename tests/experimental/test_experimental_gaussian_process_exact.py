@@ -83,7 +83,7 @@ def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
         gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf,
-        # random_seed=124,
+        random_seed=42,
     )
     model2 = GaussianProcessExact(
         x,
@@ -91,7 +91,7 @@ def test_fit_predict_deterministic_with_seed(sample_data_y1d, new_data_y1d):
         gpytorch.likelihoods.MultitaskGaussianLikelihood,
         constant_mean,
         rbf,
-        # random_seed=123,
+        random_seed=42,
     )
     model1.fit(x, y)
     model2.fit(x, y)
