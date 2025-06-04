@@ -60,29 +60,16 @@ def test_predict_with_simulator(history_matcher):
     assert pred_vars is None
 
 
-# def test_predict_with_missing_params(history_matcher, mock_simulator):
-#     """Test running a wave with invalid parameters that should fail"""
-#     parameter_samples = [
-#         {"param1": 0.1},  # Missing param2 - should fail
-#         {"param1": 0.3, "param2": -0.4},  # Valid
-#     ]
-
-#     successful_samples, impl_scores = history_matcher.predict(
-#         parameter_samples
-#     )
-
-#     # Only the valid sample should succeed
-#     assert len(successful_samples) == 1
-#     assert len(impl_scores) == 1
-#     assert successful_samples[0] == parameter_samples[1]
-
-
 def test_history_matcher_init(history_matcher, mock_simulator):
     """Test initialization of HistoryMatching with mock simulator"""
     assert history_matcher.simulator == mock_simulator
     assert history_matcher.threshold == 3.0
     assert history_matcher.discrepancy == 0.1
     assert history_matcher.rank == 1
+    assert history_matcher.in_dim == 2
+    assert history_matcher.out_dim == 2
+    assert history_matcher.obs_means.shape == (1, 2)
+    assert history_matcher.obs_vars.shape == (1, 2)
 
 
 def test_calculate_implausibility(history_matcher):
@@ -95,11 +82,23 @@ def test_calculate_implausibility(history_matcher):
     result = history_matcher.calculate_implausibility(pred_means, pred_vars)
 
     # Check the structure of the result
-    # assert set(result.keys()) == {"I", "NROY", "RO"}
     assert isinstance(result, TensorLike)
-    # assert isinstance(result["NROY"], TensorLike)
-    # assert isinstance(result["RO"], TensorLike)
     assert len(result) == 2  # Should have implausibility for both outputs
+
+
+def test_get_nroy(history_matcher):
+    # TODO
+    pass
+
+
+def test_get_ro(history_matcher):
+    # TODO
+    pass
+
+
+def test_invalid_inputs(history_matcher):
+    # TODO
+    pass
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
