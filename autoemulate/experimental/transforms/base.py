@@ -22,7 +22,7 @@ class AutoEmulateTransform(Transform, ABC):
 
     def _check_is_fitted(self):
         if not self.is_fitted_:
-            msg = f"Transform ({self.__name__}) has not been fitted yet."
+            msg = f"Transform ({self}) has not been fitted yet."
             raise ValueError(msg)
 
     @property
@@ -105,6 +105,3 @@ class AutoEmulateTransformModule(TransformModule):
     def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
         msg = "This method should be implemented in subclasses."
         raise NotImplementedError(msg)
-
-
-# TODO: conside adding AutoEmulateComposeTransform
