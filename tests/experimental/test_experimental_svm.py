@@ -1,3 +1,4 @@
+import torch
 from autoemulate.experimental.emulators.svm import (
     SupportVectorMachine,
 )
@@ -21,3 +22,18 @@ def test_tune_svm(sample_data_y1d):
     scores, configs = tuner.run(SupportVectorMachine)
     assert len(scores) == 5
     assert len(configs) == 5
+
+
+def test_svm_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    x, y = sample_data_y1d
+    y = y.reshape(-1, 1)
+    x2, _ = new_data_y1d
+    model1 = SupportVectorMachine(x, y, random_seed=42)
+    model2 = SupportVectorMachine(x, y, random_seed=42)
+    model1.fit(x, y)
+    model2.fit(x, y)
+    pred1 = model1.predict(x2)
+    pred2 = model2.predict(x2)
+    assert isinstance(pred1, TensorLike)
+    assert isinstance(pred2, TensorLike)
+    assert torch.allclose(pred1, pred2)
