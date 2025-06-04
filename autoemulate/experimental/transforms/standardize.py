@@ -20,7 +20,7 @@ class StandardizeTransform(AutoEmulateTransform):
 
     def fit(self, x: TensorLike):
         self.mean = x.mean(0, keepdim=True)
-        self.std = x.std(0, keepdim=True)
+        self.std = torch.nan_to_num(x.std(0, keepdim=True), nan=1.0)
         self.is_fitted_ = True
 
     def _call(self, x):
