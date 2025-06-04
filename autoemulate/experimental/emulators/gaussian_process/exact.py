@@ -59,7 +59,6 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         lr: float = 2e-1,
         device: DeviceLike | None = None,
     ):
-        # Init random state
         if random_seed is not None:
             self.set_random_seed(random_seed)
 

@@ -25,7 +25,7 @@ class RandomForest(SklearnBackend):
         bootstrap: bool = True,
         oob_score: bool = False,
         max_samples: int | None = None,
-        random_seed: int | np.random.RandomState | None = None,
+        random_seed: int | None = None,
         device: DeviceLike = "cpu",
     ):
         """Initializes a RandomForest object."""
