@@ -1,6 +1,12 @@
 from typing import cast
 
-from torch.distributions import ComposeTransform, Transform, TransformedDistribution
+import torch
+from gpytorch.distributions import MultivariateNormal
+from torch.distributions import (
+    ComposeTransform,
+    Transform,
+    TransformedDistribution,
+)
 
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
@@ -18,13 +24,15 @@ class TransformedEmulator(Emulator, ValidationMixin):
     model: Emulator
     target_transforms: list[AutoEmulateTransform]
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
         transforms: list[AutoEmulateTransform] | None,
         target_transforms: list[AutoEmulateTransform] | None,
         model: type[Emulator],
+        output_from_samples: bool = False,
+        n_samples: int = 1000,
         **kwargs,
     ):
         """Initialize a transformed emulator.
@@ -40,8 +48,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 apply to the target data. The transforms are applied to y in the order
                 they appear in the list
             model (type[Emulator]): The emulator model class to use.
+            output_from_samples (bool): If True, sample outputs from the model for
+                obtaining approximate predictive distributions. Default is False.
             **kwargs: Additional keyword arguments to pass to the model constructor.
-
 
         """
         self.transforms = transforms if transforms is not None else []
@@ -50,6 +59,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
         self._fit_transforms(x, y)
         self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
+        self.output_from_samples = output_from_samples
+        self.n_samples = n_samples
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         # Fit transforms
@@ -103,6 +114,19 @@ class TransformedEmulator(Emulator, ValidationMixin):
             y_dis = transform._inverse_gaussian(y_dis)
         return y_dis
 
+    def _inv_transform_y_sample(self, y_dis: DistributionLike) -> MultivariateNormal:
+        samples = torch.stack(
+            [
+                self._inv_transform_y_tensor(y_dis.sample())
+                for _ in range(self.n_samples)
+            ],
+            0,
+        )
+        return MultivariateNormal(
+            samples.mean(0),
+            samples.var(0, unbiased=False).diag_embed(),
+        )
+
     def _inv_transform_y_distribution(
         self, y_dis: DistributionLike
     ) -> DistributionLike:
@@ -121,13 +145,23 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Transform and invert transform for prediction in original data space
         x = self._transform_x(x)
         y_pred = self.model.predict(x)
-        if isinstance(y_pred, TensorLike):
-            return self._inv_transform_y_tensor(y_pred)
-        if isinstance(y_pred, GaussianLike):
-            return self._inv_transform_y_mvn(y_pred)
+        if not self.output_from_samples or isinstance(y_pred, TensorLike):
+            if isinstance(y_pred, TensorLike):
+                return self._inv_transform_y_tensor(y_pred)
+            if isinstance(y_pred, GaussianLike):
+                return self._inv_transform_y_mvn(y_pred)
+            if isinstance(y_pred, DistributionLike):
+                return self._inv_transform_y_distribution(y_pred)
+            msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
+            raise ValueError(msg)
+        # If output_from_samples is True, sample from the distribution
         if isinstance(y_pred, DistributionLike):
-            return self._inv_transform_y_distribution(y_pred)
-        msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
+            return self._inv_transform_y_sample(y_pred)
+        msg = (
+            "Invalid output type from model prediction. Expected TensorLike,"
+            "GaussianLike, or DistributionLike. Received: "
+            f"{type(y_pred)}"
+        )
         raise ValueError(msg)
 
     # TODO: this requires self, should we update the base emulator?
