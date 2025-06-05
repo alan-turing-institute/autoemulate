@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from autoemulate.experimental.emulators import GaussianProcessExact
 from autoemulate.experimental.transforms import (
@@ -5,6 +6,7 @@ from autoemulate.experimental.transforms import (
     StandardizeTransform,
     VAETransform,
 )
+from sklearn.decomposition import PCA as SklearnPCA
 
 
 @pytest.mark.parametrize(
@@ -37,3 +39,14 @@ def test_transform_inverse_for_gaussians(sample_data_y2d, transform):
     for method in [transform._inverse_sample, transform._inverse_gaussian]:
         y_pred = method(z_pred)
         assert y_pred.mean.shape == (10, 2)
+
+
+def test_pca(sample_data_y2d):
+    pca = PCATransform(n_components=2, niter=50)
+    x, _ = sample_data_y2d
+    pca.fit(x)
+    skpca = SklearnPCA(n_components=2)
+    skpca.fit(x)
+    assert np.allclose(
+        np.abs(pca.components.cpu().numpy()), np.abs(skpca.components_.T), atol=1e-6
+    )
