@@ -22,7 +22,7 @@ class HistoryMatching(TorchDeviceMixin):
     all other points are marked as not ruled out yet (NROY).
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         simulator: Simulator,
         observations: dict[str, tuple[float, float]],
