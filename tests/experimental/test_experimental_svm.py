@@ -28,8 +28,8 @@ def test_svm_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     y = y.reshape(-1, 1)
     x2, _ = new_data_y1d
-    model1 = SupportVectorMachine(x, y, random_seed=42)
-    model2 = SupportVectorMachine(x, y, random_seed=42)
+    model1 = SupportVectorMachine(x, y)
+    model2 = SupportVectorMachine(x, y)
     model1.fit(x, y)
     model2.fit(x, y)
     pred1 = model1.predict(x2)

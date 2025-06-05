@@ -2,11 +2,13 @@ import gpytorch
 import pytest
 import torch
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
+from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
     check_model_device,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -75,29 +77,33 @@ def test_device(sample_data_y2d, new_data_y2d, device):
 def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
-    # TODO: investigate why this test passes even when
-    # random_seed unset or set differently
+    ae = AutoEmulate(x, y, models=ALL_EMULATORS)
+
+    # Create 2 models that should have the same output
     model1 = GaussianProcessExact(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf,
-        random_seed=42,
+        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
     model2 = GaussianProcessExact(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf,
-        random_seed=42,
+        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
     model1.fit(x, y)
     model2.fit(x, y)
     pred1 = model1.predict(x2)
     pred2 = model2.predict(x2)
+
+    # Change the random seed and create a model with different output
+    ae.set_random_seed(84)
+    model3 = GaussianProcessExact(
+        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
+    )
+    model3.fit(x, y)
+    pred3 = model3.predict(x2)
+
     assert isinstance(pred1, DistributionLike)
     assert isinstance(pred2, DistributionLike)
+    assert isinstance(pred3, DistributionLike)
     assert torch.allclose(pred1.mean, pred2.mean)
     assert torch.allclose(pred1.variance, pred2.variance)
+
+    # TODO: should this pass or fail?
+    # assert not torch.allclose(pred1.mean, pred3.mean)
