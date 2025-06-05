@@ -61,21 +61,20 @@ class AutoEmulateTransform(Transform, ABC):
         assert isinstance(mean_orig, TensorLike)
 
         def sample_cov():
+            # Draws samples from gaussian in latent and transforms to original space
             sample = x.sample()
             sample_orig = self.inv(sample)
             assert isinstance(sample_orig, TensorLike)
             sample_orig = sample_orig.view(-1, 1)
             mean_reshaped = mean_orig.view(-1, 1)
-            return (
-                (sample_orig - mean_reshaped)
-                @ (sample_orig - mean_reshaped).T
-                / (sample_orig.shape[0] - 1)
-            )
+            return (sample_orig - mean_reshaped) @ (sample_orig - mean_reshaped).T
 
-        # Generate samples and take mean to estimate covariance, make positive definite
-        cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).mean(0)
+        # Generate samples and take unbiased mean to estimate covariance
+        cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).sum(0) / (
+            n_samples - 1
+        )
+        # Ensure positive definite
         cov_orig = make_positive_definite(cov_orig)
-
         return GaussianLike(mean_orig, cov_orig)
 
     def _inverse_gaussian(self, x: GaussianLike) -> GaussianLike:
@@ -88,8 +87,10 @@ class AutoEmulateTransform(Transform, ABC):
 
         expanded_basis_matrix = self._expanded_basis_matrix(mean)
 
-        # Transform covariance and make it positive definite
+        # Transform covariance matrix
         cov_orig = expanded_basis_matrix @ cov @ expanded_basis_matrix.T
+
+        # Ensure positive definite
         cov_orig = make_positive_definite(cov_orig)
 
         return GaussianLike(mean_orig, cov_orig)
