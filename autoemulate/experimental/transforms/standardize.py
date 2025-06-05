@@ -1,5 +1,5 @@
 import torch
-from torch.distributions import Transform
+from torch.distributions import Transform, constraints
 
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import TensorLike
@@ -12,6 +12,8 @@ class StandardizeTransform(AutoEmulateTransform):
     translation by the mean and a scaling by the inverse of the standard deviation.
     """
 
+    domain = constraints.real
+    codomain = constraints.real
     bijective = True
 
     def __init__(self, cache_size=0):
