@@ -1,16 +1,10 @@
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Optional
-
+from typing import Dict, List, Tuple, Optional
 import numpy as np
 import pandas as pd
 import pyro
 import pyro.distributions as dist
 import torch
-from pyro.infer import MCMC
-from pyro.infer import NUTS
-
+from pyro.infer import MCMC, NUTS
 
 class MCMCCalibrator:
     def __init__(
@@ -19,6 +13,7 @@ class MCMCCalibrator:
         sensitivity_results: pd.DataFrame,
         observations: Dict[str, Tuple[float, float]],
         parameter_bounds: Dict[str, List[float]],
+        # NEW: Add history matching results
         nroy_samples: Optional[np.ndarray] = None,
         nroy_indices: Optional[List[int]] = None,
         all_samples: Optional[np.ndarray] = None,
@@ -27,28 +22,32 @@ class MCMCCalibrator:
     ):
         self.emulator = emulator
         self.observations = observations
-
-        # history matching results
+        self.device = device
+        self.parameter_bounds = parameter_bounds
+        
+        # Store history matching results
         self.nroy_samples = nroy_samples
         self.nroy_indices = nroy_indices
         self.all_samples = all_samples
-
-        self.device = device
-        self.parameter_bounds = parameter_bounds
+        
         # Get important parameters and their bounds
         self.important_params = self._get_important_parameters(
             sensitivity_results, top_n_params
         )
         self.reduced_bounds = {p: parameter_bounds[p] for p in self.important_params}
-
+        
+        # Check if NROY samples are valid before using them
         if nroy_samples is not None:
-            self.reduced_bounds = self._refine_bounds_from_nroy(nroy_samples)
+            if len(nroy_samples) > 0:
+                print(f"Using {len(nroy_samples)} NROY samples to refine bounds")
+                self.reduced_bounds = self._refine_bounds_from_nroy(nroy_samples)
+            else:
+                print("Warning: No NROY samples found (empty array). Using original parameter bounds.")
+        else:
+            print("No NROY samples provided. Using original parameter bounds.")
 
         print(f"Calibrating top {len(self.important_params)} parameters:")
         print("\n".join(f"  - {param}" for param in self.important_params))
-
-        if nroy_samples is not None:
-            print(f"Using {len(nroy_samples)} NROY samples to inform priors")
 
     def _get_important_parameters(
         self, sensitivity_results: pd.DataFrame, top_n: int
@@ -61,6 +60,102 @@ class MCMCCalibrator:
             .nlargest(top_n)
             .index.tolist()
         )
+    
+    def _refine_bounds_from_nroy(self, nroy_samples: np.ndarray) -> Dict[str, List[float]]:
+        """Refine parameter bounds using NROY samples from history matching."""
+        # Check if NROY samples is empty
+        if len(nroy_samples) == 0:
+            print("Warning: Empty NROY samples provided. Using original bounds.")
+            return {p: self.parameter_bounds[p] for p in self.important_params}
+        
+        # Check if NROY samples has the right number of parameters
+        expected_params = len(self.parameter_bounds)
+        if nroy_samples.shape[1] != expected_params:
+            print(f"Warning: NROY samples has {nroy_samples.shape[1]} parameters, "
+                  f"but expected {expected_params}. Using original bounds.")
+            return {p: self.parameter_bounds[p] for p in self.important_params}
+        
+        refined_bounds = {}
+        param_names = list(self.parameter_bounds.keys())
+        
+        for i, param_name in enumerate(param_names):
+            if param_name in self.important_params:
+                try:
+                    # Use NROY samples to define tighter bounds
+                    nroy_values = nroy_samples[:, i]
+                    
+                    # Additional check for empty values
+                    if len(nroy_values) == 0:
+                        print(f"Warning: No NROY values for parameter {param_name}. Using original bounds.")
+                        refined_bounds[param_name] = self.parameter_bounds[param_name]
+                        continue
+                    
+                    min_val = max(np.min(nroy_values), self.parameter_bounds[param_name][0])
+                    max_val = min(np.max(nroy_values), self.parameter_bounds[param_name][1])
+                    
+                    # Check if min_val >= max_val (degenerate case)
+                    if min_val >= max_val:
+                        print(f"Warning: Degenerate bounds for parameter {param_name}. Using original bounds.")
+                        refined_bounds[param_name] = self.parameter_bounds[param_name]
+                        continue
+                    
+                    # Add small buffer to avoid edge effects
+                    buffer = (max_val - min_val) * 0.05
+                    refined_bounds[param_name] = [
+                        max(min_val - buffer, self.parameter_bounds[param_name][0]),
+                        min(max_val + buffer, self.parameter_bounds[param_name][1])
+                    ]
+                    
+                    print(f"Parameter {param_name}:")
+                    print(f"  Original bounds: {self.parameter_bounds[param_name]}")
+                    print(f"  NROY-refined bounds: {refined_bounds[param_name]}")
+                    
+                except Exception as e:
+                    print(f"Error refining bounds for parameter {param_name}: {e}")
+                    print(f"Using original bounds for {param_name}")
+                    refined_bounds[param_name] = self.parameter_bounds[param_name]
+            else:
+                refined_bounds[param_name] = self.parameter_bounds[param_name]
+        
+        return refined_bounds
+
+    def _get_nroy_initial_values(self, n_samples: int = 1) -> torch.Tensor:
+        """Get initial MCMC values from NROY samples."""
+        if self.nroy_samples is None or len(self.nroy_samples) == 0:
+            # Fall back to center of bounds
+            initial_values = []
+            for param_name in self.important_params:
+                bounds = self.reduced_bounds[param_name]
+                initial_values.append((bounds[0] + bounds[1]) / 2)
+            return torch.tensor(initial_values, device=self.device)
+        
+        # Sample from NROY points
+        param_indices = [i for i, param in enumerate(self.parameter_bounds.keys()) 
+                        if param in self.important_params]
+        
+        try:
+            if len(self.nroy_samples) >= n_samples:
+                selected_indices = np.random.choice(len(self.nroy_samples), n_samples, replace=False)
+            else:
+                selected_indices = np.random.choice(len(self.nroy_samples), n_samples, replace=True)
+            
+            selected_samples = self.nroy_samples[selected_indices][:, param_indices]
+            return torch.tensor(selected_samples[0] if n_samples == 1 else selected_samples, 
+                               device=self.device)
+        except Exception as e:
+            print(f"Error getting NROY initial values: {e}")
+            print("Falling back to center of bounds")
+            # Fall back to center of bounds
+            initial_values = []
+            for param_name in self.important_params:
+                bounds = self.reduced_bounds[param_name]
+                initial_values.append((bounds[0] + bounds[1]) / 2)
+            return torch.tensor(initial_values, device=self.device)
+
+    def _init_fn(self):
+        """Initialization function for MCMC using NROY samples."""
+        return {param: self._get_nroy_initial_values() 
+                for param in self.important_params}
 
     def _create_full_params(self, reduced_params: torch.Tensor) -> torch.Tensor:
         """Create full parameter vector with defaults for non-calibrated params."""
@@ -74,17 +169,21 @@ class MCMCCalibrator:
         return full_params
 
     def model(self):
-        """Pyro model for MCMC sampling."""
-        reduced_params = [
-            pyro.sample(
-                param_name,
-                dist.Uniform(
-                    torch.tensor(bounds[0], device=self.device),
-                    torch.tensor(bounds[1], device=self.device),
-                ),
-            )
-            for param_name, bounds in self.reduced_bounds.items()
-        ]
+        """Enhanced Pyro model that uses NROY-informed priors."""
+        reduced_params = []
+        
+        for param_name, bounds in self.reduced_bounds.items():
+            if param_name in self.important_params:
+                # Use refined bounds from NROY
+                reduced_params.append(
+                    pyro.sample(
+                        param_name,
+                        dist.Uniform(
+                            torch.tensor(bounds[0], device=self.device),
+                            torch.tensor(bounds[1], device=self.device),
+                        ),
+                    )
+                )
 
         full_params = self._create_full_params(torch.stack(reduced_params))
 
@@ -106,26 +205,37 @@ class MCMCCalibrator:
             )
 
     def run_mcmc(
-        self,
-        num_samples: int = 1000,
-        warmup_steps: int = 500,
+        self, 
+        num_samples: int = 1000, 
+        warmup_steps: int = 500, 
         num_chains: int = 1,
-        use_nroy_init: bool = True,
+        use_nroy_init: bool = True
     ) -> Dict:
-        """Run MCMC sampling and return results."""
-
-        init_strategy = None
-        if use_nroy_init and self.nroy_samples is not None:
-            print("Initializing MCMC chains from NROY samples...")
-            init_strategy = self._init_fn
-
+        """Run MCMC sampling with optional NROY initialization."""
         nuts_kernel = NUTS(self.model)
+        
+        # Use NROY samples for initialization if available and valid
+        initial_params = None
+        if (use_nroy_init and 
+            self.nroy_samples is not None and 
+            len(self.nroy_samples) > 0):
+            print("Initializing MCMC chains from NROY samples...")
+            try:
+                initial_params = self._init_fn()  # Call the function to get the dict
+            except Exception as e:
+                print(f"Error getting NROY initialization: {e}")
+                print("Using default initialization instead.")
+                initial_params = None
+        else:
+            if use_nroy_init:
+                print("Cannot use NROY initialization (no valid NROY samples). Using default initialization.")
+        
         mcmc = MCMC(
             nuts_kernel,
             num_samples=num_samples,
             warmup_steps=warmup_steps,
             num_chains=num_chains,
-            initial_params=init_strategy,
+            initial_params=initial_params  # Fixed parameter name
         )
 
         print("Running MCMC...")
@@ -207,99 +317,29 @@ class MCMCCalibrator:
             )
         return params
 
-    def _get_nroy_initial_values(self, n_samples: int = 1) -> torch.Tensor:
-        """Get initial MCMC values from NROY samples.
-        If no NROY samples are available, use the center of parameter bounds.
-        """
-        if self.nroy_samples is None or len(self.nroy_samples) == 0:
-            # Fall back to center of bounds
-            initial_values = []
-            for param_name in self.important_params:
-                bounds = self.reduced_bounds[param_name]
-                initial_values.append((bounds[0] + bounds[1]) / 2)
-            return torch.tensor(initial_values, device=self.device)
-
-        # Sample from NROY points
-        param_indices = [
-            i
-            for i, param in enumerate(self.parameter_bounds.keys())
-            if param in self.important_params
-        ]
-
-        if len(self.nroy_samples) >= n_samples:
-            selected_indices = np.random.choice(
-                len(self.nroy_samples), n_samples, replace=False
-            )
-        else:
-            selected_indices = np.random.choice(
-                len(self.nroy_samples), n_samples, replace=True
-            )
-
-        selected_samples = self.nroy_samples[selected_indices][:, param_indices]
-        return torch.tensor(
-            selected_samples[0] if n_samples == 1 else selected_samples,
-            device=self.device,
-        )
-
-    def _refine_bounds_from_nroy(
-        self, nroy_samples: np.ndarray
-    ) -> Dict[str, List[float]]:
-        """Refine parameter bounds using NROY samples from history matching."""
-        refined_bounds = {}
-        param_names = list(self.parameter_bounds.keys())
-
-        for i, param_name in enumerate(param_names):
-            if param_name in self.important_params:
-                # Use NROY samples to define tighter bounds
-                nroy_values = nroy_samples[:, i]
-                min_val = max(np.min(nroy_values), self.parameter_bounds[param_name][0])
-                max_val = min(np.max(nroy_values), self.parameter_bounds[param_name][1])
-
-                # Add small buffer to avoid edge effects
-                edge = (max_val - min_val) * 0.05
-                refined_bounds[param_name] = [
-                    max(min_val - edge, self.parameter_bounds[param_name][0]),
-                    min(max_val + edge, self.parameter_bounds[param_name][1]),
-                ]
-
-                print(f"Parameter {param_name}:")
-                print(f"  Original bounds: {self.parameter_bounds[param_name]}")
-                print(f"  NROY-refined bounds: {refined_bounds[param_name]}")
-            else:
-                refined_bounds[param_name] = self.parameter_bounds[param_name]
-
-        return refined_bounds
-
     def compare_with_nroy(self) -> pd.DataFrame:
         """Compare MCMC results with NROY bounds."""
-        if self.nroy_samples is None:
+        if self.nroy_samples is None or len(self.nroy_samples) == 0:
             print("No NROY samples available for comparison")
             return None
-
+        
         comparison_data = []
         param_names = list(self.parameter_bounds.keys())
-
+        
         for param_name in self.important_params:
             param_idx = param_names.index(param_name)
             nroy_values = self.nroy_samples[:, param_idx]
             mcmc_values = self.mcmc_results[param_name]
-
-            comparison_data.append(
-                {
-                    "parameter": param_name,
-                    "nroy_min": np.min(nroy_values),
-                    "nroy_max": np.max(nroy_values),
-                    "nroy_mean": np.mean(nroy_values),
-                    "mcmc_mean": np.mean(mcmc_values),
-                    "mcmc_std": np.std(mcmc_values),
-                    "mcmc_q2.5": np.percentile(mcmc_values, 2.5),
-                    "mcmc_q97.5": np.percentile(mcmc_values, 97.5),
-                }
-            )
-
+            
+            comparison_data.append({
+                'parameter': param_name,
+                'nroy_min': np.min(nroy_values),
+                'nroy_max': np.max(nroy_values),
+                'nroy_mean': np.mean(nroy_values),
+                'mcmc_mean': np.mean(mcmc_values),
+                'mcmc_std': np.std(mcmc_values),
+                'mcmc_q2.5': np.percentile(mcmc_values, 2.5),
+                'mcmc_q97.5': np.percentile(mcmc_values, 97.5),
+            })
+        
         return pd.DataFrame(comparison_data)
-
-    def _init_fn(self) -> Dict[str, torch.Tensor]:
-        return {
-            param: self._get_nroy_initial_values() for param in self.important_params
-        }
