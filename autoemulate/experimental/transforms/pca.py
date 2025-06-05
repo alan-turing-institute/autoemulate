@@ -12,14 +12,17 @@ class PCATransform(AutoEmulateTransform):
     codomain = constraints.real
     bijective = False
 
-    def __init__(self, n_components, cache_size: int = 0):
+    def __init__(self, n_components, cache_size: int = 0, niter: int = 1000):
         Transform.__init__(self, cache_size=cache_size)
-        self.n_components = n_components  # n_c
+        # n_c
+        self.n_components = n_components
+        self.niter = niter
 
     def fit(self, x: TensorLike):
         self.mean = x.mean(0)
-        _, _, v = torch.pca_lowrank(x, q=self.n_components)
-        self.components = v[:, : self.n_components]  # (d, n_c)
+        _, _, v = torch.pca_lowrank(x, q=self.n_components, niter=self.niter)
+        # (d, n_c)
+        self.components = v[:, : self.n_components]
         self._is_fitted = True
 
     def _call(self, x):
