@@ -3,13 +3,14 @@ from typing import Optional, Union
 import torch
 from tqdm import tqdm
 
+from autoemulate.experimental.data.utils import ValidationMixin
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import GaussianProcessExact
-from autoemulate.experimental.types import GaussianLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 from autoemulate.simulations.base import Simulator
 
 
-# TODO: add ValidationMixin and TorchMixin here
-class HistoryMatching:
+class HistoryMatching(ValidationMixin, TorchDeviceMixin):
     """
     History matching is a model calibration method, which uses observed data to rule out
     parameter values which are ``implausible``. The implausability metric is:
@@ -29,12 +30,12 @@ class HistoryMatching:
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
+        device: DeviceLike | None = None,
     ):
         """
         Initialize the history matching object.
 
         TODO:
-        - add device handling
         - ensure consistency of tensor types
         - add checks for inputs
         - update tests
@@ -59,7 +60,11 @@ class HistoryMatching:
                 scores are ordered across outputs, it indicates which rank to use
                 when determining whether the query point is NROY. The default value
                 of ``1`` indicates that the largest implausibility will be used.
+            device: DeviceLike | None
+                The device to use. If None, the default torch device is returned.
         """
+        TorchDeviceMixin.__init__(self, device=device)
+
         self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
@@ -82,18 +87,20 @@ class HistoryMatching:
                 f"simulator output names {set(self.simulator.output_names)}",
             )
         obs_means = torch.tensor(
-            [observations[name][0] for name in self.simulator.output_names]
+            [observations[name][0] for name in self.simulator.output_names],
+            device=self.device,
         )
         obs_vars = torch.tensor(
-            [observations[name][1] for name in self.simulator.output_names]
+            [observations[name][1] for name in self.simulator.output_names],
+            device=self.device,
         )
         # Reshape observation tensors for broadcasting
         self.obs_means = obs_means.view(1, -1)  # [1, n_outputs]
         self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
 
         # Track tested parameter values and their implausability scores
-        self.tested_params = torch.empty((0, self.in_dim))
-        self.impl_scores = torch.empty((0, self.out_dim))
+        self.tested_params = torch.empty((0, self.in_dim), device=self.device)
+        self.impl_scores = torch.empty((0, self.out_dim), device=self.device)
 
     def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
         """
@@ -165,24 +172,26 @@ class HistoryMatching:
         ----------
         pred_means: TensorLike
             Tensor of prediction means [n_samples, n_outputs]
-        pred_vars: optional[TensorLike]
+        pred_vars: TensorLike | None
             Tensor of prediction variances [n_samples, n_outputs]. If not
             provided (e.g., when predictions are made by a deterministic
             simulator), all variances are set to `default_var`.
         default_var: int
-            Prediction variance to set if not provided.
+            Prediction variance value to use if not provided.
 
         Returns
         -------
         TensorLike
             Tensor of implausibility scores.
         """
-        # Set variances if not provided
+        # Set prediction variances if not provided
         if pred_vars is None:
-            pred_vars = torch.full_like(pred_means, default_var)
+            pred_vars = torch.full_like(pred_means, default_var, device=self.device)
 
-        # Add model discrepancy
-        discrepancy = torch.full_like(self.obs_vars, self.discrepancy)
+        # Additional variance due to model discrepancy (defaults to 0)
+        discrepancy = torch.full_like(
+            self.obs_vars, self.discrepancy, device=self.device
+        )
 
         # Calculate total variance
         Vs = pred_vars + discrepancy + self.obs_vars
@@ -216,11 +225,12 @@ class HistoryMatching:
 
         # Need to handle possible discontinuous NROY spaces
         # i.e., a region within min/max bounds is not valid (RO)
-        valid_samples = torch.empty((0, self.in_dim))
+        valid_samples = torch.empty((0, self.in_dim), device=self.device)
         while len(valid_samples) < n_samples:
             # Generate candidates
             candidate_samples = (
-                torch.rand((n_samples, self.in_dim)) * (max_bounds - min_bounds)
+                torch.rand((n_samples, self.in_dim), device=self.device)
+                * (max_bounds - min_bounds)
                 + min_bounds
             )
 
@@ -245,7 +255,7 @@ class HistoryMatching:
         ----------
             n_samples: int
                 Number of new samples to generate.
-            nroy_samples: optional[TensorLike]
+            nroy_samples: TensorLike | None
                 Optional tensor of parameter samples in the NROY space. If
                 provided, sample from within this space.
 
@@ -257,7 +267,7 @@ class HistoryMatching:
         # TODO: remove numpy conversions once merged with #414
         if nroy_samples is None or nroy_samples.size(0) == 0:
             samples = self.simulator.sample_inputs(n_samples)
-            return torch.from_numpy(samples).float()
+            return torch.from_numpy(samples).float().to(self.device)
         return self.sample_nroy(n_samples, nroy_samples)
 
     def predict(
@@ -273,18 +283,22 @@ class HistoryMatching:
         ----------
         x: TensorLike
             Tensor of parameters to simulate/emulate returned by `self.sample`.
-        emulator: optional[GaussianProcessExact]
+        emulator: GaussianProcessExact | None
             NOTE: this can be other GP emulators when implemented.
             Gaussian process emulator trained on `self.simulator` output data.
 
         Returns
         -------
-        tuple[TensorLike, optional[TensorLike], TensorLike]
+        tuple[TensorLike, TensorLike | None, TensorLike]
             Arrays of predicted means and optionally variances as well as the input
             data for which predictions were made succesfully.
         """
         if x.shape[0] == 0:
-            return torch.empty(0), torch.empty(0), torch.empty(0)
+            return (
+                torch.empty(0, device=self.device),
+                torch.empty(0, device=self.device),
+                torch.empty(0, device=self.device),
+            )
 
         # Make predictions using a GP emulator
         if emulator is not None:
@@ -300,7 +314,7 @@ class HistoryMatching:
         else:
             # TODO: remove numpy conversions once merged with #414
             results = self.simulator.run_batch_simulations(x.numpy())
-            results = torch.from_numpy(results).float()
+            results = torch.from_numpy(results).float().to(self.device)
             pred_vars = None
 
             # Filter out failed simulations (discard inputs and results)
@@ -309,7 +323,11 @@ class HistoryMatching:
 
             # All simulations failed
             if pred_means.shape[0] == 0:
-                return torch.empty(0), torch.empty(0), torch.empty(0)
+                return (
+                    torch.empty(0, device=self.device),
+                    torch.empty(0, device=self.device),
+                    torch.empty(0, device=self.device),
+                )
 
         return pred_means, pred_vars, x
 
@@ -341,7 +359,7 @@ class HistoryMatching:
         emulator_predict: bool = True
             Whether to use the emulator to make predictions. If False, use
             `self.simulator` instead.
-        emulator: optional[GaussianProcessExact]
+        emulator: GaussianProcessExact | None
             NOTE: this can be other GP emulators when implemented.
             Gaussian Process emulator pre-trained on `self.simulator` data.
             - if `emulator_predict=True`, the GP is used to make predictions.
@@ -354,16 +372,22 @@ class HistoryMatching:
             - a GP emulator (retrained on new data if `emulator_predict=False`) or None
         """
         if emulator_predict and emulator is None:
-            error_message = (
-                "Need to pass a GP emulator object when `emulator_predict=True`"
-            )
-            raise ValueError(error_message)
+            msg = "Need to pass a GP emulator object when `emulator_predict=True`"
+            raise ValueError(msg)
+
+        if emulator is not None:
+            emulator.device = self.device
 
         nroy_samples = None
         # Keep track of predictions in case refitting emulator
-        ys = torch.empty(0)
+        ys = torch.empty(0, device=self.device)
 
-        with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
+        with tqdm(
+            total=n_waves,
+            desc="History Matching",
+            unit="wave",
+            disable=self.device.type != "cpu",
+        ) as pbar:
             for _ in range(n_waves):
                 samples = self.sample_params(n_samples_per_wave, nroy_samples)
 
