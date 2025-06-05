@@ -1,6 +1,7 @@
 import itertools
 
 import pytest
+import torch
 from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
@@ -10,7 +11,7 @@ from autoemulate.experimental.transforms import (
 )
 
 # from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike, TensorLike
+from autoemulate.experimental.types import DistributionLike, GaussianLike, TensorLike
 
 
 def run_test(train_data, test_data, model, transform, target_transforms):
@@ -104,6 +105,59 @@ def test_transformed_emulator_100_targets(
         transform,
         target_transforms,
     )
+
+
+def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    em = TransformedEmulator(
+        x,
+        y,
+        model=GaussianProcessExact,
+        transforms=[StandardizeTransform()],
+        target_transforms=[PCATransform(n_components=1)],
+    )
+    em.fit(x, y)
+    y_pred = em.predict(x2)
+    z_pred = em.model.predict(em.transforms[0](x2))
+    assert isinstance(z_pred, GaussianLike)
+    y_pred2 = em.target_transforms[0]._inverse_sample(z_pred, n_samples=10000)
+    assert isinstance(y_pred, GaussianLike)
+    assert isinstance(y_pred2, GaussianLike)
+    print()
+    print(y_pred.covariance_matrix)
+    print(y_pred2.covariance_matrix)
+    print(y_pred2.covariance_matrix - y_pred.covariance_matrix)
+    assert torch.allclose(
+        y_pred.covariance_matrix, y_pred2.covariance_matrix, atol=1e-1
+    )
+
+
+def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    em = TransformedEmulator(
+        x,
+        y,
+        model=GaussianProcessExact,
+        transforms=[StandardizeTransform()],
+        target_transforms=[VAETransform(latent_dim=1)],
+    )
+    em.fit(x, y)
+    y_pred = em.predict(x2)
+    z_pred = em.model.predict(em.transforms[0](x2))
+    assert isinstance(z_pred, GaussianLike)
+    y_pred2 = em.target_transforms[0]._inverse_sample(z_pred, n_samples=10000)
+    assert isinstance(y_pred, GaussianLike)
+    assert isinstance(y_pred2, GaussianLike)
+    print()
+    print(y_pred.covariance_matrix)
+    print(y_pred2.covariance_matrix)
+    print(y_pred2.covariance_matrix - y_pred.covariance_matrix)
+    # TODO: consider correct assert for VAE case
+    # assert torch.allclose(
+    #     y_pred.covariance_matrix, y_pred2.covariance_matrix, atol=1e-1
+    # )
 
 
 # def test_tune_transformed_gp(sample_data_y2d):
