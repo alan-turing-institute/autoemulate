@@ -20,7 +20,7 @@ class PCATransform(AutoEmulateTransform):
         self.mean = x.mean(0)
         _, _, v = torch.pca_lowrank(x, q=self.n_components)
         self.components = v[:, : self.n_components]  # (d, n_c)
-        self.is_fitted_ = True
+        self._is_fitted = True
 
     def _call(self, x):
         self._check_is_fitted()

@@ -45,7 +45,7 @@ class VAETransform(AutoEmulateTransform):
         # TODO: consider this can be init here instead of fit
         self.vae = None
         self.input_dim = None
-        self.is_fitted_ = False
+        self._is_fitted = False
 
     def _init_vae(self, intput_dim: int):
         self.input_dim = intput_dim
@@ -91,7 +91,7 @@ class VAETransform(AutoEmulateTransform):
                 )
                 logging.info(msg)
 
-        self.is_fitted_ = True
+        self._is_fitted = True
 
     def _call(self, x):
         self._check_is_fitted()

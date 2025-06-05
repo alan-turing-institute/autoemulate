@@ -14,17 +14,17 @@ class StandardizeTransform(AutoEmulateTransform):
 
     bijective = True
 
-    def __init__(self, event_dim=0, cache_size=0):
+    def __init__(self, cache_size=0):
         Transform.__init__(self, cache_size=cache_size)
-        self._event_dim = event_dim
 
     def fit(self, x: TensorLike):
+        # TODO: add checks or shape of mean and std
         self.mean = x.mean(0, keepdim=True)
         std = x.std(0, keepdim=True)
-        # Ensure std is not zero to avoid division by zero errors.
+        # Ensure std is not zero to avoid division by zero errors
         std[std < 10 * torch.finfo(std.dtype).eps] = 1.0
         self.std = std
-        self.is_fitted_ = True
+        self._is_fitted = True
 
     def _call(self, x):
         self._check_is_fitted()
@@ -37,7 +37,7 @@ class StandardizeTransform(AutoEmulateTransform):
     def log_abs_det_jacobian(self, x, y):
         _, _ = x, y
         self._check_is_fitted()
-        return torch.abs(self.std).log().sum(dim=self._event_dim, keepdim=True)
+        return torch.abs(self.std).log().sum()
 
     @property
     def _basis_matrix(self) -> TensorLike:

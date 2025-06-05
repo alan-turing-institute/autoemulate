@@ -9,7 +9,7 @@ from autoemulate.experimental.types import GaussianLike, TensorLike
 
 
 class AutoEmulateTransform(Transform, ABC):
-    is_fitted_: bool = False
+    _is_fitted: bool = False
 
     # TODO: consider if the override also needs to consider DistributionLike case
     def __call__(self, x: TensorLike) -> TensorLike:
@@ -21,7 +21,7 @@ class AutoEmulateTransform(Transform, ABC):
     def fit(self, x: TensorLike): ...
 
     def _check_is_fitted(self):
-        if not self.is_fitted_:
+        if not self._is_fitted:
             msg = f"Transform ({self}) has not been fitted yet."
             raise ValueError(msg)
 
