@@ -1,5 +1,6 @@
 import gpytorch
 import pytest
+import torch
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
@@ -69,3 +70,34 @@ def test_device(sample_data_y2d, new_data_y2d, device):
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
     assert y_pred.mean.shape == (20, 2)
+
+
+def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    x, y = sample_data_y1d
+    x2, _ = new_data_y1d
+    # TODO: investigate why this test passes even when
+    # random_seed unset or set differently
+    model1 = GaussianProcessExact(
+        x,
+        y,
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
+        constant_mean,
+        rbf,
+        random_seed=42,
+    )
+    model2 = GaussianProcessExact(
+        x,
+        y,
+        gpytorch.likelihoods.MultitaskGaussianLikelihood,
+        constant_mean,
+        rbf,
+        random_seed=42,
+    )
+    model1.fit(x, y)
+    model2.fit(x, y)
+    pred1 = model1.predict(x2)
+    pred2 = model2.predict(x2)
+    assert isinstance(pred1, DistributionLike)
+    assert isinstance(pred2, DistributionLike)
+    assert torch.allclose(pred1.mean, pred2.mean)
+    assert torch.allclose(pred1.variance, pred2.variance)
