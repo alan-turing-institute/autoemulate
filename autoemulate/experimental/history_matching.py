@@ -231,7 +231,8 @@ class HistoryMatching(TorchDeviceMixin):
             )
 
             # Filter valid samples based on implausibility and concatenate
-            impl_scores = self.calculate_implausibility(candidate_samples)
+            pred_means, _, candidate_samples = self.predict(candidate_samples)
+            impl_scores = self.calculate_implausibility(pred_means)
             nroy_idx = self.get_nroy(impl_scores)
             valid_candidates = candidate_samples[nroy_idx]
             valid_samples = torch.cat([valid_samples, valid_candidates], dim=0)
