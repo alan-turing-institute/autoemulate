@@ -80,7 +80,7 @@ class LightGBM(Emulator):
             colsample_bytree=self.colsample_bytree,
             reg_alpha=self.reg_alpha,
             reg_lambda=self.reg_lambda,
-            random_seed=self.random_seed,
+            random_state=self.random_seed,
             n_jobs=self.n_jobs,
             importance_type=self.importance_type,
             verbose=self.verbose,
