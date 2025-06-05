@@ -50,6 +50,7 @@ def run_test(train_data, test_data, model, transform, target_transforms):
         [
             None,
             [PCATransform(n_components=1)],
+            [StandardizeTransform(), PCATransform(n_components=1)],
             [VAETransform(latent_dim=1)],
             [StandardizeTransform(), VAETransform(latent_dim=1)],
         ],
@@ -67,6 +68,7 @@ def test_transformed_emulator(
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
             None,
+            [StandardizeTransform()],
             [PCATransform(n_components=3)],
             [VAETransform(latent_dim=3)],
             [
@@ -76,21 +78,15 @@ def test_transformed_emulator(
             ],
         ],
         [
+            # TODO: PCA/VAE both require StandardizeTransform for numerical stability
+            # e.g. "ValueError: Input tensor y contains non-finite values"
             # TODO: check error when no target transforms are provided
-            # None,
-            [PCATransform(n_components=10)],
-            [PCATransform(n_components=10)],
-            [PCATransform(n_components=15)],
-            # TODO: check error for n_components = 20
-            # ValueError: Input tensor y contains non-finite values
-            # [PCATransform(n_components=20)],
-            # TODO: consider if VAETransform without Standardize is expected to pass
-            # [VAETransform(latent_dim=10)],
-            # TODO: check error for latent_dim = 20
-            # ValueError: Input tensor y contains non-finite values
-            # [VAETransform(latent_dim=20)],
+            None,
             [StandardizeTransform()],
+            [StandardizeTransform(), PCATransform(n_components=10)],
+            [StandardizeTransform(), PCATransform(n_components=20)],
             [StandardizeTransform(), VAETransform(latent_dim=10)],
+            [StandardizeTransform(), VAETransform(latent_dim=20)],
         ],
     ),
 )
