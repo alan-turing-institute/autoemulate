@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 import torch
 from autoemulate.experimental.types import (
@@ -188,6 +190,24 @@ class ConversionMixin:
         x: TensorLike, x_mean: TensorLike, x_std: TensorLike
     ) -> TensorLike:
         return (x * x_std) + x_mean
+
+    def set_random_seed(self, seed: int, deterministic: bool = False):
+        """Set random seed for Python, NumPy and PyTorch.
+
+        Parameters
+        ----------
+        seed : int
+            The random seed to use.
+        deterministic : bool
+            Use "deterministic" algorithms in PyTorch.
+        """
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        if deterministic:
+            torch.backends.cudnn.benchmark = False
+            torch.use_deterministic_algorithms(True)
 
 
 class ValidationMixin:
