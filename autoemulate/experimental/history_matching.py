@@ -3,14 +3,13 @@ from typing import Optional, Union
 import torch
 from tqdm import tqdm
 
-from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import GaussianProcessExact
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 from autoemulate.simulations.base import Simulator
 
 
-class HistoryMatching(ValidationMixin, TorchDeviceMixin):
+class HistoryMatching(TorchDeviceMixin):
     """
     History matching is a model calibration method, which uses observed data to rule out
     parameter values which are ``implausible``. The implausability metric is:
@@ -36,11 +35,8 @@ class HistoryMatching(ValidationMixin, TorchDeviceMixin):
         Initialize the history matching object.
 
         TODO:
-        - ensure consistency of tensor types
-        - add checks for inputs
-        - update tests
         - make this work with updated Simulator class (after #414 is merged)
-        - add random seed following #479
+        - add random seed (once #465 is complete)
 
         Parameters
         ----------
@@ -224,7 +220,7 @@ class HistoryMatching(ValidationMixin, TorchDeviceMixin):
         max_bounds, _ = torch.max(nroy_samples, dim=0)
 
         # Need to handle possible discontinuous NROY spaces
-        # i.e., a region within min/max bounds is not valid (RO)
+        # i.e., a region within min/max bounds is ruled out
         valid_samples = torch.empty((0, self.in_dim), device=self.device)
         while len(valid_samples) < n_samples:
             # Generate candidates
@@ -295,9 +291,9 @@ class HistoryMatching(ValidationMixin, TorchDeviceMixin):
         """
         if x.shape[0] == 0:
             return (
-                torch.empty(0, device=self.device),
-                torch.empty(0, device=self.device),
-                torch.empty(0, device=self.device),
+                torch.empty((0, self.out_dim), device=self.device),
+                torch.empty((0, self.out_dim), device=self.device),
+                torch.empty((0, self.in_dim), device=self.device),
             )
 
         # Make predictions using a GP emulator
@@ -317,17 +313,9 @@ class HistoryMatching(ValidationMixin, TorchDeviceMixin):
             results = torch.from_numpy(results).float().to(self.device)
             pred_vars = None
 
-            # Filter out failed simulations (discard inputs and results)
+            # Simulator returns None if it fails, discard these runs and inputs
             valid_indices = [i for i, res in enumerate(results) if res is not None]
             pred_means, x = results[valid_indices], x[valid_indices]
-
-            # All simulations failed
-            if pred_means.shape[0] == 0:
-                return (
-                    torch.empty(0, device=self.device),
-                    torch.empty(0, device=self.device),
-                    torch.empty(0, device=self.device),
-                )
 
         return pred_means, pred_vars, x
 
@@ -378,9 +366,11 @@ class HistoryMatching(ValidationMixin, TorchDeviceMixin):
         if emulator is not None:
             emulator.device = self.device
 
-        nroy_samples = None
         # Keep track of predictions in case refitting emulator
         ys = torch.empty(0, device=self.device)
+
+        # To begin with entire parameter space is NROY so don't have samples yet
+        nroy_samples = None
 
         with tqdm(
             total=n_waves,
