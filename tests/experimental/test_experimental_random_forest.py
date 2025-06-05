@@ -1,4 +1,4 @@
-# import torch
+import torch
 from autoemulate.experimental.emulators.random_forest import (
     RandomForest,
 )
@@ -33,16 +33,15 @@ def test_tune_rf(sample_data_y1d):
     assert len(configs) == 5
 
 
-# def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):
-#     x, y = sample_data_y1d
-#     x2, _ = new_data_y1d
-#     # TODO: need to be able to pass random_seed into this model
-#     model1 = RandomForest(x, y)
-#     model2 = RandomForest(x, y)
-#     model1.fit(x, y)
-#     model2.fit(x, y)
-#     pred1 = model1.predict(x2)
-#     pred2 = model2.predict(x2)
-#     assert isinstance(pred1, TensorLike)
-#     assert isinstance(pred2, TensorLike)
-#     assert torch.allclose(pred1, pred2)
+def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    x, y = sample_data_y1d
+    x2, _ = new_data_y1d
+    model1 = RandomForest(x, y)
+    model2 = RandomForest(x, y)
+    model1.fit(x, y)
+    model2.fit(x, y)
+    pred1 = model1.predict(x2)
+    pred2 = model2.predict(x2)
+    assert isinstance(pred1, TensorLike)
+    assert isinstance(pred2, TensorLike)
+    assert torch.allclose(pred1, pred2)

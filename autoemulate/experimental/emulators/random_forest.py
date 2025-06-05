@@ -25,6 +25,7 @@ class RandomForest(SklearnBackend):
         bootstrap: bool = True,
         oob_score: bool = False,
         max_samples: int | None = None,
+        random_seed: int = 42,
         device: DeviceLike = "cpu",
     ):
         """Initializes a RandomForest object."""
@@ -39,6 +40,7 @@ class RandomForest(SklearnBackend):
         self.bootstrap = bootstrap
         self.oob_score = oob_score
         self.max_samples = max_samples
+        self.random_seed = random_seed
         self.model = RandomForestRegressor(
             n_estimators=self.n_estimators,
             max_depth=self.max_depth,
@@ -46,6 +48,7 @@ class RandomForest(SklearnBackend):
             min_samples_leaf=self.min_samples_leaf,
             max_features=self.max_features,
             bootstrap=self.bootstrap,
+            random_state=self.random_seed,
         )
 
     @staticmethod
