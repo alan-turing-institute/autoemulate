@@ -625,10 +625,20 @@ class MCMCVisualizationDashboard:
 
         # Create pairplot
         g = sns.PairGrid(df, height=figsize[0] / len(selected_params))
-        g.map_upper(plt.scatter, s=20)
-        g.map_lower(sns.kdeplot, cmap="Blues", fill=True, alpha=0.7)
-        g.map_diag(plt.hist, bins=self.n_bins.value, alpha=0.7, edgecolor="black")
+        # 1. Add alpha for transparency
+        g.map_upper(plt.scatter, s=20, alpha=0.6)
 
+        # 2. Adjust KDE levels for better visibility
+        g.map_lower(sns.kdeplot, cmap="Blues", fill=True, alpha=0.7, levels=10)
+
+        # 3. Add correlation coefficients to upper triangle
+        def corrfunc(x, y, **kws):
+            r = np.corrcoef(x, y)[0, 1]
+            ax = plt.gca()
+            ax.annotate(f'r = {r:.2f}', xy=(0.1, 0.9), xycoords='axes fraction',
+                        fontsize=12, bbox=dict(boxstyle="round", facecolor='wheat', alpha=0.5))
+
+        g.map_upper(corrfunc)
         g.fig.suptitle("Pairwise Parameter Relationships", fontsize=16, y=0.98)
 
     def _plot_convergence(self, figsize):
