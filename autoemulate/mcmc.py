@@ -195,15 +195,23 @@ class MCMCCalibrator:
                 device=self.device,
             )
 
-
         # setup likelihood from observations
-        
+
         # Pre-convert observations to tensors
-        obs_means = torch.tensor([obs[0] for obs in self.observations.values()], device=self.device)
-        obs_stds = torch.tensor([obs[1] for obs in self.observations.values()], device=self.device)
+        obs_means = torch.tensor(
+            [obs[0] for obs in self.observations.values()], device=self.device
+        )
+        obs_stds = torch.tensor(
+            [obs[1] for obs in self.observations.values()], device=self.device
+        )
 
         # One-liner comparison
-        [pyro.sample(f"obs_{name}", dist.Normal(pred_mean[i], obs_stds[i]), obs=obs_means[i]) for i, name in enumerate(self.observations.keys())]
+        [
+            pyro.sample(
+                f"obs_{name}", dist.Normal(pred_mean[i], obs_stds[i]), obs=obs_means[i]
+            )
+            for i, name in enumerate(self.observations.keys())
+        ]
 
     def run_mcmc(
         self,

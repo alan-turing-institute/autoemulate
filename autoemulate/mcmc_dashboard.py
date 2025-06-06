@@ -635,8 +635,13 @@ class MCMCVisualizationDashboard:
         def corrfunc(x, y, **kws):
             r = np.corrcoef(x, y)[0, 1]
             ax = plt.gca()
-            ax.annotate(f'r = {r:.2f}', xy=(0.1, 0.9), xycoords='axes fraction',
-                        fontsize=12, bbox=dict(boxstyle="round", facecolor='wheat', alpha=0.5))
+            ax.annotate(
+                f"r = {r:.2f}",
+                xy=(0.1, 0.9),
+                xycoords="axes fraction",
+                fontsize=12,
+                bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+            )
 
         g.map_upper(corrfunc)
         g.fig.suptitle("Pairwise Parameter Relationships", fontsize=16, y=0.98)
