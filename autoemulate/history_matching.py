@@ -336,7 +336,7 @@ class HistoryMatching:
                             )
 
                             # Filter candidates using emulator before simulation
-                            if emulator_predict and emulator is not None:
+                            if not emulator_predict and emulator is not None:
                                 pred_means, pred_vars = emulator.predict(
                                     candidate_samples, return_std=True
                                 )
