@@ -21,6 +21,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         y: InputLike,
         models: list[type[Emulator]] | None = None,
         device: DeviceLike | None = None,
+        random_seed: int = 42,
     ):
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
@@ -38,6 +39,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
 
         self.models = updated_models
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
+
+        # Set random seed for reproducibility
+        self.set_random_seed(random_seed, deterministic=True)
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
