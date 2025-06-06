@@ -1,7 +1,7 @@
 from typing import cast
 
 import torch
-from gpytorch.distributions import MultivariateNormal
+from linear_operator.operators import DiagLinearOperator
 from torch.distributions import (
     ComposeTransform,
     Transform,
@@ -11,6 +11,7 @@ from torch.distributions import (
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
@@ -33,6 +34,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         model: type[Emulator],
         output_from_samples: bool = False,
         n_samples: int = 1000,
+        full_covariance: bool = False,
+        max_targets: int = 200,
         **kwargs,
     ):
         """Initialize a transformed emulator.
@@ -50,6 +53,12 @@ class TransformedEmulator(Emulator, ValidationMixin):
             model (type[Emulator]): The emulator model class to use.
             output_from_samples (bool): If True, sample outputs from the model for
                 obtaining approximate predictive distributions. Default is False.
+            n_samples (int): Number of samples to draw from the model for
+                approximate predictive distributions. Default is 1000.
+            full_covariance (bool): If True, use the full covariance matrix.
+                If False, use the diagonal covariance matrix. Default is False.
+            max_targets (int): Maximum number of targets to before switching to
+                sampled predictive distribution and diagonal covariance. Default is 200.
             **kwargs: Additional keyword arguments to pass to the model constructor.
 
         """
@@ -59,8 +68,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
         self._fit_transforms(x, y)
         self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
-        self.output_from_samples = output_from_samples
+        self.output_from_samples = output_from_samples or y.shape[1] > max_targets
         self.n_samples = n_samples
+        self.full_covariance = full_covariance and y.shape[1] <= max_targets
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         # Fit transforms
@@ -114,18 +124,19 @@ class TransformedEmulator(Emulator, ValidationMixin):
             y_dis = transform._inverse_gaussian(y_dis)
         return y_dis
 
-    def _inv_transform_y_sample(self, y_dis: DistributionLike) -> MultivariateNormal:
-        samples = torch.stack(
-            [
-                self._inv_transform_y_tensor(y_dis.sample())
-                for _ in range(self.n_samples)
-            ],
-            0,
+    def _inv_transform_y_mvn_sample(self, y_dis: DistributionLike) -> GaussianLike:
+        samples = self._inv_transform_y_tensor(
+            torch.stack([y_dis.sample() for _ in range(self.n_samples)], dim=0)
         )
-        return MultivariateNormal(
-            samples.mean(0),
-            samples.var(0, unbiased=False).diag_embed(),
+        assert isinstance(samples, TensorLike)
+        mean = samples.mean(dim=0)
+        cov = (
+            make_positive_definite(samples.view(self.n_samples, -1).T.cov())
+            if self.full_covariance
+            # Efficient for large output shape but no covariance
+            else DiagLinearOperator(samples.view(self.n_samples, -1).var(dim=0))
         )
+        return GaussianLike(mean, cov)
 
     def _inv_transform_y_distribution(
         self, y_dis: DistributionLike
@@ -154,9 +165,10 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 return self._inv_transform_y_distribution(y_pred)
             msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
             raise ValueError(msg)
+
         # If output_from_samples is True, sample from the distribution
         if isinstance(y_pred, DistributionLike):
-            return self._inv_transform_y_sample(y_pred)
+            return self._inv_transform_y_mvn_sample(y_pred)
         msg = (
             "Invalid output type from model prediction. Expected TensorLike,"
             "GaussianLike, or DistributionLike. Received: "

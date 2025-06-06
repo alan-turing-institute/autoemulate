@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import torch
+from linear_operator.operators import DiagLinearOperator
 from pyro.distributions import TransformModule
 from torch.distributions import Transform
 
@@ -51,31 +52,21 @@ class AutoEmulateTransform(Transform, ABC):
         self._check_is_fitted()
         return torch.kron(torch.eye(x.shape[0]), self._basis_matrix)
 
-    def _inverse_sample(self, x: GaussianLike, n_samples: int = 100) -> GaussianLike:
-        """Generate samples from a Gaussian distribution."""
-        mean = x.mean
-        cov = x.covariance_matrix
-        mean_orig = self.inv(mean)
-        assert isinstance(mean, TensorLike)
-        assert isinstance(cov, TensorLike)
-        assert isinstance(mean_orig, TensorLike)
-
-        def sample_cov():
-            # Draws samples from gaussian in latent and transforms to original space
-            sample = x.sample()
-            sample_orig = self.inv(sample)
-            assert isinstance(sample_orig, TensorLike)
-            sample_orig = sample_orig.view(-1, 1)
-            mean_reshaped = mean_orig.view(-1, 1)
-            return (sample_orig - mean_reshaped) @ (sample_orig - mean_reshaped).T
-
-        # Generate samples and take unbiased mean to estimate covariance
-        cov_orig = torch.stack([sample_cov() for _ in range(n_samples)]).sum(0) / (
-            n_samples - 1
+    def _inverse_sample(
+        self, x: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
+    ) -> GaussianLike:
+        """Generate samples from a distribution and return a GaussianLike given the mean
+        and covariance across samples.
+        """
+        samples = self.inv(torch.stack([x.sample() for _ in range(n_samples)], dim=0))
+        assert isinstance(samples, TensorLike)
+        mean = samples.mean(dim=0)
+        cov = (
+            make_positive_definite(samples.view(n_samples, -1).T.cov())
+            if full_covariance
+            else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
         )
-        # Ensure positive definite
-        cov_orig = make_positive_definite(cov_orig)
-        return GaussianLike(mean_orig, cov_orig)
+        return GaussianLike(mean, cov)
 
     def _inverse_gaussian(self, x: GaussianLike) -> GaussianLike:
         mean = x.mean
@@ -85,6 +76,7 @@ class AutoEmulateTransform(Transform, ABC):
         assert isinstance(cov, TensorLike)
         assert isinstance(mean_orig, TensorLike)
 
+        # Get the expanded basis matrix around the mean
         expanded_basis_matrix = self._expanded_basis_matrix(mean)
 
         # Transform covariance matrix

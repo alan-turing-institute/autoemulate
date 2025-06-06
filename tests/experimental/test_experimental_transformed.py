@@ -121,13 +121,16 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     y_pred = em.predict(x2)
     z_pred = em.model.predict(em.transforms[0](x2))
     assert isinstance(z_pred, GaussianLike)
-    y_pred2 = em.target_transforms[0]._inverse_sample(z_pred, n_samples=10000)
+    y_pred2 = em.target_transforms[0]._inverse_sample(
+        z_pred, n_samples=10000, full_covariance=True
+    )
     assert isinstance(y_pred, GaussianLike)
     assert isinstance(y_pred2, GaussianLike)
     print()
     print(y_pred.covariance_matrix)
     print(y_pred2.covariance_matrix)
     print(y_pred2.covariance_matrix - y_pred.covariance_matrix)
+    # TODO: consider if this is close enough for PCA case
     assert torch.allclose(
         y_pred.covariance_matrix, y_pred2.covariance_matrix, atol=1e-1
     )
