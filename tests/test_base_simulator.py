@@ -1,9 +1,15 @@
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import numpy as np
 import pytest
 
 from autoemulate.simulations.base import Simulator
+from autoemulate.simulations.epidemic import EpidemicSimulator
+from autoemulate.simulations.epidemic import simulate_epidemic
+from autoemulate.simulations.projectile import ProjectileSimulator
+from autoemulate.simulations.projectile import simulate_projectile
 
 # In test_base_simulator.py, update the MockSimulator class:
 
@@ -178,3 +184,25 @@ def test_end_to_end_workflow(mock_simulator):
     assert set(mock_simulator.output_names).issubset(set(df.columns)) or set(
         f"output_{i}" for i in range(len(mock_simulator.output_names))
     ).issubset(set(df.columns))
+
+
+def test_projectile_simulator():
+    """
+    Sense check ProjectileSimulator against previous implementation.
+    """
+    sim = ProjectileSimulator()
+    X = sim.sample_inputs(100)
+    y = sim.run_batch_simulations(X)
+    y_old = np.array([simulate_projectile(x) for x in X])
+    assert np.allclose(y, y_old)
+
+
+def test_epidemoc_simulator():
+    """
+    Sense check EpidemicSimulator against previous implementation.
+    """
+    sim = EpidemicSimulator()
+    X = sim.sample_inputs(100)
+    y = sim.run_batch_simulations(X)
+    y_old = np.array([simulate_epidemic(x) for x in X])
+    assert np.allclose(y, y_old)
