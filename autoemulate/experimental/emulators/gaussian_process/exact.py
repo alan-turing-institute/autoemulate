@@ -170,8 +170,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
             loss = mll(output, y)
             assert isinstance(loss, torch.Tensor)
             loss = -loss
-            # TODO: consider removing retain_graph=True, added for trasnformed emulator
-            loss.backward(retain_graph=True)
+            loss.backward()
             self.log_epoch(epoch, loss)
             optimizer.step()
 
