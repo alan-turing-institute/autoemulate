@@ -14,7 +14,11 @@ from autoemulate.simulations.base import Simulator
 
 
 class ProjectileSimulator(Simulator):
-    def __init__(self, param_ranges={"c": [-5.0, 1.0], "v0": [0.0, 1000]}):
+    """
+    Simulator of projectile motion.
+    """
+
+    def __init__(self, param_ranges={"c": (-5.0, 1.0), "v0": (0.0, 1000)}):
         super().__init__(param_ranges)
         self._output_names = ["distance"]
 
@@ -23,8 +27,9 @@ class ProjectileSimulator(Simulator):
         Parameters
         ----------
         params : dict[str, float]
-            Dictionary of input parameter values
-            to simulate (c, v0).
+            Dictionary of input parameter values to simulate:
+            - `c`: the drag coefficient on a log scale
+            - `v0`: velocity
 
         Returns
         -------
