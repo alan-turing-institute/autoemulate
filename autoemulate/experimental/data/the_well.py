@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from autoemulate.experimental.types import TensorLike
 from the_well.data import WellDataset
@@ -12,10 +13,16 @@ class AutoEmulateWellDatasetTabular(WellDataset):
     """
 
     def __init__(self, field_indices: list[int], **kwargs):
-        # TODO: add a way to ensure
+        data = WellDataset(**kwargs)
+        n_steps_input = np.unique(data.n_steps_per_trajectory)[0]
+        if len(np.unique(data.n_steps_per_trajectory)) > 1:
+            msg = (
+                "More than one length of trajectory:\n"
+                f"ValueError{np.unique(data.n_steps_per_trajectory)}"
+            )
+            raise ValueError(msg)
         super().__init__(
-            # TODO: add handling depending on whether specified n_step_inputs
-            n_steps_input=81,
+            n_steps_input=n_steps_input,
             n_steps_output=0,
             **kwargs,
         )
