@@ -143,7 +143,6 @@ class MCMCCalibrator:
                     dtype=torch.float32,
                 )
 
-            print(f"DEBUG: Initialization values: {init_values}")
             return init_values
 
         except Exception as e:
