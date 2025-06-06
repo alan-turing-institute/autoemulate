@@ -2,6 +2,8 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 
+from autoemulate.simulations.base import Simulator
+
 # Create our simulator, which solves a nonlinear differential equation describing projectile
 # motion with drag. A projectile is launched from an initial height of 2 meters at an
 # angle of 45 degrees and falls under the influence of gravity and air resistance.
@@ -9,6 +11,28 @@ from scipy.integrate import solve_ivp
 # travelled by the projectile as a function of the drag coefficient and the launch velocity.
 
 # define functions needed for simulator
+
+
+class ProjectileSimulator(Simulator):
+    def __init__(self, param_ranges={"c": [-5.0, 1.0], "v0": [0.0, 1000]}):
+        super().__init__(param_ranges)
+        self._output_names = ["distance"]
+
+    def sample_forward(self, params: dict[str, float]) -> np.ndarray:
+        """
+        Parameters
+        ----------
+        params : dict[str, float]
+            Dictionary of input parameter values
+            to simulate (c, v0).
+
+        Returns
+        -------
+        distance : float
+            Distance travelled by projectile.
+        """
+        x = np.array([params["c"], params["v0"]])
+        return simulate_projectile(x)
 
 
 def f(t, y, c):
