@@ -31,7 +31,6 @@ from autoemulate.experimental.emulators.gaussian_process import (
     MeanModuleFn,
 )
 from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
-from autoemulate.utils import set_random_seed
 
 
 class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
@@ -53,16 +52,15 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         preprocessor_cls: type[Preprocessor] | None = None,
-        random_state: int | None = None,
+        random_seed: int | None = None,
         epochs: int = 50,
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         device: DeviceLike | None = None,
     ):
-        # Init random state
-        if random_state is not None:
-            set_random_seed(random_state)
+        if random_seed is not None:
+            self.set_random_seed(random_seed)
 
         # Init device
         TorchDeviceMixin.__init__(self, device=device)

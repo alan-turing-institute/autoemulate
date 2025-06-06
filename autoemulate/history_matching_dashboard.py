@@ -401,6 +401,7 @@ class HistoryMatchingDashboard:
                     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
                 elif plot_type == "Wave Evolution":
                     self._plot_wave_evolution(filtered_df, filtered_scores)
+                plt.show()
 
             except Exception as e:
                 plt.figure(figsize=(10, 6))

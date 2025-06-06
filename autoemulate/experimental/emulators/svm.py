@@ -29,9 +29,12 @@ class SupportVectorMachine(SklearnBackend):
         verbose: bool = False,
         max_iter: int = 100,
         normalise_y: bool = True,
+        random_seed: int | None = None,
         device: DeviceLike = "cpu",
     ):
         """Initializes a SupportVectorMachines object."""
+        if random_seed is not None:
+            self.set_random_seed(random_seed)
         _, _, _ = x, y, device  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
         self.kernel = kernel
