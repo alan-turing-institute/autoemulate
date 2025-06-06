@@ -9,10 +9,12 @@ from torch.distributions import (
 )
 
 from autoemulate.experimental.data.utils import ValidationMixin
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
+    DeviceLike,
     DistributionLike,
     GaussianLike,
     OutputLike,
@@ -36,6 +38,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         n_samples: int = 1000,
         full_covariance: bool = False,
         max_targets: int = 200,
+        device: DeviceLike = "cpu",
         **kwargs,
     ):
         """Initialize a transformed emulator.
@@ -71,6 +74,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
+        TorchDeviceMixin.__init__(self, device=device)
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         # Fit transforms
@@ -149,6 +153,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Transform x and y
         x = self._transform_x(x)
         y = self._transform_y_tensor(y)
+
         # Fit on transformed variables
         self.model.fit(x, y)
 
