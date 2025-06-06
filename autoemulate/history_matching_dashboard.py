@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from IPython.display import clear_output, display
+from IPython.display import clear_output
+from IPython.display import display
 from sklearn.decomposition import PCA
 
 
