@@ -2,6 +2,8 @@ import torch
 
 
 # TODO: consider if this function is sufficiently robust for all cases.
+# TODO: compare with linear_operator's psd_safe_cholesky:
+# `from linear_operator.utils.cholesky import psd_safe_cholesky``
 def make_positive_definite(
     cov, epsilon=1e-6, min_eigval=1e-6, max_tries_epsilon=3, max_tries_min_eigval=5
 ):

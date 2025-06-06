@@ -107,6 +107,50 @@ def test_transformed_emulator_100_targets(
     )
 
 
+@pytest.mark.parametrize(
+    ("model", "transform", "target_transforms"),
+    itertools.product(
+        [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
+        [
+            None,
+            [StandardizeTransform()],
+            [PCATransform(n_components=3)],
+            [VAETransform(latent_dim=3)],
+            [
+                StandardizeTransform(),
+                PCATransform(n_components=3),
+                VAETransform(latent_dim=2),
+            ],
+        ],
+        [
+            # TODO: PCA/VAE both require StandardizeTransform for numerical stability
+            # e.g. "ValueError: Input tensor y contains non-finite values"
+            # TODO: check error when no target transforms are provided
+            # None,
+            # [StandardizeTransform()],
+            [StandardizeTransform(), PCATransform(n_components=10)],
+            [StandardizeTransform(), PCATransform(n_components=20)],
+            [StandardizeTransform(), VAETransform(latent_dim=10)],
+            [StandardizeTransform(), VAETransform(latent_dim=20)],
+        ],
+    ),
+)
+def test_transformed_emulator_1000_targets(
+    sample_data_y2d_1000_targets,
+    new_data_y2d_1000_targets,
+    model,
+    transform,
+    target_transforms,
+):
+    run_test(
+        sample_data_y2d_1000_targets,
+        new_data_y2d_1000_targets,
+        model,
+        transform,
+        target_transforms,
+    )
+
+
 def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
