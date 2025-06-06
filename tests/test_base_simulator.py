@@ -29,17 +29,6 @@ class MockSimulator(Simulator):
         self._output_names = self._output_variables.copy()
         self._has_sample_forward = True
 
-    def sample_inputs(self, n_samples: int) -> List[Dict[str, float]]:
-        """Generate mock samples"""
-        samples = []
-        for _ in range(n_samples):
-            sample = {}
-            for name in self._param_names:
-                min_val, max_val = self._param_bounds[name]
-                sample[name] = min_val + (max_val - min_val) * np.random.random()
-            samples.append(sample)
-        return samples
-
     def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
         """Run mock simulation and return numpy array as specified in the base class"""
         # Check that all required parameters are present
@@ -98,13 +87,12 @@ def test_sample_inputs(mock_simulator):
 
     # Check structure of each sample
     for sample in samples:
-        assert isinstance(sample, dict)
-        assert set(sample.keys()) == set(mock_simulator.param_names)
+        assert isinstance(sample, np.ndarray)
 
         # Check parameter bounds
-        assert 0.0 <= sample["param1"] <= 1.0
-        assert -10.0 <= sample["param2"] <= 10.0
-        assert 0.5 <= sample["param3"] <= 5.0
+        assert 0.0 <= sample[0] <= 1.0
+        assert -10.0 <= sample[1] <= 10.0
+        assert 0.5 <= sample[2] <= 5.0
 
 
 # Test sample_forward method returns correct output structure
@@ -156,6 +144,7 @@ def test_end_to_end_workflow(mock_simulator):
     # Generate samples
     n_samples = 10
     samples = mock_simulator.sample_inputs(n_samples)
+    samples = mock_simulator.convert_samples(samples)
 
     # Run simulations on all samples
     results = []
