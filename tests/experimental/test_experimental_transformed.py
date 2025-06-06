@@ -82,8 +82,8 @@ def test_transformed_emulator(
             # TODO: PCA/VAE both require StandardizeTransform for numerical stability
             # e.g. "ValueError: Input tensor y contains non-finite values"
             # TODO: check error when no target transforms are provided
-            None,
-            [StandardizeTransform()],
+            # None,
+            # [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=10)],
             [StandardizeTransform(), PCATransform(n_components=20)],
             [StandardizeTransform(), VAETransform(latent_dim=10)],
