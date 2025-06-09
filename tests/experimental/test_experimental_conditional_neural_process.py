@@ -5,7 +5,9 @@ from autoemulate.experimental.device import (
     check_model_device,
     check_torch_device_is_available,
 )
-from autoemulate.experimental.emulators import CNPModule
+from autoemulate.experimental.emulators.neural_processes.conditional_neural_process import (  # noqa: E501
+    CNPModule,
+)
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
