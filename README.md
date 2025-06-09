@@ -69,12 +69,12 @@
 | autoemulate/save.py                                                                  |       36 |        3 |     92% |     28-30 |
 | autoemulate/sensitivity\_analysis.py                                                 |      214 |      135 |     37% |54-76, 84, 87, 89, 94, 122, 156-159, 258-272, 295-333, 363-386, 407-423, 442-542, 551-623 |
 | autoemulate/simulations/\_\_init\_\_.py                                              |        0 |        0 |    100% |           |
-| autoemulate/simulations/base.py                                                      |       81 |       20 |     75% |60, 78, 103, 114, 136-139, 157, 172-188, 204-217 |
+| autoemulate/simulations/base.py                                                      |       81 |       16 |     80% |60, 78, 103, 114, 136-139, 157, 172-188, 211-217 |
 | autoemulate/simulations/circ\_utils.py                                               |       94 |       94 |      0% |     4-233 |
-| autoemulate/simulations/epidemic.py                                                  |       26 |       26 |      0% |      1-55 |
+| autoemulate/simulations/epidemic.py                                                  |       34 |        0 |    100% |           |
 | autoemulate/simulations/flow\_functions.py                                           |       85 |       85 |      0% |     1-162 |
 | autoemulate/simulations/naghavi\_cardiac\_ModularCirc.py                             |       70 |       70 |      0% |     1-148 |
-| autoemulate/simulations/projectile.py                                                |       46 |        8 |     83% |177-182, 199-200, 221-223 |
+| autoemulate/simulations/projectile.py                                                |       54 |        8 |     85% |206-211, 228-229, 250-252 |
 | autoemulate/simulations/reaction\_diffusion.py                                       |       57 |       57 |      0% |     1-129 |
 | autoemulate/utils.py                                                                 |      159 |       12 |     92% |59, 67, 100, 184, 190, 228, 375-376, 403, 450, 459, 473 |
 | tests/\_\_init\_\_.py                                                                |        0 |        0 |    100% |           |
@@ -95,7 +95,7 @@
 | tests/models/test\_cnp.py                                                            |      108 |        0 |    100% |           |
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                        |       81 |        5 |     94% |     77-81 |
-| tests/test\_base\_simulator.py                                                       |       52 |        2 |     96% |     52-53 |
+| tests/test\_base\_simulator.py                                                       |       95 |        2 |     98% |     45-46 |
 | tests/test\_compare.py                                                               |      183 |        3 |     98% |239, 263, 272 |
 | tests/test\_cross\_validate.py                                                       |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
@@ -117,7 +117,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **7512** | **1400** | **81%** |           |
+|                                                                            **TOTAL** | **7571** | **1370** | **82%** |           |
 
 
 ## Setup coverage badge
