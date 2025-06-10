@@ -6,25 +6,75 @@ from tqdm import tqdm
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import GaussianProcessExact
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
+from autoemulate.experimental_design import LatinHypercube
 from autoemulate.simulations.base import Simulator
+
+# MAYBE try to make SIMILAR to AL but with some flexibility
+# 1: run HistoryMatching on predictions
+# instantiate with HM params and observations (like on mogp)
+# can just use `.calculate_implausability` in this case
+# and then extract NROY and RO points based on that
+# OR use emulator to make predictions
+#
+# 2: run with simulator (and optional emulator)
+# requires updating emulator at each step AND using it
+# to filter candidates
+
+
+class SimulatorMetadata:
+    # TODO: move this to where simulator is, should be done as part of #414
+    # and make sure that `sample_inputs` is only implemented once
+    def __init__(
+        self, parameters_range: dict[str, tuple[float, float]], output_names: list[str]
+    ):
+        """
+        Parameters
+        ----------
+        parameters_range : dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        output_names: list[str]
+            List of output parameters' names.
+        """
+        self.param_bounds = parameters_range
+        self.param_names = list(self.param_bounds.keys())
+        self.output_names = output_names
+
+    def sample_inputs(self, n_samples: int) -> TensorLike:
+        """
+        Generate random samples using Latin Hypercube Sampling.
+
+        Parameters
+        ----------
+            n_samples: int
+                Number of samples to generate
+
+        Returns
+        -------
+        TensorLike
+            Parameter samples (column order is given by self.param_names)
+        """
+
+        lhd = LatinHypercube([self.param_bounds[name] for name in self.param_names])
+        sample_array = lhd.sample(n_samples)
+        return torch.tensor(sample_array)
 
 
 class HistoryMatching(TorchDeviceMixin):
     """
-    History matching is a model calibration method, which uses observed data to rule out
-    parameter values which are ``implausible``. The implausability metric is:
+    History matching is a model calibration method, which uses observed data to
+    rule out ``implausible`` parameter values. The implausability metric is:
 
     .. math::
         I_i(\bar{x_0}) = \frac{|z_i - \\mathbb{E}(f_i(\bar{x_0}))|}
         {\\sqrt{\text{Var}[z_i - \\mathbb{E}(f_i(\bar{x_0}))]}}
 
-    Query points above a given implausibility threshold are ruled out (RO) whereas
-    all other points are marked as not ruled out yet (NROY).
+    Query points above a given implausibility threshold are ruled out (RO)
+    whereas all other points are marked as not ruled out yet (NROY).
     """
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        simulator: Simulator,
+        simulator: Simulator | SimulatorMetadata,
         observations: dict[str, tuple[float, float]],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -37,11 +87,17 @@ class HistoryMatching(TorchDeviceMixin):
         TODO:
         - make this work with updated Simulator class (after #414 is merged)
         - add random seed (once #465 is complete)
+        - update to make sure we serve all the expected workflows
+            - only filter candidate samples if simulate outputs but have
+              an emulator available for this
+            - alternatively just simulate OR emulate everything
+            - also want to be able to use HM without either (already have
+              some predictions available)
 
         Parameters
         ----------
-            simulator: Simulator
-                The simulation to emulate.
+            simulator: Simulator | SimulatorMetadata
+                A simulator or the simulation metadata.
             observations: dict[str, tuple[float, float]]
                 For each output variable, specifies observed [mean, variance] values.
             threshold: float
@@ -66,6 +122,7 @@ class HistoryMatching(TorchDeviceMixin):
         self.discrepancy = model_discrepancy
 
         # TODO: currently output_names is not populated if sim is not run
+        # make sure this is fixed in #414
         self.in_dim = len(self.simulator.param_names)
         self.out_dim = len(self.simulator.output_names)
 
@@ -218,30 +275,11 @@ class HistoryMatching(TorchDeviceMixin):
 
         min_bounds, _ = torch.min(nroy_samples, dim=0)
         max_bounds, _ = torch.max(nroy_samples, dim=0)
-
-        # Need to handle possible discontinuous NROY spaces
-        # i.e., a region within min/max bounds is ruled out
-        valid_samples = torch.empty((0, self.in_dim), device=self.device)
-        while len(valid_samples) < n_samples:
-            # Generate candidates
-            candidate_samples = (
-                torch.rand((n_samples, self.in_dim), device=self.device)
-                * (max_bounds - min_bounds)
-                + min_bounds
-            )
-
-            # Filter valid samples based on implausibility and concatenate
-            pred_means, _, candidate_samples = self.predict(candidate_samples)
-            impl_scores = self.calculate_implausibility(pred_means)
-            nroy_idx = self.get_nroy(impl_scores)
-            valid_candidates = candidate_samples[nroy_idx]
-            valid_samples = torch.cat([valid_samples, valid_candidates], dim=0)
-
-            # Only return required number of samples
-            if len(valid_samples) > n_samples:
-                valid_samples = valid_samples[:n_samples]
-
-        return valid_samples
+        return (
+            torch.rand((n_samples, self.in_dim), device=self.device)
+            * (max_bounds - min_bounds)
+            + min_bounds
+        )
 
     def sample_params(self, n_samples: int, nroy_samples: Optional[TensorLike] = None):
         """
@@ -308,7 +346,7 @@ class HistoryMatching(TorchDeviceMixin):
             )
 
         # Make predictions using the simulator
-        else:
+        elif not isinstance(self.simulator, SimulatorMetadata):
             # TODO: remove numpy conversions once merged with #414
             results = self.simulator.run_batch_simulations(x.numpy())
             results = torch.from_numpy(results).float().to(self.device)
@@ -317,6 +355,10 @@ class HistoryMatching(TorchDeviceMixin):
             # Simulator returns None if it fails, discard these runs and inputs
             valid_indices = [i for i, res in enumerate(results) if res is not None]
             pred_means, x = results[valid_indices], x[valid_indices]
+
+        else:
+            msg = "Need an Emulator or a Simulator to make predictions."
+            raise ValueError(msg)
 
         return pred_means, pred_vars, x
 
@@ -381,6 +423,10 @@ class HistoryMatching(TorchDeviceMixin):
         ) as pbar:
             for _ in range(n_waves):
                 samples = self.sample_params(n_samples_per_wave, nroy_samples)
+
+                # TODO: filter candidate samples to predict
+                if (not emulator_predict) and (emulator is not None):
+                    pass
 
                 # Emulate predictions unless emulator_predict=False
                 pred_means, pred_vars, successful_samples = self.predict(
