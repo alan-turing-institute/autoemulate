@@ -348,6 +348,7 @@ class HistoryMatching(TorchDeviceMixin):
         # Make predictions using the simulator
         elif not isinstance(self.simulator, SimulatorMetadata):
             # TODO: remove numpy conversions once merged with #414
+            # method will be called `forward_batch`
             results = self.simulator.run_batch_simulations(x.numpy())
             results = torch.from_numpy(results).float().to(self.device)
             pred_vars = None
