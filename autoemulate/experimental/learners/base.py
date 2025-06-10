@@ -9,72 +9,9 @@ from torcheval.metrics import MeanSquaredError, R2Score
 
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.simulations.base import Simulator
 
 from ..types import GaussianLike, TensorLike
-
-
-@dataclass(kw_only=True)
-class Simulator(ValidationMixin, ABC):
-    """
-    Simulator abstract class for generating outputs from inputs.
-
-    This class defines the interface for a simulator that produces samples based on
-    input X.
-
-    Parameters
-    ----------
-    (No additional parameters)
-    """
-
-    def sample(self, X: TensorLike) -> TensorLike:
-        """
-        Generate samples from input data using the simulator.
-
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor of shape (n_samples, n_features).
-
-        Returns
-        -------
-        TensorLike
-            Simulated output tensor.
-        """
-        Y = self.check_matrix(self.sample_forward(self.check_matrix(X)))
-        X, Y = self.check_pair(X, Y)
-        return Y
-
-    @abstractmethod
-    def sample_forward(self, X: TensorLike) -> TensorLike:
-        """
-        Abstract method to perform the forward simulation.
-
-        Parameters
-        ----------
-        X : TensorLike
-            Input tensor.
-
-        Returns
-        -------
-        TensorLike
-            Simulated output tensor.
-        """
-
-    @abstractmethod
-    def sample_inputs(self, n: int) -> TensorLike:
-        """
-        Abstract method to generate random input samples.
-
-        Parameters
-        ----------
-        n : int
-            Number of input samples to generate.
-
-        Returns
-        -------
-        TensorLike
-            Random input tensor.
-        """
 
 
 @dataclass(kw_only=True)
@@ -193,7 +130,7 @@ class Active(Learner):
 
         if X is not None:
             # If X is not, we skip the point (typically for Stream learners)
-            Y_true = self.simulator.sample(X)
+            Y_true = self.simulator.forward(X)
             self.X_train = torch.cat([self.X_train, X])
             self.Y_train = torch.cat([self.Y_train, Y_true])
             self.emulator.fit(self.X_train, self.Y_train)

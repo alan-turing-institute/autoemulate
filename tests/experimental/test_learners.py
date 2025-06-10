@@ -5,37 +5,28 @@ import torch
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
-from autoemulate.experimental.learners import (
-    Simulator,
-    stream,
-)
-from autoemulate.experimental_design import LatinHypercube
+from autoemulate.experimental.learners import stream
+from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.simulations.projectile import simulate_projectile_multioutput
 from tqdm import tqdm
 
 
 # Define a simple sine simulator.
 class Sin(Simulator):
-    def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
-        return torch.sin(X)
-
-    def sample_inputs(self, n: int) -> torch.Tensor:
-        return torch.Tensor(LatinHypercube([(0.0, 50.0)]).sample(n))
+    def _forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.sin(x)
 
 
 class Projectile(Simulator):
-    def sample_forward(self, X: torch.Tensor) -> torch.Tensor:
-        return torch.tensor([simulate_projectile_multioutput(x) for x in X])
-
-    def sample_inputs(self, n: int) -> torch.Tensor:
-        return torch.Tensor(LatinHypercube([(-5.0, 1.0), (0.0, 1000.0)]).sample(n))
+    def _forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.tensor([simulate_projectile_multioutput(val) for val in x])
 
 
 def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
     X_train = simulator.sample_inputs(n_initial_samples)
-    Y_train = simulator.sample(X_train)
+    Y_train = simulator.forward(X_train)
     yield stream.Random(
         simulator=simulator,
         emulator=GaussianProcessExact(X_train, Y_train),
@@ -161,7 +152,7 @@ def run_experiment(
 
 def test_learners_sin():
     metrics, summary = run_experiment(
-        simulator=Sin(),
+        simulator=Sin(parameters_range={"X": (0, 50.0)}, output_variables=["Y"]),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
@@ -171,7 +162,9 @@ def test_learners_sin():
 
 def test_learners_projectile():
     metrics, summary = run_experiment(
-        simulator=Projectile(),
+        simulator=Projectile(
+            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_variables=["Y"]
+        ),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
