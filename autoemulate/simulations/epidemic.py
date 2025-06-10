@@ -24,11 +24,12 @@ class EpidemicSimulator(Simulator):
 
         Returns
         -------
-        infection : float
+        infection : np.ndarray
             Peak infection rate.
         """
         x = np.array([params["beta"], params["gamma"]])
-        return simulate_epidemic(x)
+        y = simulate_epidemic(x)
+        return np.array([y])
 
 
 def simulate_epidemic(x, N=1000, I0=1):
