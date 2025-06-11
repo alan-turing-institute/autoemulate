@@ -8,7 +8,88 @@ from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
 
 
-class Simulator(ABC, ValidationMixin):
+class SimulatorMetadata:
+    """
+    Simulation metadata.
+
+    NOTE: the output metadata is going to get more complex. e.g.:
+    - indicate if output is temporal
+    - indicate if output is spatial
+    - ...
+    """
+
+    def __init__(
+        self, parameters_range: dict[str, tuple[float, float]], output_names: list[str]
+    ):
+        """
+        Parameters
+        ----------
+        parameters_range : dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        output_names: list[str]
+            List of output parameters' names.
+        """
+        self._parameters_range = parameters_range
+        self._param_names = list(parameters_range.keys())
+        self._param_bounds = list(parameters_range.values())
+        self._output_names = output_names
+        self._in_dim = len(self.param_names)
+        self._out_dim = len(self.output_names)
+
+    @property
+    def parameters_range(self) -> dict[str, tuple[float, float]]:
+        """Dictionary mapping input parameter names to their (min, max) ranges."""
+        return self._parameters_range
+
+    @property
+    def param_names(self) -> list[str]:
+        """List of parameter names."""
+        return self._param_names
+
+    @property
+    def param_bounds(self) -> list[tuple[float, float]]:
+        """List of parameter bounds."""
+        return self._param_bounds
+
+    @property
+    def output_names(self) -> list[str]:
+        """List of output parameter names."""
+        return self._output_names
+
+    @property
+    def in_dim(self) -> int:
+        """Input dimensionality."""
+        return self._in_dim
+
+    @property
+    def out_dim(self) -> int:
+        """Output dimensionality."""
+        return self._out_dim
+
+    def sample_inputs(self, n_samples: int) -> TensorLike:
+        """
+        Generate random samples using Latin Hypercube Sampling.
+
+        Parameters
+        ----------
+            n_samples: int
+                Number of samples to generate.
+
+        Returns
+        -------
+        TensorLike
+            Parameter samples (column order is given by self.param_names)
+        """
+
+        lhd = LatinHypercube(self.param_bounds)
+        sample_array = lhd.sample(n_samples)
+        # TODO: have option to set dtype and ensure consistency throughout codebase?
+        # added here as method was returning float64 and elsewhere had tensors of
+        # float32 and this caused issues
+        return torch.tensor(sample_array, dtype=torch.float32)
+
+
+class Simulator(ABC, SimulatorMetadata, ValidationMixin):
     """
     Base class for simulations. All simulators should inherit from this class.
     This class provides the interface and common functionality for different
@@ -18,46 +99,21 @@ class Simulator(ABC, ValidationMixin):
     def __init__(
         self,
         parameters_range: dict[str, tuple[float, float]],
-        output_variables: list[str],
+        output_names: list[str],
     ):
         """
-        Initialize the base simulator with parameter ranges
-          and optional output variables.
+        Initialize the base simulator with parameter ranges and output names
+        as well as optional output variables.
 
         Parameters
         ----------
-        parameters_range : dict
-            Dictionary mapping parameter names to their (min, max) ranges.
-        output_variables : list
-            Optional list of specific output variables to track.
+        parameters_range : dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        output_names: list[str]
+            List of output parameters' names.
         """
-        # define param names and values
-        self._parameters_range = parameters_range
-        self._param_names = list(self._parameters_range.keys())
-        self._param_bounds = list(self._parameters_range.values())
-
-        # Output configuration
-        self._output_variables = (
-            output_variables if output_variables is not None else []
-        )
-        self._output_names: list[str] = []  # Will be populated after first simulation
+        SimulatorMetadata.__init__(self, parameters_range, output_names)
         self._has_sample_forward = False
-
-    def sample_inputs(self, n: int) -> TensorLike:
-        """
-        Generate random samples within the parameter bounds using
-          Latin Hypercube Sampling.
-
-        Args:
-            n: Number of samples to generate
-
-        Returns:
-            TensorLike: Random input tensor based from param values
-        """
-        # Use LatinHypercube from autoemulate.experimental_design
-        lhd = LatinHypercube(self._param_bounds)
-        sample_array = lhd.sample(n)
-        return torch.Tensor(sample_array)
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike:
@@ -72,7 +128,7 @@ class Simulator(ABC, ValidationMixin):
         Returns
         -------
         TensorLike
-            Simulated output tensor. Shape = (n_batch, *target_shape).
+            Simulated output tensor. Shape = (1, self.out_dim).
             For example, if the simulator outputs two simulated variables,
             then the shape would be (1, 2).
         """
@@ -85,7 +141,7 @@ class Simulator(ABC, ValidationMixin):
         Parameters
         ----------
         x : TensorLike | dict
-            Input tensor of shape (n_samples, n_features) or a dictionary of parameters.
+            Input tensor of shape (n_samples, self.in_dim).
 
         Returns
         -------
@@ -100,11 +156,15 @@ class Simulator(ABC, ValidationMixin):
         """
         Run multiple simulations with different parameters.
 
-        Args:
-            samples: List of parameter dictionaries or DataFrame of parameters
+        Parameters
+        ----------
+        samples: TensorLike
+            Tensor of input parameters to make predictions for.
 
         Returns:
-            2D array of simulation results
+        -------
+        TensorLike
+            Tensor of simulation results of shape (n_batch, self.out_dim).
         """
         results = []
         successful = 0
@@ -142,23 +202,3 @@ class Simulator(ABC, ValidationMixin):
         if name not in self._param_names:
             raise ValueError(f"Parameter {name} not found.")
         return self._param_names.index(name)
-
-    @property
-    def param_names(self) -> list[str]:
-        """List of parameter names"""
-        return self._param_names
-
-    @property
-    def param_bounds(self) -> list[tuple[float, float]]:
-        """List of parameter bounds"""
-        return self._param_bounds
-
-    @property
-    def output_names(self) -> list[str]:
-        """List of output names with their statistics"""
-        return self._output_names
-
-    @property
-    def output_variables(self) -> list[str]:
-        """List of original output variables without statistic suffixes"""
-        return self._output_variables

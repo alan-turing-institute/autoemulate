@@ -11,12 +11,10 @@ class MockSimulator(Simulator):
     def __init__(
         self,
         parameters_range: dict[str, tuple[float, float]],
-        output_variables: list[str],
+        output_names: list[str],
     ):
         # Call parent constructor
-        super().__init__(parameters_range, output_variables)
-        # Set output names after initialization
-        self._output_names = [f"{var}_stat" for var in self._output_variables]
+        super().__init__(parameters_range, output_names)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -26,7 +24,7 @@ class MockSimulator(Simulator):
         """
         # Create different outputs for each variable
         outputs = []
-        for i, _ in enumerate(self._output_variables):
+        for i, _ in enumerate(self._output_names):
             # Create a unique output for each variable
             output = torch.sum(x, dim=1) * (i + 1)
             outputs.append(output.view(-1, 1))
@@ -42,28 +40,30 @@ def parameters_range():
 
 
 @pytest.fixture
-def output_variables():
-    """Create test output variables"""
+def output_names():
+    """Create test output names"""
     return ["var1", "var2"]
 
 
 @pytest.fixture
-def mock_simulator(parameters_range, output_variables):
+def mock_simulator(parameters_range, output_names):
     """Create a mock simulator instance"""
-    return MockSimulator(parameters_range, output_variables)
+    return MockSimulator(parameters_range, output_names)
 
 
-def test_simulator_init(mock_simulator, parameters_range, output_variables):
+def test_simulator_init(mock_simulator, parameters_range, output_names):
     """Test that the simulator initializes correctly with provided values"""
     # Check param names and bounds
     assert mock_simulator._param_names == list(parameters_range.keys())
     assert mock_simulator._param_bounds == list(parameters_range.values())
+    assert mock_simulator.in_dim == 3
 
-    # Check output variables
-    assert mock_simulator._output_variables == output_variables
+    # Check output_names
+    assert mock_simulator._output_names == output_names
+    assert mock_simulator.out_dim == 2
 
     # Check output names are generated correctly in mock implementation
-    assert mock_simulator._output_names == ["var1_stat", "var2_stat"]
+    assert mock_simulator._output_names == ["var1", "var2"]
 
     # Check has_sample_forward flag
     assert mock_simulator._has_sample_forward is False
@@ -96,7 +96,7 @@ def test_forward(mock_simulator):
     output = mock_simulator.forward(test_input)
 
     # Check shape
-    assert output.shape == (1, len(mock_simulator._output_variables))
+    assert output.shape == (1, len(mock_simulator._output_names))
 
     # Check values against expected transformation
     expected_sum = 0.5 + 0.0 + 7.5
@@ -116,7 +116,7 @@ def test_forward_batch(mock_simulator):
     results = mock_simulator.forward_batch(batch)
 
     # Check shape
-    assert results.shape == (n_samples, len(mock_simulator._output_variables))
+    assert results.shape == (n_samples, len(mock_simulator._output_names))
 
     # Check values for each sample
     for i in range(n_samples):
@@ -136,7 +136,7 @@ def test_get_parameter_idx(mock_simulator):
         mock_simulator.get_parameter_idx("invalid_param")
 
 
-def test_properties(mock_simulator, parameters_range, output_variables):
+def test_properties(mock_simulator, parameters_range, output_names):
     """Test that properties return correct values"""
     # Test param_names
     assert mock_simulator.param_names == list(parameters_range.keys())
@@ -145,10 +145,10 @@ def test_properties(mock_simulator, parameters_range, output_variables):
     assert mock_simulator.param_bounds == list(parameters_range.values())
 
     # Test output_names
-    assert mock_simulator.output_names == ["var1_stat", "var2_stat"]
+    assert mock_simulator.output_names == ["var1", "var2"]
 
-    # Test output_variables
-    assert mock_simulator.output_variables == output_variables
+    # Test output_names
+    assert mock_simulator.output_names == output_names
 
 
 def test_abstract_class():
@@ -173,7 +173,7 @@ def test_handle_simulation_failure():
                 return super()._forward(x)
             # For other cases, let's return a tensor of zeros instead of None
             # since the type system doesn't allow None returns
-            return torch.zeros((x.shape[0], len(self._output_variables)))
+            return torch.zeros((x.shape[0], len(self._output_names)))
 
     # Create simulator with float parameters
     params = {"param1": (0.0, 1.0), "param2": (0.0, 1.0), "param3": (0.0, 1.0)}

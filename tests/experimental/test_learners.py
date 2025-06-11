@@ -144,6 +144,7 @@ def run_experiment(
             n_initial_samples=n_initial_samples,
             adaptive_only=adaptive_only,
         ):
+            print("input: ", X_stream.type())
             learner.fit_samples(X_stream)
             metrics.append(dict(name=learner.__class__.__name__, **learner.metrics))
             summary.append(dict(name=learner.__class__.__name__, **learner.summary))
@@ -152,7 +153,7 @@ def run_experiment(
 
 def test_learners_sin():
     metrics, summary = run_experiment(
-        simulator=Sin(parameters_range={"X": (0, 50.0)}, output_variables=["Y"]),
+        simulator=Sin(parameters_range={"X": (0, 50.0)}, output_names=["Y"]),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
@@ -163,7 +164,7 @@ def test_learners_sin():
 def test_learners_projectile():
     metrics, summary = run_experiment(
         simulator=Projectile(
-            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_variables=["Y"]
+            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_names=["Y"]
         ),
         seeds=[0],
         n_initial_samples=5,
