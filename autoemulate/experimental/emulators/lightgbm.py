@@ -34,13 +34,15 @@ class LightGBM(Emulator):
         colsample_bytree: float = 1.0,
         reg_alpha: float = 0.0,
         reg_lambda: float = 0.0,
-        random_state: int | None = None,
+        random_seed: int | None = None,
         n_jobs: int | None = 1,
         importance_type: str = "split",
         verbose: int = -1,
         device: DeviceLike = "cpu",
     ):
         """Initializes a LightGBM object."""
+        if random_seed is not None:
+            self.set_random_seed(random_seed)
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device)
         self.boosting_type = boosting_type
@@ -58,7 +60,7 @@ class LightGBM(Emulator):
         self.colsample_bytree = colsample_bytree
         self.reg_alpha = reg_alpha
         self.reg_lambda = reg_lambda
-        self.random_state = random_state
+        self.random_seed = random_seed
         self.n_jobs = n_jobs
         self.importance_type = importance_type
         self.verbose = verbose
@@ -78,7 +80,7 @@ class LightGBM(Emulator):
             colsample_bytree=self.colsample_bytree,
             reg_alpha=self.reg_alpha,
             reg_lambda=self.reg_lambda,
-            random_state=self.random_state,
+            random_state=self.random_seed,
             n_jobs=self.n_jobs,
             importance_type=self.importance_type,
             verbose=self.verbose,
