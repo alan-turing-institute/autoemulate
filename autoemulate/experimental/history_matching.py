@@ -5,9 +5,8 @@ from tqdm import tqdm
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import GaussianProcessExact
+from autoemulate.experimental.simulations.base import Simulator, SimulatorMetadata
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
-from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations.base import Simulator
 
 # MAYBE try to make SIMILAR to AL but with some flexibility
 # 1: run HistoryMatching on predictions
@@ -19,44 +18,6 @@ from autoemulate.simulations.base import Simulator
 # 2: run with simulator (and optional emulator)
 # requires updating emulator at each step AND using it
 # to filter candidates
-
-
-class SimulatorMetadata:
-    # TODO: move this to where simulator is, should be done as part of #414
-    # and make sure that `sample_inputs` is only implemented once
-    def __init__(
-        self, parameters_range: dict[str, tuple[float, float]], output_names: list[str]
-    ):
-        """
-        Parameters
-        ----------
-        parameters_range : dict[str, tuple[float, float]]
-            Dictionary mapping input parameter names to their (min, max) ranges.
-        output_names: list[str]
-            List of output parameters' names.
-        """
-        self.param_bounds = parameters_range
-        self.param_names = list(self.param_bounds.keys())
-        self.output_names = output_names
-
-    def sample_inputs(self, n_samples: int) -> TensorLike:
-        """
-        Generate random samples using Latin Hypercube Sampling.
-
-        Parameters
-        ----------
-            n_samples: int
-                Number of samples to generate
-
-        Returns
-        -------
-        TensorLike
-            Parameter samples (column order is given by self.param_names)
-        """
-
-        lhd = LatinHypercube([self.param_bounds[name] for name in self.param_names])
-        sample_array = lhd.sample(n_samples)
-        return torch.tensor(sample_array)
 
 
 class HistoryMatching(TorchDeviceMixin):
@@ -85,7 +46,6 @@ class HistoryMatching(TorchDeviceMixin):
         Initialize the history matching object.
 
         TODO:
-        - make this work with updated Simulator class (after #414 is merged)
         - add random seed (once #465 is complete)
         - update to make sure we serve all the expected workflows
             - only filter candidate samples if simulate outputs but have
@@ -121,15 +81,10 @@ class HistoryMatching(TorchDeviceMixin):
         self.threshold = threshold
         self.discrepancy = model_discrepancy
 
-        # TODO: currently output_names is not populated if sim is not run
-        # make sure this is fixed in #414
-        self.in_dim = len(self.simulator.param_names)
-        self.out_dim = len(self.simulator.output_names)
-
-        if rank > self.out_dim:
+        if rank > self.simulator.out_dim:
             raise ValueError(
                 f"Rank {rank} is more than the simulator output dimension of ",
-                f"{self.out_dim}",
+                f"{self.simulator.out_dim}",
             )
         self.rank = rank
 
@@ -152,8 +107,8 @@ class HistoryMatching(TorchDeviceMixin):
         self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
 
         # Track tested parameter values and their implausability scores
-        self.tested_params = torch.empty((0, self.in_dim), device=self.device)
-        self.impl_scores = torch.empty((0, self.out_dim), device=self.device)
+        self.tested_params = torch.empty((0, self.simulator.in_dim), device=self.device)
+        self.impl_scores = torch.empty((0, self.simulator.out_dim), device=self.device)
 
     def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
         """
@@ -276,7 +231,7 @@ class HistoryMatching(TorchDeviceMixin):
         min_bounds, _ = torch.min(nroy_samples, dim=0)
         max_bounds, _ = torch.max(nroy_samples, dim=0)
         return (
-            torch.rand((n_samples, self.in_dim), device=self.device)
+            torch.rand((n_samples, self.simulator.in_dim), device=self.device)
             * (max_bounds - min_bounds)
             + min_bounds
         )
@@ -301,8 +256,7 @@ class HistoryMatching(TorchDeviceMixin):
         """
         # TODO: remove numpy conversions once merged with #414
         if nroy_samples is None or nroy_samples.size(0) == 0:
-            samples = self.simulator.sample_inputs(n_samples)
-            return torch.from_numpy(samples).float().to(self.device)
+            return self.simulator.sample_inputs(n_samples)
         return self.sample_nroy(n_samples, nroy_samples)
 
     def predict(
@@ -330,11 +284,10 @@ class HistoryMatching(TorchDeviceMixin):
         """
         if x.shape[0] == 0:
             return (
-                torch.empty((0, self.out_dim), device=self.device),
-                torch.empty((0, self.out_dim), device=self.device),
-                torch.empty((0, self.in_dim), device=self.device),
+                torch.empty((0, self.simulator.out_dim), device=self.device),
+                torch.empty((0, self.simulator.out_dim), device=self.device),
+                torch.empty((0, self.simulator.in_dim), device=self.device),
             )
-
         # Make predictions using a GP emulator
         if emulator is not None:
             output = emulator.predict(x)
@@ -346,14 +299,12 @@ class HistoryMatching(TorchDeviceMixin):
             )
 
         # Make predictions using the simulator
-        elif not isinstance(self.simulator, SimulatorMetadata):
-            # TODO: remove numpy conversions once merged with #414
-            # method will be called `forward_batch`
-            results = self.simulator.run_batch_simulations(x.numpy())
-            results = torch.from_numpy(results).float().to(self.device)
+        elif isinstance(self.simulator, Simulator):
+            # Simulator is determinstic, have no predictive variance
             pred_vars = None
 
             # Simulator returns None if it fails, discard these runs and inputs
+            results = self.simulator.forward_batch(x)
             valid_indices = [i for i, res in enumerate(results) if res is not None]
             pred_means, x = results[valid_indices], x[valid_indices]
 

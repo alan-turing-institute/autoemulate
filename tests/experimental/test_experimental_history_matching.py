@@ -5,7 +5,7 @@ import torch
 from autoemulate.experimental.history_matching import HistoryMatching
 from autoemulate.experimental.types import TensorLike
 
-from tests.test_base_simulator import MockSimulator
+from .test_experimental_base_simulator import MockSimulator
 
 # Import the classes to test
 
@@ -14,7 +14,7 @@ from tests.test_base_simulator import MockSimulator
 def mock_simulator():
     """Fixture for the mock simulator from test_base_simulator"""
     param_ranges = {"param1": (0.0, 1.0), "param2": (-10.0, 10.0)}
-    return MockSimulator(param_ranges)
+    return MockSimulator(param_ranges, output_names=["output1", "output2"])
 
 
 @pytest.fixture
@@ -56,8 +56,6 @@ def test_history_matcher_init(history_matcher, mock_simulator):
     assert history_matcher.threshold == 3.0
     assert history_matcher.discrepancy == 0.1
     assert history_matcher.rank == 1
-    assert history_matcher.in_dim == 2
-    assert history_matcher.out_dim == 2
     assert history_matcher.obs_means.shape == (1, 2)
     assert history_matcher.obs_vars.shape == (1, 2)
 
