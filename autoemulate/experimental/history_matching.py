@@ -25,7 +25,7 @@ class HistoryMatching(TorchDeviceMixin):
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         simulator: Simulator | SimulatorMetadata,
-        observations: dict[str, tuple[float, float]],
+        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
@@ -47,9 +47,9 @@ class HistoryMatching(TorchDeviceMixin):
         ----------
         simulator: Simulator | SimulatorMetadata
             A simulator or the simulation metadata.
-        observations: dict[str, tuple[float, float]]
-            For each output variable, specifies observed [mean, variance] values.
-            TODO: should be possible to pass just mean without variance
+        observations: dict[str, tuple[float, float] | dict[str, float]
+            For each output variable, specifies observed [value, noise]. In case
+            of no uncertainty in observations, provides just the observation.
         threshold: float
             Implausibility threshold (query points with implausability scores that
             exceed this value are ruled out). Defaults to 3, which is considered
@@ -84,21 +84,52 @@ class HistoryMatching(TorchDeviceMixin):
                 f"Observation keys {set(observations.keys())} must be a subset of ",
                 f"simulator output names {set(self.simulator.output_names)}",
             )
-        obs_means = torch.tensor(
-            [observations[name][0] for name in self.simulator.output_names],
-            device=self.device,
-        )
-        obs_vars = torch.tensor(
-            [observations[name][1] for name in self.simulator.output_names],
-            device=self.device,
-        )
-        # Reshape observation tensors for broadcasting
-        self.obs_means = obs_means.view(1, -1)  # [1, n_outputs]
-        self.obs_vars = obs_vars.view(1, -1)  # [1, n_outputs]
+
+        # Shape: [1, n_outputs]
+        self.obs_means, self.obs_vars = self._process_observations(observations)
 
         # Track tested parameter values and their implausability scores
         self.tested_params = torch.empty((0, self.simulator.in_dim), device=self.device)
         self.impl_scores = torch.empty((0, self.simulator.out_dim), device=self.device)
+
+    def _process_observations(
+        self,
+        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+    ) -> tuple[TensorLike, TensorLike]:
+        """
+        Turn observations into tensors of shape [1, n_inputs].
+
+        Parameters
+        ----------
+        observations: dict[str, tuple[float, float] | dict[str, float]
+            For each output variable, specifies observed [value, noise]. In case
+            of no uncertainty in observations, provides just the observation.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tensors of observations and the associated noise (which can be 0).
+        """
+        means = []
+        variances = []
+
+        for key, value in observations.items():
+            if isinstance(value, float):  # Single float case
+                means.append(value)
+                variances.append(0.0)
+            elif isinstance(value, tuple) and len(value) == 2:  # Tuple case
+                mean, variance = value
+                means.append(mean)
+                variances.append(variance)
+            else:
+                raise ValueError(f"Invalid observation format for key '{key}': {value}")
+
+        # Convert lists to tensors
+        means_tensor = torch.tensor(means, dtype=torch.float32)
+        variances_tensor = torch.tensor(variances, dtype=torch.float32)
+
+        # Reshape observation tensors for broadcasting
+        return means_tensor.view(1, -1), variances_tensor.view(1, -1)
 
     def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
         """
@@ -366,14 +397,15 @@ class HistoryMatching(TorchDeviceMixin):
             for _ in range(n_waves):
                 samples = self.sample_params(n_samples_per_wave, nroy_samples)
 
-                # Filter out RO samples (if simulate and have an emulator for this)
+                # Filter out RO samples (if have simulator and an emulator)
+                # this is quite similar to an active learning workflow
                 if (not emulator_predict) and (emulator is not None):
                     pred_means, pred_vars, _ = self.predict(samples)
                     impl_scores = self.calculate_implausibility(pred_means, pred_vars)
                     nroy_idx = self.get_nroy(impl_scores)
                     samples[nroy_idx]
 
-                # Emulate predictions unless emulator_predict=False
+                # Emulate (or simulate) predictions
                 pred_means, pred_vars, successful_samples = self.predict(
                     x=samples,
                     emulator=emulator if emulator_predict else None,
