@@ -8,17 +8,6 @@ from autoemulate.experimental.emulators import GaussianProcessExact
 from autoemulate.experimental.simulations.base import Simulator, SimulatorMetadata
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 
-# MAYBE try to make SIMILAR to AL but with some flexibility
-# 1: run HistoryMatching on predictions
-# instantiate with HM params and observations (like on mogp)
-# can just use `.calculate_implausability` in this case
-# and then extract NROY and RO points based on that
-# OR use emulator to make predictions
-#
-# 2: run with simulator (and optional emulator)
-# requires updating emulator at each step AND using it
-# to filter candidates
-
 
 class HistoryMatching(TorchDeviceMixin):
     """
@@ -56,24 +45,25 @@ class HistoryMatching(TorchDeviceMixin):
 
         Parameters
         ----------
-            simulator: Simulator | SimulatorMetadata
-                A simulator or the simulation metadata.
-            observations: dict[str, tuple[float, float]]
-                For each output variable, specifies observed [mean, variance] values.
-            threshold: float
-                Implausibility threshold (query points with implausability scores that
-                exceed this value are ruled out). Defaults to 3, which is considered
-                a good value for simulations with a single output.
-            model_discrepancy: float
-                Additional variance to include in the implausability calculation.
-            rank: int
-                Scoring method for multi-output problems. Must be a non-negative
-                integer less than the number of outputs. When the implausability
-                scores are ordered across outputs, it indicates which rank to use
-                when determining whether the query point is NROY. The default value
-                of ``1`` indicates that the largest implausibility will be used.
-            device: DeviceLike | None
-                The device to use. If None, the default torch device is returned.
+        simulator: Simulator | SimulatorMetadata
+            A simulator or the simulation metadata.
+        observations: dict[str, tuple[float, float]]
+            For each output variable, specifies observed [mean, variance] values.
+            TODO: should be possible to pass just mean without variance
+        threshold: float
+            Implausibility threshold (query points with implausability scores that
+            exceed this value are ruled out). Defaults to 3, which is considered
+            a good value for simulations with a single output.
+        model_discrepancy: float
+            Additional variance to include in the implausability calculation.
+        rank: int
+            Scoring method for multi-output problems. Must be a non-negative
+            integer less than the number of outputs. When the implausability
+            scores are ordered across outputs, it indicates which rank to use
+            when determining whether the query point is NROY. The default value
+            of ``1`` indicates that the largest implausibility will be used.
+        device: DeviceLike | None
+            The device to use. If None, the default torch device is returned.
         """
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -316,7 +306,7 @@ class HistoryMatching(TorchDeviceMixin):
 
     def run(
         self,
-        n_waves: int = 3,
+        n_waves: int = 1,
         n_samples_per_wave: int = 100,
         emulator_predict: bool = True,
         emulator: Optional[GaussianProcessExact] = None,
@@ -376,9 +366,12 @@ class HistoryMatching(TorchDeviceMixin):
             for _ in range(n_waves):
                 samples = self.sample_params(n_samples_per_wave, nroy_samples)
 
-                # TODO: filter candidate samples to predict
+                # Filter out RO samples (if simulate and have an emulator for this)
                 if (not emulator_predict) and (emulator is not None):
-                    pass
+                    pred_means, pred_vars, _ = self.predict(samples)
+                    impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+                    nroy_idx = self.get_nroy(impl_scores)
+                    samples[nroy_idx]
 
                 # Emulate predictions unless emulator_predict=False
                 pred_means, pred_vars, successful_samples = self.predict(
