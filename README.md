@@ -60,6 +60,8 @@
 | autoemulate/history\_matching\_dashboard.py                                          |      509 |      509 |      0% |    1-1216 |
 | autoemulate/hyperparam\_searching.py                                                 |       46 |        3 |     93% |93, 99-100 |
 | autoemulate/logging\_config.py                                                       |       43 |        4 |     91% |28, 56, 63-64 |
+| autoemulate/mcmc.py                                                                  |      160 |      160 |      0% |     1-348 |
+| autoemulate/mcmc\_dashboard.py                                                       |      369 |      369 |      0% |     1-816 |
 | autoemulate/metrics.py                                                               |        7 |        0 |    100% |           |
 | autoemulate/model\_processing.py                                                     |       48 |        1 |     98% |        67 |
 | autoemulate/model\_registry.py                                                       |       31 |        1 |     97% |        46 |
@@ -117,7 +119,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **7571** | **1370** | **82%** |           |
+|                                                                            **TOTAL** | **8100** | **1899** | **77%** |           |
 
 
 ## Setup coverage badge
