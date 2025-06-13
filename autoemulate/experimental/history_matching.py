@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import GaussianProcessExact
-from autoemulate.experimental.simulations.base import Simulator, SimulatorMetadata
+from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 
 
@@ -24,7 +24,6 @@ class HistoryMatching(TorchDeviceMixin):
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
-        simulator: Simulator | SimulatorMetadata,
         observations: Union[dict[str, tuple[float, float]], dict[str, float]],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -36,20 +35,13 @@ class HistoryMatching(TorchDeviceMixin):
 
         TODO:
         - add random seed (once #465 is complete)
-        - update to make sure we serve all the expected workflows
-            - only filter candidate samples if simulate outputs but have
-              an emulator available for this
-            - alternatively just simulate OR emulate everything
-            - also want to be able to use HM without either (already have
-              some predictions available)
 
         Parameters
         ----------
-        simulator: Simulator | SimulatorMetadata
-            A simulator or the simulation metadata.
         observations: dict[str, tuple[float, float] | dict[str, float]
+            TODO: should this just be a 1D or 2D tensor of values
             For each output variable, specifies observed [value, noise]. In case
-            of no uncertainty in observations, provides just the observation.
+            of no uncertainty in observations, provides just the observed value.
         threshold: float
             Implausibility threshold (query points with implausability scores that
             exceed this value are ruled out). Defaults to 3, which is considered
@@ -67,30 +59,19 @@ class HistoryMatching(TorchDeviceMixin):
         """
         TorchDeviceMixin.__init__(self, device=device)
 
-        self.simulator = simulator
         self.threshold = threshold
         self.discrepancy = model_discrepancy
+        self.out_dim = len(observations)
 
-        if rank > self.simulator.out_dim:
+        if rank > self.out_dim:
             raise ValueError(
                 f"Rank {rank} is more than the simulator output dimension of ",
-                f"{self.simulator.out_dim}",
+                f"{self.out_dim}",
             )
         self.rank = rank
 
-        # Save mean and variance of observations
-        if not set(observations.keys()).issubset(set(self.simulator.output_names)):
-            raise ValueError(
-                f"Observation keys {set(observations.keys())} must be a subset of ",
-                f"simulator output names {set(self.simulator.output_names)}",
-            )
-
-        # Shape: [1, n_outputs]
+        # Save mean and variance of observations, shape: [1, n_outputs]
         self.obs_means, self.obs_vars = self._process_observations(observations)
-
-        # Track tested parameter values and their implausability scores
-        self.tested_params = torch.empty((0, self.simulator.in_dim), device=self.device)
-        self.impl_scores = torch.empty((0, self.simulator.out_dim), device=self.device)
 
     def _process_observations(
         self,
@@ -103,33 +84,30 @@ class HistoryMatching(TorchDeviceMixin):
         ----------
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise]. In case
-            of no uncertainty in observations, provides just the observation.
+            of no uncertainty in observations, provides just the observed value.
 
         Returns
         -------
         tuple[TensorLike, TensorLike]
             Tensors of observations and the associated noise (which can be 0).
         """
-        means = []
-        variances = []
+        values = torch.tensor(list(observations.values()))
 
-        for key, value in observations.items():
-            if isinstance(value, float):  # Single float case
-                means.append(value)
-                variances.append(0.0)
-            elif isinstance(value, tuple) and len(value) == 2:  # Tuple case
-                mean, variance = value
-                means.append(mean)
-                variances.append(variance)
-            else:
-                raise ValueError(f"Invalid observation format for key '{key}': {value}")
-
-        # Convert lists to tensors
-        means_tensor = torch.tensor(means, dtype=torch.float32)
-        variances_tensor = torch.tensor(variances, dtype=torch.float32)
+        # No variance
+        if values.ndim == 1:
+            means = values
+            variances = torch.zeros_like(means)
+        # Values are (mean, variance)
+        elif values.ndim == 2:
+            means = values[:, 0]
+            variances = values[:, 1]
+        else:
+            raise ValueError(
+                "Observations must be either float or tuple of two floats."
+            )
 
         # Reshape observation tensors for broadcasting
-        return means_tensor.view(1, -1), variances_tensor.view(1, -1)
+        return means.view(1, -1), variances.view(1, -1)
 
     def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
         """
@@ -206,6 +184,7 @@ class HistoryMatching(TorchDeviceMixin):
             provided (e.g., when predictions are made by a deterministic
             simulator), all variances are set to `default_var`.
         default_var: int
+            TODO: should this just be 0?
             Prediction variance value to use if not provided.
 
         Returns
@@ -228,6 +207,34 @@ class HistoryMatching(TorchDeviceMixin):
         # Calculate implausibility
         return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
 
+    def filter_nroy_samples(
+        self, samples: TensorLike, pred_means: TensorLike, pred_vars: TensorLike
+    ) -> TensorLike:
+        """
+        Given input parameter samples and predicted means and variances for
+        each input, return only NROY input parameter samples.
+
+        Parameters
+        ----------
+        samples: TensorLike
+            Tensor of input parameters used to make predictions.
+        pred_means: TensorLike
+            Tensor of prediction means [n_samples, n_outputs]
+        pred_vars: TensorLike | None
+            Tensor of prediction variances [n_samples, n_outputs]. If not
+            provided (e.g., when predictions are made by a deterministic
+            simulator), all variances are set to `default_var`.
+
+        Returns
+        -------
+        TensorLike
+            Tensor of parameter samples [n_samples, n_parameters] within
+            NROY.
+        """
+        impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+        nroy_idx = self.get_nroy(impl_scores)
+        return samples[nroy_idx]
+
     def sample_nroy(
         self,
         n_samples: int,
@@ -238,64 +245,45 @@ class HistoryMatching(TorchDeviceMixin):
 
         Parameters
         ----------
-            n_samples: int
-                Number of new samples to generate within the NROY bounds.
-            nroy_samples: TensorLike
-                Tensor of parameter samples in the NROY space [samples, parameters].
+        n_samples: int
+            Number of new samples to generate within the NROY bounds.
+        nroy_samples: TensorLike
+            Tensor of parameter samples in the NROY space [samples, parameters].
 
         Returns
         -------
-            TensorLike
-                Tensor of parameter samples [n_samples, n_parameters].
+        TensorLike
+            Tensor of parameter samples [n_samples, n_parameters].
         """
 
         min_bounds, _ = torch.min(nroy_samples, dim=0)
         max_bounds, _ = torch.max(nroy_samples, dim=0)
         return (
-            torch.rand((n_samples, self.simulator.in_dim), device=self.device)
+            torch.rand((n_samples, nroy_samples.shape[1]), device=self.device)
             * (max_bounds - min_bounds)
             + min_bounds
         )
 
-    def sample_params(self, n_samples: int, nroy_samples: Optional[TensorLike] = None):
-        """
-        Generate new parameter samples, either using `self.simulator` or from
-        within NROY space if `nroy_samples` is provided and it is not empty.
-
-        Parameters
-        ----------
-            n_samples: int
-                Number of new samples to generate.
-            nroy_samples: TensorLike | None
-                Optional tensor of parameter samples in the NROY space. If
-                provided, sample from within this space.
-
-        Returns
-        -------
-            TensorLike
-                Tensor of parameter samples [n_samples, n_parameters].
-        """
-        # TODO: remove numpy conversions once merged with #414
-        if nroy_samples is None or nroy_samples.size(0) == 0:
-            return self.simulator.sample_inputs(n_samples)
-        return self.sample_nroy(n_samples, nroy_samples)
-
-    def predict(
+    def _predict(
         self,
         x: TensorLike,
+        simulator: Optional[Simulator] = None,
         emulator: Optional[GaussianProcessExact] = None,
     ) -> tuple[TensorLike, Optional[TensorLike], TensorLike]:
         """
-        Make predictions for a batch of inputs x. Uses `self.simulator` unless
-        an emulator trained on `self.simulator` data is provided.
+        Make predictions for a batch of inputs x. Uses `simulator` unless
+        an emulator trained on `simulator` data is provided.
 
         Parameters
         ----------
         x: TensorLike
             Tensor of parameters to simulate/emulate returned by `self.sample`.
+        simulator: Simulator | None
+            An optional simulator. Must be provided if `emulator=None`.
         emulator: GaussianProcessExact | None
             NOTE: this can be other GP emulators when implemented.
-            Gaussian process emulator trained on `self.simulator` output data.
+            An optional Gaussian Process emulator pre-trained on `simulator` data.
+            Must be provided if `simulator=None`.
 
         Returns
         -------
@@ -305,10 +293,14 @@ class HistoryMatching(TorchDeviceMixin):
         """
         if x.shape[0] == 0:
             return (
-                torch.empty((0, self.simulator.out_dim), device=self.device),
-                torch.empty((0, self.simulator.out_dim), device=self.device),
-                torch.empty((0, self.simulator.in_dim), device=self.device),
+                torch.empty((0, simulator.out_dim), device=self.device),
+                torch.empty((0, simulator.out_dim), device=self.device),
+                torch.empty((0, simulator.in_dim), device=self.device),
             )
+
+        # TODO: if both emulator and simulator are provided, uses simulator
+        # - is this expected behaviour?
+        # - should we handle this?
         # Make predictions using a GP emulator
         if emulator is not None:
             output = emulator.predict(x)
@@ -320,74 +312,65 @@ class HistoryMatching(TorchDeviceMixin):
             )
 
         # Make predictions using the simulator
-        elif isinstance(self.simulator, Simulator):
+        elif simulator is not None:
             # Simulator is determinstic, have no predictive variance
             pred_vars = None
 
             # Simulator returns None if it fails, discard these runs and inputs
-            results = self.simulator.forward_batch(x)
+            results = simulator.forward_batch(x)
             valid_indices = [i for i, res in enumerate(results) if res is not None]
             pred_means, x = results[valid_indices], x[valid_indices]
-
         else:
-            msg = "Need an Emulator or a Simulator to make predictions."
+            msg = "Either an emulator or a simulator must be provided."
             raise ValueError(msg)
 
         return pred_means, pred_vars, x
 
     def run(
         self,
+        simulator: Simulator,
+        emulator: GaussianProcessExact,
         n_waves: int = 1,
         n_samples_per_wave: int = 100,
-        emulator_predict: bool = True,
-        emulator: Optional[GaussianProcessExact] = None,
-    ) -> Union[GaussianProcessExact, None]:
+    ) -> tuple[TensorLike, TensorLike, GaussianProcessExact | None]:
         """
         Run iterative history matching. In each wave:
             - sample parameter values to test from the NROY space
                 - at the start, NROY is the entire parameter space
-            - make predictions for the sampled parameters:
-                - either, use the provided emulator to make predictions
-                - or, use `self.simulator` to make predictions and update
-                  the emulator after each wave (if there are enough
-                  succesful samples)
-            - compute implausability scores for predictions and further
-              reduce NROY space
+                - use emulator to filter out implausible samples
+            - make predictions for the sampled parameters using the simulator
+            - refit the emulator using the simulated data
 
         Parameters
         ----------
+        simulator: Simulator
+            A simulator.
+        emulator: GaussianProcessExact
+            NOTE: this can be other GP emulators when implemented.
+            A Gaussian Process emulator pre-trained on `simulator` data.
         n_waves: int
             Number of iterations of history matching to run.
         n_samples_per_wave: int
             Number of parameter samples to make predictions for in each wave.
-        emulator_predict: bool = True
-            Whether to use the emulator to make predictions. If False, use
-            `self.simulator` instead.
-        emulator: GaussianProcessExact | None
-            NOTE: this can be other GP emulators when implemented.
-            Gaussian Process emulator pre-trained on `self.simulator` data.
-            - if `emulator_predict=True`, the GP is used to make predictions.
-            - if `emulator_predict=False`, `self.simulator` is used to make
-              predictions and the GP is retrained on the simulated data.
 
         Returns
         -------
-        union[GaussianProcessExact, None]
-            - a GP emulator (retrained on new data if `emulator_predict=False`) or None
+        tuple[TensorLike, TensorLike]
+            Simulated parameters and their implausability scores.
         """
-        if emulator_predict and emulator is None:
-            msg = "Need to pass a GP emulator object when `emulator_predict=True`"
-            raise ValueError(msg)
-
         if emulator is not None:
             emulator.device = self.device
 
+        # TODO: we should keep track of these within the class
         # Keep track of predictions in case refitting emulator
-        ys = torch.empty(0, device=self.device)
+        tested_params = torch.empty((0, simulator.in_dim), device=self.device)
+        ys = torch.empty((0, simulator.out_dim), device=self.device)
+        impl_scores = torch.empty((0, simulator.out_dim), device=self.device)
 
         # To begin with entire parameter space is NROY so don't have samples yet
         nroy_samples = None
 
+        # TODO: add logging
         with tqdm(
             total=n_waves,
             desc="History Matching",
@@ -395,20 +378,19 @@ class HistoryMatching(TorchDeviceMixin):
             disable=self.device.type != "cpu",
         ) as pbar:
             for _ in range(n_waves):
-                samples = self.sample_params(n_samples_per_wave, nroy_samples)
+                if nroy_samples is None or nroy_samples.size(0) == 0:
+                    samples = simulator.sample_inputs(n_samples_per_wave)
+                samples = self.sample_nroy(n_samples_per_wave, nroy_samples)
 
-                # Filter out RO samples (if have simulator and an emulator)
-                # this is quite similar to an active learning workflow
-                if (not emulator_predict) and (emulator is not None):
-                    pred_means, pred_vars, _ = self.predict(samples)
-                    impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                    nroy_idx = self.get_nroy(impl_scores)
-                    samples[nroy_idx]
+                # Filter out RO samples (if have an emulator)
+                if emulator is not None:
+                    pred_means, pred_vars, _ = self._predict(samples, emulator)
+                    samples = self.filter_nroy_samples(samples, pred_means, pred_vars)
 
-                # Emulate (or simulate) predictions
-                pred_means, pred_vars, successful_samples = self.predict(
+                # Simulate predictions
+                pred_means, pred_vars, successful_samples = self._predict(
                     x=samples,
-                    emulator=emulator if emulator_predict else None,
+                    emulator=None,
                 )
 
                 # Calculate implausibility and identify NROY points
@@ -417,15 +399,13 @@ class HistoryMatching(TorchDeviceMixin):
                 nroy_samples = successful_samples[nroy_idx]
 
                 # Store results
-                self.tested_params = torch.cat(
-                    [self.tested_params, successful_samples], dim=0
-                )
-                self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
+                tested_params = torch.cat([tested_params, successful_samples], dim=0)
+                impl_scores = torch.cat([impl_scores, impl_scores], dim=0)
 
                 # Refit emulator
-                if (not emulator_predict) and (emulator is not None):
+                if emulator is not None:
                     ys = torch.cat([ys, pred_means], dim=0)
-                    emulator.fit(self.tested_params, ys)
+                    emulator.fit(tested_params, ys)
 
                 # Update progress bar
                 self._update_progress_bar(
@@ -433,7 +413,9 @@ class HistoryMatching(TorchDeviceMixin):
                 )
                 pbar.update(1)
 
-        return emulator
+        # TODO: don't love returning all of these - can we store them somewhere?
+        # - maybe create placeholders for them in init
+        return tested_params, impl_scores, emulator
 
     def _update_progress_bar(
         self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
