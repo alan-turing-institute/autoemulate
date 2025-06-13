@@ -1,0 +1,1642 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Active Learning with AutoEmulate &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/04_active_learning';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reduced-dimension Emulator: Reaction-Diffusion example" href="05_reaction_diffusion.html" />
+    <link rel="prev" title="Scaling Sensitivity Analysis with Emulation" href="03_emulation_sensitivity.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../getting-started/index.html">Getting started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started/installation.html">Installation instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started/quickstart.html">Quickstart</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="01_start.html">A deeper dive into <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code></a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="02_speed.html">Minimising computation time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_emulation_sensitivity.html">Scaling Sensitivity Analysis with Emulation</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_reaction_diffusion.html">Reduced-dimension Emulator: Reaction-Diffusion example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_AE_workflow.html">Integrating a user-provided simulator in an end-to-end AutoEmulate workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/contributing-emulators.html">Contributing Emulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/compare.html">autoemulate.compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/datasets.html">autoemulate.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/history_matching.html"><code class="docutils literal notranslate"><span class="pre">HistoryMatching</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/sensitivity_analysis.html">autoemulate.sensitivity_analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/simulations/index.html">autoemulate.simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/emulators/index.html">autoemulate.emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/rbf.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/support_vector_machines.html">autoemulate.emulators.support_vector_machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/light_gbm.html">autoemulate.emulators.light_gbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/conditional_neural_process.html">autoemulate.emulators.conditional_neural_process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/conditional_neural_process_attn.html">autoemulate.emulators.conditional_neural_process_attn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gaussian_process.html">autoemulate.emulators.gaussian_process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gaussian_process_mt.html">autoemulate.emulators.gaussian_process_mt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/neural_net_sk.html">autoemulate.emulators.neural_net_sk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/emulators/gaussian_process_sklearn.html">autoemulate.emulators.gaussian_process</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/04_active_learning.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/04_active_learning.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Active Learning with AutoEmulate</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#active-learning-components">Active Learning Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-simulators">Defining Simulators</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-emulator">Using the Emulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-learner">Using the learner</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-full-experiment-with-all-stream-based-learners-advanced">A full experiment with all stream-based Learners (advanced)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random">1. <code class="docutils literal notranslate"><span class="pre">Random</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#threshold-based-learners">2. Threshold-Based Learners</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adaptive-threshold-learners-pid-controlled">3. Adaptive Threshold Learners (PID-Controlled)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#adaptive-variants">Adaptive Variants:</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-learners">Defining the Learners</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-experiment">Running the Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summarizing-results">Summarizing Results</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualizing-performance">Visualizing Performance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#active-learning-with-the-sinusoid-simulation">Active learning with the Sinusoid simulation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#active-learning-with-the-projectile-simulation">Active learning with the Projectile simulation</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="active-learning-with-autoemulate">
+<h1>Active Learning with AutoEmulate<a class="headerlink" href="#active-learning-with-autoemulate" title="Link to this heading">#</a></h1>
+<p>In this notebook, we’ll introduce <strong>active learning (AL)</strong> using AutoEmulate, demonstrating how emulators and simulators work together to efficiently build accurate predictive models.</p>
+<p><strong>Why Active Learning?</strong></p>
+<p>High-fidelity simulators produce accurate predictions but are computationally expensive. Emulators offer fast approximations but can be unreliable, especially in unexplored regions. Active learning intelligently selects informative simulator evaluations to maximize emulator improvement with minimal computational cost.</p>
+<p><strong>Key Components</strong></p>
+<ul class="simple">
+<li><p><strong>Simulator:</strong> High-fidelity, reliable, expensive to run.</p></li>
+<li><p><strong>Emulator:</strong> Fast, inexpensive surrogate model, less reliable in unseen parts of input space, but trainable.</p></li>
+</ul>
+<p><strong>Active Learning Policy</strong></p>
+<p>The <strong>policy</strong> <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> determines which input points are evaluated by the simulator. At each iteration, based on:</p>
+<ul class="simple">
+<li><p><strong>Labeled Set (<span class="math notranslate nohighlight">\(\mathcal{D}\)</span>):</strong> Evaluated points from the simulator.</p></li>
+<li><p><strong>Query Set (<span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>):</strong> Potential points for evaluation.</p></li>
+</ul>
+<p>The policy either:</p>
+<ul class="simple">
+<li><p>Selects a new point <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> for simulator evaluation, updating:
+$<span class="math notranslate nohighlight">\(
+\mathcal{D}_{i+1} = \mathcal{D}_i \cup \{(\mathbf{x}, \mathbf{y})\}, \quad \mathbf{x} = \mathbf{u}(\mathcal{D}_i, \mathcal{Q}_i).
+\)</span>$</p></li>
+<li><p>Or stops querying, leaving <span class="math notranslate nohighlight">\(\mathcal{D}\)</span> unchanged:
+$<span class="math notranslate nohighlight">\(
+\mathcal{D}_{i+1} = \mathcal{D}_i, \quad \mathbf{u}(\mathcal{D}_i, \mathcal{Q}_i) = \emptyset.
+\)</span>$</p></li>
+</ul>
+<p><strong>Active Learning Scenarios</strong></p>
+<p>Active learning typically includes three scenarios:</p>
+<ol class="arabic simple">
+<li><p><strong>Stream-based AL:</strong> Inputs arrive sequentially; the learner chooses whether to evaluate them.</p></li>
+<li><p><strong>Pool-based AL:</strong> A fixed pool of inputs; the learner chooses which to evaluate.</p></li>
+<li><p><strong>Membership-based AL:</strong> Learner generates inputs from the entire continuous input space.</p></li>
+</ol>
+<p><strong>This Notebook: Stream-Based AL</strong></p>
+<p>We focus on <strong>stream-based AL</strong>, where:</p>
+<ol class="arabic simple">
+<li><p>A user queries the emulator at specific inputs.</p></li>
+<li><p>If emulator predictions are uncertain, the learner queries the simulator.</p></li>
+<li><p>The emulator is retrained on simulator evaluations triggered by uncertainty.</p></li>
+<li><p>The learner manages this process.</p></li>
+</ol>
+<p>Let’s implement stream-based active learning—starting with necessary imports below.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+
+<span class="c1"># Import core classes from the source code.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.experimental.learners</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulator</span><span class="p">,</span> <span class="n">stream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.projectile</span><span class="w"> </span><span class="kn">import</span> <span class="n">simulate_projectile_multioutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.experimental.emulators.gaussian_process.exact</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianProcessExact</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.experimental_design</span><span class="w"> </span><span class="kn">import</span> <span class="n">LatinHypercube</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.experimental.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianLike</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+<span class="n">show_progress</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;JUPYTER_BOOK&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span> <span class="k">else</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>AutoEmulate provides several experimental implementations of stream-based active learners. These learners differ in how they assess informativeness—whether based on input space, output space, or adaptive thresholds.</p>
+<p>You can visualize the available options using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stream</span><span class="o">.</span><span class="n">Stream</span><span class="o">.</span><span class="n">plot_hierarchy</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stream</span><span class="o">.</span><span class="n">Stream</span><span class="o">.</span><span class="n">plot_hierarchy</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Stream [Abstract]
+├── Random [Concrete]
+└── Threshold [Abstract]
+    ├── Input [Abstract]
+    │   └── Distance [Concrete]
+    ├── Output [Abstract]
+    │   ├── A_Optimal [Concrete]
+    │   ├── D_Optimal [Concrete]
+    │   └── E_Optimal [Concrete]
+    └── Adaptive [Abstract]
+        ├── Adaptive_Distance [Concrete]
+        ├── Adaptive_A_Optimal [Concrete]
+        ├── Adaptive_D_Optimal [Concrete]
+        └── Adaptive_E_Optimal [Concrete]
+</pre></div>
+</div>
+</div>
+</div>
+<section id="active-learning-components">
+<h2>Active Learning Components<a class="headerlink" href="#active-learning-components" title="Link to this heading">#</a></h2>
+<p>To set up active learning in AutoEmulate, you typically need:</p>
+<ol class="arabic simple">
+<li><p>A <strong>simulator</strong> – provides ground truth data (expensive but accurate).</p></li>
+<li><p>An <strong>emulator</strong> – a fast surrogate that approximates the simulator.</p></li>
+<li><p>Some <strong>initial training data</strong> – a small set of labeled input-output pairs to start with.</p></li>
+</ol>
+<section id="defining-simulators">
+<h3>Defining Simulators<a class="headerlink" href="#defining-simulators" title="Link to this heading">#</a></h3>
+<p>Below, we define two example simulators:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Sin</span></code></strong>: A simple one-dimensional simulator where outputs are generated as <span class="math notranslate nohighlight">\(y = \sin(x)\)</span>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Projectile</span></code></strong>: A 2D simulator that maps initial velocity and drag coefficient of a projectile to its final distance and impact velocity.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define a simple sine simulator.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Sin</span><span class="p">(</span><span class="n">Simulator</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">LatinHypercube</span><span class="p">([(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">)])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Projectile</span><span class="p">(</span><span class="n">Simulator</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">simulate_projectile_multioutput</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">LatinHypercube</span><span class="p">([(</span><span class="o">-</span><span class="mf">5.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1000.</span><span class="p">)])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s plot the Sin simulator just to get a feel.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulator</span> <span class="o">=</span> <span class="n">Sin</span><span class="p">()</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">X</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[22.1031],
+        [ 5.9700],
+        [36.2849],
+        [47.6365]])
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Y</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">Y</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[-0.1117],
+        [-0.3081],
+        [-0.9878],
+        [-0.4904]])
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/896209e6a4e971ee96832236e0d71f3e74b1f04a53c6f78ea06e52c24983517e.png" src="../_images/896209e6a4e971ee96832236e0d71f3e74b1f04a53c6f78ea06e52c24983517e.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="using-the-emulator">
+<h2>Using the Emulator<a class="headerlink" href="#using-the-emulator" title="Link to this heading">#</a></h2>
+<p>To use an emulator in AutoEmulate, you just need to create an instance of an emulator class. The core operations are:</p>
+<ol class="arabic simple">
+<li><p><strong>Training</strong> – Fit the emulator on a batch of input-output pairs.</p></li>
+<li><p><strong>Prediction</strong> – Generate output predictions (with uncertainty estimates) for new inputs.</p></li>
+</ol>
+<p>In this example, we use a simple <strong>Gaussian Process</strong> model (<code class="docutils literal notranslate"><span class="pre">GaussianProcessExact</span></code>) provided by the AutoEmulate package.</p>
+<p>Let’s get a feel for it.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Train emulator</span>
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">Sin</span><span class="p">()</span>
+<span class="n">X_train</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="n">Y_train</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+
+<span class="n">emulator</span> <span class="o">=</span> <span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">)</span>
+<span class="n">emulator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">)</span>
+
+<span class="c1"># Test emulator</span>
+<span class="n">X_test</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="n">emulator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">GaussianLike</span><span class="p">)</span>
+<span class="n">Y_true</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="c1"># Plot</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">Y_mean</span><span class="p">,</span> <span class="n">Y_cov</span><span class="p">,</span> <span class="n">Y_true</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">X_train</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">Y_train</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">X_test</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> 
+    <span class="n">dist</span><span class="o">.</span><span class="n">mean</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">variance</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">Y_true</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">Y_true</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Simulator&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">Y_mean</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Emulator&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">Y_mean</span> <span class="o">-</span> <span class="n">Y_cov</span><span class="p">,</span> <span class="n">Y_mean</span> <span class="o">+</span> <span class="n">Y_cov</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Confidence&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Training&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/3e8487234ea3f61aa8299018b05896e69ac1299afa4189081230ac4d07b0c3ce.png" src="../_images/3e8487234ea3f61aa8299018b05896e69ac1299afa4189081230ac4d07b0c3ce.png" />
+</div>
+</div>
+<p>The plot shows how well the emulator approximates the simulator, along with confidence intervals from the GP model. Note how the uncertainty grows in regions far from the training data!</p>
+</section>
+<section id="using-the-learner">
+<h2>Using the learner<a class="headerlink" href="#using-the-learner" title="Link to this heading">#</a></h2>
+<p>One of the simplest forms of stream-based active learning is to just sample a queried input point with some probability. Inevitably, this results in a query rate of that probability, where the query rate is the proportion of accepted input points and total input points encountered. We can instantiate and train this learner as follows.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Learner components</span>
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">Sin</span><span class="p">()</span>
+
+<span class="n">X_train</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">Y_train</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">emulator</span> <span class="o">=</span> <span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">)</span>
+
+<span class="c1"># Learner itself!</span>
+<span class="n">learner</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span>
+    <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span>
+    <span class="n">emulator</span><span class="o">=</span><span class="n">emulator</span><span class="p">,</span>
+    <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+    <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+    <span class="n">p_query</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Stream of 500 samples</span>
+<span class="n">X_stream</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">learner</span><span class="o">.</span><span class="n">fit_samples</span><span class="p">(</span><span class="n">X_stream</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Random: 100%|██████████| 500/500 [00:10&lt;00:00, 48.75it/s, mse=0.0774, r2=0.822, rate=0.196, logdet=-9.94, trace=4.82e-5, max_eigval=4.82e-5, n_queries=98]  
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">learner</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;mse&#39;, &#39;r2&#39;, &#39;rate&#39;, &#39;logdet&#39;, &#39;trace&#39;, &#39;max_eigval&#39;, &#39;n_queries&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+<p>There are several metrics commonly recorded when running an active learner, each providing insight into different aspects of its performance:</p>
+<ol class="arabic simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">mse</span></code> (Mean Squared Error)</strong>: Measures the average squared difference between the emulator’s predicted outputs and the simulator’s actual outputs before updating (fitting) the emulator. A lower MSE indicates that the emulator predictions closely match the simulator.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">r2</span></code> (Coefficient of Determination)</strong>:<br />
+$<span class="math notranslate nohighlight">\(
+R^2 = 1 - \frac{\sum (y_{\text{true}} - y_{\text{pred}})^2}{\sum (y_{\text{true}} - \bar{y})^2}
+\)</span><span class="math notranslate nohighlight">\(  
+Here, \)</span>y_{\text{true}}<span class="math notranslate nohighlight">\( denotes the simulator outputs, \)</span>y_{\text{pred}}<span class="math notranslate nohighlight">\( denotes the emulator's predictions, and \)</span>\bar{y}$ is the average of the simulator’s outputs.</p>
+<ul class="simple">
+<li><p>An <span class="math notranslate nohighlight">\(R^2\)</span> score of <strong>1</strong> indicates a perfect fit—emulator predictions exactly match simulator outputs.</p></li>
+<li><p>An <span class="math notranslate nohighlight">\(R^2\)</span> score of <strong>0</strong> means the emulator is performing no better than a naive model that predicts the mean simulator output.</p></li>
+<li><p>An <span class="math notranslate nohighlight">\(R^2\)</span> score <strong>less than 0</strong> suggests the emulator predictions are worse than simply using the mean output.</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">rate</span></code> (Query Rate)</strong>: The ratio of simulator queries made to the total number of input points encountered in the stream. Lower rates indicate a more efficient learner, as fewer expensive simulator queries are needed relative to the number of inputs seen.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">n_queries</span></code> (Number of Queries)</strong>: The cumulative count of how many times the simulator has been queried so far. Monitoring this number helps track the overall computational cost incurred by the learner.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">logdet</span></code> (Log Determinant of Covariance)</strong>: Represents uncertainty in the emulator’s predictions, calculated as the log determinant of the emulator’s covariance matrix. A decreasing (more negative) log determinant typically indicates increasing confidence in predictions as the emulator improves with additional simulator data.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">trace</span></code> (Trace of Covariance)</strong>: Measures the sum of variances along each dimension of the emulator’s predictions, given by the trace of the covariance matrix. As the emulator learns, this metric should decrease toward zero, reflecting growing certainty.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">max_eigval</span></code> (Maximum Eigenvalue of Covariance)</strong>: Indicates the largest single uncertainty direction of the emulator’s predictions. A decreasing maximum eigenvalue approaching zero implies increased confidence in the emulator’s predictions along all directions in the output space.</p></li>
+</ol>
+<p>Let’s plot these!</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">learner</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iterations&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/c981c378f5a08d61aab0a5eee295edb0685e38f97eacc0d59f5f4d283afb2856.png" src="../_images/c981c378f5a08d61aab0a5eee295edb0685e38f97eacc0d59f5f4d283afb2856.png" />
+<img alt="../_images/8a8d4ccfb60c048ffa4e74e7afb46c2f8c900540ba231c40b75f4cce55276d66.png" src="../_images/8a8d4ccfb60c048ffa4e74e7afb46c2f8c900540ba231c40b75f4cce55276d66.png" />
+<img alt="../_images/9d9e07b998ab47b527269faed18f4fc39922058a479f6903a315cd23d818f3b4.png" src="../_images/9d9e07b998ab47b527269faed18f4fc39922058a479f6903a315cd23d818f3b4.png" />
+<img alt="../_images/c21adc48575d80a5cad9bdaa0b16065da0831ba848651937a31babfed261e062.png" src="../_images/c21adc48575d80a5cad9bdaa0b16065da0831ba848651937a31babfed261e062.png" />
+<img alt="../_images/4900ec70f6ccaf6b31d1cdcb0b8fb59a7bc7cb58a3993b76995a43c8950908c6.png" src="../_images/4900ec70f6ccaf6b31d1cdcb0b8fb59a7bc7cb58a3993b76995a43c8950908c6.png" />
+<img alt="../_images/69cc94427a988785d540268b258c0824a1802c9683004c56061952685d1b7af7.png" src="../_images/69cc94427a988785d540268b258c0824a1802c9683004c56061952685d1b7af7.png" />
+<img alt="../_images/1c89ca8305d35a1ac49eaffd27ee682ae7a5cfcaf7a2b18e65d382b7957a25ea.png" src="../_images/1c89ca8305d35a1ac49eaffd27ee682ae7a5cfcaf7a2b18e65d382b7957a25ea.png" />
+</div>
+</div>
+<p>Along with the above running statistics, we also have summary statistics available from the active learner object.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">mse_per_query</span></code>:</strong><br />
+This represents the mean squared error (MSE) per simulator query. A lower value indicates the emulator is closely matching the simulator’s output on average each time it’s queried, suggesting good predictive performance.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">r2_per_query</span></code>:</strong><br />
+The coefficient of determination (<span class="math notranslate nohighlight">\(R^2\)</span>) per simulator query measures how well emulator predictions explain the variability in the simulator outputs. An <span class="math notranslate nohighlight">\(R^2\)</span> value close to 0 suggests that emulator predictions are currently only slightly better than simply predicting the mean.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">trace_per_query</span></code>:</strong><br />
+This metric  is the trace of the emulator’s covariance matrix per query, reflecting the average uncertainty across the emulator’s predicted dimensions. A small value means that, on average, the emulator is very certain about its predictions at the time of querying.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">logdet_per_query</span></code>:</strong><br />
+The log determinant of the covariance per query quantifies the overall uncertainty volume in the emulator’s predictions. A negative and decreasing value typically indicates increased confidence and improved stability in emulator predictions.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">max_eigval_per_query</span></code>:</strong><br />
+The maximum eigenvalue of the covariance matrix per query indicates uncertainty along the dimension with the highest variance. A small value signifies that even in the direction of greatest uncertainty, predictions remain relatively confident.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">auc_mse</span></code>:</strong><br />
+The Area Under the Curve (AUC) of the cumulative mean squared error summarizes the emulator’s predictive error over the entire learning process. A lower AUC-MSE generally indicates better overall emulator performance across queries.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">learner</span><span class="o">.</span><span class="n">summary</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;mse_per_query&#39;: 0.0007893913710603908,
+ &#39;r2_per_query&#39;: 0.008388819134965236,
+ &#39;trace_per_query&#39;: 4.914342140664859e-07,
+ &#39;logdet_per_query&#39;: -0.10143847368201431,
+ &#39;max_eigval_per_query&#39;: 4.914342140664859e-07,
+ &#39;auc_mse&#39;: 22.751049041748047}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="a-full-experiment-with-all-stream-based-learners-advanced">
+<h2>A full experiment with all stream-based Learners (advanced)<a class="headerlink" href="#a-full-experiment-with-all-stream-based-learners-advanced" title="Link to this heading">#</a></h2>
+<p>AutoEmulate includes a variety of <strong>stream-based active learners</strong>, each using a different strategy to decide whether to query the simulator.</p>
+<section id="random">
+<h3>1. <code class="docutils literal notranslate"><span class="pre">Random</span></code><a class="headerlink" href="#random" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Strategy</strong>: Queries the simulator at random.</p></li>
+<li><p><strong>Control</strong>: Uses a fixed probability (<code class="docutils literal notranslate"><span class="pre">p_query</span></code>).</p></li>
+<li><p><strong>Use case</strong>: Serves as a baseline for comparison.</p></li>
+</ul>
+</section>
+<section id="threshold-based-learners">
+<h3>2. Threshold-Based Learners<a class="headerlink" href="#threshold-based-learners" title="Link to this heading">#</a></h3>
+<p>These learners query the simulator only when a particular metric exceeds a fixed threshold.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Distance</span></code></strong><br />
+Based on distance in the input space. Queries when a new input is sufficiently far from the training data.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">A_Optimal</span></code></strong>, <strong><code class="docutils literal notranslate"><span class="pre">D_Optimal</span></code></strong>, <strong><code class="docutils literal notranslate"><span class="pre">E_Optimal</span></code></strong><br />
+Use information-theoretic metrics derived from the emulator:</p>
+<ul>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">A_Optimal</span></code></strong>: Minimizes the trace of the inverse Fisher information matrix.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">D_Optimal</span></code></strong>: Maximizes the determinant (volume) of the Fisher information.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">E_Optimal</span></code></strong>: Maximizes the smallest eigenvalue (worst-case direction).</p></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<div><p>These methods use a <strong>fixed threshold</strong>, which may become suboptimal as the emulator’s uncertainty naturally decreases over time.</p>
+</div></blockquote>
+</section>
+<section id="adaptive-threshold-learners-pid-controlled">
+<h3>3. Adaptive Threshold Learners (PID-Controlled)<a class="headerlink" href="#adaptive-threshold-learners-pid-controlled" title="Link to this heading">#</a></h3>
+<p>To maintain a steady query rate over time, <strong>adaptive learners</strong> use a <strong>PID controller</strong> to adjust the threshold dynamically.</p>
+<p>This turns active learning into a control problem where:</p>
+<ul class="simple">
+<li><p>The <strong>threshold</strong> is the control input.</p></li>
+<li><p>The <strong>query rate</strong> is the measured system output.</p></li>
+<li><p>The <strong>target query rate</strong> is the setpoint.</p></li>
+</ul>
+<p>The PID controller updates the threshold as follows:
+$<span class="math notranslate nohighlight">\(
+u_k = K_p e_k + K_i \sum_{j=0}^k e_j + K_d (e_k - e_{k-1}), \quad \text{where} \quad e_k = \text{rate}_k - \text{rate}_\text{target}
+\)</span>$</p>
+<section id="adaptive-variants">
+<h4>Adaptive Variants:<a class="headerlink" href="#adaptive-variants" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Adaptive_Distance</span></code></strong>: Applies PID control to input-space diversity.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Adaptive_A_Optimal</span></code></strong>: PID-controlled version of A-optimal design.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Adaptive_D_Optimal</span></code></strong>: PID-controlled version of D-optimal design.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Adaptive_E_Optimal</span></code></strong>: PID-controlled version of E-optimal design.</p></li>
+</ul>
+<p>These learners maintain a desired number of simulator queries over time by continuously adapting their thresholds.</p>
+<p>This suite of learners allows you to balance between:</p>
+<ul class="simple">
+<li><p><strong>Exploration</strong> (via distance-based criteria),</p></li>
+<li><p><strong>Exploitation</strong> (via uncertainty-based optimal design),</p></li>
+<li><p>And <strong>control over query budget</strong> (via adaptive strategies).</p></li>
+</ul>
+</section>
+</section>
+<section id="defining-the-learners">
+<h3>Defining the Learners<a class="headerlink" href="#defining-the-learners" title="Link to this heading">#</a></h3>
+<p>To facilitate benchmarking, we define a <code class="docutils literal notranslate"><span class="pre">learners</span></code> function that returns a collection of stream-based active learning strategies. Each learner is initialized with:</p>
+<ul class="simple">
+<li><p>A <strong>simulator</strong> (e.g. <code class="docutils literal notranslate"><span class="pre">Sin</span></code>, <code class="docutils literal notranslate"><span class="pre">Projectile</span></code>)</p></li>
+<li><p>An <strong>emulator</strong> (a Gaussian Process in our case)</p></li>
+<li><p>An <strong>initial training dataset</strong> of input-output pairs</p></li>
+</ul>
+<p>This function supports two modes:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">adaptive_only=False</span></code>, both <strong>fixed-threshold</strong> and <strong>adaptive (PID-controlled)</strong> learners are included.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">adaptive_only=True</span></code>, only the adaptive learners are returned.</p></li>
+</ul>
+<p>The learners cover:</p>
+<ul class="simple">
+<li><p>Baseline: <code class="docutils literal notranslate"><span class="pre">Random</span></code></p></li>
+<li><p>Threshold-based: <code class="docutils literal notranslate"><span class="pre">Distance</span></code>, <code class="docutils literal notranslate"><span class="pre">A_Optimal</span></code>, <code class="docutils literal notranslate"><span class="pre">D_Optimal</span></code>, <code class="docutils literal notranslate"><span class="pre">E_Optimal</span></code></p></li>
+<li><p>Adaptive PID-controlled variants: <code class="docutils literal notranslate"><span class="pre">Adaptive_Distance</span></code>, <code class="docutils literal notranslate"><span class="pre">Adaptive_A_Optimal</span></code>, <code class="docutils literal notranslate"><span class="pre">Adaptive_D_Optimal</span></code>, <code class="docutils literal notranslate"><span class="pre">Adaptive_E_Optimal</span></code></p></li>
+</ul>
+<p>This modular setup allows us to easily loop over multiple learner types in the experiment and compare their performance on the same stream of inputs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">learners</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span><span class="p">,</span> <span class="n">n_initial_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">adaptive_only</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="n">n_initial_samples</span><span class="p">)</span>
+    <span class="n">Y_train</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span>
+        <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+        <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+        <span class="n">p_query</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">adaptive_only</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">Distance</span><span class="p">(</span>
+            <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+            <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+        <span class="p">)</span>
+        <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">A_Optimal</span><span class="p">(</span>
+            <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+            <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+        <span class="p">)</span>
+        <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">D_Optimal</span><span class="p">(</span>
+            <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+            <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=-</span><span class="mf">4.2</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+        <span class="p">)</span>
+        <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">E_Optimal</span><span class="p">(</span>
+            <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+            <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+        <span class="p">)</span>
+    <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">Adaptive_Distance</span><span class="p">(</span>
+        <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+        <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Kp</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">Ki</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">Kd</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rate&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">min_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="c1"># if isinstance(simulator, Sin) else None, </span>
+        <span class="n">max_threshold</span><span class="o">=</span><span class="mf">2.0</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="n">Sin</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+    <span class="p">)</span>
+    <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">Adaptive_A_Optimal</span><span class="p">(</span>
+        <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+        <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">,</span> <span class="n">Kp</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">Ki</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">Kd</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rate&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">min_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="c1"># if isinstance(simulator, Sin) else None, </span>
+        <span class="n">max_threshold</span><span class="o">=</span><span class="mf">1.0</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="n">Sin</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+    <span class="p">)</span>
+    <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">Adaptive_D_Optimal</span><span class="p">(</span>
+        <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+        <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=-</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">Kp</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">Ki</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">Kd</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rate&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">min_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_threshold</span><span class="o">=</span><span class="mi">0</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="n">Sin</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+    <span class="p">)</span>
+    <span class="k">yield</span> <span class="n">stream</span><span class="o">.</span><span class="n">Adaptive_E_Optimal</span><span class="p">(</span>
+        <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> <span class="n">emulator</span><span class="o">=</span><span class="n">GaussianProcessExact</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">),</span>
+        <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="o">=</span><span class="n">Y_train</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="n">Sin</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1000</span><span class="p">,</span> 
+        <span class="n">Kp</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">Ki</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">Kd</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rate&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+        <span class="n">min_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="c1"># if isinstance(simulator, Sin) else None, </span>
+        <span class="n">max_threshold</span><span class="o">=</span><span class="mf">1.0</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="n">Sin</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="running-the-experiment">
+<h3>Running the Experiment<a class="headerlink" href="#running-the-experiment" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">run_experiment</span></code> function evaluates each learner on a fixed stream of input points, over multiple random seeds. For each trial:</p>
+<ol class="arabic simple">
+<li><p>A stream of inputs is sampled from the simulator.</p></li>
+<li><p>Each learner is initialized with the same initial dataset.</p></li>
+<li><p>The learner processes the stream (either in batches or one sample at a time).</p></li>
+<li><p>Key performance metrics and summary statistics are recorded.</p></li>
+</ol>
+<p>This setup supports toggling:</p>
+<ul class="simple">
+<li><p>Number of <strong>initial training samples</strong></p></li>
+<li><p>Number of <strong>streamed inputs</strong></p></li>
+<li><p>Whether to include only <strong>adaptive learners</strong></p></li>
+<li><p>Optional <strong>batch size</strong> for processing</p></li>
+</ul>
+<p>The results include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code>: detailed time-series metrics for each learner</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary</span></code>: overall performance summaries for final comparison</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">run_experiment</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span><span class="p">,</span>
+    <span class="n">seeds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">n_initial_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_stream_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">adaptive_only</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]:</span>
+    <span class="n">metrics</span><span class="p">,</span> <span class="n">summary</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">seeds</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">X_stream</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="n">n_stream_samples</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trial with seed </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">learner</span> <span class="ow">in</span> <span class="n">learners</span><span class="p">(</span>
+            <span class="n">simulator</span><span class="o">=</span><span class="n">simulator</span><span class="p">,</span> 
+            <span class="n">n_initial_samples</span><span class="o">=</span><span class="n">n_initial_samples</span><span class="p">,</span> 
+            <span class="n">adaptive_only</span><span class="o">=</span><span class="n">adaptive_only</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">learner</span><span class="o">.</span><span class="n">fit_batches</span><span class="p">(</span><span class="n">X_stream</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">learner</span><span class="o">.</span><span class="n">fit_samples</span><span class="p">(</span><span class="n">X_stream</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">learner</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">learner</span><span class="o">.</span><span class="n">metrics</span>
+            <span class="p">))</span>
+            <span class="n">summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">learner</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">learner</span><span class="o">.</span><span class="n">summary</span>
+            <span class="p">))</span>
+    <span class="k">return</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">summary</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="summarizing-results">
+<h3>Summarizing Results<a class="headerlink" href="#summarizing-results" title="Link to this heading">#</a></h3>
+<p>After all learners have been evaluated, we use the <code class="docutils literal notranslate"><span class="pre">compute_statistics</span></code> function to produce a compact summary of performance across trials.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">compute_statistics</span><span class="p">(</span><span class="n">summary</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">compute_statistics</span><span class="p">(</span><span class="n">summary</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">])</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">((</span><span class="s1">&#39;mse_per_query&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">),</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="visualizing-performance">
+<h3>Visualizing Performance<a class="headerlink" href="#visualizing-performance" title="Link to this heading">#</a></h3>
+<p>To better understand how learners perform over time, we use the <code class="docutils literal notranslate"><span class="pre">plot_metrics</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">plot_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">smoothing_window</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+
+    <span class="c1"># Compute the mean and variance curves for each class</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="n">s</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">std</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">])</span>
+
+    <span class="c1"># Smoothing to help visualisation</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">moving_average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
+        <span class="n">pad_width</span> <span class="o">=</span> <span class="n">window</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">padded_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">pad_width</span><span class="p">,</span> <span class="n">window</span> <span class="o">-</span> <span class="n">pad_width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">padded_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">window</span><span class="p">)</span><span class="o">/</span><span class="n">window</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;valid&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Plot each metric</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">learner</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">mean_values</span> <span class="o">=</span> <span class="n">moving_average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">learner</span><span class="p">,</span> <span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">)]),</span> <span class="n">window</span><span class="o">=</span><span class="n">smoothing_window</span><span class="p">)</span>
+            <span class="n">std_values</span>  <span class="o">=</span> <span class="n">moving_average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">learner</span><span class="p">,</span> <span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">)]),</span> <span class="n">window</span><span class="o">=</span><span class="n">smoothing_window</span><span class="p">)</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mean_values</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">mean_values</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">learner</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mean_values</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">mean_values</span> <span class="o">-</span> <span class="n">std_values</span><span class="p">,</span> <span class="n">mean_values</span> <span class="o">+</span> <span class="n">std_values</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s1">&#39;r2&#39;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="active-learning-with-the-sinusoid-simulation">
+<h3>Active learning with the Sinusoid simulation<a class="headerlink" href="#active-learning-with-the-sinusoid-simulation" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span><span class="p">,</span> <span class="n">summary</span> <span class="o">=</span> <span class="n">run_experiment</span><span class="p">(</span>
+    <span class="n">simulator</span><span class="o">=</span><span class="n">Sin</span><span class="p">(),</span>
+    <span class="n">seeds</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="n">n_initial_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">n_stream_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">adaptive_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Trial with seed 0
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Random: 100%|██████████| 500/500 [00:12&lt;00:00, 41.57it/s, mse=0.0882, r2=0.822, rate=0.234, logdet=-9.71, trace=6.06e-5, max_eigval=6.06e-5, n_queries=117]  
+Adaptive_Distance: 100%|██████████| 500/500 [00:11&lt;00:00, 42.36it/s, mse=0.0718, r2=0.846, rate=0.238, logdet=-10.1, trace=3.91e-5, max_eigval=3.91e-5, n_queries=119, score=0.0898, threshold=0.934, error_prop=-0.0115, error_int=-0.0934, error_deriv=-0.000479] 
+Adaptive_A_Optimal: 100%|██████████| 500/500 [00:11&lt;00:00, 41.77it/s, mse=0.108, r2=0.772, rate=0.254, logdet=-10.1, trace=4.01e-5, max_eigval=4.01e-5, n_queries=127, score=4.01e-5, threshold=0.347, error_prop=0.00451, error_int=0.0561, error_deriv=-0.000511]     
+Adaptive_D_Optimal: 100%|██████████| 500/500 [00:11&lt;00:00, 43.27it/s, mse=0.0639, r2=0.865, rate=0.248, logdet=-10.1, trace=4.1e-5, max_eigval=4.1e-5, n_queries=124, score=-10.1, threshold=0, error_prop=-0.0015, error_int=0.00767, error_deriv=-0.000499]         
+Adaptive_E_Optimal: 100%|██████████| 500/500 [00:12&lt;00:00, 40.90it/s, mse=0.115, r2=0.773, rate=0.256, logdet=-10.1, trace=4.2e-5, max_eigval=4.2e-5, n_queries=128, score=4.2e-5, threshold=0, error_prop=0.00451, error_int=-0.023, error_deriv=0.0015]               
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Trial with seed 1
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Random: 100%|██████████| 500/500 [00:11&lt;00:00, 42.50it/s, mse=0.0745, r2=0.853, rate=0.248, logdet=-10.3, trace=3.34e-5, max_eigval=3.34e-5, n_queries=124]  
+Adaptive_Distance: 100%|██████████| 500/500 [00:11&lt;00:00, 45.17it/s, mse=0.0612, r2=0.876, rate=0.238, logdet=-10.2, trace=3.86e-5, max_eigval=3.86e-5, n_queries=119, score=0.197, threshold=0.934, error_prop=-0.0115, error_int=-0.0934, error_deriv=-0.000479]  
+Adaptive_A_Optimal: 100%|██████████| 500/500 [00:11&lt;00:00, 42.37it/s, mse=0.0506, r2=0.895, rate=0.248, logdet=-10.3, trace=3.34e-5, max_eigval=3.34e-5, n_queries=124, score=3.34e-5, threshold=0.798, error_prop=-0.0015, error_int=0.00767, error_deriv=-0.000499]   
+Adaptive_D_Optimal: 100%|██████████| 500/500 [00:13&lt;00:00, 37.03it/s, mse=0.0764, r2=0.834, rate=0.268, logdet=-11.3, trace=1.24e-5, max_eigval=1.24e-5, n_queries=134, score=-11.3, threshold=0, error_prop=0.0185, error_int=0.21, error_deriv=-0.000539]            
+Adaptive_E_Optimal: 100%|██████████| 500/500 [00:13&lt;00:00, 36.66it/s, mse=0.0669, r2=0.869, rate=0.25, logdet=-9.7, trace=6.1e-5, max_eigval=6.1e-5, n_queries=125, score=6.1e-5, threshold=0, error_prop=-0.0015, error_int=-0.0714, error_deriv=0.00151]               
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">compute_statistics</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="2" halign="left">mse_per_query</th>
+      <th colspan="2" halign="left">r2_per_query</th>
+      <th colspan="2" halign="left">trace_per_query</th>
+      <th colspan="2" halign="left">logdet_per_query</th>
+      <th colspan="2" halign="left">max_eigval_per_query</th>
+      <th colspan="2" halign="left">auc_mse</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+    </tr>
+    <tr>
+      <th>name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Adaptive_D_Optimal</th>
+      <td>0.000543</td>
+      <td>0.000039</td>
+      <td>0.006602</td>
+      <td>0.000533</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.082890</td>
+      <td>0.002014</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>23.435789</td>
+      <td>4.027235</td>
+    </tr>
+    <tr>
+      <th>Adaptive_Distance</th>
+      <td>0.000559</td>
+      <td>0.000063</td>
+      <td>0.007235</td>
+      <td>0.000176</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.085340</td>
+      <td>0.000073</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>21.232103</td>
+      <td>1.074722</td>
+    </tr>
+    <tr>
+      <th>Adaptive_A_Optimal</th>
+      <td>0.000629</td>
+      <td>0.000312</td>
+      <td>0.006646</td>
+      <td>0.000807</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.081426</td>
+      <td>0.002404</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>25.153875</td>
+      <td>11.204294</td>
+    </tr>
+    <tr>
+      <th>Random</th>
+      <td>0.000678</td>
+      <td>0.000108</td>
+      <td>0.006953</td>
+      <td>0.000108</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.083067</td>
+      <td>0.000083</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>24.780220</td>
+      <td>2.961457</td>
+    </tr>
+    <tr>
+      <th>Adaptive_E_Optimal</th>
+      <td>0.000718</td>
+      <td>0.000257</td>
+      <td>0.006495</td>
+      <td>0.000642</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>-0.078186</td>
+      <td>0.000783</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>28.289063</td>
+      <td>10.238486</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/4a5e2853d8d23d999656466b23840dd9e8294f82b06f9402f71facf9c1afa315.png" src="../_images/4a5e2853d8d23d999656466b23840dd9e8294f82b06f9402f71facf9c1afa315.png" />
+<img alt="../_images/10078549f8f777c037b1d713f78d95ce234581d2287e3de628b054ccec6df32e.png" src="../_images/10078549f8f777c037b1d713f78d95ce234581d2287e3de628b054ccec6df32e.png" />
+<img alt="../_images/f3dfdd46ad6bfe1fda4ff23b4752c049fe424746d8aa2710e138f3d2342a5734.png" src="../_images/f3dfdd46ad6bfe1fda4ff23b4752c049fe424746d8aa2710e138f3d2342a5734.png" />
+<img alt="../_images/5625e78bc189e257695b080691b4286bf4d511615e9be1bf25c8dc2f8f7dea66.png" src="../_images/5625e78bc189e257695b080691b4286bf4d511615e9be1bf25c8dc2f8f7dea66.png" />
+<img alt="../_images/6d98a72d3b29e15be1f63091dff2814998fc00de79f607a4db614093d8a98389.png" src="../_images/6d98a72d3b29e15be1f63091dff2814998fc00de79f607a4db614093d8a98389.png" />
+<img alt="../_images/205e525b9cfe9e28d89c8c53f5b52e45a9df751ada908859a02f360a506ccb3b.png" src="../_images/205e525b9cfe9e28d89c8c53f5b52e45a9df751ada908859a02f360a506ccb3b.png" />
+<img alt="../_images/48a67e980df1d911bbfdc543f830349dbc2991d6c11c5ae0aa821db8613494e0.png" src="../_images/48a67e980df1d911bbfdc543f830349dbc2991d6c11c5ae0aa821db8613494e0.png" />
+<img alt="../_images/9e35f8b5bdd17dd1d8e9d090fcf6eb74b8c026c41020e01ff7650d5d13763031.png" src="../_images/9e35f8b5bdd17dd1d8e9d090fcf6eb74b8c026c41020e01ff7650d5d13763031.png" />
+<img alt="../_images/097d3413e781c0401a2d89a048bbb4ded8e90a0729b0a6e48756245306e45caf.png" src="../_images/097d3413e781c0401a2d89a048bbb4ded8e90a0729b0a6e48756245306e45caf.png" />
+<img alt="../_images/af749580132fc6c734a478ba998c71bc66e0781ee99f1a27e1f20a72b663a978.png" src="../_images/af749580132fc6c734a478ba998c71bc66e0781ee99f1a27e1f20a72b663a978.png" />
+<img alt="../_images/deee5651129a988d1a0b36f92bfc8259cea78b12dfb45350421a828bc473c265.png" src="../_images/deee5651129a988d1a0b36f92bfc8259cea78b12dfb45350421a828bc473c265.png" />
+<img alt="../_images/01ffa3f4a087d5f9cf365cfc1d5c012e39b960e87d4f856244e35a8af4946fd1.png" src="../_images/01ffa3f4a087d5f9cf365cfc1d5c012e39b960e87d4f856244e35a8af4946fd1.png" />
+</div>
+</div>
+<p>As we can see:</p>
+<ol class="arabic simple">
+<li><p>The query rate approaches 0.25, as expected.</p></li>
+<li><p>The MSE approaches 0.</p></li>
+<li><p>The R2 score approache 1.</p></li>
+<li><p>The covariance matrix max eigenvalue and trace appraoch 0, and the log determinant approaches around -4.2.</p></li>
+<li><p>The number of queries and PID gains stabalise.</p></li>
+</ol>
+</section>
+<section id="active-learning-with-the-projectile-simulation">
+<h3>Active learning with the Projectile simulation<a class="headerlink" href="#active-learning-with-the-projectile-simulation" title="Link to this heading">#</a></h3>
+<p>Here we do the same thing, but for the more difficult projectile example.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span><span class="p">,</span> <span class="n">summary</span> <span class="o">=</span> <span class="n">run_experiment</span><span class="p">(</span>
+    <span class="n">simulator</span><span class="o">=</span><span class="n">Projectile</span><span class="p">(),</span>
+    <span class="n">seeds</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="n">n_initial_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">n_stream_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">adaptive_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Trial with seed 0
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Random: 100%|██████████| 500/500 [00:19&lt;00:00, 26.24it/s, mse=2.09e+7, r2=-0.0808, rate=0.254, logdet=14.3, trace=2.52e+3, max_eigval=1.26e+3, n_queries=127]
+Adaptive_Distance: 100%|██████████| 500/500 [00:14&lt;00:00, 34.08it/s, mse=7.88e+6, r2=0.345, rate=0.218, logdet=12.4, trace=1.3e+3, max_eigval=1.08e+3, n_queries=109, score=4.32, threshold=12.9, error_prop=-0.0316, error_int=-0.296, error_deriv=-0.000439]    
+Adaptive_A_Optimal: 100%|██████████| 500/500 [00:08&lt;00:00, 58.24it/s, mse=1.71e+7, r2=0.348, rate=0.12, logdet=10.9, trace=475, max_eigval=301, n_queries=60, score=475, threshold=731, error_prop=-0.13, error_int=-1.29, error_deriv=-0.000241]       
+Adaptive_D_Optimal: 100%|██████████| 500/500 [00:22&lt;00:00, 21.90it/s, mse=7.37e+6, r2=0.515, rate=0.322, logdet=10.7, trace=444, max_eigval=287, n_queries=161, score=10.7, threshold=55.8, error_prop=0.0726, error_int=0.756, error_deriv=-0.000648]          
+Adaptive_E_Optimal: 100%|██████████| 500/500 [00:26&lt;00:00, 19.02it/s, mse=8.45e+6, r2=0.728, rate=0.326, logdet=10.2, trace=363, max_eigval=254, n_queries=163, score=254, threshold=20.3, error_prop=0.0746, error_int=0.685, error_deriv=0.00136]      
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Trial with seed 1
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Random: 100%|██████████| 500/500 [00:15&lt;00:00, 31.72it/s, mse=5.73e+7, r2=0.262, rate=0.24, logdet=12, trace=1.33e+3, max_eigval=1.19e+3, n_queries=120]   
+Adaptive_Distance: 100%|██████████| 500/500 [00:18&lt;00:00, 26.74it/s, mse=4.58e+7, r2=-0.105, rate=0.262, logdet=14.3, trace=2.58e+3, max_eigval=1.29e+3, n_queries=131, score=5.68, threshold=0.0991, error_prop=0.0105, error_int=0.0377, error_deriv=0.00148] 
+Adaptive_A_Optimal: 100%|██████████| 500/500 [00:09&lt;00:00, 55.00it/s, mse=3.27e+7, r2=0.585, rate=0.138, logdet=10.1, trace=312, max_eigval=174, n_queries=69, score=312, threshold=299, error_prop=-0.114, error_int=-1.18, error_deriv=-0.000274]     
+Adaptive_D_Optimal: 100%|██████████| 500/500 [00:22&lt;00:00, 22.20it/s, mse=1.23e+7, r2=0.339, rate=0.324, logdet=13, trace=1.88e+3, max_eigval=1.61e+3, n_queries=162, score=13, threshold=56.7, error_prop=0.0746, error_int=0.776, error_deriv=-0.000652]      
+Adaptive_E_Optimal: 100%|██████████| 500/500 [00:23&lt;00:00, 21.31it/s, mse=1.26e+7, r2=0.355, rate=0.326, logdet=11.9, trace=834, max_eigval=571, n_queries=163, score=571, threshold=20.3, error_prop=0.0746, error_int=0.685, error_deriv=0.00136]                
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">compute_statistics</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="2" halign="left">mse_per_query</th>
+      <th colspan="2" halign="left">r2_per_query</th>
+      <th colspan="2" halign="left">trace_per_query</th>
+      <th colspan="2" halign="left">logdet_per_query</th>
+      <th colspan="2" halign="left">max_eigval_per_query</th>
+      <th colspan="2" halign="left">auc_mse</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
+    </tr>
+    <tr>
+      <th>name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Adaptive_D_Optimal</th>
+      <td>60796.359426</td>
+      <td>21236.675508</td>
+      <td>0.002644</td>
+      <td>0.000783</td>
+      <td>7.178590</td>
+      <td>6.248244</td>
+      <td>0.073357</td>
+      <td>0.009584</td>
+      <td>5.855080</td>
+      <td>5.762612</td>
+      <td>2.552757e+09</td>
+      <td>1.370971e+09</td>
+    </tr>
+    <tr>
+      <th>Adaptive_E_Optimal</th>
+      <td>64493.170187</td>
+      <td>17930.826131</td>
+      <td>0.003323</td>
+      <td>0.001616</td>
+      <td>3.671931</td>
+      <td>2.044376</td>
+      <td>0.067948</td>
+      <td>0.007337</td>
+      <td>2.527987</td>
+      <td>1.374938</td>
+      <td>2.569186e+09</td>
+      <td>2.112937e+08</td>
+    </tr>
+    <tr>
+      <th>Adaptive_Distance</th>
+      <td>210910.593943</td>
+      <td>195986.674831</td>
+      <td>0.001182</td>
+      <td>0.002808</td>
+      <td>15.807784</td>
+      <td>5.491876</td>
+      <td>0.111449</td>
+      <td>0.002973</td>
+      <td>9.877630</td>
+      <td>0.043712</td>
+      <td>3.786540e+09</td>
+      <td>4.084366e+09</td>
+    </tr>
+    <tr>
+      <th>Random</th>
+      <td>321167.828313</td>
+      <td>221605.935971</td>
+      <td>0.000773</td>
+      <td>0.001993</td>
+      <td>15.457555</td>
+      <td>6.200716</td>
+      <td>0.106257</td>
+      <td>0.008720</td>
+      <td>9.922341</td>
+      <td>0.001415</td>
+      <td>3.175322e+09</td>
+      <td>1.081337e+09</td>
+    </tr>
+    <tr>
+      <th>Adaptive_A_Optimal</th>
+      <td>379985.811467</td>
+      <td>133513.841884</td>
+      <td>0.007142</td>
+      <td>0.001890</td>
+      <td>6.225275</td>
+      <td>2.401961</td>
+      <td>0.163677</td>
+      <td>0.024700</td>
+      <td>3.770508</td>
+      <td>1.762447</td>
+      <td>1.774842e+09</td>
+      <td>1.354126e+09</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/c5fb24812ffc43166449246eb03dbe581bece6f994f5393f5fb33cd7e33c87c6.png" src="../_images/c5fb24812ffc43166449246eb03dbe581bece6f994f5393f5fb33cd7e33c87c6.png" />
+<img alt="../_images/72d78f21085165abcc9619c2d9201bd10b84518004a7c244d5e1f226bdf9c394.png" src="../_images/72d78f21085165abcc9619c2d9201bd10b84518004a7c244d5e1f226bdf9c394.png" />
+<img alt="../_images/7ef7fa5c687541be7f7d007ea5b354b3b68ce3aef897df77968812acd61eea85.png" src="../_images/7ef7fa5c687541be7f7d007ea5b354b3b68ce3aef897df77968812acd61eea85.png" />
+<img alt="../_images/d0fea3eb67fdb5e8cecbf9c5b8b29fe2bbb0be38bc56d4b5ca4ca33745bec5ef.png" src="../_images/d0fea3eb67fdb5e8cecbf9c5b8b29fe2bbb0be38bc56d4b5ca4ca33745bec5ef.png" />
+<img alt="../_images/8f55bf6d0ddb3786226aeec14cf2e9635b37bb781aeb0c2b537ea6778b95a1cc.png" src="../_images/8f55bf6d0ddb3786226aeec14cf2e9635b37bb781aeb0c2b537ea6778b95a1cc.png" />
+<img alt="../_images/a83e578f2c528b197271f95f076330269bb0367a10b5f58eaf260e582e7468a1.png" src="../_images/a83e578f2c528b197271f95f076330269bb0367a10b5f58eaf260e582e7468a1.png" />
+<img alt="../_images/a5ee1353b43a9ec45599f765d41300d1de04eebc72ba30e5235974b758de7fb4.png" src="../_images/a5ee1353b43a9ec45599f765d41300d1de04eebc72ba30e5235974b758de7fb4.png" />
+<img alt="../_images/005c529d0b57320199cfa6b677bdbdf2e80113a2a135fd95ad8fa0ebd79236ea.png" src="../_images/005c529d0b57320199cfa6b677bdbdf2e80113a2a135fd95ad8fa0ebd79236ea.png" />
+<img alt="../_images/e62a7be41aaf27832cb180d925b68235e1056f5bee566730fccf6c2d93d86185.png" src="../_images/e62a7be41aaf27832cb180d925b68235e1056f5bee566730fccf6c2d93d86185.png" />
+<img alt="../_images/a1d918f9a3ee78c20bc9668645759f93a903d00c42caaa5bf94f5edf1aadb702.png" src="../_images/a1d918f9a3ee78c20bc9668645759f93a903d00c42caaa5bf94f5edf1aadb702.png" />
+<img alt="../_images/ece082521389a313c8b8da117324955468ad4c08cb5f14dab8be799d56b2fe4c.png" src="../_images/ece082521389a313c8b8da117324955468ad4c08cb5f14dab8be799d56b2fe4c.png" />
+<img alt="../_images/59ca2878acc4aea8bc3c09e78a27a8fb77bfe61130ed57ed53a8c5cafa4c2b0c.png" src="../_images/59ca2878acc4aea8bc3c09e78a27a8fb77bfe61130ed57ed53a8c5cafa4c2b0c.png" />
+</div>
+</div>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="03_emulation_sensitivity.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Scaling Sensitivity Analysis with Emulation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="05_reaction_diffusion.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reduced-dimension Emulator: Reaction-Diffusion example</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#active-learning-components">Active Learning Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-simulators">Defining Simulators</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-emulator">Using the Emulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-learner">Using the learner</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-full-experiment-with-all-stream-based-learners-advanced">A full experiment with all stream-based Learners (advanced)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random">1. <code class="docutils literal notranslate"><span class="pre">Random</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#threshold-based-learners">2. Threshold-Based Learners</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adaptive-threshold-learners-pid-controlled">3. Adaptive Threshold Learners (PID-Controlled)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#adaptive-variants">Adaptive Variants:</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-learners">Defining the Learners</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-experiment">Running the Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summarizing-results">Summarizing Results</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualizing-performance">Visualizing Performance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#active-learning-with-the-sinusoid-simulation">Active learning with the Sinusoid simulation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#active-learning-with-the-projectile-simulation">Active learning with the Projectile simulation</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
