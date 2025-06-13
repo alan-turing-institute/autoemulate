@@ -33,11 +33,12 @@ class ProjectileSimulator(Simulator):
 
         Returns
         -------
-        distance : float
+        distance : np.ndarray
             Distance travelled by projectile.
         """
         x = np.array([params["c"], params["v0"]])
-        return simulate_projectile(x)
+        y = simulate_projectile(x)
+        return np.array([y])
 
 
 def f(t, y, c):
