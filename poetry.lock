@@ -505,6 +505,26 @@ test = ["Pillow", "contourpy[test-no-images]", "matplotlib"]
 test-no-images = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist", "wurlitzer"]
 
 [[package]]
+name = "corner"
+version = "2.2.3"
+description = "Make some beautiful corner plots"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "corner-2.2.3-py3-none-any.whl", hash = "sha256:39674b223482456c3a78234dc7bdefd21188a2d47bb8cd468104a0501f6659ec"},
+    {file = "corner-2.2.3.tar.gz", hash = "sha256:471b7b63395d8f1dee176bb779348ade38d56abd23404a48802a593607745e1c"},
+]
+
+[package.dependencies]
+matplotlib = ">=2.1"
+
+[package.extras]
+arviz = ["arviz (>=0.9)"]
+docs = ["arviz (>=0.9)", "ipython", "myst-nb", "pandoc", "sphinx (>=1.7.5)", "sphinx-book-theme"]
+test = ["arviz (>=0.9)", "pytest", "scipy"]
+
+[[package]]
 name = "coverage"
 version = "7.8.0"
 description = "Code coverage measurement for Python"
@@ -4599,4 +4619,4 @@ docs = []
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "015f056ef25ab4e19efe7a2c6446fbab2a2c74094838abd49b456a3dd0c22bbc"
+content-hash = "12861b8a479d261732799e41f1efdc6c699a0d4f9d2803be98e9e2f640f6070b"
