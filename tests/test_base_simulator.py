@@ -182,16 +182,20 @@ def test_projectile_simulator():
     sim = ProjectileSimulator()
     X = sim.sample_inputs(100)
     y = sim.run_batch_simulations(X)
+    assert y.shape == (100, 1)
+
     y_old = np.array([simulate_projectile(x) for x in X])
-    assert np.allclose(y, y_old)
+    assert np.allclose(y, y_old.reshape(-1, 1))
 
 
-def test_epidemoc_simulator():
+def test_epidemic_simulator():
     """
     Sense check EpidemicSimulator against previous implementation.
     """
     sim = EpidemicSimulator()
     X = sim.sample_inputs(100)
     y = sim.run_batch_simulations(X)
+    assert y.shape == (100, 1)
+
     y_old = np.array([simulate_epidemic(x) for x in X])
-    assert np.allclose(y, y_old)
+    assert np.allclose(y, y_old.reshape(-1, 1))
