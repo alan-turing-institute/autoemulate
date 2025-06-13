@@ -102,9 +102,8 @@ class HistoryMatching(TorchDeviceMixin):
             means = values[:, 0]
             variances = values[:, 1]
         else:
-            raise ValueError(
-                "Observations must be either float or tuple of two floats."
-            )
+            msg = "Observations must be either float or tuple of two floats."
+            raise ValueError(msg)
 
         # Reshape observation tensors for broadcasting
         return means.view(1, -1), variances.view(1, -1)
@@ -208,7 +207,7 @@ class HistoryMatching(TorchDeviceMixin):
         return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
 
     def filter_nroy_samples(
-        self, samples: TensorLike, pred_means: TensorLike, pred_vars: TensorLike
+        self, samples: TensorLike, pred_means: TensorLike, pred_vars: TensorLike | None
     ) -> TensorLike:
         """
         Given input parameter samples and predicted means and variances for
@@ -290,11 +289,11 @@ class HistoryMatching(TorchDeviceMixin):
             Arrays of predicted means and optionally variances as well as the input
             data for which predictions were made succesfully.
         """
-        if x.shape[0] == 0:
+        if x.shape[0] == 0 and simulator is not None:
             return (
-                torch.empty((0, simulator.out_dim), device=self.device),
-                torch.empty((0, simulator.out_dim), device=self.device),
-                torch.empty((0, simulator.in_dim), device=self.device),
+                torch.empty((0, self.out_dim), device=self.device),
+                torch.empty((0, self.out_dim), device=self.device),
+                torch.empty((0, x.shape[1]), device=self.device),
             )
 
         # TODO: if both emulator and simulator are provided, uses simulator
