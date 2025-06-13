@@ -2,6 +2,9 @@ from unittest.mock import patch
 
 import pytest
 import torch
+from autoemulate.experimental.emulators.gaussian_process.exact import (
+    GaussianProcessExact,
+)
 from autoemulate.experimental.history_matching import HistoryMatching
 from autoemulate.experimental.types import TensorLike
 
@@ -24,10 +27,9 @@ def observations():
 
 
 @pytest.fixture
-def history_matcher(mock_simulator, observations):
+def history_matcher(observations):
     """Fixture for a basic HistoryMatching instance using the mock simulator"""
     return HistoryMatching(
-        simulator=mock_simulator,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
@@ -35,11 +37,13 @@ def history_matcher(mock_simulator, observations):
     )
 
 
-def test_predict_with_simulator(history_matcher):
+def test_predict_with_simulator(history_matcher, mock_simulator):
     """Test running a wave with the mock simulator"""
 
     x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])  # [n_sample, n_output]
-    pred_means, pred_vars, successful_samples = history_matcher.predict(x)
+    pred_means, pred_vars, successful_samples = history_matcher._predict(
+        x, simulator=mock_simulator
+    )
 
     # With our mock simulator, all valid samples should succeed
     assert successful_samples.shape[0] == 2
@@ -50,9 +54,8 @@ def test_predict_with_simulator(history_matcher):
     assert pred_vars is None
 
 
-def test_history_matcher_init(history_matcher, mock_simulator):
+def test_history_matcher_init(history_matcher):
     """Test initialization of HistoryMatching with mock simulator"""
-    assert history_matcher.simulator == mock_simulator
     assert history_matcher.threshold == 3.0
     assert history_matcher.discrepancy == 0.1
     assert history_matcher.rank == 1
@@ -108,22 +111,30 @@ def test_invalid_inputs(history_matcher):
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
-def test_run(history_matcher):
+def test_run(history_matcher, mock_simulator):
     """Test the full history matching process with a mock simulator"""
+    x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])
+    y = mock_simulator.forward_batch(x)
+
     n_waves = 2
     n_samples_per_wave = 5
 
     # Run history matching
-    updated_emulator = history_matcher.run(
-        n_waves=n_waves, n_samples_per_wave=n_samples_per_wave, emulator_predict=False
+    gp = GaussianProcessExact(x, y)
+    gp.fit(x, y)
+    tested_params, impl_scores, updated_emulator = history_matcher.run(
+        n_waves=n_waves,
+        n_samples_per_wave=n_samples_per_wave,
+        simulator=mock_simulator,
+        emulator=gp,
     )
-    all_samples = history_matcher.tested_params
-    all_impl_scores = history_matcher.impl_scores
+    all_samples = tested_params
+    all_impl_scores = impl_scores
 
     # Check basic structure of results
     assert isinstance(all_samples, TensorLike)
     assert isinstance(all_impl_scores, TensorLike)
-    assert updated_emulator is None  # Since we didn't use an emulator
+    assert updated_emulator is not None
 
     # We should get results for all valid samples
     assert len(all_samples) == n_waves * n_samples_per_wave

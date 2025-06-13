@@ -22,7 +22,7 @@ class HistoryMatching(TorchDeviceMixin):
     whereas all other points are marked as not ruled out yet (NROY).
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         observations: Union[dict[str, tuple[float, float]], dict[str, float]],
         threshold: float = 3.0,
@@ -255,7 +255,6 @@ class HistoryMatching(TorchDeviceMixin):
         TensorLike
             Tensor of parameter samples [n_samples, n_parameters].
         """
-
         min_bounds, _ = torch.min(nroy_samples, dim=0)
         max_bounds, _ = torch.max(nroy_samples, dim=0)
         return (
@@ -332,7 +331,7 @@ class HistoryMatching(TorchDeviceMixin):
         emulator: GaussianProcessExact,
         n_waves: int = 1,
         n_samples_per_wave: int = 100,
-    ) -> tuple[TensorLike, TensorLike, GaussianProcessExact | None]:
+    ) -> tuple[TensorLike, TensorLike, GaussianProcessExact]:
         """
         Run iterative history matching. In each wave:
             - sample parameter values to test from the NROY space
@@ -355,8 +354,9 @@ class HistoryMatching(TorchDeviceMixin):
 
         Returns
         -------
-        tuple[TensorLike, TensorLike]
-            Simulated parameters and their implausability scores.
+        tuple[TensorLike, TensorLike, GaussianProcessExact]
+            Simulated parameters and their implausability scores as well as
+            the refitted GP emulator.
         """
         if emulator is not None:
             emulator.device = self.device
@@ -380,16 +380,20 @@ class HistoryMatching(TorchDeviceMixin):
             for _ in range(n_waves):
                 if nroy_samples is None or nroy_samples.size(0) == 0:
                     samples = simulator.sample_inputs(n_samples_per_wave)
-                samples = self.sample_nroy(n_samples_per_wave, nroy_samples)
+                else:
+                    samples = self.sample_nroy(n_samples_per_wave, nroy_samples)
 
                 # Filter out RO samples (if have an emulator)
                 if emulator is not None:
-                    pred_means, pred_vars, _ = self._predict(samples, emulator)
+                    pred_means, pred_vars, _ = self._predict(
+                        samples, simulator=None, emulator=emulator
+                    )
                     samples = self.filter_nroy_samples(samples, pred_means, pred_vars)
 
                 # Simulate predictions
                 pred_means, pred_vars, successful_samples = self._predict(
                     x=samples,
+                    simulator=simulator,
                     emulator=None,
                 )
 
