@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 import torch
+
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -35,23 +36,6 @@ def history_matcher(observations):
         model_discrepancy=0.1,
         rank=1,
     )
-
-
-def test_predict_with_simulator(history_matcher, mock_simulator):
-    """Test running a wave with the mock simulator"""
-
-    x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])  # [n_sample, n_output]
-    pred_means, pred_vars, successful_samples = history_matcher._predict(
-        x, simulator=mock_simulator
-    )
-
-    # With our mock simulator, all valid samples should succeed
-    assert successful_samples.shape[0] == 2
-    assert pred_means.shape[0] == 2
-    assert successful_samples.shape == (2, 2)  # 2 samples, 2 outputs
-
-    # When using simulator, no variance is returns
-    assert pred_vars is None
 
 
 def test_history_matcher_init(history_matcher):
@@ -103,11 +87,6 @@ def test_get_indices(history_matcher):
     history_matcher.rank = 2
     assert len(history_matcher.get_nroy(impl_scores)) == 3
     assert len(history_matcher.get_ro(impl_scores)) == 0
-
-
-def test_invalid_inputs(history_matcher):
-    # TODO
-    pass
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests

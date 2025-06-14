@@ -262,68 +262,6 @@ class HistoryMatching(TorchDeviceMixin):
             + min_bounds
         )
 
-    def _predict(
-        self,
-        x: TensorLike,
-        simulator: Optional[Simulator] = None,
-        emulator: Optional[GaussianProcessExact] = None,
-    ) -> tuple[TensorLike, Optional[TensorLike], TensorLike]:
-        """
-        Make predictions for a batch of inputs x. Uses `simulator` unless
-        an emulator trained on `simulator` data is provided.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Tensor of parameters to simulate/emulate returned by `self.sample`.
-        simulator: Simulator | None
-            An optional simulator. Must be provided if `emulator=None`.
-        emulator: GaussianProcessExact | None
-            NOTE: this can be other GP emulators when implemented.
-            An optional Gaussian Process emulator pre-trained on `simulator` data.
-            Must be provided if `simulator=None`.
-
-        Returns
-        -------
-        tuple[TensorLike, TensorLike | None, TensorLike]
-            Arrays of predicted means and optionally variances as well as the input
-            data for which predictions were made succesfully.
-        """
-        if x.shape[0] == 0 and simulator is not None:
-            return (
-                torch.empty((0, self.out_dim), device=self.device),
-                torch.empty((0, self.out_dim), device=self.device),
-                torch.empty((0, x.shape[1]), device=self.device),
-            )
-
-        # TODO: if both emulator and simulator are provided, uses simulator
-        # - is this expected behaviour?
-        # - should we handle this?
-        # Make predictions using a GP emulator
-        if emulator is not None:
-            output = emulator.predict(x)
-            assert isinstance(output, GaussianLike)
-            assert output.variance.ndim == 2
-            pred_means, pred_vars = (
-                output.mean.float().detach(),
-                output.variance.float().detach(),
-            )
-
-        # Make predictions using the simulator
-        elif simulator is not None:
-            # Simulator is determinstic, have no predictive variance
-            pred_vars = None
-
-            # Simulator returns None if it fails, discard these runs and inputs
-            results = simulator.forward_batch(x)
-            valid_indices = [i for i, res in enumerate(results) if res is not None]
-            pred_means, x = results[valid_indices], x[valid_indices]
-        else:
-            msg = "Either an emulator or a simulator must be provided."
-            raise ValueError(msg)
-
-        return pred_means, pred_vars, x
-
     def run(
         self,
         simulator: Simulator,
@@ -384,17 +322,21 @@ class HistoryMatching(TorchDeviceMixin):
 
                 # Filter out RO samples (if have an emulator)
                 if emulator is not None:
-                    pred_means, pred_vars, _ = self._predict(
-                        samples, simulator=None, emulator=emulator
+                    output = emulator.predict(samples)
+                    assert isinstance(output, GaussianLike)
+                    assert output.variance.ndim == 2
+                    pred_means, pred_vars = (
+                        output.mean.float().detach(),
+                        output.variance.float().detach(),
                     )
                     samples = self.filter_nroy_samples(samples, pred_means, pred_vars)
 
                 # Simulate predictions
-                pred_means, pred_vars, successful_samples = self._predict(
-                    x=samples,
-                    simulator=simulator,
-                    emulator=None,
-                )
+                results = simulator.forward_batch(samples)
+                valid_indices = [i for i, res in enumerate(results) if res is not None]
+                successful_samples = samples[valid_indices]
+                pred_means = results[valid_indices]
+                pred_vars = None
 
                 # Calculate implausibility and identify NROY points
                 impl_scores = self.calculate_implausibility(pred_means, pred_vars)
