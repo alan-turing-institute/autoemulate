@@ -5,7 +5,7 @@ from autoemulate.experimental.types import TensorLike
 from autoemulate.simulations.epidemic import simulate_epidemic
 
 
-class EpidemicSimulator(Simulator):
+class Epidemic(Simulator):
     """
     Simulator of infectious disease spread (SIR).
     """
