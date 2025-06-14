@@ -1,0 +1,35 @@
+import torch
+
+from autoemulate.experimental.simulations.base import Simulator
+from autoemulate.experimental.types import TensorLike
+from autoemulate.simulations.projectile import simulate_projectile
+
+
+class ProjectileSimulator(Simulator):
+    """
+    Simulator of projectile motion.
+    """
+
+    def __init__(
+        self,
+        param_ranges={"c": (-5.0, 1.0), "v0": (0.0, 1000)},
+        output_names=["distance"],
+    ):
+        super().__init__(param_ranges, output_names)
+
+    def _forward(self, x: TensorLike) -> TensorLike:
+        """
+        Parameters
+        ----------
+        x : TensorLike
+            Dictionary of input parameter values to simulate:
+            - `c`: the drag coefficient on a log scale
+            - `v0`: velocity
+
+        Returns
+        -------
+        TensorLike
+            Distance travelled by projectile.
+        """
+        y = simulate_projectile(x.numpy()[0])
+        return torch.tensor([y]).view(-1, 1)
