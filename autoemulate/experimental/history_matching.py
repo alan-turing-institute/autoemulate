@@ -1,0 +1,380 @@
+from typing import Optional, Union
+
+import torch
+from tqdm import tqdm
+
+from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.emulators import GaussianProcessExact
+from autoemulate.experimental.simulations.base import Simulator
+from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
+
+
+class HistoryMatching(TorchDeviceMixin):
+    """
+    History matching is a model calibration method, which uses observed data to
+    rule out ``implausible`` parameter values. The implausability metric is:
+
+    .. math::
+        I_i(\bar{x_0}) = \frac{|z_i - \\mathbb{E}(f_i(\bar{x_0}))|}
+        {\\sqrt{\text{Var}[z_i - \\mathbb{E}(f_i(\bar{x_0}))]}}
+
+    Query points above a given implausibility threshold are ruled out (RO)
+    whereas all other points are marked as not ruled out yet (NROY).
+    """
+
+    def __init__(
+        self,
+        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+        threshold: float = 3.0,
+        model_discrepancy: float = 0.0,
+        rank: int = 1,
+        device: DeviceLike | None = None,
+    ):
+        """
+        Initialize the history matching object.
+
+        TODO:
+        - add random seed (once #465 is complete)
+
+        Parameters
+        ----------
+        observations: dict[str, tuple[float, float] | dict[str, float]
+            TODO: should this just be a 1D or 2D tensor of values
+            For each output variable, specifies observed [value, noise]. In case
+            of no uncertainty in observations, provides just the observed value.
+        threshold: float
+            Implausibility threshold (query points with implausability scores that
+            exceed this value are ruled out). Defaults to 3, which is considered
+            a good value for simulations with a single output.
+        model_discrepancy: float
+            Additional variance to include in the implausability calculation.
+        rank: int
+            Scoring method for multi-output problems. Must be a non-negative
+            integer less than the number of outputs. When the implausability
+            scores are ordered across outputs, it indicates which rank to use
+            when determining whether the query point is NROY. The default value
+            of ``1`` indicates that the largest implausibility will be used.
+        device: DeviceLike | None
+            The device to use. If None, the default torch device is returned.
+        """
+        TorchDeviceMixin.__init__(self, device=device)
+
+        self.threshold = threshold
+        self.discrepancy = model_discrepancy
+        self.out_dim = len(observations)
+
+        if rank > self.out_dim:
+            raise ValueError(
+                f"Rank {rank} is more than the simulator output dimension of ",
+                f"{self.out_dim}",
+            )
+        self.rank = rank
+
+        # Save mean and variance of observations, shape: [1, n_outputs]
+        self.obs_means, self.obs_vars = self._process_observations(observations)
+
+        # These get populated in self.run()
+        self.tested_params = torch.empty((0, len(observations)), device=self.device)
+        self.impl_scores = torch.empty((0, len(observations)), device=self.device)
+
+    def _process_observations(
+        self,
+        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+    ) -> tuple[TensorLike, TensorLike]:
+        """
+        Turn observations into tensors of shape [1, n_inputs].
+
+        Parameters
+        ----------
+        observations: dict[str, tuple[float, float] | dict[str, float]
+            For each output variable, specifies observed [value, noise]. In case
+            of no uncertainty in observations, provides just the observed value.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tensors of observations and the associated noise (which can be 0).
+        """
+        values = torch.tensor(list(observations.values()))
+
+        # No variance
+        if values.ndim == 1:
+            means = values
+            variances = torch.zeros_like(means)
+        # Values are (mean, variance)
+        elif values.ndim == 2:
+            means = values[:, 0]
+            variances = values[:, 1]
+        else:
+            msg = "Observations must be either float or tuple of two floats."
+            raise ValueError(msg)
+
+        # Reshape observation tensors for broadcasting
+        return means.view(1, -1), variances.view(1, -1)
+
+    def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
+        """
+        Create mask for NROY points based on rank.
+
+        Parameters
+        ----------
+        implausability: TensorLike
+            Tensor of implausability scores for tested parameters.
+
+        Returns
+        -------
+        TensorLike
+            Tensor indicating whether each parameter point is NROY given
+            self.rank and self.threshold values.
+        """
+        if self.rank == 1:
+            # First-order implausibility: all outputs must satisfy threshold
+            return torch.all(self.threshold >= implausability, dim=1)
+        # Sort implausibilities for each sample (descending)
+        I_sorted, _ = torch.sort(implausability, dim=1, descending=True)
+        # The rank-th highest implausibility must be <= threshold
+        return I_sorted[:, self.rank - 1] <= self.threshold
+
+    def get_nroy(
+        self, implausability: TensorLike, samples: Optional[TensorLike] = None
+    ) -> TensorLike:
+        """
+        Get indices of NROY points from implausability scores. If `samples`
+        is provided, returns samples at NROY indices
+
+        Parameters
+        ----------
+        implausability: TensorLike
+            Tensor of implausability scores for tested parameters.
+        samples: Tensorlike | None
+            Optional tensor of parameter samples.
+
+        Returns
+        -------
+        TensorLike
+            Indices of NROY points or `samples` at NROY indices.
+        """
+        nroy_mask = self._create_nroy_mask(implausability)
+        idx = torch.where(nroy_mask)[0]
+        if samples is None:
+            return idx
+        return samples[idx]
+
+    def get_ro(
+        self, implausability: TensorLike, samples: Optional[TensorLike] = None
+    ) -> TensorLike:
+        """
+        Get indices of RO points from implausability scores. If `samples`
+        is provided, returns samples at RO indices
+
+        Parameters
+        ----------
+        implausability: TensorLike
+            Tensor of implausability scores for tested parameters.
+        samples: Tensorlike | None
+            Optional tensor of parameter samples.
+
+        Returns
+        -------
+        TensorLike
+            Indices of RO points or `samples` at RO indices.
+        """
+        nroy_mask = self._create_nroy_mask(implausability)
+        idx = torch.where(~nroy_mask)[0]
+        if samples is None:
+            return idx
+        return samples[idx]
+
+    def calculate_implausibility(
+        self,
+        pred_means: TensorLike,  # [n_samples, n_outputs]
+        pred_vars: Optional[TensorLike] = None,  # [n_samples, n_outputs]
+        default_var: float = 0.01,
+    ) -> TensorLike:
+        """
+        Calculate implausibility scores.
+
+        Parameters
+        ----------
+        pred_means: TensorLike
+            Tensor of prediction means [n_samples, n_outputs]
+        pred_vars: TensorLike | None
+            Tensor of prediction variances [n_samples, n_outputs]. If not
+            provided (e.g., when predictions are made by a deterministic
+            simulator), all variances are set to `default_var`.
+        default_var: int
+            TODO: should this just be 0?
+            Prediction variance value to use if not provided.
+
+        Returns
+        -------
+        TensorLike
+            Tensor of implausibility scores.
+        """
+        # Set prediction variances if not provided
+        if pred_vars is None:
+            pred_vars = torch.full_like(pred_means, default_var, device=self.device)
+
+        # Additional variance due to model discrepancy (defaults to 0)
+        discrepancy = torch.full_like(
+            self.obs_vars, self.discrepancy, device=self.device
+        )
+
+        # Calculate total variance
+        Vs = pred_vars + discrepancy + self.obs_vars
+
+        # Calculate implausibility
+        return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
+
+    def sample_nroy(
+        self,
+        n_samples: int,
+        nroy_samples: TensorLike,
+    ) -> TensorLike:
+        """
+        Generate new parameter samples within NROY space.
+
+        Parameters
+        ----------
+        n_samples: int
+            Number of new samples to generate within the NROY bounds.
+        nroy_samples: TensorLike
+            Tensor of parameter samples in the NROY space [samples, parameters].
+
+        Returns
+        -------
+        TensorLike
+            Tensor of parameter samples [n_samples, n_parameters].
+        """
+        min_bounds, _ = torch.min(nroy_samples, dim=0)
+        max_bounds, _ = torch.max(nroy_samples, dim=0)
+        return (
+            torch.rand((n_samples, nroy_samples.shape[1]), device=self.device)
+            * (max_bounds - min_bounds)
+            + min_bounds
+        )
+
+    def run(
+        self,
+        simulator: Simulator,
+        emulator: GaussianProcessExact,
+        n_waves: int = 1,
+        n_samples_per_wave: int = 100,
+    ) -> GaussianProcessExact:
+        """
+        Run iterative history matching. In each wave:
+            - sample parameter values to test from the NROY space
+                - at the start, NROY is the entire parameter space
+                - use emulator to filter out implausible samples
+            - make predictions for the sampled parameters using the simulator
+            - refit the emulator using the simulated data
+
+        Parameters
+        ----------
+        simulator: Simulator
+            A simulator.
+        emulator: GaussianProcessExact
+            NOTE: this can be other GP emulators when implemented.
+            A Gaussian Process emulator pre-trained on `simulator` data.
+        n_waves: int
+            Number of iterations of history matching to run.
+        n_samples_per_wave: int
+            Number of parameter samples to make predictions for in each wave.
+
+        Returns
+        -------
+        GaussianProcessExact
+            The refitted GP emulator.
+        """
+        if emulator is not None:
+            emulator.device = self.device
+
+        # Keep track of predictions in case refitting emulator
+        ys = torch.empty((0, simulator.out_dim), device=self.device)
+
+        # To begin with entire parameter space is NROY so don't have samples yet
+        nroy_samples = None
+
+        with tqdm(
+            total=n_waves,
+            desc="History Matching",
+            unit="wave",
+            disable=self.device.type != "cpu",
+        ) as pbar:
+            for _ in range(n_waves):
+                if nroy_samples is None or nroy_samples.size(0) == 0:
+                    samples = simulator.sample_inputs(n_samples_per_wave)
+                else:
+                    samples = self.sample_nroy(n_samples_per_wave, nroy_samples)
+
+                # Filter out RO samples (if have an emulator)
+                if emulator is not None:
+                    output = emulator.predict(samples)
+                    assert isinstance(output, GaussianLike)
+                    assert output.variance.ndim == 2
+                    pred_means, pred_vars = (
+                        output.mean.float().detach(),
+                        output.variance.float().detach(),
+                    )
+                    impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+                    samples = self.get_nroy(impl_scores, samples)
+
+                # Simulate predictions
+                results = simulator.forward_batch(samples)
+                valid_indices = [i for i, res in enumerate(results) if res is not None]
+                successful_samples = samples[valid_indices]
+                pred_means = results[valid_indices]
+                pred_vars = None
+
+                # Calculate implausibility and identify NROY points
+                impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+                nroy_samples = self.get_nroy(impl_scores, successful_samples)
+
+                # Store results
+                self.tested_params = torch.cat(
+                    [self.tested_params, successful_samples], dim=0
+                )
+                self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
+
+                # Refit emulator
+                if emulator is not None:
+                    ys = torch.cat([ys, pred_means], dim=0)
+                    emulator.fit(self.tested_params, ys)
+
+                # Update progress bar
+                self._update_progress_bar(
+                    pbar, impl_scores, samples.size(0), nroy_samples.size(0)
+                )
+                pbar.update(1)
+
+        return emulator
+
+    def _update_progress_bar(
+        self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
+    ):
+        """
+        Updates the progress bar.
+
+        Parameters
+        ----------
+        pbar: tqdm
+            The progress bar.
+        impl_scores: TensorLike
+            Tensor of implausibility scores for succesful parameter samples.
+        n_samples: int
+            Total number of tested parameter samples.
+        n_nroy_samples: int
+            Number of parameter samples in the NROY space.
+        """
+        failed_count = n_samples - impl_scores.size(0)
+        min_impl = torch.min(impl_scores) if impl_scores.size(0) > 0 else "NaN"
+        max_impl = torch.max(impl_scores) if impl_scores.size(0) > 0 else "NaN"
+        pbar.set_postfix(
+            {
+                "samples": n_samples,
+                "failed": failed_count,
+                "NROY": n_nroy_samples,
+                "min_impl": f"{min_impl:.2f}",
+                "max_impl": f"{max_impl:.2f}",
+            }
+        )

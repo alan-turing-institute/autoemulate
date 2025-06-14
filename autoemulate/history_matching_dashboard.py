@@ -8,6 +8,8 @@ from IPython.display import clear_output
 from IPython.display import display
 from sklearn.decomposition import PCA
 
+from autoemulate.experimental.types import TensorLike
+
 
 class HistoryMatchingDashboard:
     """
@@ -21,9 +23,11 @@ class HistoryMatchingDashboard:
         """
         Initialize the dashboard
 
+        TODO: shouldn't this include rank as input?
+
         Args:
-            samples: DataFrame or numpy array with parameter samples
-            impl_scores: Array of implausibility scores
+            samples: DataFrame or numpy array or tensor with parameter samples
+            impl_scores: Array or tensor of implausibility scores
             param_names: List of parameter names
             output_names: List of output names
             threshold: Implausibility threshold
@@ -31,6 +35,8 @@ class HistoryMatchingDashboard:
         # Convert samples to DataFrame if it's an array
         if isinstance(samples, np.ndarray):
             self.samples_df = pd.DataFrame(samples, columns=param_names)
+        elif isinstance(samples, TensorLike):
+            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)
         else:
             self.samples_df = samples.copy()
 
@@ -45,18 +51,21 @@ class HistoryMatchingDashboard:
             self.max_waves = min(10, n_samples // 100) if n_samples > 100 else 5
 
         # Store other data
-        self.impl_scores = impl_scores
+        if isinstance(impl_scores, TensorLike):
+            self.impl_scores = impl_scores.numpy()
+        else:
+            self.impl_scores = impl_scores
         self.param_names = param_names
         self.output_names = output_names
         self.threshold = threshold
 
         # Calculate minimum implausibility for each sample
-        if len(impl_scores.shape) > 1:
-            self.min_impl = np.min(impl_scores, axis=1)
-            self.max_impl = np.max(impl_scores, axis=1)
+        if len(self.impl_scores.shape) > 1:
+            self.min_impl = np.min(self.impl_scores, axis=1)
+            self.max_impl = np.max(self.impl_scores, axis=1)
         else:
-            self.min_impl = impl_scores
-            self.max_impl = impl_scores
+            self.min_impl = self.impl_scores
+            self.max_impl = self.impl_scores
 
         # Add implausibility to DataFrame
         self.samples_df["min_implausibility"] = self.min_impl
