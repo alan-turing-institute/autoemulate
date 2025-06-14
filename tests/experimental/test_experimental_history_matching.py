@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 import pytest
 import torch
-
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -101,14 +100,14 @@ def test_run(history_matcher, mock_simulator):
     # Run history matching
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
-    tested_params, impl_scores, updated_emulator = history_matcher.run(
+    updated_emulator = history_matcher.run(
         n_waves=n_waves,
         n_samples_per_wave=n_samples_per_wave,
         simulator=mock_simulator,
         emulator=gp,
     )
-    all_samples = tested_params
-    all_impl_scores = impl_scores
+    all_samples = history_matcher.tested_params
+    all_impl_scores = history_matcher.impl_scores
 
     # Check basic structure of results
     assert isinstance(all_samples, TensorLike)

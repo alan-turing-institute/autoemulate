@@ -73,6 +73,10 @@ class HistoryMatching(TorchDeviceMixin):
         # Save mean and variance of observations, shape: [1, n_outputs]
         self.obs_means, self.obs_vars = self._process_observations(observations)
 
+        # These get populated in self.run()
+        self.tested_params = torch.empty((0, len(observations)), device=self.device)
+        self.impl_scores = torch.empty((0, len(observations)), device=self.device)
+
     def _process_observations(
         self,
         observations: Union[dict[str, tuple[float, float]], dict[str, float]],
@@ -268,7 +272,7 @@ class HistoryMatching(TorchDeviceMixin):
         emulator: GaussianProcessExact,
         n_waves: int = 1,
         n_samples_per_wave: int = 100,
-    ) -> tuple[TensorLike, TensorLike, GaussianProcessExact]:
+    ) -> GaussianProcessExact:
         """
         Run iterative history matching. In each wave:
             - sample parameter values to test from the NROY space
@@ -291,23 +295,18 @@ class HistoryMatching(TorchDeviceMixin):
 
         Returns
         -------
-        tuple[TensorLike, TensorLike, GaussianProcessExact]
-            Simulated parameters and their implausability scores as well as
-            the refitted GP emulator.
+        GaussianProcessExact
+            The refitted GP emulator.
         """
         if emulator is not None:
             emulator.device = self.device
 
-        # TODO: we should keep track of these within the class
         # Keep track of predictions in case refitting emulator
-        tested_params = torch.empty((0, simulator.in_dim), device=self.device)
         ys = torch.empty((0, simulator.out_dim), device=self.device)
-        impl_scores = torch.empty((0, simulator.out_dim), device=self.device)
 
         # To begin with entire parameter space is NROY so don't have samples yet
         nroy_samples = None
 
-        # TODO: add logging
         with tqdm(
             total=n_waves,
             desc="History Matching",
@@ -344,13 +343,15 @@ class HistoryMatching(TorchDeviceMixin):
                 nroy_samples = successful_samples[nroy_idx]
 
                 # Store results
-                tested_params = torch.cat([tested_params, successful_samples], dim=0)
-                impl_scores = torch.cat([impl_scores, impl_scores], dim=0)
+                self.tested_params = torch.cat(
+                    [self.tested_params, successful_samples], dim=0
+                )
+                self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
                 # Refit emulator
                 if emulator is not None:
                     ys = torch.cat([ys, pred_means], dim=0)
-                    emulator.fit(tested_params, ys)
+                    emulator.fit(self.tested_params, ys)
 
                 # Update progress bar
                 self._update_progress_bar(
@@ -358,9 +359,7 @@ class HistoryMatching(TorchDeviceMixin):
                 )
                 pbar.update(1)
 
-        # TODO: don't love returning all of these - can we store them somewhere?
-        # - maybe create placeholders for them in init
-        return tested_params, impl_scores, emulator
+        return emulator
 
     def _update_progress_bar(
         self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
