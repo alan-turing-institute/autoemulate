@@ -135,39 +135,55 @@ class HistoryMatching(TorchDeviceMixin):
         # The rank-th highest implausibility must be <= threshold
         return I_sorted[:, self.rank - 1] <= self.threshold
 
-    def get_nroy(self, implausability: TensorLike) -> TensorLike:
+    def get_nroy(
+        self, implausability: TensorLike, samples: Optional[TensorLike] = None
+    ) -> TensorLike:
         """
-        Get indices of NROY points from implausability scores.
+        Get indices of NROY points from implausability scores. If `samples`
+        is provided, returns samples at NROY indices
 
         Parameters
         ----------
         implausability: TensorLike
             Tensor of implausability scores for tested parameters.
+        samples: Tensorlike | None
+            Optional tensor of parameter samples.
 
         Returns
         -------
         TensorLike
-            Indices of NROY points.
+            Indices of NROY points or `samples` at NROY indices.
         """
         nroy_mask = self._create_nroy_mask(implausability)
-        return torch.where(nroy_mask)[0]
+        idx = torch.where(nroy_mask)[0]
+        if samples is None:
+            return idx
+        return samples[idx]
 
-    def get_ro(self, implausability: TensorLike) -> TensorLike:
+    def get_ro(
+        self, implausability: TensorLike, samples: Optional[TensorLike] = None
+    ) -> TensorLike:
         """
-        Get indices of RO points from implausability scores.
+        Get indices of RO points from implausability scores. If `samples`
+        is provided, returns samples at RO indices
 
         Parameters
         ----------
         implausability: TensorLike
             Tensor of implausability scores for tested parameters.
+        samples: Tensorlike | None
+            Optional tensor of parameter samples.
 
         Returns
         -------
         TensorLike
-            Indices of RO points.
+            Indices of RO points or `samples` at RO indices.
         """
         nroy_mask = self._create_nroy_mask(implausability)
-        return torch.where(~nroy_mask)[0]
+        idx = torch.where(~nroy_mask)[0]
+        if samples is None:
+            return idx
+        return samples[idx]
 
     def calculate_implausibility(
         self,
@@ -209,34 +225,6 @@ class HistoryMatching(TorchDeviceMixin):
 
         # Calculate implausibility
         return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
-
-    def filter_nroy_samples(
-        self, samples: TensorLike, pred_means: TensorLike, pred_vars: TensorLike | None
-    ) -> TensorLike:
-        """
-        Given input parameter samples and predicted means and variances for
-        each input, return only NROY input parameter samples.
-
-        Parameters
-        ----------
-        samples: TensorLike
-            Tensor of input parameters used to make predictions.
-        pred_means: TensorLike
-            Tensor of prediction means [n_samples, n_outputs]
-        pred_vars: TensorLike | None
-            Tensor of prediction variances [n_samples, n_outputs]. If not
-            provided (e.g., when predictions are made by a deterministic
-            simulator), all variances are set to `default_var`.
-
-        Returns
-        -------
-        TensorLike
-            Tensor of parameter samples [n_samples, n_parameters] within
-            NROY.
-        """
-        impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-        nroy_idx = self.get_nroy(impl_scores)
-        return samples[nroy_idx]
 
     def sample_nroy(
         self,
@@ -328,7 +316,8 @@ class HistoryMatching(TorchDeviceMixin):
                         output.mean.float().detach(),
                         output.variance.float().detach(),
                     )
-                    samples = self.filter_nroy_samples(samples, pred_means, pred_vars)
+                    impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+                    samples = self.get_nroy(impl_scores, samples)
 
                 # Simulate predictions
                 results = simulator.forward_batch(samples)
@@ -339,8 +328,7 @@ class HistoryMatching(TorchDeviceMixin):
 
                 # Calculate implausibility and identify NROY points
                 impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                nroy_idx = self.get_nroy(impl_scores)
-                nroy_samples = successful_samples[nroy_idx]
+                nroy_samples = self.get_nroy(impl_scores, successful_samples)
 
                 # Store results
                 self.tested_params = torch.cat(
