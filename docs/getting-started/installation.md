@@ -1,20 +1,13 @@
 # Installation instructions
 
-`AutoEmulate` is a Python package that can be installed in a number of ways. In this section we will describe the main ways to install the package.
+`AutoEmulate` is a Python package that can be installed in a number of ways.
+In this section we will describe the main ways to install the package.
+For new users, we recommend installing the package from PyPI.
+For users who want to contribute to the package, we recommend using Poetry to install the package from the source code.
 
 ## Prerequisites
 
 **Python Version:** `AutoEmulate` requires Python `>=3.10` and `<3.13`.
-
-## Install from GitHub
-
-This is the easiest way to install `AutoEmulate`.
-
-Currently, because we are in active development, it's recommended to install the development version from GitHub:
-
-```bash
-pip install git+https://github.com/alan-turing-institute/autoemulate.git
-```
 
 ## Install from PyPI
 
