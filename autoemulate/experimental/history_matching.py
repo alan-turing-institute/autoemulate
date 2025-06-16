@@ -132,54 +132,54 @@ class HistoryMatching(TorchDeviceMixin):
         return I_sorted[:, self.rank - 1] <= self.threshold
 
     def get_nroy(
-        self, implausability: TensorLike, samples: Optional[TensorLike] = None
+        self, implausability: TensorLike, parameters: Optional[TensorLike] = None
     ) -> TensorLike:
         """
-        Get indices of NROY points from implausability scores. If `samples`
-        is provided, returns samples at NROY indices
+        Get indices of NROY points from implausability scores. If `parameters`
+        is provided, returns parameters at NROY indices
 
         Parameters
         ----------
         implausability: TensorLike
             Tensor of implausability scores for tested parameters.
-        samples: Tensorlike | None
-            Optional tensor of parameter samples.
+        parameters: Tensorlike | None
+            Optional tensor of parameters.
 
         Returns
         -------
         TensorLike
-            Indices of NROY points or `samples` at NROY indices.
+            Indices of NROY points or `parameters` at NROY indices.
         """
         nroy_mask = self._create_nroy_mask(implausability)
         idx = torch.where(nroy_mask)[0]
-        if samples is None:
+        if parameters is None:
             return idx
-        return samples[idx]
+        return parameters[idx]
 
     def get_ro(
-        self, implausability: TensorLike, samples: Optional[TensorLike] = None
+        self, implausability: TensorLike, parameters: Optional[TensorLike] = None
     ) -> TensorLike:
         """
-        Get indices of RO points from implausability scores. If `samples`
-        is provided, returns samples at RO indices
+        Get indices of RO points from implausability scores. If `parameters`
+        is provided, returns parameters at RO indices
 
         Parameters
         ----------
         implausability: TensorLike
             Tensor of implausability scores for tested parameters.
-        samples: Tensorlike | None
-            Optional tensor of parameter samples.
+        parameters: Tensorlike | None
+            Optional tensor of parameters.
 
         Returns
         -------
         TensorLike
-            Indices of RO points or `samples` at RO indices.
+            Indices of RO points or `parameters` at RO indices.
         """
         nroy_mask = self._create_nroy_mask(implausability)
         idx = torch.where(~nroy_mask)[0]
-        if samples is None:
+        if parameters is None:
             return idx
-        return samples[idx]
+        return parameters[idx]
 
     def calculate_implausibility(
         self,
@@ -225,27 +225,27 @@ class HistoryMatching(TorchDeviceMixin):
     def sample_nroy(
         self,
         n_samples: int,
-        nroy_samples: TensorLike,
+        nroy_parameters: TensorLike,
     ) -> TensorLike:
         """
-        Generate new parameter samples within NROY space.
+        Generate new samples within NROY parameter space.
 
         Parameters
         ----------
         n_samples: int
             Number of new samples to generate within the NROY bounds.
-        nroy_samples: TensorLike
-            Tensor of parameter samples in the NROY space [samples, parameters].
+        nroy_parameters: TensorLike
+            Tensor of parameters in the NROY space [m_samples, n_parameters].
 
         Returns
         -------
         TensorLike
-            Tensor of parameter samples [n_samples, n_parameters].
+            Tensor of parameters [n_samples, n_parameters].
         """
-        min_bounds, _ = torch.min(nroy_samples, dim=0)
-        max_bounds, _ = torch.max(nroy_samples, dim=0)
+        min_bounds, _ = torch.min(nroy_parameters, dim=0)
+        max_bounds, _ = torch.max(nroy_parameters, dim=0)
         return (
-            torch.rand((n_samples, nroy_samples.shape[1]), device=self.device)
+            torch.rand((n_samples, nroy_parameters.shape[1]), device=self.device)
             * (max_bounds - min_bounds)
             + min_bounds
         )
@@ -273,9 +273,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
     ):
         """
         Initialize the history matching workflow object.
-
-        TODO:
-        - add random seed (once #465 is complete)
 
         Parameters
         ----------
@@ -331,7 +328,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
         # To begin with entire parameter space is NROY so don't have samples yet
-        nroy_samples = None
+        nroy_parameters = None
 
         with tqdm(
             total=n_waves,
@@ -340,13 +337,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
             disable=self.device.type != "cpu",
         ) as pbar:
             for _ in range(n_waves):
-                if nroy_samples is None or nroy_samples.size(0) == 0:
-                    samples = self.simulator.sample_inputs(n_samples_per_wave)
+                if nroy_parameters is None or nroy_parameters.size(0) == 0:
+                    parameter_samples = self.simulator.sample_inputs(n_samples_per_wave)
                 else:
-                    samples = self.sample_nroy(n_samples_per_wave, nroy_samples)
+                    parameter_samples = self.sample_nroy(
+                        n_samples_per_wave, nroy_parameters
+                    )
 
-                # Filter out RO samples using an emulator
-                output = self.emulator.predict(samples)
+                # Filter out RO parameters from samples using an emulator
+                output = self.emulator.predict(parameter_samples)
                 assert isinstance(output, GaussianLike)
                 assert output.variance.ndim == 2
                 pred_means, pred_vars = (
@@ -354,22 +353,24 @@ class HistoryMatchingWorkflow(HistoryMatching):
                     output.variance.float().detach(),
                 )
                 impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                samples = self.get_nroy(impl_scores, samples)
+                parameter_samples = self.get_nroy(impl_scores, parameter_samples)
 
                 # Simulate predictions
-                results = self.simulator.forward_batch(samples)
+                results = self.simulator.forward_batch(parameter_samples)
                 valid_indices = [i for i, res in enumerate(results) if res is not None]
-                successful_samples = samples[valid_indices]
+                successful_parameter_samples = parameter_samples[valid_indices]
                 pred_means = results[valid_indices]
                 pred_vars = None
 
                 # Calculate implausibility and identify NROY points
                 impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                nroy_samples = self.get_nroy(impl_scores, successful_samples)
+                nroy_parameters = self.get_nroy(
+                    impl_scores, successful_parameter_samples
+                )
 
                 # Store results
                 self.tested_params = torch.cat(
-                    [self.tested_params, successful_samples], dim=0
+                    [self.tested_params, successful_parameter_samples], dim=0
                 )
                 self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
@@ -379,12 +380,19 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
                 # Update progress bar
                 self._update_progress_bar(
-                    pbar, impl_scores, samples.size(0), nroy_samples.size(0)
+                    pbar,
+                    impl_scores,
+                    parameter_samples.size(0),
+                    nroy_parameters.size(0),
                 )
                 pbar.update(1)
 
     def _update_progress_bar(
-        self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
+        self,
+        pbar: tqdm,
+        impl_scores: TensorLike,
+        n_samples: int,
+        n_nroy_parameters: int,
     ):
         """
         Updates the progress bar.
@@ -394,11 +402,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         pbar: tqdm
             The progress bar.
         impl_scores: TensorLike
-            Tensor of implausibility scores for succesful parameter samples.
+            Tensor of implausibility scores for succesful parameters.
         n_samples: int
             Total number of tested parameter samples.
-        n_nroy_samples: int
-            Number of parameter samples in the NROY space.
+        n_nroy_parameters: int
+            Number of parameters in the NROY space.
         """
         failed_count = n_samples - impl_scores.size(0)
         min_impl = torch.min(impl_scores) if impl_scores.size(0) > 0 else "NaN"
@@ -407,7 +415,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             {
                 "samples": n_samples,
                 "failed": failed_count,
-                "NROY": n_nroy_samples,
+                "NROY": n_nroy_parameters,
                 "min_impl": f"{min_impl:.2f}",
                 "max_impl": f"{max_impl:.2f}",
             }
