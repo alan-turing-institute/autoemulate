@@ -15,9 +15,13 @@ class Projectile(Simulator):
 
     def __init__(
         self,
-        param_ranges={"c": (-5.0, 1.0), "v0": (0.0, 1000)},
-        output_names=["distance"],
+        param_ranges=None,
+        output_names=None,
     ):
+        if param_ranges is None:
+            param_ranges = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
+        if output_names is None:
+            output_names = ["distance"]
         super().__init__(param_ranges, output_names)
 
     def _forward(self, x: TensorLike) -> TensorLike:
@@ -45,9 +49,13 @@ class ProjectileMultioutput(Simulator):
 
     def __init__(
         self,
-        param_ranges={"c": (-5.0, 1.0), "v0": (0.0, 1000)},
-        output_names=["distance", "impact_v"],
+        param_ranges=None,
+        output_names=None,
     ):
+        if param_ranges is None:
+            param_ranges = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
+        if output_names is None:
+            output_names = ["distance", "impact_velocity"]
         super().__init__(param_ranges, output_names)
 
     def _forward(self, x: TensorLike) -> TensorLike:
@@ -65,4 +73,4 @@ class ProjectileMultioutput(Simulator):
             Distance travelled by projectile and impact velocity.
         """
         y = simulate_projectile_multioutput(x.numpy()[0])
-        return torch.tensor([y]).view(-1, 1)
+        return torch.tensor([y])
