@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for autoemulate/history_matching_dashboard.py: 0%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
-    <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
+    <link rel="stylesheet" href="style_cb_81f8c14c.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_1723575ec71c99c4_hyperparam_searching_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.2">coverage.py v7.8.2</a>,
-            created at 2025-06-13 13:52 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
+            created at 2025-06-16 09:52 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -1025,11 +1025,11 @@
     <p class="pln"><span class="n"><a id="t943" href="#t943">943</a></span><span class="t">            <span class="com"># Format the parameter name nicely for display</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t944" href="#t944">944</a></span><span class="t">            <span class="key">if</span> <span class="str">"log"</span> <span class="key">in</span> <span class="nam">param</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t945" href="#t945">945</a></span><span class="t">                <span class="nam">base_name</span> <span class="op">=</span> <span class="nam">param</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">"log_"</span><span class="op">,</span> <span class="str">""</span><span class="op">)</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">"log"</span><span class="op">,</span> <span class="str">""</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t946" href="#t946">946</a></span><span class="t">                <span class="key">return</span> <span class="fst">f"</span><span class="fst">$\mu_{</span> <span class="op">{</span><span class="nam">base_name</span><span class="op">}</span><span class="fst">}</span> <span class="fst">$</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t946" href="#t946">946</a></span><span class="t">                <span class="key">return</span> <span class="fst">f"</span><span class="fst">$\mu_{{</span><span class="op">{</span><span class="nam">base_name</span><span class="op">}</span><span class="fst">}}</span><span class="fst">$</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t947" href="#t947">947</a></span><span class="t">            <span class="key">elif</span> <span class="str">"_"</span> <span class="key">in</span> <span class="nam">param</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t948" href="#t948">948</a></span><span class="t">                <span class="nam">parts</span> <span class="op">=</span> <span class="nam">param</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">"_"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t949" href="#t949">949</a></span><span class="t">                <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">parts</span><span class="op">)</span> <span class="op">==</span> <span class="num">2</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t950" href="#t950">950</a></span><span class="t">                    <span class="key">return</span> <span class="fst">f"</span><span class="fst">$log_{</span> <span class="fst">10}</span> <span class="fst">(</span><span class="op">{</span><span class="nam">parts</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">}</span><span class="fst">_{</span> <span class="fst">v}</span> <span class="fst">/</span><span class="op">{</span><span class="nam">parts</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">}</span><span class="fst">_{</span> <span class="fst">h}</span> <span class="fst">)$</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t950" href="#t950">950</a></span><span class="t">                    <span class="key">return</span> <span class="fst">f"</span><span class="fst">$log_{{</span><span class="fst">10}}</span><span class="fst">(</span><span class="op">{</span><span class="nam">parts</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">}</span><span class="fst">_{{</span><span class="fst">v}}</span><span class="fst">/</span><span class="op">{</span><span class="nam">parts</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">}</span><span class="fst">_{{</span><span class="fst">h}}</span><span class="fst">)$</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t951" href="#t951">951</a></span><span class="t">                <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t952" href="#t952">952</a></span><span class="t">                    <span class="key">return</span> <span class="nam">param</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t953" href="#t953">953</a></span><span class="t">            <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -1304,8 +1304,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_1723575ec71c99c4_hyperparam_searching_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.8.2">coverage.py v7.8.2</a>,
-            created at 2025-06-13 13:52 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
+            created at 2025-06-16 09:52 +0000
         </p>
     </div>
 </footer>
