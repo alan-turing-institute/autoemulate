@@ -1,7 +1,6 @@
 from typing import Optional, Union
 
 import torch
-from tqdm import tqdm
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import GaussianProcessExact
@@ -308,115 +307,53 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # these get populated when run() is called
         self.tested_params = torch.empty((0, len(observations)), device=self.device)
         self.impl_scores = torch.empty((0, len(observations)), device=self.device)
+        self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-    def run(
-        self,
-        n_waves: int = 1,
-        n_samples_per_wave: int = 100,
-    ):
+    def run(self, n_samples: int = 100):
         """
         Run the iterative history matching workflow.
 
         Parameters
         ----------
-        n_waves: int
-            Number of iterations of history matching to run.
-        n_samples_per_wave: int
-            Number of parameter samples to make predictions for in each wave.
+        n_samples: int
+            Number of parameter samples to make predictions.
         """
-        # Keep track of predictions in case refitting emulator
-        ys = torch.empty((0, self.simulator.out_dim), device=self.device)
-
         # To begin with entire parameter space is NROY so don't have samples yet
         nroy_parameters = None
 
-        with tqdm(
-            total=n_waves,
-            desc="History Matching",
-            unit="wave",
-            disable=self.device.type != "cpu",
-        ) as pbar:
-            for _ in range(n_waves):
-                if nroy_parameters is None or nroy_parameters.size(0) == 0:
-                    parameter_samples = self.simulator.sample_inputs(n_samples_per_wave)
-                else:
-                    parameter_samples = self.sample_nroy(
-                        n_samples_per_wave, nroy_parameters
-                    )
+        if nroy_parameters is None or nroy_parameters.size(0) == 0:
+            parameter_samples = self.simulator.sample_inputs(n_samples)
+        else:
+            parameter_samples = self.sample_nroy(n_samples, nroy_parameters)
 
-                # Filter out RO parameters from samples using an emulator
-                output = self.emulator.predict(parameter_samples)
-                assert isinstance(output, GaussianLike)
-                assert output.variance.ndim == 2
-                pred_means, pred_vars = (
-                    output.mean.float().detach(),
-                    output.variance.float().detach(),
-                )
-                impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                parameter_samples = self.get_nroy(impl_scores, parameter_samples)
-
-                # Simulate predictions
-                results = self.simulator.forward_batch(parameter_samples)
-                valid_indices = [i for i, res in enumerate(results) if res is not None]
-                successful_parameter_samples = parameter_samples[valid_indices]
-                pred_means = results[valid_indices]
-                pred_vars = None
-
-                # Calculate implausibility and identify NROY points
-                impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                nroy_parameters = self.get_nroy(
-                    impl_scores, successful_parameter_samples
-                )
-
-                # Store results
-                self.tested_params = torch.cat(
-                    [self.tested_params, successful_parameter_samples], dim=0
-                )
-                self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
-
-                # Refit emulator
-                ys = torch.cat([ys, pred_means], dim=0)
-                self.emulator.fit(self.tested_params, ys)
-
-                # Update progress bar
-                self._update_progress_bar(
-                    pbar,
-                    impl_scores,
-                    parameter_samples.size(0),
-                    nroy_parameters.size(0),
-                )
-                pbar.update(1)
-
-    def _update_progress_bar(
-        self,
-        pbar: tqdm,
-        impl_scores: TensorLike,
-        n_samples: int,
-        n_nroy_parameters: int,
-    ):
-        """
-        Updates the progress bar.
-
-        Parameters
-        ----------
-        pbar: tqdm
-            The progress bar.
-        impl_scores: TensorLike
-            Tensor of implausibility scores for succesful parameters.
-        n_samples: int
-            Total number of tested parameter samples.
-        n_nroy_parameters: int
-            Number of parameters in the NROY space.
-        """
-        failed_count = n_samples - impl_scores.size(0)
-        min_impl = torch.min(impl_scores) if impl_scores.size(0) > 0 else "NaN"
-        max_impl = torch.max(impl_scores) if impl_scores.size(0) > 0 else "NaN"
-        pbar.set_postfix(
-            {
-                "samples": n_samples,
-                "failed": failed_count,
-                "NROY": n_nroy_parameters,
-                "min_impl": f"{min_impl:.2f}",
-                "max_impl": f"{max_impl:.2f}",
-            }
+        # Filter out RO parameters from samples using an emulator
+        output = self.emulator.predict(parameter_samples)
+        assert isinstance(output, GaussianLike)
+        assert output.variance.ndim == 2
+        pred_means, pred_vars = (
+            output.mean.float().detach(),
+            output.variance.float().detach(),
         )
+        impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+        parameter_samples = self.get_nroy(impl_scores, parameter_samples)
+
+        # Simulate predictions
+        results = self.simulator.forward_batch(parameter_samples)
+        valid_indices = [i for i, res in enumerate(results) if res is not None]
+        successful_parameter_samples = parameter_samples[valid_indices]
+        pred_means = results[valid_indices]
+        pred_vars = None
+
+        # Calculate implausibility and identify NROY points
+        impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+        nroy_parameters = self.get_nroy(impl_scores, successful_parameter_samples)
+
+        # Store results
+        self.tested_params = torch.cat(
+            [self.tested_params, successful_parameter_samples], dim=0
+        )
+        self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
+
+        # Refit emulator
+        self.ys = torch.cat([self.ys, pred_means], dim=0)
+        self.emulator.fit(self.tested_params, self.ys)

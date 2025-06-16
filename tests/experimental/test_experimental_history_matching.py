@@ -120,9 +120,6 @@ def test_run(observations, mock_simulator):
     x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])
     y = mock_simulator.forward_batch(x)
 
-    n_waves = 2
-    n_samples_per_wave = 5
-
     # Run history matching
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
@@ -136,16 +133,20 @@ def test_run(observations, mock_simulator):
         rank=1,
     )
 
-    hm.run(
-        n_waves=n_waves,
-        n_samples_per_wave=n_samples_per_wave,
-    )
+    # call run first time
+    hm.run(n_samples=5)
 
     # Check basic structure of results
     assert isinstance(hm.tested_params, TensorLike)
     assert isinstance(hm.impl_scores, TensorLike)
     assert hm.emulator is not None
 
+    assert len(hm.tested_params) == 5
+    assert len(hm.impl_scores) == 5
+
+    # can run again
+    hm.run(n_samples=5)
+
     # We should get results for all valid samples
-    assert len(hm.tested_params) == n_waves * n_samples_per_wave
-    assert len(hm.impl_scores) == n_waves * n_samples_per_wave
+    assert len(hm.tested_params) == 5 * 2
+    assert len(hm.impl_scores) == 5 * 2
