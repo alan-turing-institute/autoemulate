@@ -73,10 +73,6 @@ class HistoryMatching(TorchDeviceMixin):
         # Save mean and variance of observations, shape: [1, n_outputs]
         self.obs_means, self.obs_vars = self._process_observations(observations)
 
-        # These get populated in self.run()
-        self.tested_params = torch.empty((0, len(observations)), device=self.device)
-        self.impl_scores = torch.empty((0, len(observations)), device=self.device)
-
     def _process_observations(
         self,
         observations: Union[dict[str, tuple[float, float]], dict[str, float]],
@@ -254,6 +250,56 @@ class HistoryMatching(TorchDeviceMixin):
             + min_bounds
         )
 
+
+class HistoryMatchingWorkflow(HistoryMatching):
+    """
+    Run iterative history matching workflow:
+    - sample parameter values to test from the NROY space
+        - at the start, NROY is the entire parameter space
+        - use emulator to filter out implausible samples
+    - make predictions for the sampled parameters using the simulator
+    - refit the emulator using the simulated data
+    """
+
+    def __init__(
+        self,
+        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+        threshold: float = 3.0,
+        model_discrepancy: float = 0.0,
+        rank: int = 1,
+        device: DeviceLike | None = None,
+    ):
+        """
+        Initialize the history matching workflow object.
+
+        TODO:
+        - add random seed (once #465 is complete)
+
+        Parameters
+        ----------
+        observations: dict[str, tuple[float, float] | dict[str, float]
+            TODO: should this just be a 1D or 2D tensor of values
+            For each output variable, specifies observed [value, noise]. In case
+            of no uncertainty in observations, provides just the observed value.
+        threshold: float
+            Implausibility threshold (query points with implausability scores that
+            exceed this value are ruled out). Defaults to 3, which is considered
+            a good value for simulations with a single output.
+        model_discrepancy: float
+            Additional variance to include in the implausability calculation.
+        rank: int
+            Scoring method for multi-output problems. Must be a non-negative
+            integer less than the number of outputs. When the implausability
+            scores are ordered across outputs, it indicates which rank to use
+            when determining whether the query point is NROY. The default value
+            of ``1`` indicates that the largest implausibility will be used.
+        device: DeviceLike | None
+            The device to use. If None, the default torch device is returned.
+        """
+        super().__init__(observations, threshold, model_discrepancy, rank, device)
+        self.tested_params = torch.empty((0, len(observations)), device=self.device)
+        self.impl_scores = torch.empty((0, len(observations)), device=self.device)
+
     def run(
         self,
         simulator: Simulator,
@@ -262,12 +308,7 @@ class HistoryMatching(TorchDeviceMixin):
         n_samples_per_wave: int = 100,
     ) -> GaussianProcessExact:
         """
-        Run iterative history matching. In each wave:
-            - sample parameter values to test from the NROY space
-                - at the start, NROY is the entire parameter space
-                - use emulator to filter out implausible samples
-            - make predictions for the sampled parameters using the simulator
-            - refit the emulator using the simulated data
+        Run the iterative history matching workflow.
 
         Parameters
         ----------

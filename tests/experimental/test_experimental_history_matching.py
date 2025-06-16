@@ -5,7 +5,10 @@ import torch
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
-from autoemulate.experimental.history_matching import HistoryMatching
+from autoemulate.experimental.history_matching import (
+    HistoryMatching,
+    HistoryMatchingWorkflow,
+)
 from autoemulate.experimental.types import TensorLike
 
 from .test_experimental_base_simulator import MockSimulator
@@ -28,7 +31,7 @@ def observations():
 
 @pytest.fixture
 def history_matcher(observations):
-    """Fixture for a basic HistoryMatching instance using the mock simulator"""
+    """Fixture for a basic HistoryMatching instance."""
     return HistoryMatching(
         observations=observations,
         threshold=3.0,
@@ -47,7 +50,7 @@ def test_history_matcher_init(history_matcher):
 
 
 def test_calculate_implausibility(history_matcher, observations):
-    """Test implausibility calculation with mock simulator outputs"""
+    """Test implausibility calculation."""
 
     # have 1 sample of 2 outputs arranged as [n_samples, n_outputs]
     pred_means = torch.Tensor([[0.4, 0.7]])
@@ -70,6 +73,7 @@ def test_calculate_implausibility(history_matcher, observations):
 
 
 def test_get_indices(history_matcher):
+    """Test NROY and RO indices vary with rank."""
     impl_scores = torch.tensor([[1, 5], [1, 2], [4, 2]])
 
     # rank = 1
@@ -89,8 +93,8 @@ def test_get_indices(history_matcher):
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
-def test_run(history_matcher, mock_simulator):
-    """Test the full history matching process with a mock simulator"""
+def test_run(observations, mock_simulator):
+    """Test the full history matching workflow with a mock simulator"""
     x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])
     y = mock_simulator.forward_batch(x)
 
@@ -100,14 +104,22 @@ def test_run(history_matcher, mock_simulator):
     # Run history matching
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
-    updated_emulator = history_matcher.run(
+
+    hm = HistoryMatchingWorkflow(
+        observations=observations,
+        threshold=3.0,
+        model_discrepancy=0.1,
+        rank=1,
+    )
+
+    updated_emulator = hm.run(
         n_waves=n_waves,
         n_samples_per_wave=n_samples_per_wave,
         simulator=mock_simulator,
         emulator=gp,
     )
-    all_samples = history_matcher.tested_params
-    all_impl_scores = history_matcher.impl_scores
+    all_samples = hm.tested_params
+    all_impl_scores = hm.impl_scores
 
     # Check basic structure of results
     assert isinstance(all_samples, TensorLike)
