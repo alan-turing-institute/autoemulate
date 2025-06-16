@@ -8,14 +8,11 @@ from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
 
 
-class SimulatorMetadata:
+class Simulator(ABC, ValidationMixin):
     """
-    Simulation metadata.
-
-    NOTE: the output metadata is going to get more complex. e.g.:
-    - indicate if output is temporal
-    - indicate if output is spatial
-    - ...
+    Base class for simulations. All simulators should inherit from this class.
+    This class provides the interface and common functionality for different
+    simulation implementations.
     """
 
     def __init__(
@@ -35,6 +32,7 @@ class SimulatorMetadata:
         self._output_names = output_names
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
+        self._has_sample_forward = False
 
     @property
     def parameters_range(self) -> dict[str, tuple[float, float]]:
@@ -88,33 +86,6 @@ class SimulatorMetadata:
         # float32 and this caused issues
         return torch.tensor(sample_array, dtype=torch.float32)
 
-
-class Simulator(ABC, SimulatorMetadata, ValidationMixin):
-    """
-    Base class for simulations. All simulators should inherit from this class.
-    This class provides the interface and common functionality for different
-    simulation implementations.
-    """
-
-    def __init__(
-        self,
-        parameters_range: dict[str, tuple[float, float]],
-        output_names: list[str],
-    ):
-        """
-        Initialize the base simulator with parameter ranges and output names
-        as well as optional output variables.
-
-        Parameters
-        ----------
-        parameters_range : dict[str, tuple[float, float]]
-            Dictionary mapping input parameter names to their (min, max) ranges.
-        output_names: list[str]
-            List of output parameters' names.
-        """
-        SimulatorMetadata.__init__(self, parameters_range, output_names)
-        self._has_sample_forward = False
-
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -140,7 +111,7 @@ class Simulator(ABC, SimulatorMetadata, ValidationMixin):
 
         Parameters
         ----------
-        x : TensorLike | dict
+        x : TensorLike
             Input tensor of shape (n_samples, self.in_dim).
 
         Returns
