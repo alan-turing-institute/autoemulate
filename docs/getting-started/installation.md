@@ -59,7 +59,11 @@ Then activate the virtual environment using the command displayed by the previou
 
 You can run the Quickstart demo and other interactive tutorials fron the documentation locally.
 The examples are all Jupyter notebooks and can be run in your favoured method, such as JupyterLab, Jupyter Notebook, or VS Code.
+
+<details>
+<summary>
 These steps will guide you in the simplest way to set up a virtual environment, install the package from PyPI and run the notebooks with JupyterLab.
+</summary>
 
 1. Clone the AutoEmulate repository:
 
@@ -113,3 +117,5 @@ These steps will guide you in the simplest way to set up a virtual environment, 
 9. Open the `docs/getting-started/quickstart.ipynb` notebook in JupyterLab.
 10. Set the kernel to use the `Python (autoemulate)` kernel you created earlier. You can do this by clicking on the kernel name in the top right corner of the JupyterLab interface and selecting `Python (autoemulate)` from the dropdown menu.
 11. Find other interactive tutorials in the `docs/tutorials` directory, which you can open and run in JupyterLab.
+
+</details>
