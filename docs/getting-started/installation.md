@@ -52,7 +52,7 @@ poetry env activate
 Then activate the virtual environment using the command displayed by the previous command. This will be something like:
 
 ```bash
-    source /Users/yourName/Library/Caches/pypoetry/virtualenvs/autoemulate-l4vGdsmY-py3.11/bin/activate
+source /Users/yourName/Library/Caches/pypoetry/virtualenvs/autoemulate-l4vGdsmY-py3.11/bin/activate
 ```
 
 ## Interactive tutorials
