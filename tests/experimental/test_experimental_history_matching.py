@@ -128,26 +128,24 @@ def test_run(observations, mock_simulator):
     gp.fit(x, y)
 
     hm = HistoryMatchingWorkflow(
+        simulator=mock_simulator,
+        emulator=gp,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
         rank=1,
     )
 
-    updated_emulator = hm.run(
+    hm.run(
         n_waves=n_waves,
         n_samples_per_wave=n_samples_per_wave,
-        simulator=mock_simulator,
-        emulator=gp,
     )
-    all_samples = hm.tested_params
-    all_impl_scores = hm.impl_scores
 
     # Check basic structure of results
-    assert isinstance(all_samples, TensorLike)
-    assert isinstance(all_impl_scores, TensorLike)
-    assert updated_emulator is not None
+    assert isinstance(hm.tested_params, TensorLike)
+    assert isinstance(hm.impl_scores, TensorLike)
+    assert hm.emulator is not None
 
     # We should get results for all valid samples
-    assert len(all_samples) == n_waves * n_samples_per_wave
-    assert len(all_impl_scores) == n_waves * n_samples_per_wave
+    assert len(hm.tested_params) == n_waves * n_samples_per_wave
+    assert len(hm.impl_scores) == n_waves * n_samples_per_wave

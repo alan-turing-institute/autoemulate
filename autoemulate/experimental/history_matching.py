@@ -261,8 +261,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
     - refit the emulator using the simulated data
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
+        simulator: Simulator,
+        emulator: GaussianProcessExact,
         observations: Union[dict[str, tuple[float, float]], dict[str, float]],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -277,6 +279,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         Parameters
         ----------
+        simulator: Simulator
+            A simulator.
+        emulator: GaussianProcessExact
+            NOTE: this can be other GP emulators when implemented.
+            A Gaussian Process emulator pre-trained on `simulator` data.
         observations: dict[str, tuple[float, float] | dict[str, float]
             TODO: should this just be a 1D or 2D tensor of values
             For each output variable, specifies observed [value, noise]. In case
@@ -297,41 +304,31 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The device to use. If None, the default torch device is returned.
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
+        self.simulator = simulator
+        self.emulator = emulator
+        self.emulator.device = self.device
+
+        # these get populated when run() is called
         self.tested_params = torch.empty((0, len(observations)), device=self.device)
         self.impl_scores = torch.empty((0, len(observations)), device=self.device)
 
     def run(
         self,
-        simulator: Simulator,
-        emulator: GaussianProcessExact,
         n_waves: int = 1,
         n_samples_per_wave: int = 100,
-    ) -> GaussianProcessExact:
+    ):
         """
         Run the iterative history matching workflow.
 
         Parameters
         ----------
-        simulator: Simulator
-            A simulator.
-        emulator: GaussianProcessExact
-            NOTE: this can be other GP emulators when implemented.
-            A Gaussian Process emulator pre-trained on `simulator` data.
         n_waves: int
             Number of iterations of history matching to run.
         n_samples_per_wave: int
             Number of parameter samples to make predictions for in each wave.
-
-        Returns
-        -------
-        GaussianProcessExact
-            The refitted GP emulator.
         """
-        if emulator is not None:
-            emulator.device = self.device
-
         # Keep track of predictions in case refitting emulator
-        ys = torch.empty((0, simulator.out_dim), device=self.device)
+        ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
         # To begin with entire parameter space is NROY so don't have samples yet
         nroy_samples = None
@@ -344,24 +341,23 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ) as pbar:
             for _ in range(n_waves):
                 if nroy_samples is None or nroy_samples.size(0) == 0:
-                    samples = simulator.sample_inputs(n_samples_per_wave)
+                    samples = self.simulator.sample_inputs(n_samples_per_wave)
                 else:
                     samples = self.sample_nroy(n_samples_per_wave, nroy_samples)
 
-                # Filter out RO samples (if have an emulator)
-                if emulator is not None:
-                    output = emulator.predict(samples)
-                    assert isinstance(output, GaussianLike)
-                    assert output.variance.ndim == 2
-                    pred_means, pred_vars = (
-                        output.mean.float().detach(),
-                        output.variance.float().detach(),
-                    )
-                    impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-                    samples = self.get_nroy(impl_scores, samples)
+                # Filter out RO samples using an emulator
+                output = self.emulator.predict(samples)
+                assert isinstance(output, GaussianLike)
+                assert output.variance.ndim == 2
+                pred_means, pred_vars = (
+                    output.mean.float().detach(),
+                    output.variance.float().detach(),
+                )
+                impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+                samples = self.get_nroy(impl_scores, samples)
 
                 # Simulate predictions
-                results = simulator.forward_batch(samples)
+                results = self.simulator.forward_batch(samples)
                 valid_indices = [i for i, res in enumerate(results) if res is not None]
                 successful_samples = samples[valid_indices]
                 pred_means = results[valid_indices]
@@ -378,17 +374,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
                 # Refit emulator
-                if emulator is not None:
-                    ys = torch.cat([ys, pred_means], dim=0)
-                    emulator.fit(self.tested_params, ys)
+                ys = torch.cat([ys, pred_means], dim=0)
+                self.emulator.fit(self.tested_params, ys)
 
                 # Update progress bar
                 self._update_progress_bar(
                     pbar, impl_scores, samples.size(0), nroy_samples.size(0)
                 )
                 pbar.update(1)
-
-        return emulator
 
     def _update_progress_bar(
         self, pbar: tqdm, impl_scores: TensorLike, n_samples: int, n_nroy_samples: int
