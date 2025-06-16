@@ -105,11 +105,18 @@ These steps will guide you in the simplest way to set up a virtual environment, 
    ```bash
    pip install jupyterlab
    ```
-7. Launch JupyterLab:
+7. Create a Jupyter kernel for the virtual environment:
+
+   ```bash
+   python -m ipykernel install --user --name autoemulate --display-name "Python (autoemulate)"
+   ```
+
+   This command registers the virtual environment as a Jupyter kernel named `Python (autoemulate)`, which you can select in JupyterLab.
+8. Launch JupyterLab:
 
    ```bash
    jupyter lab
    ```
-8. Open the `docs/getting-started/quickstart.ipynb` notebook in JupyterLab.
-9. Set the kernel to use the `autoemulate` virtual environment you created (it should be automatically detected).
-10. Find other interactive tutorials in the `docs/tutorials` directory, which you can open and run in JupyterLab.
+9. Open the `docs/getting-started/quickstart.ipynb` notebook in JupyterLab.
+10. Set the kernel to use the `Python (autoemulate)` kernel you created earlier. You can do this by clicking on the kernel name in the top right corner of the JupyterLab interface and selecting `Python (autoemulate)` from the dropdown menu.
+11. Find other interactive tutorials in the `docs/tutorials` directory, which you can open and run in JupyterLab.
