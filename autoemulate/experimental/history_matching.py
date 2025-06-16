@@ -319,7 +319,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_samples: int
-            Number of parameter samples to make predictions.
+            Number of parameter samples to make predictions for.
         """
 
         if self.nroy_parameters is None or self.nroy_parameters.size(0) == 0:
@@ -348,6 +348,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Calculate implausibility and identify NROY points
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
         # TODO: is this the correct behaviour?
+        # - we want to store the last nroy_samples for next time run() is called!
+        # - should we be concatenating rather than overwriting?
         self.nroy_parameters = self.get_nroy(impl_scores, successful_parameter_samples)
 
         # Store results
