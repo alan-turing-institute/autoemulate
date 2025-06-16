@@ -173,6 +173,7 @@ def test_handle_simulation_failure():
                 return super()._forward(x)
             # For other cases, let's return a tensor of zeros instead of None
             # since the type system doesn't allow None returns
+            # TODO (#438): update to handle failed simulations
             return torch.zeros((x.shape[0], len(self._output_names)))
 
     # Create simulator with float parameters
