@@ -13,8 +13,6 @@ from autoemulate.experimental.types import TensorLike
 
 from .test_experimental_base_simulator import MockSimulator
 
-# Import the classes to test
-
 
 @pytest.fixture
 def mock_simulator():
@@ -41,7 +39,7 @@ def history_matcher(observations):
 
 
 def test_history_matcher_init(history_matcher):
-    """Test initialization of HistoryMatching with mock simulator"""
+    """Test initialization of HistoryMatching."""
     assert history_matcher.threshold == 3.0
     assert history_matcher.discrepancy == 0.1
     assert history_matcher.rank == 1
@@ -92,6 +90,30 @@ def test_get_indices(history_matcher):
     assert len(history_matcher.get_ro(impl_scores)) == 0
 
 
+def test_sample_nroy(history_matcher):
+    """Test generating new samples within NROY space using mock simulator"""
+
+    X_nroy = torch.tensor([[0.1, 0.2], [0.3, -0.4], [0.2, 0.1]])
+
+    n_samples = 5
+    new_samples = history_matcher.sample_nroy(n_samples, X_nroy)
+
+    # Check the number of samples
+    assert new_samples.shape[0] == n_samples
+    assert new_samples.shape[1] == history_matcher.out_dim
+
+    # Check that values are within the bounds of NROY samples
+    assert (
+        (torch.min(X_nroy[:, 0]) <= new_samples[:, 0])
+        & (new_samples[:, 0] <= torch.max(X_nroy[:, 0]))
+    ).all()
+
+    assert (
+        (torch.min(X_nroy[:, 1]) <= new_samples[:, 1])
+        & (new_samples[:, 1] <= torch.max(X_nroy[:, 1]))
+    ).all()
+
+
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
 def test_run(observations, mock_simulator):
     """Test the full history matching workflow with a mock simulator"""
@@ -129,27 +151,3 @@ def test_run(observations, mock_simulator):
     # We should get results for all valid samples
     assert len(all_samples) == n_waves * n_samples_per_wave
     assert len(all_impl_scores) == n_waves * n_samples_per_wave
-
-
-def test_sample_nroy(history_matcher, mock_simulator):
-    """Test generating new samples within NROY space using mock simulator"""
-
-    X_nroy = torch.tensor([[0.1, 0.2], [0.3, -0.4], [0.2, 0.1]])
-
-    n_samples = 5
-    new_samples = history_matcher.sample_nroy(n_samples, X_nroy)
-
-    # Check the number of samples
-    assert new_samples.shape[0] == n_samples
-    assert new_samples.shape[1] == len(mock_simulator.param_names)
-
-    # Check that values are within the bounds of NROY samples
-    assert (
-        (torch.min(X_nroy[:, 0]) <= new_samples[:, 0])
-        & (new_samples[:, 0] <= torch.max(X_nroy[:, 0]))
-    ).all()
-
-    assert (
-        (torch.min(X_nroy[:, 1]) <= new_samples[:, 1])
-        & (new_samples[:, 1] <= torch.max(X_nroy[:, 1]))
-    ).all()
