@@ -111,7 +111,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        x : TensorLike | dict
+        x : TensorLike
             Input tensor of shape (n_samples, self.in_dim).
 
         Returns
