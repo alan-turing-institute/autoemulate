@@ -61,3 +61,54 @@ Then activate the virtual environment using the command displayed by the previou
 ```bash
     source /Users/yourName/Library/Caches/pypoetry/virtualenvs/autoemulate-l4vGdsmY-py3.11/bin/activate
 ```
+
+## Interactive tutorials
+
+You can run the Quickstart demo and other interactive tutorials fron the documentation locally.
+The examples are all Jupyter notebooks and can be run in your favoured method, such as JupyterLab, Jupyter Notebook, or VS Code.
+These steps will guide you in the simplest way to set up a virtual environment, install the package from PyPI and run the notebooks with JupyterLab.
+
+1. Clone the AutoEmulate repository:
+
+   ```bash
+   git clone https://github.com/alan-turing-institute/autoemulate
+   ```
+2. Navigate into the directory:
+
+   ```bash
+   cd autoemulate
+   ```
+3. Set up a virtual environment called `autoemulate`:
+
+   ```bash
+   python -m venv autoemulate
+   ```
+4. Activate the virtual environment:
+   - On Windows:
+
+     ```bash
+     autoemulate\Scripts\activate
+     ```
+
+   - On macOS/Linux:
+
+     ```bash
+     source autoemulate/bin/activate
+     ```
+5. Install the package from PyPI:
+
+   ```bash
+   pip install autoemulate
+   ```
+6. Install JupyterLab:
+
+   ```bash
+   pip install jupyterlab
+   ```
+7. Launch JupyterLab:
+
+   ```bash
+   jupyter lab
+   ```
+8. Open the `docs/getting-started/quickstart.ipynb` notebook in JupyterLab to start exploring `AutoEmulate`.
+9. Find other interactive tutorials in the `docs/tutorials` directory, which you can open and run in JupyterLab.
