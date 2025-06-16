@@ -260,7 +260,6 @@ class CNPModule(PyTorchBackend):
         offset_context_points: int = 2,
         n_episodes: int = 12,
         batch_size: int = 4,
-        random_seed: int | None = None,
         device: DeviceLike | None = None,
     ):
         """
@@ -293,8 +292,6 @@ class CNPModule(PyTorchBackend):
         device: DeviceLike | None
             Device to use for training. If None, use the default device.
         """
-        if random_seed is not None:
-            self.set_random_seed(random_seed, deterministic=True)
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
         x, y = self._move_tensors_to_device(x, y)

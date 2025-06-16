@@ -36,8 +36,8 @@ def test_tune_rf(sample_data_y1d):
 def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
-    model1 = RandomForest(x, y, random_seed=42)
-    model2 = RandomForest(x, y, random_seed=42)
+    model1 = RandomForest(x, y)
+    model2 = RandomForest(x, y)
     model1.fit(x, y)
     model2.fit(x, y)
     pred1 = model1.predict(x2)
