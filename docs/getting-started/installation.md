@@ -110,5 +110,6 @@ These steps will guide you in the simplest way to set up a virtual environment, 
    ```bash
    jupyter lab
    ```
-8. Open the `docs/getting-started/quickstart.ipynb` notebook in JupyterLab to start exploring `AutoEmulate`.
-9. Find other interactive tutorials in the `docs/tutorials` directory, which you can open and run in JupyterLab.
+8. Open the `docs/getting-started/quickstart.ipynb` notebook in JupyterLab.
+9. Set the kernel to use the `autoemulate` virtual environment you created (it should be automatically detected).
+10. Find other interactive tutorials in the `docs/tutorials` directory, which you can open and run in JupyterLab.
