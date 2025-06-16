@@ -309,6 +309,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.impl_scores = torch.empty((0, len(observations)), device=self.device)
         self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
+        # To begin with entire parameter space is NROY so don't have samples yet
+        self.nroy_parameters = None
+
     def run(self, n_samples: int = 100):
         """
         Run the iterative history matching workflow.
@@ -318,13 +321,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_samples: int
             Number of parameter samples to make predictions.
         """
-        # To begin with entire parameter space is NROY so don't have samples yet
-        nroy_parameters = None
 
-        if nroy_parameters is None or nroy_parameters.size(0) == 0:
+        if self.nroy_parameters is None or self.nroy_parameters.size(0) == 0:
             parameter_samples = self.simulator.sample_inputs(n_samples)
         else:
-            parameter_samples = self.sample_nroy(n_samples, nroy_parameters)
+            parameter_samples = self.sample_nroy(n_samples, self.nroy_parameters)
 
         # Filter out RO parameters from samples using an emulator
         output = self.emulator.predict(parameter_samples)
@@ -346,7 +347,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Calculate implausibility and identify NROY points
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-        nroy_parameters = self.get_nroy(impl_scores, successful_parameter_samples)
+        # TODO: is this the correct behaviour?
+        self.nroy_parameters = self.get_nroy(impl_scores, successful_parameter_samples)
 
         # Store results
         self.tested_params = torch.cat(
