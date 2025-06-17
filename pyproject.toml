@@ -68,6 +68,7 @@ include = ["autoemulate/experimental/*", "tests/experimental/*"]
 src = ["autoemulate/"]
 line-length = 88
 include = ["autoemulate/experimental/**/*.py", "tests/experimental/**/*.py"]
+target-version = "py310"
 
 [tool.ruff.format]
 docstring-code-format = true
