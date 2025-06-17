@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-
 from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.sensitivity_analysis import SensitivityAnalysis
 from autoemulate.experimental.simulations.projectile import (
@@ -66,13 +65,13 @@ def test_check_problem_invalid(model_1d):
         "num_vars": 2,
         "names": ["c", "v0"],
     }
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="problem must contain 'bounds'."):
         SensitivityAnalysis(model_1d, problem=problem)
 
 
 def test_check_problem_bounds(model_1d):
     problem = {"num_vars": 2, "names": ["c", "v0"], "bounds": [(-5.0, 1.0)]}
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Length of 'bounds' must match 'num_vars'."):
         SensitivityAnalysis(model_1d, problem=problem)
 
 
@@ -102,7 +101,7 @@ def test_get_output_names_invalid(model_2d):
         "output_names": "lol",
     }
     sa = SensitivityAnalysis(model_2d, problem=problem)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="'output_names' must be a list of strings."):
         sa._get_output_names(1)
 
 
