@@ -179,7 +179,7 @@ class HistoryMatching(TorchDeviceMixin):
     def calculate_implausibility(
         self,
         pred_means: TensorLike,  # [n_samples, n_outputs]
-        pred_vars: Optional[TensorLike] = None,  # [n_samples, n_outputs]
+        pred_vars: TensorLike,  # [n_samples, n_outputs]
     ) -> TensorLike:
         """
         Calculate implausibility scores.
@@ -188,10 +188,8 @@ class HistoryMatching(TorchDeviceMixin):
         ----------
         pred_means: TensorLike
             Tensor of prediction means [n_samples, n_outputs]
-        pred_vars: TensorLike | None
-            Tensor of prediction variances [n_samples, n_outputs]. If not
-            provided (e.g., when predictions are made by a deterministic
-            simulator), all variances are set to `default_var`.
+        pred_vars: TensorLike
+            Tensor of prediction variances [n_samples, n_outputs].
 
         Returns
         -------
