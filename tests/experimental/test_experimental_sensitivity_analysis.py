@@ -5,27 +5,26 @@ import torch
 
 from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.sensitivity_analysis import SensitivityAnalysis
-from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations.projectile import (
-    simulate_projectile,
-    simulate_projectile_multioutput,
+from autoemulate.experimental.simulations.projectile import (
+    Projectile,
+    ProjectileMultioutput,
 )
 
 
 @pytest.fixture
 def Xy_1d():
-    lhd = LatinHypercube([(-5.0, 1.0), (0.0, 1000.0)])
-    X = lhd.sample(100)
-    y = np.array([simulate_projectile(x) for x in X])
-    return torch.tensor(X), torch.tensor(y)
+    sim = Projectile()
+    x = sim.sample_inputs(100)
+    y = sim.forward_batch(x)
+    return x, y
 
 
 @pytest.fixture
 def Xy_2d():
-    lhd = LatinHypercube([(-5.0, 1.0), (0.0, 1000.0)])
-    X = lhd.sample(100)
-    y = np.array([simulate_projectile_multioutput(x) for x in X])
-    return torchX, y
+    sim = ProjectileMultioutput()
+    x = sim.sample_inputs(100)
+    y = sim.forward_batch(x)
+    return x, y
 
 
 @pytest.fixture
@@ -46,68 +45,65 @@ def model_2d(Xy_2d):
 
 @pytest.fixture
 def sa_1d(model_1d):
-    return SensitivityAnalysis(model_1d)
-
-
-# test problem checking ----------------------------------------------------------------
-def test_check_problem(sa_1d):
     problem = {
         "num_vars": 2,
         "names": ["c", "v0"],
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
     }
-    problem = sa_1d._check_problem(problem)
+    return SensitivityAnalysis(model_1d, problem=problem)
+
+
+# test problem checking ----------------------------------------------------------------
+def test_check_problem(sa_1d):
+    problem = sa_1d._check_problem(sa_1d.problem)
     assert problem["num_vars"] == 2
     assert problem["names"] == ["c", "v0"]
     assert problem["bounds"] == [(-5.0, 1.0), (0.0, 1000.0)]
 
 
-def test_check_problem_invalid(sa_1d):
+def test_check_problem_invalid(model_1d):
     problem = {
         "num_vars": 2,
         "names": ["c", "v0"],
     }
     with pytest.raises(ValueError):
-        sa_1d._check_problem(problem)
+        SensitivityAnalysis(model_1d, problem=problem)
 
 
-def test_check_problem_bounds(sa_1d):
+def test_check_problem_bounds(model_1d):
     problem = {"num_vars": 2, "names": ["c", "v0"], "bounds": [(-5.0, 1.0)]}
     with pytest.raises(ValueError):
-        sa_1d._check_problem(problem)
+        SensitivityAnalysis(model_1d, problem=problem)
 
 
 # test output name retrieval --------------------------------------------------
 def test_get_output_names_default(sa_1d):
-    problem = {
-        "num_vars": 2,
-        "names": ["c", "v0"],
-        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
-    }
-    output_names = sa_1d._get_output_names(problem, 1)
+    output_names = sa_1d._get_output_names(1)
     assert output_names == ["y1"]
 
 
-def test_get_output_names_custom(sa_1d):
+def test_get_output_names_custom(model_2d):
     problem = {
         "num_vars": 2,
         "names": ["c", "v0"],
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
         "output_names": ["lol1", "lol2"],
     }
-    output_names = sa_1d._get_output_names(problem, 2)
+    sa = SensitivityAnalysis(model_2d, problem=problem)
+    output_names = sa._get_output_names(2)
     assert output_names == ["lol1", "lol2"]
 
 
-def test_get_output_names_invalid(sa_1d):
+def test_get_output_names_invalid(model_2d):
     problem = {
         "num_vars": 2,
         "names": ["c", "v0"],
         "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
         "output_names": "lol",
     }
+    sa = SensitivityAnalysis(model_2d, problem=problem)
     with pytest.raises(ValueError):
-        sa_1d._get_output_names(problem, 1)
+        sa._get_output_names(1)
 
 
 # test Sobol analysis ------------------------------------------------------------
@@ -116,14 +112,8 @@ def test_get_output_names_invalid(sa_1d):
     "expected_names",
     [["c", "v0", "c", "v0", ["c", "v0"]]],
 )
-def test_sobol_results_to_df(model_1d, expected_names):
-    problem = {
-        "num_vars": 2,
-        "names": ["c", "v0"],
-        "bounds": [(-5.0, 1.0), (0.0, 1000.0)],
-    }
-    sa = SensitivityAnalysis(model_1d, problem=problem)
-    df = sa.run("sobol")
+def test_sobol_results_to_df(sa_1d, expected_names):
+    df = sa_1d.run("sobol")
 
     assert isinstance(df, pd.DataFrame)
     assert df.columns.tolist() == [
@@ -149,7 +139,9 @@ def test_sobol_analysis_2d(model_2d):
     df = sa.run("sobol")
 
     assert isinstance(df, pd.DataFrame)
-    assert ["y1", "y2"] == list(df["pamater"].unique())
+    assert df["output"].nunique() == 2
+    assert "y1" in list(df["output"].unique())
+    assert "y2" in list(df["output"].unique())
 
 
 # test _generate_problem -----------------------------------------------------

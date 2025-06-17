@@ -131,7 +131,8 @@ class SensitivityAnalysis(ConversionMixin):
         Make predictions with emulator for N input samples.
         """
 
-        param_tensor, _ = self._convert_to_tensors(param_samples)
+        param_tensor = self._convert_to_tensors(param_samples)
+        assert isinstance(param_tensor, TensorLike)
         y_pred = self.emulator.predict(param_tensor)
 
         # handle types, convert to numpy
