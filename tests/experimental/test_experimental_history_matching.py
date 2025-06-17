@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 import torch
+
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -88,30 +89,6 @@ def test_get_indices(history_matcher):
     history_matcher.rank = 2
     assert len(history_matcher.get_nroy(impl_scores)) == 3
     assert len(history_matcher.get_ro(impl_scores)) == 0
-
-
-def test_sample_nroy(history_matcher):
-    """Test generating new samples within NROY space using mock simulator"""
-
-    X_nroy = torch.tensor([[0.1, 0.2], [0.3, -0.4], [0.2, 0.1]])
-
-    n_samples = 5
-    new_samples = history_matcher.sample_nroy(n_samples, X_nroy)
-
-    # Check the number of samples
-    assert new_samples.shape[0] == n_samples
-    assert new_samples.shape[1] == history_matcher.out_dim
-
-    # Check that values are within the bounds of NROY samples
-    assert (
-        (torch.min(X_nroy[:, 0]) <= new_samples[:, 0])
-        & (new_samples[:, 0] <= torch.max(X_nroy[:, 0]))
-    ).all()
-
-    assert (
-        (torch.min(X_nroy[:, 1]) <= new_samples[:, 1])
-        & (new_samples[:, 1] <= torch.max(X_nroy[:, 1]))
-    ).all()
 
 
 @patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests

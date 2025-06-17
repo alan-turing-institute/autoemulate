@@ -38,7 +38,6 @@ class HistoryMatching(TorchDeviceMixin):
         Parameters
         ----------
         observations: dict[str, tuple[float, float] | dict[str, float]
-            TODO: should this just be a 1D or 2D tensor of values
             For each output variable, specifies observed [value, noise]. In case
             of no uncertainty in observations, provides just the observed value.
         threshold: float
@@ -135,7 +134,7 @@ class HistoryMatching(TorchDeviceMixin):
     ) -> TensorLike:
         """
         Get indices of NROY points from implausability scores. If `parameters`
-        is provided, returns parameters at NROY indices
+        is provided, returns parameter values at NROY indices.
 
         Parameters
         ----------
@@ -160,7 +159,7 @@ class HistoryMatching(TorchDeviceMixin):
     ) -> TensorLike:
         """
         Get indices of RO points from implausability scores. If `parameters`
-        is provided, returns parameters at RO indices
+        is provided, returns parameter values at RO indices.
 
         Parameters
         ----------
@@ -221,41 +220,13 @@ class HistoryMatching(TorchDeviceMixin):
         # Calculate implausibility
         return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
 
-    def sample_nroy(
-        self,
-        n_samples: int,
-        nroy_parameters: TensorLike,
-    ) -> TensorLike:
-        """
-        Generate new samples within NROY parameter space.
-
-        Parameters
-        ----------
-        n_samples: int
-            Number of new samples to generate within the NROY bounds.
-        nroy_parameters: TensorLike
-            Tensor of parameters in the NROY space [m_samples, n_parameters].
-
-        Returns
-        -------
-        TensorLike
-            Tensor of parameters [n_samples, n_parameters].
-        """
-        min_bounds, _ = torch.min(nroy_parameters, dim=0)
-        max_bounds, _ = torch.max(nroy_parameters, dim=0)
-        return (
-            torch.rand((n_samples, nroy_parameters.shape[1]), device=self.device)
-            * (max_bounds - min_bounds)
-            + min_bounds
-        )
-
 
 class HistoryMatchingWorkflow(HistoryMatching):
     """
-    Run iterative history matching workflow:
+    Run history matching workflow:
     - sample parameter values to test from the NROY space
         - at the start, NROY is the entire parameter space
-        - use emulator to filter out implausible samples
+    - use emulator to filter out implausible samples
     - make predictions for the sampled parameters using the simulator
     - refit the emulator using the simulated data
     """
@@ -281,7 +252,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
             NOTE: this can be other GP emulators when implemented.
             A Gaussian Process emulator pre-trained on `simulator` data.
         observations: dict[str, tuple[float, float] | dict[str, float]
-            TODO: should this just be a 1D or 2D tensor of values
             For each output variable, specifies observed [value, noise]. In case
             of no uncertainty in observations, provides just the observed value.
         threshold: float
@@ -304,13 +274,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = emulator
         self.emulator.device = self.device
 
-        # these get populated when run() is called
+        # These get populated when run() is called
         self.tested_params = torch.empty((0, len(observations)), device=self.device)
         self.impl_scores = torch.empty((0, len(observations)), device=self.device)
         self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
-
-        # To begin with entire parameter space is NROY so don't have samples yet
-        self.nroy_parameters = None
 
     def run(self, n_samples: int = 100):
         """
@@ -322,12 +289,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Number of parameter samples to make predictions for.
         """
 
-        if self.nroy_parameters is None or self.nroy_parameters.size(0) == 0:
-            parameter_samples = self.simulator.sample_inputs(n_samples)
-        else:
-            parameter_samples = self.sample_nroy(n_samples, self.nroy_parameters)
+        # Sample from the NROY parameter space - to begin with this is the entire space
+        print(self.simulator.param_bounds)
+        parameter_samples = self.simulator.sample_inputs(n_samples)
 
-        # Filter out RO parameters from samples using an emulator
+        # Rule out implausible parameters from samples using an emulator
         output = self.emulator.predict(parameter_samples)
         assert isinstance(output, GaussianLike)
         assert output.variance.ndim == 2
@@ -338,25 +304,34 @@ class HistoryMatchingWorkflow(HistoryMatching):
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
         parameter_samples = self.get_nroy(impl_scores, parameter_samples)
 
-        # Simulate predictions
+        # Simulate predictions (predicted variance is None)
         results = self.simulator.forward_batch(parameter_samples)
+        pred_vars = None
+
+        # This assumes that simulator returns None if it fails
+        # TODO: update as part of #438
         valid_indices = [i for i, res in enumerate(results) if res is not None]
         successful_parameter_samples = parameter_samples[valid_indices]
         pred_means = results[valid_indices]
-        pred_vars = None
 
-        # Calculate implausibility and identify NROY points
+        # Calculate implausibility and store results
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-        # TODO: is this the correct behaviour?
-        # - we want to store the last nroy_samples for next time run() is called!
-        # - should we be concatenating rather than overwriting?
-        self.nroy_parameters = self.get_nroy(impl_scores, successful_parameter_samples)
-
-        # Store results
         self.tested_params = torch.cat(
             [self.tested_params, successful_parameter_samples], dim=0
         )
         self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
+
+        # Restrict parameter bounds to sample from next to the NROY region
+        nroy_parameter_samples = self.get_nroy(
+            impl_scores, successful_parameter_samples
+        )
+        # TODO: update bounds to sample from
+        # - if only have 1 nroy parameter, might want to keep original min/max
+        min_nroy_values = torch.min(nroy_parameter_samples, dim=0).values
+        max_nroy_values = torch.max(nroy_parameter_samples, dim=0).values
+        self.simulator._param_bounds = list(
+            zip(min_nroy_values.tolist(), max_nroy_values.tolist())
+        )
 
         # Refit emulator
         self.ys = torch.cat([self.ys, pred_means], dim=0)
