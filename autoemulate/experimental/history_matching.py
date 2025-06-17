@@ -227,6 +227,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         model_discrepancy: float = 0.0,
         rank: int = 1,
         device: DeviceLike | None = None,
+        train_x: Optional[TensorLike] = None,
+        train_y: Optional[TensorLike] = None,
     ):
         """
         Initialize the history matching workflow object.
@@ -255,6 +257,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
+        train_x: TensorLike | None
+            Optional tensor of input data the emulator was trained on.
+        train_y: TensorLike | None
+            Optional tensor of output data the emulator was trained on.
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
@@ -262,9 +268,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator.device = self.device
 
         # These get populated when run() is called, used to refit the emulator with
-        # TODO: should this include the original X,y data emulator was trained on!
-        self.tested_params = torch.empty((0, self.simulator.in_dim), device=self.device)
-        self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
+        if train_x is not None and train_y is not None:
+            self.tested_params = train_x
+            self.ys = train_y
+        else:
+            self.tested_params = torch.empty(
+                (0, self.simulator.in_dim), device=self.device
+            )
+            self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
     def run(self, n_samples: int = 100):
         """
