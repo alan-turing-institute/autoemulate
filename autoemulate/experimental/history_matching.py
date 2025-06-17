@@ -121,9 +121,6 @@ class HistoryMatching(TorchDeviceMixin):
             Tensor indicating whether each parameter point is NROY given
             self.rank and self.threshold values.
         """
-        if self.rank == 1:
-            # First-order implausibility: all outputs must satisfy threshold
-            return torch.all(self.threshold >= implausability, dim=1)
         # Sort implausibilities for each sample (descending)
         I_sorted, _ = torch.sort(implausability, dim=1, descending=True)
         # The rank-th highest implausibility must be <= threshold
