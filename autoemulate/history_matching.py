@@ -169,23 +169,13 @@ class HistoryMatching:
 
         # Need to handle discontinuous NROY spaces
         # i.e., region within min/max bounds is RO
-        valid_samples = np.empty((0, nroy_samples.shape[1]))
-        while len(valid_samples) < n_samples:
-            # Generate candidates
-            candidate_samples = np.random.uniform(
-                min_bounds, max_bounds, size=(n_samples, nroy_samples.shape[1])
-            )
 
-            # Filter valid samples based on implausibility and concatenate
-            implausibility = self.calculate_implausibility(candidate_samples)
-            valid_candidates = candidate_samples[implausibility["NROY"]]
-            valid_samples = np.concatenate((valid_samples, valid_candidates), axis=0)
+        # Generate candidates
+        candidate_samples = np.random.uniform(
+            min_bounds, max_bounds, size=(n_samples, nroy_samples.shape[1])
+        )
 
-            # Only return required number of samples
-            if len(valid_samples) > n_samples:
-                valid_samples = valid_samples[:n_samples]
-
-        return valid_samples
+        return candidate_samples
 
     def predict(
         self,
@@ -298,13 +288,22 @@ class HistoryMatching:
 
         with tqdm(total=n_waves, desc="History Matching", unit="wave") as pbar:
             for wave in range(n_waves):
+                #  CHECK IF WE HAVE SAMPLES TO PROCESS
+                if len(current_samples) == 0:
+                    print(f"Wave {wave}: No valid samples found, skipping...")
+                    pbar.update(1)
+                    continue
+
                 # Run wave using batch processing
                 pred_means, pred_vars, successful_samples = self.predict(
                     x=current_samples,
                     # Emulate predictions unless emulator_predict=False
                     emulator=emulator if emulator_predict else None,
                 )
-
+                if len(successful_samples) == 0:
+                    print(f"Wave {wave}: All simulations failed, skipping...")
+                    pbar.update(1)
+                    continue
                 # Calculate implausibility in batch
                 implausibility = self.calculate_implausibility(pred_means, pred_vars)
 
@@ -328,18 +327,39 @@ class HistoryMatching:
                             emulator, successful_samples, pred_means
                         )
 
-                # Generate new samples for next wave
-                if wave < n_waves - 1:
-                    if nroy_samples.size > 0:
-                        current_samples = self.sample_nroy(
-                            nroy_samples, n_samples_per_wave
-                        )
-                    else:
-                        # If no NROY points, sample from full space
-                        current_samples = self.simulator.sample_inputs(
-                            n_samples_per_wave
-                        )
+                    # Generate new samples for next wave
+                    if wave < n_waves - 1:
+                        if nroy_samples.size > 0:
+                            # Sample candidates
+                            candidate_samples = self.sample_nroy(
+                                nroy_samples, n_samples_per_wave
+                            )
 
+                            # Filter candidates using emulator before simulation
+                            if not emulator_predict and emulator is not None:
+                                pred_means, pred_vars = emulator.predict(
+                                    candidate_samples, return_std=True
+                                )
+                                pred_vars = pred_vars**2
+
+                                # Ensure correct shape for single output case
+                                if len(pred_means.shape) == 1:
+                                    pred_means = pred_means.reshape(-1, 1)
+                                    pred_vars = pred_vars.reshape(-1, 1)
+
+                                implausibility = self.calculate_implausibility(
+                                    pred_means, pred_vars
+                                )
+                                current_samples = candidate_samples[
+                                    implausibility["NROY"]
+                                ]
+                            else:
+                                current_samples = candidate_samples
+                        else:
+                            # If no NROY points, sample from full space
+                            current_samples = self.simulator.sample_inputs(
+                                n_samples_per_wave
+                            )
                 pbar.update(1)
 
         # Concatenate all samples and implausibility scores
