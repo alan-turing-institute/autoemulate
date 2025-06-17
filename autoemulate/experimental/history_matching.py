@@ -263,7 +263,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # These get populated when run() is called, used to refit the emulator with
         # TODO: should this include the original X,y data emulator was trained on!
-        self.tested_params = torch.empty((0, len(observations)), device=self.device)
+        self.tested_params = torch.empty((0, self.simulator.in_dim), device=self.device)
         self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
     def run(self, n_samples: int = 100):
@@ -314,3 +314,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             [self.tested_params, successful_parameter_samples], dim=0
         )
         self.emulator.fit(self.tested_params, self.ys)
+        pred_means, pred_vars = (
+            output.mean.float().detach(),
+            output.variance.float().detach(),
+        )
+        return self.calculate_implausibility(pred_means, pred_vars)
