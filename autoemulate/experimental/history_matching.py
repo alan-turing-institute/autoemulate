@@ -60,13 +60,11 @@ class HistoryMatching(TorchDeviceMixin):
         self.discrepancy = model_discrepancy
         self.out_dim = len(observations)
 
-        if rank > self.out_dim:
+        if rank > self.out_dim or rank < 1:
             raise ValueError(
-                f"Rank {rank} is more than the simulator output dimension of ",
-                f"{self.out_dim}",
+                f"Rank ({rank}) is outside valid range between 1 and output dimension "
+                f"of simulator ({self.out_dim})",
             )
-        if rank < 1:
-            raise ValueError(f"Rank {rank} is less than 1.")
         self.rank = rank
 
         # Save mean and variance of observations, shape: [1, n_outputs]
