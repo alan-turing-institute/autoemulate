@@ -25,7 +25,7 @@ class RandomForest(SklearnBackend):
         bootstrap: bool = True,
         oob_score: bool = False,
         max_samples: int | None = None,
-        random_state: int | np.random.RandomState | None = None,
+        random_seed: int | None = None,
         device: DeviceLike = "cpu",
         **kwargs,
     ):
@@ -41,7 +41,7 @@ class RandomForest(SklearnBackend):
         self.bootstrap = bootstrap
         self.oob_score = oob_score
         self.max_samples = max_samples
-        self.random_state = random_state
+        self.random_seed = random_seed
         self.model = RandomForestRegressor(
             n_estimators=self.n_estimators,
             max_depth=self.max_depth,
@@ -49,7 +49,7 @@ class RandomForest(SklearnBackend):
             min_samples_leaf=self.min_samples_leaf,
             max_features=self.max_features,
             bootstrap=self.bootstrap,
-            random_state=self.random_state,
+            random_state=self.random_seed,
         )
 
     @staticmethod

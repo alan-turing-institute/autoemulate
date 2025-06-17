@@ -401,6 +401,7 @@ class HistoryMatchingDashboard:
                     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
                 elif plot_type == "Wave Evolution":
                     self._plot_wave_evolution(filtered_df, filtered_scores)
+                plt.show()
 
             except Exception as e:
                 plt.figure(figsize=(10, 6))
@@ -1208,26 +1209,8 @@ class HistoryMatchingDashboard:
 
         heading = widgets.HTML(value="<h2>History Matching Dashboard</h2>")
 
-        instructions = widgets.HTML(
-            value="""
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-                <h3>Instructions:</h3>
-                <ul>
-                    <li><strong>Plot Type</strong>: Select the type of visualization from the dropdown.</li>
-                    <li><strong>Threshold</strong>: Adjust the implausibility threshold for NROY classification.</li>
-                    <li><strong>Parameters</strong>: Select parameters to visualize (availability depends on plot type).</li>
-                    <li><strong>Show only NROY points</strong>: When available, filters to show only viable parameter combinations.</li>
-                    <li><strong>Update Plot</strong>: Click to regenerate the visualization with current settings.</li>
-                </ul>
-                <p><em>Note: Some controls are only available for certain plot types.</em></p>
-            </div>
-            """
-        )
-
         # Display the heading and instructions first
         display(heading)
-        display(instructions)
-
         display(self.main_layout)
         # Initialize the first plot
         self._update_plot(None)

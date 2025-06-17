@@ -7,7 +7,7 @@ This guide explains how to create new releases of AutoEmulate for maintainers.
 AutoEmulate uses GitHub Actions to automatically publish releases to PyPI when a new version tag is pushed. The process is as follows:
 
 1. **Update Version Number**
-First, give the package a new version. We recommend [this guide](https://py-pkgs.org/07-releasing-versioning.html) to decide on a version number.
+First, give the package a new version. We recommend [this guide](https://py-pkgs.org/07-releasing-versioning.html) to decide on a version number. Note: you'll need to open a PR to do this.
 
 Update the version in `pyproject.toml`:
 
@@ -17,24 +17,17 @@ name = "autoemulate"
 version = "X.Y.Z"  # Update this line
 ```
 
-2. **Update CHANGELOG.md**
-Add a new section to `CHANGELOG.md` describing the changes in this release. Follow the existing format:
-
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
-
-- Added feature X
-- Fixed bug Y
-- Changed Z
-```
-
-3. **Create and Push Tag**
-Create a new git tag following semantic versioning (vX.Y.Z):
+2. **Create and Push Tag**
+Create a new git tag following the same semantic versioning (vX.Y.Z):
 
 ```bash
 git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
+
+3. **Create a Release on GitHub**
+Go to the [Releases page](https://github.com/alan-turing-institute/autoemulate/releases) of the repository and click "Draft a new release".
+Fill in the release title and description, then select the tag you just created (vX.Y.Z). You can also link to the relevant issues or pull requests that are included in this release. There is an option to "Generate release notes" which can help summarize changes since the last release.
 
 4. **Automated Release Process using GitHub Actions**
 
