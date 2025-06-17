@@ -65,6 +65,8 @@ class HistoryMatching(TorchDeviceMixin):
                 f"Rank {rank} is more than the simulator output dimension of ",
                 f"{self.out_dim}",
             )
+        if rank < 1:
+            raise ValueError(f"Rank {rank} is less than 1.")
         self.rank = rank
 
         # Save mean and variance of observations, shape: [1, n_outputs]
