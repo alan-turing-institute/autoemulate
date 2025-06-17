@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 import torch
+
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -27,7 +28,7 @@ def observations():
     return {"output1": (0.5, 0.1), "output2": (0.6, 0.2)}  # (mean, variance)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def history_matcher(observations):
     """Fixture for a basic HistoryMatching instance."""
     return HistoryMatching(
@@ -68,6 +69,11 @@ def test_calculate_implausibility(history_matcher, observations):
         # have an extra term in the denominator for model discrepancy
         / (pred_vars[0][1] + observations["output2"][1] + 0.1) ** 0.5
     )
+
+    # the output shape is the same irrespective of rank
+    history_matcher.rank = 2
+    impl_scores = history_matcher.calculate_implausibility(pred_means, pred_vars)
+    assert impl_scores.shape == (1, 2)
 
 
 def test_get_indices(history_matcher):
