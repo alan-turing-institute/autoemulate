@@ -9,30 +9,30 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 from tqdm.auto import tqdm
 
-from autoemulate.cross_validate import _run_cv, _sum_cv, _sum_cvs
+from autoemulate.cross_validate import _run_cv
+from autoemulate.cross_validate import _sum_cv
+from autoemulate.cross_validate import _sum_cvs
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import AutoEmulatePipeline
-from autoemulate.plotting import _plot_cv, _plot_model
-from autoemulate.preprocess_target import NonTrainableTransformer, get_dim_reducer
+from autoemulate.plotting import _plot_cv
+from autoemulate.plotting import _plot_model
+from autoemulate.preprocess_target import get_dim_reducer
+from autoemulate.preprocess_target import NonTrainableTransformer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.sensitivity_analysis import (
-    _plot_morris_analysis,
-    _plot_sobol_analysis,
-    _sensitivity_analysis,
-)
-from autoemulate.utils import (
-    _check_cv,
-    _ensure_2d,
-    _get_full_model_name,
-    _redirect_warnings,
-    get_model_name,
-    get_short_model_name,
-)
+from autoemulate.sensitivity_analysis import _plot_morris_analysis
+from autoemulate.sensitivity_analysis import _plot_sobol_analysis
+from autoemulate.sensitivity_analysis import _sensitivity_analysis
+from autoemulate.utils import _check_cv
+from autoemulate.utils import _ensure_2d
+from autoemulate.utils import _get_full_model_name
+from autoemulate.utils import _redirect_warnings
+from autoemulate.utils import get_model_name
+from autoemulate.utils import get_short_model_name
 
 
 class AutoEmulate:
@@ -370,10 +370,10 @@ class AutoEmulate:
                         pbar.update(1)
 
                 # Get best model for this preprocessing method
-                self.preprocessing_results[prep_name]["best_model"] = (
-                    self.get_best_model_for_prep(
-                        prep_results=self.preprocessing_results[prep_name], metric="r2"
-                    )
+                self.preprocessing_results[prep_name][
+                    "best_model"
+                ] = self.get_best_model_for_prep(
+                    prep_results=self.preprocessing_results[prep_name], metric="r2"
                 )
 
         # Find the overall best model and preprocessing method
