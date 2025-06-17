@@ -289,7 +289,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Number of parameters to test for implausability with the emulator.
         """
 
-        # Sample from the NROY parameter space - to begin with this is the entire space
+        # Generate `n_test_samples` NROY parameters
         parameter_samples = self.simulator.sample_inputs(n_test_samples)
 
         # Rule out implausible parameters from samples using an emulator
@@ -312,7 +312,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 zip(min_nroy_values.tolist(), max_nroy_values.tolist())
             )
 
-        # Simulate predictions
+        # Simulate `n_simulation_samples` predictions
+        # TODO: check that LHC sampling is the correct thing to do here
         parameter_samples = self.simulator.sample_inputs(n_simulation_samples)
         results = self.simulator.forward_batch(parameter_samples)
 

@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 import pytest
 import torch
-
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
