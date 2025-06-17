@@ -180,7 +180,6 @@ class HistoryMatching(TorchDeviceMixin):
         self,
         pred_means: TensorLike,  # [n_samples, n_outputs]
         pred_vars: Optional[TensorLike] = None,  # [n_samples, n_outputs]
-        default_var: float = 0.01,
     ) -> TensorLike:
         """
         Calculate implausibility scores.
@@ -193,18 +192,12 @@ class HistoryMatching(TorchDeviceMixin):
             Tensor of prediction variances [n_samples, n_outputs]. If not
             provided (e.g., when predictions are made by a deterministic
             simulator), all variances are set to `default_var`.
-        default_var: int
-            Prediction variance value to use if not provided.
 
         Returns
         -------
         TensorLike
             Tensor of implausibility scores.
         """
-        # Set prediction variances if not provided
-        if pred_vars is None:
-            pred_vars = torch.full_like(pred_means, default_var, device=self.device)
-
         # Additional variance due to model discrepancy (defaults to 0)
         discrepancy = torch.full_like(
             self.obs_vars, self.discrepancy, device=self.device
