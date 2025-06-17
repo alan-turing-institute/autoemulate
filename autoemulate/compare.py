@@ -9,30 +9,30 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 from tqdm.auto import tqdm
 
-from autoemulate.cross_validate import _run_cv
-from autoemulate.cross_validate import _sum_cv
-from autoemulate.cross_validate import _sum_cvs
+from autoemulate.cross_validate import _run_cv, _sum_cv, _sum_cvs
 from autoemulate.data_splitting import _split_data
 from autoemulate.emulators import model_registry
 from autoemulate.hyperparam_searching import _optimize_params
 from autoemulate.logging_config import _configure_logging
 from autoemulate.metrics import METRIC_REGISTRY
 from autoemulate.model_processing import AutoEmulatePipeline
-from autoemulate.plotting import _plot_cv
-from autoemulate.plotting import _plot_model
-from autoemulate.preprocess_target import get_dim_reducer
-from autoemulate.preprocess_target import NonTrainableTransformer
+from autoemulate.plotting import _plot_cv, _plot_model
+from autoemulate.preprocess_target import NonTrainableTransformer, get_dim_reducer
 from autoemulate.printing import _print_setup
 from autoemulate.save import ModelSerialiser
-from autoemulate.sensitivity_analysis import _plot_morris_analysis
-from autoemulate.sensitivity_analysis import _plot_sobol_analysis
-from autoemulate.sensitivity_analysis import _sensitivity_analysis
-from autoemulate.utils import _check_cv
-from autoemulate.utils import _ensure_2d
-from autoemulate.utils import _get_full_model_name
-from autoemulate.utils import _redirect_warnings
-from autoemulate.utils import get_model_name
-from autoemulate.utils import get_short_model_name
+from autoemulate.sensitivity_analysis import (
+    _plot_morris_analysis,
+    _plot_sobol_analysis,
+    _sensitivity_analysis,
+)
+from autoemulate.utils import (
+    _check_cv,
+    _ensure_2d,
+    _get_full_model_name,
+    _redirect_warnings,
+    get_model_name,
+    get_short_model_name,
+)
 
 
 class AutoEmulate:
@@ -370,10 +370,10 @@ class AutoEmulate:
                         pbar.update(1)
 
                 # Get best model for this preprocessing method
-                self.preprocessing_results[prep_name][
-                    "best_model"
-                ] = self.get_best_model_for_prep(
-                    prep_results=self.preprocessing_results[prep_name], metric="r2"
+                self.preprocessing_results[prep_name]["best_model"] = (
+                    self.get_best_model_for_prep(
+                        prep_results=self.preprocessing_results[prep_name], metric="r2"
+                    )
                 )
 
         # Find the overall best model and preprocessing method
@@ -986,8 +986,6 @@ class AutoEmulate:
         problem=None,
         N=1024,
         conf_level=0.95,
-        as_df=True,
-        **plot_kwargs,
     ):
         """Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -1024,22 +1022,14 @@ class AutoEmulate:
         conf_level : float, optional
             Confidence level (between 0 and 1) for calculating confidence intervals of the
             sensitivity indices. Default is 0.95 (95% confidence).
-        as_df : bool, optional
-            If True, returns results as a long-format pandas DataFrame with columns for
-            parameters, sensitivity indices, and confidence intervals. If False, returns
-            the raw SALib results dictionary. Default is True.
 
         Returns
         -------
-        pandas.DataFrame or dict
-            If as_df=True (default), returns a DataFrame with columns:
-
+        pandas.DataFrame
             - 'parameter': Input parameter name
             - 'output': Output variable name
             - 'S1', 'S2', 'ST': First, second, and total order sensitivity indices
             - 'S1_conf', 'S2_conf', 'ST_conf': Confidence intervals for each index
-
-            If as_df=False, returns the raw SALib results dictionary.
 
         Notes
         -----
