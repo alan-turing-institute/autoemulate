@@ -290,7 +290,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
 
         # Sample from the NROY parameter space - to begin with this is the entire space
-        print(self.simulator.param_bounds)
         parameter_samples = self.simulator.sample_inputs(n_samples)
 
         # Rule out implausible parameters from samples using an emulator
