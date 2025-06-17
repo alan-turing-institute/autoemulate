@@ -321,17 +321,16 @@ class HistoryMatchingWorkflow(HistoryMatching):
         )
         self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
 
-        # Restrict parameter bounds to sample from next to the NROY region
+        # Restrict parameter bounds to sample from to NROY min/max
         nroy_parameter_samples = self.get_nroy(
             impl_scores, successful_parameter_samples
         )
-        # TODO: update bounds to sample from
-        # - if only have 1 nroy parameter, might want to keep original min/max
-        min_nroy_values = torch.min(nroy_parameter_samples, dim=0).values
-        max_nroy_values = torch.max(nroy_parameter_samples, dim=0).values
-        self.simulator._param_bounds = list(
-            zip(min_nroy_values.tolist(), max_nroy_values.tolist())
-        )
+        if nroy_parameter_samples.shape[0] > 1:
+            min_nroy_values = torch.min(nroy_parameter_samples, dim=0).values
+            max_nroy_values = torch.max(nroy_parameter_samples, dim=0).values
+            self.simulator._param_bounds = list(
+                zip(min_nroy_values.tolist(), max_nroy_values.tolist())
+            )
 
         # Refit emulator
         self.ys = torch.cat([self.ys, pred_means], dim=0)
