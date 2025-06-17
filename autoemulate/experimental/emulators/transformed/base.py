@@ -161,9 +161,13 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Transform and invert transform for prediction in original data space
         x = self._transform_x(x)
         y_pred = self.model.predict(x)
-        if not self.output_from_samples or isinstance(y_pred, TensorLike):
-            if isinstance(y_pred, TensorLike):
-                return self._inv_transform_y_tensor(y_pred)
+
+        # If TensorLike, transform tensor back to original space
+        if isinstance(y_pred, TensorLike):
+            return self._inv_transform_y_tensor(y_pred)
+
+        # Output derived by analytical/approximate transformations
+        if not self.output_from_samples:
             if isinstance(y_pred, GaussianLike):
                 return self._inv_transform_y_mvn(y_pred)
             if isinstance(y_pred, DistributionLike):
@@ -171,7 +175,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
             raise ValueError(msg)
 
-        # If output_from_samples is True, sample from the distribution
+        # Output derived by sampling and inverting to original space
         if isinstance(y_pred, DistributionLike):
             return self._inv_transform_y_mvn_sample(y_pred)
         msg = (
