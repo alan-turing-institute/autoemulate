@@ -47,12 +47,15 @@
 | autoemulate/experimental/emulators/random\_forest.py                                 |       26 |        0 |    100% |           |
 | autoemulate/experimental/emulators/svm.py                                            |       33 |        0 |    100% |           |
 | autoemulate/experimental/learners/\_\_init\_\_.py                                    |        4 |        0 |    100% |           |
-| autoemulate/experimental/learners/base.py                                            |      116 |       22 |     81% |124-127, 138-142, 155-164, 183, 188-192 |
+| autoemulate/experimental/learners/base.py                                            |      107 |       22 |     79% |61-64, 75-79, 92-101, 120, 125-129 |
 | autoemulate/experimental/learners/membership.py                                      |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/pool.py                                            |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/stream.py                                          |      128 |       12 |     91% |83-93, 480, 531-535, 538, 566-571, 574 |
 | autoemulate/experimental/model\_selection.py                                         |       45 |        3 |     93% |     30-37 |
 | autoemulate/experimental/simulations/\_\_init\_\_.py                                 |        0 |        0 |    100% |           |
+| autoemulate/experimental/simulations/base.py                                         |       57 |        1 |     98% |        40 |
+| autoemulate/experimental/simulations/epidemic.py                                     |       14 |       14 |      0% |      1-39 |
+| autoemulate/experimental/simulations/projectile.py                                   |       24 |       24 |      0% |      1-76 |
 | autoemulate/experimental/tuner.py                                                    |       32 |        0 |    100% |           |
 | autoemulate/experimental/types.py                                                    |       18 |        0 |    100% |           |
 | autoemulate/experimental\_design.py                                                  |       19 |        3 |     84% |24, 35, 46 |
@@ -83,6 +86,7 @@
 | tests/experimental/conftest.py                                                       |       41 |        0 |    100% |           |
 | tests/experimental/test\_device.py                                                   |       11 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_base.py                                       |       79 |        1 |     99% |        46 |
+| tests/experimental/test\_experimental\_base\_simulator.py                            |       83 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_compare.py                                    |       28 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_conditional\_neural\_process.py               |       50 |        8 |     84% |     83-90 |
 | tests/experimental/test\_experimental\_gaussian\_process\_exact.py                   |       59 |        0 |    100% |           |
@@ -92,7 +96,7 @@
 | tests/experimental/test\_experimental\_random\_forest.py                             |       37 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_svm.py                                        |       31 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_utils.py                                      |      218 |        0 |    100% |           |
-| tests/experimental/test\_learners.py                                                 |       47 |        4 |     91% |     47-68 |
+| tests/experimental/test\_learners.py                                                 |       44 |        4 |     91% |     38-59 |
 | tests/models/test\_attn\_cnp.py                                                      |      147 |        0 |    100% |           |
 | tests/models/test\_cnp.py                                                            |      108 |        0 |    100% |           |
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
@@ -119,7 +123,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **8104** | **1901** | **77%** |           |
+|                                                                            **TOTAL** | **8270** | **1940** | **77%** |           |
 
 
 ## Setup coverage badge
