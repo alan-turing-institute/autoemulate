@@ -120,15 +120,12 @@ def test_run(observations, mock_simulator):
 
     # Check basic structure of results
     assert isinstance(hm.tested_params, TensorLike)
-    assert isinstance(hm.impl_scores, TensorLike)
     assert hm.emulator is not None
 
     assert len(hm.tested_params) == 5
-    assert len(hm.impl_scores) == 5
 
     # can run again
     hm.run(n_samples=5)
 
     # We should get results for all valid samples
     assert len(hm.tested_params) == 5 * 2
-    assert len(hm.impl_scores) == 5 * 2

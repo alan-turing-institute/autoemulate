@@ -261,9 +261,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = emulator
         self.emulator.device = self.device
 
-        # These get populated when run() is called
+        # These get populated when run() is called, used to refit the emulator with
+        # TODO: should this include the original X,y data emulator was trained on!
         self.tested_params = torch.empty((0, len(observations)), device=self.device)
-        self.impl_scores = torch.empty((0, len(observations)), device=self.device)
         self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
     def run(self, n_samples: int = 100):
@@ -290,34 +290,27 @@ class HistoryMatchingWorkflow(HistoryMatching):
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
         parameter_samples = self.get_nroy(impl_scores, parameter_samples)
 
-        # Simulate predictions (predicted variance is None)
-        results = self.simulator.forward_batch(parameter_samples)
-        pred_vars = None
-
-        # This assumes that simulator returns None if it fails
-        # TODO: update as part of #438
-        valid_indices = [i for i, res in enumerate(results) if res is not None]
-        successful_parameter_samples = parameter_samples[valid_indices]
-        pred_means = results[valid_indices]
-
-        # Calculate implausibility and store results
-        impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-        self.tested_params = torch.cat(
-            [self.tested_params, successful_parameter_samples], dim=0
-        )
-        self.impl_scores = torch.cat([self.impl_scores, impl_scores], dim=0)
-
-        # Restrict parameter bounds to sample from to NROY min/max
-        nroy_parameter_samples = self.get_nroy(
-            impl_scores, successful_parameter_samples
-        )
-        if nroy_parameter_samples.shape[0] > 1:
-            min_nroy_values = torch.min(nroy_parameter_samples, dim=0).values
-            max_nroy_values = torch.max(nroy_parameter_samples, dim=0).values
+        # Update simulator parameter bounds to NROY min/max
+        # This way next time we sample, it's from NROY region
+        if parameter_samples.shape[0] > 1:
+            min_nroy_values = torch.min(parameter_samples, dim=0).values
+            max_nroy_values = torch.max(parameter_samples, dim=0).values
             self.simulator._param_bounds = list(
                 zip(min_nroy_values.tolist(), max_nroy_values.tolist())
             )
 
+        # Simulate predictions
+        results = self.simulator.forward_batch(parameter_samples)
+
+        # filter out parameters we got predictions for
+        # TODO: this assumes that simulator returns None if it fails (see #438)
+        valid_indices = [i for i, res in enumerate(results) if res is not None]
+        successful_parameter_samples = parameter_samples[valid_indices]
+        pred_means = results[valid_indices]
+
         # Refit emulator
         self.ys = torch.cat([self.ys, pred_means], dim=0)
+        self.tested_params = torch.cat(
+            [self.tested_params, successful_parameter_samples], dim=0
+        )
         self.emulator.fit(self.tested_params, self.ys)
