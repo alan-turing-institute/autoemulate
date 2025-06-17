@@ -11,7 +11,7 @@ from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 class HistoryMatching(TorchDeviceMixin):
     """
     History matching is a model calibration method, which uses observed data to
-    rule out ``implausible`` parameter values. The implausability metric is:
+    rule out ``implausible`` parameter values. The implausibility metric is:
 
     .. math::
         I_i(\bar{x_0}) = \frac{|z_i - \\mathbb{E}(f_i(\bar{x_0}))|}
@@ -41,14 +41,14 @@ class HistoryMatching(TorchDeviceMixin):
             For each output variable, specifies observed [value, noise]. In case
             of no uncertainty in observations, provides just the observed value.
         threshold: float
-            Implausibility threshold (query points with implausability scores that
+            Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
             a good value for simulations with a single output.
         model_discrepancy: float
-            Additional variance to include in the implausability calculation.
+            Additional variance to include in the implausibility calculation.
         rank: int
             Scoring method for multi-output problems. Must be 1 <= rank <= n_outputs.
-            When the implausability scores are ordered across outputs, it indicates
+            When the implausibility scores are ordered across outputs, it indicates
             which rank to use when determining whether the query point is NROY. The
             default val of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
@@ -105,14 +105,14 @@ class HistoryMatching(TorchDeviceMixin):
         # Reshape observation tensors for broadcasting
         return means.view(1, -1), variances.view(1, -1)
 
-    def _create_nroy_mask(self, implausability: TensorLike) -> TensorLike:
+    def _create_nroy_mask(self, implausibility: TensorLike) -> TensorLike:
         """
         Create mask for NROY points based on rank.
 
         Parameters
         ----------
-        implausability: TensorLike
-            Tensor of implausability scores for tested parameters.
+        implausibility: TensorLike
+            Tensor of implausibility scores for tested parameters.
 
         Returns
         -------
@@ -121,21 +121,21 @@ class HistoryMatching(TorchDeviceMixin):
             self.rank and self.threshold values.
         """
         # Sort implausibilities for each sample (descending)
-        I_sorted, _ = torch.sort(implausability, dim=1, descending=True)
+        I_sorted, _ = torch.sort(implausibility, dim=1, descending=True)
         # The rank-th highest implausibility must be <= threshold
         return I_sorted[:, self.rank - 1] <= self.threshold
 
     def get_nroy(
-        self, implausability: TensorLike, parameters: Optional[TensorLike] = None
+        self, implausibility: TensorLike, parameters: Optional[TensorLike] = None
     ) -> TensorLike:
         """
-        Get indices of NROY points from implausability scores. If `parameters`
+        Get indices of NROY points from implausibility scores. If `parameters`
         is provided, returns parameter values at NROY indices.
 
         Parameters
         ----------
-        implausability: TensorLike
-            Tensor of implausability scores for tested parameters.
+        implausibility: TensorLike
+            Tensor of implausibility scores for tested parameters.
         parameters: Tensorlike | None
             Optional tensor of parameters.
 
@@ -144,23 +144,23 @@ class HistoryMatching(TorchDeviceMixin):
         TensorLike
             Indices of NROY points or `parameters` at NROY indices.
         """
-        nroy_mask = self._create_nroy_mask(implausability)
+        nroy_mask = self._create_nroy_mask(implausibility)
         idx = torch.where(nroy_mask)[0]
         if parameters is None:
             return idx
         return parameters[idx]
 
     def get_ro(
-        self, implausability: TensorLike, parameters: Optional[TensorLike] = None
+        self, implausibility: TensorLike, parameters: Optional[TensorLike] = None
     ) -> TensorLike:
         """
-        Get indices of RO points from implausability scores. If `parameters`
+        Get indices of RO points from implausibility scores. If `parameters`
         is provided, returns parameter values at RO indices.
 
         Parameters
         ----------
-        implausability: TensorLike
-            Tensor of implausability scores for tested parameters.
+        implausibility: TensorLike
+            Tensor of implausibility scores for tested parameters.
         parameters: Tensorlike | None
             Optional tensor of parameters.
 
@@ -169,7 +169,7 @@ class HistoryMatching(TorchDeviceMixin):
         TensorLike
             Indices of RO points or `parameters` at RO indices.
         """
-        nroy_mask = self._create_nroy_mask(implausability)
+        nroy_mask = self._create_nroy_mask(implausibility)
         idx = torch.where(~nroy_mask)[0]
         if parameters is None:
             return idx
@@ -243,14 +243,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
             For each output variable, specifies observed [value, noise]. In case
             of no uncertainty in observations, provides just the observed value.
         threshold: float
-            Implausibility threshold (query points with implausability scores that
+            Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
             a good value for simulations with a single output.
         model_discrepancy: float
-            Additional variance to include in the implausability calculation.
+            Additional variance to include in the implausibility calculation.
         rank: int
             Scoring method for multi-output problems. Must be 1 <= rank <= n_outputs.
-            When the implausability scores are ordered across outputs, it indicates
+            When the implausibility scores are ordered across outputs, it indicates
             which rank to use when determining whether the query point is NROY. The
             default val of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
@@ -284,7 +284,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_simulation_samples: int
             Number of parameter samples to simulate.
         n_test_samples: int
-            Number of parameters to test for implausability with the emulator.
+            Number of parameters to test for implausibility with the emulator.
         """
 
         # Generate `n_test_samples` NROY parameters
