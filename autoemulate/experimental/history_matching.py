@@ -277,18 +277,20 @@ class HistoryMatchingWorkflow(HistoryMatching):
             )
             self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-    def run(self, n_samples: int = 100):
+    def run(self, n_simulation_samples: int = 100, n_test_samples=1000):
         """
         Run the iterative history matching workflow.
 
         Parameters
         ----------
-        n_samples: int
-            Number of parameter samples to make predictions for.
+        n_simulation_samples: int
+            Number of parameter samples to simulate.
+        n_test_samples: int
+            Number of parameters to test for implausability with the emulator.
         """
 
         # Sample from the NROY parameter space - to begin with this is the entire space
-        parameter_samples = self.simulator.sample_inputs(n_samples)
+        parameter_samples = self.simulator.sample_inputs(n_test_samples)
 
         # Rule out implausible parameters from samples using an emulator
         output = self.emulator.predict(parameter_samples)
@@ -311,6 +313,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             )
 
         # Simulate predictions
+        parameter_samples = self.simulator.sample_inputs(n_simulation_samples)
         results = self.simulator.forward_batch(parameter_samples)
 
         # filter out parameters we got predictions for

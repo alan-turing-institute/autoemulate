@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 import torch
+
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -115,7 +116,7 @@ def test_run(observations, mock_simulator):
     )
 
     # call run first time
-    hm.run(n_samples=5)
+    hm.run(n_simulation_samples=5)
 
     # Check basic structure of results
     assert isinstance(hm.tested_params, TensorLike)
@@ -124,7 +125,7 @@ def test_run(observations, mock_simulator):
     assert len(hm.tested_params) == 5
 
     # can run again
-    hm.run(n_samples=5)
+    hm.run(n_simulation_samples=5)
 
     # We should get results for all valid samples
     assert len(hm.tested_params) == 5 * 2
