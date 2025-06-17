@@ -47,11 +47,10 @@ class HistoryMatching(TorchDeviceMixin):
         model_discrepancy: float
             Additional variance to include in the implausability calculation.
         rank: int
-            Scoring method for multi-output problems. Must be a non-negative
-            integer less than the number of outputs. When the implausability
-            scores are ordered across outputs, it indicates which rank to use
-            when determining whether the query point is NROY. The default value
-            of ``1`` indicates that the largest implausibility will be used.
+            Scoring method for multi-output problems. Must be 1 <= rank <= n_outputs.
+            When the implausability scores are ordered across outputs, it indicates
+            which rank to use when determining whether the query point is NROY. The
+            default val of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
@@ -250,11 +249,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         model_discrepancy: float
             Additional variance to include in the implausability calculation.
         rank: int
-            Scoring method for multi-output problems. Must be a non-negative
-            integer less than the number of outputs. When the implausability
-            scores are ordered across outputs, it indicates which rank to use
-            when determining whether the query point is NROY. The default value
-            of ``1`` indicates that the largest implausibility will be used.
+            Scoring method for multi-output problems. Must be 1 <= rank <= n_outputs.
+            When the implausability scores are ordered across outputs, it indicates
+            which rank to use when determining whether the query point is NROY. The
+            default val of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         train_x: TensorLike | None
