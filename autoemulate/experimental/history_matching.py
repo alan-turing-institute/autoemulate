@@ -197,7 +197,6 @@ class HistoryMatching(TorchDeviceMixin):
             provided (e.g., when predictions are made by a deterministic
             simulator), all variances are set to `default_var`.
         default_var: int
-            TODO: should this just be 0?
             Prediction variance value to use if not provided.
 
         Returns
