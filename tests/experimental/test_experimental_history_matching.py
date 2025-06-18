@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 import torch
 from autoemulate.experimental.emulators.gaussian_process.exact import (
@@ -9,6 +7,7 @@ from autoemulate.experimental.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,
 )
+from autoemulate.experimental.simulations.epidemic import Epidemic
 from autoemulate.experimental.types import TensorLike
 
 from .test_experimental_base_simulator import MockSimulator
@@ -95,18 +94,20 @@ def test_get_indices(history_matcher):
     assert len(history_matcher.get_ro(impl_scores)) == 0
 
 
-@patch("tqdm.tqdm", lambda x, **kwargs: x)  # Mock tqdm to avoid progress bars in tests
-def test_run(observations, mock_simulator):
-    """Test the full history matching workflow with a mock simulator"""
-    x = torch.tensor([[0.1, 0.2], [0.3, -0.4]])
-    y = mock_simulator.forward_batch(x)
+def test_run():
+    """Test the full history matching workflow with Epidemic simulator."""
+    simulator = Epidemic()
+    x = simulator.sample_inputs(10)
+    y = simulator.forward_batch(x)
 
     # Run history matching
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
 
+    observations = {"infection_rate": (0.3, 0.05)}
+
     hm = HistoryMatchingWorkflow(
-        simulator=mock_simulator,
+        simulator=simulator,
         emulator=gp,
         observations=observations,
         threshold=3.0,

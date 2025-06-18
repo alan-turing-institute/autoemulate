@@ -288,7 +288,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         )
 
     def run(
-        self, n_simulation_samples: int = 100, n_test_samples=1000
+        self, n_simulation_samples: int = 100, n_test_samples=10000
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run the iterative history matching workflow.
