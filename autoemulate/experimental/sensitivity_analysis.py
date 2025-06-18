@@ -28,7 +28,7 @@ class SensitivityAnalysis(ConversionMixin):
     def __init__(
         self,
         emulator: Emulator,
-        X: Optional[TensorLike] = None,
+        x: Optional[TensorLike] = None,
         problem: Optional[dict] = None,
     ):
         """
@@ -36,11 +36,11 @@ class SensitivityAnalysis(ConversionMixin):
         ----------
         emulator : Emulator
             Fitted emulator.
-        X : InputLike | None
+        x : InputLike | None
             Simulator input parameter values.
         problem : dict | None
             The problem definition dictionary. If None, the problem is generated
-            from X using minimum and maximum values of the features as bounds.
+            from x using minimum and maximum values of the features as bounds.
             The dictionary should contain:
                 - 'num_vars': Number of input variables (int)
                 - 'names': List of variable names (list of str)
@@ -57,12 +57,12 @@ class SensitivityAnalysis(ConversionMixin):
         """
         if problem is not None:
             problem = self._check_problem(problem)
-            self.X = X
-        elif X is not None:
-            self.X, _ = self._convert_to_numpy(X)
-            problem = self._generate_problem(self.X)
+            self.x = x
+        elif x is not None:
+            self.x, _ = self._convert_to_numpy(x)
+            problem = self._generate_problem(self.x)
         else:
-            msg = "Either problem or X must be provided."
+            msg = "Either problem or x must be provided."
             raise ValueError(msg)
 
         self.emulator = emulator
@@ -97,23 +97,23 @@ class SensitivityAnalysis(ConversionMixin):
         return problem
 
     @staticmethod
-    def _generate_problem(X: NumpyLike) -> dict:
+    def _generate_problem(x: NumpyLike) -> dict:
         """
         Generate a problem definition from a design matrix.
 
         Parameters
         ----------
-        X : NumpyLike
+        x : NumpyLike
             Simulator input parameter values [n_samples, n_parameters].
         """
-        if X.ndim == 1:
-            msg = "X must be a 2D array."
+        if x.ndim == 1:
+            msg = "x must be a 2D array."
             raise ValueError(msg)
 
         return {
-            "num_vars": X.shape[1],
-            "names": [f"X{i + 1}" for i in range(X.shape[1])],
-            "bounds": [[X[:, i].min(), X[:, i].max()] for i in range(X.shape[1])],
+            "num_vars": x.shape[1],
+            "names": [f"X{i + 1}" for i in range(x.shape[1])],
+            "bounds": [[x[:, i].min(), x[:, i].max()] for i in range(x.shape[1])],
         }
 
     def _sample(self, method: str, N: int) -> NumpyLike:
@@ -164,7 +164,7 @@ class SensitivityAnalysis(ConversionMixin):
     def run(
         self,
         method: str = "sobol",
-        N: int = 1024,
+        n_samples: int = 1024,
         conf_level: float = 0.95,
     ) -> pd.DataFrame | None:
         """
@@ -174,7 +174,7 @@ class SensitivityAnalysis(ConversionMixin):
         ----------
         method: str
             The sensitivity analysis method to perform, one of ["sobol", "morris"].
-        N : int
+        n_samples : int
             Number of samples to generate for the analysis. Higher values give more
             accurate results but increase computation time. Default is 1024.
         conf_level : float
@@ -201,7 +201,7 @@ class SensitivityAnalysis(ConversionMixin):
             msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
             raise ValueError(msg)
 
-        param_samples = self._sample(method, N)
+        param_samples = self._sample(method, n_samples)
         y = self._predict(param_samples)
         output_names = self._get_output_names(y.shape[1])
 
