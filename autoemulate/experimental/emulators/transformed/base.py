@@ -130,7 +130,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.x_transforms = x_transforms or []
         self.y_transforms = y_transforms or []
         self._fit_transforms(x, y)
-        self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
+        self.model = model(
+            self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
+        )
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets

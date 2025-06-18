@@ -15,6 +15,9 @@ from sklearn.utils.validation import check_is_fitted
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 
+from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.types import DeviceLike
+
 
 def get_dim_reducer(
     name,
@@ -254,7 +257,7 @@ class TargetVAE(BaseEstimator, TransformerMixin):
             # Print progress
             if self.verbose and (epoch + 1) % 10 == 0:
                 print(
-                    f"Epoch {epoch+1}/{self.epochs}, Loss: {total_loss/len(data_loader):.4f}"
+                    f"Epoch {epoch + 1}/{self.epochs}, Loss: {total_loss / len(data_loader):.4f}"
                 )
 
         self.is_fitted_ = True
@@ -339,7 +342,7 @@ class TargetVAE(BaseEstimator, TransformerMixin):
         self._verbose = value
 
 
-class VAE(nn.Module):
+class VAE(nn.Module, TorchDeviceMixin):
     """
     Variational Autoencoder implementation in PyTorch.
 
@@ -353,29 +356,32 @@ class VAE(nn.Module):
         Dimensionality of the latent space.
     """
 
-    def __init__(self, input_dim, hidden_layers, latent_dim):
-        super(VAE, self).__init__()
+    def __init__(
+        self, input_dim, hidden_layers, latent_dim, device: DeviceLike | None = None
+    ):
+        nn.Module.__init__(self)
+        TorchDeviceMixin.__init__(self, device=device)
 
         # Encoder layers
         encoder_layers = []
         prev_dim = input_dim
         for dim in hidden_layers:
-            encoder_layers.append(nn.Linear(prev_dim, dim))
+            encoder_layers.append(nn.Linear(prev_dim, dim, device=self.device))
             encoder_layers.append(nn.ReLU())
             prev_dim = dim
 
         self.encoder = nn.Sequential(*encoder_layers)
-        self.fc_mu = nn.Linear(hidden_layers[-1], latent_dim)
-        self.fc_var = nn.Linear(hidden_layers[-1], latent_dim)
+        self.fc_mu = nn.Linear(hidden_layers[-1], latent_dim, device=self.device)
+        self.fc_var = nn.Linear(hidden_layers[-1], latent_dim, device=self.device)
 
         # Decoder layers
         decoder_layers = []
         prev_dim = latent_dim
         for dim in reversed(hidden_layers):
-            decoder_layers.append(nn.Linear(prev_dim, dim))
+            decoder_layers.append(nn.Linear(prev_dim, dim, device=self.device))
             decoder_layers.append(nn.ReLU())
             prev_dim = dim
-        decoder_layers.append(nn.Linear(prev_dim, input_dim))
+        decoder_layers.append(nn.Linear(prev_dim, input_dim, device=self.device))
 
         self.decoder = nn.Sequential(*decoder_layers)
 
@@ -463,8 +469,9 @@ def inverse_transform_with_std(model, x_latent_pred, x_latent_std, n_samples=100
         samples.append(model.transformer_.inverse_transform(samples_latent))
     samples = np.array(samples)
 
-    x_reconstructed_mean, x_reconstructed_std = np.mean(samples, axis=1), np.std(
-        samples, axis=1
+    x_reconstructed_mean, x_reconstructed_std = (
+        np.mean(samples, axis=1),
+        np.std(samples, axis=1),
     )
 
     return x_reconstructed_mean, x_reconstructed_std

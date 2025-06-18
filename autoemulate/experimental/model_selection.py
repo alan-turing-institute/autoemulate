@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader, Dataset, Subset
 
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
+from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import (
     DeviceLike,
     DistributionLike,
@@ -65,10 +67,12 @@ def evaluate(
     return metric_instance.compute().item()
 
 
-def cross_validate(
+def cross_validate(  # noqa: PLR0913
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
+    x_transforms: list[AutoEmulateTransform] | None = None,
+    y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int = np.random.randint(int(1e5)),
     **kwargs: Any,
@@ -93,6 +97,8 @@ def cross_validate(
        Contains r2 and rmse scores computed for each cross validation fold.
     """
     best_model_config: ModelConfig = kwargs
+    x_transforms = x_transforms or []
+    y_transforms = y_transforms or []
     cv_results = {"r2": [], "rmse": []}
     batch_size = best_model_config.get("batch_size", 16)
     device = get_torch_device(device)
@@ -106,15 +112,24 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        m = model(x, y, device=device, random_seed=random_seed, **best_model_config)
-        m.fit(x, y)
+        transformed_emulator = TransformedEmulator(
+            x,
+            y,
+            model=model,
+            x_transforms=x_transforms,
+            y_transforms=y_transforms,
+            device=device,
+            random_seed=random_seed,
+            **best_model_config,
+        )
+        transformed_emulator.fit(x, y)
 
         # evaluate on batches
         r2_metric = torchmetrics.R2Score().to(device)
         mse_metric = torchmetrics.MeanSquaredError().to(device)
         for x_b, y_b in val_loader:
             x_b_device, y_b_device = move_tensors_to_device(x_b, y_b, device=device)
-            y_batch_pred = m.predict(x_b_device)
+            y_batch_pred = transformed_emulator.predict(x_b_device)
             _update(y_b_device, y_batch_pred, r2_metric)
             _update(y_b_device, y_batch_pred, mse_metric)
 

@@ -4,7 +4,9 @@ from tqdm import tqdm
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
+from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.model_selection import evaluate
+from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import (
     DeviceLike,
     InputLike,
@@ -49,7 +51,12 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         # Q: should users be able to choose a different validation metric?
         self.metric = R2Score
 
-    def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
+    def run(
+        self,
+        model_class: type[Emulator],
+        x_transforms: list[AutoEmulateTransform] | None = None,
+        y_transforms: list[AutoEmulateTransform] | None = None,
+    ) -> tuple[list[float], list[ModelConfig]]:
         """
         Parameters
         ----------
@@ -85,7 +92,19 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
-            m = model_class(train_x, train_y, device=self.device, **model_config)
+
+            m = (
+                model_class(train_x, train_y, device=self.device, **model_config)
+                if not x_transforms and not y_transforms
+                else TransformedEmulator(
+                    train_x,
+                    train_y,
+                    model=model_class,
+                    x_transforms=x_transforms,
+                    y_transforms=y_transforms,
+                    device=self.device,
+                )
+            )
             m.fit(train_x, train_y)
 
             # evaluate
