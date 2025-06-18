@@ -104,7 +104,7 @@ class LightGBM(Emulator):
     def _predict(self, x: TensorLike) -> OutputLike:
         """Predicts the output of the emulator for a given input."""
         y_pred = self.model_.predict(x)
-        assert not isinstance(y_pred, (spmatrix, list))
+        assert not isinstance(y_pred, spmatrix | list)
         _, y = self._convert_to_tensors(x, y_pred)
         return y
 
