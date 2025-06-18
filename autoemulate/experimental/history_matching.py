@@ -1,5 +1,3 @@
-from typing import Optional, Union
-
 import torch
 
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -23,7 +21,7 @@ class HistoryMatching(TorchDeviceMixin):
 
     def __init__(
         self,
-        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+        observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
@@ -69,7 +67,7 @@ class HistoryMatching(TorchDeviceMixin):
 
     def _process_observations(
         self,
-        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+        observations: dict[str, tuple[float, float]] | dict[str, float],
     ) -> tuple[TensorLike, TensorLike]:
         """
         Turn observations into tensors of shape [1, n_inputs].
@@ -123,7 +121,7 @@ class HistoryMatching(TorchDeviceMixin):
         return I_sorted[:, self.rank - 1] <= self.threshold
 
     def get_nroy(
-        self, implausibility: TensorLike, parameters: Optional[TensorLike] = None
+        self, implausibility: TensorLike, parameters: TensorLike | None = None
     ) -> TensorLike:
         """
         Get indices of NROY points from implausibility scores. If `parameters`
@@ -148,7 +146,7 @@ class HistoryMatching(TorchDeviceMixin):
         return parameters[idx]
 
     def get_ro(
-        self, implausibility: TensorLike, parameters: Optional[TensorLike] = None
+        self, implausibility: TensorLike, parameters: TensorLike | None = None
     ) -> TensorLike:
         """
         Get indices of RO points from implausibility scores. If `parameters`
@@ -218,13 +216,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
         simulator: Simulator,
         # TODO: make this EmulatorWithUncertainty once implemented (see #542)
         emulator: GaussianProcessExact,
-        observations: Union[dict[str, tuple[float, float]], dict[str, float]],
+        observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
         device: DeviceLike | None = None,
-        train_x: Optional[TensorLike] = None,
-        train_y: Optional[TensorLike] = None,
+        train_x: TensorLike | None = None,
+        train_y: TensorLike | None = None,
     ):
         """
         Initialize the history matching workflow object.
@@ -322,7 +320,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             min_nroy_values = torch.min(nroy_parameters, dim=0).values
             max_nroy_values = torch.max(nroy_parameters, dim=0).values
             self.simulator._param_bounds = list(
-                zip(min_nroy_values.tolist(), max_nroy_values.tolist())
+                zip(min_nroy_values.tolist(), max_nroy_values.tolist(), strict=False)
             )
 
         # Randomly pick `n_simulation_samples` from NROY to simulate predictions for
