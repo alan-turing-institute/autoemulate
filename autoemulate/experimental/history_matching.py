@@ -121,54 +121,54 @@ class HistoryMatching(TorchDeviceMixin):
         return I_sorted[:, self.rank - 1] <= self.threshold
 
     def get_nroy(
-        self, implausibility: TensorLike, parameters: TensorLike | None = None
+        self, implausibility: TensorLike, x: TensorLike | None = None
     ) -> TensorLike:
         """
-        Get indices of NROY points from implausibility scores. If `parameters`
+        Get indices of NROY points from implausibility scores. If `x`
         is provided, returns parameter values at NROY indices.
 
         Parameters
         ----------
         implausibility: TensorLike
-            Tensor of implausibility scores for tested parameters.
-        parameters: Tensorlike | None
-            Optional tensor of parameters.
+            Tensor of implausibility scores for tested input parameters.
+        x: Tensorlike | None
+            Optional tensor of input parameters.
 
         Returns
         -------
         TensorLike
-            Indices of NROY points or `parameters` at NROY indices.
+            Indices of NROY points or `x` at NROY indices.
         """
         nroy_mask = self._create_nroy_mask(implausibility)
         idx = torch.where(nroy_mask)[0]
-        if parameters is None:
+        if x is None:
             return idx
-        return parameters[idx]
+        return x[idx]
 
     def get_ro(
-        self, implausibility: TensorLike, parameters: TensorLike | None = None
+        self, implausibility: TensorLike, x: TensorLike | None = None
     ) -> TensorLike:
         """
-        Get indices of RO points from implausibility scores. If `parameters`
+        Get indices of RO points from implausibility scores. If `x`
         is provided, returns parameter values at RO indices.
 
         Parameters
         ----------
         implausibility: TensorLike
-            Tensor of implausibility scores for tested parameters.
-        parameters: Tensorlike | None
-            Optional tensor of parameters.
+            Tensor of implausibility scores for tested input parameters.
+        x: Tensorlike | None
+            Optional tensor of iput parameters.
 
         Returns
         -------
         TensorLike
-            Indices of RO points or `parameters` at RO indices.
+            Indices of RO points or `x` at RO indices.
         """
         nroy_mask = self._create_nroy_mask(implausibility)
         idx = torch.where(~nroy_mask)[0]
-        if parameters is None:
+        if x is None:
             return idx
-        return parameters[idx]
+        return x[idx]
 
     def calculate_implausibility(
         self,
@@ -265,21 +265,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
-            self.simulated_params = train_x
-            self.ys = train_y
+            self.train_x = train_x
+            self.train_y = train_y
         else:
-            self.simulated_params = torch.empty(
-                (0, self.simulator.in_dim), device=self.device
-            )
-            self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
+            self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
+            self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-    def _emulator_predict(
-        self, parameters: TensorLike
-    ) -> tuple[TensorLike, TensorLike]:
+    def _emulator_predict(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
-        Return emulator mean and variance prediction for parameters.
+        Return emulator mean and variance prediction for input parameters `x`.
         """
-        output = self.emulator.predict(parameters)
+        output = self.emulator.predict(x)
         assert isinstance(output, GaussianLike)
         assert output.variance.ndim == 2
         return (
@@ -288,59 +284,59 @@ class HistoryMatchingWorkflow(HistoryMatching):
         )
 
     def run(
-        self, n_simulation_samples: int = 100, n_test_samples=10000
+        self, n_simulations: int = 100, n_test_samples=10000
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run the iterative history matching workflow.
 
         Parameters
         ----------
-        n_simulation_samples: int
-            Number of parameter samples to simulate.
+        n_simulations: int
+            Number of simulations to run.
         n_test_samples: int
-            Number of parameters to test for implausibility with the emulator.
+            Number of input parameters to test for implausibility with the emulator.
 
         Returns
         -------
         tuple[TensorLike, TensorLike]
-            A tensor of tested parameters and their imaplausability scores from
+            A tensor of tested input parameters and their imaplausability scores from
             which simulation samples were then selected.
         """
 
         # Generate `n_test_samples` of NROY parameters
-        test_parameters = self.simulator.sample_inputs(n_test_samples)
+        test_x = self.simulator.sample_inputs(n_test_samples)
 
         # Rule out implausible parameters from samples using an emulator
-        pred_means, pred_vars = self._emulator_predict(test_parameters)
+        pred_means, pred_vars = self._emulator_predict(test_x)
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
-        nroy_parameters = self.get_nroy(impl_scores, test_parameters)
+        nroy_x = self.get_nroy(impl_scores, test_x)
 
         # Update parameter bounds to NROY -> next time sample from this region
-        if nroy_parameters.shape[0] > 1:
-            min_nroy_values = torch.min(nroy_parameters, dim=0).values
-            max_nroy_values = torch.max(nroy_parameters, dim=0).values
+        if nroy_x.shape[0] > 1:
+            min_nroy_values = torch.min(nroy_x, dim=0).values
+            max_nroy_values = torch.max(nroy_x, dim=0).values
             self.simulator._param_bounds = list(
                 zip(min_nroy_values.tolist(), max_nroy_values.tolist(), strict=False)
             )
 
         # Randomly pick `n_simulation_samples` from NROY to simulate predictions for
         # TODO: what if this returns fewer than `n_simulation_samples`?
-        idx = torch.randperm(nroy_parameters.shape[0])[:n_simulation_samples]
-        simulation_parameters = nroy_parameters[idx]
-        results = self.simulator.forward_batch(simulation_parameters)
+        # - keep sampling if have fewer NROY samples (should this be random/uniform?)
+        # - append test_x and impl_scores
+        idx = torch.randperm(nroy_x.shape[0])[:n_simulations]
+        to_simulate_x = nroy_x[idx]
+        results = self.simulator.forward_batch(to_simulate_x)
 
         # Filter out parameters that simulator failed to return predictions for
         # TODO: this assumes that simulator returns None if it fails (see #438)
         valid_indices = [i for i, res in enumerate(results) if res is not None]
-        successful_parameters = simulation_parameters[valid_indices]
+        simulated_x = to_simulate_x[valid_indices]
         pred_means = results[valid_indices]
 
         # Refit emulator
-        self.ys = torch.cat([self.ys, pred_means], dim=0)
-        self.simulated_params = torch.cat(
-            [self.simulated_params, successful_parameters], dim=0
-        )
-        self.emulator.fit(self.simulated_params, self.ys)
+        self.train_y = torch.cat([self.train_y, pred_means], dim=0)
+        self.train_x = torch.cat([self.train_x, simulated_x], dim=0)
+        self.emulator.fit(self.train_x, self.train_y)
 
         # Return test parameters and impl scores for this run/wave
-        return test_parameters, impl_scores
+        return test_x, impl_scores

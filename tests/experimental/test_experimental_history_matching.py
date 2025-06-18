@@ -116,16 +116,16 @@ def test_run():
     )
 
     # call run first time
-    hm.run(n_simulation_samples=5)
+    hm.run(n_simulations=5)
 
     # Check basic structure of results
-    assert isinstance(hm.simulated_params, TensorLike)
+    assert isinstance(hm.train_x, TensorLike)
     assert isinstance(hm.emulator, GaussianProcessExact)
 
-    assert len(hm.simulated_params) == 5
+    assert len(hm.train_x) == 5
 
     # can run again
-    hm.run(n_simulation_samples=5)
+    hm.run(n_simulations=5)
 
     # We should get results for all valid samples
-    assert len(hm.simulated_params) == 5 * 2
+    assert len(hm.train_x) == 5 * 2
