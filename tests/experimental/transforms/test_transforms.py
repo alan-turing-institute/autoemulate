@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import torch
 from autoemulate.experimental.emulators import GaussianProcessExact
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -41,6 +42,25 @@ def test_transform_inverse_for_gaussians(sample_data_y2d, transform):
         assert y_pred.mean.shape == (10, 2)
 
 
+def test_standardize(sample_data_y2d):
+    x, _ = sample_data_y2d
+    std_transform = StandardizeTransform()
+    std_transform.fit(x)
+
+    # Test forward method
+    z = std_transform(x)
+    assert z.shape == (20, 5)
+    assert torch.allclose(z.mean(dim=0), torch.zeros(5), atol=1e-6)
+    assert torch.allclose(z.std(dim=0), torch.ones(5), atol=1e-6)
+
+    # Test inverse method
+    x_inv = std_transform.inv(z)
+    assert isinstance(x_inv, torch.Tensor)
+    assert x_inv.shape == (20, 5)
+    assert torch.allclose(x_inv.mean(dim=0), x.mean(dim=0), atol=1e-6)
+    assert torch.allclose(x_inv.std(dim=0), x.std(dim=0), atol=1e-6)
+
+
 def test_pca(sample_data_y2d):
     pca = PCATransform(n_components=2, niter=50)
     x, _ = sample_data_y2d
@@ -50,3 +70,19 @@ def test_pca(sample_data_y2d):
     assert np.allclose(
         np.abs(pca.components.cpu().numpy()), np.abs(skpca.components_.T), atol=1e-6
     )
+
+    # Test forward method
+    z = pca(x)
+    z_sk = skpca.transform(x)
+    assert isinstance(z, torch.Tensor)
+    assert z.shape == (20, 2)
+    assert np.allclose(np.abs(z.cpu().numpy()), np.abs(z_sk), atol=1e-6)
+
+    # Test inverse method
+    x_inv = pca.inv(z)
+    x_inv_sk = skpca.inverse_transform(z_sk)
+    assert isinstance(x_inv, torch.Tensor)
+    assert x_inv.shape == (20, 5)
+    print(x_inv)
+    print(x_inv_sk)
+    assert np.allclose(x_inv.cpu().numpy(), x_inv_sk, atol=1e-6)
