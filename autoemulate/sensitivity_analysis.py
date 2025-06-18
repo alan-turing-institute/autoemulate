@@ -1,5 +1,3 @@
-from typing import Dict
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -16,7 +14,8 @@ from autoemulate.utils import _ensure_2d
 def _sensitivity_analysis(
     model, method="sobol", problem=None, X=None, N=1024, conf_level=0.95, as_df=True
 ):
-    """Perform Sobol sensitivity analysis on a fitted emulator.
+    """
+    Perform global sensitivity analysis on a fitted emulator.
 
     Parameters:
     -----------
@@ -34,6 +33,8 @@ def _sensitivity_analysis(
             "bounds": [[0, 1], [0, 1]],
         }
         ```
+    X : array-like, shape (n_samples, n_features)
+        Simulation input.
     N : int, optional
         The number of samples to generate (default is 1024).
     conf_level : float, optional
@@ -130,9 +131,15 @@ def _generate_problem(X):
 
 def _sobol_analysis(
     model, problem=None, X=None, N=1024, conf_level=0.95
-) -> Dict[str, ResultDict]:
+) -> dict[str, ResultDict]:
     """
     Perform Sobol sensitivity analysis on a fitted emulator.
+
+    Sobol sensitivity analysis is a variance-based method that decomposes the variance of the model
+        output into contributions from individual input parameters and their interactions. It calculates:
+        - First-order indices (S1): Direct contribution of each input parameter
+        - Second-order indices (S2): Contribution from pairwise interactions between parameters
+        - Total-order indices (ST): Total contribution of a parameter, including all its interactions
 
     Parameters:
     -----------
@@ -140,8 +147,12 @@ def _sobol_analysis(
         The emulator model to analyze.
     problem : dict
         The problem definition, including 'num_vars', 'names', and 'bounds'.
+    X : array-like, shape (n_samples, n_features)
+        Simulation input.
     N : int, optional
-        The number of samples to generate (default is 1000).
+        The number of samples to generate (default is 1024).
+    conf_level : float, optional
+        The confidence level for the confidence intervals (default is 0.95).
 
     Returns:
     --------
@@ -177,7 +188,7 @@ def _sobol_analysis(
     return results
 
 
-def _sobol_results_to_df(results: Dict[str, ResultDict]) -> pd.DataFrame:
+def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
     """
     Convert Sobol results to a (long-format) pandas DataFrame.
 
@@ -274,7 +285,7 @@ def _create_bar_plot(ax, output_data, output_name):
 
 def _plot_sobol_analysis(results, index="S1", n_cols=None, figsize=None):
     """
-    Plot the sensitivity analysis results.
+    Plot the sobol sensitivity analysis results.
 
     Parameters:
     -----------
@@ -338,9 +349,11 @@ Morris sensitivity analysis
 """
 
 
-def _morris_analysis(model, problem=None, X=None, N=1024) -> Dict[str, ResultDict]:
+def _morris_analysis(model, problem=None, X=None, N=1024) -> dict[str, ResultDict]:
     """
     Perform Morris sensitivity analysis on a fitted emulator.
+
+    TODO: can we say more about the method here?
 
     Parameters:
     -----------
@@ -387,7 +400,7 @@ def _morris_analysis(model, problem=None, X=None, N=1024) -> Dict[str, ResultDic
 
 
 def _morris_results_to_df(
-    results: Dict[str, ResultDict], problem: dict
+    results: dict[str, ResultDict], problem: dict
 ) -> pd.DataFrame:
     """
     Convert Morris results to a (long-format) pandas DataFrame.
