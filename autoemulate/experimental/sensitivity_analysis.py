@@ -164,7 +164,7 @@ class SensitivityAnalysis(ConversionMixin):
         method: str = "sobol",
         n_samples: int = 1024,
         conf_level: float = 0.95,
-    ) -> pd.DataFrame | None:
+    ) -> pd.DataFrame:
         """
         Perform global sensitivity analysis on a fitted emulator.
 
@@ -213,11 +213,7 @@ class SensitivityAnalysis(ConversionMixin):
 
         if method == "sobol":
             return _sobol_results_to_df(results)
-        if method == "morris":
-            return _morris_results_to_df(results, self.problem)
-
-        # this should never happen, just keeping type checker happy
-        return None
+        return _morris_results_to_df(results, self.problem)
 
     @staticmethod
     def plot_sobol(results, index="S1", n_cols=None, figsize=None):
