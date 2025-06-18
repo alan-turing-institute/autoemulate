@@ -173,14 +173,17 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     print()
     print(y_pred.covariance_matrix)
     print(y_pred2.covariance_matrix)
-    print(y_pred2.covariance_matrix - y_pred.covariance_matrix)
+    y_pred_cov = y_pred.covariance_matrix
+    y_pred2_cov = y_pred2.covariance_matrix
+    assert isinstance(y_pred_cov, TensorLike)
+    assert isinstance(y_pred2_cov, TensorLike)
+    print(y_pred2_cov - y_pred_cov)
     # TODO: consider if this is close enough for PCA case
-    assert torch.allclose(
-        y_pred.covariance_matrix, y_pred2.covariance_matrix, atol=1e-1
-    )
+    assert torch.allclose(y_pred_cov, y_pred2_cov, atol=1e-1)
 
 
 def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
+    torch.manual_seed(0)
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
     em = TransformedEmulator(
@@ -188,23 +191,37 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
         y,
         model=GaussianProcessExact,
         transforms=[StandardizeTransform()],
-        target_transforms=[VAETransform(latent_dim=1)],
+        target_transforms=[StandardizeTransform(), VAETransform(latent_dim=1)],
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
     z_pred = em.model.predict(em.transforms[0](x2))
     assert isinstance(z_pred, GaussianLike)
-    y_pred2 = em.target_transforms[0]._inverse_sample(z_pred, n_samples=10000)
+    y_pred2 = em.target_transforms[0]._inverse_gaussian(
+        em.target_transforms[1]._inverse_sample(z_pred, n_samples=10000)
+    )
     assert isinstance(y_pred, GaussianLike)
     assert isinstance(y_pred2, GaussianLike)
     print()
     print(y_pred.covariance_matrix)
     print(y_pred2.covariance_matrix)
-    print(y_pred2.covariance_matrix - y_pred.covariance_matrix)
-    # TODO: consider correct assert for VAE case
-    # assert torch.allclose(
-    #     y_pred.covariance_matrix, y_pred2.covariance_matrix, atol=1e-1
-    # )
+    y_pred_cov = y_pred.covariance_matrix
+    y_pred2_cov = y_pred2.covariance_matrix
+    assert isinstance(y_pred_cov, TensorLike)
+    assert isinstance(y_pred2_cov, TensorLike)
+    diff = y_pred2_cov - y_pred_cov
+    print(diff)
+    assert isinstance(diff, TensorLike)
+    diff_abs = (diff / y_pred_cov).abs()
+
+    # TODO: these are not necessarily expected to be close since both approximate in
+    # different ways
+    # Most are within 50% error
+    assert torch.quantile(diff_abs.flatten(), 0.9).item() < 0.25
+    assert torch.quantile(diff_abs.flatten(), 0.95).item() < 0.5
+    # Some large max differences so will not assert on these
+    print("Max diff", diff_abs.abs().max())
+    # assert torch.allclose(diff_abs, torch.zeros_like(diff_abs), atol=0.4)
 
 
 # def test_tune_transformed_gp(sample_data_y2d):
