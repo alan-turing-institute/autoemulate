@@ -29,11 +29,11 @@ class ConversionMixin:
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=torch.float32)
 
-        if isinstance(x, (torch.Tensor, np.ndarray)) and isinstance(
-            y, (torch.Tensor, np.ndarray)
+        if isinstance(x, torch.Tensor | np.ndarray) and isinstance(
+            y, torch.Tensor | np.ndarray
         ):
             dataset = TensorDataset(x, y)
-        elif isinstance(x, (torch.Tensor, np.ndarray)) and y is None:
+        elif isinstance(x, torch.Tensor | np.ndarray) and y is None:
             dataset = TensorDataset(x)
         elif isinstance(x, Dataset) and y is None:
             dataset = x
