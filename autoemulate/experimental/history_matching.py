@@ -267,10 +267,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
-            self.tested_params = train_x
+            self.simulated_params = train_x
             self.ys = train_y
         else:
-            self.tested_params = torch.empty(
+            self.simulated_params = torch.empty(
                 (0, self.simulator.in_dim), device=self.device
             )
             self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
@@ -305,10 +305,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Returns
         -------
         tuple[TensorLike, TensorLike]
-            A tensor of parameters and their imaplausability scores.
+            A tensor of tested parameters and their imaplausability scores from
+            which simulation samples were then selected.
         """
 
-        # Generate `n_test_samples` NROY parameters
+        # Generate `n_test_samples` of NROY parameters
         test_parameters = self.simulator.sample_inputs(n_test_samples)
 
         # Rule out implausible parameters from samples using an emulator
@@ -324,8 +325,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 zip(min_nroy_values.tolist(), max_nroy_values.tolist())
             )
 
-        # Simulate `n_simulation_samples` predictions
-        simulation_parameters = self.simulator.sample_inputs(n_simulation_samples)
+        # Randomly pick `n_simulation_samples` from NROY to simulate predictions for
+        # TODO: what if this returns fewer than `n_simulation_samples`?
+        idx = torch.randperm(nroy_parameters.shape[0])[:n_simulation_samples]
+        simulation_parameters = nroy_parameters[idx]
         results = self.simulator.forward_batch(simulation_parameters)
 
         # Filter out parameters that simulator failed to return predictions for
@@ -336,9 +339,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Refit emulator
         self.ys = torch.cat([self.ys, pred_means], dim=0)
-        self.tested_params = torch.cat(
-            [self.tested_params, successful_parameters], dim=0
+        self.simulated_params = torch.cat(
+            [self.simulated_params, successful_parameters], dim=0
         )
-        self.emulator.fit(self.tested_params, self.ys)
-        pred_means, pred_vars = self._emulator_predict(test_parameters)
-        return test_parameters, self.calculate_implausibility(pred_means, pred_vars)
+        self.emulator.fit(self.simulated_params, self.ys)
+
+        # Return test parameters and impl scores for this run/wave
+        return test_parameters, impl_scores
