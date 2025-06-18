@@ -58,7 +58,7 @@ class SensitivityAnalysis(ConversionMixin):
             self.x = x
         elif x is not None:
             self.x, _ = self._convert_to_numpy(x)
-            problem = self._generate_problem(self.x)
+            problem = self._generate_problem(x)
         else:
             msg = "Either problem or x must be provided."
             raise ValueError(msg)
@@ -95,13 +95,13 @@ class SensitivityAnalysis(ConversionMixin):
         return problem
 
     @staticmethod
-    def _generate_problem(x: NumpyLike) -> dict:
+    def _generate_problem(x: TensorLike) -> dict:
         """
         Generate a problem definition from a design matrix.
 
         Parameters
         ----------
-        x : NumpyLike
+        x : TensorLike
             Simulator input parameter values [n_samples, n_parameters].
         """
         if x.ndim == 1:
@@ -111,7 +111,9 @@ class SensitivityAnalysis(ConversionMixin):
         return {
             "num_vars": x.shape[1],
             "names": [f"X{i + 1}" for i in range(x.shape[1])],
-            "bounds": [[x[:, i].min(), x[:, i].max()] for i in range(x.shape[1])],
+            "bounds": [
+                [x[:, i].min().item(), x[:, i].max().item()] for i in range(x.shape[1])
+            ],
         }
 
     def _sample(self, method: str, N: int) -> NumpyLike:
