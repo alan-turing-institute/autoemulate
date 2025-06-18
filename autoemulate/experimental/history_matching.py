@@ -32,9 +32,6 @@ class HistoryMatching(TorchDeviceMixin):
         """
         Initialize the history matching object.
 
-        TODO:
-        - add random seed (once #465 is complete)
-
         Parameters
         ----------
         observations: dict[str, tuple[float, float] | dict[str, float]
@@ -210,16 +207,16 @@ class HistoryMatching(TorchDeviceMixin):
 class HistoryMatchingWorkflow(HistoryMatching):
     """
     Run history matching workflow:
-    - sample parameter values to test from the NROY space
-        - at the start, NROY is the entire parameter space
-    - use emulator to filter out implausible samples
-    - make predictions for the sampled parameters using the simulator
+    - sample parameter values to test from the current NROY parameter space
+    - use emulator to filter out implausible samples and update NROY space
+    - make predictions for a subset the NROY parameters using the simulator
     - refit the emulator using the simulated data
     """
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         simulator: Simulator,
+        # TODO: make this EmulatorWithUncertainty once implemented (see #542)
         emulator: GaussianProcessExact,
         observations: Union[dict[str, tuple[float, float]], dict[str, float]],
         threshold: float = 3.0,
@@ -232,12 +229,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         Initialize the history matching workflow object.
 
+        TODO:
+        - add random seed for reproducibility (once #465 is complete)
+
         Parameters
         ----------
         simulator: Simulator
             A simulator.
         emulator: GaussianProcessExact
-            NOTE: this can be other GP emulators when implemented.
+            TODO: make this EmulatorWithUncertainty once implemented (see #542)
             A Gaussian Process emulator pre-trained on `simulator` data.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise]. In case
@@ -265,7 +265,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = emulator
         self.emulator.device = self.device
 
-        # These get populated when run() is called, used to refit the emulator with
+        # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
             self.tested_params = train_x
             self.ys = train_y
@@ -275,7 +275,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
             )
             self.ys = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-    def run(self, n_simulation_samples: int = 100, n_test_samples=1000):
+    def run(
+        self, n_simulation_samples: int = 100, n_test_samples=1000
+    ) -> tuple[TensorLike, TensorLike]:
         """
         Run the iterative history matching workflow.
 
@@ -285,6 +287,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Number of parameter samples to simulate.
         n_test_samples: int
             Number of parameters to test for implausibility with the emulator.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            A tensor of parameters and their imaplausability scores.
         """
 
         # Generate `n_test_samples` NROY parameters
@@ -301,8 +308,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
         parameter_samples = self.get_nroy(impl_scores, parameter_samples)
 
-        # Update simulator parameter bounds to NROY min/max
-        # This way next time we sample, it's from NROY region
+        # Update parameter bounds to NROY -> next time sample from this region
         if parameter_samples.shape[0] > 1:
             min_nroy_values = torch.min(parameter_samples, dim=0).values
             max_nroy_values = torch.max(parameter_samples, dim=0).values
@@ -311,14 +317,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
             )
 
         # Simulate `n_simulation_samples` predictions
-        # TODO: check that LHC sampling is the correct thing to do here
-        parameter_samples = self.simulator.sample_inputs(n_simulation_samples)
-        results = self.simulator.forward_batch(parameter_samples)
+        simulator_parameter_samples = self.simulator.sample_inputs(n_simulation_samples)
+        results = self.simulator.forward_batch(simulator_parameter_samples)
 
-        # filter out parameters we got predictions for
+        # Filter out parameters that simulator failed to return predictions for
         # TODO: this assumes that simulator returns None if it fails (see #438)
         valid_indices = [i for i, res in enumerate(results) if res is not None]
-        successful_parameter_samples = parameter_samples[valid_indices]
+        successful_parameter_samples = simulator_parameter_samples[valid_indices]
         pred_means = results[valid_indices]
 
         # Refit emulator
@@ -327,8 +332,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
             [self.tested_params, successful_parameter_samples], dim=0
         )
         self.emulator.fit(self.tested_params, self.ys)
+        output = self.emulator.predict(parameter_samples)
+        assert isinstance(output, GaussianLike)
+        assert output.variance.ndim == 2
         pred_means, pred_vars = (
             output.mean.float().detach(),
             output.variance.float().detach(),
         )
-        return self.calculate_implausibility(pred_means, pred_vars)
+        return parameter_samples, self.calculate_implausibility(pred_means, pred_vars)
