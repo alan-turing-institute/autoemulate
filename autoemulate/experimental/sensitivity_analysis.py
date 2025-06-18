@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pandas as pd
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
@@ -28,8 +26,8 @@ class SensitivityAnalysis(ConversionMixin):
     def __init__(
         self,
         emulator: Emulator,
-        x: Optional[TensorLike] = None,
-        problem: Optional[dict] = None,
+        x: TensorLike | None = None,
+        problem: dict | None = None,
     ):
         """
         Parameters
