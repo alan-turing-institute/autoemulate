@@ -55,7 +55,6 @@ class SensitivityAnalysis(ConversionMixin):
         """
         if problem is not None:
             problem = self._check_problem(problem)
-            self.x = x
         elif x is not None:
             self.x, _ = self._convert_to_numpy(x)
             problem = self._generate_problem(x)
