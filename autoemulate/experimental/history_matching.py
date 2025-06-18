@@ -45,7 +45,7 @@ class HistoryMatching(TorchDeviceMixin):
             Scoring method for multi-output problems. Must be 1 <= rank <= n_outputs.
             When the implausibility scores are ordered across outputs, it indicates
             which rank to use when determining whether the query point is NROY. The
-            default val of ``1`` indicates that the largest implausibility will be used.
+            default of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
@@ -112,12 +112,12 @@ class HistoryMatching(TorchDeviceMixin):
         Returns
         -------
         TensorLike
-            Tensor indicating whether each parameter point is NROY given
-            self.rank and self.threshold values.
+            Tensor indicating whether each implausability score is NROY
+            given self.rank and self.threshold values.
         """
         # Sort implausibilities for each sample (descending)
         I_sorted, _ = torch.sort(implausibility, dim=1, descending=True)
-        # The rank-th highest implausibility must be <= threshold
+        # The rank-th highest output implausibility must be <= threshold
         return I_sorted[:, self.rank - 1] <= self.threshold
 
     def get_nroy(
@@ -132,12 +132,12 @@ class HistoryMatching(TorchDeviceMixin):
         implausibility: TensorLike
             Tensor of implausibility scores for tested input parameters.
         x: Tensorlike | None
-            Optional tensor of input parameters.
+            Optional tensor of scored input parameters.
 
         Returns
         -------
         TensorLike
-            Indices of NROY points or `x` at NROY indices.
+            Indices of NROY points or `x` parameters at NROY indices.
         """
         nroy_mask = self._create_nroy_mask(implausibility)
         idx = torch.where(nroy_mask)[0]
@@ -157,12 +157,12 @@ class HistoryMatching(TorchDeviceMixin):
         implausibility: TensorLike
             Tensor of implausibility scores for tested input parameters.
         x: Tensorlike | None
-            Optional tensor of iput parameters.
+            Optional tensor of scored iput parameters.
 
         Returns
         -------
         TensorLike
-            Indices of RO points or `x` at RO indices.
+            Indices of RO points or `x` parameters at RO indices.
         """
         nroy_mask = self._create_nroy_mask(implausibility)
         idx = torch.where(~nroy_mask)[0]
@@ -206,7 +206,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     """
     Run history matching workflow:
     - sample parameter values to test from the current NROY parameter space
-    - use emulator to filter out implausible samples and update NROY space
+    - use emulator to rule out implausible samples and update NROY space
     - make predictions for a subset the NROY parameters using the simulator
     - refit the emulator using the simulated data
     """
@@ -220,9 +220,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
-        device: DeviceLike | None = None,
         train_x: TensorLike | None = None,
         train_y: TensorLike | None = None,
+        device: DeviceLike | None = None,
     ):
         """
         Initialize the history matching workflow object.
@@ -251,12 +251,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
             When the implausibility scores are ordered across outputs, it indicates
             which rank to use when determining whether the query point is NROY. The
             default val of ``1`` indicates that the largest implausibility will be used.
-        device: DeviceLike | None
-            The device to use. If None, the default torch device is returned.
         train_x: TensorLike | None
             Optional tensor of input data the emulator was trained on.
         train_y: TensorLike | None
             Optional tensor of output data the emulator was trained on.
+        device: DeviceLike | None
+            The device to use. If None, the default torch device is returned.
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
