@@ -285,10 +285,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
             output.variance.float().detach(),
         )
 
-    def generate_samples(self, n_test_samples: int) -> tuple[TensorLike, TensorLike]:
+    def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
         """
-        Sample `n_test_samples` from the simulator min/max parameter bounds and
+        Draw `n` samples from the simulator min/max parameter bounds and
         evaluate implausability given emulator predictions.
+
+        Parameters
+        ----------
+        n: int
+            The number of parameter samples to generate.
 
         Returns
         -------
@@ -296,7 +301,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters and their imaplausability scores.
         """
         # Generate `n_test_samples` of NROY parameters
-        test_x = self.simulator.sample_inputs(n_test_samples)
+        test_x = self.simulator.sample_inputs(n)
 
         # Rule out implausible parameters from samples using an emulator
         pred_means, pred_vars = self._emulator_predict(test_x)
@@ -307,19 +312,37 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def update_simulator_bounds(self, nroy_x: TensorLike):
         """
         Update simulator parameter bounds to min/max of NROY parameter samples.
+
+        Parameters
+        ----------
+        nroy_x: TensorLike
+            A tensor of NROY parameter samples [n_samples, n_inputs]
         """
         # Can't get min/max if have only 1 sample
-        if nroy_x.shape[1] > 1:
+        if nroy_x.shape[0] > 1:
             min_nroy_values = torch.min(nroy_x, dim=0).values
             max_nroy_values = torch.max(nroy_x, dim=0).values
             self.simulator._param_bounds = list(
                 zip(min_nroy_values.tolist(), max_nroy_values.tolist(), strict=False)
+            )
+        else:
+            warnings.warn(
+                (
+                    f"Could not update simulator parameter bounds only "
+                    f"{nroy_x.shape[0]} samples were provided."
+                ),
+                stacklevel=2,
             )
 
     @staticmethod
     def sample_tensor(n: int, x: TensorLike) -> TensorLike:
         """
         Randomly sample `n` rows from `x`.
+
+        Parameters
+        ----------
+        n: int
+            The number of samples to draw.
         """
         if x.shape[0] < n:
             warnings.warn(
