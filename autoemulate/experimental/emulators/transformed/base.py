@@ -65,10 +65,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
             **kwargs: Additional keyword arguments to pass to the model constructor.
 
         """
-        self.transforms = transforms if transforms is not None else []
-        self.target_transforms = (
-            target_transforms if target_transforms is not None else []
-        )
+        self.transforms = transforms or []
+        self.target_transforms = target_transforms or []
         self._fit_transforms(x, y)
         self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
