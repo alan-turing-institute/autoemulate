@@ -21,13 +21,14 @@ class HistoryMatching(TorchDeviceMixin):
     whereas all other points are marked as not ruled out yet (NROY).
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
         device: DeviceLike | None = None,
+        emulator: GaussianProcessExact | None = None,
     ):
         """
         Initialize the history matching object.
@@ -50,12 +51,16 @@ class HistoryMatching(TorchDeviceMixin):
             default of ``1`` indicates that the largest implausibility will be used.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
+        emulator: GaussianProcessExact
+            TODO: make this EmulatorWithUncertainty once implemented (see #542)
+            An optional Gaussian Process emulator pre-trained on `simulator` data.
         """
         TorchDeviceMixin.__init__(self, device=device)
 
         self.threshold = threshold
         self.discrepancy = model_discrepancy
         self.out_dim = len(observations)
+        self.emulator = emulator
 
         if rank > self.out_dim or rank < 1:
             raise ValueError(
@@ -121,6 +126,31 @@ class HistoryMatching(TorchDeviceMixin):
         I_sorted, _ = torch.sort(implausibility, dim=1, descending=True)
         # The rank-th highest output implausibility must be <= threshold
         return I_sorted[:, self.rank - 1] <= self.threshold
+
+    def emulator_predict(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
+        """
+        Return emulator mean and variance prediction for input parameters `x`.
+
+        Parameters
+        ----------
+        x: TensorLike | None
+            Tensor of input parameters to make predictions for.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            The emulator prediction mean and variance for `x`.
+        """
+        if self.emulator is not None:
+            output = self.emulator.predict(x)
+            assert isinstance(output, GaussianLike)
+            assert output.variance.ndim == 2
+            return (
+                output.mean.float().detach(),
+                output.variance.float().detach(),
+            )
+        msg = "Need an emulator to make predictions."
+        raise ValueError(msg)
 
     def get_nroy(
         self, implausibility: TensorLike, x: TensorLike | None = None
@@ -273,18 +303,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-    def _emulator_predict(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Return emulator mean and variance prediction for input parameters `x`.
-        """
-        output = self.emulator.predict(x)
-        assert isinstance(output, GaussianLike)
-        assert output.variance.ndim == 2
-        return (
-            output.mean.float().detach(),
-            output.variance.float().detach(),
-        )
-
     def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
         """
         Draw `n` samples from the simulator min/max parameter bounds and
@@ -304,7 +322,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         test_x = self.simulator.sample_inputs(n)
 
         # Rule out implausible parameters from samples using an emulator
-        pred_means, pred_vars = self._emulator_predict(test_x)
+        pred_means, pred_vars = self.emulator_predict(test_x)
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
 
         return test_x, impl_scores
