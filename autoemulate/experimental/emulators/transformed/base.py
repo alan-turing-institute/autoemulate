@@ -70,7 +70,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
             target_transforms if target_transforms is not None else []
         )
         self._fit_transforms(x, y)
-        self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
+        self.model = model(
+            self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
+        )
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets

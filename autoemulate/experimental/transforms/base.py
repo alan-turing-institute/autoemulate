@@ -5,11 +5,12 @@ from linear_operator.operators import DiagLinearOperator
 from pyro.distributions import TransformModule
 from torch.distributions import Transform
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import GaussianLike, TensorLike
 
 
-class AutoEmulateTransform(Transform, ABC):
+class AutoEmulateTransform(Transform, TorchDeviceMixin, ABC):
     _is_fitted: bool = False
 
     # TODO: consider if the override also needs to consider DistributionLike case
@@ -50,7 +51,7 @@ class AutoEmulateTransform(Transform, ABC):
             TensorLike: Expanded basis matrix.
         """
         self._check_is_fitted()
-        return torch.kron(torch.eye(x.shape[0]), self._basis_matrix)
+        return torch.kron(torch.eye(x.shape[0], device=self.device), self._basis_matrix)
 
     def _inverse_sample(
         self, x: GaussianLike, n_samples: int = 1000, full_covariance: bool = True

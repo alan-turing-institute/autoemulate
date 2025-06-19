@@ -102,6 +102,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     model=model_class,
                     transforms=transforms,
                     target_transforms=target_transforms,
+                    device=self.device,
                 )
             )
             m.fit(train_x, train_y)
