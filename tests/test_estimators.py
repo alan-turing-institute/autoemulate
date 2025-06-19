@@ -14,10 +14,7 @@ from sklearn.utils.estimator_checks import check_estimators_dtypes
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.estimator_checks import set_random_state
 
-from autoemulate.emulators import AttentiveConditionalNeuralProcess
-from autoemulate.emulators import ConditionalNeuralProcess
 from autoemulate.emulators import GaussianProcess
-from autoemulate.emulators import GaussianProcessMOGP
 from autoemulate.emulators import GaussianProcessMT
 from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import GradientBoosting
@@ -27,6 +24,10 @@ from autoemulate.emulators import RadialBasisFunctions
 from autoemulate.emulators import RandomForest
 from autoemulate.emulators import SecondOrderPolynomial
 from autoemulate.emulators import SupportVectorMachines
+from autoemulate.emulators.conditional_neural_process import ConditionalNeuralProcess
+from autoemulate.emulators.conditional_neural_process_attn import (
+    AttentiveConditionalNeuralProcess,
+)
 
 
 @parametrize_with_checks(
