@@ -1,6 +1,7 @@
 import torch
 from torch.distributions import Transform, constraints
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import TensorLike
 
@@ -20,6 +21,8 @@ class StandardizeTransform(AutoEmulateTransform):
         Transform.__init__(self, cache_size=cache_size)
 
     def fit(self, x: TensorLike):
+        TorchDeviceMixin.__init__(self, device=x.device)
+
         # TODO: add checks or shape of mean and std
         self.mean = x.mean(0, keepdim=True)
         std = x.std(0, keepdim=True)
@@ -43,4 +46,4 @@ class StandardizeTransform(AutoEmulateTransform):
 
     @property
     def _basis_matrix(self) -> TensorLike:
-        return torch.eye(self.std.shape[1]) * self.std
+        return torch.eye(self.std.shape[1], device=self.device) * self.std
