@@ -98,7 +98,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             retrain_transforms (bool): If True, retrain the transforms on the new data.
                 If False, use the existing transforms. Default is False.
         """
-        if not retrain_transforms:
+        if retrain_transforms:
             self._fit_transforms(x, y)
         self.fit(x, y)
 
