@@ -38,7 +38,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         n_samples: int = 1000,
         full_covariance: bool = False,
         max_targets: int = 200,
-        device: DeviceLike = "cpu",
+        device: DeviceLike | None = None,
         **kwargs,
     ):
         """Initialize a transformed emulator.
