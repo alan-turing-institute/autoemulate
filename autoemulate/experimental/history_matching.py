@@ -27,8 +27,8 @@ class HistoryMatching(TorchDeviceMixin):
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
-        device: DeviceLike | None = None,
         emulator: GaussianProcessExact | None = None,
+        device: DeviceLike | None = None,
     ):
         """
         Initialize the history matching object.
@@ -49,11 +49,11 @@ class HistoryMatching(TorchDeviceMixin):
             When the implausibility scores are ordered across outputs, it indicates
             which rank to use when determining whether the query point is NROY. The
             default of ``1`` indicates that the largest implausibility will be used.
-        device: DeviceLike | None
-            The device to use. If None, the default torch device is returned.
         emulator: GaussianProcessExact
             TODO: make this EmulatorWithUncertainty once implemented (see #542)
             An optional Gaussian Process emulator pre-trained on `simulator` data.
+        device: DeviceLike | None
+            The device to use. If None, the default torch device is returned.
         """
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -61,6 +61,7 @@ class HistoryMatching(TorchDeviceMixin):
         self.discrepancy = model_discrepancy
         self.out_dim = len(observations)
         self.emulator = emulator
+        self.emulator.device = self.device
 
         if rank > self.out_dim or rank < 1:
             raise ValueError(
@@ -90,12 +91,12 @@ class HistoryMatching(TorchDeviceMixin):
         tuple[TensorLike, TensorLike]
             Tensors of observations and the associated noise (which can be 0).
         """
-        values = torch.tensor(list(observations.values()))
+        values = torch.tensor(list(observations.values()), device=self.device)
 
         # No variance
         if values.ndim == 1:
             means = values
-            variances = torch.zeros_like(means)
+            variances = torch.zeros_like(means, device=self.device)
         # Values are (mean, variance)
         elif values.ndim == 2:
             means = values[:, 0]
@@ -319,7 +320,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters and their imaplausability scores.
         """
         # Generate `n_test_samples` of NROY parameters
-        test_x = self.simulator.sample_inputs(n)
+        test_x = self.simulator.sample_inputs(n).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
         pred_means, pred_vars = self.emulator_predict(test_x)
@@ -341,7 +342,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
             min_nroy_values = torch.min(nroy_x, dim=0).values
             max_nroy_values = torch.max(nroy_x, dim=0).values
             self.simulator._param_bounds = list(
-                zip(min_nroy_values.tolist(), max_nroy_values.tolist(), strict=False)
+                zip(
+                    min_nroy_values.cpu().tolist(),
+                    max_nroy_values.cpu().tolist(),
+                    strict=False,
+                )
             )
         else:
             warnings.warn(
@@ -379,7 +384,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         tuple[TensorLike, TensorLike]
             Tensors of succesfully simulated input parameters and predictions.
         """
-        y = self.simulator.forward_batch(x)
+        y = self.simulator.forward_batch(x).to(self.device)
 
         # Filter out runs that simulator failed to return predictions for
         # TODO: this assumes that simulator returns None if it fails (see #438)
@@ -393,7 +398,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         return valid_x, valid_y
 
     def run(
-        self, n_simulations: int = 100, n_test_samples=10000
+        self,
+        n_simulations: int = 100,
+        n_test_samples: int = 10000,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -401,7 +408,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_simulations: int
-            The maximum number of simulations to run.
+            The number of simulations to run.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
