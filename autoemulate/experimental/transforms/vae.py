@@ -113,11 +113,11 @@ class VAETransform(AutoEmulateTransform):
         msg = "log det Jacobian not computable since transform is not bijective."
         raise RuntimeError(msg)
 
-    def _expanded_basis_matrix(self, x):
-        # Delta method to compute covariance in original space
+    def _expanded_basis_matrix(self, y):
+        # Delta method to compute covariance in original space of transform's domain.
         # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
         self._check_is_fitted()
         assert self.vae is not None
-        jacobian_z = torch.autograd.functional.jacobian(self.vae.decode, x)
-        # Reshape jacobian to match the shape of cov_z (n_tasks x n_samples)
-        return jacobian_z.view(jacobian_z.shape[0] * jacobian_z.shape[1], -1)
+        jacobian_y = torch.autograd.functional.jacobian(self.vae.decode, y)
+        # Reshape jacobian to match the shape of cov_y (n_tasks x n_samples)
+        return jacobian_y.view(jacobian_y.shape[0] * jacobian_y.shape[1], -1)
