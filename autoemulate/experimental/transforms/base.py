@@ -55,8 +55,8 @@ class AutoEmulateTransform(Transform, ABC):
     def _inverse_sample(
         self, x: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
-        """Generate samples from a distribution and return a GaussianLike given the mean
-        and covariance across samples.
+        """Generate samples from the latent distribution `x`, map those back to the original space and return a GaussianLike given the mean
+        and covariance across the reconstructed samples.
         """
         samples = self.inv(torch.stack([x.sample() for _ in range(n_samples)], dim=0))
         assert isinstance(samples, TensorLike)

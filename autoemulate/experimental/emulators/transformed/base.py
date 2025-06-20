@@ -60,8 +60,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 approximate predictive distributions. Default is 1000.
             full_covariance (bool): If True, use the full covariance matrix.
                 If False, use the diagonal covariance matrix. Default is False.
-            max_targets (int): Maximum number of targets to before switching to
-                sampled predictive distribution and diagonal covariance. Default is 200.
+            max_targets (int): Maximum number of targets allowed before switching to an approximate
+                sampled predictive distribution with diagonal covariance. Default is 200.
             **kwargs: Additional keyword arguments to pass to the model constructor.
 
         """
