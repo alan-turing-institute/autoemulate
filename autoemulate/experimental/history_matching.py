@@ -409,7 +409,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Returns
         -------
         tuple[TensorLike, TensorLike]
-            A tensor of tested input parameters and their imaplausability scores from
+            A tensor of tested input parameters and their implausibility scores from
             which simulation samples were then selected.
         """
 
