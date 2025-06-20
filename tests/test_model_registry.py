@@ -1,8 +1,8 @@
 import pytest
 
-from autoemulate.emulators import ConditionalNeuralProcess
 from autoemulate.emulators import GaussianProcessSklearn
 from autoemulate.emulators import RadialBasisFunctions
+from autoemulate.emulators.conditional_neural_process import ConditionalNeuralProcess
 from autoemulate.model_registry import ModelRegistry
 
 
