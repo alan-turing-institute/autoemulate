@@ -426,7 +426,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         to_simulate_x = self.sample_tensor(n_simulations, nroy_x)
 
         # Make predictions using simulator (this updates self.x_train and self.y_train)
-        self.simulate(to_simulate_x)
+        _, _ = self.simulate(to_simulate_x)
 
         # Refit emulator using all available data
         self.emulator.fit(self.train_x, self.train_y)
