@@ -129,3 +129,29 @@ def test_run():
 
     # We should get results for all valid samples
     assert len(hm.train_x) == 5 * 2
+
+
+def test_run_max_tries():
+    """Run history matching with observations that return no NROY params."""
+    simulator = Epidemic()
+    x = simulator.sample_inputs(10)
+    y = simulator.forward_batch(x)
+
+    # Run history matching
+    gp = GaussianProcessExact(x, y)
+    gp.fit(x, y)
+
+    # Extreme values outside the range of what the simulator returns
+    observations = {"infection_rate": (100.0, 1.0)}
+
+    hm = HistoryMatchingWorkflow(
+        simulator=simulator,
+        emulator=gp,
+        observations=observations,
+        threshold=3.0,
+        model_discrepancy=0.1,
+        rank=1,
+    )
+
+    with pytest.raises(RuntimeError):
+        hm.run(n_simulations=5)
