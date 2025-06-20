@@ -46,3 +46,6 @@ docs/data/shallow_water/X.npy
 docs/data/shallow_water/Y.npy
 docs/tutorials/05_reaction_diffusion copy.ipynb
 docs/data/simulator_results.csv
+
+# Ignore experimental exploratory data path
+autoemulate/experimental/exploratory/data
