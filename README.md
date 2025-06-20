@@ -5,14 +5,14 @@
 | Name                                                                                 |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | autoemulate/\_\_init\_\_.py                                                          |        0 |        0 |    100% |           |
-| autoemulate/compare.py                                                               |      340 |       80 |     76% |267-277, 333-341, 430-440, 447, 451-459, 471, 488, 495-500, 506, 566, 582, 584, 587, 605, 609, 612, 626, 653, 658-660, 667, 672, 680, 690, 749, 755-756, 765-772, 785, 798-799, 823, 858, 864, 950-980, 1039-1061, 1085-1088 |
+| autoemulate/compare.py                                                               |      340 |       80 |     76% |267-277, 333-341, 430-440, 447, 451-459, 471, 488, 495-500, 506, 566, 582, 584, 587, 605, 609, 612, 626, 653, 658-660, 667, 672, 680, 690, 749, 755-756, 765-772, 785, 798-799, 823, 858, 864, 950-980, 1039-1060, 1084-1087 |
 | autoemulate/cross\_validate.py                                                       |       46 |        3 |     93% |81-82, 153 |
 | autoemulate/data\_splitting.py                                                       |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                                              |       12 |        0 |    100% |           |
 | autoemulate/emulators/\_\_init\_\_.py                                                |       27 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                                |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                          |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                           |      104 |        1 |     99% |        73 |
+| autoemulate/emulators/gaussian\_process.py                                           |      104 |        2 |     98% |   73, 282 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                                     |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                                       |       97 |       10 |     90% |71, 246, 250, 254, 259, 265, 271, 282, 286, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                                  |       42 |        0 |    100% |           |
@@ -125,7 +125,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **8449** | **1943** | **77%** |           |
+|                                                                            **TOTAL** | **8449** | **1944** | **77%** |           |
 
 
 ## Setup coverage badge
