@@ -17,8 +17,8 @@ class HistoryMatching(TorchDeviceMixin):
         I_i(\bar{x_0}) = \frac{|z_i - \\mathbb{E}(f_i(\bar{x_0}))|}
         {\\sqrt{\text{Var}[z_i - \\mathbb{E}(f_i(\bar{x_0}))]}}
 
-    Query points above a given implausibility threshold are ruled out (RO)
-    whereas all other points are marked as not ruled out yet (NROY).
+    Queried parameters above a given implausibility threshold are ruled out (RO)
+    whereas all other parameters are marked as not ruled out yet (NROY).
     """
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
@@ -51,7 +51,7 @@ class HistoryMatching(TorchDeviceMixin):
             default of ``1`` indicates that the largest implausibility will be used.
         emulator: GaussianProcessExact
             TODO: make this EmulatorWithUncertainty once implemented (see #542)
-            An optional Gaussian Process emulator pre-trained on `simulator` data.
+            An optional trained Gaussian Process emulator.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
@@ -133,17 +133,17 @@ class HistoryMatching(TorchDeviceMixin):
 
     def emulator_predict(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
-        Return emulator mean and variance prediction for input parameters `x`.
+        Return emulator predicted mean and variance for input parameters `x`.
 
         Parameters
         ----------
-        x: TensorLike | None
+        x: TensorLike
             Tensor of input parameters to make predictions for.
 
         Returns
         -------
         tuple[TensorLike, TensorLike]
-            The emulator prediction mean and variance for `x`.
+            The emulator predicted mean and variance for `x`.
         """
         if self.emulator is not None:
             output = self.emulator.predict(x)
@@ -242,7 +242,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     """
     Run history matching workflow:
     - sample parameter values to test from the current NROY parameter space
-    - use emulator to rule out implausible samples and update NROY space
+    - use emulator to rule out implausible parameters and update NROY space
     - make predictions for a subset the NROY parameters using the simulator
     - refit the emulator using the simulated data
     """
@@ -320,9 +320,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Returns
         -------
         tuple[TensorLike, TensorLike]
-            A tensor of tested input parameters and their imaplausability scores.
+            A tensor of tested input parameters and their implausability scores.
         """
-        # Generate `n_test_samples` of NROY parameters
+        # Generate `n` parameter samples from within NROY bounds
         test_x = self.simulator.sample_inputs(n).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
@@ -368,6 +368,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         n: int
             The number of samples to draw.
+        x: TensorLike
+            The tensor to sample from.
+
+        Returns
+        -------
+        TensorLike
+            A tensor of samples with `n` rows.
         """
         if x.shape[0] < n:
             warnings.warn(
@@ -380,6 +387,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def simulate(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
         Simulate `x` parameter inputs and filter out failed simulations.
+
+        Parameters
+        ----------
+        x: TensorLike
+            A tensor of parameters to simulate [n_samples, n_inputs].
 
         Returns
         -------
