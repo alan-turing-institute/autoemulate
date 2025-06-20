@@ -10,9 +10,7 @@ from autoemulate.preprocess_target import VAE
 
 
 class VAETransform(AutoEmulateTransform):
-    """
-    VAE transform for dimensionality reduction.
-    """
+    """VAE transform for dimensionality reduction."""
 
     domain = constraints.real
     codomain = constraints.real
@@ -21,19 +19,46 @@ class VAETransform(AutoEmulateTransform):
 
     def __init__(  # noqa: PLR0913
         self,
-        latent_dim=3,
-        hidden_layers=None,
-        epochs=800,
-        batch_size=32,
-        learning_rate=1e-3,
-        random_state=None,
-        beta=1.0,
-        verbose=False,
-        cache_size: int = 0,
+        latent_dim: int = 3,
+        hidden_layers: list[int] | None = None,
+        epochs: int = 800,
+        batch_size: int = 32,
+        learning_rate: float = 1e-3,
+        random_state: int | None = None,
+        beta: float = 1.0,
+        verbose: bool = False,
     ):
-        Transform.__init__(self, cache_size=cache_size)
+        """Intialize the VAE transform parameters but defer intialization of the inner
+        VAE model until fit is called when the input data is available.
+
+        Parameters
+        ----------
+
+        latent_dim : int, default=3
+            The dimensionality of the VAE latent space.
+        hidden_layers : list of int, default=None
+            The number of hidden layers and their sizes in the VAE. If None, defaults to
+            [64, 32].
+        epochs : int, default=800
+            The number of training epochs for the VAE.
+        batch_size : int, default=32
+            The batch size for training the VAE.
+        learning_rate : float, default=1e-3
+            The learning rate for the VAE optimizer.
+        random_state : int, default=None
+            Random seed for reproducibility.
+        beta : float, default=1.0
+            The beta parameter for the VAE loss function, controlling the trade-off
+            between reconstruction loss and KL divergence.
+        verbose : bool, default=False
+            If True, log training progress.
+
+        """
+
+        # Init with cache_size=0 to avoid caching as $f^{-1}(f(x)) \approx x$
+        Transform.__init__(self, cache_size=0)
         self.latent_dim = latent_dim
-        self.hidden_layers = [64, 32] if hidden_layers is None else hidden_layers
+        self.hidden_layers = hidden_layers or [64, 32]
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -42,7 +67,6 @@ class VAETransform(AutoEmulateTransform):
         self.verbose = verbose
 
         # Initialized during fit
-        # TODO: consider this can be init here instead of fit
         self.vae = None
         self.input_dim = None
         self._is_fitted = False
@@ -82,8 +106,7 @@ class VAETransform(AutoEmulateTransform):
                 optimizer.step()
                 total_loss += loss.item()
 
-            # TODO: update with logging
-            # Print progress
+            # Log progress
             if self.verbose and (epoch + 1) % 10 == 0:
                 msg = (
                     f"Epoch {epoch + 1}/{self.epochs}, "
