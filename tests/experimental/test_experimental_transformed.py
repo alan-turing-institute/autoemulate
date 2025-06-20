@@ -14,15 +14,11 @@ from autoemulate.experimental.transforms import (
 from autoemulate.experimental.types import DistributionLike, GaussianLike, TensorLike
 
 
-def run_test(train_data, test_data, model, transform, target_transforms):
+def run_test(train_data, test_data, model, x_transforms, y_transforms):
     x, y = train_data
     x2, _ = test_data
     em = TransformedEmulator(
-        x,
-        y,
-        transforms=transform,
-        target_transforms=target_transforms,
-        model=model,
+        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=model
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
@@ -35,7 +31,7 @@ def run_test(train_data, test_data, model, transform, target_transforms):
 
 
 @pytest.mark.parametrize(
-    ("model", "transform", "target_transforms"),
+    ("model", "x_transforms", "y_transforms"),
     itertools.product(
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
@@ -58,13 +54,13 @@ def run_test(train_data, test_data, model, transform, target_transforms):
     ),
 )
 def test_transformed_emulator(
-    sample_data_y2d, new_data_y2d, model, transform, target_transforms
+    sample_data_y2d, new_data_y2d, model, x_transforms, y_transforms
 ):
-    run_test(sample_data_y2d, new_data_y2d, model, transform, target_transforms)
+    run_test(sample_data_y2d, new_data_y2d, model, x_transforms, y_transforms)
 
 
 @pytest.mark.parametrize(
-    ("model", "transform", "target_transforms"),
+    ("model", "x_transforms", "y_transforms"),
     itertools.product(
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
@@ -95,20 +91,20 @@ def test_transformed_emulator_100_targets(
     sample_data_y2d_100_targets,
     new_data_y2d_100_targets,
     model,
-    transform,
-    target_transforms,
+    x_transforms,
+    y_transforms,
 ):
     run_test(
         sample_data_y2d_100_targets,
         new_data_y2d_100_targets,
         model,
-        transform,
-        target_transforms,
+        x_transforms,
+        y_transforms,
     )
 
 
 @pytest.mark.parametrize(
-    ("model", "transform", "target_transforms"),
+    ("model", "x_transforms", "y_transforms"),
     itertools.product(
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
@@ -139,15 +135,15 @@ def test_transformed_emulator_1000_targets(
     sample_data_y2d_1000_targets,
     new_data_y2d_1000_targets,
     model,
-    transform,
-    target_transforms,
+    x_transforms,
+    y_transforms,
 ):
     run_test(
         sample_data_y2d_1000_targets,
         new_data_y2d_1000_targets,
         model,
-        transform,
-        target_transforms,
+        x_transforms,
+        y_transforms,
     )
 
 
@@ -158,14 +154,14 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
         x,
         y,
         model=GaussianProcessExact,
-        transforms=[StandardizeTransform()],
-        target_transforms=[PCATransform(n_components=1)],
+        x_transforms=[StandardizeTransform()],
+        y_transforms=[PCATransform(n_components=1)],
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    z_pred = em.model.predict(em.transforms[0](x2))
+    z_pred = em.model.predict(em.x_transforms[0](x2))
     assert isinstance(z_pred, GaussianLike)
-    y_pred2 = em.target_transforms[0]._inverse_sample(
+    y_pred2 = em.y_transforms[0]._inverse_sample(
         z_pred, n_samples=10000, full_covariance=True
     )
     assert isinstance(y_pred, GaussianLike)
@@ -190,15 +186,15 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
         x,
         y,
         model=GaussianProcessExact,
-        transforms=[StandardizeTransform()],
-        target_transforms=[StandardizeTransform(), VAETransform(latent_dim=1)],
+        x_transforms=[StandardizeTransform()],
+        y_transforms=[StandardizeTransform(), VAETransform(latent_dim=1)],
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    z_pred = em.model.predict(em.transforms[0](x2))
+    z_pred = em.model.predict(em.x_transforms[0](x2))
     assert isinstance(z_pred, GaussianLike)
-    y_pred2 = em.target_transforms[0]._inverse_gaussian(
-        em.target_transforms[1]._inverse_sample(z_pred, n_samples=10000)
+    y_pred2 = em.y_transforms[0]._inverse_gaussian(
+        em.y_transforms[1]._inverse_sample(z_pred, n_samples=10000)
     )
     assert isinstance(y_pred, GaussianLike)
     assert isinstance(y_pred2, GaussianLike)

@@ -23,16 +23,50 @@ from autoemulate.experimental.types import (
 
 
 class TransformedEmulator(Emulator, ValidationMixin):
-    transforms: list[AutoEmulateTransform]
+    """A transformed emulator that applies transformations to input and target data.
+
+    This class wraps an emulator model with configurable transformations applied to
+    both input features (x) and target variables (y). The emulator is trained and
+    makes predictions in the transformed space, with automatic inverse transformations
+    applied to return results in the original data space.
+
+    The transformation workflow:
+    ```
+    Original space:     x ────────────────────► y_pred
+                        │                       ▲
+                        │ x_transforms          │ y_transforms⁻¹
+                        ▼                       │
+    Transformed space:  x_t ──► emulator ──► y_t_pred
+    ```
+
+    Key features:
+    - Sequential application of multiple transformations
+    - Automatic handling of different prediction output types (tensors, distributions)
+    - Support for both analytical and sampling-based inverse transformations
+    - Configurable behavior for high-dimensional targets
+
+    Attributes
+    ----------
+
+    x_transforms : list[AutoEmulateTransform]
+        List of transformations applied to input data (x) in sequential order.
+    model : Emulator
+        The underlying emulator model that operates on transformed data.
+    y_transforms : list[AutoEmulateTransform]
+        List of transformations applied to target data (y) in sequential order.
+
+    """
+
+    x_transforms: list[AutoEmulateTransform]
     model: Emulator
-    target_transforms: list[AutoEmulateTransform]
+    y_transforms: list[AutoEmulateTransform]
 
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
-        transforms: list[AutoEmulateTransform] | None,
-        target_transforms: list[AutoEmulateTransform] | None,
+        x_transforms: list[AutoEmulateTransform] | None,
+        y_transforms: list[AutoEmulateTransform] | None,
         model: type[Emulator],
         output_from_samples: bool = False,
         n_samples: int = 1000,
@@ -45,29 +79,46 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Parameters
         ----------
-            x (TensorLike): Input data tensor.
-            y (TensorLike): Target data tensor.
-            transforms (list[AutoEmulateTransform] | None): List of transforms to apply
-                to the input data. The transforms are applied to x in the order they
-                appear in the list.
-            target_transforms (list[AutoEmulateTransform] | None): List of transforms to
-                apply to the target data. The transforms are applied to y in the order
-                they appear in the list
-            model (type[Emulator]): The emulator model class to use.
-            output_from_samples (bool): If True, sample outputs from the model for
-                obtaining approximate predictive distributions. Default is False.
-            n_samples (int): Number of samples to draw from the model for
-                approximate predictive distributions. Default is 1000.
-            full_covariance (bool): If True, use the full covariance matrix.
-                If False, use the diagonal covariance matrix. Default is False.
-            max_targets (int): Maximum number of targets allowed before switching to an
-                approximate sampled predictive distribution with diagonal covariance.
-                Default is 200.
-            **kwargs: Additional keyword arguments to pass to the model constructor.
+        x : TensorLike
+            Input training data tensor of shape (n_samples, n_features).
+        y : TensorLike
+            Target training data tensor of shape (n_samples, n_targets).
+        x_transforms : list[AutoEmulateTransform] | None
+            List of transforms to apply to input data in sequential order.
+            If None, no transformations are applied to x.
+        y_transforms : list[AutoEmulateTransform] | None
+            List of transforms to apply to target data in sequential order.
+            If None, no transformations are applied to y.
+        model : type[Emulator]
+            The emulator class to instantiate and train on transformed data.
+        output_from_samples : bool, default=False
+            Whether to obtain predictions by sampling from the model's predictive
+            distribution. Automatically set to True for high-dimensional targets
+            (n_targets > max_targets).
+        n_samples : int, default=1000
+            Number of samples to draw when using sampling-based predictions.
+            Only used when output_from_samples=True.
+        full_covariance : bool, default=False
+            Whether to use full covariance matrix for predictions. If False,
+            uses diagonal covariance. Automatically set to False for
+            high-dimensional targets (n_targets > max_targets).
+        max_targets : int, default=200
+            Threshold for switching to approximate sampling-based predictions
+            with diagonal covariance when dealing with high-dimensional targets.
+        device : DeviceLike | None, default=None
+            Device for tensor operations. If None, uses the default device.
+        **kwargs
+            Additional keyword arguments passed to the emulator constructor.
 
+        Notes
+        -----
+        - Transforms are fitted on the provided training data during initialization
+        - The underlying emulator is trained on the transformed data
+        - For targets with dimensionality > max_targets, the emulator automatically
+          switches to sampling-based predictions with diagonal covariance for efficiency
         """
-        self.transforms = transforms or []
-        self.target_transforms = target_transforms or []
+        self.x_transforms = x_transforms or []
+        self.y_transforms = y_transforms or []
         self._fit_transforms(x, y)
         self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
@@ -78,12 +129,12 @@ class TransformedEmulator(Emulator, ValidationMixin):
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         # Fit transforms
         current_x = x
-        for transform in self.transforms:
+        for transform in self.x_transforms:
             transform.fit(current_x)
             current_x = transform(current_x)
         # Fit target transforms
         current_y = y
-        for transform in self.target_transforms:
+        for transform in self.y_transforms:
             transform.fit(current_y)
             current_y = transform(current_y)
 
@@ -92,44 +143,53 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Parameters
         ----------
-            x (TensorLike): New input data tensor.
-            y (TensorLike): New target data tensor.
-            retrain_transforms (bool): If True, retrain the transforms on the new data.
-                If False, use the existing transforms. Default is False.
+        x : TensorLike
+            New input training data tensor of shape (n_samples, n_features).
+        y : TensorLike
+            New target training data tensor of shape (n_samples, n_targets).
+        retrain_transforms : bool, default=False
+            Whether to retrain the transforms on the new data. If False,
+            uses the existing fitted transforms from initialization.
+
+        Notes
+        -----
+        When retrain_transforms=False, the transforms fitted during initialization
+        are applied to the new data. This assumes the new data comes from the same
+        distribution as the original training data.
         """
         if retrain_transforms:
             self._fit_transforms(x, y)
         self.fit(x, y)
 
     def _transform_x(self, x: TensorLike) -> TensorLike:
-        transformed_x = ComposeTransform(self._cast(self.transforms))(x)
-        assert isinstance(transformed_x, TensorLike)
-        return transformed_x
+        x_t = ComposeTransform(self._cast(self.x_transforms))(x)
+        assert isinstance(x_t, TensorLike)
+        return x_t
 
     def _transform_y_tensor(self, y: TensorLike) -> TensorLike:
-        transformed_y = ComposeTransform(self._cast(self.target_transforms))(y)
-        assert isinstance(transformed_y, TensorLike)
-        return transformed_y
+        y_t = ComposeTransform(self._cast(self.y_transforms))(y)
+        assert isinstance(y_t, TensorLike)
+        return y_t
 
     @staticmethod
     def _cast(transforms: list[AutoEmulateTransform]) -> list[Transform]:
         return cast(list[Transform], transforms)
 
-    def _inv_transform_y_tensor(self, y: TensorLike) -> TensorLike:
-        target_transforms = self._cast(self.target_transforms)
-        inv_transformed_y = ComposeTransform(target_transforms).inv(y)
-        assert isinstance(inv_transformed_y, TensorLike)
-        return inv_transformed_y
+    def _inv_transform_y_tensor(self, y_t: TensorLike) -> TensorLike:
+        target_transforms = self._cast(self.y_transforms)
+        y = ComposeTransform(target_transforms).inv(y_t)
+        assert isinstance(y, TensorLike)
+        return y
 
-    def _inv_transform_y_mvn(self, y_dis: GaussianLike) -> GaussianLike:
+    def _inv_transform_y_mvn(self, y_t: GaussianLike) -> GaussianLike:
         # Invert the order since the combined transform is an inversion
-        for transform in self.target_transforms[::-1]:
-            y_dis = transform._inverse_gaussian(y_dis)
-        return y_dis
+        for transform in self.y_transforms[::-1]:
+            y_t = transform._inverse_gaussian(y_t)
+        return y_t
 
-    def _inv_transform_y_mvn_sample(self, y_dis: DistributionLike) -> GaussianLike:
+    def _inv_transform_y_mvn_sample(self, y_t: DistributionLike) -> GaussianLike:
         samples = self._inv_transform_y_tensor(
-            torch.stack([y_dis.sample() for _ in range(self.n_samples)], dim=0)
+            torch.stack([y_t.sample() for _ in range(self.n_samples)], dim=0)
         )
         assert isinstance(samples, TensorLike)
         mean = samples.mean(dim=0)
@@ -141,46 +201,44 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
         return GaussianLike(mean, cov)
 
-    def _inv_transform_y_distribution(
-        self, y_dis: DistributionLike
-    ) -> DistributionLike:
+    def _inv_transform_y_distribution(self, y_t: DistributionLike) -> DistributionLike:
         """Invert the distribution using the target transforms."""
-        target_transforms = self._cast(self.target_transforms)
-        return TransformedDistribution(y_dis, [ComposeTransform(target_transforms).inv])
+        target_transforms = self._cast(self.y_transforms)
+        return TransformedDistribution(y_t, [ComposeTransform(target_transforms).inv])
 
     def _fit(self, x: TensorLike, y: TensorLike):
         # Transform x and y
-        x = self._transform_x(x)
-        y = self._transform_y_tensor(y)
+        x_t = self._transform_x(x)
+        y_t = self._transform_y_tensor(y)
 
         # Fit on transformed variables
-        self.model.fit(x, y)
+        self.model.fit(x_t, y_t)
 
     def _predict(self, x: TensorLike) -> OutputLike:
         # Transform and invert transform for prediction in original data space
-        x = self._transform_x(x)
-        y_pred = self.model.predict(x)
+        x_t = self._transform_x(x)
+        y_t_pred = self.model.predict(x_t)
 
         # If TensorLike, transform tensor back to original space
-        if isinstance(y_pred, TensorLike):
-            return self._inv_transform_y_tensor(y_pred)
+        if isinstance(y_t_pred, TensorLike):
+            return self._inv_transform_y_tensor(y_t_pred)
 
         # Output derived by analytical/approximate transformations
         if not self.output_from_samples:
-            if isinstance(y_pred, GaussianLike):
-                return self._inv_transform_y_mvn(y_pred)
-            if isinstance(y_pred, DistributionLike):
-                return self._inv_transform_y_distribution(y_pred)
+            if isinstance(y_t_pred, GaussianLike):
+                return self._inv_transform_y_mvn(y_t_pred)
+            if isinstance(y_t_pred, DistributionLike):
+                return self._inv_transform_y_distribution(y_t_pred)
             msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
             raise ValueError(msg)
 
         # Output derived by sampling and inverting to original space
-        if isinstance(y_pred, DistributionLike):
-            return self._inv_transform_y_mvn_sample(y_pred)
+        if isinstance(y_t_pred, DistributionLike):
+            return self._inv_transform_y_mvn_sample(y_t_pred)
         msg = (
             "Invalid output type from model prediction. Expected TensorLike,"
             "GaussianLike, or DistributionLike. Received: "
-            f"{type(y_pred)}"
+            f"{type(y_t_pred)}"
         )
         raise ValueError(msg)
 
