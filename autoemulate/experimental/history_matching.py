@@ -400,7 +400,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         return valid_x, valid_y
 
     def run(
-        self, n_simulations: int = 100, n_test_samples=10000
+        self,
+        n_simulations: int = 100,
+        n_test_samples: int = 10000,
+        max_retries: int = 3,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -408,10 +411,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_simulations: int
-            The maximum number of simulations to run.
+            The number of simulations to run.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
+        max_retries: int
+            Maximum number of times to try to generate `n_simulations` NROY parameters.
+            That is the maximum number of times to repeat the following steps:
+                - draw `n_test_samples` parameters
+                - use emulator to make predictions for those parameters
+                - score implausability of parameters given predictions
+                - identify NROY parameters within this set
 
         Returns
         -------
@@ -420,24 +430,46 @@ class HistoryMatchingWorkflow(HistoryMatching):
             which simulation samples were then selected.
         """
 
-        # Generate `n_test_samples` of parameters and get implausability scores
-        test_x, impl_scores = self.generate_samples(n_test_samples)
+        test_parameters_list, impl_scores_list, nroy_parameters_list = (
+            [],
+            [],
+            [torch.empty((0, self.simulator.in_dim), device=self.device)],
+        )
 
-        # Rule out implausible parameters from samples
-        nroy_x = self.get_nroy(impl_scores, test_x)
+        retries = 0
+        while torch.cat(nroy_parameters_list, 0).shape[0] < n_simulations:
+            if retries == max_retries:
+                msg = (
+                    f"Could not generate n_simulations ({n_simulations}) samples "
+                    f"that are NROY after {max_retries} retries."
+                )
+                raise RuntimeError(msg)
 
-        # Update simulator parameter bounds to NROY -> next time sample from this region
-        self.update_simulator_bounds(nroy_x)
+            # Generate `n_test_samples` with implausability scores, identify NROY
+            test_parameters, impl_scores = self.generate_samples(n_test_samples)
+            nroy_parameters = self.get_nroy(impl_scores, test_parameters)
+
+            # Store results
+            nroy_parameters_list.append(nroy_parameters)
+            test_parameters_list.append(test_parameters)
+            impl_scores_list.append(impl_scores)
+
+            retries += 1
+
+        # Update simulator parameter bounds to NROY region
+        # Next time that call run(), will sample from within this region
+        nroy_parameters_all = torch.cat(nroy_parameters_list, 0)
+        self.update_simulator_bounds(nroy_parameters_all)
 
         # Randomly pick at most `n_simulations` parameters from NROY to simulate
-        to_simulate_x = self.sample_tensor(n_simulations, nroy_x)
+        nroy_simulation_samples = self.sample_tensor(n_simulations, nroy_parameters_all)
 
         # Make predictions using simulator (this updates self.x_train and self.y_train)
-        _, _ = self.simulate(to_simulate_x)
+        _, _ = self.simulate(nroy_simulation_samples)
 
         # Refit emulator using all available data
         assert self.emulator is not None
         self.emulator.fit(self.train_x, self.train_y)
 
         # Return test parameters and impl scores for this run/wave
-        return test_x, impl_scores
+        return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
