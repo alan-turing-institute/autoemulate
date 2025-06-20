@@ -61,7 +61,10 @@ class HistoryMatching(TorchDeviceMixin):
         self.discrepancy = model_discrepancy
         self.out_dim = len(observations)
         self.emulator = emulator
-        self.emulator.device = self.device
+
+        # TODO: make this EmulatorWithUncertainty once implemented (see #542)
+        if isinstance(self.emulator, GaussianProcessExact):
+            self.emulator.device = self.device
 
         if rank > self.out_dim or rank < 1:
             raise ValueError(
@@ -291,10 +294,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
-        super().__init__(observations, threshold, model_discrepancy, rank, device)
+        super().__init__(
+            observations, threshold, model_discrepancy, rank, emulator, device
+        )
         self.simulator = simulator
-        self.emulator = emulator
-        self.emulator.device = self.device
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
@@ -433,6 +436,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         _, _ = self.simulate(to_simulate_x)
 
         # Refit emulator using all available data
+        assert self.emulator is not None
         self.emulator.fit(self.train_x, self.train_y)
 
         # Return test parameters and impl scores for this run/wave
