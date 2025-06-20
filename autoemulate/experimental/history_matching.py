@@ -298,8 +298,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
-            self.train_x = train_x
-            self.train_y = train_y
+            self.train_x = train_x.to(self.device)
+            self.train_y = train_y.to(self.device)
         else:
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
@@ -357,8 +357,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 stacklevel=2,
             )
 
-    @staticmethod
-    def sample_tensor(n: int, x: TensorLike) -> TensorLike:
+    def sample_tensor(self, n: int, x: TensorLike) -> TensorLike:
         """
         Randomly sample `n` rows from `x`.
 
@@ -372,7 +371,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 f"Number of tensor rows {x.shape[0]} is less than {n} samples.",
                 stacklevel=2,
             )
-        idx = torch.randperm(x.shape[0])[:n]
+        idx = torch.randperm(x.shape[0], device=self.device)[:n]
         return x[idx]
 
     def simulate(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
@@ -398,9 +397,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         return valid_x, valid_y
 
     def run(
-        self,
-        n_simulations: int = 100,
-        n_test_samples: int = 10000,
+        self, n_simulations: int = 100, n_test_samples=10000
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -408,7 +405,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_simulations: int
-            The number of simulations to run.
+            The maximum number of simulations to run.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
