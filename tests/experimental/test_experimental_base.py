@@ -136,6 +136,16 @@ class TestPyTorchBackend:
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)
 
+        # Use a different seed to ensure deterministic behavior
+        new_seed = 43
+        RandomMixin().set_random_seed(new_seed)
+        model3 = self.DummyModel()
+        model3.fit(x_train, y_train)
+        pred3 = model3.predict(x_test)
+
         assert isinstance(pred1, torch.Tensor)
         assert isinstance(pred2, torch.Tensor)
+        assert isinstance(pred3, torch.Tensor)
         assert torch.allclose(pred1, pred2)
+        msg = "Predictions should differ with different seeds."
+        assert not torch.allclose(pred1, pred3), msg
