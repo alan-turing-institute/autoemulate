@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
+from autoemulate.experimental.data.utils import RandomMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
@@ -113,7 +114,7 @@ class TestPyTorchBackend:
         tuner = Tuner(x=dataset, y=None, n_iter=10)
         tuner.run(self.DummyModel)
 
-    def test_fit_predict_deterministic_with_seed(self, set_seed):
+    def test_fit_predict_deterministic_with_seed(self):
         """
         Test that fitting two models with the same seed and data
         produces identical predictions.
@@ -122,12 +123,15 @@ class TestPyTorchBackend:
         y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         x_test = torch.tensor([[4.0]])
 
-        set_seed()  # This is a fixture defined in conftest.py
+        # Set a random seed for reproducibility
+        seed = 42
+        RandomMixin().set_random_seed(seed)
         model1 = self.DummyModel()
         model1.fit(x_train, y_train)
         pred1 = model1.predict(x_test)
 
-        set_seed()  # Resetting the seed to ensure deterministic behavior
+        # Use the same seed to ensure deterministic behavior
+        RandomMixin().set_random_seed(seed)
         model2 = self.DummyModel()
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)
