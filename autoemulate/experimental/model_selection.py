@@ -71,6 +71,7 @@ def cross_validate(
     dataset: Dataset,
     model: type[Emulator],
     device: DeviceLike = "cpu",
+    random_seed: int | None = None,
     **kwargs: Any,
 ):
     """
@@ -87,6 +88,8 @@ def cross_validate(
         An instance of an Emulator subclass.
     device: DeviceLike
         The device to use for model training and evaluation.
+    random_seed: int | None
+        Optional random seed for reproducibility.
     Returns
     -------
     dict[str, list[float]]
@@ -106,7 +109,8 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
-        RandomMixin().set_random_seed(seed=42)  # set same seed for reproducibility
+        if random_seed is not None:  # set same seed for reproducibility
+            RandomMixin().set_random_seed(seed=random_seed)
         m = model(x, y, device=device, **best_model_config)
         m.fit(x, y)
 

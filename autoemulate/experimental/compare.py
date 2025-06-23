@@ -21,7 +21,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         y: InputLike,
         models: list[type[Emulator]] | None = None,
         device: DeviceLike | None = None,
+        random_seed: int | None = None,
     ):
+        self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
         x, y = self._convert_to_tensors(x, y)
@@ -84,7 +86,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             best_score_idx = scores.index(max(scores))
             best_model_config = configs[best_score_idx]
             cv_results = cross_validate(
-                cv(), self.train_val.dataset, model_cls, **best_model_config
+                cv=cv(),
+                dataset=self.train_val.dataset,
+                model=model_cls,
+                random_seed=self.random_seed,
+                **best_model_config,
             )
             r2_score, rmse_score = (
                 np.mean(cv_results["r2"]),
