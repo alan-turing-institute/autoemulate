@@ -13,7 +13,14 @@ from autoemulate.experimental.data.utils import (
     ValidationMixin,
 )
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
+from autoemulate.experimental.types import (
+    DistributionLike,
+    GaussianLike,
+    NumpyLike,
+    OutputLike,
+    TensorLike,
+    TuneConfig,
+)
 
 
 class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
@@ -110,6 +117,42 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         if deterministic:
             torch.backends.cudnn.benchmark = False
             torch.use_deterministic_algorithms(True)
+
+
+class DeterministicEmulator(Emulator):
+    """An emulator subclass that predicts with deterministic outputs returning a
+    TensorLike.
+    """
+
+    def _predict(self, x: TensorLike) -> TensorLike: ...
+    def predict(self, x: TensorLike) -> TensorLike:
+        pred = super().predict(x)
+        assert isinstance(pred, TensorLike)
+        return pred
+
+
+class ProbabilisticEmulator(Emulator):
+    """An emulator subclass that predicts with probabilistic outputs returning a
+    DistributionLike.
+    """
+
+    def _predict(self, x: TensorLike) -> DistributionLike: ...
+    def predict(self, x: TensorLike) -> DistributionLike:
+        pred = super().predict(x)
+        assert isinstance(pred, DistributionLike)
+        return pred
+
+
+class GaussianEmulator(ProbabilisticEmulator):
+    """An emulator subclass that predicts with Gaussian outputs returning a
+    GaussianLike.
+    """
+
+    def _predict(self, x: TensorLike) -> GaussianLike: ...
+    def predict(self, x: TensorLike) -> GaussianLike:
+        pred = super().predict(x)
+        assert isinstance(pred, GaussianLike)
+        return pred
 
 
 class PyTorchBackend(nn.Module, Emulator, Preprocessor):
