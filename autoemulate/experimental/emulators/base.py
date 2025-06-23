@@ -192,6 +192,56 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
+    def _initialize_weights(
+        self,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+    ):
+        """Initialize the weights.
+
+        Parameters
+        ----------
+        weight_init : str
+            Initialization method name
+        scale : float
+            Scale parameter for initialization methods. Used as:
+            - gain for Xavier methods
+            - std for normal distribution
+            - bound for uniform distribution (range: [-scale, scale])
+            - ignored for Kaiming methods (uses optimal scaling)
+        bias_init : str
+            Bias initialization method. Options: "zeros", "default"
+            "zeros" initializes biases to zero
+            "default" uses PyTorch's default uniform initialization
+        """
+        # Dictionary mapping for weight initialization methods
+        init_methods = {
+            "xavier_uniform": lambda w: nn.init.xavier_uniform_(w, gain=scale),
+            "xavier_normal": lambda w: nn.init.xavier_normal_(w, gain=scale),
+            "kaiming_uniform": lambda w: nn.init.kaiming_uniform_(
+                w, mode="fan_in", nonlinearity="relu"
+            ),
+            "kaiming_normal": lambda w: nn.init.kaiming_normal_(
+                w, mode="fan_in", nonlinearity="relu"
+            ),
+            "normal": lambda w: nn.init.normal_(w, mean=0.0, std=scale),
+            "uniform": lambda w: nn.init.uniform_(w, -scale, scale),
+            "zeros": lambda w: nn.init.zeros_(w),
+            "ones": lambda w: nn.init.ones_(w),
+        }
+
+        for module in self.modules():
+            # TODO: consider and add handling for other module types
+            if isinstance(module, nn.Linear):
+                # Apply initialization if method exists
+                if weight_init in init_methods:
+                    init_methods[weight_init](module.weight)
+
+                # Initialize biases based on bias_init parameter
+                if module.bias is not None and bias_init == "zeros":
+                    nn.init.zeros_(module.bias)
+
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
         x = self.preprocess(x)
