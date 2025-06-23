@@ -294,7 +294,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             return self(x)
 
 
-class SklearnBackend(Emulator):
+class SklearnBackend(DeterministicEmulator):
     """
     SklearnBackend is a sklearn model and implements the base class.
     This provides default implementations to further subclasses.
@@ -323,7 +323,7 @@ class SklearnBackend(Emulator):
         self._model_specific_check(x_np, y_np)
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> TensorLike:
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
