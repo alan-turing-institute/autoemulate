@@ -124,6 +124,7 @@ class DeterministicEmulator(Emulator):
     TensorLike.
     """
 
+    @abstractmethod
     def _predict(self, x: TensorLike) -> TensorLike: ...
     def predict(self, x: TensorLike) -> TensorLike:
         pred = super().predict(x)
@@ -136,6 +137,7 @@ class ProbabilisticEmulator(Emulator):
     DistributionLike.
     """
 
+    @abstractmethod
     def _predict(self, x: TensorLike) -> DistributionLike: ...
     def predict(self, x: TensorLike) -> DistributionLike:
         pred = super().predict(x)
@@ -148,6 +150,7 @@ class GaussianEmulator(ProbabilisticEmulator):
     GaussianLike.
     """
 
+    @abstractmethod
     def _predict(self, x: TensorLike) -> GaussianLike: ...
     def predict(self, x: TensorLike) -> GaussianLike:
         pred = super().predict(x)
