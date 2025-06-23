@@ -36,8 +36,9 @@ def test_tune_rf(sample_data_y1d):
 def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
-    model1 = RandomForest(x, y)
-    model2 = RandomForest(x, y)
+    seed = 42
+    model1 = RandomForest(x, y, random_seed=seed)
+    model2 = RandomForest(x, y, random_seed=seed)
     model1.fit(x, y)
     model2.fit(x, y)
     pred1 = model1.predict(x2)
@@ -45,3 +46,10 @@ def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     assert isinstance(pred1, TensorLike)
     assert isinstance(pred2, TensorLike)
     assert torch.allclose(pred1, pred2)
+    # Change the seed for model3
+    new_seed = 24
+    model3 = RandomForest(x, y, random_seed=new_seed)
+    model3.fit(x, y)
+    pred3 = model3.predict(x2)
+    assert isinstance(pred3, TensorLike)
+    assert not torch.allclose(pred1, pred3)
