@@ -53,7 +53,9 @@ class MLP(PyTorchBackend):
     @staticmethod
     def get_tune_config():
         return {
-            "lr": [1e-1, 1e-2, 1e-3, 1e-4],
+            "epochs": [50, 100, 200],
+            "layer_dims": [[32, 16], [64, 32, 16]],
+            "lr": [1e-1, 1e-2, 1e-3],
             "batch_size": [16, 32],
             "weight_init": ["default", "normal"],
             "scale": [0.1, 1.0],

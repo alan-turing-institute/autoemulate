@@ -33,7 +33,8 @@ def test_tune_mlp(sample_data_y1d, device):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
-    tuner = Tuner(x, y, n_iter=5, device=device)
+    n_iter = 5
+    tuner = Tuner(x, y, n_iter=n_iter, device=device)
     scores, configs = tuner.run(MLP)
-    assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(scores) == n_iter
+    assert len(configs) == n_iter
