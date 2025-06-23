@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 
 import numpy as np
@@ -107,11 +108,17 @@ def cross_validate(
         train_loader = DataLoader(train_subset, batch_size=batch_size)
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
+        # Handle random seed for reproducibility
+        if random_seed is not None:
+            RandomMixin().set_random_seed(seed=random_seed)
+        model_init_params = inspect.signature(model).parameters
+        model_kwargs = dict(best_model_config)
+        if "random_seed" in model_init_params:
+            model_kwargs["random_seed"] = random_seed
+
         # fit model
         x, y = next(iter(train_loader))
-        if random_seed is not None:  # set same seed for reproducibility
-            RandomMixin().set_random_seed(seed=random_seed)
-        m = model(x, y, device=device, **best_model_config)
+        m = model(x, y, device=device, **model_kwargs)
         m.fit(x, y)
 
         # evaluate on batches
