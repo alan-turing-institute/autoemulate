@@ -5,6 +5,7 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
+from autoemulate.experimental.data.utils import RandomMixin
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
@@ -105,6 +106,7 @@ def cross_validate(
 
         # fit model
         x, y = next(iter(train_loader))
+        RandomMixin().set_random_seed(seed=42)  # set same seed for reproducibility
         m = model(x, y, device=device, **best_model_config)
         m.fit(x, y)
 
