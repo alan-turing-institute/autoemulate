@@ -8,7 +8,7 @@ from sklearn.datasets import make_regression
 @pytest.fixture
 def set_seed():
     def _set_seed():
-        RandomMixin().set_random_seed(42, deterministic=True)
+        RandomMixin().set_random_seed()
 
     return _set_seed
 
