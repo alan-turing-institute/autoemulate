@@ -986,8 +986,6 @@ class AutoEmulate:
         problem=None,
         N=1024,
         conf_level=0.95,
-        as_df=True,
-        **plot_kwargs,
     ):
         """Perform Sobol sensitivity analysis on a fitted emulator.
 
@@ -1024,22 +1022,14 @@ class AutoEmulate:
         conf_level : float, optional
             Confidence level (between 0 and 1) for calculating confidence intervals of the
             sensitivity indices. Default is 0.95 (95% confidence).
-        as_df : bool, optional
-            If True, returns results as a long-format pandas DataFrame with columns for
-            parameters, sensitivity indices, and confidence intervals. If False, returns
-            the raw SALib results dictionary. Default is True.
 
         Returns
         -------
-        pandas.DataFrame or dict
-            If as_df=True (default), returns a DataFrame with columns:
-
+        pandas.DataFrame
             - 'parameter': Input parameter name
             - 'output': Output variable name
             - 'S1', 'S2', 'ST': First, second, and total order sensitivity indices
             - 'S1_conf', 'S2_conf', 'ST_conf': Confidence intervals for each index
-
-            If as_df=False, returns the raw SALib results dictionary.
 
         Notes
         -----
@@ -1065,7 +1055,6 @@ class AutoEmulate:
             X=self.X,
             N=N,
             conf_level=conf_level,
-            as_df=as_df,
         )
 
         return df_results

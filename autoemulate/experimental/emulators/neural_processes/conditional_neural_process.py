@@ -105,7 +105,7 @@ def cnp_collate_fn(batch, device: DeviceLike | None = None):
     as we don't do layernorm or attention, but we should modify cnp etc. to handle this
     better.
     """
-    X, y = zip(*batch)
+    X, y = zip(*batch, strict=False)
     device = get_torch_device(device)
 
     # Get the maximum number of context and target points in the batch
@@ -123,7 +123,7 @@ def cnp_collate_fn(batch, device: DeviceLike | None = None):
     target_mask = torch.zeros(len(batch), max_target, dtype=torch.bool)
 
     # Fill in the batched tensors
-    for i, (x, yi) in enumerate(zip(X, y)):
+    for i, (x, yi) in enumerate(zip(X, y, strict=False)):
         n_context = x["x_context"].shape[0]
         n_target = x["x_target"].shape[0]
 
