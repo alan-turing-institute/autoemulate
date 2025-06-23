@@ -74,6 +74,10 @@ def test_device(sample_data_y2d, new_data_y2d, device):
 
 
 def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    """
+    Gaussian Processes are deterministic given the same data and hyperparameters.
+    Check that the random seed does not affect the output.
+    """
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
 
@@ -83,7 +87,8 @@ def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     model1 = GaussianProcessExact(
         x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
-    RandomMixin().set_random_seed(seed)
+    new_seed = 43
+    RandomMixin().set_random_seed(new_seed)
     model2 = GaussianProcessExact(
         x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
@@ -92,20 +97,7 @@ def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
     pred1 = model1.predict(x2)
     pred2 = model2.predict(x2)
 
-    # Change the random seed and create a model with different output
-    new_seed = 43
-    RandomMixin().set_random_seed(new_seed)
-    model3 = GaussianProcessExact(
-        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
-    )
-    model3.fit(x, y)
-    pred3 = model3.predict(x2)
-
     assert isinstance(pred1, DistributionLike)
     assert isinstance(pred2, DistributionLike)
-    assert isinstance(pred3, DistributionLike)
     assert torch.allclose(pred1.mean, pred2.mean)
     assert torch.allclose(pred1.variance, pred2.variance)
-
-    # TODO: These should be different, but do we care that they aren't?
-    assert not torch.allclose(pred1.mean, pred3.mean)
