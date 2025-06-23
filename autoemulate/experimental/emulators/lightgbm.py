@@ -34,11 +34,11 @@ class LightGBM(Emulator):
         colsample_bytree: float = 1.0,
         reg_alpha: float = 0.0,
         reg_lambda: float = 0.0,
+        random_seed: int | None = None,
         n_jobs: int | None = 1,
         importance_type: str = "split",
         verbose: int = -1,
         device: DeviceLike = "cpu",
-        random_seed: int | None = None,
     ):
         """Initializes a LightGBM object."""
         _, _ = x, y  # ignore unused arguments
@@ -97,7 +97,6 @@ class LightGBM(Emulator):
         """
         x_np, y_np = self._convert_to_numpy(x, y)
         self.n_features_in_ = x_np.shape[1]
-        print(self.random_seed)
         self.model_.fit(x_np, y_np)
 
     def _predict(self, x: TensorLike) -> OutputLike:
