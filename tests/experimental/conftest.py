@@ -1,7 +1,16 @@
 import numpy as np
 import pytest
 import torch
+from autoemulate.experimental.data.utils import RandomMixin
 from sklearn.datasets import make_regression
+
+
+@pytest.fixture
+def set_seed():
+    def _set_seed():
+        RandomMixin().set_random_seed(42, deterministic=True)
+
+    return _set_seed
 
 
 @pytest.fixture

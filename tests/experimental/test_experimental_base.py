@@ -113,7 +113,7 @@ class TestPyTorchBackend:
         tuner = Tuner(x=dataset, y=None, n_iter=10)
         tuner.run(self.DummyModel)
 
-    def test_fit_predict_deterministic_with_seed(self):
+    def test_fit_predict_deterministic_with_seed(self, set_seed):
         """
         Test that fitting two models with the same seed and data
         produces identical predictions.
@@ -122,10 +122,12 @@ class TestPyTorchBackend:
         y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         x_test = torch.tensor([[4.0]])
 
+        set_seed()  # This is a fixture defined in conftest.py
         model1 = self.DummyModel()
         model1.fit(x_train, y_train)
         pred1 = model1.predict(x_test)
 
+        set_seed()  # Resetting the seed to ensure deterministic behavior
         model2 = self.DummyModel()
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)

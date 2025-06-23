@@ -191,6 +191,10 @@ class ConversionMixin:
     ) -> TensorLike:
         return (x * x_std) + x_mean
 
+
+class RandomMixin:
+    """Mixin class for ensuring reproducibility in AutoEmulate models."""
+
     def set_random_seed(self, seed: int, deterministic: bool = False):
         """Set random seed for Python, NumPy and PyTorch.
 
