@@ -137,6 +137,16 @@ class TransformedEmulator(Emulator, ValidationMixin):
         TorchDeviceMixin.__init__(self, device=device)
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
+        """Fit the transforms on the provided training data.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input training data tensor of shape `(n_samples, n_features)`.
+        y : TensorLike
+            Target training data tensor of shape `(n_samples, n_targets)`.
+
+        """
         # Fit transforms
         current_x = x
         for transform in self.x_transforms:
@@ -154,9 +164,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
         Parameters
         ----------
         x : TensorLike
-            New input training data tensor of shape (n_samples, n_features).
+            New input training data tensor of shape `(n_samples, n_features)`.
         y : TensorLike
-            New target training data tensor of shape (n_samples, n_targets).
+            New target training data tensor of shape `(n_samples, n_targets)`.
         retrain_transforms : bool, default=False
             Whether to retrain the transforms on the new data. If False,
             uses the existing fitted transforms from initialization.
@@ -172,32 +182,126 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.fit(x, y)
 
     def _transform_x(self, x: TensorLike) -> TensorLike:
+        """Transform the input tensor `x` using `x_transforms` returning a `TensorLike`.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input tensor to be transformed.
+
+        Returns
+        -------
+        TensorLike
+            Transformed input tensor after applying all x_transforms.
+
+        """
         x_t = ComposeTransform(self._cast(self.x_transforms))(x)
         assert isinstance(x_t, TensorLike)
         return x_t
 
     def _transform_y_tensor(self, y: TensorLike) -> TensorLike:
+        """Transform the target tensor `y` using `y_transforms` returning a
+        `TensorLike`.
+
+        Parameters
+        ----------
+        y : TensorLike
+            Target tensor to be transformed.
+
+        Returns
+        -------
+        TensorLike
+            Transformed target tensor after applying all `y_transforms`.
+
+        """
         y_t = ComposeTransform(self._cast(self.y_transforms))(y)
         assert isinstance(y_t, TensorLike)
         return y_t
 
     @staticmethod
     def _cast(transforms: list[AutoEmulateTransform]) -> list[Transform]:
+        """Casts a list of AutoEmulateTransform to a list of torch Transforms."""
         return cast(list[Transform], transforms)
 
     def _inv_transform_y_tensor(self, y_t: TensorLike) -> TensorLike:
+        """Invert the transformed target tensor `y_t` back to the original space.
+
+        Parameters
+        ----------
+        y_t : TensorLike
+            Transformed target tensor to be inverted.
+
+        Returns
+        -------
+        TensorLike
+            Inverted target tensor in the original data space after applying all
+            inverse `y_transforms`.
+
+        """
         target_transforms = self._cast(self.y_transforms)
         y = ComposeTransform(target_transforms).inv(y_t)
         assert isinstance(y, TensorLike)
         return y
 
     def _inv_transform_y_mvn(self, y_t: GaussianLike) -> GaussianLike:
+        """Invert the transformed `GaussianLike` `y_t` back to the original space.
+
+        The inversion is performed with calls to each transform's inverse_gaussian
+        method that aims to use the analytical or approximate non-sampling inverse of
+        the transformation for Gaussian distributions.
+
+        Parameters
+        ----------
+        y_t : GaussianLike
+            Transformed MultitaskMultivariateNormal target distribution to be inverted.
+
+        Returns
+        -------
+        GaussianLike
+            Inverted GaussianLike distribution in the original data space after applying
+            all inverse `y_transforms` with the transforms `inverse_gaussian` methods.
+
+        """
         # Invert the order since the combined transform is an inversion
         for transform in self.y_transforms[::-1]:
             y_t = transform._inverse_gaussian(y_t)
         return y_t
 
     def _inv_transform_y_mvn_sample(self, y_t: DistributionLike) -> GaussianLike:
+        """Invert the transformed distribution `y_t` by sampling and calculating
+        empirical mean and covariance from the samples in the original space to
+        parameterize a `GaussianLike` distribution.
+
+        This method uses the number of samples specified in the initialization
+        (`n_samples`) to draw samples from the transformed distribution `y_t` and
+        returns a full covariance `GaussianLike` if specified (`full_covariance=True`
+        in the initialization and fewer than `max_targets`) or a diagonal covariance
+        `GaussianLike` otherwise for computational feasibility.
+
+        Parameters
+        ----------
+        y_t : DistributionLike
+            Transformed target distribution to be inverted by sampling.
+
+        Returns
+        -------
+        GaussianLike
+            A GaussianLike distribution parameterized by the empirical mean and
+            covariance of the samples drawn from the transformed distribution in the
+            original data space after applying all inverse `y_transforms`.
+
+        Raises
+        ------
+        RuntimeError
+            If the empirical covariance cannot be made positive definite.
+
+        Notes
+        -----
+        This method can be used when the emulator's predictive distribution is not
+        `GaussianLike` or when analytical or alternative approximate inversion is not
+        possible.
+
+        """
         samples = self._inv_transform_y_tensor(
             torch.stack([y_t.sample() for _ in range(self.n_samples)], dim=0)
         )
@@ -212,7 +316,38 @@ class TransformedEmulator(Emulator, ValidationMixin):
         return GaussianLike(mean, cov)
 
     def _inv_transform_y_distribution(self, y_t: DistributionLike) -> DistributionLike:
-        """Invert the distribution using the target transforms."""
+        """Invert the transformed distribution `y_t` back to the original space `y`.
+
+        This method applies the inverse transformations to the distribution `y_t`
+        using the `inv` method of the `ComposeTransform` class, which is a composition
+        of all inverse transforms in `y_transforms`.
+
+        Parameters
+        ----------
+        y_t : DistributionLike
+
+        Returns
+        -------
+        DistributionLike
+            Inverted distribution `y` in the original data space after applying all
+            inverse `y_transforms`.
+
+        Raises
+        ------
+        RuntimeError
+            If the distribution cannot be inverted due to non-bijective transforms.
+
+        Notes
+        -----
+        The method requires that all transforms in `y_transforms` are bijective
+        with log det Jacobian defined so that the returned transformed distribution is
+        valid. As such, this method is:
+        - is not used in dimensionality reduction contexts (e.g. with PCA, VAE, etc.)
+        - does not return a distribution with mean and variance readily implemented
+          (this would require further empirical estimation from samples from the
+          returned transformed distribution `y`).
+
+        """
         target_transforms = self._cast(self.y_transforms)
         return TransformedDistribution(y_t, [ComposeTransform(target_transforms).inv])
 
