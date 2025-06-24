@@ -387,10 +387,13 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
         raise ValueError(msg)
 
-    # TODO: this requires self, should we update the base emulator?
-    def is_multioutput(self) -> bool:  # type: ignore PGH003
-        # Check if the model is multioutput
-        return self.model.is_multioutput()
+    @staticmethod
+    def is_multioutput() -> bool:
+        msg = (
+            "TransformedEmulator does not implement is_multioutput as a staticmethod"
+            "since it depends on the emulator instance."
+        )
+        raise NotImplementedError(msg)
 
 
 # TODO: implement TransformedModuleEmulator with learnable parameters
