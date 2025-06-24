@@ -35,5 +35,6 @@ class Epidemic(Simulator):
         TensorLike
             Peak infection rate.
         """
-        y = simulate_epidemic(x.numpy()[0])
-        return torch.tensor([y]).view(-1, 1)
+        y = simulate_epidemic(x.cpu().numpy()[0])
+        # TODO (#537): update with default dtype
+        return torch.tensor([y], dtype=torch.float32).view(-1, 1)

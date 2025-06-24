@@ -1,5 +1,9 @@
 import pytest
 import torch
+from autoemulate.experimental.device import (
+    SUPPORTED_DEVICES,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -94,14 +98,18 @@ def test_get_indices(history_matcher):
     assert len(history_matcher.get_ro(impl_scores)) == 0
 
 
-def test_run():
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_run(device):
     """Test the full history matching workflow with Epidemic simulator."""
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
     y = simulator.forward_batch(x)
 
     # Run history matching
-    gp = GaussianProcessExact(x, y)
+    gp = GaussianProcessExact(x, y, device=device)
     gp.fit(x, y)
 
     observations = {"infection_rate": (0.3, 0.05)}
@@ -113,6 +121,7 @@ def test_run():
         threshold=3.0,
         model_discrepancy=0.1,
         rank=1,
+        device=device,
     )
 
     # call run first time
