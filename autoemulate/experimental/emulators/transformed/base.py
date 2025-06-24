@@ -30,7 +30,17 @@ class TransformedEmulator(Emulator, ValidationMixin):
     makes predictions in the transformed space, with automatic inverse transformations
     applied to return results in the original data space.
 
-    The transformation workflow:
+    The transformation workflow for fitting:
+    ```
+    Original space:     x                                         y
+                        │                                         │
+                        ▼ x_transforms.fit()   y_transforms.fit() ▼
+                        │                                         │
+    Transformed space:  x_t ──────────► emulator.fit() ◄──────── y_t
+    ```
+
+
+    The transformation workflow for prediction:
     ```
     Original space:     x ────────────────────► y_pred
                         │                       ▲
