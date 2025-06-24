@@ -2,7 +2,6 @@ import logging
 
 import torch
 from torch.distributions import Transform, constraints
-from torch.utils.data import DataLoader, TensorDataset
 
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import TensorLike
@@ -89,9 +88,10 @@ class VAETransform(AutoEmulateTransform):
         if self.random_state is not None:
             torch.manual_seed(self.random_state)
 
-        # Create dataset and dataloader
-        dataset = TensorDataset(x, x)
-        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        # Create dataloader
+        data_loader = self._convert_to_dataloader(
+            x, x, batch_size=self.batch_size, shuffle=True
+        )
 
         # Initialize the model
         self._init_vae(intput_dim=x.shape[1])
