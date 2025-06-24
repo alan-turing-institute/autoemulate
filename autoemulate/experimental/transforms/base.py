@@ -181,7 +181,7 @@ class AutoEmulateTransform(Transform, ABC):
         return GaussianLike(mean_orig, cov_orig)
 
 
-# TODO: complete implementation in ...
+# TODO (#536): complete implementation
 # class AutoEmulateTransformModule(TransformModule):
 #     @abstractmethod
 #     def fit(self, x): ...
