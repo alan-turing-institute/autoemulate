@@ -15,24 +15,28 @@ class MLP(PyTorchBackend):
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
         scale: float = 1.0,
+        dropout_prob: float | None = None,
         device: DeviceLike | None = None,
         **kwargs,
     ):
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)
         x, y = self._convert_to_tensors(x, y)
-        layer_dims = layer_dims or [32, 16]
-        layer_dims = [x.shape[1], *layer_dims]
+        self.dropout_prob = dropout_prob
 
         # Construct the MLP layers
+        layer_dims = [x.shape[1], *layer_dims] if layer_dims else [32, 16]
         layers = []
         for idx, dim in enumerate(layer_dims[1:]):
             layers.append(nn.Linear(layer_dims[idx], dim))
             layers.append(activation_cls())
+            if self.dropout_prob is not None:
+                layers.append(nn.Dropout(p=self.dropout_prob))
+
         layers.append(nn.Linear(layer_dims[-1], y.shape[1]))
         self.nn = nn.Sequential(*layers)
 
-        # Init weights using backend specific method
+        # Initialize weights
         self._initialize_weights(weight_init, scale)
 
         # TODO: consider adding flexibility over optimizer to API
@@ -56,11 +60,10 @@ class MLP(PyTorchBackend):
             "epochs": [50, 100, 200],
             "layer_dims": [[32, 16], [64, 32, 16]],
             "lr": [1e-1, 1e-2, 1e-3],
+            "weight_decay": [0.0, 1e-4, 1e-3],
             "batch_size": [16, 32],
             "weight_init": ["default", "normal"],
             "scale": [0.1, 1.0],
-            "bias_init": [
-                "default",
-                "zeros",
-            ],
+            "bias_init": ["default", "zeros"],
+            "dropout_prob": [0.3, 0.5, None],
         }
