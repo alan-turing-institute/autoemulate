@@ -243,7 +243,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         assert isinstance(y, TensorLike)
         return y
 
-    def _inv_transform_y_mvn(self, y_t: GaussianLike) -> GaussianLike:
+    def _inv_transform_y_gaussian(self, y_t: GaussianLike) -> GaussianLike:
         """Invert the transformed `GaussianLike` `y_t` back to the original space.
 
         The inversion is performed with calls to each transform's inverse_gaussian
@@ -267,7 +267,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             y_t = transform._inverse_gaussian(y_t)
         return y_t
 
-    def _inv_transform_y_mvn_sample(self, y_t: DistributionLike) -> GaussianLike:
+    def _inv_transform_y_gaussian_sample(self, y_t: DistributionLike) -> GaussianLike:
         """Invert the transformed distribution `y_t` by sampling and calculating
         empirical mean and covariance from the samples in the original space to
         parameterize a `GaussianLike` distribution.
@@ -371,7 +371,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Output derived by analytical/approximate transformations
         if not self.output_from_samples:
             if isinstance(y_t_pred, GaussianLike):
-                return self._inv_transform_y_mvn(y_t_pred)
+                return self._inv_transform_y_gaussian(y_t_pred)
             if isinstance(y_t_pred, DistributionLike):
                 return self._inv_transform_y_distribution(y_t_pred)
             msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
@@ -379,7 +379,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         # Output derived by sampling and inverting to original space
         if isinstance(y_t_pred, DistributionLike):
-            return self._inv_transform_y_mvn_sample(y_t_pred)
+            return self._inv_transform_y_gaussian_sample(y_t_pred)
         msg = (
             "Invalid output type from model prediction. Expected TensorLike,"
             "GaussianLike, or DistributionLike. Received: "
