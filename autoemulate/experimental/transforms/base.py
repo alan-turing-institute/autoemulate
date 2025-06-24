@@ -4,11 +4,12 @@ import torch
 from linear_operator.operators import DiagLinearOperator
 from torch.distributions import Transform
 
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import GaussianLike, TensorLike
 
 
-class AutoEmulateTransform(Transform, ABC):
+class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
     """Base class for transforms in the AutoEmulate framework.
 
     This class subclasses the `torch.distributions.Transform` class and provides
