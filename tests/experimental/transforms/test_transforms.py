@@ -62,7 +62,7 @@ def test_standardize(sample_data_y2d):
 
 
 def test_pca(sample_data_y2d):
-    pca = PCATransform(n_components=2, niter=50)
+    pca = PCATransform(n_components=2)
     x, _ = sample_data_y2d
     pca.fit(x)
     skpca = SklearnPCA(n_components=2)
