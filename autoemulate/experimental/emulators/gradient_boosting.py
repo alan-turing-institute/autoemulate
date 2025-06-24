@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 from scipy.stats import loguniform
 from sklearn.ensemble import GradientBoostingRegressor
@@ -17,7 +19,9 @@ class GradientBoosting(SklearnBackend):
         self,
         x: TensorLike,
         y: TensorLike,
-        loss: str = "squared_error",
+        loss: Literal[
+            "squared_error", "absolute_error", "huber", "quantile"
+        ] = "squared_error",
         learning_rate: float = 0.1,
         n_estimators: int = 100,
         max_depth: int = 3,
