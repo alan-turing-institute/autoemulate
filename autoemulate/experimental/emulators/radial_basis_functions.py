@@ -5,7 +5,7 @@ from scipy.interpolate import RBFInterpolator
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import SklearnBackend
-from autoemulate.experimental.types import DeviceLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
 class RadialBasisFunctions(SklearnBackend):
@@ -31,6 +31,17 @@ class RadialBasisFunctions(SklearnBackend):
         self.kernel = kernel
         self.epsilon = epsilon
         self.degree = degree
+
+    def _fit(self, x: TensorLike, y: TensorLike):
+        if self.normalize_y:
+            y, y_mean, y_std = self._normalize(y)
+            self.y_mean = y_mean
+            self.y_std = y_std
+        x_np, y_np = self._convert_to_numpy(x, y)
+        assert isinstance(x_np, np.ndarray)
+        assert isinstance(y_np, np.ndarray)
+        self.n_features_in_ = x_np.shape[1]
+        self._model_specific_check(x_np, y_np)
         self.model = RBFInterpolator(
             x,
             y,
@@ -39,6 +50,14 @@ class RadialBasisFunctions(SklearnBackend):
             epsilon=self.epsilon,
             degree=self.degree,
         )
+
+    def _predict(self, x: TensorLike) -> OutputLike:
+        x_np, _ = self._convert_to_numpy(x, None)
+        y_pred = self.model(x_np)  # type: ignore PGH003
+        _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
+        if self.normalize_y:
+            y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
+        return y_pred
 
     @staticmethod
     def is_multioutput() -> bool:
