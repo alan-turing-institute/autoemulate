@@ -4,6 +4,7 @@ from typing import ClassVar
 
 import numpy as np
 import torch
+from scipy.interpolate import RBFInterpolator
 from sklearn.base import BaseEstimator
 from torch import nn, optim
 
@@ -206,8 +207,7 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # TODO: consider if we also need to inherit from other classes
-    model: BaseEstimator
+    model: BaseEstimator | RBFInterpolator
     normalize_y: bool = False
     y_mean: TensorLike
     y_std: TensorLike
