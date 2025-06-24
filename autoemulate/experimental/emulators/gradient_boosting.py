@@ -48,7 +48,7 @@ class GradientBoosting(SklearnBackend):
         self.ccp_alpha = ccp_alpha
         self.n_iter_no_change = n_iter_no_change
         self.random_seed = random_seed
-        self.model_ = GradientBoostingRegressor(
+        self.model = GradientBoostingRegressor(
             loss=self.loss,
             learning_rate=self.learning_rate,
             n_estimators=self.n_estimators,
