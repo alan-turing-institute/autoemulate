@@ -29,22 +29,21 @@ class PCATransform(AutoEmulateTransform):
         self.niter = niter
 
     def fit(self, x: TensorLike):
-        self.mean = x.mean(0)
+        self.check_matrix(x)
+        self.mean = x.mean(0, keepdim=True)  # (1, d)
         _, _, v = torch.pca_lowrank(x, q=self.n_components, niter=self.niter)
-        # (d, n_c)
-        self.components = v[:, : self.n_components]
+        self.components = v[:, : self.n_components]  # (d, n_c)
         self._is_fitted = True
 
-    def _call(self, x):
+    def _call(self, x: TensorLike):
         self._check_is_fitted()
         return (x - self.mean) @ self.components
 
-    def _inverse(self, y):
+    def _inverse(self, y: TensorLike):
         self._check_is_fitted()
-        # (n, n_c) x (n_c, d) + (n_c,)
-        return y @ self.components.T + self.mean
+        return y @ self.components.T + self.mean  # (n, n_c) x (n_c, d) + (1, d)
 
-    def log_abs_det_jacobian(self, x, y):
+    def log_abs_det_jacobian(self, x: TensorLike, y: TensorLike):
         _, _ = x, y
         msg = "log det Jacobian not computable for n_components < d as not bijective."
         raise RuntimeError(msg)
