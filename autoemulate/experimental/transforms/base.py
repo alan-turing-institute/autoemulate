@@ -55,9 +55,36 @@ class AutoEmulateTransform(Transform, ABC):
     def _inverse_sample(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
-        """Generate samples from a distribution `y` in the codomain and map those back
-        to the original space and return a `GaussianLike` given the mean and covariance
-        across the inverted samples.
+        """Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the domain
+        through generating samples from `y` in the codomain and mapping those back
+        to the original space `x`.
+
+        The empirical mean and covariance of the samples are computed, and a
+        `GaussianLike` object in the domain is returned with these statistics.
+
+        Parameters
+        ----------
+            y : GaussianLike
+                The distribution in the codomain.
+            n_samples : int, default=1000
+                Number of samples to generate from the distribution `y`.
+            full_covariance : bool, default=True
+                If True, calculates a full covariance matrix from samples; otherwise,
+                calculates only the diagonal of the covariance matrix. This is useful
+                for a high-dimensional domain where full covariance might be
+                computationally expensive.
+
+        Returns
+        -------
+            GaussianLike
+                A `GaussianLike` object representing the distribution in the domain,
+                with mean and covariance derived from the samples.
+
+        Raises
+        ------
+            RuntimeError
+                If covariance matrix cannot be made positive definite.
+
         """
         samples = self.inv(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
         assert isinstance(samples, TensorLike)
