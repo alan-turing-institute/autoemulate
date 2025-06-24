@@ -10,6 +10,10 @@ class StandardizeTransform(AutoEmulateTransform):
 
     This transform is effectively a composition of two AffineTransforms with a
     translation by the mean and a scaling by the inverse of the standard deviation.
+
+    The transform assumes that the input data is a matrix of shape `(n, d)`, where `n`
+    is the number of samples and `d` is the number of features.
+
     """
 
     domain = constraints.real
@@ -20,7 +24,7 @@ class StandardizeTransform(AutoEmulateTransform):
         Transform.__init__(self, cache_size=cache_size)
 
     def fit(self, x: TensorLike):
-        # TODO: add checks or shape of mean and std
+        self.check_matrix(x)
         self.mean = x.mean(0, keepdim=True)
         std = x.std(0, keepdim=True)
         # Ensure std is not zero to avoid division by zero errors
