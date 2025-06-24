@@ -12,10 +12,20 @@ class PCATransform(AutoEmulateTransform):
     codomain = constraints.real
     bijective = False
 
-    def __init__(self, n_components, cache_size: int = 0, niter: int = 1000):
-        Transform.__init__(self, cache_size=cache_size)
-        # n_c
-        self.n_components = n_components
+    def __init__(self, n_components: int, niter: int = 1000):
+        """
+        Initialize the PCA transform.
+
+        Parameters
+        ----------
+        n_components : int
+            The number of principal components to use for the transformation.
+        niter : int, default=1000
+            The number of iterations for the PCA algorithm.
+        """
+        # Init the base class with no cache
+        Transform.__init__(self, cache_size=0)
+        self.n_components = n_components  # n_c
         self.niter = niter
 
     def fit(self, x: TensorLike):
