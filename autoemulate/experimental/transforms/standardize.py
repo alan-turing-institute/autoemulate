@@ -20,8 +20,9 @@ class StandardizeTransform(AutoEmulateTransform):
     codomain = constraints.real
     bijective = True
 
-    def __init__(self, cache_size=0):
-        Transform.__init__(self, cache_size=cache_size)
+    def __init__(self):
+        # Cache not used as not expected to be beneficial for standardization
+        Transform.__init__(self, cache_size=0)
 
     def fit(self, x: TensorLike):
         self.check_matrix(x)

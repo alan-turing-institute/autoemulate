@@ -12,7 +12,7 @@ class PCATransform(AutoEmulateTransform):
     codomain = constraints.real
     bijective = False
 
-    def __init__(self, n_components: int, niter: int = 1000):
+    def __init__(self, n_components: int, niter: int = 1000, cache_size: int = 0):
         """
         Initialize the PCA transform.
 
@@ -22,9 +22,15 @@ class PCATransform(AutoEmulateTransform):
             The number of principal components to use for the transformation.
         niter : int, default=1000
             The number of iterations for the PCA algorithm.
+        cache_size : int, default=0
+            Whether to cache previous transform. Set to 0 to disable caching. Set to
+            1 to enable caching of the last single value. This might be useful for
+            repeated expensive calls with the same input data but is by default
+            disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
+            for more details on caching.
+
         """
-        # Init the base class with no cache
-        Transform.__init__(self, cache_size=0)
+        Transform.__init__(self, cache_size=cache_size)
         self.n_components = n_components  # n_c
         self.niter = niter
 

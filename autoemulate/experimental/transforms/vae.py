@@ -27,6 +27,7 @@ class VAETransform(AutoEmulateTransform):
         random_state: int | None = None,
         beta: float = 1.0,
         verbose: bool = False,
+        cache_size: int = 0,
     ):
         """Intialize the VAE transform parameters but defer intialization of the inner
         VAE model until fit is called when the input data is available.
@@ -52,11 +53,16 @@ class VAETransform(AutoEmulateTransform):
             between reconstruction loss and KL divergence.
         verbose : bool, default=False
             If True, log training progress.
+        cache_size : int, default=0
+            Whether to cache previous transform. Set to 0 to disable caching. Set to
+            1 to enable caching of the last single value. This might be useful for
+            repeated expensive calls with the same input data but is by default
+            disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
+            for more details on caching.
 
         """
 
-        # Init with cache_size=0 to avoid caching as $f^{-1}(f(x)) \approx x$
-        Transform.__init__(self, cache_size=0)
+        Transform.__init__(self, cache_size=cache_size)
         self.latent_dim = latent_dim
         self.hidden_layers = hidden_layers or [64, 32]
         self.epochs = epochs
