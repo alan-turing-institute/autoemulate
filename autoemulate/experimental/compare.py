@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, KFold
 
-from autoemulate.experimental.data.utils import ConversionMixin
+from autoemulate.experimental.data.utils import ConversionMixin, RandomMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
@@ -39,6 +39,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             )
 
         self.models = updated_models
+        if random_seed is not None:
+            RandomMixin().set_random_seed(seed=random_seed)
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
 
     @staticmethod
