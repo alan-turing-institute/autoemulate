@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.3.3"
+version = "0.4.0"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = ["AutoEmulate contributors (see our GitHub page)"]

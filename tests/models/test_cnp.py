@@ -6,7 +6,6 @@ from autoemulate.emulators.neural_networks.cnp_module import CNPModule
 from autoemulate.emulators.neural_networks.cnp_module import Decoder
 from autoemulate.emulators.neural_networks.cnp_module import Encoder
 
-
 # encoder ----------------------------
 
 

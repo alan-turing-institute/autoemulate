@@ -1055,7 +1055,6 @@ class AutoEmulate:
             X=self.X,
             N=N,
             conf_level=conf_level,
-            as_df=as_df,
         )
 
         return df_results
