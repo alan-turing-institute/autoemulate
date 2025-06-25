@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from autoemulate.experimental.emulators.lightgbm import LightGBM
 from autoemulate.experimental.tuner import Tuner
@@ -27,13 +26,8 @@ def test_lightgm_class_name_returned():
     assert lgbm.model_name() == "LightGBM"
 
 
-def test_lgbm_deterministic_with_seed():
-    # Generate very small, highly noisy data to maximize stochasticity effects
-    rng = np.random.RandomState(0)
-    x = torch.tensor(rng.normal(size=(100, 2)), dtype=torch.float32)
-    y = torch.tensor(rng.normal(size=(100,)), dtype=torch.float32)
-    # Use some of the training points as test points to amplify differences
-    x2 = x[:4].clone()
+def test_lgbm_deterministic_with_seed(noisy_data):
+    x, y, x2 = noisy_data
 
     # Use parameters that introduce stochasticity
     params = {
