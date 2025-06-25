@@ -144,6 +144,23 @@ class ProbabilisticEmulator(Emulator):
         assert isinstance(pred, DistributionLike)
         return pred
 
+    def predict_mean_and_variance(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
+        """Predict mean and variance from the probabilistic output.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input tensor to make predictions for.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            The emulator predicted mean and variance for `x`.
+
+        """
+        pred = self.predict(x)
+        return pred.mean, pred.variance
+
 
 class GaussianEmulator(ProbabilisticEmulator):
     """An emulator subclass that predicts with Gaussian outputs returning a
