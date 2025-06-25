@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for autoemulate/emulators/gaussian_process_mt.py: 91%</title>
+    <title>Coverage for autoemulate/emulators/gaussian_process_mt.py: 90%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_81f8c14c.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>autoemulate/emulators/gaussian_process_mt.py</b>:
-            <span class="pc_cov">91%</span>
+            <span class="pc_cov">90%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">97 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">88<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">9<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">87<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">10<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -319,7 +319,7 @@
     <p class="pln"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t"><span class="com"># wrapper functions for kernel initialization at fit time (to provide ard_num_dims)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t"><span class="com"># move outside class to allow pickling</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t239" href="#t239">239</a></span><span class="t"><span class="key">def</span> <span class="nam">rbf_kernel</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t240" href="#t240">240</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">RBFKernel</span><span class="op">(</span><span class="nam">ard_num_dims</span><span class="op">=</span><span class="nam">n_features</span><span class="op">)</span><span class="op">.</span><span class="nam">initialize</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t240" href="#t240">240</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">RBFKernel</span><span class="op">(</span><span class="nam">ard_num_dims</span><span class="op">=</span><span class="nam">n_features</span><span class="op">)</span><span class="op">.</span><span class="nam">initialize</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t241" href="#t241">241</a></span><span class="t">        <span class="nam">lengthscale</span><span class="op">=</span><span class="nam">torch</span><span class="op">.</span><span class="nam">ones</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span> <span class="op">*</span> <span class="num">1.5</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t242" href="#t242">242</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t243" href="#t243">243</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -329,7 +329,7 @@
     <p class="pln"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t"><span class="key">def</span> <span class="nam">matern_3_2_kernel</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">MaternKernel</span><span class="op">(</span><span class="nam">nu</span><span class="op">=</span><span class="num">1.5</span><span class="op">,</span> <span class="nam">ard_num_dims</span><span class="op">=</span><span class="nam">n_features</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">MaternKernel</span><span class="op">(</span><span class="nam">nu</span><span class="op">=</span><span class="num">1.5</span><span class="op">,</span> <span class="nam">ard_num_dims</span><span class="op">=</span><span class="nam">n_features</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t"><span class="key">def</span> <span class="nam">rq_kernel</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -338,7 +338,7 @@
     <p class="pln"><span class="n"><a id="t256" href="#t256">256</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t257" href="#t257">257</a></span><span class="t"><span class="com"># combinations</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t258" href="#t258">258</a></span><span class="t"><span class="key">def</span> <span class="nam">rbf_plus_linear</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">RBFKernel</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">RBFKernel</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t260" href="#t260">260</a></span><span class="t">        <span class="nam">ard_num_dims</span><span class="op">=</span><span class="nam">n_features</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t261" href="#t261">261</a></span><span class="t">    <span class="op">)</span> <span class="op">+</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">kernels</span><span class="op">.</span><span class="nam">LinearKernel</span><span class="op">(</span><span class="nam">ard_num_dims</span><span class="op">=</span><span class="nam">n_features</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t262" href="#t262">262</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -357,11 +357,11 @@
     <p class="pln"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t276" href="#t276">276</a></span><span class="t"><span class="com"># means</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t277" href="#t277">277</a></span><span class="t"><span class="key">def</span> <span class="nam">constant_mean</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t278" href="#t278">278</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">means</span><span class="op">.</span><span class="nam">ConstantMean</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t278" href="#t278">278</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">means</span><span class="op">.</span><span class="nam">ConstantMean</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t279" href="#t279">279</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t280" href="#t280">280</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t281" href="#t281">281</a></span><span class="t"><span class="key">def</span> <span class="nam">zero_mean</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t282" href="#t282">282</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">means</span><span class="op">.</span><span class="nam">ZeroMean</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t282" href="#t282">282</a></span><span class="t">    <span class="key">return</span> <span class="nam">gpytorch</span><span class="op">.</span><span class="nam">means</span><span class="op">.</span><span class="nam">ZeroMean</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t283" href="#t283">283</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t284" href="#t284">284</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t285" href="#t285">285</a></span><span class="t"><span class="key">def</span> <span class="nam">linear_mean</span><span class="op">(</span><span class="nam">n_features</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>

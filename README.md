@@ -9,12 +9,12 @@
 | autoemulate/cross\_validate.py                                                       |       46 |        3 |     93% |81-82, 153 |
 | autoemulate/data\_splitting.py                                                       |        6 |        0 |    100% |           |
 | autoemulate/datasets.py                                                              |       12 |        0 |    100% |           |
-| autoemulate/emulators/\_\_init\_\_.py                                                |       22 |        0 |    100% |           |
-| autoemulate/emulators/conditional\_neural\_process.py                                |      103 |        7 |     93% |254-255, 261-277, 282, 296 |
+| autoemulate/emulators/\_\_init\_\_.py                                                |       27 |        0 |    100% |           |
+| autoemulate/emulators/conditional\_neural\_process.py                                |      103 |        3 |     97% |254-255, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                          |        9 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process.py                                           |      104 |        2 |     98% |   73, 282 |
-| autoemulate/emulators/gaussian\_process\_mogp.py                                     |       33 |       33 |      0% |      1-82 |
-| autoemulate/emulators/gaussian\_process\_mt.py                                       |       97 |        9 |     91% |71, 240, 246, 254, 265, 271, 278, 286, 290 |
+| autoemulate/emulators/gaussian\_process\_mogp.py                                     |       33 |       18 |     45% |18, 35-40, 59-65, 71-75, 79, 82 |
+| autoemulate/emulators/gaussian\_process\_mt.py                                       |       97 |       10 |     90% |71, 246, 250, 254, 259, 265, 271, 282, 286, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                                  |       42 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/\_\_init\_\_.py                       |        3 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process\_utils/early\_stopping\_criterion.py         |       11 |        2 |     82% |    58, 63 |
@@ -114,7 +114,7 @@
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                              |       13 |        0 |    100% |           |
 | tests/test\_end\_to\_end.py                                                          |       39 |        0 |    100% |           |
-| tests/test\_estimators.py                                                            |       29 |        0 |    100% |           |
+| tests/test\_estimators.py                                                            |       30 |        0 |    100% |           |
 | tests/test\_experimental\_design.py                                                  |       22 |        0 |    100% |           |
 | tests/test\_gaussian\_process\_utils.py                                              |       76 |        0 |    100% |           |
 | tests/test\_history\_matching.py                                                     |       58 |        0 |    100% |           |
@@ -130,7 +130,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **8676** | **1970** | **77%** |           |
+|                                                                            **TOTAL** | **8682** | **1952** | **78%** |           |
 
 
 ## Setup coverage badge
