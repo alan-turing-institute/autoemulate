@@ -21,7 +21,7 @@ class SecondOrderPolynomial(SklearnBackend):
         degree: int = 2,
         device: DeviceLike = "cpu",
     ):
-        """Initializes a RandomForest object."""
+        """Initializes a SecondOrderPolynomial object."""
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
         self.degree = degree
