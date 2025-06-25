@@ -16,6 +16,9 @@ class MLP(PyTorchBackend):
         weight_init: str = "default",
         scale: float = 1.0,
         dropout_prob: float | None = None,
+        loss_fn: type[nn.Module] = nn.MSELoss,
+        lr: float = 1e-1,
+        weight_decay: float = 0.0,
         device: DeviceLike | None = None,
         **kwargs,
     ):
@@ -25,25 +28,21 @@ class MLP(PyTorchBackend):
         self.dropout_prob = dropout_prob
 
         # Construct the MLP layers
-        layer_dims = [x.shape[1], *layer_dims] if layer_dims else [32, 16]
+        layer_dims = [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
         layers = []
         for idx, dim in enumerate(layer_dims[1:]):
-            layers.append(nn.Linear(layer_dims[idx], dim))
+            layers.append(nn.Linear(layer_dims[idx], dim, device=self.device))
             layers.append(activation_cls())
             if self.dropout_prob is not None:
                 layers.append(nn.Dropout(p=self.dropout_prob))
-
-        layers.append(nn.Linear(layer_dims[-1], y.shape[1]))
+        # Add final layer without activation
+        layers.append(nn.Linear(layer_dims[-1], y.shape[1], device=self.device))
         self.nn = nn.Sequential(*layers)
 
-        # Initialize weights
         self._initialize_weights(weight_init, scale)
-
-        # TODO: consider adding flexibility over optimizer to API
-        self.optimizer = optim.Adam(
-            self.nn.parameters(),
-            lr=kwargs.get("lr", 1e-3),
-            weight_decay=kwargs.get("weight_decay", 0.0),
+        self.set_loss_function(loss_fn())
+        self.set_optimizer(
+            optim.Adam(self.nn.parameters(), lr=lr, weight_decay=weight_decay)
         )
         self.to(device)
 
