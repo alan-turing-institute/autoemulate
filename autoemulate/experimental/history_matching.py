@@ -3,9 +3,9 @@ import warnings
 import torch
 
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators import GaussianProcessExact
+from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class HistoryMatching(TorchDeviceMixin):
@@ -21,13 +21,12 @@ class HistoryMatching(TorchDeviceMixin):
     whereas all other parameters are marked as not ruled out yet (NROY).
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
-        emulator: GaussianProcessExact | None = None,
         device: DeviceLike | None = None,
     ):
         """
@@ -60,11 +59,6 @@ class HistoryMatching(TorchDeviceMixin):
         self.threshold = threshold
         self.discrepancy = model_discrepancy
         self.out_dim = len(observations)
-        self.emulator = emulator
-
-        # TODO: make this EmulatorWithUncertainty once implemented (see #542)
-        if isinstance(self.emulator, GaussianProcessExact):
-            self.emulator.device = self.device
 
         if rank > self.out_dim or rank < 1:
             raise ValueError(
@@ -130,31 +124,6 @@ class HistoryMatching(TorchDeviceMixin):
         I_sorted, _ = torch.sort(implausibility, dim=1, descending=True)
         # The rank-th highest output implausibility must be <= threshold
         return I_sorted[:, self.rank - 1] <= self.threshold
-
-    def emulator_predict(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """
-        Return emulator predicted mean and variance for input parameters `x`.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Tensor of input parameters to make predictions for.
-
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            The emulator predicted mean and variance for `x`.
-        """
-        if self.emulator is not None:
-            output = self.emulator.predict(x)
-            assert isinstance(output, GaussianLike)
-            assert output.variance.ndim == 2
-            return (
-                output.mean.float().detach(),
-                output.variance.float().detach(),
-            )
-        msg = "Need an emulator to make predictions."
-        raise ValueError(msg)
 
     def get_nroy(
         self, implausibility: TensorLike, x: TensorLike | None = None
@@ -250,8 +219,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         simulator: Simulator,
-        # TODO: make this EmulatorWithUncertainty once implemented (see #542)
-        emulator: GaussianProcessExact,
+        emulator: ProbabilisticEmulator,
         observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -294,10 +262,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
-        super().__init__(
-            observations, threshold, model_discrepancy, rank, emulator, device
-        )
+        super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
+        self.emulator = emulator
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
@@ -326,7 +293,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         test_x = self.simulator.sample_inputs(n).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
-        pred_means, pred_vars = self.emulator_predict(test_x)
+        pred_means, pred_vars = self.emulator.predict_mean_and_variance(test_x)
         impl_scores = self.calculate_implausibility(pred_means, pred_vars)
 
         return test_x, impl_scores
