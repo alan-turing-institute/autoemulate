@@ -6,7 +6,7 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from autoemulate.experimental.data.utils import RandomMixin
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
@@ -110,7 +110,7 @@ def cross_validate(
 
         # Handle random seed for reproducibility
         if random_seed is not None:
-            RandomMixin().set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
         model_kwargs = dict(best_model_config)
         if "random_seed" in model_init_params:

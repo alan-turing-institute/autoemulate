@@ -2,7 +2,7 @@ import gpytorch
 import pytest
 import torch
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
-from autoemulate.experimental.data.utils import RandomMixin
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
     check_model_device,
@@ -83,12 +83,12 @@ def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
 
     # Create 2 models that should have the same output
     seed = 42
-    RandomMixin().set_random_seed(seed)
+    set_random_seed(seed)
     model1 = GaussianProcessExact(
         x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
     new_seed = 43
-    RandomMixin().set_random_seed(new_seed)
+    set_random_seed(new_seed)
     model2 = GaussianProcessExact(
         x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )

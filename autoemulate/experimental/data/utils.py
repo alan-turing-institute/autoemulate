@@ -192,26 +192,23 @@ class ConversionMixin:
         return (x * x_std) + x_mean
 
 
-class RandomMixin:
-    """Mixin class for ensuring reproducibility in AutoEmulate models."""
+def set_random_seed(seed: int = 42, deterministic: bool = True):
+    """Set random seed for Python, NumPy and PyTorch.
 
-    def set_random_seed(self, seed: int = 42, deterministic: bool = True):
-        """Set random seed for Python, NumPy and PyTorch.
-
-        Parameters
-        ----------
-        seed : int
-            The random seed to use.
-        deterministic : bool
-            Use "deterministic" algorithms in PyTorch.
-        """
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        if deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.use_deterministic_algorithms(True)
+    Parameters
+    ----------
+    seed : int
+        The random seed to use.
+    deterministic : bool
+        Use "deterministic" algorithms in PyTorch.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    if deterministic:
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)
 
 
 class ValidationMixin:

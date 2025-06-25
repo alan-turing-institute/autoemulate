@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
-from autoemulate.experimental.data.utils import RandomMixin
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
@@ -125,20 +125,20 @@ class TestPyTorchBackend:
 
         # Set a random seed for reproducibility
         seed = 42
-        RandomMixin().set_random_seed(seed)
+        set_random_seed(seed)
         model1 = self.DummyModel()
         model1.fit(x_train, y_train)
         pred1 = model1.predict(x_test)
 
         # Use the same seed to ensure deterministic behavior
-        RandomMixin().set_random_seed(seed)
+        set_random_seed(seed)
         model2 = self.DummyModel()
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)
 
         # Use a different seed to ensure deterministic behavior
         new_seed = 43
-        RandomMixin().set_random_seed(new_seed)
+        set_random_seed(new_seed)
         model3 = self.DummyModel()
         model3.fit(x_train, y_train)
         pred3 = model3.predict(x_test)
