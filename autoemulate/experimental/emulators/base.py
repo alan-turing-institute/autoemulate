@@ -254,8 +254,9 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
-        x = self.preprocess(x)
-        return self(x)
+        with torch.no_grad():
+            x = self.preprocess(x)
+            return self(x)
 
 
 class SklearnBackend(Emulator):
