@@ -141,14 +141,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         """
         return nn.MSELoss()(y_pred, y_true)
 
-    def set_loss_function(self, loss_fn_cls: nn.Module):
-        """Set the loss function"""
-        self.loss_fn = loss_fn_cls
-
-    def set_optimizer(self, optimizer: optim.Optimizer):
-        """Set the optimizer"""
-        self.optimizer = optimizer
-
     def _fit(
         self,
         x: TensorLike,
