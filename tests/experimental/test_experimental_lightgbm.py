@@ -30,8 +30,8 @@ def test_lightgm_class_name_returned():
 def test_lgbm_deterministic_with_seed():
     # Generate very small, highly noisy data to maximize stochasticity effects
     rng = np.random.RandomState(0)
-    x = torch.tensor(rng.normal(size=(8, 2)), dtype=torch.float32)
-    y = torch.tensor(rng.normal(size=(8,)), dtype=torch.float32)
+    x = torch.tensor(rng.normal(size=(100, 2)), dtype=torch.float32)
+    y = torch.tensor(rng.normal(size=(100,)), dtype=torch.float32)
     # Use some of the training points as test points to amplify differences
     x2 = x[:4].clone()
 
@@ -65,7 +65,6 @@ def test_lgbm_deterministic_with_seed():
 
     assert torch.equal(pred1, pred2)
 
-    # TODO: find a way to get LGBM to produce different outputs with different seeds
-    # pred3 = model3.predict(x2)
-    # assert isinstance(pred3, TensorLike)
-    # assert not torch.equal(pred1, pred3)
+    pred3 = model3.predict(x2)
+    assert isinstance(pred3, TensorLike)
+    assert not torch.equal(pred1, pred3)
