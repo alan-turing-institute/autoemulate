@@ -52,7 +52,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
-        x, _ = self._move_tensors_to_device(x)
+        (x,) = self._move_tensors_to_device(x)
         output = self._predict(x)
         self._check_output(output)
         return output
