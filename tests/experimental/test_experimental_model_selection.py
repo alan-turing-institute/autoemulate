@@ -1,8 +1,10 @@
 import numpy as np
 import torch
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.model_selection import cross_validate
 from sklearn.model_selection import KFold, LeavePOut
+from torch import nn
 from torch.utils.data import TensorDataset
 
 
@@ -12,8 +14,10 @@ def test_cross_validate():
     """
 
     class DummyEmulator(Emulator, torch.nn.Module):
-        def __init__(self, x=None, y=None, **kwargs):
-            pass
+        def __init__(self, x=None, y=None, device=None, **kwargs):
+            nn.Module.__init__(self)
+            TorchDeviceMixin.__init__(self, device=device)
+            _, _ = x, y
 
         def _fit(self, x, y):
             pass
