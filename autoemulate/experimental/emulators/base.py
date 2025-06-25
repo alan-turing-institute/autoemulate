@@ -30,6 +30,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
+        x, y = self._move_tensors_to_device(x, y)
         self._fit(x, y)
         self.is_fitted_ = True
 
@@ -51,6 +52,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
+        x, _ = self._move_tensors_to_device(x)
         output = self._predict(x)
         self._check_output(output)
         return output
