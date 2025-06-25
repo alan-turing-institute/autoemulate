@@ -79,7 +79,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         logger.info(msg)
 
     def compare(
-        self, n_iter: int = 10, cv: type[BaseCrossValidator] = KFold
+        self,
+        n_iter: int = 10,
+        cv: type[BaseCrossValidator] = KFold,
+        cv_seed: int | None = None,
     ) -> dict[str, dict[str, Any]]:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         models_evaluated = {}
@@ -89,7 +92,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             best_model_config = configs[best_score_idx]
             cv_results = cross_validate(
                 cv=cv(
-                    random_state=self.random_seed  # type: ignore PGH003
+                    random_state=cv_seed  # type: ignore PGH003
                 ),
                 dataset=self.train_val.dataset,
                 model=model_cls,
