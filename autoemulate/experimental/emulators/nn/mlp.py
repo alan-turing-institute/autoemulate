@@ -69,9 +69,8 @@ class MLP(PyTorchBackend):
         if seed is not None:
             torch.manual_seed(seed)
 
-        # Validate input dimensions
-        self.check_matrix(x)
-        self.check_matrix(y)
+        # Ensure x and y are tensors with correct dimensions
+        x, y = self._convert_to_tensors(x, y)
 
         # Construct the MLP layers
         layer_dims = [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
