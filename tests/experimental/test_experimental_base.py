@@ -18,8 +18,10 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self, x=None, y=None, **kwargs):
+        def __init__(self, x=None, y=None, random_seed=None, **kwargs):
             super().__init__()
+            if random_seed is not None:
+                set_random_seed(random_seed)
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
@@ -125,21 +127,18 @@ class TestPyTorchBackend:
 
         # Set a random seed for reproducibility
         seed = 42
-        set_random_seed(seed)
-        model1 = self.DummyModel()
+        model1 = self.DummyModel(random_seed=seed)
         model1.fit(x_train, y_train)
         pred1 = model1.predict(x_test)
 
         # Use the same seed to ensure deterministic behavior
-        set_random_seed(seed)
-        model2 = self.DummyModel()
+        model2 = self.DummyModel(random_seed=seed)
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)
 
         # Use a different seed to ensure deterministic behavior
         new_seed = 43
-        set_random_seed(new_seed)
-        model3 = self.DummyModel()
+        model3 = self.DummyModel(random_seed=new_seed)
         model3.fit(x_train, y_train)
         pred3 = model3.predict(x_test)
 
