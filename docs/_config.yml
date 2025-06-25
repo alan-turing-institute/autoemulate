@@ -9,7 +9,9 @@ theme:
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: 'off'
+  execute_notebooks: 'force'
+  exclude_patterns:
+    - "07_AE_workflow.ipynb"
   exclude_tags:
     - skip-execution
 
