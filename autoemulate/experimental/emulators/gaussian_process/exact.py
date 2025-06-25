@@ -25,15 +25,17 @@ from autoemulate.emulators.gaussian_process import (
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import GaussianEmulator
+from autoemulate.experimental.emulators.base import GaussianProcessEmulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
-from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, GaussianProcessLike, TensorLike
 
 
-class GaussianProcessExact(GaussianEmulator, gpytorch.models.ExactGP, Preprocessor):
+class GaussianProcessExact(
+    GaussianProcessEmulator, gpytorch.models.ExactGP, Preprocessor
+):
     """
     Gaussian Process Exact Emulator
     This class implements an exact Gaussian Process emulator using the GPyTorch library
@@ -172,7 +174,7 @@ class GaussianProcessExact(GaussianEmulator, gpytorch.models.ExactGP, Preprocess
             self.log_epoch(epoch, loss)
             optimizer.step()
 
-    def _predict(self, x: TensorLike) -> GaussianLike:
+    def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
         with torch.no_grad():
             x = x.to(self.device)
