@@ -88,7 +88,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             best_score_idx = scores.index(max(scores))
             best_model_config = configs[best_score_idx]
             cv_results = cross_validate(
-                cv=cv(),
+                cv=cv(
+                    random_state=self.random_seed  # type: ignore PGH003
+                ),
                 dataset=self.train_val.dataset,
                 model=model_cls,
                 random_seed=self.random_seed,
