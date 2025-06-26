@@ -1,3 +1,5 @@
+from typing import Union
+
 import pyro
 import pyro.distributions as dist
 import torch
@@ -22,7 +24,7 @@ class HMCCalibrator(TorchDeviceMixin):
         self,
         emulator: Emulator,
         parameter_range: dict[str, list[float]],
-        observations: dict[str, float | list[float]],
+        observations: dict[str, float] | dict[str, list[float]],
         observation_noise: float | dict[str, float] = 0.1,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
@@ -36,7 +38,7 @@ class HMCCalibrator(TorchDeviceMixin):
             Fitted Emulator object.
         parameters_range : dict[str, tuple[float, float]]
             Dictionary mapping input parameter names to their (min, max) ranges.
-        observations: dist[str, float | list[float]]
+        observations: dict[str, float] | dict[str, list[float]]
             A dictionary of either a single vlue or a list of values per output.
         observation_noise: float | dict[str, float] | None
             A single value or an array of values (one per output). Defaults to 0.1.
@@ -47,7 +49,6 @@ class HMCCalibrator(TorchDeviceMixin):
             The device to use. If None, the default torch device is returned.
         """
         TorchDeviceMixin.__init__(self, device=device)
-        self.observations = observations
         self.emulator = emulator
         # TODO: what if have tensor?
         # maybe always save this as a tensor?
@@ -64,14 +65,14 @@ class HMCCalibrator(TorchDeviceMixin):
 
     def _process_observations(
         self,
-        observations: dict[str, float | list[float]],
+        observations: dict[str, float] | dict[str, list[float]],
     ):
         """
         Turn `observations` into tensor shaped [n_samples, n_ouputs], save attribute.
 
         Parameters
         ----------
-        observations: dist[str, float | list[float]]
+        observations: dict[str, float] | dict[str, list[float]]
             A dictionary of either a single value or a list of values per output.
         """
 
