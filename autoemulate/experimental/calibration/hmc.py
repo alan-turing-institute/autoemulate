@@ -9,31 +9,183 @@ from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 
 
 class HMCCalibrator(TorchDeviceMixin):
+    """
+    Markov Chain Monte Carlo (MCMC) is a Bayesian calibration method that estimates the
+    probability distribution over input parameters given observed data. A key advantage
+    is that it provides uncertainty estimates over the parameter space.
+
+    Hamiltonian Monte Carlo (HMC) is a type of MCMC, which efficiently handles high
+    dimensional parameter spaces. In particular, we use the NUTS sampler.
+    """
+
     def __init__(
-        self, observations, emulator: Emulator, device: DeviceLike | None = None
+        self,
+        emulator: Emulator,
+        parameter_range: dict[str, list[float]],
+        observations: dict[str, float | list[float]],
+        observation_noise: float | dict[str, float] = 0.1,
+        calibration_params: list[str] | None = None,
+        device: DeviceLike | None = None,
     ):
-        """ """
+        """
+        Initialize the HMC calibration object.
+
+        Parameters
+        ----------
+        emulator: Emulator
+            Fitted Emulator object.
+        parameters_range : dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        observations: dist[str, float | list[float]]
+            A dictionary of either a single vlue or a list of values per output.
+        observation_noise: float | dict[str, float] | None
+            A single value or an array of values (one per output). Defaults to 0.1.
+        calibration_params: list[str] | None
+            Optional list of input parameters to calibrate. If None, will calibrate
+            all input parameters. Defaults to None.
+        device: DeviceLike | None
+            The device to use. If None, the default torch device is returned.
+        """
         TorchDeviceMixin.__init__(self, device=device)
         self.observations = observations
         self.emulator = emulator
+        # TODO: what if have tensor?
+        # maybe always save this as a tensor?
+        # BUT probably want to store the names somewhere (same as SA)
+        self.parameter_range = parameter_range
+        if calibration_params is None:
+            calibration_params = list(parameter_range.keys())
+        self.calibration_params = calibration_params
+        self._process_observations(observations)
+        # TODO: should we allow for this to be None? In that case, do inference on it?
+        # NOTE: given often we want to reduce param space, unlikely that we want to
+        # then add complexity here
+        self._process_obs_noise(list(observations.keys()), observation_noise)
+
+    def _process_observations(
+        self,
+        observations: dict[str, float | list[float]],
+    ):
+        """
+        Turn `observations` into tensor shaped [n_samples, n_ouputs], save attribute.
+
+        Parameters
+        ----------
+        observations: dist[str, float | list[float]]
+            A dictionary of either a single value or a list of values per output.
+        """
+
+        observation_values = [
+            (torch.tensor(value) if isinstance(value, list) else torch.tensor([value]))
+            for value in observations.values()
+        ]
+        # shape: [n_samples, n_outputs]
+        self.observations = torch.stack(observation_values, dim=1)
+
+    def _process_obs_noise(
+        self,
+        output_names: list[str],
+        observation_noise: float | dict[str, float] | None = 0.1,
+    ):
+        """
+        Ensure that `observation_noise` is handled correctly and saved as attribute:
+        - if float, set the same observation noise value for all outputs
+        - if dict, make sure the order matches `self.observations`
+
+        Parameters
+        ----------
+        output_names: list[str]
+            Names of output parameters in order of `self.observations`.
+        observation_noise: float | dict[str, float] | None
+            A single value or an array of values (one per output). If None, then
+            it is treated as a parameter to infer. Defaults to 0.1.
+        """
+        if isinstance(observation_noise, float):
+            # Broadcast to match outputs
+            self.obs_noise = torch.full(
+                (self.observations.shape[1],), observation_noise, dtype=torch.float32
+            )
+        elif isinstance(observation_noise, dict):
+            # Ensure order matches self.observations
+            noise_values = [
+                torch.tensor(observation_noise[key], dtype=torch.float32)
+                for key in output_names
+            ]
+            self.obs_noise = torch.tensor(noise_values, dtype=torch.float32)
+        else:
+            raise ValueError("`observation_noise` must be a float or dict.")
 
     def model(self):
-        """Pyro model for MCMC calibration..."""
-        pass
+        """Pyro model."""
 
-    def run_mcmc(
-        self, num_samples: int = 1000, warmup_steps: int = 500, num_chains: int = 1
-    ):
-        """Run MCMC sampling..."""
+        # Set uniform priors for calibration parameters
+        calibration_params = {}
+        for param in self.calibration_params:
+            min_val, max_val = self.parameter_range[param]
+            calibration_params[param] = pyro.sample(
+                param, dist.Uniform(min_val, max_val)
+            )
 
-        nuts_kernel = NUTS(self.model)
+        # Set all other parameters to midpoint value in range
+        full_params = torch.zeros(len(self.parameter_range), device=self.device)
+        for i, param in enumerate(self.parameter_range.keys()):
+            if param in calibration_params:
+                full_params[i] = calibration_params[param]
+            else:
+                min_val, max_val = self.parameter_range[param]
+                full_params[i] = (min_val + max_val) / 2
 
-        mcmc = MCMC(
-            nuts_kernel,
-            num_samples=num_samples,
-            warmup_steps=warmup_steps,
-            num_chains=num_chains,
-            # initial_params=initial_params,
+        # Emulator prediction
+        with torch.no_grad():
+            # TODO: handle different types of Emulator output here
+            output = self.emulator.predict(full_params)
+            pred_mean = output.mean
+
+        # Diagonal covariance (uncorrelated outputs)
+        pred_cov = torch.diag(self.obs_noise.to(self.device))
+
+        # Likelihood
+        pyro.sample(
+            "obs",
+            dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
+            obs=self.observations,
         )
 
+    def run_mcmc(
+        self, warmup_steps: int = 500, num_samples: int = 1000, num_chains: int = 1
+    ):
+        """
+        Run MCMC sampling with NUTS sampler.
+
+        Parameters
+        ----------
+        warmup_steps: int
+            Number warm up steps to run per chain (i.e., burn-in). These samples are
+            discarded. Defaults to 500.
+        num_samples: int
+            Number of samples to draw after warm up. Defaults to 1000.
+        num_chains: int
+            Number of parallel hains to run. Defaults to 1.
+
+        Returns
+        -------
+        samples : dict
+            Dictionary of sampled parameter values.
+        """
+
+        nuts_kernel = NUTS(self.model)
+        mcmc = MCMC(
+            nuts_kernel,
+            warmup_steps=warmup_steps,
+            num_samples=num_samples,
+            num_chains=num_chains,
+            ## Dict containing initial tensors in unconstrained space to initiate the
+            ## markov chain. The leading dimension’s size must match that of num_chains.
+            ## If not specified, parameter values will be sampled from the prior.
+            # initial_params=self.initial_params,
+        )
         mcmc.run()
+        return mcmc.get_samples()
+
+    def predict(self):
+        pass
