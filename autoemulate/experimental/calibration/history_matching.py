@@ -266,6 +266,8 @@ class HistoryMatching(TorchDeviceMixin):
         upper_bound = max_val + buffer
 
         # [n_inputs, 2]
+        # TODO: should this return a dict with param names since that is expected as
+        # input in a number of places?
         return torch.stack([lower_bound, upper_bound], dim=1)
 
 

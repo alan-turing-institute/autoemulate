@@ -57,9 +57,6 @@ class HMCCalibrator(TorchDeviceMixin):
             calibration_params = list(parameter_range.keys())
         self.calibration_params = calibration_params
         self._process_observations(observations)
-        # TODO: should we allow for this to be None? In that case, do inference on it?
-        # NOTE: given often we want to reduce param space, unlikely that we want to
-        # then add complexity here
         self._process_obs_noise(list(observations.keys()), observation_noise)
 
     def _process_observations(
@@ -80,7 +77,7 @@ class HMCCalibrator(TorchDeviceMixin):
             for value in observations.values()
         ]
         # shape: [n_samples, n_outputs]
-        self.observations = torch.stack(observation_values, dim=1)
+        self.observations = torch.stack(observation_values, dim=1).to(self.device)
 
     def _process_obs_noise(
         self,
@@ -102,15 +99,14 @@ class HMCCalibrator(TorchDeviceMixin):
         if isinstance(observation_noise, float):
             # Broadcast to match outputs
             self.obs_noise = torch.full(
-                (self.observations.shape[1],), observation_noise, dtype=torch.float32
-            )
+                (self.observations.shape[1],), observation_noise
+            ).to(self.device)
         elif isinstance(observation_noise, dict):
             # Ensure order matches self.observations
             noise_values = [
-                torch.tensor(observation_noise[key], dtype=torch.float32)
-                for key in output_names
+                torch.tensor(observation_noise[key]) for key in output_names
             ]
-            self.obs_noise = torch.tensor(noise_values, dtype=torch.float32)
+            self.obs_noise = torch.tensor(noise_values).to(self.device)
         else:
             msg = "`observation_noise` must be a float or dict."
             raise ValueError(msg)
