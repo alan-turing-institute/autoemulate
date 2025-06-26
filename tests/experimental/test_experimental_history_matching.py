@@ -1,15 +1,16 @@
 import pytest
 import torch
+
+from autoemulate.experimental.calibration.history_matching import (
+    HistoryMatching,
+    HistoryMatchingWorkflow,
+)
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
-)
-from autoemulate.experimental.history_matching import (
-    HistoryMatching,
-    HistoryMatchingWorkflow,
 )
 from autoemulate.experimental.simulations.epidemic import Epidemic
 from autoemulate.experimental.types import TensorLike
