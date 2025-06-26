@@ -127,14 +127,16 @@ class HMCCalibrator(TorchDeviceMixin):
             )
 
         # Set all other parameters to midpoint value in range
-        full_params = torch.zeros(len(self.parameter_range), device=self.device)
+        # Ensure that full_params is shape [1, n_inputs]
+        full_params = torch.zeros((1, len(self.parameter_range)), device=self.device)
         for i, param in enumerate(self.parameter_range.keys()):
             if param in calibration_params:
-                full_params[i] = calibration_params[param]
+                full_params[0, i] = calibration_params[param]
             else:
                 min_val, max_val = self.parameter_range[param]
-                full_params[i] = (min_val + max_val) / 2
+                full_params[0, i] = (min_val + max_val) / 2
 
+        print(full_params.shape)
         # Emulator prediction
         with torch.no_grad():
             # TODO: handle different types of Emulator output here
