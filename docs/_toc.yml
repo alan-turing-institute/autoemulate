@@ -23,10 +23,6 @@ chapters:
   sections:
   - file: experimental/active_learning
 
-- file: case_studies/index
-  sections:
-  - file: case_studies/ModularCirc
-
 - file: community/index
   sections:
   - file: community/contributing
