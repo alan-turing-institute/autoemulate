@@ -256,3 +256,30 @@ class SensitivityAnalysis(ConversionMixin):
             Figure size as (width, height) in inches.If None, set calculated.
         """
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)
+
+    @staticmethod
+    def top_n_params(sa_results_df: pd.DataFrame, top_n: int) -> list[str]:
+        """
+        Return `top_n` most important parameterss given sensitivity analysis
+        results dataframe.
+
+        Parameters:
+        -----------
+        sa_results_df: pd.DataFrame
+            Dataframe results by `SensitivityAnalysis().run()`
+        top_n: int
+            Number of parameters to return.
+
+        Returns
+        -------
+        list[str]
+            TODO: is this names or indices of the `top_n` params.
+        """
+        # should we return indices or names?!
+        st_results = sa_results_df[sa_results_df["index"] == "ST"]
+        return (
+            st_results.groupby("parameter")["value"]
+            .mean()
+            .nlargest(top_n)
+            .index.tolist()
+        )
