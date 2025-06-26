@@ -1,6 +1,7 @@
 import torch
 from torch.distributions import Transform, constraints
 
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import TensorLike
 
@@ -35,6 +36,7 @@ class PCATransform(AutoEmulateTransform):
         self.niter = niter
 
     def fit(self, x: TensorLike):
+        TorchDeviceMixin.__init__(self, device=x.device)
         self.check_matrix(x)
         self.mean = x.mean(0, keepdim=True)  # (1, d)
         _, _, v = torch.pca_lowrank(x, q=self.n_components, niter=self.niter)

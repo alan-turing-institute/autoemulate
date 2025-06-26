@@ -5,6 +5,11 @@ from autoemulate.experimental.device import (
     check_torch_device_is_available,
 )
 from autoemulate.experimental.emulators import ALL_EMULATORS
+from autoemulate.experimental.transforms import (
+    PCATransform,
+    StandardizeTransform,
+    VAETransform,
+)
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
@@ -14,6 +19,23 @@ def test_compare(sample_data_y2d, device):
 
     x, y = sample_data_y2d
     ae = AutoEmulate(x, y, device=device)
+    results = ae.compare(2)
+    print(results)
+
+
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_compare_with_transforms(sample_data_y2d_100_targets, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+
+    x, y = sample_data_y2d_100_targets
+    ae = AutoEmulate(
+        x,
+        y,
+        x_transforms_list=[[StandardizeTransform(), PCATransform(n_components=2)]],
+        y_transforms_list=[[StandardizeTransform(), VAETransform(latent_dim=20)]],
+        device=device,
+    )
     results = ae.compare(2)
     print(results)
 
