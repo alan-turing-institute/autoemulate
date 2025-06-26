@@ -4,6 +4,7 @@ from typing import ClassVar
 
 import numpy as np
 import torch
+from scipy.interpolate import RBFInterpolator
 from sklearn.base import BaseEstimator
 from torch import nn, optim
 
@@ -259,14 +260,16 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # TODO: consider if we also need to inherit from other classes
-    model: BaseEstimator
+    model: BaseEstimator | RBFInterpolator
     normalize_y: bool = False
     y_mean: TensorLike
     y_std: TensorLike
 
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
+
+    def _model_fit(self, x: NumpyLike, y: NumpyLike):
+        self.model.fit(x, y)  # type: ignore PGH003
 
     def _fit(self, x: TensorLike, y: TensorLike):
         if self.normalize_y:
@@ -278,11 +281,14 @@ class SklearnBackend(Emulator):
         assert isinstance(y_np, np.ndarray)
         self.n_features_in_ = x_np.shape[1]
         self._model_specific_check(x_np, y_np)
-        self.model.fit(x_np, y_np)  # type: ignore PGH003
+        self._model_fit(x_np, y_np)
+
+    def _model_predict(self, x: NumpyLike) -> NumpyLike:
+        return self.model.predict(x)  # type: ignore PGH003
 
     def _predict(self, x: TensorLike) -> OutputLike:
         x_np, _ = self._convert_to_numpy(x, None)
-        y_pred = self.model.predict(x_np)  # type: ignore PGH003
+        y_pred = self._model_predict(x_np)
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
         if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
