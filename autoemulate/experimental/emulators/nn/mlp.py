@@ -64,8 +64,9 @@ class MLP(PyTorchBackend):
             If the input dimensions of `x` and `y` are not matrices.
 
         """
-        TorchDeviceMixin.__init__(self, device=device)
-        nn.Module.__init__(self)
+        # Initialize parent classes properly
+        super().__init__()
+        # TorchDeviceMixin.__init__(self, device)
 
         # TODO: update following #512
         if seed is not None:
@@ -78,20 +79,23 @@ class MLP(PyTorchBackend):
         layer_dims = [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
         layers = []
         for idx, dim in enumerate(layer_dims[1:]):
-            layers.append(nn.Linear(layer_dims[idx], dim, device=self.device))
+            # layers.append(nn.Linear(layer_dims[idx], dim, device=self._device))
+            layers.append(nn.Linear(layer_dims[idx], dim))
             layers.append(activation_cls())
             if dropout_prob is not None:
                 layers.append(nn.Dropout(p=dropout_prob))
 
         # Add final layer without activation
-        layers.append(nn.Linear(layer_dims[-1], y.shape[1], device=self.device))
+        # layers.append(nn.Linear(layer_dims[-1], y.shape[1], device=self._device))
+        layers.append(nn.Linear(layer_dims[-1], y.shape[1]))
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization
         self._initialize_weights(weight_init, scale)
         self.loss_fn = loss_fn_cls()
-        self.optimizer = optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.to(device)
+        # self.optimizer = optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.optimizer = optimizer_cls
+        # self.to(device)
 
     def forward(self, x):
         return self.nn(x)

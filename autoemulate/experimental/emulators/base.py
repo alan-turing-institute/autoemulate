@@ -1,6 +1,6 @@
 import random
 from abc import ABC, abstractmethod
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -8,15 +8,13 @@ from sklearn.base import BaseEstimator
 from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import (
-    ConversionMixin,
-    ValidationMixin,
-)
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
 
 
 class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
+    # class Emulator(ABC, ValidationMixin, ConversionMixin):
     """
     The interface containing methods on emulators that are
     expected by downstream dependents. This includes:
@@ -30,7 +28,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
-        x, y = self._move_tensors_to_device(x, y)
+        # x, y = self._move_tensors_to_device(x, y)
         self._fit(x, y)
         self.is_fitted_ = True
 
@@ -112,7 +110,11 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             torch.use_deterministic_algorithms(True)
 
 
-class PyTorchBackend(nn.Module, Emulator, Preprocessor):
+# class PyTorchBackend(nn.Module, Emulator, Preprocessor):
+import lightning as L
+
+
+class PyTorchBackend(L.LightningModule, Emulator, Preprocessor):
     """
     PyTorchBackend is a torch model and implements the base class.
     This provides default implementations to further subclasses.
@@ -127,7 +129,8 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     verbose: bool = False
     preprocessor: Preprocessor | None = None
     loss_fn: nn.Module = nn.MSELoss()
-    optimizer: optim.Optimizer
+    optimizer: type[optim.Optimizer]
+    # optimizer: type[optim.Adam]
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
@@ -157,42 +160,12 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 Target values (not needed if x is a DataLoader).
 
         """
-
-        self.train()  # Set model to training mode
-
-        # Convert input to DataLoader if not already
-        dataloader = self._convert_to_dataloader(
-            x, y, batch_size=self.batch_size, shuffle=self.shuffle
+        trainer = L.Trainer(limit_train_batches=100, max_epochs=1)
+        trainer.fit(
+            model=self,
+            train_dataloaders=self._convert_to_dataloader(x, y),
+            # val_dataloaders=...,
         )
-
-        # Training loop
-        for epoch in range(self.epochs):
-            epoch_loss = 0.0
-            batches = 0
-
-            for X_batch, y_batch in dataloader:
-                # Preprocess x_batch
-                x = self.preprocess(X_batch)
-
-                # Forward pass
-                y_pred = self.forward(X_batch)
-                loss = self.loss_func(y_pred, y_batch)
-
-                # Backward pass and optimize
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-
-                # Track loss
-                epoch_loss += loss.item()
-                batches += 1
-
-            # Average loss for the epoch
-            avg_epoch_loss = epoch_loss / batches
-            self.loss_history.append(avg_epoch_loss)
-
-            if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
-                print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
     def _initialize_weights(
         self,
@@ -249,6 +222,47 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         with torch.no_grad():
             x = self.preprocess(x)
             return self(x)
+        # TODO:
+        trainer = L.Trainer()
+        predictions = trainer.predict(self, self._convert_to_dataloader(x))
+        assert predictions is not None
+        return predictions
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        return self(batch)
+
+    def training_step(self, batch, batch_idx) -> TensorLike:
+        X_batch, y_batch = batch
+        x = self.preprocess(X_batch)
+        y_pred = self.forward(x)
+        return self.loss_func(y_pred, y_batch)
+
+    def validation_step(self, batch, batch_idx) -> TensorLike:
+        X_batch, y_batch = batch
+        x = self.preprocess(X_batch)
+        y_pred = self.forward(x)
+        val_loss = self.loss_func(y_pred, y_batch)
+        self.log("val_loss", val_loss)
+
+    # def predict_step(self, *args, **kwargs):
+    #     return super().predict_step(*args, **kwargs)
+
+    def configure_optimizers(self):
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            a "lr dict" according to the pytorch lightning documentation
+        """
+        optimizer = self.optimizer(self.parameters())
+        # if self.lr_scheduler is not None:
+        #     lr_scheduler = self.lr_scheduler(optimizer)
+        #     return {
+        #         "optimizer": optimizer,
+        #         "lr_scheduler": {"scheduler": lr_scheduler, "monitor": "val_loss"},
+        #     }
+        # else:
+        # return {"optimizer": optimizer}
+        return optimizer
 
 
 class SklearnBackend(Emulator):

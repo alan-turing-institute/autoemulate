@@ -64,7 +64,7 @@ class HistoryMatching(TorchDeviceMixin):
 
         # TODO: make this EmulatorWithUncertainty once implemented (see #542)
         if isinstance(self.emulator, GaussianProcessExact):
-            self.emulator.device = self.device
+            self.emulator._device = self._device
 
         if rank > self.out_dim or rank < 1:
             raise ValueError(
@@ -94,12 +94,12 @@ class HistoryMatching(TorchDeviceMixin):
         tuple[TensorLike, TensorLike]
             Tensors of observations and the associated noise (which can be 0).
         """
-        values = torch.tensor(list(observations.values()), device=self.device)
+        values = torch.tensor(list(observations.values()), device=self._device)
 
         # No variance
         if values.ndim == 1:
             means = values
-            variances = torch.zeros_like(means, device=self.device)
+            variances = torch.zeros_like(means, device=self._device)
         # Values are (mean, variance)
         elif values.ndim == 2:
             means = values[:, 0]
@@ -228,7 +228,7 @@ class HistoryMatching(TorchDeviceMixin):
         """
         # Additional variance due to model discrepancy (defaults to 0)
         discrepancy = torch.full_like(
-            self.obs_vars, self.discrepancy, device=self.device
+            self.obs_vars, self.discrepancy, device=self._device
         )
 
         # Calculate total variance
@@ -301,11 +301,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
-            self.train_x = train_x.to(self.device)
-            self.train_y = train_y.to(self.device)
+            self.train_x = train_x.to(self._device)
+            self.train_y = train_y.to(self._device)
         else:
-            self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
-            self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
+            self.train_x = torch.empty((0, self.simulator.in_dim), device=self._device)
+            self.train_y = torch.empty((0, self.simulator.out_dim), device=self._device)
 
     def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
         """
@@ -323,7 +323,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters and their implausability scores.
         """
         # Generate `n` parameter samples from within NROY bounds
-        test_x = self.simulator.sample_inputs(n).to(self.device)
+        test_x = self.simulator.sample_inputs(n).to(self._device)
 
         # Rule out implausible parameters from samples using an emulator
         pred_means, pred_vars = self.emulator_predict(test_x)
@@ -381,7 +381,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 f"Number of tensor rows {x.shape[0]} is less than {n} samples.",
                 stacklevel=2,
             )
-        idx = torch.randperm(x.shape[0], device=self.device)[:n]
+        idx = torch.randperm(x.shape[0], device=self._device)[:n]
         return x[idx]
 
     def simulate(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
@@ -398,7 +398,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         tuple[TensorLike, TensorLike]
             Tensors of succesfully simulated input parameters and predictions.
         """
-        y = self.simulator.forward_batch(x).to(self.device)
+        y = self.simulator.forward_batch(x).to(self._device)
 
         # Filter out runs that simulator failed to return predictions for
         # TODO: this assumes that simulator returns None if it fails (see #438)
@@ -445,7 +445,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         test_parameters_list, impl_scores_list, nroy_parameters_list = (
             [],
             [],
-            [torch.empty((0, self.simulator.in_dim), device=self.device)],
+            [torch.empty((0, self.simulator.in_dim), device=self._device)],
         )
 
         retries = 0

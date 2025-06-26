@@ -19,4 +19,4 @@ def test_device(device):
         patch.object(torch, "xpu", fake_xpu),
     ):
         torch_device_mixin = TorchDeviceMixin(device)
-        assert torch_device_mixin.device == torch.device(device)
+        assert torch_device_mixin._device == torch.device(device)

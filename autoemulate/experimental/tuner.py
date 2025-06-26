@@ -85,12 +85,12 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
             model_config: ModelConfig = {
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
-            m = model_class(train_x, train_y, device=self.device, **model_config)
+            m = model_class(train_x, train_y, device=self._device, **model_config)
             m.fit(train_x, train_y)
 
             # evaluate
             y_pred = m.predict(val_x)
-            score = evaluate(val_y, y_pred, self.metric, self.device)
+            score = evaluate(val_y, y_pred, self.metric, self._device)
 
             # record score and config
             model_config_tested.append(model_config)

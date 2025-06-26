@@ -77,7 +77,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     def compare(
         self, n_iter: int = 10, cv: type[BaseCrossValidator] = KFold
     ) -> dict[str, dict[str, Any]]:
-        tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
+        tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self._device)
         models_evaluated = {}
         for model_cls in self.models:
             scores, configs = tuner.run(model_cls)

@@ -101,7 +101,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
 
         # Init likelihood
         likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
-        likelihood = likelihood.to(self.device)
+        likelihood = likelihood.to(self._device)
 
         # Init must be called with preprocessed data
         x_preprocessed = self.preprocess(x)
@@ -118,7 +118,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
-        self.to(self.device)
+        self.to(self._device)
 
     @staticmethod
     def is_multioutput():
@@ -174,7 +174,7 @@ class GaussianProcessExact(Emulator, gpytorch.models.ExactGP, Preprocessor):
 
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
-        x = x.to(self.device)
+        x = x.to(self._device)
         x = self.preprocess(x)
         return self(x)
 

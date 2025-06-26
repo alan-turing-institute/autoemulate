@@ -158,10 +158,10 @@ class TorchDeviceMixin:
             # warnings.warn(msg, stacklevel=2)
             logging.warning(msg)
 
-        self.device = get_torch_device(device)
+        self._device = get_torch_device(device)
 
-        if not check_torch_device_is_available(self.device):
-            raise TorchDeviceError(str(self.device))
+        if not check_torch_device_is_available(self._device):
+            raise TorchDeviceError(str(self._device))
 
     def _move_tensors_to_device(self, *args: TensorLike) -> tuple[TensorLike, ...]:
         """
@@ -177,4 +177,4 @@ class TorchDeviceMixin:
         tuple[TensorLike, ...]
             The tensors on the device.
         """
-        return move_tensors_to_device(*args, device=self.device)
+        return move_tensors_to_device(*args, device=self._device)
