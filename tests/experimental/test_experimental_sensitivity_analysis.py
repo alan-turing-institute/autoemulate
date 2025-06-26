@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
+
 from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.sensitivity_analysis import SensitivityAnalysis
 from autoemulate.experimental.simulations.projectile import (
@@ -141,6 +142,11 @@ def test_sobol_analysis_2d(model_2d):
     assert df["output"].nunique() == 2
     assert "y1" in list(df["output"].unique())
     assert "y2" in list(df["output"].unique())
+
+    assert len(sa.top_n_params(df, 1)) == 1
+    assert len(sa.top_n_params(df, 2)) == 2
+    assert sa.top_n_params(df, 1)[0] == "c"
+    assert sa.top_n_params(df, 2)[-1] == "v0"
 
 
 # test _generate_problem -----------------------------------------------------
