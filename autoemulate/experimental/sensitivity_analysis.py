@@ -8,7 +8,7 @@ from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DistributionLike, NumpyLike, TensorLike
 
-# NOTE: we still use these functions from main
+# NOTE: we still use these functions from main #544
 # should we just move them to experimental as well?
 from autoemulate.sensitivity_analysis import (
     _morris_results_to_df,
@@ -260,7 +260,7 @@ class SensitivityAnalysis(ConversionMixin):
     @staticmethod
     def top_n_params(sa_results_df: pd.DataFrame, top_n: int) -> list[str]:
         """
-        Return `top_n` most important parameterss given sensitivity analysis
+        Return `top_n` most important parameters given sensitivity analysis
         results dataframe.
 
         Parameters:
@@ -273,7 +273,7 @@ class SensitivityAnalysis(ConversionMixin):
         Returns
         -------
         list[str]
-            TODO: is this names or indices of the `top_n` params.
+            List of `top_n` parameter names.
         """
         # should we return indices or names?!
         st_results = sa_results_df[sa_results_df["index"] == "ST"]
