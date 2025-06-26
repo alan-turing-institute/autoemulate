@@ -1,5 +1,3 @@
-from typing import Union
-
 import pyro
 import pyro.distributions as dist
 import torch
@@ -7,7 +5,7 @@ from pyro.infer import MCMC, NUTS
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import DeviceLike
+from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class HMCCalibrator(TorchDeviceMixin):
@@ -39,12 +37,13 @@ class HMCCalibrator(TorchDeviceMixin):
         parameters_range : dict[str, tuple[float, float]]
             Dictionary mapping input parameter names to their (min, max) ranges.
         observations: dict[str, float] | dict[str, list[float]]
-            A dictionary of either a single vlue or a list of values per output.
-        observation_noise: float | dict[str, float] | None
-            A single value or an array of values (one per output). Defaults to 0.1.
+            A dictionary of either a single value or a list of values per output.
+        observation_noise: float | dict[str, float]
+            A single value or a dictionary of values (one per output). Defaults to 0.1.
         calibration_params: list[str] | None
-            Optional list of input parameters to calibrate. If None, will calibrate
-            all input parameters. Defaults to None.
+            Optional list of input parameters to calibrate. Any parameters that are not
+            listed will be set to the midpoint value of their parameter range. If None,
+            will calibrate all input parameters. Defaults to None.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
@@ -86,7 +85,7 @@ class HMCCalibrator(TorchDeviceMixin):
     def _process_obs_noise(
         self,
         output_names: list[str],
-        observation_noise: float | dict[str, float] | None = 0.1,
+        observation_noise: float | dict[str, float] = 0.1,
     ):
         """
         Ensure that `observation_noise` is handled correctly and saved as attribute:
@@ -97,9 +96,8 @@ class HMCCalibrator(TorchDeviceMixin):
         ----------
         output_names: list[str]
             Names of output parameters in order of `self.observations`.
-        observation_noise: float | dict[str, float] | None
-            A single value or an array of values (one per output). If None, then
-            it is treated as a parameter to infer. Defaults to 0.1.
+        observation_noise: float | dict[str, float]
+           A single value or a dictionary of values (one per output). Defaults to 0.1.
         """
         if isinstance(observation_noise, float):
             # Broadcast to match outputs
@@ -170,12 +168,12 @@ class HMCCalibrator(TorchDeviceMixin):
         num_samples: int
             Number of samples to draw after warm up. Defaults to 1000.
         num_chains: int
-            Number of parallel hains to run. Defaults to 1.
+            Number of parallel chains to run. Defaults to 1.
 
         Returns
         -------
-        samples : dict
-            Dictionary of sampled parameter values.
+        dict[str, TensorLike]
+            Dictionary of parameter samples: `dict[<param name>: <samples>, ...]`.
         """
 
         nuts_kernel = NUTS(self.model)
@@ -184,13 +182,43 @@ class HMCCalibrator(TorchDeviceMixin):
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            # Dict containing initial tensors in unconstrained space to initiate the
-            # markov chain. The leading dimension size must match that of num_chains.
-            # If not specified, parameter values will be sampled from the prior.
-            # initial_params=self.initial_params,
+            initial_params=self._set_initial_values(num_chains),
         )
         mcmc.run()
         return mcmc.get_samples()
 
-    def predict(self):
-        pass
+    def predict(self, test_x: TensorLike) -> TensorLike:
+        """
+        Return posterior predictive.
+
+        Parameters
+        ----------
+        test_x: TensorLike
+            Tensor of parameters to make predictions for [n_data_samples, n_inputs].
+
+        Returns
+        -------
+        TensorLike
+            Tensor of posterior predictive predictions [n_mcmc_samples, n_outputs].
+        """
+        # TODO
+        return test_x
+
+    def _set_initial_values(self, num_chains: int) -> None | dict[str, TensorLike]:
+        """
+        Set the initian parameter values for each MCMC chain.
+
+        Parameters
+        ----------
+        num_chains: int
+            Number of parallel chains to run. Defaults to 1.
+
+        Returns
+        -------
+        None | dict[str, TensorLike]
+        """
+        # TODO
+        # Dict containing initial tensors in unconstrained space to initiate the
+        # markov chain. The leading dimension size must match that of num_chains.
+        # If not specified, parameter values will be sampled from the prior.
+        return
