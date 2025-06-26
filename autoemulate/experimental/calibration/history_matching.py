@@ -237,6 +237,39 @@ class HistoryMatching(TorchDeviceMixin):
         # Calculate implausibility
         return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
 
+    @staticmethod
+    def generate_param_bounds(
+        nroy_x: TensorLike, buffer_ratio: float = 0.05
+    ) -> TensorLike:
+        """
+        Generate lower/upper parameter bounds as min/max of NROY samples.
+
+        A buffer is computed as a ratio of the difference between the min and max
+        values of `nroy_x` and the paremeter bounds are set to:
+            [min(nroy_x) - buffer, max(nroy_x) + buffer].
+
+        Parameters
+        ----------
+        nroy_x: TensorLike
+            A tensor of NROY parameter samples [n_samples, n_inputs].
+        buffer_ratio: float
+            Buffer ratio by which to expand the generated parameter bounds.
+
+        Returns
+        -------
+        TensorLike
+            The generated lower/upper parameter bounds.
+        """
+
+        min_val = torch.min(nroy_x, dim=0).values
+        max_val = torch.max(nroy_x, dim=0).values
+        buffer = (max_val - min_val) * buffer_ratio
+        lower_bound = min_val - buffer
+        upper_bound = max_val + buffer
+
+        # [n_inputs, 2]
+        return torch.stack([lower_bound, upper_bound], dim=1)
+
 
 class HistoryMatchingWorkflow(HistoryMatching):
     """
@@ -342,12 +375,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         # Can't get min/max if have only 1 sample
         if nroy_x.shape[0] > 1:
-            min_nroy_values = torch.min(nroy_x, dim=0).values
-            max_nroy_values = torch.max(nroy_x, dim=0).values
+            # [n_outputs, 2] where second dim is [min, max]
+            param_bounds = self.generate_param_bounds(nroy_x, 0.0)
             self.simulator._param_bounds = list(
                 zip(
-                    min_nroy_values.cpu().tolist(),
-                    max_nroy_values.cpu().tolist(),
+                    param_bounds[:, 0].cpu().tolist(),
+                    param_bounds[:, 1].cpu().tolist(),
                     strict=False,
                 )
             )
