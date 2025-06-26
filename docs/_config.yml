@@ -11,7 +11,7 @@ theme:
 execute:
   execute_notebooks: 'force'
   exclude_patterns:
-    - "07_AE_workflow.ipynb"
+    - "case_studies/*.ipynb"
 
 # Define the name of the latex output file for PDF builds
 latex:

@@ -21,11 +21,11 @@ chapters:
 
 - file: experimental/index
   sections:
-  - file: experimental/04_active_learning
+  - file: experimental/active_learning
 
 - file: case_studies/index
   sections:
-  - file: case_studies/07_AE_workflow
+  - file: case_studies/ModularCirc
 
 - file: community/index
   sections:
