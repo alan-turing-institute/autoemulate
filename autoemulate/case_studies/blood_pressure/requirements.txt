@@ -1,0 +1,3 @@
+autoemulate
+jupyterlab
+git+https://github.com/alan-turing-institute/ModularCirc.git@dev
