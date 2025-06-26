@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from autoemulate.experimental.calibration.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,

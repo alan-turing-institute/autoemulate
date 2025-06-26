@@ -5,7 +5,7 @@ from pyro.infer import MCMC, NUTS
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
+from autoemulate.experimental.types import DeviceLike
 
 
 class HMCCalibrator(TorchDeviceMixin):
@@ -18,7 +18,7 @@ class HMCCalibrator(TorchDeviceMixin):
     dimensional parameter spaces. In particular, we use the NUTS sampler.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         emulator: Emulator,
         parameter_range: dict[str, list[float]],
@@ -113,7 +113,8 @@ class HMCCalibrator(TorchDeviceMixin):
             ]
             self.obs_noise = torch.tensor(noise_values, dtype=torch.float32)
         else:
-            raise ValueError("`observation_noise` must be a float or dict.")
+            msg = "`observation_noise` must be a float or dict."
+            raise ValueError(msg)
 
     def model(self):
         """Pyro model."""
@@ -145,11 +146,14 @@ class HMCCalibrator(TorchDeviceMixin):
         pred_cov = torch.diag(self.obs_noise.to(self.device))
 
         # Likelihood
-        pyro.sample(
-            "obs",
-            dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
-            obs=self.observations,
-        )
+        # TODO: we could also loop over the output dimension here and treat the
+        # samples as draws from independent multivariate normal
+        for i in range(self.observations.shape[0]):
+            pyro.sample(
+                f"obs_{i}",
+                dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
+                obs=self.observations[i],
+            )
 
     def run_mcmc(
         self, warmup_steps: int = 500, num_samples: int = 1000, num_chains: int = 1
@@ -179,9 +183,9 @@ class HMCCalibrator(TorchDeviceMixin):
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            ## Dict containing initial tensors in unconstrained space to initiate the
-            ## markov chain. The leading dimension’s size must match that of num_chains.
-            ## If not specified, parameter values will be sampled from the prior.
+            # Dict containing initial tensors in unconstrained space to initiate the
+            # markov chain. The leading dimension size must match that of num_chains.
+            # If not specified, parameter values will be sampled from the prior.
             # initial_params=self.initial_params,
         )
         mcmc.run()

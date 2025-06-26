@@ -258,7 +258,7 @@ class SensitivityAnalysis(ConversionMixin):
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)
 
     @staticmethod
-    def top_n_params(sa_results_df: pd.DataFrame, top_n: int) -> list[str]:
+    def top_n_params(sa_results_df: pd.DataFrame, top_n: int) -> list:
         """
         Return `top_n` most important parameters given sensitivity analysis
         results dataframe.
@@ -275,7 +275,15 @@ class SensitivityAnalysis(ConversionMixin):
         list[str]
             List of `top_n` parameter names.
         """
-        # should we return indices or names?!
+        if not all(
+            col in sa_results_df.columns for col in ["index", "parameter", "value"]
+        ):
+            msg = (
+                "sa_results_df is missing required columns: 'index', 'parameter',"
+                "or 'value'"
+            )
+            raise ValueError(msg)
+
         st_results = sa_results_df[sa_results_df["index"] == "ST"]
         return (
             st_results.groupby("parameter")["value"]
