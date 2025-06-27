@@ -45,7 +45,7 @@ class VAETransform(AutoEmulateTransform):
             The batch size for training the VAE.
         learning_rate : float, default=1e-3
             The learning rate for the VAE optimizer.
-        random_state : int, default=None
+        random_seed : int, default=None
             Random seed for reproducibility.
         beta : float, default=1.0
             The beta parameter for the VAE loss function, controlling the trade-off
