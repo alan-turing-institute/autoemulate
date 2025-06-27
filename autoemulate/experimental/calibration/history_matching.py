@@ -240,8 +240,10 @@ class HistoryMatching(TorchDeviceMixin):
 
     @staticmethod
     def generate_param_bounds(
-        nroy_x: TensorLike, buffer_ratio: float = 0.05
-    ) -> TensorLike:
+        nroy_x: TensorLike,
+        buffer_ratio: float = 0.05,
+        param_names: list[str] | None = None,
+    ) -> dict[str, [float, float]]:
         """
         Generate lower/upper parameter bounds as min/max of NROY samples.
 
@@ -253,12 +255,16 @@ class HistoryMatching(TorchDeviceMixin):
             A scaling factor used to expand the bounds of the (NROY) parameter space.
             It is applied as a ratio of the range (max_val - min_val) of each input
             parameter to create a buffer around the NROY minimum and maximum values.
+        param_names: list[str] | None
+            Optional list of parameter names. If None, uses default `["x1", ..., "xn"]`.
 
         Returns
         -------
         TensorLike
             The generated lower/upper parameter bounds.
         """
+        if param_names is None:
+            param_names = [f"x{i+1}" for i in range(nroy_x.shape[1])]
 
         min_val = torch.min(nroy_x, dim=0).values
         max_val = torch.max(nroy_x, dim=0).values
@@ -266,10 +272,10 @@ class HistoryMatching(TorchDeviceMixin):
         lower_bound = min_val - buffer
         upper_bound = max_val + buffer
 
-        # [n_inputs, 2]
-        # TODO: should this return a dict with param names since that is expected as
-        # input in a number of places?
-        return torch.stack([lower_bound, upper_bound], dim=1)
+        return {
+            param: [lower_bound[i], upper_bound[i]]
+            for i, param in enumerate(param_names)
+        }
 
 
 class HistoryMatchingWorkflow(HistoryMatching):
@@ -382,13 +388,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         if nroy_x.shape[0] > 1:
             # [n_outputs, 2] where second dim is [min, max]
             param_bounds = self.generate_param_bounds(nroy_x, buffer_ratio)
-            self.simulator._param_bounds = list(
-                zip(
-                    param_bounds[:, 0].cpu().tolist(),
-                    param_bounds[:, 1].cpu().tolist(),
-                    strict=False,
-                )
-            )
+            self.simulator._param_bounds = list(param_bounds.values())
         else:
             warnings.warn(
                 (
