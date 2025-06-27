@@ -42,7 +42,7 @@ class SecondOrderPolynomial(PyTorchBackend):
         x_poly_tensor = torch.tensor(x_poly, dtype=torch.float32, device=self.device)
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-        self.linear = nn.Linear(x_poly_tensor.shape[1], self.n_outputs_, bias=True).to(
+        self.linear = nn.Linear(x_poly_tensor.shape[1], self.n_outputs_, bias=False).to(
             self.device
         )
         self.optimizer = optim.Adam(self.linear.parameters(), lr=self.lr)
