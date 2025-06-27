@@ -2,6 +2,7 @@ import warnings
 
 import torch
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.simulations.base import Simulator
@@ -227,12 +228,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         train_x: TensorLike | None = None,
         train_y: TensorLike | None = None,
         device: DeviceLike | None = None,
+        random_seed: int | None = None,
     ):
         """
         Initialize the history matching workflow object.
-
-        TODO:
-        - add random seed for reproducibility (once #465 is complete)
 
         Parameters
         ----------
@@ -264,7 +263,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
-        self.emulator = emulator
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:

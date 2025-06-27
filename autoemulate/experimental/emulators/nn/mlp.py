@@ -1,6 +1,6 @@
-import torch
 from torch import nn, optim
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
@@ -20,7 +20,7 @@ class MLP(PyTorchBackend):
         scale: float = 1.0,
         dropout_prob: float | None = None,
         lr: float = 1e-1,
-        seed: int | None = None,
+        random_seed: int | None = None,
         device: DeviceLike | None = None,
         **kwargs,
     ):
@@ -67,9 +67,8 @@ class MLP(PyTorchBackend):
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)
 
-        # TODO: update following #512
-        if seed is not None:
-            torch.manual_seed(seed)
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
 
         # Ensure x and y are tensors with correct dimensions
         x, y = self._convert_to_tensors(x, y)

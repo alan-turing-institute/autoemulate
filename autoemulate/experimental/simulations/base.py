@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import torch
 from tqdm import tqdm
 
-from autoemulate.experimental.data.utils import ValidationMixin
+from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
 from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
 
@@ -64,7 +64,9 @@ class Simulator(ABC, ValidationMixin):
         """Output dimensionality."""
         return self._out_dim
 
-    def sample_inputs(self, n_samples: int) -> TensorLike:
+    def sample_inputs(
+        self, n_samples: int, random_seed: int | None = None
+    ) -> TensorLike:
         """
         Generate random samples using Latin Hypercube Sampling.
 
@@ -72,6 +74,8 @@ class Simulator(ABC, ValidationMixin):
         ----------
             n_samples: int
                 Number of samples to generate.
+            random_seed: int | None
+                Random seed for reproducibility. If None, no seed is set.
 
         Returns
         -------
@@ -79,6 +83,8 @@ class Simulator(ABC, ValidationMixin):
             Parameter samples (column order is given by self.param_names)
         """
 
+        if random_seed is not None:
+            set_random_seed(random_seed)  # type: ignore PGH003
         lhd = LatinHypercube(self.param_bounds)
         sample_array = lhd.sample(n_samples)
         # TODO: have option to set dtype and ensure consistency throughout codebase?

@@ -41,8 +41,6 @@ class LightGBM(DeterministicEmulator):
         device: DeviceLike = "cpu",
     ):
         """Initializes a LightGBM object."""
-        if random_seed is not None:
-            self.set_random_seed(random_seed)
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device)
         self.boosting_type = boosting_type

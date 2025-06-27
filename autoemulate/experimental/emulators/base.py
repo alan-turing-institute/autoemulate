@@ -1,4 +1,3 @@
-import random
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
@@ -99,25 +98,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             "each subclass."
         )
         raise NotImplementedError(msg)
-
-    @staticmethod
-    def set_random_seed(seed: int, deterministic: bool = False):
-        """Set random seed for Python, NumPy and PyTorch.
-
-        Parameters
-        ----------
-        seed : int
-            The random seed to use.
-        deterministic : bool
-            Use "deterministic" algorithms in PyTorch.
-        """
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        if deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.use_deterministic_algorithms(True)
 
 
 class DeterministicEmulator(Emulator):
@@ -336,7 +316,6 @@ class SklearnBackend(DeterministicEmulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # TODO: consider if we also need to inherit from other classes
     model: BaseEstimator
     normalize_y: bool = False
     y_mean: TensorLike
