@@ -1,10 +1,12 @@
 import torch
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from torch import nn, optim
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.emulators.base import PyTorchBackend, SklearnBackend
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
@@ -64,3 +66,37 @@ class PolynomialRegression(PyTorchBackend):
             "epochs": [50, 100, 200],
             "batch_size": [8, 16, 32],
         }
+
+
+class PolynomialRegressionOld(SklearnBackend):
+    """Second order polynomial emulator.
+
+    Creates a second order polynomial emulator. This is a linear model
+    including all main effects, interactions and quadratic terms.
+    """
+
+    def __init__(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        degree: int = 2,
+        device: DeviceLike = "cpu",
+    ):
+        """Initializes a SecondOrderPolynomial object."""
+        _, _ = x, y  # ignore unused arguments
+        TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
+        self.degree = degree
+        self.model = Pipeline(
+            [
+                ("poly", PolynomialFeatures(degree=self.degree)),
+                ("model", LinearRegression()),
+            ]
+        )
+
+    @staticmethod
+    def is_multioutput() -> bool:
+        return True
+
+    @staticmethod
+    def get_tune_config():
+        return {}

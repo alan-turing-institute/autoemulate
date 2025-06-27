@@ -1,6 +1,7 @@
 import torch
 from autoemulate.experimental.emulators.polynomials import (
     PolynomialRegression,
+    PolynomialRegressionOld,
 )
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
@@ -13,6 +14,23 @@ def test_predict_sop(sample_data_y1d, new_data_y1d):
     x2, _ = new_data_y1d
     y_pred = sop.predict(x2)
     assert isinstance(y_pred, TensorLike)
+
+
+def test_sop_sk_and_pytorch(sample_data_y2d, new_data_y2d):
+    x, y = sample_data_y2d
+    x2, y2 = new_data_y2d
+
+    model1 = PolynomialRegression(x, y)
+    model1.fit(x, y)
+    pred1 = model1.predict(x2)
+
+    model2 = PolynomialRegressionOld(x, y)
+    model2.fit(x, y)
+    pred2 = model2.predict(x2)
+    print(pred1)
+    print(pred2)
+    print(y2)
+    assert torch.allclose(pred1, pred2)  # ignore
 
 
 def test_predict_sop_2d(sample_data_y2d, new_data_y2d):
