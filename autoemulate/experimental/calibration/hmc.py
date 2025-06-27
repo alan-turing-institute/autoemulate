@@ -207,6 +207,7 @@ class HMCCalibrator(TorchDeviceMixin):
             Tensor of posterior predictive predictions [n_mcmc_samples, n_outputs].
         """
         # TODO: check return shape, should we just do this for one data point?
+        # TODO: imp;le
         return test_x
 
     def _set_initial_values(self, num_chains: int) -> None | dict[str, TensorLike]:
