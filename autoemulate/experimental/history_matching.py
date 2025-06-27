@@ -49,9 +49,6 @@ class HistoryMatching(TorchDeviceMixin):
             When the implausibility scores are ordered across outputs, it indicates
             which rank to use when determining whether the query point is NROY. The
             default of ``1`` indicates that the largest implausibility will be used.
-        emulator: GaussianProcessExact
-            TODO: make this EmulatorWithUncertainty once implemented (see #542)
-            An optional trained Gaussian Process emulator.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         """
@@ -237,9 +234,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         simulator: Simulator
             A simulator.
-        emulator: GaussianProcessExact
-            TODO: make this EmulatorWithUncertainty once implemented (see #542)
-            A Gaussian Process emulator pre-trained on `simulator` data.
+        emulator: ProbabilisticEmulator
+            A ProbabilisticEmulator pre-trained on `simulator` data.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise]. In case
             of no uncertainty in observations, provides just the observed value.
@@ -265,6 +261,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed)
+        self.emulator = emulator
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
