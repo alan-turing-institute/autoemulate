@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn, optim
@@ -17,8 +18,9 @@ class TestPyTorchBackend:
         A dummy implementation of PyTorchBackend for testing purposes.
         """
 
-        def __init__(self, x=None, y=None, random_seed=None, **kwargs):
+        def __init__(self, x=None, y=None, random_seed=None, device=None, **kwargs):
             super().__init__()
+            TorchDeviceMixin.__init__(self, device)
             if random_seed is not None:
                 self.set_random_seed(random_seed)
             _, _ = x, y  # unused variables
