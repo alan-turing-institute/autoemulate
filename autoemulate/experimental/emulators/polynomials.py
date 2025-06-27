@@ -40,7 +40,6 @@ class PolynomialRegression(PyTorchBackend):
         x_np, _ = self._convert_to_numpy(x)
         x_poly = self.poly.fit_transform(x_np)
         x_poly_tensor = torch.tensor(x_poly, dtype=torch.float32, device=self.device)
-        self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
         self.linear = nn.Linear(x_poly_tensor.shape[1], self.n_outputs_, bias=False).to(
             self.device
