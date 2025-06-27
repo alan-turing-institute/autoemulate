@@ -5,7 +5,7 @@ from pyro.infer import MCMC, NUTS
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import DeviceLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 
 
 class HMCCalibrator(TorchDeviceMixin):
@@ -134,21 +134,20 @@ class HMCCalibrator(TorchDeviceMixin):
 
         # Emulator prediction
         with torch.no_grad():
-            # TODO: handle different types of Emulator output here
-            # this does not need to be a GaussianProcess
             output = self.emulator.predict(full_params)
-            pred_mean = output.mean
+            if isinstance(output, TensorLike):
+                y_pred = output
+            elif isinstance(output, DistributionLike):
+                y_pred = output.mean
 
         # Diagonal covariance (uncorrelated outputs)
         pred_cov = torch.diag(self.obs_noise.to(self.device))
 
         # Likelihood
-        # TODO: we could also loop over the output dimension here and treat the
-        # samples as draws from independent multivariate normal
         for i in range(self.observations.shape[0]):
             pyro.sample(
                 f"obs_{i}",
-                dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
+                dist.MultivariateNormal(y_pred, covariance_matrix=pred_cov),
                 obs=self.observations[i],
             )
 
