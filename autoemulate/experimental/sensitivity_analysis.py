@@ -8,7 +8,7 @@ from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DistributionLike, NumpyLike, TensorLike
 
-# NOTE: we still use these functions from main
+# NOTE: we still use these functions from main #544
 # should we just move them to experimental as well?
 from autoemulate.sensitivity_analysis import (
     _morris_results_to_df,
@@ -137,7 +137,8 @@ class SensitivityAnalysis(ConversionMixin):
         if isinstance(y_pred, TensorLike):
             y_pred_np, _ = self._convert_to_numpy(y_pred)
         elif isinstance(y_pred, DistributionLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred.mean)
+            # TODO: the emulator should return a detached prediction
+            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float().detach())
         else:
             msg = "Emulator has to return Tensor or Distribution"
             raise ValueError(msg)
@@ -256,3 +257,38 @@ class SensitivityAnalysis(ConversionMixin):
             Figure size as (width, height) in inches.If None, set calculated.
         """
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)
+
+    @staticmethod
+    def top_n_params(sa_results_df: pd.DataFrame, top_n: int) -> list:
+        """
+        Return `top_n` most important parameters given sensitivity analysis
+        results dataframe.
+
+        Parameters:
+        -----------
+        sa_results_df: pd.DataFrame
+            Dataframe results by `SensitivityAnalysis().run()`
+        top_n: int
+            Number of parameters to return.
+
+        Returns
+        -------
+        list[str]
+            List of `top_n` parameter names.
+        """
+        if not all(
+            col in sa_results_df.columns for col in ["index", "parameter", "value"]
+        ):
+            msg = (
+                "sa_results_df is missing required columns: 'index', 'parameter',"
+                "or 'value'"
+            )
+            raise ValueError(msg)
+
+        st_results = sa_results_df[sa_results_df["index"] == "ST"]
+        return (
+            st_results.groupby("parameter")["value"]
+            .mean()
+            .nlargest(top_n)
+            .index.tolist()
+        )

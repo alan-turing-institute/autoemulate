@@ -150,6 +150,7 @@ class HistoryMatching(TorchDeviceMixin):
             output = self.emulator.predict(x)
             assert isinstance(output, GaussianLike)
             assert output.variance.ndim == 2
+            # TODO: the emulator should return a detached prediction
             return (
                 output.mean.float().detach(),
                 output.variance.float().detach(),
@@ -237,6 +238,45 @@ class HistoryMatching(TorchDeviceMixin):
 
         # Calculate implausibility
         return torch.abs(self.obs_means - pred_means) / torch.sqrt(Vs)
+
+    @staticmethod
+    def generate_param_bounds(
+        nroy_x: TensorLike,
+        buffer_ratio: float = 0.05,
+        param_names: list[str] | None = None,
+    ) -> dict[str, [float, float]]:
+        """
+        Generate lower/upper parameter bounds as min/max of NROY samples.
+
+        Parameters
+        ----------
+        nroy_x: TensorLike
+            A tensor of NROY parameter samples [n_samples, n_inputs].
+        buffer_ratio: float
+            A scaling factor used to expand the bounds of the (NROY) parameter space.
+            It is applied as a ratio of the range (max_val - min_val) of each input
+            parameter to create a buffer around the NROY minimum and maximum values.
+        param_names: list[str] | None
+            Optional list of parameter names. If None, uses default `["x1", ..., "xn"]`.
+
+        Returns
+        -------
+        TensorLike
+            The generated lower/upper parameter bounds.
+        """
+        if param_names is None:
+            param_names = [f"x{i+1}" for i in range(nroy_x.shape[1])]
+
+        min_val = torch.min(nroy_x, dim=0).values
+        max_val = torch.max(nroy_x, dim=0).values
+        buffer = (max_val - min_val) * buffer_ratio
+        lower_bound = min_val - buffer
+        upper_bound = max_val + buffer
+
+        return {
+            param: [lower_bound[i], upper_bound[i]]
+            for i, param in enumerate(param_names)
+        }
 
 
 class HistoryMatchingWorkflow(HistoryMatching):
@@ -332,7 +372,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         return test_x, impl_scores
 
-    def update_simulator_bounds(self, nroy_x: TensorLike):
+    def update_simulator_bounds(self, nroy_x: TensorLike, buffer_ratio: float = 0.05):
         """
         Update simulator parameter bounds to min/max of NROY parameter samples.
 
@@ -340,18 +380,16 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         nroy_x: TensorLike
             A tensor of NROY parameter samples [n_samples, n_inputs]
+        buffer_ratio: float
+            A scaling factor used to expand the bounds of the (NROY) parameter space.
+            It is applied as a ratio of the range (max_val - min_val) of each input
+            parameter to create a buffer around the NROY minimum and maximum values.
         """
         # Can't get min/max if have only 1 sample
         if nroy_x.shape[0] > 1:
-            min_nroy_values = torch.min(nroy_x, dim=0).values
-            max_nroy_values = torch.max(nroy_x, dim=0).values
-            self.simulator._param_bounds = list(
-                zip(
-                    min_nroy_values.cpu().tolist(),
-                    max_nroy_values.cpu().tolist(),
-                    strict=False,
-                )
-            )
+            # [n_outputs, 2] where second dim is [min, max]
+            param_bounds = self.generate_param_bounds(nroy_x, buffer_ratio)
+            self.simulator._param_bounds = list(param_bounds.values())
         else:
             warnings.warn(
                 (
@@ -417,6 +455,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
+        buffer_ratio: float = 0.0,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -435,6 +474,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 - use emulator to make predictions for those parameters
                 - score implausability of parameters given predictions
                 - identify NROY parameters within this set
+        buffer_ratio: float
+            A scaling factor used to expand the bounds of the (NROY) parameter space.
+            It is applied as a ratio of the range (max_val - min_val) of each input
+            parameter to create a buffer around the NROY minimum and maximum values
+            when updating the simulator parameter bounds.
 
         Returns
         -------
@@ -472,7 +516,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Update simulator parameter bounds to NROY region
         # Next time that call run(), will sample from within this region
         nroy_parameters_all = torch.cat(nroy_parameters_list, 0)
-        self.update_simulator_bounds(nroy_parameters_all)
+        self.update_simulator_bounds(nroy_parameters_all, buffer_ratio)
 
         # Randomly pick at most `n_simulations` parameters from NROY to simulate
         nroy_simulation_samples = self.sample_tensor(n_simulations, nroy_parameters_all)
