@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 
 import numpy as np
@@ -5,6 +6,7 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
@@ -70,7 +72,7 @@ def cross_validate(
     dataset: Dataset,
     model: type[Emulator],
     device: DeviceLike = "cpu",
-    random_seed: int = np.random.randint(int(1e5)),
+    random_seed: int | None = None,
     **kwargs: Any,
 ):
     """
@@ -87,6 +89,8 @@ def cross_validate(
         An instance of an Emulator subclass.
     device: DeviceLike
         The device to use for model training and evaluation.
+    random_seed: int | None
+        Optional random seed for reproducibility.
     Returns
     -------
     dict[str, list[float]]
@@ -104,9 +108,17 @@ def cross_validate(
         train_loader = DataLoader(train_subset, batch_size=batch_size)
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
+        # Handle random seed for reproducibility
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
+        model_init_params = inspect.signature(model).parameters
+        model_kwargs = dict(best_model_config)
+        if "random_seed" in model_init_params:
+            model_kwargs["random_seed"] = random_seed
+
         # fit model
         x, y = next(iter(train_loader))
-        m = model(x, y, device=device, random_seed=random_seed, **best_model_config)
+        m = model(x, y, device=device, **model_kwargs)
         m.fit(x, y)
 
         # evaluate on batches
