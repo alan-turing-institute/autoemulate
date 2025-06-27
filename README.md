@@ -47,6 +47,7 @@
 | autoemulate/experimental/emulators/neural\_processes/conditional\_neural\_process.py |      168 |        8 |     95% |47-48, 193-194, 432, 461-462, 485 |
 | autoemulate/experimental/emulators/nn/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
 | autoemulate/experimental/emulators/nn/mlp.py                                         |       33 |        0 |    100% |           |
+| autoemulate/experimental/emulators/polynomials.py                                    |       34 |        1 |     97% |        58 |
 | autoemulate/experimental/emulators/random\_forest.py                                 |       26 |        0 |    100% |           |
 | autoemulate/experimental/emulators/svm.py                                            |       31 |        0 |    100% |           |
 | autoemulate/experimental/emulators/transformed/\_\_init\_\_.py                       |        0 |        0 |    100% |           |
@@ -109,6 +110,7 @@
 | tests/experimental/test\_experimental\_lightgbm.py                                   |       39 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_mlp.py                                        |       52 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_model\_selection.py                           |       37 |        2 |     95% |    34, 38 |
+| tests/experimental/test\_experimental\_polynomials.py                                |       51 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_preprocessors.py                              |       49 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_random\_forest.py                             |       44 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_sensitivity\_analysis.py                      |       85 |        0 |    100% |           |
@@ -143,7 +145,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **9269** | **2013** | **78%** |           |
+|                                                                            **TOTAL** | **9354** | **2014** | **78%** |           |
 
 
 ## Setup coverage badge
