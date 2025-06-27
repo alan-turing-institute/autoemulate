@@ -27,6 +27,7 @@ class RandomForest(SklearnBackend):
         max_samples: int | None = None,
         random_seed: int | None = None,
         device: DeviceLike = "cpu",
+        **kwargs,
     ):
         """Initializes a RandomForest object."""
         _, _ = x, y  # ignore unused arguments

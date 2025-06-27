@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, KFold
 
-from autoemulate.experimental.data.utils import ConversionMixin
+from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
@@ -21,7 +21,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         y: InputLike,
         models: list[type[Emulator]] | None = None,
         device: DeviceLike | None = None,
+        random_seed: int | None = None,
     ):
+        self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
         x, y = self._convert_to_tensors(x, y)
@@ -37,6 +39,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             )
 
         self.models = updated_models
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
 
     @staticmethod
@@ -75,7 +79,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         logger.info(msg)
 
     def compare(
-        self, n_iter: int = 10, cv: type[BaseCrossValidator] = KFold
+        self,
+        n_iter: int = 10,
+        cv: type[BaseCrossValidator] = KFold,
+        cv_seed: int | None = None,
     ) -> dict[str, dict[str, Any]]:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         models_evaluated = {}
@@ -84,7 +91,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             best_score_idx = scores.index(max(scores))
             best_model_config = configs[best_score_idx]
             cv_results = cross_validate(
-                cv(), self.train_val.dataset, model_cls, **best_model_config
+                cv=cv(
+                    random_state=cv_seed  # type: ignore PGH003
+                ),
+                dataset=self.train_val.dataset,
+                model=model_cls,
+                random_seed=None,  # Does not need to be set the same for each model
+                **best_model_config,
             )
             r2_score, rmse_score = (
                 np.mean(cv_results["r2"]),

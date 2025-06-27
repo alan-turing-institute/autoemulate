@@ -1,4 +1,5 @@
 import torch
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.svm import (
     SupportVectorMachine,
 )
@@ -25,14 +26,21 @@ def test_tune_svm(sample_data_y1d):
 
 
 def test_svm_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    """
+    SVMs are deterministic so we do not expect different outputs for different seeds.
+    """
     x, y = sample_data_y1d
     y = y.reshape(-1, 1)
     x2, _ = new_data_y1d
-    model1 = SupportVectorMachine(x, y, random_seed=42)
-    model2 = SupportVectorMachine(x, y, random_seed=42)
+    seed = 42
+    set_random_seed(seed)
+    model1 = SupportVectorMachine(x, y)
     model1.fit(x, y)
-    model2.fit(x, y)
     pred1 = model1.predict(x2)
+    new_seed = 24
+    set_random_seed(new_seed)
+    model2 = SupportVectorMachine(x, y)
+    model2.fit(x, y)
     pred2 = model2.predict(x2)
     assert isinstance(pred1, TensorLike)
     assert isinstance(pred2, TensorLike)

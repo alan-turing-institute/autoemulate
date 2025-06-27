@@ -2,6 +2,7 @@ import gpytorch
 import pytest
 import torch
 from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
     check_model_device,
@@ -73,30 +74,29 @@ def test_device(sample_data_y2d, new_data_y2d, device):
 
 
 def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+    """
+    Gaussian Processes are deterministic given the same data and hyperparameters.
+    Check that the random seed does not affect the output.
+    """
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
-    # TODO: investigate why this test passes even when
-    # random_seed unset or set differently
+
+    # Create 2 models that should have the same output
+    seed = 42
+    set_random_seed(seed)
     model1 = GaussianProcessExact(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf,
-        random_seed=42,
+        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
+    new_seed = 43
+    set_random_seed(new_seed)
     model2 = GaussianProcessExact(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf,
-        random_seed=42,
+        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
     )
     model1.fit(x, y)
     model2.fit(x, y)
     pred1 = model1.predict(x2)
     pred2 = model2.predict(x2)
+
     assert isinstance(pred1, DistributionLike)
     assert isinstance(pred2, DistributionLike)
     assert torch.allclose(pred1.mean, pred2.mean)
