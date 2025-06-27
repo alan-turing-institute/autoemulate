@@ -1,10 +1,24 @@
 # Blood pressure simulation
 
-In this workflow we demonstrate the integration of a cardiovascular simulator, specifically the Naghavi Model from the [ModularCirc](https://github.com/alan-turing-institute/ModularCirc) package, in an end-to-end AutoEmulate workflow.
+In this case study we demonstrate the integration of a cardiovascular simulator, the Naghavi Model from the [ModularCirc](https://github.com/alan-turing-institute/ModularCirc) package, in an end-to-end `AutoEmulate` workflow.
 
-In addition to `AutoEmulate`, running this notebook depends on having `ModularCirc` and `Jupyter` installed:
+To run the notebook follow the steps below.
+
+1. Clone the repository:
 
 ```bash
-pip -r requirements.txt
+git clone https://github.com/alan-turing-institute/autoemulate.git
+cd case_studies/blood_pressure
 ```
 
+2. Install dependencies:
+
+```bash
+poetry install
+```
+
+3. Run JupyterLab to view the notebook:
+
+```bash
+poetry run jupyter lab
+```
