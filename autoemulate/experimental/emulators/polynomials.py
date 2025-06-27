@@ -1,36 +1,54 @@
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import Pipeline
+import torch
 from sklearn.preprocessing import PolynomialFeatures
+from torch import nn, optim
 
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import SklearnBackend
+from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
-class SecondOrderPolynomial(SklearnBackend):
+class SecondOrderPolynomial(PyTorchBackend):
     """Second order polynomial emulator.
 
-    Creates a second order polynomial emulator. This is a linear model
-    including all main effects, interactions and quadratic terms.
+    Implements a linear model including all main effects, interactions,
+    and quadratic terms.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
         degree: int = 2,
+        lr: float = 1e-2,
+        epochs: int = 50,
+        batch_size: int = 16,
         device: DeviceLike = "cpu",
     ):
-        """Initializes a SecondOrderPolynomial object."""
-        _, _ = x, y  # ignore unused arguments
-        TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
+        super().__init__()
+        TorchDeviceMixin.__init__(self, device=device)
         self.degree = degree
-        self.model = Pipeline(
-            [
-                ("poly", PolynomialFeatures(degree=self.degree)),
-                ("model", LinearRegression()),
-            ]
+        self.lr = lr
+        self.epochs = epochs
+        self.batch_size = batch_size
+
+        # Fit the polynomial feature transformer on the input data
+        self.poly = PolynomialFeatures(degree=self.degree)
+        x_np, _ = self._convert_to_numpy(x)
+        x_poly = self.poly.fit_transform(x_np)
+        x_poly_tensor = torch.tensor(x_poly, dtype=torch.float32, device=self.device)
+        self.n_features_in_ = x.shape[1]
+        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
+        self.linear = nn.Linear(x_poly_tensor.shape[1], self.n_outputs_, bias=True).to(
+            self.device
         )
+        self.optimizer = optim.Adam(self.linear.parameters(), lr=self.lr)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # Transform input using the fitted PolynomialFeatures
+        x_np, _ = self._convert_to_numpy(x)
+        x_poly = self.poly.transform(x_np)
+        x_poly_tensor = torch.tensor(x_poly, dtype=torch.float32, device=self.device)
+        return self.linear(x_poly_tensor)
 
     @staticmethod
     def is_multioutput() -> bool:
@@ -38,4 +56,8 @@ class SecondOrderPolynomial(SklearnBackend):
 
     @staticmethod
     def get_tune_config():
-        return {}
+        return {
+            "lr": [1e-3, 1e-2, 1e-1],
+            "epochs": [50, 100, 200],
+            "batch_size": [8, 16, 32],
+        }
