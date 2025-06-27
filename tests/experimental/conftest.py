@@ -64,3 +64,15 @@ def tensor_2d_mismatch():
 def tensor_2d_pair():
     # Shape (2, 2)
     return torch.tensor([[5.0, 6.0], [7.0, 8.0]])
+
+
+@pytest.fixture
+def noisy_data():
+    """
+    Generate a highly noisy dataset to test stochasticity effects.
+    """
+    rng = np.random.RandomState(0)
+    x = torch.tensor(rng.normal(size=(100, 2)), dtype=torch.float32)
+    y = torch.tensor(rng.normal(size=(100,)), dtype=torch.float32)
+    x2 = x[:4].clone()
+    return x, y, x2

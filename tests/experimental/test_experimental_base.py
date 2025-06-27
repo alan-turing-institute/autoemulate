@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
@@ -22,7 +23,7 @@ class TestPyTorchBackend:
             super().__init__()
             TorchDeviceMixin.__init__(self, device)
             if random_seed is not None:
-                self.set_random_seed(random_seed)
+                set_random_seed(random_seed)
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
@@ -126,14 +127,26 @@ class TestPyTorchBackend:
         y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
         x_test = torch.tensor([[4.0]])
 
-        model1 = self.DummyModel(random_seed=123)
+        # Set a random seed for reproducibility
+        seed = 42
+        model1 = self.DummyModel(random_seed=seed)
         model1.fit(x_train, y_train)
         pred1 = model1.predict(x_test)
 
-        model2 = self.DummyModel(random_seed=123)
+        # Use the same seed to ensure deterministic behavior
+        model2 = self.DummyModel(random_seed=seed)
         model2.fit(x_train, y_train)
         pred2 = model2.predict(x_test)
 
+        # Use a different seed to ensure deterministic behavior
+        new_seed = 43
+        model3 = self.DummyModel(random_seed=new_seed)
+        model3.fit(x_train, y_train)
+        pred3 = model3.predict(x_test)
+
         assert isinstance(pred1, torch.Tensor)
         assert isinstance(pred2, torch.Tensor)
+        assert isinstance(pred3, torch.Tensor)
         assert torch.allclose(pred1, pred2)
+        msg = "Predictions should differ with different seeds."
+        assert not torch.allclose(pred1, pred3), msg
