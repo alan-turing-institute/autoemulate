@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 
 import numpy as np
+import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
 
@@ -238,7 +239,6 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # TODO: consider if we also need to inherit from other classes
     model: BaseEstimator
     normalize_y: bool = False
     y_mean: TensorLike
