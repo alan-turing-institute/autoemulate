@@ -159,10 +159,13 @@ class PyTorchBackend(L.LightningModule, Emulator, Preprocessor):
 
         """
         trainer = L.Trainer(limit_train_batches=100, max_epochs=1)
+        train_dataloader, val_dataloader = self._random_split(
+            self._convert_to_dataset(x, y), self.batch_size
+        )
         trainer.fit(
-            model=self,
-            train_dataloaders=self._convert_to_dataloader(x, y),
-            # val_dataloaders=...,
+            self,
+            train_dataloader,
+            val_dataloader,
         )
 
     def _initialize_weights(
