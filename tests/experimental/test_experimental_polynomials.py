@@ -1,4 +1,9 @@
+import pytest
 import torch
+from autoemulate.experimental.device import (
+    SUPPORTED_DEVICES,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators.polynomials import (
     PolynomialRegression,
 )
@@ -25,12 +30,16 @@ def test_predict_sop_2d(sample_data_y2d, new_data_y2d):
     assert y_pred.shape == (20, 2)
 
 
-def test_tune_sop(sample_data_y1d):
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_tune_sop(sample_data_y1d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
-    tuner = Tuner(x, y, n_iter=5)
+    n_iter = 5
+    tuner = Tuner(x, y, n_iter=n_iter, device=device)
     scores, configs = tuner.run(PolynomialRegression)
-    assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(scores) == n_iter
+    assert len(configs) == n_iter
 
 
 def test_sop_predict_deterministic_with_seed(sample_data_y2d, new_data_y2d):
