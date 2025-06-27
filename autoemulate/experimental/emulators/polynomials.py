@@ -61,6 +61,6 @@ class PolynomialRegression(PyTorchBackend):
     def get_tune_config():
         return {
             "lr": [1e-3, 1e-2, 1e-1],
-            "epochs": [50, 100, 200],
+            "epochs": [50, 100, 200, 500, 1000],
             "batch_size": [8, 16, 32],
         }
