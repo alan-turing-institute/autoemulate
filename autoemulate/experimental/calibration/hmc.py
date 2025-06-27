@@ -132,10 +132,10 @@ class HMCCalibrator(TorchDeviceMixin):
                 min_val, max_val = self.parameter_range[param]
                 full_params[0, i] = (min_val + max_val) / 2
 
-        print(full_params.shape)
         # Emulator prediction
         with torch.no_grad():
             # TODO: handle different types of Emulator output here
+            # this does not need to be a GaussianProcess
             output = self.emulator.predict(full_params)
             pred_mean = output.mean
 
@@ -154,7 +154,7 @@ class HMCCalibrator(TorchDeviceMixin):
 
     def run_mcmc(
         self, warmup_steps: int = 500, num_samples: int = 1000, num_chains: int = 1
-    ):
+    ) -> MCMC:
         """
         Run MCMC sampling with NUTS sampler.
 
@@ -170,8 +170,8 @@ class HMCCalibrator(TorchDeviceMixin):
 
         Returns
         -------
-        dict[str, TensorLike]
-            Dictionary of parameter samples: `dict[<param name>: <samples>, ...]`.
+        MCMC
+            The Pyro MCMC object. Use either `mcmc.summary()` or `mcmc.get_samples()`.
         """
 
         nuts_kernel = NUTS(self.model)
@@ -183,7 +183,7 @@ class HMCCalibrator(TorchDeviceMixin):
             initial_params=self._set_initial_values(num_chains),
         )
         mcmc.run()
-        return mcmc.get_samples()
+        return mcmc
 
     def predict(self, test_x: TensorLike) -> TensorLike:
         """
