@@ -149,6 +149,7 @@ class ConversionMixin:
         batch_size: int | None = None,
         train_size: float = 0.8,
         test_size: float = 0.2,
+        random_seed: int = 42,
     ) -> tuple[DataLoader, DataLoader]:
         """
         Split Dataset into train/test DataLoaders.
@@ -170,7 +171,13 @@ class ConversionMixin:
             raise ValueError(
                 f"Train size ({train_size}) and test size ({test_size}) must sum to 1"
             )
-        train, test = tuple(random_split(dataset, [train_size, test_size]))
+        train, test = tuple(
+            random_split(
+                dataset,
+                [train_size, test_size],
+                generator=torch.Generator().manual_seed(random_seed),
+            )
+        )
         if batch_size is None:
             batch_size = len(train)
         train_loader = self._convert_to_dataloader(train, batch_size=batch_size)
