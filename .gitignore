@@ -37,7 +37,7 @@ Thumbs.db
 # Quarto
 README.html
 README_files/
-requirements.txt
+# requirements.txt
 
 
 # Ignore pyrightconfig.json to enable custom venv to be set
