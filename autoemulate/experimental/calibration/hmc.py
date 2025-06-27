@@ -46,6 +46,14 @@ class HMCCalibrator(TorchDeviceMixin):
             will calibrate all input parameters. Defaults to None.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
+
+        Notes
+        -----
+        The model assumes:
+        - Uniform priors for calibrated parameters (bounds given by `parameters_range`)
+        - Gaussian likelihood with no correlation between outputs
+        All non-calibrated parameters are set to a constant value. This is chosen as the
+        midpoint value of `parameters_range`.
         """
         TorchDeviceMixin.__init__(self, device=device)
         self.emulator = emulator
@@ -114,7 +122,7 @@ class HMCCalibrator(TorchDeviceMixin):
     def model(self):
         """Pyro model."""
 
-        # Set uniform priors for calibration parameters
+        # Sample from uniform priors for calibration parameters
         calibration_params = {}
         for param in self.calibration_params:
             min_val, max_val = self.parameter_range[param]
@@ -198,7 +206,7 @@ class HMCCalibrator(TorchDeviceMixin):
         TensorLike
             Tensor of posterior predictive predictions [n_mcmc_samples, n_outputs].
         """
-        # TODO
+        # TODO: check return shape, should we just do this for one data point?
         return test_x
 
     def _set_initial_values(self, num_chains: int) -> None | dict[str, TensorLike]:
