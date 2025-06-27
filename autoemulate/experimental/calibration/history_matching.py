@@ -149,6 +149,7 @@ class HistoryMatching(TorchDeviceMixin):
             output = self.emulator.predict(x)
             assert isinstance(output, GaussianLike)
             assert output.variance.ndim == 2
+            # TODO: the emulator should return a detached prediction
             return (
                 output.mean.float().detach(),
                 output.variance.float().detach(),

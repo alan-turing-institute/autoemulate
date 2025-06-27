@@ -137,7 +137,8 @@ class SensitivityAnalysis(ConversionMixin):
         if isinstance(y_pred, TensorLike):
             y_pred_np, _ = self._convert_to_numpy(y_pred)
         elif isinstance(y_pred, DistributionLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred.mean)
+            # TODO: the emulator should return a detached prediction
+            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float().detach())
         else:
             msg = "Emulator has to return Tensor or Distribution"
             raise ValueError(msg)
