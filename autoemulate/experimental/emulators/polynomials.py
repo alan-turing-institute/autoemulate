@@ -25,7 +25,7 @@ class PolynomialRegression(PyTorchBackend):
         batch_size: int = 16,
         optimizer_cls: type[optim.Optimizer] = optim.Adam,
         random_seed: int | None = None,
-        device: DeviceLike = "cpu",
+        device: DeviceLike | None = None,
     ):
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
