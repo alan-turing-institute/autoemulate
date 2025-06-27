@@ -96,7 +96,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 ),
                 dataset=self.train_val.dataset,
                 model=model_cls,
-                random_seed=self.random_seed,
+                random_seed=None,  # Does not need to be set the same for each model
                 **best_model_config,
             )
             r2_score, rmse_score = (
