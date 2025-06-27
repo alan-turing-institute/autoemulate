@@ -2,6 +2,7 @@ import torch
 from sklearn.preprocessing import PolynomialFeatures
 from torch import nn, optim
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.types import DeviceLike, TensorLike
@@ -22,10 +23,13 @@ class SecondOrderPolynomial(PyTorchBackend):
         lr: float = 1e-2,
         epochs: int = 50,
         batch_size: int = 16,
+        random_seed: int | None = None,
         device: DeviceLike = "cpu",
     ):
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
         self.degree = degree
         self.lr = lr
         self.epochs = epochs
