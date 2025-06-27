@@ -1,6 +1,6 @@
 import torch
 from autoemulate.experimental.emulators.polynomials import (
-    SecondOrderPolynomial,
+    PolynomialRegression,
 )
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
@@ -8,7 +8,7 @@ from autoemulate.experimental.types import TensorLike
 
 def test_predict_sop(sample_data_y1d, new_data_y1d):
     x, y = sample_data_y1d
-    sop = SecondOrderPolynomial(x, y)
+    sop = PolynomialRegression(x, y)
     sop.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = sop.predict(x2)
@@ -17,7 +17,7 @@ def test_predict_sop(sample_data_y1d, new_data_y1d):
 
 def test_predict_sop_2d(sample_data_y2d, new_data_y2d):
     x, y = sample_data_y2d
-    sop = SecondOrderPolynomial(x, y)
+    sop = PolynomialRegression(x, y)
     sop.fit(x, y)
     x2, _ = new_data_y2d
     y_pred = sop.predict(x2)
@@ -28,7 +28,7 @@ def test_predict_sop_2d(sample_data_y2d, new_data_y2d):
 def test_tune_sop(sample_data_y1d):
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5)
-    scores, configs = tuner.run(SecondOrderPolynomial)
+    scores, configs = tuner.run(PolynomialRegression)
     assert len(scores) == 5
     assert len(configs) == 5
 
@@ -43,18 +43,18 @@ def test_sop_predict_deterministic_with_seed(sample_data_y2d, new_data_y2d):
 
     # Set a random seed for reproducibility
     seed = 42
-    model1 = SecondOrderPolynomial(x, y, random_seed=seed)
+    model1 = PolynomialRegression(x, y, random_seed=seed)
     model1.fit(x, y)
     pred1 = model1.predict(x2)
 
     # Use the same seed to ensure deterministic behavior
-    model2 = SecondOrderPolynomial(x, y, random_seed=seed)
+    model2 = PolynomialRegression(x, y, random_seed=seed)
     model2.fit(x, y)
     pred2 = model2.predict(x2)
 
     # Use a different seed to ensure deterministic behavior
     new_seed = 43
-    model3 = SecondOrderPolynomial(x, y, random_seed=new_seed)
+    model3 = PolynomialRegression(x, y, random_seed=new_seed)
     model3.fit(x, y)
     pred3 = model3.predict(x2)
 

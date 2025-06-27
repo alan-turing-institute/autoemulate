@@ -8,8 +8,8 @@ from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
-class SecondOrderPolynomial(PyTorchBackend):
-    """Second order polynomial emulator.
+class PolynomialRegression(PyTorchBackend):
+    """PolynomialRegression emulator.
 
     Implements a linear model including all main effects, interactions,
     and quadratic terms.
