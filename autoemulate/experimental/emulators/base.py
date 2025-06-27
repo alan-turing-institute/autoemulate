@@ -1,7 +1,8 @@
 import random
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar
+from typing import ClassVar
 
+import lightning as L
 import numpy as np
 import torch
 from sklearn.base import BaseEstimator
@@ -111,9 +112,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
 
 # class PyTorchBackend(nn.Module, Emulator, Preprocessor):
-import lightning as L
-
-
 class PyTorchBackend(L.LightningModule, Emulator, Preprocessor):
     """
     PyTorchBackend is a torch model and implements the base class.
