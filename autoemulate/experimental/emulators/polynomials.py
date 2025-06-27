@@ -23,6 +23,7 @@ class PolynomialRegression(PyTorchBackend):
         lr: float = 1e-2,
         epochs: int = 50,
         batch_size: int = 16,
+        optimizer_cls: type[optim.Optimizer] = optim.Adam,
         random_seed: int | None = None,
         device: DeviceLike = "cpu",
     ):
@@ -43,7 +44,7 @@ class PolynomialRegression(PyTorchBackend):
         self.linear = nn.Linear(x_poly.shape[1], self.n_outputs_, bias=False).to(
             self.device
         )
-        self.optimizer = optim.Adam(self.linear.parameters(), lr=self.lr)
+        self.optimizer = optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Transform input using the fitted PolynomialFeatures
