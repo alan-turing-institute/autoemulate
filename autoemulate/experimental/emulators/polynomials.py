@@ -40,7 +40,7 @@ class PolynomialRegression(PyTorchBackend):
         x_np, _ = self._convert_to_numpy(x)
         x_poly = self.poly.fit_transform(x_np)
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-        self.linear = nn.Linear(x_poly_tensor.shape[1], self.n_outputs_, bias=False).to(
+        self.linear = nn.Linear(x_poly.shape[1], self.n_outputs_, bias=False).to(
             self.device
         )
         self.optimizer = optim.Adam(self.linear.parameters(), lr=self.lr)
