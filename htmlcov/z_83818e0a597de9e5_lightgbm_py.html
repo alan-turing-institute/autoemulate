@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_34421451b5438b02_conditional_neural_process_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
-            created at 2025-06-27 16:10 +0000
+            created at 2025-06-30 13:58 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -85,11 +85,11 @@
     <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">scipy</span><span class="op">.</span><span class="nam">sparse</span> <span class="key">import</span> <span class="nam">spmatrix</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">device</span> <span class="key">import</span> <span class="nam">TorchDeviceMixin</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">emulators</span><span class="op">.</span><span class="nam">base</span> <span class="key">import</span> <span class="nam">Emulator</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">types</span> <span class="key">import</span> <span class="nam">DeviceLike</span><span class="op">,</span> <span class="nam">OutputLike</span><span class="op">,</span> <span class="nam">TensorLike</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">emulators</span><span class="op">.</span><span class="nam">base</span> <span class="key">import</span> <span class="nam">DeterministicEmulator</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">types</span> <span class="key">import</span> <span class="nam">DeviceLike</span><span class="op">,</span> <span class="nam">TensorLike</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">class</span> <span class="nam">LightGBM</span><span class="op">(</span><span class="nam">Emulator</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">class</span> <span class="nam">LightGBM</span><span class="op">(</span><span class="nam">DeterministicEmulator</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t">    <span class="str">"""LightGBM Emulator.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="str">    Wraps LightGBM regression from LightGBM.</span>&nbsp;</span><span class="r"></span></p>
@@ -181,7 +181,7 @@
     <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">n_features_in_</span> <span class="op">=</span> <span class="nam">x_np</span><span class="op">.</span><span class="nam">shape</span><span class="op">[</span><span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">model_</span><span class="op">.</span><span class="nam">fit</span><span class="op">(</span><span class="nam">x_np</span><span class="op">,</span> <span class="nam">y_np</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">    <span class="key">def</span> <span class="nam">_predict</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">TensorLike</span><span class="op">)</span> <span class="op">-></span> <span class="nam">OutputLike</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">    <span class="key">def</span> <span class="nam">_predict</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">TensorLike</span><span class="op">)</span> <span class="op">-></span> <span class="nam">TensorLike</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="str">"""Predicts the output of the emulator for a given input."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">y_pred</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">model_</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">x</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="key">assert</span> <span class="key">not</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">y_pred</span><span class="op">,</span> <span class="nam">spmatrix</span> <span class="op">|</span> <span class="nam">list</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -209,7 +209,7 @@
             <a class="nav" href="z_34421451b5438b02_conditional_neural_process_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
-            created at 2025-06-27 16:10 +0000
+            created at 2025-06-30 13:58 +0000
         </p>
     </div>
 </footer>
