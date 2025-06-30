@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 import torch
 from linear_operator.operators import DiagLinearOperator
@@ -6,7 +7,12 @@ from torch.distributions import Transform
 
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import GaussianLike, GaussianProcessLike, TensorLike
+from autoemulate.experimental.types import (
+    DistributionLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
 
 
 class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
@@ -79,36 +85,16 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
     def _inverse_sample_gaussian_like(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
-        if len(y.batch_shape) > 1:
-            msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
-            raise NotImplementedError(msg)
-        samples = self.inv(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
-        assert isinstance(samples, TensorLike)
-        mean = samples.mean(dim=0)
-
-        # TODO check the handling if no batch dim is present
-        cov = (
-            torch.stack(
-                [make_positive_definite(s.T.cov()) for s in samples.transpose(0, 1)], 0
-            )
-            if full_covariance
-            else DiagLinearOperator(samples.var(dim=0))
+        return _inverse_sample_gaussian_like(
+            self.inv, y, n_samples=n_samples, full_covariance=full_covariance
         )
-
-        return GaussianLike(mean, cov)
 
     def _inverse_sample_gaussian_process_like(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
-        samples = self.inv(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
-        assert isinstance(samples, TensorLike)
-        mean = samples.mean(dim=0)
-        cov = (
-            make_positive_definite(samples.view(n_samples, -1).T.cov())
-            if full_covariance
-            else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
+        return _inverse_sample_gaussian_process_like(
+            self.inv, y, n_samples=n_samples, full_covariance=full_covariance
         )
-        return GaussianProcessLike(mean, cov)
 
     def _inverse_sample(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
@@ -232,6 +218,48 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
         msg = f"Unsupported type: {type(y)}"
         raise TypeError(msg)
+
+
+def _inverse_sample_gaussian_like(
+    c: Callable,
+    y: DistributionLike,
+    n_samples: int = 1000,
+    full_covariance: bool = True,
+) -> GaussianLike:
+    if len(y.batch_shape) > 1:
+        msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
+        raise NotImplementedError(msg)
+    samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+    assert isinstance(samples, TensorLike)
+    mean = samples.mean(dim=0)
+
+    # TODO check the handling if no batch dim is present
+    cov = (
+        torch.stack(
+            [make_positive_definite(s.T.cov()) for s in samples.transpose(0, 1)], 0
+        )
+        if full_covariance
+        else DiagLinearOperator(samples.var(dim=0))
+    )
+
+    return GaussianLike(mean, cov)
+
+
+def _inverse_sample_gaussian_process_like(
+    c: Callable,
+    y: DistributionLike,
+    n_samples: int = 1000,
+    full_covariance: bool = True,
+) -> GaussianProcessLike:
+    samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+    assert isinstance(samples, TensorLike)
+    mean = samples.mean(dim=0)
+    cov = (
+        make_positive_definite(samples.view(n_samples, -1).T.cov())
+        if full_covariance
+        else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
+    )
+    return GaussianProcessLike(mean, cov)
 
 
 # TODO (#536): complete implementation

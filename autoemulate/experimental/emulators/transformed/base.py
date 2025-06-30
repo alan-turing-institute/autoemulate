@@ -1,7 +1,5 @@
 from typing import cast
 
-import torch
-from linear_operator.operators import DiagLinearOperator
 from torch.distributions import (
     ComposeTransform,
     Transform,
@@ -11,8 +9,11 @@ from torch.distributions import (
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.transforms.utils import make_positive_definite
+from autoemulate.experimental.transforms.base import (
+    AutoEmulateTransform,
+    _inverse_sample_gaussian_like,
+    _inverse_sample_gaussian_process_like,
+)
 from autoemulate.experimental.types import (
     DeviceLike,
     DistributionLike,
@@ -268,10 +269,15 @@ class TransformedEmulator(Emulator, ValidationMixin):
             y_t = transform._inverse_gaussian(y_t)
         return y_t
 
-    def _inv_transform_y_gaussian_sample(self, y_t: DistributionLike) -> GaussianLike:
+    def _inv_transform_y_gaussian_sample(
+        self, y_t: DistributionLike
+    ) -> GaussianLike | GaussianProcessLike:
         """Invert the transformed distribution `y_t` by sampling and calculating
         empirical mean and covariance from the samples in the original space to
         parameterize a `GaussianLike` distribution.
+
+        This method accepts any `DistributionLike` input but returns `GaussianLike` or
+        `GaussianProcessLike` distributions.
 
         This method uses the number of samples specified in the initialization
         (`n_samples`) to draw samples from the transformed distribution `y_t` and
@@ -286,9 +292,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Returns
         -------
-        GaussianLike
-            A GaussianLike distribution parameterized by the empirical mean and
-            covariance of the samples drawn from the transformed distribution in the
+        GaussianLike | GaussianProcessLike
+            A `GaussianProcessLike` distribution if the input was `GaussianProcessLike`,
+            or a `GaussianLike` distribution if the input was any other
+            `DistributionLike`. The distribution is parameterized by the empirical mean
+            and covariance of the samples drawn from the transformed distribution in the
             original data space after applying all inverse `y_transforms`.
 
         Raises
@@ -303,32 +311,16 @@ class TransformedEmulator(Emulator, ValidationMixin):
         possible.
 
         """
-        # Handle GaussianProcessLike and GaussianLike differently
+        # Handle GaussianProcessLike distinctly
         if isinstance(y_t, GaussianProcessLike):
-            # For GaussianProcessLike, we need to sample from the process
-            # and then apply the inverse transformation.
-            samples = self._inv_transform_y_tensor(
-                torch.stack([y_t.sample() for _ in range(self.n_samples)], dim=0)
+            return _inverse_sample_gaussian_process_like(
+                self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
             )
-            assert isinstance(samples, TensorLike)
-            mean = samples.mean(dim=0)
-            cov = (
-                make_positive_definite(samples.view(self.n_samples, -1).T.cov())
-                if self.full_covariance
-                else DiagLinearOperator(samples.view(self.n_samples, -1).var(dim=0))
-            )
-            return GaussianProcessLike(mean, cov)
-        # For GaussianLike, we can directly sample and apply the inverse transformation
-        samples = self._inv_transform_y_tensor(y_t.sample((self.n_samples,)))
-        assert isinstance(samples, TensorLike)
-        samples = samples.squeeze()
-        mean = samples.mean(dim=0)
-        cov = (
-            make_positive_definite(samples.T.cov())
-            if self.full_covariance
-            else DiagLinearOperator(samples.var(dim=0))
+        # If `y_t` is not a `GaussianProcessLike``, sample from it and return a
+        # `GaussianLike`
+        return _inverse_sample_gaussian_like(
+            self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
         )
-        return GaussianLike(mean.unsqueeze(0), cov.unsqueeze(0))
 
     def _inv_transform_y_distribution(self, y_t: DistributionLike) -> DistributionLike:
         """Invert the transformed distribution `y_t` back to the original space `y`.
