@@ -1,4 +1,3 @@
-import random
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
@@ -13,7 +12,15 @@ from autoemulate.experimental.data.utils import (
     ValidationMixin,
 )
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.types import NumpyLike, OutputLike, TensorLike, TuneConfig
+from autoemulate.experimental.types import (
+    DistributionLike,
+    GaussianLike,
+    GaussianProcessLike,
+    NumpyLike,
+    OutputLike,
+    TensorLike,
+    TuneConfig,
+)
 
 
 class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
@@ -92,24 +99,74 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         )
         raise NotImplementedError(msg)
 
-    @staticmethod
-    def set_random_seed(seed: int, deterministic: bool = False):
-        """Set random seed for Python, NumPy and PyTorch.
+
+class DeterministicEmulator(Emulator):
+    """An emulator subclass that predicts with deterministic outputs returning a
+    `TensorLike`.
+    """
+
+    @abstractmethod
+    def _predict(self, x: TensorLike) -> TensorLike: ...
+    def predict(self, x: TensorLike) -> TensorLike:
+        pred = super().predict(x)
+        assert isinstance(pred, TensorLike)
+        return pred
+
+
+class ProbabilisticEmulator(Emulator):
+    """An emulator subclass that predicts with probabilistic outputs returning a
+    `DistributionLike`.
+    """
+
+    @abstractmethod
+    def _predict(self, x: TensorLike) -> DistributionLike: ...
+    def predict(self, x: TensorLike) -> DistributionLike:
+        pred = super().predict(x)
+        assert isinstance(pred, DistributionLike)
+        return pred
+
+    def predict_mean_and_variance(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
+        """Predict mean and variance from the probabilistic output.
 
         Parameters
         ----------
-        seed : int
-            The random seed to use.
-        deterministic : bool
-            Use "deterministic" algorithms in PyTorch.
+        x : TensorLike
+            Input tensor to make predictions for.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            The emulator predicted mean and variance for `x`.
+
         """
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        if deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.use_deterministic_algorithms(True)
+        pred = self.predict(x)
+        return pred.mean, pred.variance
+
+
+class GaussianEmulator(ProbabilisticEmulator):
+    """An emulator subclass that predicts with Gaussian outputs returning a
+    `GaussianLike`.
+    """
+
+    @abstractmethod
+    def _predict(self, x: TensorLike) -> GaussianLike: ...
+    def predict(self, x: TensorLike) -> GaussianLike:
+        pred = super().predict(x)
+        assert isinstance(pred, GaussianLike)
+        return pred
+
+
+class GaussianProcessEmulator(GaussianEmulator):
+    """A Gaussian Process emulator subclass that predicts with output
+    `GaussianProcessLike`.
+    """
+
+    @abstractmethod
+    def _predict(self, x: TensorLike) -> GaussianProcessLike: ...
+    def predict(self, x: TensorLike) -> GaussianProcessLike:
+        pred = super().predict(x)
+        assert isinstance(pred, GaussianProcessLike)
+        return pred
 
 
 class PyTorchBackend(nn.Module, Emulator, Preprocessor):
@@ -251,7 +308,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             return self(x)
 
 
-class SklearnBackend(Emulator):
+class SklearnBackend(DeterministicEmulator):
     """
     SklearnBackend is a sklearn model and implements the base class.
     This provides default implementations to further subclasses.
@@ -259,7 +316,6 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # TODO: consider if we also need to inherit from other classes
     model: BaseEstimator
     normalize_y: bool = False
     y_mean: TensorLike
@@ -280,7 +336,7 @@ class SklearnBackend(Emulator):
         self._model_specific_check(x_np, y_np)
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> TensorLike:
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))

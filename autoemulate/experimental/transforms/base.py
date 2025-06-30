@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 import torch
 from linear_operator.operators import DiagLinearOperator
@@ -7,7 +8,12 @@ from torch.distributions import Transform
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import GaussianLike, TensorLike
+from autoemulate.experimental.types import (
+    DistributionLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
 
 
 class AutoEmulateTransform(
@@ -79,6 +85,20 @@ class AutoEmulateTransform(
         self._check_is_fitted()
         return torch.kron(torch.eye(y.shape[0], device=self.device), self._basis_matrix)
 
+    def _inverse_sample_gaussian_like(
+        self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
+    ) -> GaussianLike:
+        return _inverse_sample_gaussian_like(
+            self.inv, y, n_samples=n_samples, full_covariance=full_covariance
+        )
+
+    def _inverse_sample_gaussian_process_like(
+        self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
+    ) -> GaussianLike:
+        return _inverse_sample_gaussian_process_like(
+            self.inv, y, n_samples=n_samples, full_covariance=full_covariance
+        )
+
     def _inverse_sample(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
@@ -113,15 +133,17 @@ class AutoEmulateTransform(
             If covariance matrix cannot be made positive definite.
 
         """
-        samples = self.inv(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
-        assert isinstance(samples, TensorLike)
-        mean = samples.mean(dim=0)
-        cov = (
-            make_positive_definite(samples.view(n_samples, -1).T.cov())
-            if full_covariance
-            else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
+        if isinstance(y, GaussianProcessLike):
+            return self._inverse_sample_gaussian_process_like(
+                y, n_samples=n_samples, full_covariance=full_covariance
+            )
+        # TODO (#579): remove raise once fully implemented
+        msg = "Implementation to be complete in #579"
+        raise NotImplementedError(msg)
+
+        return self._inverse_sample_gaussian_like(
+            y, n_samples=n_samples, full_covariance=full_covariance
         )
-        return GaussianLike(mean, cov)
 
     def _inverse_gaussian(self, y: GaussianLike) -> GaussianLike:
         r"""Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the
@@ -148,6 +170,9 @@ class AutoEmulateTransform(
         RuntimeError
             If the covariance matrix cannot be made positive definite.
 
+        TypeError
+            If the input `y` is not of type `GaussianLike` or `GaussianProcessLike`.
+
 
         Notes
         -----
@@ -173,16 +198,138 @@ class AutoEmulateTransform(
         assert isinstance(cov, TensorLike)
         assert isinstance(mean_orig, TensorLike)
 
-        # Get the expanded basis matrix around the mean
-        expanded_basis_matrix = self._expanded_basis_matrix(mean)
+        if isinstance(y, GaussianProcessLike):
+            # Get the expanded basis matrix around the mean
+            expanded_basis_matrix = self._expanded_basis_matrix(mean)
 
-        # Transform covariance matrix
-        cov_orig = expanded_basis_matrix @ cov @ expanded_basis_matrix.T
+            # Transform covariance matrix
+            cov_orig = expanded_basis_matrix @ cov @ expanded_basis_matrix.T
 
-        # Ensure positive definite
-        cov_orig = make_positive_definite(cov_orig)
+            # Ensure positive definite
+            cov_orig = make_positive_definite(cov_orig)
 
-        return GaussianLike(mean_orig, cov_orig)
+            return GaussianProcessLike(mean_orig, cov_orig)
+
+        # TODO (#579): remove raise once fully implemented
+        msg = "Implementation to be complete in #579"
+        raise NotImplementedError(msg)
+
+        if isinstance(y, GaussianLike):
+            if len(y.batch_shape) > 1:
+                msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
+                raise NotImplementedError(msg)
+            # Transform covariance matrix
+            # TODO: update if _basis_matrix is not implemented
+            cov_orig = self._basis_matrix @ cov @ self._basis_matrix.T
+
+            # Ensure positive definite
+            if cov_orig.ndim > 2:
+                cov_orig = torch.stack([make_positive_definite(c) for c in cov_orig], 0)
+
+            return GaussianLike(mean_orig, cov_orig)
+
+        msg = f"Unsupported type: {type(y)}"
+        raise TypeError(msg)
+
+
+def _inverse_sample_gaussian_like(
+    c: Callable,
+    y: DistributionLike,
+    n_samples: int = 1000,
+    full_covariance: bool = True,
+) -> GaussianLike:
+    """Transforms a `DistributionLike` to a `GaussianLike` through sampling from `y`.
+
+    Parameters
+    ----------
+    c : Callable
+        A callable that applies a transformation to the generated samples.
+    y : DistributionLike
+        The distribution from which to sample.
+    n_samples : int, default=1000
+        Number of samples to generate from the distribution `y`.
+    full_covariance : bool, default=True
+        If True, calculates a full covariance matrix from samples; otherwise,
+        calculates only the diagonal of the covariance matrix. This is useful
+        for a high-dimensional domain where full covariance might be
+        computationally expensive.
+
+    Returns
+    -------
+    GaussianProcessLike
+        A `GaussianProcessLike` object representing the distribution from the empirical
+        samples.
+
+    Raises
+    ------
+    NotImplementedError
+        If the batch shape of `y` is greater than 1, as this implementation does
+        not support multi-dimensional batch shapes.
+
+    """
+    if len(y.batch_shape) > 1:
+        msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
+        raise NotImplementedError(msg)
+    samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+    assert isinstance(samples, TensorLike)
+    mean = samples.mean(dim=0)
+
+    # TODO check the handling if no batch dim is present
+    cov = (
+        torch.stack(
+            [make_positive_definite(s.T.cov()) for s in samples.transpose(0, 1)], 0
+        )
+        if full_covariance
+        else DiagLinearOperator(samples.var(dim=0))
+    )
+
+    return GaussianLike(mean, cov)
+
+
+def _inverse_sample_gaussian_process_like(
+    c: Callable,
+    y: GaussianProcessLike,
+    n_samples: int = 1000,
+    full_covariance: bool = True,
+) -> GaussianProcessLike:
+    """Transforms a `GaussianProcessLike` to another `GaussianProcessLike` through
+    sampling from `y`.
+
+    Parameters
+    ----------
+    c : Callable
+        A callable that applies a transformation to the generated samples.
+    y : GaussianProcessLike
+        The Gaussian Process from which to sample.
+    n_samples : int, default=1000
+        Number of samples to generate from the distribution `y`.
+    full_covariance : bool, default=True
+        If True, calculates a full covariance matrix from samples; otherwise, calculates
+        only the diagonal of the covariance matrix. This is useful for a
+        high-dimensional domain where full covariance might be computationally
+        expensive.
+
+    Returns
+    -------
+    GaussianProcessLike
+        A `GaussianProcessLike` object representing the distribution from the empirical
+        samples.
+
+    Raises
+    ------
+    RuntimeError
+        If the covariance matrix cannot be made positive definite.
+
+    """
+    samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+    assert isinstance(samples, TensorLike)
+    mean = samples.mean(dim=0)
+    cov = (
+        make_positive_definite(samples.view(n_samples, -1).T.cov())
+        if full_covariance
+        else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
+    )
+    return GaussianProcessLike(mean, cov)
 
 
 # TODO (#536): complete implementation

@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from autoemulate.experimental.data.utils import set_random_seed
+
 from ..types import GaussianLike, TensorLike
 from .base import Active
 
@@ -102,12 +104,16 @@ class Random(Stream):
     ----------
     p_query : float
         Query probability for selecting a sample.
+    random_seed : int | None
+        Optional random seed for reproducibility.
     """
 
     p_query: float
 
     def query(
-        self, X: TensorLike | None = None
+        self,
+        X: TensorLike | None = None,
+        random_seed: int | None = None,
     ) -> tuple[torch.Tensor | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Query new samples randomly based on a fixed probability.
@@ -131,6 +137,8 @@ class Random(Stream):
         output = self.emulator.predict(X)
         assert isinstance(output, TensorLike | GaussianLike)
         # assert isinstance(output, TensorLike | DistributionLike)
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
         X = X if np.random.rand() < self.p_query else None
         return X, output, {}
 

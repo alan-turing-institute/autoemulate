@@ -24,7 +24,7 @@ class VAETransform(AutoEmulateTransform):
         epochs: int = 800,
         batch_size: int = 32,
         learning_rate: float = 1e-3,
-        random_state: int | None = None,
+        random_seed: int | None = None,
         beta: float = 1.0,
         verbose: bool = False,
         cache_size: int = 0,
@@ -46,7 +46,7 @@ class VAETransform(AutoEmulateTransform):
             The batch size for training the VAE.
         learning_rate : float, default=1e-3
             The learning rate for the VAE optimizer.
-        random_state : int, default=None
+        random_seed : int, default=None
             Random seed for reproducibility.
         beta : float, default=1.0
             The beta parameter for the VAE loss function, controlling the trade-off
@@ -69,7 +69,7 @@ class VAETransform(AutoEmulateTransform):
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.beta = beta
-        self.random_state = random_state
+        self.random_seed = random_seed
         self.verbose = verbose
 
         # Initialized during fit
@@ -90,8 +90,9 @@ class VAETransform(AutoEmulateTransform):
         TorchDeviceMixin.__init__(self, device=x.device)
 
         # Set random seed for reproducibility
-        if self.random_state is not None:
-            torch.manual_seed(self.random_state)
+        # TODO: update after #512
+        if self.random_seed is not None:
+            torch.manual_seed(self.random_seed)
 
         # Create dataloader
         data_loader = self._convert_to_dataloader(

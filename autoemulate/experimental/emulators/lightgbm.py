@@ -3,11 +3,11 @@ from lightgbm import LGBMRegressor
 from scipy.sparse import spmatrix
 
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
+from autoemulate.experimental.emulators.base import DeterministicEmulator
+from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
-class LightGBM(Emulator):
+class LightGBM(DeterministicEmulator):
     """LightGBM Emulator.
 
     Wraps LightGBM regression from LightGBM.
@@ -41,8 +41,6 @@ class LightGBM(Emulator):
         device: DeviceLike = "cpu",
     ):
         """Initializes a LightGBM object."""
-        if random_seed is not None:
-            self.set_random_seed(random_seed)
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device)
         self.boosting_type = boosting_type
@@ -101,7 +99,7 @@ class LightGBM(Emulator):
         self.n_features_in_ = x_np.shape[1]
         self.model_.fit(x_np, y_np)
 
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike) -> TensorLike:
         """Predicts the output of the emulator for a given input."""
         y_pred = self.model_.predict(x)
         assert not isinstance(y_pred, spmatrix | list)

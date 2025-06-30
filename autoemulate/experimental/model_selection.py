@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 
 import numpy as np
@@ -5,6 +6,7 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
@@ -74,7 +76,7 @@ def cross_validate(  # noqa: PLR0913
     x_transforms: list[AutoEmulateTransform] | None = None,
     y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",
-    random_seed: int = np.random.randint(int(1e5)),
+    random_seed: int | None = None,
     **kwargs: Any,
 ):
     """
@@ -91,6 +93,8 @@ def cross_validate(  # noqa: PLR0913
         An instance of an Emulator subclass.
     device: DeviceLike
         The device to use for model training and evaluation.
+    random_seed: int | None
+        Optional random seed for reproducibility.
     Returns
     -------
     dict[str, list[float]]
@@ -110,6 +114,14 @@ def cross_validate(  # noqa: PLR0913
         train_loader = DataLoader(train_subset, batch_size=batch_size)
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
+        # Handle random seed for reproducibility
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
+        model_init_params = inspect.signature(model).parameters
+        model_kwargs = dict(best_model_config)
+        if "random_seed" in model_init_params:
+            model_kwargs["random_seed"] = random_seed
+
         # fit model
         x, y = next(iter(train_loader))
         transformed_emulator = TransformedEmulator(
@@ -119,8 +131,7 @@ def cross_validate(  # noqa: PLR0913
             x_transforms=x_transforms,
             y_transforms=y_transforms,
             device=device,
-            random_seed=random_seed,
-            **best_model_config,
+            **model_kwargs,
         )
         transformed_emulator.fit(x, y)
 
