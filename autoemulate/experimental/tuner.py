@@ -93,22 +93,18 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 k: v[np.random.randint(len(v))] for k, v in tune_config.items()
             }
 
-            m = (
-                model_class(train_x, train_y, device=self.device, **model_config)
-                if not x_transforms and not y_transforms
-                else TransformedEmulator(
-                    train_x,
-                    train_y,
-                    model=model_class,
-                    x_transforms=x_transforms,
-                    y_transforms=y_transforms,
-                    device=self.device,
-                )
+            transformed_emulator = TransformedEmulator(
+                train_x,
+                train_y,
+                model=model_class,
+                x_transforms=x_transforms,
+                y_transforms=y_transforms,
+                device=self.device,
             )
-            m.fit(train_x, train_y)
+            transformed_emulator.fit(train_x, train_y)
 
             # evaluate
-            y_pred = m.predict(val_x)
+            y_pred = transformed_emulator.predict(val_x)
             score = evaluate(val_y, y_pred, self.metric, self.device)
 
             # record score and config
