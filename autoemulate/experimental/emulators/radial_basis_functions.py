@@ -16,8 +16,8 @@ class RadialBasisFunctions(PyTorchBackend):
 
     def __init__(  # noqa: PLR0913
         self,
-        x: TensorLike,
-        y: TensorLike,
+        x: TensorLike,  # noqa: ARG002
+        y: TensorLike,  # noqa: ARG002
         smoothing: float = 0.0,
         kernel: str = "thin_plate_spline",
         epsilon: float = 1.0,
@@ -32,6 +32,8 @@ class RadialBasisFunctions(PyTorchBackend):
         self.epsilon = epsilon
         self.degree = degree
         self.device = device
+
+    def _fit(self, x: TensorLike, y: TensorLike):
         self.model = RBFInterpolator(
             x,
             y,
