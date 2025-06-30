@@ -121,6 +121,8 @@ class Active(Learner):
         elif isinstance(output, GaussianLike):
             assert output.variance.ndim == 2
             Y_pred, _ = output.mean, output.variance
+        elif isinstance(output, torch.distributions.MultivariateNormal):
+            Y_pred, _ = output.loc, None
         else:
             msg = (
                 f"Output must be either `Tensor` or `MultivariateNormal` but got "

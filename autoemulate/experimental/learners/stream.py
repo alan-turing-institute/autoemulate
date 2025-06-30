@@ -220,7 +220,10 @@ class Threshold(Stream):
         # TODO: move handling to check method in base class
         assert isinstance(X, torch.Tensor)
         output = self.emulator.predict(X)
-        assert isinstance(output, GaussianLike)
+        assert isinstance(
+            output,
+            GaussianLike | torch.distributions.multivariate_normal.MultivariateNormal,
+        )
         assert isinstance(output.variance, torch.Tensor)
         score = self.score(X, output.mean, output.variance)
         X = X if score > self.threshold else None
