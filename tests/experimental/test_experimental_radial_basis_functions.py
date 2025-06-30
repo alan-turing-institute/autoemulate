@@ -1,3 +1,8 @@
+import pytest
+from autoemulate.experimental.device import (
+    SUPPORTED_DEVICES,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators.radial_basis_functions import (
     RadialBasisFunctions,
 )
@@ -15,12 +20,16 @@ def test_predict_rbf(sample_data_rbf, new_data_rbf):
     assert y_pred.shape == (56, 2)
 
 
-def test_tune_rbf(sample_data_rbf):
-    x, y = sample_data_rbf
-    tuner = Tuner(x, y, n_iter=5)
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_tune_rbf(sample_data_y1d, device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+    x, y = sample_data_y1d
+    n_iter = 5
+    tuner = Tuner(x, y, n_iter=n_iter, device=device)
     scores, configs = tuner.run(RadialBasisFunctions)
-    assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(scores) == n_iter
+    assert len(configs) == n_iter
 
 
 # TODO: add determinism test after #512
