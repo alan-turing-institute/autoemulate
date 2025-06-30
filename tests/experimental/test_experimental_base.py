@@ -7,6 +7,7 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
 from torch import nn
+from torch.optim.lr_scheduler import ExponentialLR
 
 
 class TestPyTorchBackend:
@@ -28,6 +29,7 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
             self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg]
+            self.scheduler = ExponentialLR(self.optimizer, gamma=0.9)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(
