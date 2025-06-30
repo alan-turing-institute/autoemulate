@@ -21,15 +21,12 @@ def test_predict_rbf(sample_data_rbf, new_data_rbf):
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
-def test_tune_rbf(sample_data_y1d, device):
+def test_tune_rbf(sample_data_rbf, device):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
-    x, y = sample_data_y1d
+    x, y = sample_data_rbf
     n_iter = 5
     tuner = Tuner(x, y, n_iter=n_iter, device=device)
     scores, configs = tuner.run(RadialBasisFunctions)
     assert len(scores) == n_iter
     assert len(configs) == n_iter
-
-
-# TODO: add determinism test after #512
