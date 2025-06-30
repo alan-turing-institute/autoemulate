@@ -134,6 +134,10 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
             return self._inverse_sample_gaussian_process_like(
                 y, n_samples=n_samples, full_covariance=full_covariance
             )
+        # TODO (#579): remove raise once fully implemented
+        msg = "Implementation to be complete in #579"
+        raise NotImplementedError(msg)
+
         return self._inverse_sample_gaussian_like(
             y, n_samples=n_samples, full_covariance=full_covariance
         )
@@ -202,6 +206,11 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
             cov_orig = make_positive_definite(cov_orig)
 
             return GaussianProcessLike(mean_orig, cov_orig)
+
+        # TODO (#579): remove raise once fully implemented
+        msg = "Implementation to be complete in #579"
+        raise NotImplementedError(msg)
+
         if isinstance(y, GaussianLike):
             if len(y.batch_shape) > 1:
                 msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
