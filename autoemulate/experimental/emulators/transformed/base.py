@@ -17,6 +17,7 @@ from autoemulate.experimental.types import (
     DeviceLike,
     DistributionLike,
     GaussianLike,
+    GaussianProcessLike,
     OutputLike,
     TensorLike,
 )
@@ -302,18 +303,32 @@ class TransformedEmulator(Emulator, ValidationMixin):
         possible.
 
         """
-        samples = self._inv_transform_y_tensor(
-            torch.stack([y_t.sample() for _ in range(self.n_samples)], dim=0)
-        )
+        # Handle GaussianProcessLike and GaussianLike differently
+        if isinstance(y_t, GaussianProcessLike):
+            # For GaussianProcessLike, we need to sample from the process
+            # and then apply the inverse transformation.
+            samples = self._inv_transform_y_tensor(
+                torch.stack([y_t.sample() for _ in range(self.n_samples)], dim=0)
+            )
+            assert isinstance(samples, TensorLike)
+            mean = samples.mean(dim=0)
+            cov = (
+                make_positive_definite(samples.view(self.n_samples, -1).T.cov())
+                if self.full_covariance
+                else DiagLinearOperator(samples.view(self.n_samples, -1).var(dim=0))
+            )
+            return GaussianProcessLike(mean, cov)
+        # For GaussianLike, we can directly sample and apply the inverse transformation
+        samples = self._inv_transform_y_tensor(y_t.sample((self.n_samples,)))
         assert isinstance(samples, TensorLike)
+        samples = samples.squeeze()
         mean = samples.mean(dim=0)
         cov = (
-            make_positive_definite(samples.view(self.n_samples, -1).T.cov())
+            make_positive_definite(samples.T.cov())
             if self.full_covariance
-            # Efficient for large output shape but no covariance
-            else DiagLinearOperator(samples.view(self.n_samples, -1).var(dim=0))
+            else DiagLinearOperator(samples.var(dim=0))
         )
-        return GaussianLike(mean, cov)
+        return GaussianLike(mean.unsqueeze(0), cov.unsqueeze(0))
 
     def _inv_transform_y_distribution(self, y_t: DistributionLike) -> DistributionLike:
         """Invert the transformed distribution `y_t` back to the original space `y`.
