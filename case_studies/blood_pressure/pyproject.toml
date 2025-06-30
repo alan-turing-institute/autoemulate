@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "blood_pressure"
+version = "0.1.0"
+description = "Blood pressure AutoEmulate case study with ModularCirc"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+autoemulate = "*"
+jupyterlab = "*"
+ModularCirc = { git = "https://github.com/alan-turing-institute/ModularCirc.git", branch = "dev" }
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

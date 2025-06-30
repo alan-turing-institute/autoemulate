@@ -31,10 +31,9 @@ Here, we'll show you how to install `AutoEmulate` and get started with the basic
 
 :::
 
-:::{grid-item} <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **Deep Learning**
+:::{grid-item} <img src="https://pytorch.org/assets/images/pytorch-logo.png" height="16"/> **PyTorch models**
 
 - Multi-output / Multi-task Gaussian Processes
-- Conditional Neural Processes
 
 :::
 ::::
