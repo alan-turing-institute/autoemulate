@@ -102,7 +102,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
 class DeterministicEmulator(Emulator):
     """An emulator subclass that predicts with deterministic outputs returning a
-    TensorLike.
+    `TensorLike`.
     """
 
     @abstractmethod
@@ -115,7 +115,7 @@ class DeterministicEmulator(Emulator):
 
 class ProbabilisticEmulator(Emulator):
     """An emulator subclass that predicts with probabilistic outputs returning a
-    DistributionLike.
+    `DistributionLike`.
     """
 
     @abstractmethod
@@ -145,7 +145,7 @@ class ProbabilisticEmulator(Emulator):
 
 class GaussianEmulator(ProbabilisticEmulator):
     """An emulator subclass that predicts with Gaussian outputs returning a
-    GaussianLike.
+    `GaussianLike`.
     """
 
     @abstractmethod
@@ -157,8 +157,8 @@ class GaussianEmulator(ProbabilisticEmulator):
 
 
 class GaussianProcessEmulator(GaussianEmulator):
-    """An emulator subclass that predicts with Gaussian outputs returning a
-    GaussianLike.
+    """A Gaussian Process emulator subclass that predicts with output
+    `GaussianProcessLike`.
     """
 
     @abstractmethod
