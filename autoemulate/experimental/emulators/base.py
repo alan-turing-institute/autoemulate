@@ -1,4 +1,3 @@
-import random
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
@@ -30,6 +29,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
+        x, y = self._move_tensors_to_device(x, y)
         self._fit(x, y)
         self.is_fitted_ = True
 
@@ -51,6 +51,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
+        (x,) = self._move_tensors_to_device(x)
         output = self._predict(x)
         self._check_output(output)
         return output
@@ -89,25 +90,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             "each subclass."
         )
         raise NotImplementedError(msg)
-
-    @staticmethod
-    def set_random_seed(seed: int, deterministic: bool = False):
-        """Set random seed for Python, NumPy and PyTorch.
-
-        Parameters
-        ----------
-        seed : int
-            The random seed to use.
-        deterministic : bool
-            Use "deterministic" algorithms in PyTorch.
-        """
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        if deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.use_deterministic_algorithms(True)
 
 
 class PyTorchBackend(nn.Module, Emulator, Preprocessor):
@@ -192,10 +174,61 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
+    def _initialize_weights(
+        self,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+    ):
+        """Initialize the weights.
+
+        Parameters
+        ----------
+        weight_init : str
+            Initialization method name
+        scale : float
+            Scale parameter for initialization methods. Used as:
+            - gain for Xavier methods
+            - std for normal distribution
+            - bound for uniform distribution (range: [-scale, scale])
+            - ignored for Kaiming methods (uses optimal scaling)
+        bias_init : str
+            Bias initialization method. Options: "zeros", "default"
+            "zeros" initializes biases to zero
+            "default" uses PyTorch's default uniform initialization
+        """
+        # Dictionary mapping for weight initialization methods
+        init_methods = {
+            "xavier_uniform": lambda w: nn.init.xavier_uniform_(w, gain=scale),
+            "xavier_normal": lambda w: nn.init.xavier_normal_(w, gain=scale),
+            "kaiming_uniform": lambda w: nn.init.kaiming_uniform_(
+                w, mode="fan_in", nonlinearity="relu"
+            ),
+            "kaiming_normal": lambda w: nn.init.kaiming_normal_(
+                w, mode="fan_in", nonlinearity="relu"
+            ),
+            "normal": lambda w: nn.init.normal_(w, mean=0.0, std=scale),
+            "uniform": lambda w: nn.init.uniform_(w, -scale, scale),
+            "zeros": lambda w: nn.init.zeros_(w),
+            "ones": lambda w: nn.init.ones_(w),
+        }
+
+        for module in self.modules():
+            # TODO: consider and add handling for other module types
+            if isinstance(module, nn.Linear):
+                # Apply initialization if method exists
+                if weight_init in init_methods:
+                    init_methods[weight_init](module.weight)
+
+                # Initialize biases based on bias_init parameter
+                if module.bias is not None and bias_init == "zeros":
+                    nn.init.zeros_(module.bias)
+
     def _predict(self, x: TensorLike) -> OutputLike:
         self.eval()
-        x = self.preprocess(x)
-        return self(x)
+        with torch.no_grad():
+            x = self.preprocess(x)
+            return self(x)
 
 
 class SklearnBackend(Emulator):
@@ -206,7 +239,6 @@ class SklearnBackend(Emulator):
     `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
     """
 
-    # TODO: consider if we also need to inherit from other classes
     model: BaseEstimator
     normalize_y: bool = False
     y_mean: TensorLike

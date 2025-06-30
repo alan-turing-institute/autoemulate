@@ -6,12 +6,13 @@ theme:
   logo_only: true
   display_navbar_logo_on_scroll: true
 
-# Force re-execution of notebooks on each build.
+# Do not force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: 'off'
-  exclude_tags:
-    - skip-execution
+  execute_notebooks: 'cache'
+  timeout: 600  # Increase timeout to 10 minutes
+  exclude_patterns:
+    - "case_studies/*.ipynb"
 
 # Define the name of the latex output file for PDF builds
 latex:
