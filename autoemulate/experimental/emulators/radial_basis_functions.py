@@ -5,7 +5,7 @@ from torchrbf import RBFInterpolator
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
-from autoemulate.experimental.types import DeviceLike, NumpyLike, TensorLike
+from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class RadialBasisFunctions(PyTorchBackend):
@@ -14,7 +14,7 @@ class RadialBasisFunctions(PyTorchBackend):
     Wraps the Radial Basis Function Interpolation in PyTorch.
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
@@ -25,14 +25,13 @@ class RadialBasisFunctions(PyTorchBackend):
         device: DeviceLike | None = None,
     ):
         """Initializes a RadialBasisFunctions object."""
-        _, _ = x, y  # ignore unused arguments
+        super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
         self.smoothing = smoothing
         self.kernel = kernel
         self.epsilon = epsilon
         self.degree = degree
-
-    def _model_fit(self, x: NumpyLike, y: NumpyLike):
+        self.device = device
         self.model = RBFInterpolator(
             x,
             y,
@@ -40,10 +39,11 @@ class RadialBasisFunctions(PyTorchBackend):
             kernel=self.kernel,
             epsilon=self.epsilon,
             degree=self.degree,
+            device=self.device,  # type: ignore PGH003
         )
 
-    def _model_predict(self, x: NumpyLike) -> NumpyLike:
-        return self.model(x)  # type: ignore PGH003
+    def forward(self, x: TensorLike) -> TensorLike:
+        return self.model(x)
 
     @staticmethod
     def is_multioutput() -> bool:
