@@ -1,6 +1,6 @@
 import torch
 from sklearn.preprocessing import PolynomialFeatures
-from torch import nn, optim
+from torch import nn
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -23,7 +23,6 @@ class PolynomialRegression(PyTorchBackend):
         lr: float = 0.1,
         epochs: int = 500,
         batch_size: int = 16,
-        optimizer_cls: type[optim.Optimizer] = optim.Adam,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
     ):
@@ -44,7 +43,7 @@ class PolynomialRegression(PyTorchBackend):
         self.linear = nn.Linear(x_poly.shape[1], self.n_outputs_, bias=False).to(
             self.device
         )
-        self.optimizer = optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Transform input using the fitted PolynomialFeatures

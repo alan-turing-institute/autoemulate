@@ -6,7 +6,7 @@ from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
-from torch import nn, optim
+from torch import nn
 
 
 class TestPyTorchBackend:
@@ -27,7 +27,7 @@ class TestPyTorchBackend:
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
-            self.optimizer = optim.SGD(self.parameters(), lr=0.01)
+            self.optimizer = self.optimizer_cls(self.parameters(), lr=0.01)  # type: ignore[call-arg]
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(

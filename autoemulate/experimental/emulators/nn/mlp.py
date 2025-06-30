@@ -1,4 +1,4 @@
-from torch import nn, optim
+from torch import nn
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -14,7 +14,6 @@ class MLP(PyTorchBackend):
         y: TensorLike,
         activation_cls: type[nn.Module] = nn.ReLU,
         loss_fn_cls: type[nn.Module] = nn.MSELoss,
-        optimizer_cls: type[optim.Optimizer] = optim.Adam,
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
         scale: float = 1.0,
@@ -89,7 +88,7 @@ class MLP(PyTorchBackend):
         # Finalize initialization
         self._initialize_weights(weight_init, scale)
         self.loss_fn = loss_fn_cls()
-        self.optimizer = optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
         self.to(device)
 
     def forward(self, x):
