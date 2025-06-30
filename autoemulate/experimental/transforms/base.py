@@ -235,12 +235,12 @@ def _inverse_sample_gaussian_like(
     n_samples: int = 1000,
     full_covariance: bool = True,
 ) -> GaussianLike:
-    """Transforms a `DistributionLike`to a `GaussianLike` through sampling from `y`.
+    """Transforms a `DistributionLike` to a `GaussianLike` through sampling from `y`.
 
     Parameters
     ----------
     c : Callable
-        A callable that applies a transformation to generated the samples.
+        A callable that applies a transformation to the generated samples.
     y : DistributionLike
         The distribution from which to sample.
     n_samples : int, default=1000
@@ -295,7 +295,7 @@ def _inverse_sample_gaussian_process_like(
     Parameters
     ----------
     c : Callable
-        A callable that applies a transformation to generated the samples.
+        A callable that applies a transformation to the generated samples.
     y : GaussianProcessLike
         The Gaussian Process from which to sample.
     n_samples : int, default=1000
