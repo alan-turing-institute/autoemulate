@@ -109,6 +109,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     loss_fn: nn.Module = nn.MSELoss()
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
+    lr: float = 1e-1
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:

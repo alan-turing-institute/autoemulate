@@ -27,7 +27,7 @@ class TestPyTorchBackend:
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
-            self.optimizer = self.optimizer_cls(self.parameters(), lr=0.01)  # type: ignore[call-arg]
+            self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg]
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(
