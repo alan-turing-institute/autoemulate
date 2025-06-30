@@ -56,14 +56,11 @@ class HMCCalibrator(TorchDeviceMixin):
         midpoint value of `parameters_range`.
         """
         TorchDeviceMixin.__init__(self, device=device)
-        self.emulator = emulator
-        # TODO: what if have tensor?
-        # maybe always save this as a tensor?
-        # BUT probably want to store the names somewhere (same as SA)
         self.parameter_range = parameter_range
         if calibration_params is None:
             calibration_params = list(parameter_range.keys())
         self.calibration_params = calibration_params
+        self.emulator = emulator
         self._process_observations(observations)
         self._process_obs_noise(list(observations.keys()), observation_noise)
 
@@ -122,40 +119,36 @@ class HMCCalibrator(TorchDeviceMixin):
     def model(self):
         """Pyro model."""
 
-        # Sample from uniform priors for calibration parameters
-        calibration_params = {}
-        for param in self.calibration_params:
-            min_val, max_val = self.parameter_range[param]
-            calibration_params[param] = pyro.sample(
-                param, dist.Uniform(min_val, max_val)
-            )
-
-        # Set all other parameters to midpoint value in range
-        # Ensure that full_params is shape [1, n_inputs]
+        # Set all input parameters, shape [1, n_inputs]
         full_params = torch.zeros((1, len(self.parameter_range)), device=self.device)
+
+        # Each param is either sampled (if calibrated) or set to a constant value
         for i, param in enumerate(self.parameter_range.keys()):
-            if param in calibration_params:
-                full_params[0, i] = calibration_params[param]
+            if param in self.calibration_params:
+                # Set uniform priors for calibration params
+                min_val, max_val = self.parameter_range[param]
+                sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
+                full_params[0, i] = sampled_val
             else:
+                # Set all other parameters to midpoint value in range
                 min_val, max_val = self.parameter_range[param]
                 full_params[0, i] = (min_val + max_val) / 2
 
         # Emulator prediction
+        # TODO: emulator should eventually handle no_grad
         with torch.no_grad():
             output = self.emulator.predict(full_params)
             if isinstance(output, TensorLike):
-                y_pred = output
+                pred_mean = output
             elif isinstance(output, DistributionLike):
-                y_pred = output.mean
+                pred_mean = output.mean
 
-        # Diagonal covariance (uncorrelated outputs)
+        # MultivariateNormal likelihood over outputs (diagonal covariance)
         pred_cov = torch.diag(self.obs_noise.to(self.device))
-
-        # Likelihood
         for i in range(self.observations.shape[0]):
             pyro.sample(
                 f"obs_{i}",
-                dist.MultivariateNormal(y_pred, covariance_matrix=pred_cov),
+                dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
                 obs=self.observations[i],
             )
 
