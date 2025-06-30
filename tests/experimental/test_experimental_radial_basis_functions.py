@@ -1,4 +1,6 @@
 import pytest
+import torch
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
@@ -30,3 +32,30 @@ def test_tune_rbf(sample_data_rbf, device):
     scores, configs = tuner.run(RadialBasisFunctions)
     assert len(scores) == n_iter
     assert len(configs) == n_iter
+
+
+def test_pr_predict_deterministic_with_seed(sample_data_rbf, new_data_rbf):
+    """
+    RBFInterpolator should be deterministic given the same data
+    and parameters so we do not expect different outputs for different seeds.
+    """
+    x, y = sample_data_rbf
+    x2, _ = new_data_rbf
+
+    # Set a random seed
+    seed = 42
+    set_random_seed(seed)
+    model1 = RadialBasisFunctions(x, y)
+    model1.fit(x, y)
+    pred1 = model1.predict(x2)
+
+    # Use a different seed
+    new_seed = 43
+    set_random_seed(new_seed)
+    model2 = RadialBasisFunctions(x, y)
+    model2.fit(x, y)
+    pred2 = model2.predict(x2)
+
+    assert isinstance(pred1, torch.Tensor)
+    assert isinstance(pred2, torch.Tensor)
+    assert torch.allclose(pred1, pred2)
