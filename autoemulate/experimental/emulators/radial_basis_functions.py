@@ -1,17 +1,17 @@
 import random
 
 import numpy as np
-from scipy.interpolate import RBFInterpolator
+from torchrbf import RBFInterpolator
 
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import SklearnBackend
+from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.types import DeviceLike, NumpyLike, TensorLike
 
 
-class RadialBasisFunctions(SklearnBackend):
+class RadialBasisFunctions(PyTorchBackend):
     """Radial basis function Emulator.
 
-    Wraps the RBF interpolator from scipy.
+    Wraps the Radial Basis Function Interpolation in PyTorch.
     """
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
@@ -22,11 +22,11 @@ class RadialBasisFunctions(SklearnBackend):
         kernel: str = "thin_plate_spline",
         epsilon: float = 1.0,
         degree: int = 1,
-        device: DeviceLike = "cpu",
+        device: DeviceLike | None = None,
     ):
         """Initializes a RadialBasisFunctions object."""
         _, _ = x, y  # ignore unused arguments
-        TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
+        TorchDeviceMixin.__init__(self, device=device)
         self.smoothing = smoothing
         self.kernel = kernel
         self.epsilon = epsilon
