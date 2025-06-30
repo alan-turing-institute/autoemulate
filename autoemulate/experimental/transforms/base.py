@@ -235,6 +235,35 @@ def _inverse_sample_gaussian_like(
     n_samples: int = 1000,
     full_covariance: bool = True,
 ) -> GaussianLike:
+    """Transforms a `DistributionLike`to a `GaussianLike` through sampling from `y`.
+
+    Parameters
+    ----------
+    c : Callable
+        A callable that applies a transformation to generated the samples.
+    y : DistributionLike
+        The distribution from which to sample.
+    n_samples : int, default=1000
+        Number of samples to generate from the distribution `y`.
+    full_covariance : bool, default=True
+        If True, calculates a full covariance matrix from samples; otherwise,
+        calculates only the diagonal of the covariance matrix. This is useful
+        for a high-dimensional domain where full covariance might be
+        computationally expensive.
+
+    Returns
+    -------
+    GaussianProcessLike
+        A `GaussianProcessLike` object representing the distribution from the empirical
+        samples.
+
+    Raises
+    ------
+    NotImplementedError
+        If the batch shape of `y` is greater than 1, as this implementation does
+        not support multi-dimensional batch shapes.
+
+    """
     if len(y.batch_shape) > 1:
         msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
         raise NotImplementedError(msg)
@@ -256,10 +285,39 @@ def _inverse_sample_gaussian_like(
 
 def _inverse_sample_gaussian_process_like(
     c: Callable,
-    y: DistributionLike,
+    y: GaussianProcessLike,
     n_samples: int = 1000,
     full_covariance: bool = True,
 ) -> GaussianProcessLike:
+    """Transforms a `GaussianProcessLike` to another `GaussianProcessLike` through
+    sampling from `y`.
+
+    Parameters
+    ----------
+    c : Callable
+        A callable that applies a transformation to generated the samples.
+    y : GaussianProcessLike
+        The Gaussian Process from which to sample.
+    n_samples : int, default=1000
+        Number of samples to generate from the distribution `y`.
+    full_covariance : bool, default=True
+        If True, calculates a full covariance matrix from samples; otherwise, calculates
+        only the diagonal of the covariance matrix. This is useful for a
+        high-dimensional domain where full covariance might be computationally
+        expensive.
+
+    Returns
+    -------
+    GaussianProcessLike
+        A `GaussianProcessLike` object representing the distribution from the empirical
+        samples.
+
+    Raises
+    ------
+    RuntimeError
+        If the covariance matrix cannot be made positive definite.
+
+    """
     samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
     assert isinstance(samples, TensorLike)
     mean = samples.mean(dim=0)
