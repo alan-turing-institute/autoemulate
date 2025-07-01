@@ -3,11 +3,12 @@ from torch import Tensor
 
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.types import DeviceLike, TensorLike, TuneConfig
+from autoemulate.experimental.emulators.base import Emulator, GaussianEmulator, DeterministicEmulator, PyTorchBackend
+from autoemulate.experimental.types import DeviceLike, TensorLike, TuneConfig, GaussianLike
+from typing import Sequence
 
 
-class Ensemble(Emulator, ValidationMixin, TorchDeviceMixin):
+class Ensemble(GaussianEmulator):
     """
     Ensemble emulator that aggregates multiple Emulator instances and returns
     a MultivariateNormal representing the ensemble posterior.
@@ -21,13 +22,16 @@ class Ensemble(Emulator, ValidationMixin, TorchDeviceMixin):
             - MultivariateNormal (with `.mean` and `.covariance_matrix`)
     """
 
-    def __init__(self, emulators: list[Emulator], device: DeviceLike | None = None):
-        if not emulators:
-            s = "Ensemble must contain at least one emulator."
-            raise ValueError(s)
-        self.emulators = emulators
-        self.M = len(emulators)
-        self.is_fitted_ = all(getattr(em, "is_fitted_", False) for em in emulators)
+    def __init__(
+        self, 
+        emulators: list[GaussianEmulator | DeterministicEmulator | PyTorchBackend], 
+        device: DeviceLike | None = None
+    ):
+        assert isinstance(emulators, Sequence)
+        for e in emulators:
+            assert isinstance(e, GaussianEmulator | DeterministicEmulator | PyTorchBackend)
+        self.emulators = list(emulators)
+        self.is_fitted_ = all(e.is_fitted_ for e in emulators)
         TorchDeviceMixin.__init__(self, device=device)
 
     @staticmethod
@@ -36,15 +40,15 @@ class Ensemble(Emulator, ValidationMixin, TorchDeviceMixin):
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
-        # No tunable hyperparameters at the ensemble level
         return {}
 
     def _fit(self, x: TensorLike, y: TensorLike) -> None:
-        for em in self.emulators:
-            em.fit(x, y)
+        for e in self.emulators:
+            e.fit(x, y)
         self.is_fitted_ = True
 
-    def _predict(self, x: Tensor) -> torch.distributions.MultivariateNormal:
+    @torch.inference_mode()
+    def _predict(self, x: Tensor) -> GaussianLike:
         """
         Perform inference with the ensemble.
 
@@ -58,47 +62,43 @@ class Ensemble(Emulator, ValidationMixin, TorchDeviceMixin):
         """
 
         # Inference mode to disable autograd computation graph
-        with torch.inference_mode():
-            device = x.device
-            means: list[Tensor] = []
-            covs: list[Tensor] = []
+        device = x.device
+        means: list[Tensor] = []
+        covs: list[Tensor] = []
 
-            # Outputs from each emulator
-            for em in self.emulators:
-                out = em.predict(x)
-                if isinstance(out, torch.distributions.MultivariateNormal):
-                    mu_i = out.mean.to(device)
-                    sigma_i = out.covariance_matrix.to(device)
-                elif isinstance(out, TensorLike):
-                    mu_i = out.to(device)
-                    dim = mu_i.shape[-1]
-                    sigma_i = torch.zeros(mu_i.size(0), dim, dim, device=device)
-                else:
-                    s = (
-                        "Sub-emulators' output must "
-                        "be TensorLike or MultivariateNormal."
-                    )
-                    raise TypeError(s)
-                means.append(mu_i)
-                covs.append(sigma_i)
+        # Outputs from each emulator
+        for e in self.emulators:
+            out = e.predict(x)
+            if isinstance(out, GaussianLike):
+                mu_i = out.mean.to(device) # (batch_size, n_dims)
+                sigma_i = out.covariance_matrix.to(device) # (batch_size, n_dims, n_dims)
+            elif isinstance(out, TensorLike):
+                mu_i = out.to(device)
+                # Instead of constructing dense zero matrix
+                sigma_i = torch.broadcast_to(
+                    torch.tensor(0.0), (mu_i.shape[0], mu_i.shape[1], mu_i.shape[1])
+                )
+            else:
+                s = f"Emulators of type {type(e)} are note supported yet."
+                raise TypeError(s)
+            means.append(mu_i)
+            covs.append(sigma_i)
 
-            # Stacked means and covs
-            mu_stack = torch.stack(means, dim=0)  # (M, batch, dim)
-            cov_stack = torch.stack(covs, dim=0)  # (M, batch, dim, dim)
+        # Stacked means and covs
+        mu_stack = torch.stack(means, dim=0)  # (M, batch, dim)
+        cov_stack = torch.stack(covs, dim=0)  # (M, batch, dim, dim)
 
-            # Uniform ensemble mean and aleatoric average
-            # NOTE: can implement weighting in future
-            mu_ens = mu_stack.mean(dim=0)  # (batch, dim)
-            sigma_alea = cov_stack.mean(dim=0)  # (batch, dim, dim)
+        # Uniform ensemble mean and aleatoric average
+        # NOTE: can implement weighting in future
+        mu_ens = mu_stack.mean(dim=0)  # (batch, dim)
+        sigma_alea = cov_stack.mean(dim=0)  # (batch, dim, dim)
 
-            # Epistemic covariance: unbiased over M members
-            dev = mu_stack - mu_ens.unsqueeze(0)  # (M, batch, dim)
-            sigma_epi = torch.einsum("m b d, m b e -> b d e", dev, dev) / (self.M - 1)
+        # Epistemic covariance: unbiased over M members
+        dev = mu_stack - mu_ens.unsqueeze(0)  # (M, batch, dim)
+        sigma_epi = torch.einsum("m b d, m b e -> b d e", dev, dev) / (len(self.emulators) - 1)
 
-            # Total covariance
-            sigma_ens = sigma_alea + sigma_epi  # (batch, dim, dim)
+        # Total covariance
+        sigma_ens = sigma_alea + sigma_epi  # (batch, dim, dim)
 
-            # Return as MultivariateNormal
-            return torch.distributions.MultivariateNormal(
-                loc=mu_ens, covariance_matrix=sigma_ens
-            )
+        # Return as MultivariateNormal
+        return GaussianLike(mu_ens, sigma_ens)
