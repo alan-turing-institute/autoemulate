@@ -1,11 +1,19 @@
+from collections.abc import Sequence
+
 import torch
 from torch import Tensor
 
-from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import Emulator, GaussianEmulator, DeterministicEmulator, PyTorchBackend
-from autoemulate.experimental.types import DeviceLike, TensorLike, TuneConfig, GaussianLike
-from typing import Sequence
+from autoemulate.experimental.emulators.base import (
+    Emulator,
+    GaussianEmulator,
+)
+from autoemulate.experimental.types import (
+    DeviceLike,
+    GaussianLike,
+    TensorLike,
+    TuneConfig,
+)
 
 
 class Ensemble(GaussianEmulator):
@@ -23,13 +31,13 @@ class Ensemble(GaussianEmulator):
     """
 
     def __init__(
-        self, 
-        emulators: list[GaussianEmulator | DeterministicEmulator | PyTorchBackend], 
-        device: DeviceLike | None = None
+        self,
+        emulators: list[Emulator],
+        device: DeviceLike | None = None,
     ):
         assert isinstance(emulators, Sequence)
         for e in emulators:
-            assert isinstance(e, GaussianEmulator | DeterministicEmulator | PyTorchBackend)
+            assert isinstance(e, Emulator)
         self.emulators = list(emulators)
         self.is_fitted_ = all(e.is_fitted_ for e in emulators)
         TorchDeviceMixin.__init__(self, device=device)
@@ -70,8 +78,10 @@ class Ensemble(GaussianEmulator):
         for e in self.emulators:
             out = e.predict(x)
             if isinstance(out, GaussianLike):
-                mu_i = out.mean.to(device) # (batch_size, n_dims)
-                sigma_i = out.covariance_matrix.to(device) # (batch_size, n_dims, n_dims)
+                mu_i = out.mean.to(device)  # (batch_size, n_dims)
+                sigma_i = out.covariance_matrix.to(
+                    device
+                )  # (batch_size, n_dims, n_dims)
             elif isinstance(out, TensorLike):
                 mu_i = out.to(device)
                 # Instead of constructing dense zero matrix
@@ -95,7 +105,9 @@ class Ensemble(GaussianEmulator):
 
         # Epistemic covariance: unbiased over M members
         dev = mu_stack - mu_ens.unsqueeze(0)  # (M, batch, dim)
-        sigma_epi = torch.einsum("m b d, m b e -> b d e", dev, dev) / (len(self.emulators) - 1)
+        sigma_epi = torch.einsum("m b d, m b e -> b d e", dev, dev) / (
+            len(self.emulators) - 1
+        )
 
         # Total covariance
         sigma_ens = sigma_alea + sigma_epi  # (batch, dim, dim)
