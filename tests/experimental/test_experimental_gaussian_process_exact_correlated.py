@@ -7,8 +7,8 @@ from autoemulate.experimental.device import (
     check_model_device,
     check_torch_device_is_available,
 )
-from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
+from autoemulate.experimental.emulators.gaussian_process.exact_correlated import (
+    CorrGPModule as GaussianProcessExact,
 )
 from autoemulate.experimental.emulators.gaussian_process.kernel import (
     rbf,
