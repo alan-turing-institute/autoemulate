@@ -22,7 +22,7 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    if model is GaussianProcessExact:
+    if issubclass(model, GaussianProcessExact):
         assert isinstance(y_pred, DistributionLike)
         assert y_pred.mean.shape == (x2.shape[0], y.shape[1])
     else:
