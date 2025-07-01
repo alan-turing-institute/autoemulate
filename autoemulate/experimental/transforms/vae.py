@@ -3,6 +3,7 @@ import logging
 import torch
 from torch.distributions import Transform, constraints
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import TensorLike
@@ -90,9 +91,8 @@ class VAETransform(AutoEmulateTransform):
         TorchDeviceMixin.__init__(self, device=x.device)
 
         # Set random seed for reproducibility
-        # TODO: update after #512
         if self.random_seed is not None:
-            torch.manual_seed(self.random_seed)
+            set_random_seed(self.random_seed)
 
         # Create dataloader
         data_loader = self._convert_to_dataloader(
