@@ -24,37 +24,11 @@ def rbf(n_features: int | None, n_outputs: torch.Size | None) -> RBFKernel:
 def matern_5_2_kernel(
     n_features: int | None, n_outputs: torch.Size | None
 ) -> MaternKernel:
-    return MaternKernel(
+    k = MaternKernel(
         nu=2.5,
         ard_num_dims=n_features,
         batch_shape=n_outputs,
     )
-
-
-def matern_3_2_kernel(
-    n_features: int | None, n_outputs: torch.Size | None
-) -> MaternKernel:
-    return MaternKernel(
-        nu=1.5,
-        ard_num_dims=n_features,
-        batch_shape=n_outputs,
-    )
-
-
-def rq_kernel(n_features: int | None, n_outputs: torch.Size | None) -> RQKernel:
-    return RQKernel(
-        ard_num_dims=n_features,
-        batch_shape=n_outputs,
-    )
-
-
-def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
-    k = (
-        RBFKernel(
-            ard_num_dims=n_features,
-            batch_shape=n_outputs,
-        )
-    ) + ConstantKernel()
     return (
         k.initialize(lengthscale=torch.ones(n_features) * 1.5)
         if n_features is not None
@@ -62,33 +36,82 @@ def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> K
     )
 
 
-# combinations
-def rbf_plus_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
-    return RBFKernel(
+def matern_3_2_kernel(
+    n_features: int | None, n_outputs: torch.Size | None
+) -> MaternKernel:
+    k = MaternKernel(
+        nu=1.5,
         ard_num_dims=n_features,
         batch_shape=n_outputs,
-    ) + LinearKernel(
+    )
+    return (
+        k.initialize(lengthscale=torch.ones(n_features) * 1.5)
+        if n_features is not None
+        else k
+    )
+
+
+def rq_kernel(n_features: int | None, n_outputs: torch.Size | None) -> RQKernel:
+    k = RQKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+    return (
+        k.initialize(lengthscale=torch.ones(n_features) * 1.5)
+        if n_features is not None
+        else k
+    )
+
+
+def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
+    rbf_kernel = RBFKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+    if n_features is not None:
+        rbf_kernel.initialize(lengthscale=torch.ones(n_features) * 1.5)
+    return rbf_kernel + ConstantKernel()
+
+
+# combinations
+def rbf_plus_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
+    rbf_kernel = RBFKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+    if n_features is not None:
+        rbf_kernel.initialize(lengthscale=torch.ones(n_features) * 1.5)
+    return rbf_kernel + LinearKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
     )
 
 
 def matern_5_2_plus_rq(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
-    return MaternKernel(
+    matern_kernel = MaternKernel(
         nu=2.5,
         ard_num_dims=n_features,
         batch_shape=n_outputs,
-    ) + RQKernel(
+    )
+    rq_kernel = RQKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
     )
+    # Initialize lengthscales for both kernels if n_features is provided
+    if n_features is not None:
+        matern_kernel.initialize(lengthscale=torch.ones(n_features) * 1.5)
+        rq_kernel.initialize(lengthscale=torch.ones(n_features) * 1.5)
+    return matern_kernel + rq_kernel
 
 
 def rbf_times_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
-    return RBFKernel(
+    rbf_kernel = RBFKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
-    ) * LinearKernel(
+    )
+    if n_features is not None:
+        rbf_kernel.initialize(lengthscale=torch.ones(n_features) * 1.5)
+    return rbf_kernel * LinearKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
     )

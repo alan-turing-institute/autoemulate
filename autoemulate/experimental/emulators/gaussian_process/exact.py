@@ -10,7 +10,7 @@ from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
 from torch import nn
 
-from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
 from autoemulate.experimental.emulators.gaussian_process import (
@@ -41,9 +41,7 @@ from .mean import (
 )
 
 
-class GaussianProcessExact(
-    GaussianProcessEmulator, gpytorch.models.ExactGP, Preprocessor
-):
+class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
     Gaussian Process Exact Emulator
     This class implements an exact Gaussian Process emulator using the GPyTorch library
@@ -61,7 +59,6 @@ class GaussianProcessExact(
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
-        preprocessor_cls: type[Preprocessor] | None = None,
         epochs: int = 50,
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
@@ -92,30 +89,13 @@ class GaussianProcessExact(
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
 
-        # Init preprocessor
-        if preprocessor_cls is not None:
-            if issubclass(preprocessor_cls, Standardizer):
-                self.preprocessor = preprocessor_cls(
-                    x.mean(0, keepdim=True), x.std(0, keepdim=True)
-                )
-            else:
-                raise NotImplementedError(
-                    f"Preprocessor ({preprocessor_cls}) not currently implemented."
-                )
-        else:
-            self.preprocessor = None
-
         # Init likelihood
         likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
         likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
-        x_preprocessed = self.preprocess(x)
         gpytorch.models.ExactGP.__init__(
-            self,
-            train_inputs=x_preprocessed,
-            train_targets=y,
-            likelihood=likelihood,
+            self, train_inputs=x, train_targets=y, likelihood=likelihood
         )
         self.likelihood = likelihood
         self.mean_module = mean_module
@@ -129,12 +109,6 @@ class GaussianProcessExact(
     @staticmethod
     def is_multioutput():
         return True
-
-    def preprocess(self, x: TensorLike) -> TensorLike:
-        """Preprocess the input data using the preprocessor."""
-        if self.preprocessor is not None:
-            x = self.preprocessor.preprocess(x)
-        return x
 
     def forward(self, x: TensorLike):
         mean = self.mean_module(x)
@@ -163,7 +137,6 @@ class GaussianProcessExact(
 
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
-        x = self.preprocess(x)
 
         # Set the training data in case changed since init
         self.set_train_data(x, y, strict=False)
@@ -182,7 +155,6 @@ class GaussianProcessExact(
         self.eval()
         with torch.no_grad():
             x = x.to(self.device)
-            x = self.preprocess(x)
             return self(x)
 
     @staticmethod
@@ -211,7 +183,6 @@ class GaussianProcessExact(
                 nn.GELU,
             ],
             "lr": list(np.logspace(-3, -1)),
-            "preprocessor_cls": [None, Standardizer],
             "likelihood_cls": [MultitaskGaussianLikelihood],
         }
 
@@ -233,10 +204,14 @@ class CorrGPModule(GaussianProcessExact):
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        seed: int | None = None,
         device: DeviceLike | None = None,
     ):
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
+
+        if seed is not None:
+            set_random_seed(seed)
 
         # Convert to 2D tensors if needed and move to device
         x, y = self._move_tensors_to_device(*self._convert_to_tensors(x, y))
@@ -258,6 +233,12 @@ class CorrGPModule(GaussianProcessExact):
         num_tasks = tuple(y.shape)[1]
         mean_module = MultitaskMean(mean_module, num_tasks=num_tasks)
         covar_module = MultitaskKernel(covar_module, num_tasks=num_tasks, rank=1)
+
+        # TODO: identify if initialization of task covariance factor is needed for
+        # deterministic behavior
+        # with torch.no_grad():
+        #     mean_module.task_covar_factor.fill_(1.0)  # type: ignore  # noqa: PGH003
+        #     covar_module.task_covar_factor.fill_(1.0)  # type: ignore  # noqa: PGH003
 
         # Init likelihood
         likelihood = likelihood_cls(num_tasks=num_tasks)
