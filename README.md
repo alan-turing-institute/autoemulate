@@ -39,14 +39,14 @@
 | autoemulate/experimental/data/utils.py                                               |      177 |       18 |     90% |65, 94, 100, 116-120, 134, 167, 172, 404, 407-409, 435, 438-440, 470 |
 | autoemulate/experimental/device.py                                                   |       45 |        8 |     82% |15-16, 45, 99, 105, 154-159, 164 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                                   |        6 |        0 |    100% |           |
-| autoemulate/experimental/emulators/base.py                                           |      146 |        9 |     94% |55, 96-100, 252, 302, 329-331, 344 |
+| autoemulate/experimental/emulators/base.py                                           |      146 |        8 |     95% |55, 96-100, 252, 329-331, 344 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py                 |        8 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/exact.py                        |       86 |        1 |     99% |        94 |
 | autoemulate/experimental/emulators/gradient\_boosting.py                             |       29 |        1 |     97% |        67 |
 | autoemulate/experimental/emulators/lightgbm.py                                       |       45 |        0 |    100% |           |
 | autoemulate/experimental/emulators/neural\_processes/conditional\_neural\_process.py |      168 |        8 |     95% |47-48, 193-194, 432, 461-462, 485 |
 | autoemulate/experimental/emulators/nn/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
-| autoemulate/experimental/emulators/nn/mlp.py                                         |       33 |        0 |    100% |           |
+| autoemulate/experimental/emulators/nn/mlp.py                                         |       34 |        0 |    100% |           |
 | autoemulate/experimental/emulators/polynomials.py                                    |       34 |        1 |     97% |        58 |
 | autoemulate/experimental/emulators/random\_forest.py                                 |       26 |        0 |    100% |           |
 | autoemulate/experimental/emulators/svm.py                                            |       31 |        0 |    100% |           |
@@ -145,7 +145,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **9395** | **2029** | **78%** |           |
+|                                                                            **TOTAL** | **9396** | **2028** | **78%** |           |
 
 
 ## Setup coverage badge
