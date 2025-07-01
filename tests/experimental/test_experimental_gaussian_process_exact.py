@@ -10,8 +10,8 @@ from autoemulate.experimental.device import (
     check_torch_device_is_available,
 )
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    CorrGPModule,
     GaussianProcessExact,
+    GaussianProcessExactCorrelated,
 )
 from autoemulate.experimental.emulators.gaussian_process.kernel import (
     rbf,
@@ -21,7 +21,7 @@ from autoemulate.experimental.emulators.gaussian_process.mean import constant_me
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
-GPS = [GaussianProcessExact, CorrGPModule]
+GPS = [GaussianProcessExact, GaussianProcessExactCorrelated]
 
 
 @pytest.mark.parametrize("emulator", GPS)
@@ -133,9 +133,9 @@ def test_gp_corr_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     x2, _ = new_data_y1d
     seed = 42
     new_seed = 43
-    model1 = CorrGPModule(x, y, device=device, seed=seed)
-    model2 = CorrGPModule(x, y, device=device, seed=new_seed)
-    model3 = CorrGPModule(x, y, device=device, seed=seed)
+    model1 = GaussianProcessExactCorrelated(x, y, device=device, seed=seed)
+    model2 = GaussianProcessExactCorrelated(x, y, device=device, seed=new_seed)
+    model3 = GaussianProcessExactCorrelated(x, y, device=device, seed=seed)
     model1.fit(x, y)
     pred1 = model1.predict(x2)
     model2.fit(x, y)

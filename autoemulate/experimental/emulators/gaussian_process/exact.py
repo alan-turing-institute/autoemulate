@@ -187,7 +187,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         }
 
 
-class CorrGPModule(GaussianProcessExact):
+class GaussianProcessExactCorrelated(GaussianProcessExact):
     """
     Multioutput GP module for correlated outputs, see Bonilla et al. 2008.
     """
