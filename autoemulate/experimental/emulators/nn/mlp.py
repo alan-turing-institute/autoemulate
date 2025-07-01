@@ -15,9 +15,11 @@ class MLP(PyTorchBackend):
         activation_cls: type[nn.Module] = nn.ReLU,
         loss_fn_cls: type[nn.Module] = nn.MSELoss,
         optimizer_cls: type[optim.Optimizer] = optim.Adam,
+        epochs: int = 100,
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
         scale: float = 1.0,
+        bias_init: str = "default",
         dropout_prob: float | None = None,
         lr: float = 1e-1,
         random_seed: int | None = None,
@@ -87,7 +89,8 @@ class MLP(PyTorchBackend):
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization
-        self._initialize_weights(weight_init, scale)
+        self._initialize_weights(weight_init, scale, bias_init)
+        self.epochs = epochs
         self.loss_fn = loss_fn_cls()
         self.optimizer = optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
         self.to(device)
