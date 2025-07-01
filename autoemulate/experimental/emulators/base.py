@@ -189,6 +189,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     optimizer: optim.Optimizer
     lr: float = 1e-1
     scheduler: ExponentialLR | None = None
+    gamma: float = 0.9
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:

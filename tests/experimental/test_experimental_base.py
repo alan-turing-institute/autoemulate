@@ -29,7 +29,7 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
             self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg]
-            self.scheduler = ExponentialLR(self.optimizer, gamma=0.9)
+            self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(

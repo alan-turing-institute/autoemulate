@@ -45,7 +45,7 @@ class PolynomialRegression(PyTorchBackend):
             self.device
         )
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = ExponentialLR(self.optimizer, gamma=0.9)
+        self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Transform input using the fitted PolynomialFeatures

@@ -93,7 +93,7 @@ class MLP(PyTorchBackend):
         self.epochs = epochs
         self.loss_fn = loss_fn_cls()
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = ExponentialLR(self.optimizer, gamma=0.9)
+        self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
         self.to(device)
 
     def forward(self, x):
