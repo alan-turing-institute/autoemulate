@@ -44,6 +44,7 @@ from .mean import (
 class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
     Gaussian Process Exact Emulator
+
     This class implements an exact Gaussian Process emulator using the GPyTorch library
 
     It supports:
@@ -65,6 +66,32 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         lr: float = 2e-1,
         device: DeviceLike | None = None,
     ):
+        """Initialize the GaussianProcessExact emulator.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input features, expected to be a 2D tensor of shape (n_samples, n_features).
+        y : TensorLike
+            Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
+        likelihood_cls : type[MultitaskGaussianLikelihood],
+            default=MultitaskGaussianLikelihood
+            Likelihood class to use for the model. Defaults to
+            `MultitaskGaussianLikelihood`.
+        mean_module_fn : MeanModuleFn, default=constant_mean
+            Function to create the mean module.
+        covar_module_fn : CovarModuleFn, default=rbf
+            Function to create the covariance module.
+        epochs : int, default=50
+            Number of training epochs.
+        activation : type[nn.Module], default=nn.ReLU
+            Activation function to use in the model.
+        lr : float, default=2e-1
+            Learning rate for the optimizer.
+        device : DeviceLike | None, default=None
+            Device to run the model on. If None, uses the default device (usually CPU or
+            GPU).
+        """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -188,8 +215,14 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
 
 class GaussianProcessExactCorrelated(GaussianProcessExact):
-    """
-    Multioutput GP module for correlated outputs, see Bonilla et al. 2008.
+    """Multioutput exact GP implementation with correlated task covariance.
+
+    This class extends the `GaussianProcessExact` to support correlated task covariance
+    by using a `MultitaskKernel` with a rank-1 covariance factor and a `MultitaskMean`
+    for the mean function.
+
+    It is designed to handle multi-task Gaussian processes where the tasks are
+    correlated, allowing for more flexible modeling of multi-output data.
     """
 
     # TODO: refactor the init as similar to exact GP base class
@@ -201,12 +234,40 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         seed: int | None = None,
         device: DeviceLike | None = None,
     ):
+        """Initialize the GaussianProcessExactCorrelated emulator.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input features, expected to be a 2D tensor of shape (n_samples, n_features).
+        y : TensorLike
+            Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
+        likelihood_cls : type[MultitaskGaussianLikelihood],
+            default=MultitaskGaussianLikelihood
+            Likelihood class to use for the model. Defaults to
+            `MultitaskGaussianLikelihood`.
+        mean_module_fn : MeanModuleFn, default=constant_mean
+            Function to create the mean module.
+        covar_module_fn : CovarModuleFn, default=rbf
+            Function to create the covariance module.
+        epochs : int, default=50
+            Number of training epochs.
+        activation : type[nn.Module], default=nn.ReLU
+            Activation function to use in the model.
+        lr : float, default=2e-1
+            Learning rate for the optimizer.
+        seed : int | None, default=None
+            Random seed for reproducibility. If None, no seed is set.
+        device : DeviceLike | None, default=None
+            Device to run the model on. If None, uses the default device (usually CPU or
+            GPU).
+        """
+
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -247,7 +308,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.batch_size = batch_size
         self.activation = activation
         self.to(self.device)
 
