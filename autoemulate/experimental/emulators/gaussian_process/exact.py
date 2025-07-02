@@ -220,15 +220,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         mean_module = mean_module_fn(tuple(x.shape)[1], None)
         covar_module = covar_module_fn(tuple(x.shape)[1], None)
 
-        # If the combined kernel is not a ScaleKernel, wrap it in one
-        covar_module = (
-            covar_module
-            if isinstance(covar_module, ScaleKernel)
-            else ScaleKernel(
-                covar_module,
-            )
-        )
-
         # Mean and covariance modules for multitask
         num_tasks = tuple(y.shape)[1]
         mean_module = MultitaskMean(mean_module, num_tasks=num_tasks)
