@@ -61,10 +61,10 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         device: DeviceLike | None = None,
+        **kwargs,
     ):
         """Initialize the GaussianProcessExact emulator.
 
@@ -127,7 +127,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.batch_size = batch_size
         self.activation = activation
         self.to(self.device)
 
@@ -236,6 +235,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         lr: float = 2e-1,
         seed: int | None = None,
         device: DeviceLike | None = None,
+        **kwargs,
     ):
         """Initialize the GaussianProcessExactCorrelated emulator.
 
