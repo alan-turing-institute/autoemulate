@@ -37,18 +37,18 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
         [
             None,
             [PCATransform(n_components=3)],
-            [VAETransform(latent_dim=3)],
+            [StandardizeTransform(), VAETransform(latent_dim=3)],
             [
                 StandardizeTransform(),
                 PCATransform(n_components=3),
-                VAETransform(latent_dim=2),
             ],
         ],
         [
             None,
+            [StandardizeTransform()],
             [PCATransform(n_components=1)],
             [StandardizeTransform(), PCATransform(n_components=1)],
-            [VAETransform(latent_dim=1)],
+            [StandardizeTransform(), VAETransform(latent_dim=1)],
             [StandardizeTransform(), VAETransform(latent_dim=1)],
         ],
     ),
