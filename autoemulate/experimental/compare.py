@@ -142,10 +142,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             Metric to use for selecting the best model. Default is 'r2_score'.
         x : InputLike | None, optional
             Input data to use for refitting. If None, uses the original data
-            passed to AutoEmulate constructor.
+            passed to AutoEmulate constructor. Must be provided together with y.
         y : InputLike | None, optional
             Target data to use for refitting. If None, uses the original data
-            passed to AutoEmulate constructor.
+            passed to AutoEmulate constructor. Must be provided together with x.
 
         Returns
         -------
@@ -157,7 +157,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         RuntimeError
             If `compare()` has not been run yet.
         ValueError
-            If the specified model_name was not found in comparison results.
+            If the specified model_name was not found in comparison results,
+            or if only one of x or y is provided.
         """
         if self._comparison_results is None:
             msg = (
@@ -165,6 +166,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 "No comparison results found."
             )
             raise RuntimeError(msg)
+
+        # Check that both x and y are provided together or both are None
+        if (x is None) != (y is None):
+            msg = (
+                "Both x and y must be provided together, or both must be None. "
+                "Providing only one of x or y is not supported."
+            )
+            raise ValueError(msg)
 
         # Select model to refit
         if model_name is None:
@@ -191,20 +200,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         # Use provided data or default to original data
         if x is None and y is None:
             refit_x, refit_y = self.x, self.y
-        elif x is not None and y is not None:
-            # Convert both x and y to tensors
+        else:  # Both x and y are provided
+            # Type assertion is safe here since we validated both are not None
+            assert x is not None
+            assert y is not None
             refit_x, refit_y = self._convert_to_tensors(x, y)
             refit_x, refit_y = self._move_tensors_to_device(refit_x, refit_y)
-        elif x is not None and y is None:
-            # Convert only x, use original y
-            refit_x, _ = self._convert_to_tensors(x, self.y)
-            refit_x, _ = self._move_tensors_to_device(refit_x, self.y)
-            refit_y = self.y
-        else:  # x is None and y is not None
-            # Convert only y, use original x
-            _, refit_y = self._convert_to_tensors(self.x, y)
-            _, refit_y = self._move_tensors_to_device(self.x, refit_y)
-            refit_x = self.x
 
         # Create and fit model with best configuration
         if self.random_seed is not None:

@@ -117,8 +117,8 @@ def test_refit_with_custom_data(sample_data_y2d, new_data_y2d):
     assert predictions is not None
 
 
-def test_refit_with_custom_x_only(sample_data_y2d, new_data_y2d):
-    """Test that refit works when providing only custom x data."""
+def test_refit_with_only_x_raises_error(sample_data_y2d, new_data_y2d):
+    """Test that refit raises error when providing only x data."""
     x, y = sample_data_y2d
     x_new, _ = new_data_y2d
     ae = AutoEmulate(x, y)
@@ -126,17 +126,15 @@ def test_refit_with_custom_x_only(sample_data_y2d, new_data_y2d):
     # Run comparison first
     ae.compare(n_iter=2)
 
-    # Refit with only custom x (should use original y)
-    custom_model = ae.refit(x=x_new)
-
-    # Check that model is fitted and can make predictions
-    assert custom_model.is_fitted_
-    predictions = custom_model.predict(x_new)
-    assert predictions is not None
+    # Try to refit with only custom x (should raise error)
+    with pytest.raises(
+        ValueError, match="Both x and y must be provided together, or both must be None"
+    ):
+        ae.refit(x=x_new)
 
 
-def test_refit_with_custom_y_only(sample_data_y2d, new_data_y2d):
-    """Test that refit works when providing only custom y data."""
+def test_refit_with_only_y_raises_error(sample_data_y2d, new_data_y2d):
+    """Test that refit raises error when providing only y data."""
     x, y = sample_data_y2d
     _, y_new = new_data_y2d
     ae = AutoEmulate(x, y)
@@ -144,13 +142,11 @@ def test_refit_with_custom_y_only(sample_data_y2d, new_data_y2d):
     # Run comparison first
     ae.compare(n_iter=2)
 
-    # Refit with only custom y (should use original x)
-    custom_model = ae.refit(y=y_new)
-
-    # Check that model is fitted and can make predictions
-    assert custom_model.is_fitted_
-    predictions = custom_model.predict(x)
-    assert predictions is not None
+    # Try to refit with only custom y (should raise error)
+    with pytest.raises(
+        ValueError, match="Both x and y must be provided together, or both must be None"
+    ):
+        ae.refit(y=y_new)
 
 
 def test_refit_before_compare_raises_error(sample_data_y2d):
