@@ -3,7 +3,6 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autoemulate.compare import AutoEmulate
 from autoemulate.plotting import (
     _check_multioutput,
     _plot_cv,
@@ -16,26 +15,6 @@ from matplotlib.figure import Figure
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-
-
-@pytest.fixture(scope="module")
-def ae_single_output():
-    X, y = make_regression(n_samples=50, n_features=2, noise=0.5, random_state=42)  # type: ignore PGH003
-    em = AutoEmulate()
-    em.setup(X, y, models=["gp", "rbf", "sop"])
-    em.compare()
-    return em
-
-
-@pytest.fixture(scope="module")
-def ae_multi_output():
-    X, y = make_regression(  # type: ignore PGH003
-        n_samples=50, n_features=2, n_targets=2, noise=0.5, random_state=42
-    )
-    em = AutoEmulate()
-    em.setup(X, y, models=["gp", "rbf", "sop"])
-    em.compare()
-    return em
 
 
 # ------------------------------ test validate_inputs ------------------------------
