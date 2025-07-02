@@ -100,9 +100,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         n_iter: int = 10,
         cv: type[BaseCrossValidator] = KFold,
         cv_seed: int | None = None,
-    ) -> dict[str, dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
-        models_evaluated = {}
+        models_evaluated = []
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
                 for model_cls in self.models:
@@ -122,18 +122,16 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                         np.mean(cv_results["r2"]),
                         np.mean(cv_results["rmse"]),
                     )
-                    models_evaluated[
-                        (
-                            # TODO: refactor names of transforms and target_transforms
-                            "-".join(str(t) for t in x_transforms),
-                            "-".join(str(t) for t in y_transforms),
-                            model_cls.model_name(),
-                        )
-                    ] = {
-                        "config": best_model_config,
-                        "r2_score": r2_score,
-                        "rmse_score": rmse_score,
-                    }
+                    models_evaluated.append(
+                        {
+                            "config": best_model_config,
+                            "x_transforms": x_transforms,
+                            "y_transforms": y_transforms,
+                            "model_cls": model_cls,
+                            "r2_score": r2_score,
+                            "rmse_score": rmse_score,
+                        }
+                    )
                     self.log_compare(
                         model_cls,
                         x_transforms,
