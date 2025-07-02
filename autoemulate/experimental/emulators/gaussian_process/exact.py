@@ -98,26 +98,24 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         x, y = self._convert_to_tensors(x, y)
         x, y = self._move_tensors_to_device(x, y)
 
+        # Local variables for number of features and tasks
+        n_features = x.shape[1]
+        num_tasks = y.shape[1]
+        num_tasks_torch = torch.Size([num_tasks])
+
         # Initialize the mean and covariance modules
-        # TODO: consider refactoring to only pass torch tensors x and y
-        mean_module = mean_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
-        covar_module = covar_module_fn(tuple(x.shape)[1], torch.Size([y.shape[1]]))
+        mean_module = mean_module_fn(n_features, num_tasks_torch)
+        covar_module = covar_module_fn(n_features, num_tasks_torch)
 
         # If the combined kernel is not a ScaleKernel, wrap it in one
         covar_module = (
             covar_module
             if isinstance(covar_module, ScaleKernel)
-            else ScaleKernel(
-                covar_module,
-                batch_shape=torch.Size([y.shape[1]]),
-            )
+            else ScaleKernel(covar_module, batch_shape=num_tasks_torch)
         )
 
-        self.n_features_in_ = x.shape[1]
-        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-
         # Init likelihood
-        likelihood = likelihood_cls(num_tasks=tuple(y.shape)[1])
+        likelihood = likelihood_cls(num_tasks=num_tasks)
         likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
@@ -278,8 +276,9 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         x, y = self._move_tensors_to_device(*self._convert_to_tensors(x, y))
 
         # Initialize the mean and covariance modules
-        mean_module = mean_module_fn(tuple(x.shape)[1], None)
-        covar_module = covar_module_fn(tuple(x.shape)[1], None)
+        n_features = tuple(x.shape)[1]
+        mean_module = mean_module_fn(n_features, None)
+        covar_module = covar_module_fn(n_features, None)
 
         # Mean and covariance modules for multitask
         num_tasks = tuple(y.shape)[1]
