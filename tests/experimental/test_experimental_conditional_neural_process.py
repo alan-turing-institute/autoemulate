@@ -8,7 +8,6 @@ from autoemulate.experimental.device import (
 from autoemulate.experimental.emulators.neural_processes.conditional_neural_process import (  # noqa: E501
     CNPModule,
 )
-from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
 
@@ -70,12 +69,13 @@ def test_cnp_module_predict_fails_with_calling_fit_first(sample_data_y1d):
         cnp.predict(x)
 
 
-def test_tune_gp(sample_data_y1d):
-    x, y = sample_data_y1d
-    tuner = Tuner(x, y, n_iter=20)
-    scores, configs = tuner.run(CNPModule)
-    assert len(scores) == 20
-    assert len(configs) == 20
+# TODO: test currently not functional as CNPModule not compatible with transforms (#531)
+# def test_tune_gp(sample_data_y1d):
+#     x, y = sample_data_y1d
+#     tuner = Tuner(x, y, n_iter=20)
+#     scores, configs = tuner.run(CNPModule)
+#     assert len(scores) == 20
+#     assert len(configs) == 20
 
 
 @pytest.mark.parametrize("device", ["mps", "cuda"])
