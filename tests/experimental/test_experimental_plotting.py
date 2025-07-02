@@ -1,3 +1,5 @@
+import re
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -47,8 +49,8 @@ def test_validate_inputs_with_empty_cv_results():
 def test_validate_inputs_with_invalid_model_name():
     cv_results = {"model1": {"test_r2": 0.8}}
     model_name = "model2"
-    msg = r"Model model2 not found. Available models are: dict_keys\\(\\['model1'\\]\\)"
-    with pytest.raises(ValueError, match=msg):
+    msg = "Model model2 not found. Available models are: dict_keys(['model1'])"
+    with pytest.raises(ValueError, match=re.escape(msg)):
         _validate_inputs(cv_results, model_name)
 
 
