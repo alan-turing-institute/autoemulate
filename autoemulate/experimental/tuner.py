@@ -1,6 +1,7 @@
 from torchmetrics import R2Score
 from tqdm import tqdm
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.model_selection import evaluate
@@ -32,6 +33,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         y: InputLike | None,
         n_iter: int = 10,
         device: DeviceLike | None = None,
+        random_seed: int | None = None,
     ):
         TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter
@@ -46,6 +48,9 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
 
         # Q: should users be able to choose a different validation metric?
         self.metric = R2Score
+
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
 
     def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
         """
