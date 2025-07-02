@@ -1,5 +1,5 @@
 import torch
-from autoemulate.experimental.emulators.ensemble import Ensemble, DropoutEnsemble
+from autoemulate.experimental.emulators.ensemble import DropoutEnsemble, Ensemble
 from autoemulate.experimental.emulators.nn.mlp import MLP
 from autoemulate.experimental.types import TensorLike
 
@@ -30,6 +30,7 @@ def test_mlp_ensemble():
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)
     assert y_test_hat.covariance_matrix.shape == (1000, 1, 1)
+
 
 def test_dropout_ensemble():
     # Training data
