@@ -1,4 +1,3 @@
-import numpy as np
 from torchmetrics import R2Score
 from tqdm import tqdm
 
@@ -10,7 +9,6 @@ from autoemulate.experimental.types import (
     InputLike,
     ModelConfig,
     TensorLike,
-    TuneConfig,
 )
 
 
@@ -73,18 +71,13 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         val_y: TensorLike
         val_x, val_y = next(iter(val_loader))
 
-        # get all the available hyperparameter options
-        tune_config: TuneConfig = model_class.get_tune_config()
-
         # keep track of what parameter values tested and how they performed
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
         for _ in tqdm(range(self.n_iter)):
             # randomly sample hyperparameters and instantiate model
-            model_config: ModelConfig = {
-                k: v[np.random.randint(len(v))] for k, v in tune_config.items()
-            }
+            model_config = model_class.get_random_config()
             m = model_class(train_x, train_y, device=self.device, **model_config)
             m.fit(train_x, train_y)
 
