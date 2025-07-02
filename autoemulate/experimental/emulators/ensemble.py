@@ -7,6 +7,7 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import (
     Emulator,
     GaussianEmulator,
+    PyTorchBackend,
 )
 from autoemulate.experimental.types import (
     DeviceLike,
@@ -114,3 +115,93 @@ class Ensemble(GaussianEmulator):
 
         # Return as MultivariateNormal
         return GaussianLike(mu_ens, sigma_ens)
+
+
+class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
+    """
+    Monte-Carlo Dropout ensemble: do N forward passes with dropout on,
+    and compute mean + (epistemic) covariance across them.
+    """
+
+    def __init__(
+        self,
+        model: PyTorchBackend,
+        n_samples: int = 20,
+        jitter: float = 1e-6,
+        device: DeviceLike | None = None,
+    ):
+        """
+        Parameters
+        ----------
+        model
+            A fitted PyTorchBackend (or any nn.Module with dropout layers).
+        n_samples
+            Number of stochastic forward passes to perform.
+        device
+            torch device for inference (e.g. "cpu", "cuda").
+        """
+        assert isinstance(model, PyTorchBackend), "model must be a PyTorchBackend"
+        TorchDeviceMixin.__init__(self, device=device)
+
+        self.model = model.to(self.device)
+        self.n_samples = n_samples
+        self.is_fitted_ = model.is_fitted_
+        self.jitter = jitter
+
+    @staticmethod
+    def is_multioutput() -> bool:
+        return True
+
+    @staticmethod
+    def get_tune_config() -> TuneConfig:
+        return {
+            "n_samples": [10, 20, 50, 100],
+        }
+
+    def _fit(self, x: TensorLike, y: TensorLike) -> None:
+        # Delegate training to the wrapped model
+        self.model.fit(x, y)
+        self.is_fitted_ = True
+
+    @torch.inference_mode()
+    def _predict(self, x: Tensor) -> GaussianLike:
+        if not self.is_fitted_:
+            s = "DropoutEnsemble: model is not fitted yet."
+            raise RuntimeError(s)
+
+        # move input to right device
+        x = x.to(self.device)
+
+        # enable dropout
+        self.model.train()
+
+        # collect M outputs
+        samples = []
+        for _ in range(self.n_samples):
+            # apply any preprocessing the model expects
+            x_proc = self.model.preprocess(x)
+            out = self.model.forward(x_proc)
+            # out: Tensor of shape (batch_size, output_dim)
+            samples.append(out)
+
+        # stack to shape (M, batch, dim)
+        stack = torch.stack(samples, dim=0)
+
+        # ensemble mean: (batch, dim)
+        mu = stack.mean(dim=0)
+
+        # compute epistemic covariance for each batch point
+        # dev shape (M, batch, dim)
+        dev = stack - mu.unsqueeze(0)
+        # sigma_epi: (batch, dim, dim)
+        sigma_epi = torch.einsum("m b d, m b e -> b d e", dev, dev) / (
+            self.n_samples - 1
+        )
+
+        # Add some jitter to avoid positive-definite warnings
+        b, d = mu.shape
+        eye = torch.eye(d, device=sigma_epi.device)  # (dim, dim)
+        jitter_mat = eye.unsqueeze(0).expand(b, d, d) * self.jitter
+        sigma_epi += jitter_mat
+
+        return GaussianLike(mu, sigma_epi)
