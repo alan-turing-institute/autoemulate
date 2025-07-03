@@ -48,7 +48,7 @@ def test_tune_rbf(sample_data_rbf, device):
     assert len(configs) == n_iter
 
 
-def test_pr_predict_deterministic_with_seed(sample_data_rbf, new_data_rbf):
+def test_rbf_predict_deterministic_with_seed(sample_data_rbf, new_data_rbf):
     """
     RBFInterpolator should be deterministic given the same data
     and parameters so we do not expect different outputs for different seeds.
