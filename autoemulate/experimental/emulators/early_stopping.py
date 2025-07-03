@@ -128,7 +128,7 @@ class EarlyStopping:
         PR to skorch pending: https://github.com/skorch-dev/skorch/pull/1065
         """
         if self.threshold_mode == "rel":
-            abs_threshold_change = self.threshold * torch.abs(score)
+            abs_threshold_change = self.threshold * abs(score)
         else:
             abs_threshold_change = self.threshold
 
