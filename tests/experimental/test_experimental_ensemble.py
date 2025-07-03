@@ -25,7 +25,7 @@ def test_mlp_ensemble():
     # Test
     x_test = torch.linspace(0.0, 15.0, steps=1000).reshape(-1, 1)
     y_test_hat = emulator.predict(x_test)
-    assert isinstance(y_test_hat, torch.distributions.MultivariateNormal)
+    assert isinstance(y_test_hat, GaussianLike)
     assert isinstance(y_test_hat.loc, TensorLike)
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)
@@ -47,7 +47,7 @@ def test_dropout_ensemble():
     # Test
     x_test = torch.linspace(0.0, 15.0, steps=1000).reshape(-1, 1)
     y_test_hat = emulator.predict(x_test)
-    assert isinstance(y_test_hat, torch.distributions.MultivariateNormal)
+    assert isinstance(y_test_hat, GaussianLike)
     assert isinstance(y_test_hat.loc, TensorLike)
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)
@@ -79,7 +79,7 @@ def test_ensemble_ensemble():
     # Test
     x_test = torch.linspace(0.0, 15.0, steps=1000).reshape(-1, 1)
     y_test_hat = emulator.predict(x_test)
-    assert isinstance(y_test_hat, torch.distributions.MultivariateNormal)
+    assert isinstance(y_test_hat, GaussianLike)
     assert isinstance(y_test_hat.loc, TensorLike)
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)

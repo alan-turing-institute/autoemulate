@@ -80,6 +80,7 @@ class Ensemble(GaussianEmulator):
             out = e.predict(x)
             if isinstance(out, GaussianLike):
                 mu_i = out.mean.to(device)  # (batch_size, n_dims)
+                assert isinstance(out.covariance_matrix, TensorLike)
                 sigma_i = out.covariance_matrix.to(
                     device
                 )  # (batch_size, n_dims, n_dims)

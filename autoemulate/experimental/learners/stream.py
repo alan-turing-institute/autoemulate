@@ -222,7 +222,7 @@ class Threshold(Stream):
         output = self.emulator.predict(X)
         assert isinstance(
             output,
-            GaussianLike | torch.distributions.multivariate_normal.MultivariateNormal,
+            GaussianLike
         )
         assert isinstance(output.variance, torch.Tensor)
         score = self.score(X, output.mean, output.variance)

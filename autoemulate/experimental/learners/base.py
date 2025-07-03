@@ -121,7 +121,7 @@ class Active(Learner):
         elif isinstance(output, GaussianLike):
             assert output.variance.ndim == 2
             Y_pred, _ = output.mean, output.variance
-        elif isinstance(output, torch.distributions.MultivariateNormal):
+        elif isinstance(output, GaussianLike):
             Y_pred, _ = output.loc, None
         else:
             msg = (
