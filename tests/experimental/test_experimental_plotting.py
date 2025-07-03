@@ -3,12 +3,11 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autoemulate.plotting import (
+from autoemulate.experimental.plotting import (
     _check_multioutput,
     # _plot_cv,
     _plot_model,
     _plot_single_fold,
-    _predict_with_optional_std,
     _validate_inputs,
 )
 from matplotlib.figure import Figure
@@ -66,26 +65,6 @@ def test_check_multioutput_with_invalid_output_index():
     msg = "Output index 3 is out of range. The index should be between 0 and 2."
     with pytest.raises(ValueError, match=msg):
         _check_multioutput(y, output_index)
-
-
-# ------------------------------ test _predict_with_optional_std --------------------
-def test_predict_with_optional_std(ae_single_output):
-    # test whether the function correctly returns None for rbf's std
-    rbf = ae_single_output.get_model(name="rbf")
-    X = ae_single_output.X
-    y_pred, y_std = _predict_with_optional_std(rbf, X)
-    assert type(y_pred) is np.ndarray
-    assert y_pred.shape == (X.shape[0],)
-    assert y_std is None
-
-    # test whether the function correctly returns the std for gp
-    gp = ae_single_output.get_model(name="gp")
-    y_pred, y_std = _predict_with_optional_std(gp, X)
-    assert type(y_pred) is np.ndarray
-    assert type(y_std) is np.ndarray
-    assert y_pred.shape == (X.shape[0],)
-    assert y_std.shape == (X.shape[0],)
-    assert np.all(y_std >= 0)
 
 
 # ------------------------------ test plot_single_fold ------------------------------
