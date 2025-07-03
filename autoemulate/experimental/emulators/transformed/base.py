@@ -317,11 +317,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
             )
 
-        # TODO (#579): remove raise once fully implemented
-        msg = "Implementation to be complete in #579"
-        raise NotImplementedError(msg)
-
-        # If `y_t` is not a `GaussianProcessLike``, sample from it and return a
+        # If `y_t` is not a `GaussianProcessLike`, sample from it and return a
         # `GaussianLike`
         return _inverse_sample_gaussian_like(
             self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
