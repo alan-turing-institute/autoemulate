@@ -1,14 +1,13 @@
 from copy import deepcopy
 
 import torch
-
-from autoemulate.experimental.emulators.base import GaussianProcessEmulator
+from torch import nn
 
 
 class EarlyStopping:
     """
     Stop training early if the training loss did not improve in `patience` number of
-    epochs by at least `threshold` value.
+    epochs by at least `threshold` value. Can work with any PyTorch model.
 
     Parameters
     ----------
@@ -60,24 +59,22 @@ class EarlyStopping:
 
     def on_train_begin(self):
         if self.threshold_mode not in ["rel", "abs"]:
-            raise ValueError("Invalid threshold mode: '{}'".format(self.threshold_mode))
+            raise ValueError(f"Invalid threshold mode: '{self.threshold_mode}'")
         self.misses_ = 0
         self.dynamic_threshold_ = torch.inf if self.lower_is_better else -torch.inf
         self.best_model_weights_ = None
         self.best_epoch_ = 0
 
-    def on_epoch_end(
-        self, gp: GaussianProcessEmulator, curr_epoch: int, curr_score: float
-    ):
+    def on_epoch_end(self, model: nn.Module, curr_epoch: int, curr_score: float):
         """
         Determine whether to stop training at this epoch and save best model weights.
 
         Parameters
         ----------
-        gp: GaussianProcessEmulator
-            The GP being trained.
+        model: nn.Module
+            A PyTorch (or GPyTorch) model.
         curr_epoch: int
-            The current epoch
+            The current epoch.
         curr_score: float
             The current training loss.
         """
@@ -89,7 +86,7 @@ class EarlyStopping:
             self.dynamic_threshold_ = self._calc_new_threshold(curr_score)
             self.best_epoch_ = curr_epoch
             if self.load_best:
-                self.best_model_weights_ = deepcopy(gp.module_.state_dict())
+                self.best_model_weights_ = deepcopy(model.module_.state_dict())
         if self.misses_ == self.patience:
             print(
                 "Stopping since train loss has not improved in the last "
@@ -97,13 +94,23 @@ class EarlyStopping:
             )
             raise KeyboardInterrupt
 
-    def on_train_end(self, gp: GaussianProcessEmulator):
+    def on_train_end(self, model: nn.Module, last_epoch):
+        """
+        Optionally restore module weights from the epoch with the best train loss.
+
+        Parameters
+        ----------
+        model: nn.Module
+            A PyTorch (or GPyTorch) model.
+        last_epoch: int
+            The last epoch before training was stopped.
+        """
         if (
             self.load_best
-            and (self.best_epoch_ != gp.history[-1, "epoch"])
+            and (self.best_epoch_ != last_epoch)
             and (self.best_model_weights_ is not None)
         ):
-            gp.module_.load_state_dict(self.best_model_weights_)
+            model.module_.load_state_dict(self.best_model_weights_)
 
     def _is_score_improved(self, score):
         if self.lower_is_better:
@@ -111,7 +118,15 @@ class EarlyStopping:
         return score > self.dynamic_threshold_
 
     def _calc_new_threshold(self, score):
-        """Determine threshold based on score."""
+        """
+        Determine threshold based on score.
+
+        Notes
+        -----
+        This function is different to the skorch version which assumes the cost function
+        is always positive.
+        PR to skorch pending: https://github.com/skorch-dev/skorch/pull/1065
+        """
         if self.threshold_mode == "rel":
             abs_threshold_change = self.threshold * torch.abs(score)
         else:

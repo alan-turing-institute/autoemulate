@@ -26,12 +26,10 @@ from autoemulate.emulators.gaussian_process import (
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
+from autoemulate.experimental.emulators.early_stopping import EarlyStopping
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
-)
-from autoemulate.experimental.emulators.gaussian_process.early_stopping import (
-    EarlyStopping,
 )
 from autoemulate.experimental.types import DeviceLike, GaussianProcessLike, TensorLike
 
@@ -169,6 +167,8 @@ class GaussianProcessExact(
         if self.early_stopping is not None:
             self.early_stopping.on_train_begin()
 
+        # Avoid `"epoch" is possibly unbound` type error at the end
+        epoch = 0
         for epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)
@@ -187,7 +187,7 @@ class GaussianProcessExact(
                     break
 
         if self.early_stopping is not None:
-            self.early_stopping.on_train_end(self)
+            self.early_stopping.on_train_end(self, epoch)
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
