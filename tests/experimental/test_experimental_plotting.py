@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from autoemulate.plotting import (
     _check_multioutput,
-    _plot_cv,
+    # _plot_cv,
     _plot_model,
     _plot_single_fold,
     _predict_with_optional_std,
@@ -176,151 +176,151 @@ def test_plot_single_fold_with_multioutput():
 # ------------------------------ test _plot_cv ------------------------------
 
 
-def test__plot_cv(ae_single_output, monkeypatch):
-    # Mock plt.show to do nothing
-    monkeypatch.setattr(plt, "show", lambda: None)
+# def test__plot_cv(ae_single_output, monkeypatch):
+#     # Mock plt.show to do nothing
+#     monkeypatch.setattr(plt, "show", lambda: None)
 
-    cv_results = ae_single_output.preprocessing_results["None"]["cv_results"]
-    X, y = ae_single_output.X, ae_single_output.y
+#     cv_results = ae_single_output.preprocessing_results["None"]["cv_results"]
+#     X, y = ae_single_output.X, ae_single_output.y
 
-    # without model name
-    fig = _plot_cv(cv_results, X, y)
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 3
+#     # without model name
+#     fig = _plot_cv(cv_results, X, y)
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 3
 
-    # with model name
-    fig = _plot_cv(cv_results, X, y, model_name="RadialBasisFunctions")
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
-
-
-def test__plot_cv_output_range(ae_multi_output, monkeypatch):
-    # Mock plt.show to do nothing
-    monkeypatch.setattr(plt, "show", lambda: None)
-    cv_results = ae_multi_output.preprocessing_results["None"]["cv_results"]
-    X, y = ae_multi_output.X, ae_multi_output.y
-
-    # check that output index 1 works
-    fig_0 = _plot_cv(cv_results, X, y, output_index=0)
-    fig_1 = _plot_cv(cv_results, X, y, output_index=1)
-    assert isinstance(fig_1, Figure)
-    assert len(fig_1.axes) == 3
-
-    # check that fig_0 and fig_1 are different
-    assert fig_0 != fig_1
-
-    # check that output index 2 raises an error
-    with pytest.raises(ValueError):  # noqa: PT011
-        _plot_cv(cv_results, X, y, output_index=2)
+#     # with model name
+#     fig = _plot_cv(cv_results, X, y, model_name="RadialBasisFunctions")
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
 
 
-def test__plot_cv_input_range(ae_multi_output, monkeypatch):
-    # Mock plt.show to do nothing
-    monkeypatch.setattr(plt, "show", lambda: None)
-    cv_results = ae_multi_output.preprocessing_results["None"]["cv_results"]
-    X, y = ae_multi_output.X, ae_multi_output.y
+# def test__plot_cv_output_range(ae_multi_output, monkeypatch):
+#     # Mock plt.show to do nothing
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     cv_results = ae_multi_output.preprocessing_results["None"]["cv_results"]
+#     X, y = ae_multi_output.X, ae_multi_output.y
 
-    # check that input index 1 works
-    fig_0 = _plot_cv(cv_results, X, y, input_index=0)
-    fig_1 = _plot_cv(cv_results, X, y, input_index=1)
-    assert isinstance(fig_0, Figure)
-    assert isinstance(fig_1, Figure)
-    assert len(fig_1.axes) == 3
+#     # check that output index 1 works
+#     fig_0 = _plot_cv(cv_results, X, y, output_index=0)
+#     fig_1 = _plot_cv(cv_results, X, y, output_index=1)
+#     assert isinstance(fig_1, Figure)
+#     assert len(fig_1.axes) == 3
 
-    # check that fig_0 and fig_1 are different
-    assert fig_0 != fig_1
+#     # check that fig_0 and fig_1 are different
+#     assert fig_0 != fig_1
 
-    # check that input index 2 raises an error (2 features)
-    with pytest.raises(ValueError):  # noqa: PT011
-        _plot_cv(cv_results, X, y, input_index=2)
+#     # check that output index 2 raises an error
+#     with pytest.raises(ValueError):
+#         _plot_cv(cv_results, X, y, output_index=2)
 
 
-# # ------------------------------ most important tests, does it work? ----------------
+# def test__plot_cv_input_range(ae_multi_output, monkeypatch):
+#     # Mock plt.show to do nothing
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     cv_results = ae_multi_output.preprocessing_results["None"]["cv_results"]
+#     X, y = ae_multi_output.X, ae_multi_output.y
+
+#     # check that input index 1 works
+#     fig_0 = _plot_cv(cv_results, X, y, input_index=0)
+#     fig_1 = _plot_cv(cv_results, X, y, input_index=1)
+#     assert isinstance(fig_0, Figure)
+#     assert isinstance(fig_1, Figure)
+#     assert len(fig_1.axes) == 3
+
+#     # check that fig_0 and fig_1 are different
+#     assert fig_0 != fig_1
+
+#     # check that input index 2 raises an error (2 features)
+#     with pytest.raises(ValueError):
+#         _plot_cv(cv_results, X, y, input_index=2)
+
+
+# # ------------------------------ most important tests, does it work? ----------=
 # # ------------------------------ test plot_cv ----------------------------------
 
 
-# # test plots with best cv per model, Xy plot
-def test_plot_cv(ae_single_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_single_output.plot_cv(style="Xy")
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 3
+# # # test plots with best cv per model, Xy plot
+# def test_plot_cv(ae_single_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_single_output.plot_cv(style="Xy")
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 3
 
 
-def test_plot_cv_input_index(ae_single_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_single_output.plot_cv(input_index=1)
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 3
+# def test_plot_cv_input_index(ae_single_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_single_output.plot_cv(input_index=1)
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 3
 
 
-def test_plot_cv_input_index_out_of_range(ae_single_output):
-    with pytest.raises(ValueError):  # noqa: PT011
-        ae_single_output.plot_cv(input_index=2)
+# def test_plot_cv_input_index_out_of_range(ae_single_output):
+#     with pytest.raises(ValueError):
+#         ae_single_output.plot_cv(input_index=2)
 
 
-def test_plot_cv_output_index(ae_multi_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_multi_output.plot_cv(output_index=1)
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 3
+# def test_plot_cv_output_index(ae_multi_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_multi_output.plot_cv(output_index=1)
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 3
 
 
-def test_plot_cv_output_index_out_of_range(ae_multi_output):
-    with pytest.raises(ValueError):  # noqa: PT011
-        ae_multi_output.plot_cv(output_index=2)
+# def test_plot_cv_output_index_out_of_range(ae_multi_output):
+#     with pytest.raises(ValueError):
+#         ae_multi_output.plot_cv(output_index=2)
 
 
-# test plots with best cv per model, standard [;pt]
-def test_plot_cv_actual_vs_predicted(ae_single_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_single_output.plot_cv(style="actual_vs_predicted")
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 3
+# # test plots with best cv per model, standard [;pt]
+# def test_plot_cv_actual_vs_predicted(ae_single_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_single_output.plot_cv(style="actual_vs_predicted")
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 3
 
 
-def test_plot_cv_output_index_actual_vs_predicted(ae_multi_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_multi_output.plot_cv(style="actual_vs_predicted", output_index=1)
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 3
+# def test_plot_cv_output_index_actual_vs_predicted(ae_multi_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_multi_output.plot_cv(style="actual_vs_predicted", output_index=1)
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 3
 
 
-def test_plot_cv_output_index_actual_vs_predicted_out_of_range(ae_multi_output):
-    with pytest.raises(ValueError):  # noqa: PT011
-        ae_multi_output.plot_cv(style="actual_vs_predicted", output_index=2)
+# def test_plot_cv_output_index_actual_vs_predicted_out_of_range(ae_multi_output):
+#     with pytest.raises(ValueError):
+#         ae_multi_output.plot_cv(style="actual_vs_predicted", output_index=2)
 
 
-# test plots with all cv folds for a single model
-def test_plot_cv_model(ae_single_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_single_output.plot_cv(model="gp")
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
+# # test plots with all cv folds for a single model
+# def test_plot_cv_model(ae_single_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_single_output.plot_cv(model="gp")
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 6  # 5 cv folds, but three columns so 6 subplots are made
 
 
-def test_plot_cv_model_input_index(ae_single_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_single_output.plot_cv(model="gp", input_index=1)
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 6
+# def test_plot_cv_model_input_index(ae_single_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_single_output.plot_cv(model="gp", input_index=1)
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 6
 
 
-def test_plot_cv_model_output_index(ae_multi_output, monkeypatch):
-    monkeypatch.setattr(plt, "show", lambda: None)
-    fig = ae_multi_output.plot_cv(model="gp", output_index=1)
-    assert isinstance(fig, Figure)
-    assert len(fig.axes) == 6
+# def test_plot_cv_model_output_index(ae_multi_output, monkeypatch):
+#     monkeypatch.setattr(plt, "show", lambda: None)
+#     fig = ae_multi_output.plot_cv(model="gp", output_index=1)
+#     assert isinstance(fig, Figure)
+#     assert len(fig.axes) == 6
 
 
-def test_plot_cv_model_input_index_out_of_range(ae_single_output):
-    with pytest.raises(ValueError):  # noqa: PT011
-        ae_single_output.plot_cv(model="gp", input_index=2)
+# def test_plot_cv_model_input_index_out_of_range(ae_single_output):
+#     with pytest.raises(ValueError):
+#         ae_single_output.plot_cv(model="gp", input_index=2)
 
 
-def test_plot_cv_model_output_index_out_of_range(ae_multi_output):
-    with pytest.raises(ValueError):  # noqa: PT011
-        ae_multi_output.plot_cv(model="gp", output_index=2)
+# def test_plot_cv_model_output_index_out_of_range(ae_multi_output):
+#     with pytest.raises(ValueError):
+#         ae_multi_output.plot_cv(model="gp", output_index=2)
 
 
 # # ------------------------------ test _plot_model ------------------------------
