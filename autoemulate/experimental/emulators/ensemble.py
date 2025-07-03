@@ -20,22 +20,24 @@ from autoemulate.experimental.types import (
 class Ensemble(GaussianEmulator):
     """
     Ensemble emulator that aggregates multiple Emulator instances and returns
-    a MultivariateNormal representing the ensemble posterior.
+    a GaussianLike representing the ensemble posterior.
     Note that an Emulator instance may also be an Ensemble itself.
-
-    Parameters
-        Emulators: list[Emulator] List of fitted emulator instances.
-        Each member's `predict(x: Tensor)`
-        must return either:
-            - TensorLike (treated as mean)
-            - MultivariateNormal (with `.mean` and `.covariance_matrix`)
     """
 
     def __init__(
         self,
-        emulators: list[Emulator],
+        emulators: Sequence[Emulator],
         device: DeviceLike | None = None,
     ):
+        """
+        Parameters
+        ----------
+        emulators: Sequence[Emulator]
+            A sequence of emulators to construct the ensemble with.
+        device: DeviceLike | None
+            The device to put torch tensors on.
+        """
+
         assert isinstance(emulators, Sequence)
         for e in emulators:
             assert isinstance(e, Emulator)
@@ -58,18 +60,6 @@ class Ensemble(GaussianEmulator):
 
     @torch.inference_mode()
     def _predict(self, x: Tensor) -> GaussianLike:
-        """
-        Perform inference with the ensemble.
-
-        Inputs:
-            - x of shape (batch_size, n_dims)
-
-        Returns:
-            - torch.distributions.MultivariateNormal with
-                - mean of shape (batch_size, n_dims)
-                - cov of shape (batch_size, n_dims, n_dims)
-        """
-
         # Inference mode to disable autograd computation graph
         device = x.device
         means: list[Tensor] = []
@@ -120,8 +110,8 @@ class Ensemble(GaussianEmulator):
 
 class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
     """
-    Monte-Carlo Dropout ensemble: do N forward passes with dropout on,
-    and compute mean + (epistemic) covariance across them.
+    Monte-Carlo Dropout ensemble: do a number of forward passes with dropout on,
+    and compute mean + epistemic covariance across them.
     """
 
     def __init__(
@@ -134,16 +124,18 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         """
         Parameters
         ----------
-        model
+        model : PyTorchBackend
             A fitted PyTorchBackend (or any nn.Module with dropout layers).
-        n_samples
-            Number of stochastic forward passes to perform.
-        device
+        n_samples : int
+            Number of forward passes to perform.
+        jitter : float
+            Amount of jitter to add to covariance diagonal to avoide degeneracy.
+        device : DeviceLike | None
             torch device for inference (e.g. "cpu", "cuda").
         """
         assert isinstance(model, PyTorchBackend), "model must be a PyTorchBackend"
         TorchDeviceMixin.__init__(self, device=device)
-
+        assert n_samples > 0
         self.model = model.to(self.device)
         self.n_samples = n_samples
         self.is_fitted_ = model.is_fitted_
