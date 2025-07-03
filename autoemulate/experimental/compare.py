@@ -27,7 +27,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
         x, y = self._convert_to_tensors(x, y)
-        x, y = self._move_tensors_to_device(x, y)
+        self.x, self.y = self._move_tensors_to_device(x, y)
 
         # Set default models if None
         updated_models = self.get_models(models)
@@ -41,7 +41,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         self.models = updated_models
         if random_seed is not None:
             set_random_seed(seed=random_seed)
-        self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
+
+        self.train_val, self.test = self._random_split(
+            self._convert_to_dataset(self.x, self.y)
+        )
+        self._comparison_results: dict[str, dict[str, Any]] | None = None
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -109,4 +113,105 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 "rmse_score": rmse_score,
             }
             self.log_compare(model_cls, best_model_config, r2_score, rmse_score)
+
+        # Store comparison results for refit method
+        self._comparison_results = models_evaluated
         return models_evaluated
+
+    def refit(
+        self,
+        model_name: str | None = None,
+        metric: str = "r2_score",
+        x: InputLike | None = None,
+        y: InputLike | None = None,
+    ) -> Emulator:
+        """
+        Refit the best model from comparison results on all available data.
+
+        This method can only be called after `compare()` has been run. By default,
+        it selects the model with the highest R² score from the comparison results.
+        Alternatively, a specific model name can be provided.
+
+        Parameters
+        ----------
+        model_name : str | None, optional
+            Name of the model to refit. If None, selects the best model based on
+            the specified metric from comparison results. Must be a model name that
+            was included in the comparison.
+        metric : str, optional
+            Metric to use for selecting the best model. Default is 'r2_score'.
+        x : InputLike | None, optional
+            Input data to use for refitting. If None, uses the original data
+            passed to AutoEmulate constructor. Must be provided together with y.
+        y : InputLike | None, optional
+            Target data to use for refitting. If None, uses the original data
+            passed to AutoEmulate constructor. Must be provided together with x.
+
+        Returns
+        -------
+        Emulator
+            The fitted emulator trained on the specified data.
+
+        Raises
+        ------
+        RuntimeError
+            If `compare()` has not been run yet.
+        ValueError
+            If the specified model_name was not found in comparison results,
+            or if only one of x or y is provided.
+        """
+        if self._comparison_results is None:
+            msg = (
+                "Must run compare() before calling refit(). "
+                "No comparison results found."
+            )
+            raise RuntimeError(msg)
+
+        # Check that both x and y are provided together or both are None
+        if (x is None) != (y is None):
+            msg = (
+                "Both x and y must be provided together, or both must be None. "
+                "Providing only one of x or y is not supported."
+            )
+            raise ValueError(msg)
+
+        # Select model to refit
+        if model_name is None:
+            # Find model with best R² score
+            best_model_name = max(
+                self._comparison_results.keys(),
+                key=lambda k: self._comparison_results[k][metric],  # type: ignore[index]
+            )
+        else:
+            if model_name not in self._comparison_results:
+                available_models = list(self._comparison_results.keys())
+                raise ValueError(
+                    f"Model '{model_name}' not found in comparison results. "
+                    f"Available models: {available_models}"
+                )
+            best_model_name = model_name
+
+        # Get model class and config
+        model_cls = next(
+            model for model in self.models if model.__name__ == best_model_name
+        )
+        best_config = self._comparison_results[best_model_name]["config"]
+
+        # Use provided data or default to original data
+        if x is None and y is None:
+            refit_x, refit_y = self.x, self.y
+        else:  # Both x and y are provided
+            # Type assertion is safe here since we validated both are not None
+            assert x is not None
+            assert y is not None
+            refit_x, refit_y = self._convert_to_tensors(x, y)
+            refit_x, refit_y = self._move_tensors_to_device(refit_x, refit_y)
+
+        # Create and fit model with best configuration
+        if self.random_seed is not None:
+            set_random_seed(seed=self.random_seed)
+
+        model = model_cls(x=refit_x, y=refit_y, device=self.device, **best_config)
+        model.fit(refit_x, refit_y)
+
+        return model
