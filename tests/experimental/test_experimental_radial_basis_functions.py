@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import torch
 from autoemulate.experimental.data.utils import set_random_seed
@@ -10,6 +11,7 @@ from autoemulate.experimental.emulators.radial_basis_functions import (
 )
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
+from scipy.interpolate import RBFInterpolator
 
 
 def test_predict_rbf(sample_data_rbf, new_data_rbf):
@@ -18,8 +20,20 @@ def test_predict_rbf(sample_data_rbf, new_data_rbf):
     rbf.fit(x, y)
     x2, _ = new_data_rbf
     y_pred = rbf.predict(x2)
+
     assert isinstance(y_pred, TensorLike)
     assert y_pred.shape == (56, 2)
+
+    RBFscipy = RBFInterpolator(
+        x,
+        y,
+        smoothing=rbf.smoothing,
+        kernel=rbf.kernel,
+        epsilon=rbf.epsilon,
+        degree=rbf.degree,
+    )
+    y_pred_scipy = RBFscipy(x2)
+    assert np.allclose(y_pred, y_pred_scipy, atol=1e-4)
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
