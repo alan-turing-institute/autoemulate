@@ -30,6 +30,9 @@ from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
+from autoemulate.experimental.emulators.gaussian_process.early_stopping import (
+    EarlyStopping,
+)
 from autoemulate.experimental.types import DeviceLike, GaussianProcessLike, TensorLike
 
 
@@ -58,6 +61,7 @@ class GaussianProcessExact(
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
     ):
         # Init device
@@ -116,6 +120,7 @@ class GaussianProcessExact(
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.early_stopping = early_stopping
         self.to(self.device)
 
     @staticmethod
@@ -160,6 +165,10 @@ class GaussianProcessExact(
         # Set the training data in case changed since init
         self.set_train_data(x, y, strict=False)
 
+        # Initialize early stopping
+        if self.early_stopping is not None:
+            self.early_stopping.on_train_begin()
+
         for epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)
@@ -169,6 +178,16 @@ class GaussianProcessExact(
             loss.backward()
             self.log_epoch(epoch, loss)
             optimizer.step()
+
+            if self.early_stopping is not None:
+                try:
+                    self.early_stopping.on_epoch_end(self, epoch, loss.item())
+                except KeyboardInterrupt:
+                    # EarlyStopping prints a message if this happens
+                    break
+
+        if self.early_stopping is not None:
+            self.early_stopping.on_train_end(self)
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
