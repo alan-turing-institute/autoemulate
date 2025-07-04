@@ -26,7 +26,10 @@ from autoemulate.emulators.gaussian_process import (
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
-from autoemulate.experimental.emulators.early_stopping import EarlyStopping
+from autoemulate.experimental.emulators.early_stopping import (
+    EarlyStopping,
+    EarlyStoppingException,
+)
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
@@ -182,7 +185,7 @@ class GaussianProcessExact(
             if self.early_stopping is not None:
                 try:
                     self.early_stopping.on_epoch_end(self, epoch, loss.item())
-                except KeyboardInterrupt:
+                except EarlyStoppingException:
                     # EarlyStopping prints a message if this happens
                     break
 

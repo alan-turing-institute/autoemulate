@@ -4,6 +4,17 @@ import torch
 from torch import nn
 
 
+class EarlyStoppingException(Exception):
+    """
+    Custom exception to signal early stopping during training.
+    """
+
+    def __init__(
+        self, message: str = "Training stopped early due to early stopping criteria."
+    ):
+        super().__init__(message)
+
+
 class EarlyStopping:
     """
     Stop training early if the training loss did not improve in `patience` number of
