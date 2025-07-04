@@ -209,7 +209,8 @@ class HistoryMatching(TorchDeviceMixin):
         nroy_x: TensorLike,
         buffer_ratio: float = 0.05,
         param_names: list[str] | None = None,
-    ) -> dict[str, tuple[float, float]]:
+        min_samples: int = 1,
+    ) -> dict[str, tuple[float, float]] | None:
         """
         Generate lower/upper parameter bounds as min/max of NROY samples.
 
@@ -223,25 +224,30 @@ class HistoryMatching(TorchDeviceMixin):
             parameter to create a buffer around the NROY minimum and maximum values.
         param_names: list[str] | None
             Optional list of parameter names. If None, uses default `["x1", ..., "xn"]`.
+        min_samples: int
+            Minimum number of samples needed to generate new bounds.
 
         Returns
         -------
-        dict[str, [float, float]]
-            The generated [lower, upper] parameter bounds.
+        dict[str, [float, float]] | None
+            The generated [lower, upper] parameter bounds. Returns None if there are
+            not enough samples to generate bounds from.
         """
         if param_names is None:
             param_names = [f"x{i + 1}" for i in range(nroy_x.shape[1])]
 
-        min_val = torch.min(nroy_x, dim=0).values
-        max_val = torch.max(nroy_x, dim=0).values
-        buffer = (max_val - min_val) * buffer_ratio
-        lower_bound = min_val - buffer
-        upper_bound = max_val + buffer
+        if nroy_x.shape[0] > min_samples:
+            min_val = torch.min(nroy_x, dim=0).values
+            max_val = torch.max(nroy_x, dim=0).values
+            buffer = (max_val - min_val) * buffer_ratio
+            lower_bound = min_val - buffer
+            upper_bound = max_val + buffer
 
-        return {
-            param: (lower_bound[i].item(), upper_bound[i].item())
-            for i, param in enumerate(param_names)
-        }
+            return {
+                param: (lower_bound[i].item(), upper_bound[i].item())
+                for i, param in enumerate(param_names)
+            }
+        return
 
 
 class HistoryMatchingWorkflow(HistoryMatching):
@@ -347,10 +353,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
             It is applied as a ratio of the range (max_val - min_val) of each input
             parameter to create a buffer around the NROY minimum and maximum values.
         """
-        # Can't get min/max if have only 1 sample
-        if nroy_x.shape[0] > 1:
-            # [n_outputs, 2] where second dim is [min, max]
-            param_bounds = self.generate_param_bounds(nroy_x, buffer_ratio)
+        # [n_outputs, 2] where second dim is [min, max]
+        param_bounds = self.generate_param_bounds(nroy_x, buffer_ratio)
+        if param_bounds is not None:
             self.simulator._param_bounds = list(param_bounds.values())
         else:
             warnings.warn(
