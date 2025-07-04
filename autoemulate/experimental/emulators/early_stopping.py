@@ -30,9 +30,9 @@ class EarlyStopping:
 
     Notes
     -----
-    - This class is almost identical to `EarlyStopping` in skorch. The main difference
-        is that the method `_calc_new_threshold`, is corrected to ensure monotonicity.
-        We also do not have the option to monitor validation loss instead of train loss.
+    This class is almost identical to `EarlyStopping` in skorch. The main difference
+    is that the method `_calc_new_threshold`, is corrected to ensure monotonicity.
+    We also do not have the option to monitor validation loss instead of train loss.
     """
 
     def __init__(
@@ -72,7 +72,7 @@ class EarlyStopping:
         Parameters
         ----------
         model: nn.Module
-            A PyTorch (or GPyTorch) model.
+            A PyTorch model.
         curr_epoch: int
             The current epoch.
         curr_score: float
@@ -86,7 +86,7 @@ class EarlyStopping:
             self.dynamic_threshold_ = self._calc_new_threshold(curr_score)
             self.best_epoch_ = curr_epoch
             if self.load_best:
-                self.best_model_weights_ = deepcopy(model.module_.state_dict())
+                self.best_model_weights_ = deepcopy(model.state_dict())
         if self.misses_ == self.patience:
             print(
                 "Stopping since train loss has not improved in the last "
@@ -94,23 +94,23 @@ class EarlyStopping:
             )
             raise KeyboardInterrupt
 
-    def on_train_end(self, model: nn.Module, last_epoch):
+    def on_train_end(self, model: nn.Module, last_epoch: int):
         """
         Optionally restore module weights from the epoch with the best train loss.
 
         Parameters
         ----------
         model: nn.Module
-            A PyTorch (or GPyTorch) model.
+            A PyTorch model.
         last_epoch: int
-            The last epoch before training was stopped.
+            The number of completed epochs before training was stopped.
         """
         if (
             self.load_best
             and (self.best_epoch_ != last_epoch)
             and (self.best_model_weights_ is not None)
         ):
-            model.module_.load_state_dict(self.best_model_weights_)
+            model.load_state_dict(self.best_model_weights_)
 
     def _is_score_improved(self, score):
         if self.lower_is_better:
@@ -123,8 +123,8 @@ class EarlyStopping:
 
         Notes
         -----
-        This function is different to the skorch version which assumes the cost function
-        is always positive.
+        This function updates the skorch version, which assumes that the score returned
+        by the cost function is always positive.
         PR to skorch pending: https://github.com/skorch-dev/skorch/pull/1065
         """
         if self.threshold_mode == "rel":
