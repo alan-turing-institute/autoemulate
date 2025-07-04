@@ -5,7 +5,7 @@ from linear_operator.utils.warnings import NumericalWarning
 
 
 def make_positive_definite(
-    cov, epsilon=1e-6, min_eigval=1e-6, max_tries_epsilon=3, max_tries_min_eigval=1
+    cov, epsilon=1e-6, min_eigval=1e-6, max_tries_epsilon=3, max_tries_min_eigval=6
 ):
     """Ensure a covariance matrix is positive definite by:
         1. adding `epsilon` to the diagonal and symmetrizing the matrix
@@ -45,6 +45,7 @@ def make_positive_definite(
                 )
             return cov
         except RuntimeError:
+            # cov = cov * torch.eye(cov.shape[0], device=cov.device, dtype=cov.dtype)
             cov = cov + epsilon * torch.eye(
                 cov.shape[0], device=cov.device, dtype=cov.dtype
             )
@@ -71,5 +72,24 @@ def make_positive_definite(
             # Ensure symmetry
             cov = (cov + cov.T) / 2
             min_eigval *= 10
+
+    # # Use multiplicative jitter to whole matrix if still not positive definite
+    epsilon = 1e-6
+    # TODO: consider using a different jitter method, e.g.:
+    # torch.eye(cov.shape[0], device=cov.device, dtype=cov.dtype)
+    try:
+        torch.linalg.cholesky(cov)
+        warnings.warn(
+            f"cov not p.d. - multiply whole matrix by {epsilon:.1e} to ensure positive "
+            "definiteness",
+            NumericalWarning,
+            stacklevel=2,
+        )
+        return cov
+    except RuntimeError:
+        cov = cov * epsilon
+        # Ensure symmetry
+        cov = (cov + cov.T) / 2
+
     msg = f"Matrix could not be made positive definite:\n{cov}"
     raise RuntimeError(msg)

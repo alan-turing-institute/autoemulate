@@ -165,4 +165,4 @@ class VAETransform(AutoEmulateTransform):
         n = y.shape[0]
 
         # Reshape jacobian for shape of cov_y (n_tasks x n_samples)
-        return jacobian.view(n * jacobian.shape[1], -1)
+        return jacobian.reshape(n * jacobian.shape[1], -1)

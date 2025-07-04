@@ -13,4 +13,5 @@ ALL_EMULATORS = [
     SupportVectorMachine,
     RandomForest,
     MLP,
+    # GaussianMLP,
 ]

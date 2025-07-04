@@ -115,7 +115,7 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
         """
         self._check_is_fitted()
-        return torch.stack([self._basis_matrix] * y.shape[0], 0)
+        return self._basis_matrix.repeat(y.shape[0], 1, 1)
 
     def _inverse_sample_gaussian_like(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
@@ -360,9 +360,9 @@ def _inverse_sample_gaussian_process_like(
     assert isinstance(samples, TensorLike)
     mean = samples.mean(dim=0)
     cov = (
-        make_positive_definite(samples.view(n_samples, -1).T.cov())
+        make_positive_definite(samples.reshape(n_samples, -1).T.cov())
         if full_covariance
-        else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
+        else DiagLinearOperator(samples.reshape(n_samples, -1).var(dim=0))
     )
     return GaussianProcessLike(mean, cov)
 
