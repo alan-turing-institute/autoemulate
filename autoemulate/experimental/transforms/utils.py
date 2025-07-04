@@ -45,10 +45,13 @@ def make_positive_definite(
                 )
             return cov
         except RuntimeError:
-            # cov = cov * torch.eye(cov.shape[0], device=cov.device, dtype=cov.dtype)
-            cov = cov + epsilon * torch.eye(
-                cov.shape[0], device=cov.device, dtype=cov.dtype
-            )
+            eye = torch.eye(cov.shape[-1], device=cov.device, dtype=cov.dtype)
+            if len(cov.shape) == 3:
+                eye = eye.unsqueeze(0)
+            if len(cov.shape) > 3:
+                msg = f"cov must be a 2D or 3D tensor, got shape {cov.shape}"
+                raise ValueError(msg) from None
+            cov = cov + epsilon * eye
             # Ensure symmetry
             cov = (cov + cov.T) / 2
             epsilon *= 10
@@ -65,31 +68,14 @@ def make_positive_definite(
                     stacklevel=2,
                 )
             return cov
-        except RuntimeError:
+        except RuntimeError as e:
             eigvals, eigvecs = torch.linalg.eigh(cov)
             eigvals = torch.clamp(eigvals, min=min_eigval)
             cov = eigvecs @ torch.diag(eigvals) @ eigvecs.T
             # Ensure symmetry
             cov = (cov + cov.T) / 2
             min_eigval *= 10
-
-    # # Use multiplicative jitter to whole matrix if still not positive definite
-    epsilon = 1e-6
-    # TODO: consider using a different jitter method, e.g.:
-    # torch.eye(cov.shape[0], device=cov.device, dtype=cov.dtype)
-    try:
-        torch.linalg.cholesky(cov)
-        warnings.warn(
-            f"cov not p.d. - multiply whole matrix by {epsilon:.1e} to ensure positive "
-            "definiteness",
-            NumericalWarning,
-            stacklevel=2,
-        )
-        return cov
-    except RuntimeError:
-        cov = cov * epsilon
-        # Ensure symmetry
-        cov = (cov + cov.T) / 2
-
-    msg = f"Matrix could not be made positive definite:\n{cov}"
-    raise RuntimeError(msg)
+            if i == max_tries_min_eigval - 1:
+                msg = f"Matrix could not be made positive definite:\n{cov}"
+                raise RuntimeError(msg) from e
+    return None
