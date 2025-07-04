@@ -1,6 +1,5 @@
 import random
 from abc import ABC, abstractmethod
-from functools import partial
 from typing import ClassVar
 
 import numpy as np
@@ -196,7 +195,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
     lr: float = 1e-1
-    scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
+    scheduler_cls: type[LRScheduler] | None = None
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
