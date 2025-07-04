@@ -23,13 +23,13 @@ from autoemulate.emulators.gaussian_process import (
     rq_kernel,
     zero_mean,
 )
-from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
-from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import GaussianProcessEmulator
-from autoemulate.experimental.emulators.early_stopping import (
+from autoemulate.experimental.callbacks.early_stopping import (
     EarlyStopping,
     EarlyStoppingException,
 )
+from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
+from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.emulators.base import GaussianProcessEmulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,

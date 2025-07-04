@@ -2,11 +2,12 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
-from autoemulate.experimental.emulators.early_stopping import EarlyStopping
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
+
+from autoemulate.experimental.callbacks.early_stopping import EarlyStopping
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
 
 
 @pytest.fixture
