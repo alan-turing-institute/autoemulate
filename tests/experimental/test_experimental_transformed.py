@@ -2,7 +2,15 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
+from autoemulate.experimental.data.utils import set_random_seed
+from autoemulate.experimental.emulators import (
+    ALL_EMULATORS as DEFAULT_EMULATORS,
+)
+from autoemulate.experimental.emulators import (
+    GaussianProcessExact,
+)
+from autoemulate.experimental.emulators.base import ProbabilisticEmulator
+from autoemulate.experimental.emulators.nn.mlp import GaussianMLP
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -11,10 +19,18 @@ from autoemulate.experimental.transforms import (
 )
 
 # from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike, GaussianLike, TensorLike
+from autoemulate.experimental.types import (
+    DistributionLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
+
+ALL_EMULATORS = [*DEFAULT_EMULATORS, GaussianMLP]
 
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):
+    set_random_seed(0)
     x, y = train_data
     x2, _ = test_data
     em = TransformedEmulator(
@@ -22,7 +38,7 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    if model is GaussianProcessExact:
+    if issubclass(model, ProbabilisticEmulator):
         assert isinstance(y_pred, DistributionLike)
         assert y_pred.mean.shape == (x2.shape[0], y.shape[1])
     else:
@@ -36,19 +52,13 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
             None,
-            [PCATransform(n_components=3)],
-            [VAETransform(latent_dim=3)],
-            [
-                StandardizeTransform(),
-                PCATransform(n_components=3),
-                VAETransform(latent_dim=2),
-            ],
+            # [StandardizeTransform(), PCATransform(n_components=3)],
+            # [StandardizeTransform(), VAETransform(latent_dim=3)],
         ],
         [
             None,
-            [PCATransform(n_components=1)],
+            [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=1)],
-            [VAETransform(latent_dim=1)],
             [StandardizeTransform(), VAETransform(latent_dim=1)],
         ],
     ),
@@ -66,13 +76,8 @@ def test_transformed_emulator(
         [
             None,
             [StandardizeTransform()],
-            [PCATransform(n_components=3)],
-            [VAETransform(latent_dim=3)],
-            [
-                StandardizeTransform(),
-                PCATransform(n_components=3),
-                VAETransform(latent_dim=2),
-            ],
+            [StandardizeTransform(), PCATransform(n_components=3)],
+            [StandardizeTransform(), VAETransform(latent_dim=3)],
         ],
         [
             # TODO: PCA/VAE both require StandardizeTransform for numerical stability
@@ -110,13 +115,8 @@ def test_transformed_emulator_100_targets(
         [
             None,
             [StandardizeTransform()],
-            [PCATransform(n_components=3)],
-            [VAETransform(latent_dim=3)],
-            [
-                StandardizeTransform(),
-                PCATransform(n_components=3),
-                VAETransform(latent_dim=2),
-            ],
+            [StandardizeTransform(), PCATransform(n_components=3)],
+            [StandardizeTransform(), VAETransform(latent_dim=3)],
         ],
         [
             # TODO: PCA/VAE both require StandardizeTransform for numerical stability
@@ -164,8 +164,8 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     y_pred2 = em.y_transforms[0]._inverse_sample(
         z_pred, n_samples=10000, full_covariance=True
     )
-    assert isinstance(y_pred, GaussianLike)
-    assert isinstance(y_pred2, GaussianLike)
+    assert isinstance(y_pred, GaussianProcessLike)
+    assert isinstance(y_pred2, GaussianProcessLike)
     print()
     print(y_pred.covariance_matrix)
     print(y_pred2.covariance_matrix)

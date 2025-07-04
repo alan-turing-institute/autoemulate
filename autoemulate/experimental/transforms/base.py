@@ -82,6 +82,41 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
         self._check_is_fitted()
         return torch.kron(torch.eye(y.shape[0]), self._basis_matrix)
 
+    def _batch_basis_matrix(self, y: TensorLike) -> TensorLike:
+        """Batch basis matrix for the transformation of the number of samples in
+        a given codomain `y` sample tensor.
+
+        Given `n` samples in `y`, this returns a basis matrix for transforming each
+        element of a batch.
+
+        The default implementation assumes that the transform has implemented the
+        `_basis_matrix` property for a single sample and is therefore simply repeats
+        this along a new batch dim.
+
+        However, the method takes a `y` tensor argument to allow the method to be
+        overriden with local approximations such as through the delta method.
+
+
+        Parameters
+        ----------
+        y : TensorLike
+            Input tensor of shape `(n, )` from which to compute the batch
+            basis matrix. The number of samples `n` is inferred from the shape of `y`.
+
+        Returns
+        -------
+        TensorLike
+            Batch basis matrix.
+
+        Raises
+        ------
+        RuntimeError
+            If the transform has not been fitted yet.
+
+        """
+        self._check_is_fitted()
+        return self._basis_matrix.repeat(y.shape[0], 1, 1)
+
     def _inverse_sample_gaussian_like(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
@@ -134,9 +169,6 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
             return self._inverse_sample_gaussian_process_like(
                 y, n_samples=n_samples, full_covariance=full_covariance
             )
-        # TODO (#579): remove raise once fully implemented
-        msg = "Implementation to be complete in #579"
-        raise NotImplementedError(msg)
 
         return self._inverse_sample_gaussian_like(
             y, n_samples=n_samples, full_covariance=full_covariance
@@ -207,17 +239,16 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
             return GaussianProcessLike(mean_orig, cov_orig)
 
-        # TODO (#579): remove raise once fully implemented
-        msg = "Implementation to be complete in #579"
-        raise NotImplementedError(msg)
-
         if isinstance(y, GaussianLike):
             if len(y.batch_shape) > 1:
                 msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
                 raise NotImplementedError(msg)
             # Transform covariance matrix
-            # TODO: update if _basis_matrix is not implemented
-            cov_orig = self._basis_matrix @ cov @ self._basis_matrix.T
+            cov_orig = (
+                self._batch_basis_matrix(mean)
+                @ cov
+                @ self._batch_basis_matrix(mean).transpose(-1, -2)
+            )
 
             # Ensure positive definite
             if cov_orig.ndim > 2:
@@ -264,22 +295,29 @@ def _inverse_sample_gaussian_like(
         not support multi-dimensional batch shapes.
 
     """
-    if len(y.batch_shape) > 1:
-        msg = f"Batch shape ({y.batch_shape}) greater than ndim=1 not supported"
+    batch_shape = y.batch_shape
+    if len(batch_shape) > 1:
+        msg = f"Batch shape ({batch_shape}) greater than ndim=1 not supported"
         raise NotImplementedError(msg)
+
+    # Sample from the distribution `y` and apply the transformation `c`
     samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
     assert isinstance(samples, TensorLike)
-    mean = samples.mean(dim=0)
 
-    # TODO check the handling if no batch dim is present
+    # Compute the mean and covariance of the samples
+    mean = samples.mean(dim=0)
+    if not full_covariance:
+        return GaussianLike(mean, DiagLinearOperator(samples.var(dim=0)))
+
     cov = (
+        # Loop over the batch dimension and compute covariance for each sample
         torch.stack(
             [make_positive_definite(s.T.cov()) for s in samples.transpose(0, 1)], 0
         )
-        if full_covariance
-        else DiagLinearOperator(samples.var(dim=0))
+        if len(batch_shape) > 0
+        # If no batch shape, compute covariance for the entire sample set
+        else make_positive_definite(samples.T.cov())
     )
-
     return GaussianLike(mean, cov)
 
 
@@ -322,9 +360,9 @@ def _inverse_sample_gaussian_process_like(
     assert isinstance(samples, TensorLike)
     mean = samples.mean(dim=0)
     cov = (
-        make_positive_definite(samples.view(n_samples, -1).T.cov())
+        make_positive_definite(samples.reshape(n_samples, -1).T.cov())
         if full_covariance
-        else DiagLinearOperator(samples.view(n_samples, -1).var(dim=0))
+        else DiagLinearOperator(samples.reshape(n_samples, -1).var(dim=0))
     )
     return GaussianProcessLike(mean, cov)
 
