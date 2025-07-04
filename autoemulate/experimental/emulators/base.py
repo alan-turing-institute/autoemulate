@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import partial
 from typing import ClassVar
 
 import numpy as np
@@ -194,7 +195,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
     lr: float = 1e-1
-    scheduler_cls: type[LRScheduler] = ExponentialLR
+    scheduler_cls: type[LRScheduler] | partial[LRScheduler] = ExponentialLR
     scheduler: LRScheduler | None = None
     gamma: float = 0.9
 
