@@ -256,6 +256,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         epochs: int = 50,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
         device: DeviceLike | None = None,
         **kwargs,
@@ -331,6 +332,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.epochs = epochs
         self.lr = lr
         self.activation = activation
+        self.early_stopping = early_stopping
         self.to(self.device)
 
     def forward(self, x):
