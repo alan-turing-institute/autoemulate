@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
-from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import (
@@ -194,7 +194,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
     lr: float = 1e-1
-    scheduler: ExponentialLR | None = None
+    scheduler: LRScheduler | None = None
     gamma: float = 0.9
 
     def preprocess(self, x: TensorLike) -> TensorLike:
