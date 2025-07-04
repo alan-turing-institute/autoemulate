@@ -115,8 +115,16 @@ class HMCCalibrator(TorchDeviceMixin):
             msg = "`observation_noise` must be a float or dict."
             raise ValueError(msg)
 
-    def model(self, predict=False):
-        """Pyro model."""
+    def model(self, predict: bool = False):
+        """
+        Pyro model.
+
+        Parameters
+        ----------
+        predict: bool
+            Once MCMC has been run, one can call this methods to generate posterior
+            predictive samples. Defaults to False.
+        """
 
         # Set all input parameters, shape [1, n_inputs]
         full_params = torch.zeros((1, len(self.parameter_range)), device=self.device)
