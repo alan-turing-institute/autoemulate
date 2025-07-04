@@ -35,7 +35,7 @@ class HMCCalibrator(TorchDeviceMixin):
         emulator: Emulator
             Fitted Emulator object.
         parameters_range : dict[str, tuple[float, float]]
-            Dictionary mapping input parameter names to their (min, max) ranges.
+            A dictionary mapping input parameter names to their (min, max) ranges.
         observations: dict[str, float] | dict[str, list[float]]
             A dictionary of either a single value or a list of values per output.
         observation_noise: float | dict[str, float]
@@ -69,7 +69,7 @@ class HMCCalibrator(TorchDeviceMixin):
         observations: dict[str, float] | dict[str, list[float]],
     ):
         """
-        Turn `observations` into tensor shaped [n_samples, n_ouputs], save attribute.
+        Turn `observations` into tensor shaped [n_obs, n_ouputs], save attribute.
 
         Parameters
         ----------
@@ -81,7 +81,7 @@ class HMCCalibrator(TorchDeviceMixin):
             (torch.tensor(value) if isinstance(value, list) else torch.tensor([value]))
             for value in observations.values()
         ]
-        # shape: [n_samples, n_outputs]
+        # shape: [n_obs, n_outputs]
         self.observations = torch.stack(observation_values, dim=1).to(self.device)
 
     def _process_obs_noise(
@@ -90,9 +90,7 @@ class HMCCalibrator(TorchDeviceMixin):
         observation_noise: float | dict[str, float] = 0.1,
     ):
         """
-        Ensure that `observation_noise` is handled correctly and saved as attribute:
-        - if float, set the same observation noise value for all outputs
-        - if dict, make sure the order matches `self.observations`
+        Convert `observation_noise` to tensor and save as attribute.
 
         Parameters
         ----------
@@ -102,7 +100,7 @@ class HMCCalibrator(TorchDeviceMixin):
            A single value or a dictionary of values (one per output). Defaults to 0.1.
         """
         if isinstance(observation_noise, float):
-            # Broadcast to match outputs
+            # Broadcast to match output size
             self.obs_noise = torch.full(
                 (self.observations.shape[1],), observation_noise
             ).to(self.device)
@@ -181,10 +179,7 @@ class HMCCalibrator(TorchDeviceMixin):
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            # Once can pass a dict containing initial tensors in unconstrained space to
-            # initiate the markov chains [n_chains, n_calibrated_params]. If None,
-            # parameter values will be sampled from the prior. Since the prior is set
-            # based on parameter ranges, we don't include option to set initial values.
+            # If None, parameter init values for each chain are sampled from the prior.
             initial_params=None,
         )
         mcmc.run()
