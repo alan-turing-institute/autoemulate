@@ -90,11 +90,11 @@ class EarlyStopping:
             if self.load_best:
                 self.best_model_weights_ = deepcopy(model.state_dict())
         if self.misses_ == self.patience:
-            print(
+            msg = (
                 "Stopping since train loss has not improved in the last "
                 f"{self.patience} epochs."
             )
-            raise KeyboardInterrupt
+            raise EarlyStoppingException(msg)
 
     def on_train_end(self, model: nn.Module, last_epoch: int):
         """
