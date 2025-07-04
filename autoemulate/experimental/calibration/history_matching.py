@@ -247,7 +247,7 @@ class HistoryMatching(TorchDeviceMixin):
                 param: (lower_bound[i].item(), upper_bound[i].item())
                 for i, param in enumerate(param_names)
             }
-        return
+        return None
 
 
 class HistoryMatchingWorkflow(HistoryMatching):
