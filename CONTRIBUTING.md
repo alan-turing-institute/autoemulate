@@ -22,6 +22,22 @@ This section provides a high-level guide to contributing to AutoEmulate, designe
 
 We welcome contributions of all kinds, be it code, documentation, or community engagement. We encourage you to read through the following sections to learn more about how you can contribute to the package.
 
+## Development guide                
+
+### Running the test-suite on Apple silicon (M-series)
+
+PyTorch’s Metal (MPS) backend still lacks some `float64` linear-algebra ops (e.g. `linalg_cholesky_ex`, `linalg_eigh`). On an M-series Mac these ops fail three Gaussian-process tests unless you let PyTorch fall back to CPU.
+
+```# one-line fix: fall back to CPU for unsupported MPS ops
+export PYTORCH_ENABLE_MPS_FALLBACK=1
+pytest -q        # 831 passed, warnings only
+```
+If you prefer to skip the affected tests instead:
+
+```
+pytest -k "not mps"
+```
+
 ## How to Submit Changes
 
 We follow the same instructions for submitting changes to the project as those developed by [The Turing Way](https://github.com/the-turing-way/the-turing-way/blob/main/CONTRIBUTING.md#making-a-change-with-a-pull-request). In short, there are five steps to adding changes to this repository:
