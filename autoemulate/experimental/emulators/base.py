@@ -99,6 +99,12 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         )
         raise NotImplementedError(msg)
 
+    @classmethod
+    def get_random_config(cls):
+        return {
+            k: v[np.random.randint(len(v))] for k, v in cls.get_tune_config().items()
+        }
+
 
 class DeterministicEmulator(Emulator):
     """An emulator subclass that predicts with deterministic outputs returning a
@@ -343,3 +349,9 @@ class SklearnBackend(DeterministicEmulator):
         if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred
+
+
+class DropoutTorchBackend(PyTorchBackend):
+    """
+    Torch backend model that is meant to support dropout.
+    """

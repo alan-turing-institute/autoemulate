@@ -30,6 +30,7 @@ anytree = "^2.12.1"
 torchmetrics = "^1.7.1"
 pyro-ppl = "^1.9.1"
 corner = "^2.2.3"
+torchrbf = "^0.0.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.0"

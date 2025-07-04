@@ -2,7 +2,13 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
+from autoemulate.experimental.emulators import (
+    ALL_EMULATORS as DEFAULT_EMULATORS,
+)
+from autoemulate.experimental.emulators import (
+    GaussianProcessExact,
+)
+from autoemulate.experimental.emulators.ensemble import EnsembleMLP, EnsembleMLPDropout
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -12,6 +18,13 @@ from autoemulate.experimental.transforms import (
 
 # from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike, GaussianLike, TensorLike
+
+# TODO: update once #579 completeed
+ALL_EMULATORS = [
+    emulator
+    for emulator in DEFAULT_EMULATORS
+    if emulator not in [EnsembleMLP, EnsembleMLPDropout]
+]
 
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):

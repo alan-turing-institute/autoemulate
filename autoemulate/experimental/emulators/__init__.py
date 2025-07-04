@@ -1,3 +1,4 @@
+from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import GaussianProcessExact, GaussianProcessExactCorrelated
 from .lightgbm import LightGBM
 
@@ -14,4 +15,6 @@ ALL_EMULATORS = [
     SupportVectorMachine,
     RandomForest,
     MLP,
+    EnsembleMLP,
+    EnsembleMLPDropout,
 ]
