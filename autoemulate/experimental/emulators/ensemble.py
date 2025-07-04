@@ -9,6 +9,7 @@ from autoemulate.experimental.emulators.base import (
     GaussianEmulator,
     PyTorchBackend,
 )
+from autoemulate.experimental.emulators.nn.mlp import MLP
 from autoemulate.experimental.types import (
     DeviceLike,
     GaussianLike,
@@ -26,7 +27,7 @@ class Ensemble(GaussianEmulator):
 
     def __init__(
         self,
-        emulators: Sequence[Emulator],
+        emulators: Sequence[Emulator] | None = None,
         device: DeviceLike | None = None,
     ):
         """
@@ -106,6 +107,41 @@ class Ensemble(GaussianEmulator):
 
         # Return as MultivariateNormal
         return GaussianLike(mu_ens, sigma_ens)
+
+
+class EnsembleMLP(Ensemble):
+    def __init__(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        n_emulators: int = 4,
+        device: DeviceLike | None = None,
+        **mlp_kwargs,
+    ):
+        """Initialize an ensemble of MLPs.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input data tensor of shape (batch_size, n_features).
+        y : TensorLike
+            Target values tensor of shape (batch_size, n_outputs).
+        n_emulators : int, default=4
+            Number of MLP emulators to create in the ensemble.
+        device : DeviceLike | None, default=None
+            Device to run the model on (e.g., "cpu", "cuda").
+        **mlp_kwargs : dict
+            Additional keyword arguments for the MLP constructor.
+
+        """
+        for i in range(n_emulators):
+            mlp = MLP(x, y, random_seed=i, device=device, **mlp_kwargs)
+            self.emulators.append(mlp)
+        super().__init__(self.emulators, device=device)
+
+    @staticmethod
+    def get_tune_config() -> TuneConfig:
+        return {"n_emulators": [2, 4, 6, 8], **MLP.get_tune_config()}
 
 
 class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
@@ -198,3 +234,40 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         sigma_epi += jitter_mat
 
         return GaussianLike(mu, sigma_epi)
+
+
+class EnsembleMLPDropout(DropoutEnsemble):
+    def __init__(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        dropout_prob: float = 0.2,
+        device: DeviceLike | None = None,
+        **mlp_kwargs,
+    ):
+        """Initialize an ensemble of MLPs with dropout.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input data tensor of shape (batch_size, n_features).
+        y : TensorLike
+            Target values tensor of shape (batch_size, n_outputs).
+        dropout_prob : float, default=0.2
+            Dropout probability to use in the MLP layers.
+        device : DeviceLike | None, default=None
+            Device to run the model on (e.g., "cpu", "cuda").
+        **mlp_kwargs : dict
+            Additional keyword arguments for the MLP constructor.
+
+        """
+        super().__init__(
+            MLP(x, y, dropout_prob=dropout_prob, device=device, **mlp_kwargs),
+            device=device,
+        )
+
+    @staticmethod
+    def get_tune_config() -> TuneConfig:
+        config = MLP.get_tune_config()
+        config["dropout_prob"] = [el for el in config["dropout_prob"] if el is not None]
+        return {"n_emulators": [2, 4, 6, 8], **config}
