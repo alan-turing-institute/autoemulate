@@ -301,7 +301,7 @@ class SensitivityAnalysis(ConversionMixin):
         st_results = sa_results_df[sa_results_df["index"] == sa_index]
 
         return (
-            st_results.groupby("parameter")["value"]
+            st_results.groupby("parameter")["value"]  # pyright: ignore[reportCallIssue]
             # each parameter is evalued against each output
             # to rank parameters, average over how sensitive all outputs are to it
             .mean()
