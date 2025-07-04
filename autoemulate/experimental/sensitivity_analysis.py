@@ -178,8 +178,7 @@ class SensitivityAnalysis(ConversionMixin):
             accurate results but increase computation time. Default is 1024.
         conf_level : float
             Confidence level (between 0 and 1) for calculating confidence intervals
-            of the Sobol sensitivity indices. Default is 0.95 (95% confidence). This
-            is not used in Morris sensitivity analysis.
+            of the Sobol sensitivity indices. Default is 0.95 (95% confidence).
 
         Returns
         -------
@@ -191,10 +190,11 @@ class SensitivityAnalysis(ConversionMixin):
                 - 'index': S1, S2 or ST (first, second, and total order sensitivity)
                 - 'confidence': confidence intervals for each index
             If using Morris, the columns include:
-                - 'mu'
-                - 'mu_star'
-                - 'sigma'
-                - 'mu_star_conf'
+                - 'mu': mean of the distribution of elementary effects
+                - 'mu_star': mean of the distribution of absolute value
+                - 'sigma': standard deviation of the distribution, used as indication of
+                    interactions between parameters
+                - 'mu_star_conf: boostrapped confidence interval
 
         Notes
         -----
@@ -215,7 +215,9 @@ class SensitivityAnalysis(ConversionMixin):
             if method == "sobol":
                 Si = sobol_analyze(self.problem, y[:, i], conf_level=conf_level)
             elif method == "morris":
-                Si = morris_analyze(self.problem, param_samples, y[:, i])
+                Si = morris_analyze(
+                    self.problem, param_samples, y[:, i], conf_level=conf_level
+                )
             results[name] = Si  # type: ignore PGH003
 
         if method == "sobol":
