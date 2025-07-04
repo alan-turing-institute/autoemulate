@@ -4,10 +4,10 @@ from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
-from ..base import PyTorchBackend
+from ..base import DropoutTorchBackend
 
 
-class MLP(PyTorchBackend):
+class MLP(DropoutTorchBackend):
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,

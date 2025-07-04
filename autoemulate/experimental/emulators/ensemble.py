@@ -5,9 +5,9 @@ from torch import Tensor
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import (
+    DropoutTorchBackend,
     Emulator,
     GaussianEmulator,
-    PyTorchBackend,
 )
 from autoemulate.experimental.emulators.nn.mlp import MLP
 from autoemulate.experimental.types import (
@@ -164,7 +164,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
     def __init__(
         self,
-        model: PyTorchBackend,
+        model: DropoutTorchBackend,
         n_samples: int = 20,
         jitter: float = 1e-6,
         device: DeviceLike | None = None,
@@ -181,7 +181,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         device : DeviceLike | None
             torch device for inference (e.g. "cpu", "cuda").
         """
-        assert isinstance(model, PyTorchBackend), "model must be a PyTorchBackend"
+        assert isinstance(model, DropoutTorchBackend), "model must be a PyTorchBackend"
         TorchDeviceMixin.__init__(self, device=device)
         assert n_samples > 0
         self.model = model.to(self.device)
