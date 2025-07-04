@@ -24,6 +24,10 @@ from autoemulate.emulators.gaussian_process import (
     rq_kernel,
     zero_mean,
 )
+from autoemulate.experimental.callbacks.early_stopping import (
+    EarlyStopping,
+    EarlyStoppingException,
+)
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
@@ -66,6 +70,7 @@ class GaussianProcessExact(
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         gamma: float = 0.9,
+        early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
     ):
         # Init device
@@ -129,6 +134,7 @@ class GaussianProcessExact(
         self.scheduler = None
         # TODO: set the scheduler in any implementation that uses this class
         # self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)
+        self.early_stopping = early_stopping
         self.to(self.device)
 
     @staticmethod
@@ -172,6 +178,12 @@ class GaussianProcessExact(
         # Set the training data in case changed since init
         self.set_train_data(x, y, strict=False)
 
+        # Initialize early stopping
+        if self.early_stopping is not None:
+            self.early_stopping.on_train_begin()
+
+        # Avoid `"epoch" is possibly unbound` type error at the end
+        epoch = 0
         for epoch in range(self.epochs):
             self.optimizer.zero_grad()
             output = self(x)
@@ -181,6 +193,18 @@ class GaussianProcessExact(
             loss.backward()
             self.log_epoch(epoch, loss)
             self.optimizer.step()
+
+            if self.early_stopping is not None:
+                try:
+                    # TODO: use validation loss instead, see #589
+                    self.early_stopping.on_epoch_end(self, epoch, loss.item())
+                except EarlyStoppingException:
+                    # EarlyStopping prints a message if this happens
+                    break
+
+        if self.early_stopping is not None:
+            self.early_stopping.on_train_end(self, epoch)
+
         # Update learning rate if scheduler is defined
         if self.scheduler is not None:
             self.scheduler.step()
