@@ -91,7 +91,8 @@ class MLP(PyTorchBackend):
         self._initialize_weights(weight_init, scale, bias_init)
         self.epochs = epochs
         self.loss_fn = loss_fn_cls()
-        self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.lr = lr
+        self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
         self.to(device)
 
