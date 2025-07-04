@@ -78,4 +78,6 @@ def make_positive_definite(
             if i == max_tries_min_eigval - 1:
                 msg = f"Matrix could not be made positive definite:\n{cov}"
                 raise RuntimeError(msg) from e
-    return None
+
+    msg = f"Matrix could not be made positive definite:\n{cov}"
+    raise RuntimeError(msg)

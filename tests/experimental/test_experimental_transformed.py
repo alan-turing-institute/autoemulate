@@ -10,7 +10,7 @@ from autoemulate.experimental.emulators import (
     GaussianProcessExact,
 )
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
-from autoemulate.experimental.emulators.nn.mlp import GaussianMLP
+from autoemulate.experimental.emulators.ensemble import EnsembleMLP, EnsembleMLPDropout
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -26,7 +26,12 @@ from autoemulate.experimental.types import (
     TensorLike,
 )
 
-ALL_EMULATORS = [*DEFAULT_EMULATORS, GaussianMLP]
+# TODO: update once #579 completeed
+ALL_EMULATORS = [
+    emulator
+    for emulator in DEFAULT_EMULATORS
+    if emulator not in [EnsembleMLP, EnsembleMLPDropout]
+]
 
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):

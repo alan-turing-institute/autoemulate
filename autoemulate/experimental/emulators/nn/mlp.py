@@ -5,10 +5,10 @@ from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 
-from ..base import GaussianEmulator, PyTorchBackend
+from ..base import DropoutTorchBackend, GaussianEmulator
 
 
-class MLP(PyTorchBackend):
+class MLP(DropoutTorchBackend):
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
@@ -118,7 +118,7 @@ class MLP(PyTorchBackend):
         }
 
 
-class GaussianMLP(PyTorchBackend, GaussianEmulator):
+class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
     def __init__(  # noqa: PLR0913
         self,
         x,
