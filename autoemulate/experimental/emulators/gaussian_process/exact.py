@@ -126,7 +126,9 @@ class GaussianProcessExact(
         self.activation = activation
         self.gamma = gamma
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
+        self.scheduler = None
+        # TODO: set the scheduler in any implementation that uses this class
+        # self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)
         self.to(self.device)
 
     @staticmethod
