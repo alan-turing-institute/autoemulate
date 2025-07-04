@@ -7,7 +7,8 @@ from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
 from gpytorch.kernels import ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
-from torch import nn
+from torch import nn, optim
+from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
 from autoemulate.emulators.gaussian_process import (
     constant_mean,
@@ -46,6 +47,11 @@ class GaussianProcessExact(
 
     """
 
+    # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
+    optimizer_cls: type[optim.Optimizer] = optim.Adam
+    optimizer: optim.Optimizer
+    scheduler: LRScheduler | None = None
+
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         x: TensorLike,
@@ -58,6 +64,7 @@ class GaussianProcessExact(
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        gamma: float = 0.9,
         device: DeviceLike | None = None,
     ):
         # Init device
@@ -116,6 +123,9 @@ class GaussianProcessExact(
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.gamma = gamma
+        self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
         self.to(self.device)
 
     @staticmethod
@@ -153,7 +163,6 @@ class GaussianProcessExact(
         # TODO: move conversion out of _fit() and instead rely on for impl check
         x, y = self._convert_to_tensors(x, y)
 
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         x = self.preprocess(x)
 
@@ -161,14 +170,17 @@ class GaussianProcessExact(
         self.set_train_data(x, y, strict=False)
 
         for epoch in range(self.epochs):
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
             output = self(x)
             loss = mll(output, y)
             assert isinstance(loss, torch.Tensor)
             loss = -loss
             loss.backward()
             self.log_epoch(epoch, loss)
-            optimizer.step()
+            self.optimizer.step()
+        # Update learning rate if scheduler is defined
+        if self.scheduler is not None:
+            self.scheduler.step()
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
