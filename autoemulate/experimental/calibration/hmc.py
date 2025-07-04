@@ -135,16 +135,14 @@ class HMCCalibrator(TorchDeviceMixin):
                 full_params[0, i] = (min_val + max_val) / 2
 
         # Emulator prediction
-        # TODO: emulator should eventually handle no_grad
-        with torch.no_grad():
-            output = self.emulator.predict(full_params)
-            if isinstance(output, TensorLike):
-                pred_mean = output
-            elif isinstance(output, DistributionLike):
-                pred_mean = output.mean
-            else:
-                msg = "The emulator did not return a tensor or a distribution object."
-                raise ValueError(msg)
+        output = self.emulator.predict(full_params)
+        if isinstance(output, TensorLike):
+            pred_mean = output
+        elif isinstance(output, DistributionLike):
+            pred_mean = output.mean
+        else:
+            msg = "The emulator did not return a tensor or a distribution object."
+            raise ValueError(msg)
 
         # MultivariateNormal likelihood over outputs (diagonal covariance)
         pred_cov = torch.diag(self.obs_noise.to(self.device))
