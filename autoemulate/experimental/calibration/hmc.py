@@ -142,6 +142,9 @@ class HMCCalibrator(TorchDeviceMixin):
                 pred_mean = output
             elif isinstance(output, DistributionLike):
                 pred_mean = output.mean
+            else:
+                msg = "The emulator did not return a tensor or a distribution object."
+                raise ValueError(msg)
 
         # MultivariateNormal likelihood over outputs (diagonal covariance)
         pred_cov = torch.diag(self.obs_noise.to(self.device))

@@ -209,7 +209,7 @@ class HistoryMatching(TorchDeviceMixin):
         nroy_x: TensorLike,
         buffer_ratio: float = 0.05,
         param_names: list[str] | None = None,
-    ) -> dict[str, [float, float]]:
+    ) -> dict[str, tuple[float, float]]:
         """
         Generate lower/upper parameter bounds as min/max of NROY samples.
 
@@ -226,11 +226,11 @@ class HistoryMatching(TorchDeviceMixin):
 
         Returns
         -------
-        TensorLike
-            The generated lower/upper parameter bounds.
+        dict[str, [float, float]]
+            The generated [lower, upper] parameter bounds.
         """
         if param_names is None:
-            param_names = [f"x{i+1}" for i in range(nroy_x.shape[1])]
+            param_names = [f"x{i + 1}" for i in range(nroy_x.shape[1])]
 
         min_val = torch.min(nroy_x, dim=0).values
         max_val = torch.max(nroy_x, dim=0).values
@@ -239,7 +239,7 @@ class HistoryMatching(TorchDeviceMixin):
         upper_bound = max_val + buffer
 
         return {
-            param: [lower_bound[i], upper_bound[i]]
+            param: (lower_bound[i].item(), upper_bound[i].item())
             for i, param in enumerate(param_names)
         }
 
