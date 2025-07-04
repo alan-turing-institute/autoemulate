@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
-from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import (
@@ -195,7 +195,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
     lr: float = 1e-1
-        scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
+    scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
@@ -256,7 +256,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 batches += 1
             # Update learning rate if scheduler is defined
             if self.scheduler is not None:
-                self.scheduler.step()
+                self.scheduler.step()  # type: ignore[call-arg]
 
             # Average loss for the epoch
             avg_epoch_loss = epoch_loss / batches
