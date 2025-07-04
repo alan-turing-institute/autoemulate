@@ -24,9 +24,9 @@ def gp_exact():
     )
 
 
-def test_early_stopping_method_calls_counts(gp_exact):
+def test_early_stopping_method_call_counts(gp_exact):
     """
-    Test that early stopping methods are called correct number of times.
+    Test that early stopping methods are called the correct number of times.
     """
     early_stopping = MagicMock(spec=EarlyStopping)
     gp_exact.early_stopping = early_stopping
@@ -42,14 +42,12 @@ def test_early_stopping_method_calls_counts(gp_exact):
 
 def test_early_stopping_trigger(gp_exact):
     """Test that early stopping is triggered."""
-    # set very high threshold and low patience to trigger it
+    # Set very high threshold and low patience to ensure it gets triggered
     early_stopping = EarlyStopping(threshold=100, patience=2)
     gp_exact.early_stopping = early_stopping
 
-    # Run the training process
     x = torch.randn(10, 3)
     y = torch.randn(10, 2)
     gp_exact._fit(x, y)
 
-    # Verify that early stopping was triggered
     assert early_stopping.misses_ == early_stopping.patience
