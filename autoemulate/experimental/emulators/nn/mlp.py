@@ -119,4 +119,6 @@ class MLP(PyTorchBackend):
             "scale": [0.1, 1.0],
             "bias_init": ["default", "zeros"],
             "dropout_prob": [0.3, 0.5, None],
+            "scheduler_cls": ["ExponentialLR"],
+            "scheduler_kwargs": [{"gamma": 0.9}],
         }
