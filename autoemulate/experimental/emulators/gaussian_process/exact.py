@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 
 import gpytorch
 import numpy as np
@@ -8,7 +9,7 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from torch import nn, optim
-from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.emulators.gaussian_process import (
     constant_mean,
@@ -54,7 +55,7 @@ class GaussianProcessExact(
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
-        scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
+    scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
@@ -68,7 +69,6 @@ class GaussianProcessExact(
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
-        gamma: float = 0.9,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
     ):
