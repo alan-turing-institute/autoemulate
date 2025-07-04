@@ -71,6 +71,7 @@ class GaussianProcessExact(
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
+        **kwargs,
     ):
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -129,10 +130,12 @@ class GaussianProcessExact(
         self.batch_size = batch_size
         self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
         if self.scheduler_cls is None:
             self.scheduler = None
         else:
-            self.scheduler = self.scheduler_cls(self.optimizer)
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
         self.early_stopping = early_stopping
         self.to(self.device)
 

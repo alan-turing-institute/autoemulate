@@ -25,6 +25,7 @@ class PolynomialRegression(PyTorchBackend):
         batch_size: int = 16,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
+        **kwargs,
     ):
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
@@ -44,10 +45,12 @@ class PolynomialRegression(PyTorchBackend):
             self.device
         )
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
         if self.scheduler_cls is None:
             self.scheduler = None
         else:
-            self.scheduler = self.scheduler_cls(self.optimizer)
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Transform input using the fitted PolynomialFeatures
