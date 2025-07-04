@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 
 import gpytorch
 import numpy as np
@@ -7,7 +8,8 @@ from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
 from gpytorch.kernels import ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
-from torch import nn
+from torch import nn, optim
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.emulators.gaussian_process import (
     constant_mean,
@@ -50,6 +52,11 @@ class GaussianProcessExact(
 
     """
 
+    # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
+    optimizer_cls: type[optim.Optimizer] = optim.Adam
+    optimizer: optim.Optimizer
+    scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
+
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         x: TensorLike,
@@ -64,6 +71,7 @@ class GaussianProcessExact(
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
+        **kwargs,
     ):
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -121,6 +129,13 @@ class GaussianProcessExact(
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
         self.early_stopping = early_stopping
         self.to(self.device)
 
@@ -159,7 +174,6 @@ class GaussianProcessExact(
         # TODO: move conversion out of _fit() and instead rely on for impl check
         x, y = self._convert_to_tensors(x, y)
 
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
         x = self.preprocess(x)
 
@@ -173,14 +187,14 @@ class GaussianProcessExact(
         # Avoid `"epoch" is possibly unbound` type error at the end
         epoch = 0
         for epoch in range(self.epochs):
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
             output = self(x)
             loss = mll(output, y)
             assert isinstance(loss, torch.Tensor)
             loss = -loss
             loss.backward()
             self.log_epoch(epoch, loss)
-            optimizer.step()
+            self.optimizer.step()
 
             if self.early_stopping is not None:
                 try:
@@ -192,6 +206,10 @@ class GaussianProcessExact(
 
         if self.early_stopping is not None:
             self.early_stopping.on_train_end(self, epoch)
+
+        # Update learning rate if scheduler is defined
+        if self.scheduler is not None:
+            self.scheduler.step()
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
