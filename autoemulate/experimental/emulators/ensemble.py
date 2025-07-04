@@ -28,6 +28,7 @@ class Ensemble(GaussianEmulator):
     def __init__(
         self,
         emulators: Sequence[Emulator] | None = None,
+        jitter: float = 1e-6,
         device: DeviceLike | None = None,
     ):
         """
@@ -35,6 +36,8 @@ class Ensemble(GaussianEmulator):
         ----------
         emulators: Sequence[Emulator]
             A sequence of emulators to construct the ensemble with.
+        jitter: float, default=1e-6
+            Amount of jitter to add to the covariance diagonal to avoid degeneracy.
         device: DeviceLike | None
             The device to put torch tensors on.
         """
@@ -44,6 +47,7 @@ class Ensemble(GaussianEmulator):
             assert isinstance(e, Emulator)
         self.emulators = list(emulators)
         self.is_fitted_ = all(e.is_fitted_ for e in emulators)
+        self.jitter = jitter
         TorchDeviceMixin.__init__(self, device=device)
 
     @staticmethod
@@ -79,8 +83,9 @@ class Ensemble(GaussianEmulator):
                 mu_i = out.to(device)
                 # Instead of constructing dense zero matrix
                 sigma_i = torch.broadcast_to(
-                    torch.tensor(0.0), (mu_i.shape[0], mu_i.shape[1], mu_i.shape[1])
-                )
+                    torch.tensor(0.0),
+                    (mu_i.shape[0], mu_i.shape[1], mu_i.shape[1]),
+                ).to(device)
             else:
                 s = f"Emulators of type {type(e)} are note supported yet."
                 raise TypeError(s)
@@ -104,6 +109,12 @@ class Ensemble(GaussianEmulator):
 
         # Total covariance
         sigma_ens = sigma_alea + sigma_epi  # (batch, dim, dim)
+
+        # Add some jitter to avoid positive-definite warnings
+        b, d = mu_ens.shape
+        eye = torch.eye(d, device=sigma_epi.device)  # (dim, dim)
+        jitter_mat = eye.unsqueeze(0).expand(b, d, d) * self.jitter
+        sigma_epi += jitter_mat
 
         # Return as MultivariateNormal
         return GaussianLike(mu_ens, sigma_ens)
@@ -134,10 +145,11 @@ class EnsembleMLP(Ensemble):
             Additional keyword arguments for the MLP constructor.
 
         """
-        for i in range(n_emulators):
-            mlp = MLP(x, y, random_seed=i, device=device, **mlp_kwargs)
-            self.emulators.append(mlp)
-        super().__init__(self.emulators, device=device)
+        emulators = [
+            MLP(x, y, random_seed=i, device=device, **mlp_kwargs)
+            for i in range(n_emulators)
+        ]
+        super().__init__(emulators, device=device)
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
