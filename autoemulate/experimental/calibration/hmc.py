@@ -1,7 +1,7 @@
 import pyro
 import pyro.distributions as dist
 import torch
-from pyro.infer import MCMC, NUTS
+from pyro.infer import MCMC, NUTS, Predictive
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
@@ -186,23 +186,23 @@ class HMCCalibrator(TorchDeviceMixin):
         mcmc.run()
         return mcmc
 
-    def predict(self, test_x: TensorLike) -> TensorLike:
+    def posterior_predictive(self, mcmc: MCMC) -> TensorLike:
         """
-        Return posterior predictive.
+        Return posterior predictive samples.
 
         Parameters
         ----------
-        test_x: TensorLike
-            Tensor of parameters to make predictions for [n_data_samples, n_inputs].
+        mcmc: MCMC
+            The MCMC object.
 
         Returns
         -------
         TensorLike
-            Tensor of posterior predictive predictions [n_mcmc_samples, n_outputs].
+            Tensor of posterior predictive samples [n_mcmc_samples, n_outputs].
         """
-        # TODO: check return shape, should we just do this for one data point?
-        # TODO: imp;le
-        return test_x
+        posterior_samples = mcmc.get_samples()
+        posterior_predictive = Predictive(self.model, posterior_samples)
+        return posterior_predictive()["obs_0"]
 
     def _set_initial_values(self, num_chains: int) -> None | dict[str, TensorLike]:
         """
