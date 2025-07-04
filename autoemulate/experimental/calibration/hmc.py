@@ -210,9 +210,7 @@ class HMCCalibrator(TorchDeviceMixin):
         posterior_predictive = Predictive(self.model, posterior_samples)
         return posterior_predictive(predict=True)
 
-    def to_arviz(
-        self, mcmc: MCMC, posterior_predictive: bool = False
-    ) -> az.data.inference_data.InferenceData:
+    def to_arviz(self, mcmc: MCMC) -> az.data.inference_data.InferenceData:
         """
         Convert MCMC object to Arviz InferenceData object to enable plotting.
 
@@ -220,14 +218,13 @@ class HMCCalibrator(TorchDeviceMixin):
         ----------
         mcmc: MCMC
             The MCMC object.
-        posterior_predictive: bool
-            Whether to include posterior predictive samples.
 
         Returns
         -------
         az.data.inference_data.InferenceData
         """
-        pp_samples = None
-        if posterior_predictive:
-            pp_samples = self.posterior_predictive(mcmc)
-        return az.from_pyro(mcmc, posterior_predictive=pp_samples)
+        # TODO: anything else we want to include here?
+        # I tried optionally including posterior predictive samples but Arviz expects
+        # them to be dimension [n_chains, n_samples] or that flattened whereas ours
+        # are [n_samples, n_outputs]
+        return az.from_pyro(mcmc)
