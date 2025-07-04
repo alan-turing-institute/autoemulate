@@ -181,7 +181,11 @@ class HMCCalibrator(TorchDeviceMixin):
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            initial_params=self._set_initial_values(num_chains),
+            # Once can pass a dict containing initial tensors in unconstrained space to
+            # initiate the markov chains [n_chains, n_calibrated_params]. If None,
+            # parameter values will be sampled from the prior. Since the prior is set
+            # based on parameter ranges, we don't include option to set initial values.
+            initial_params=None,
         )
         mcmc.run()
         return mcmc
@@ -203,22 +207,3 @@ class HMCCalibrator(TorchDeviceMixin):
         posterior_samples = mcmc.get_samples()
         posterior_predictive = Predictive(self.model, posterior_samples)
         return posterior_predictive()["obs_0"]
-
-    def _set_initial_values(self, num_chains: int) -> None | dict[str, TensorLike]:
-        """
-        Set the initian parameter values for each MCMC chain.
-
-        Parameters
-        ----------
-        num_chains: int
-            Number of parallel chains to run. Defaults to 1.
-
-        Returns
-        -------
-        None | dict[str, TensorLike]
-        """
-        # TODO
-        # Dict containing initial tensors in unconstrained space to initiate the
-        # markov chain. The leading dimension size must match that of num_chains.
-        # If not specified, parameter values will be sampled from the prior.
-        return
