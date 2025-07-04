@@ -50,6 +50,7 @@ class GaussianProcessExact(
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
+    scheduler_cls: type[LRScheduler] = ExponentialLR
     scheduler: LRScheduler | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
@@ -125,7 +126,7 @@ class GaussianProcessExact(
         self.activation = activation
         self.gamma = gamma
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
+        self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
         self.to(self.device)
 
     @staticmethod

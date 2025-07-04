@@ -1,5 +1,4 @@
 from torch import nn
-from torch.optim.lr_scheduler import ExponentialLR
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -93,7 +92,7 @@ class MLP(PyTorchBackend):
         self.epochs = epochs
         self.loss_fn = loss_fn_cls()
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
+        self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
         self.to(device)
 
     def forward(self, x):

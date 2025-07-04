@@ -1,7 +1,6 @@
 import torch
 from sklearn.preprocessing import PolynomialFeatures
 from torch import nn
-from torch.optim.lr_scheduler import ExponentialLR
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -45,7 +44,7 @@ class PolynomialRegression(PyTorchBackend):
             self.device
         )
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = ExponentialLR(self.optimizer, gamma=self.gamma)
+        self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Transform input using the fitted PolynomialFeatures
