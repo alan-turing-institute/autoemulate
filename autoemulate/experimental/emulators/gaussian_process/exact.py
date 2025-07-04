@@ -129,9 +129,10 @@ class GaussianProcessExact(
         self.batch_size = batch_size
         self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = None
-        # TODO: set the scheduler in any implementation that uses this class
-        # self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer)
         self.early_stopping = early_stopping
         self.to(self.device)
 

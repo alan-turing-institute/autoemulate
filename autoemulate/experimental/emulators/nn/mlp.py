@@ -93,7 +93,10 @@ class MLP(PyTorchBackend):
         self.loss_fn = loss_fn_cls()
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer)
         self.to(device)
 
     def forward(self, x):

@@ -28,7 +28,10 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
             self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg]
-            self.scheduler = self.scheduler_cls(self.optimizer, gamma=self.gamma)  # type: ignore[call-arg]
+            if self.scheduler_cls is None:
+                self.scheduler = None
+            else:
+                self.scheduler = self.scheduler_cls(self.optimizer)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(
