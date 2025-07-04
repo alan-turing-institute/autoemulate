@@ -114,7 +114,7 @@ class HMCCalibrator(TorchDeviceMixin):
             msg = "`observation_noise` must be a float or dict."
             raise ValueError(msg)
 
-    def model(self):
+    def model(self, predict=False):
         """Pyro model."""
 
         # Set all input parameters, shape [1, n_inputs]
@@ -145,11 +145,17 @@ class HMCCalibrator(TorchDeviceMixin):
         # MultivariateNormal likelihood over outputs (diagonal covariance)
         pred_cov = torch.diag(self.obs_noise.to(self.device))
         for i in range(self.observations.shape[0]):
-            pyro.sample(
-                f"obs_{i}",
-                dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
-                obs=self.observations[i],
-            )
+            if not predict:
+                pyro.sample(
+                    f"obs_{i}",
+                    dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
+                    obs=self.observations[i],
+                )
+            else:
+                pyro.sample(
+                    f"obs_{i}",
+                    dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
+                )
 
     def run_mcmc(
         self, warmup_steps: int = 500, num_samples: int = 1000, num_chains: int = 1
@@ -197,8 +203,8 @@ class HMCCalibrator(TorchDeviceMixin):
         Returns
         -------
         TensorLike
-            Tensor of posterior predictive samples [n_mcmc_samples, n_outputs].
+            Tensor of posterior predictive samples [n_mcmc_samples, n_obs, n_outputs].
         """
         posterior_samples = mcmc.get_samples()
         posterior_predictive = Predictive(self.model, posterior_samples)
-        return posterior_predictive()["obs_0"]
+        return posterior_predictive(predict=True)
