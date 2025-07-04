@@ -267,11 +267,11 @@ class SensitivityAnalysis(ConversionMixin):
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)
 
     @staticmethod
-    def top_n_params(
+    def top_n_sobol_params(
         sa_results_df: pd.DataFrame, top_n: int, sa_index: str = "ST"
     ) -> list:
         """
-        Return `top_n` most important parameters given sensitivity analysis
+        Return `top_n` most important parameters given Sobol sensitivity analysis
         results dataframe. In case of multiple outputs, averages over them
         to rank the parameters.
 
@@ -283,7 +283,6 @@ class SensitivityAnalysis(ConversionMixin):
             Number of parameters to return.
         sa_index: str
             Which sensitivity index to rank the parameters by. One of ["S1", "S2", "ST].
-
 
         Returns
         -------
@@ -299,11 +298,7 @@ class SensitivityAnalysis(ConversionMixin):
             )
             raise ValueError(msg)
 
-        if "index" in sa_results_df:
-            # ST = total sensitivity of an output to the input (includes interactions)
-            st_results = sa_results_df[sa_results_df["index"] == "ST"]
-        else:
-            st_results = sa_results_df
+        st_results = sa_results_df[sa_results_df["index"] == sa_index]
 
         return (
             st_results.groupby("parameter")["value"]
