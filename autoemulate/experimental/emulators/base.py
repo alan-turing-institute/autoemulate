@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 from functools import partial
 from typing import ClassVar
@@ -6,7 +7,7 @@ import numpy as np
 import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
-from torch.optim.lr_scheduler import LRScheduler
+from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import (
@@ -208,6 +209,56 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         This can be overridden by subclasses to use a different loss function.
         """
         return nn.MSELoss()(y_pred, y_true)
+
+    @classmethod
+    def scheduler_config(cls) -> dict:
+        """
+        Returns a random configuration for the learning rate scheduler.
+        This should be added to the `get_tune_config()` method of subclasses
+        to allow tuning of the scheduler parameters.
+        """
+        all_params = [
+            {
+                "scheduler_cls": [ExponentialLR],
+                "scheduler_kwargs": [
+                    {"gamma": 0.9},
+                    {"gamma": 0.95},
+                ],
+            },
+            # TODO: investigate these suggestions from copilot
+            # {
+            #     "scheduler_cls": [CosineAnnealingLR],
+            #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
+            # },
+            # {
+            #     "scheduler_cls": [ReduceLROnPlateau],
+            #     "scheduler_kwargs": [{"mode": "min", "factor": 0.1, "patience": 5}],
+            # },
+            # {
+            #     "scheduler_cls": [StepLR],
+            #     "scheduler_kwargs": [{"step_size": 10, "gamma": 0.1}],
+            # },
+            # {
+            #     "scheduler_cls": [CyclicLR],
+            #     "scheduler_kwargs": [{
+            #         "base_lr": 1e-3,
+            #         "max_lr": 1e-1,
+            #         "step_size_up": 5,
+            #         "step_size_down": 5,
+            #     }],
+            # },
+            # {
+            #     "scheduler_cls": [OneCycleLR],
+            #     "scheduler_kwargs": [{
+            #         "max_lr": 1e-1,
+            #         "total_steps": self.epochs,
+            #         "pct_start": 0.3,
+            #         "anneal_strategy": "linear",
+            #     }],
+            # },
+        ]
+        # Randomly select one of the parameter sets
+        return random.choice(all_params)
 
     def _fit(
         self,

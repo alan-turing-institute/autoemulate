@@ -110,6 +110,7 @@ class MLP(PyTorchBackend):
 
     @staticmethod
     def get_tune_config():
+        scheduler_params = MLP.scheduler_config()
         return {
             "epochs": [50, 100, 200],
             "layer_dims": [[32, 16], [64, 32, 16]],
@@ -119,6 +120,6 @@ class MLP(PyTorchBackend):
             "scale": [0.1, 1.0],
             "bias_init": ["default", "zeros"],
             "dropout_prob": [0.3, 0.5, None],
-            "scheduler_cls": ["ExponentialLR"],
-            "scheduler_kwargs": [{"gamma": 0.9}],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
