@@ -184,6 +184,7 @@ class GaussianProcessExact(
 
             if self.early_stopping is not None:
                 try:
+                    # TODO: use validation loss instead, see #589
                     self.early_stopping.on_epoch_end(self, epoch, loss.item())
                 except EarlyStoppingException:
                     # EarlyStopping prints a message if this happens
