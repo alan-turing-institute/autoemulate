@@ -125,7 +125,7 @@ class HMCCalibrator(TorchDeviceMixin):
         # Each param is either sampled (if calibrated) or set to a constant value
         for i, param in enumerate(self.parameter_range.keys()):
             if param in self.calibration_params:
-                # Set uniform priors for calibration params
+                # Set uniform priors for calibration parameters
                 min_val, max_val = self.parameter_range[param]
                 sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
                 full_params[0, i] = sampled_val
@@ -162,7 +162,7 @@ class HMCCalibrator(TorchDeviceMixin):
         Parameters
         ----------
         warmup_steps: int
-            Number warm up steps to run per chain (i.e., burn-in). These samples are
+            Number of warm up steps to run per chain (i.e., burn-in). These samples are
             discarded. Defaults to 500.
         num_samples: int
             Number of samples to draw after warm up. Defaults to 1000.
@@ -172,7 +172,7 @@ class HMCCalibrator(TorchDeviceMixin):
         Returns
         -------
         MCMC
-            The Pyro MCMC object. Use either `mcmc.summary()` or `mcmc.get_samples()`.
+            The Pyro MCMC object, methods include `summary()` and `get_samples()`.
         """
 
         nuts_kernel = NUTS(self.model)

@@ -187,8 +187,14 @@ class SensitivityAnalysis(ConversionMixin):
             DataFrame with columns:
                 - 'parameter': Input parameter name
                 - 'output': Output variable name
-                - 'S1', 'S2', 'ST': First, second, and total order sensitivity indices
-                - 'S1_conf', 'S2_conf', 'ST_conf': Confidence intervals for each index
+            If using Sobol, the columns include:
+                - 'index': S1, S2 or ST (first, second, and total order sensitivity)
+                - 'confidence': confidence intervals for each index
+            If using Morris, the columns include:
+                - 'mu'
+                - 'mu_star'
+                - 'sigma'
+                - 'mu_star_conf'
 
         Notes
         -----
@@ -259,10 +265,13 @@ class SensitivityAnalysis(ConversionMixin):
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)
 
     @staticmethod
-    def top_n_params(sa_results_df: pd.DataFrame, top_n: int) -> list:
+    def top_n_params(
+        sa_results_df: pd.DataFrame, top_n: int, sa_index: str = "ST"
+    ) -> list:
         """
         Return `top_n` most important parameters given sensitivity analysis
-        results dataframe.
+        results dataframe. In case of multiple outputs, averages over them
+        to rank the parameters.
 
         Parameters:
         -----------
@@ -270,6 +279,9 @@ class SensitivityAnalysis(ConversionMixin):
             Dataframe results by `SensitivityAnalysis().run()`
         top_n: int
             Number of parameters to return.
+        sa_index: str
+            Which sensitivity index to rank the parameters by. One of ["S1", "S2", "ST].
+
 
         Returns
         -------
@@ -285,9 +297,16 @@ class SensitivityAnalysis(ConversionMixin):
             )
             raise ValueError(msg)
 
-        st_results = sa_results_df[sa_results_df["index"] == "ST"]
+        if "index" in sa_results_df:
+            # ST = total sensitivity of an output to the input (includes interactions)
+            st_results = sa_results_df[sa_results_df["index"] == "ST"]
+        else:
+            st_results = sa_results_df
+
         return (
             st_results.groupby("parameter")["value"]
+            # each parameter is evalued against each output
+            # to rank parameters, average over how sensitive all outputs are to it
             .mean()
             .nlargest(top_n)
             .index.tolist()
