@@ -64,16 +64,23 @@ class HMCCalibrator(TorchDeviceMixin):
         self.emulator = emulator
         self.output_names = list(observations.keys())
 
-        self.observations = observations
-
-        # get number of observations
-        observation_lengths = [
-            output_obs.shape[0] for output_obs in observations.values()
-        ]
-        if len(set(observation_lengths)) != 1:
+        # check observation tensors are 1D (convert if 0D)
+        processed_observations = {}
+        obs_lengths = []
+        for output, obs in observations.items():
+            if obs.ndim == 0:
+                corrected_obs = obs.unsqueeze(0)
+            elif obs.ndim > 1:
+                raise ValueError(f"Tensor for output '{output}' is not 1D.")
+            else:
+                corrected_obs = obs
+            processed_observations[output] = corrected_obs
+            obs_lengths.append(obs.shape[0])
+        if len(set(obs_lengths)) != 1:
             msg = "All outputs must have the same number of observations."
             raise ValueError(msg)
-        self.n_observations = observation_lengths[0]
+        self.observations = processed_observations
+        self.n_observations = obs_lengths[0]
 
         # save observation noise as {output: value} dictionary
         if isinstance(observation_noise, float):

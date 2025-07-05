@@ -1,5 +1,3 @@
-import torch
-
 from autoemulate.experimental.calibration.hmc import HMCCalibrator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
@@ -19,14 +17,11 @@ def test_hmc_single_obs():
 
     # pick the first sim output as an observation
     observations = {
-        "distance": y[:1, 0].tolist(),
-        "impact_velocity": y[:1, 1].tolist(),
+        "distance": y[:1, 0],
+        "impact_velocity": y[:1, 1],
     }
     hmc = HMCCalibrator(gp, sim.parameters_range, observations, 1.0)
-
-    # check observations and noise shapes
-    assert torch.allclose(hmc.observations, y[:1, :].float())
-    assert torch.allclose(hmc.obs_noise, torch.tensor([1.0, 1.0]))
+    assert hmc.observation_noise == {"distance": 1.0, "impact_velocity": 1.0}
 
     # check samples are generates
     mcmc = hmc.run(warmup_steps=5, num_samples=5)
@@ -48,8 +43,8 @@ def test_hmc_multiple_obs():
 
     # pick the first 10 sim outputs as observations
     observations = {
-        "distance": y[:10, 0].tolist(),
-        "impact_velocity": y[:10, 1].tolist(),
+        "distance": y[:10, 0],
+        "impact_velocity": y[:10, 1],
     }
     hmc = HMCCalibrator(
         gp,
@@ -57,10 +52,7 @@ def test_hmc_multiple_obs():
         observations,
         observation_noise={"distance": 20.0, "impact_velocity": 10.0},
     )
-
-    # check observations and noise shapes
-    assert torch.allclose(hmc.observations, y[:10, :].float())
-    assert torch.allclose(hmc.obs_noise, torch.tensor([20.0, 10.0]))
+    assert hmc.observation_noise == {"distance": 20.0, "impact_velocity": 10.0}
 
     # check samples are generates
     mcmc = hmc.run(warmup_steps=5, num_samples=5)
