@@ -171,7 +171,11 @@ class HMCCalibrator(TorchDeviceMixin):
                 )
 
     def run_mcmc(
-        self, warmup_steps: int = 500, num_samples: int = 1000, num_chains: int = 1
+        self,
+        warmup_steps: int = 500,
+        num_samples: int = 1000,
+        num_chains: int = 1,
+        initial_params: dict[str, TensorLike] | None = None,
     ) -> MCMC:
         """
         Run MCMC sampling with NUTS sampler.
@@ -185,6 +189,9 @@ class HMCCalibrator(TorchDeviceMixin):
             Number of samples to draw after warm up. Defaults to 1000.
         num_chains: int
             Number of parallel chains to run. Defaults to 1.
+        initial_params: dict[str, TensorLike] | None
+            Optional dictionary specifiying initial values for each calibration
+            parameters. The list length must be the same as the number of chains.
 
         Returns
         -------
@@ -192,6 +199,7 @@ class HMCCalibrator(TorchDeviceMixin):
             The Pyro MCMC object, methods include `summary()` and `get_samples()`.
         """
 
+        # TODO: add checks for initial params
         nuts_kernel = NUTS(self.model)
         mcmc = MCMC(
             nuts_kernel,
@@ -199,7 +207,7 @@ class HMCCalibrator(TorchDeviceMixin):
             num_samples=num_samples,
             num_chains=num_chains,
             # If None, parameter init values for each chain are sampled from the prior.
-            initial_params=None,
+            initial_params=initial_params,
         )
         mcmc.run()
         return mcmc
