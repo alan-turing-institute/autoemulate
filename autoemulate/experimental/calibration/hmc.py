@@ -64,7 +64,7 @@ class HMCCalibrator(TorchDeviceMixin):
         self.emulator = emulator
         self.output_names = list(observations.keys())
 
-        # check observation tensors are 1D (convert if 0D)
+        # Check observation tensors are 1D (convert if 0D)
         processed_observations = {}
         obs_lengths = []
         for output, obs in observations.items():
@@ -75,14 +75,14 @@ class HMCCalibrator(TorchDeviceMixin):
             else:
                 corrected_obs = obs
             processed_observations[output] = corrected_obs
-            obs_lengths.append(obs.shape[0])
+            obs_lengths.append(corrected_obs.shape[0])
         if len(set(obs_lengths)) != 1:
             msg = "All outputs must have the same number of observations."
             raise ValueError(msg)
         self.observations = processed_observations
         self.n_observations = obs_lengths[0]
 
-        # save observation noise as {output: value} dictionary
+        # Save observation noise as {output: value} dictionary
         if isinstance(observation_noise, float):
             self.observation_noise = dict.fromkeys(self.output_names, observation_noise)
         elif isinstance(observation_noise, dict):
@@ -98,26 +98,27 @@ class HMCCalibrator(TorchDeviceMixin):
         Parameters
         ----------
         predict: bool
-            Once MCMC has been run, one can call this method to generate posterior
-            predictive samples. Defaults to False.
+            Indicates whether to make predictions rather than do inference with the
+            model. This is meant to be used in combination with MCMC samples to generate
+            posterior predictive samples. Defaults to False.
         """
 
-        # Set all input parameters, shape [1, n_inputs]
+        # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
         full_params = torch.zeros((1, len(self.parameter_range)), device=self.device)
 
         # Each param is either sampled (if calibrated) or set to a constant value
         for i, param in enumerate(self.parameter_range.keys()):
             if param in self.calibration_params:
-                # Set uniform priors for calibration parameters
+                # Sample from uniform prior
                 min_val, max_val = self.parameter_range[param]
                 sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
                 full_params[0, i] = sampled_val
             else:
-                # Set all other parameters to midpoint value in range
+                # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
                 full_params[0, i] = (min_val + max_val) / 2
 
-        # Emulator prediction
+        # Get emulator prediction
         output = self.emulator.predict(full_params)
         if isinstance(output, TensorLike):
             pred_mean = output
@@ -156,7 +157,7 @@ class HMCCalibrator(TorchDeviceMixin):
         initial_params: dict[str, TensorLike] | None = None,
     ) -> MCMC:
         """
-        Run MCMC sampling with NUTS sampler.
+        Run MCMC with NUTS sampler.
 
         Parameters
         ----------
@@ -169,7 +170,7 @@ class HMCCalibrator(TorchDeviceMixin):
             Number of parallel chains to run. Defaults to 1.
         initial_params: dict[str, TensorLike] | None
             Optional dictionary specifiying initial values for each calibration
-            parameter. The list length must be the same as the number of chains.
+            parameter per chain. The tensors must be of length `num_chains`.
 
         Returns
         -------
@@ -177,7 +178,17 @@ class HMCCalibrator(TorchDeviceMixin):
             The Pyro MCMC object. Methods include `summary()` and `get_samples()`.
         """
 
-        # TODO: add checks for initial params
+        # Check initial param values match number of chains
+        if initial_params is not None:
+            for param, init_vals in initial_params.items():
+                if init_vals.shape[0] != num_chains:
+                    msg = (
+                        "An initial value per chain must be provided, parameter "
+                        f"{param} tensor only has {init_vals.shape[0]} values."
+                    )
+                    raise ValueError(msg)
+
+        # Run NUTS
         nuts_kernel = NUTS(self.model)
         mcmc = MCMC(
             nuts_kernel,
@@ -219,7 +230,7 @@ class HMCCalibrator(TorchDeviceMixin):
         mcmc: MCMC
             The MCMC object.
         posterior_predictive: bool
-            Whether to include posterior predictive samples.
+            Whether to include posterior predictive samples. Defaults to False.
 
         Returns
         -------
