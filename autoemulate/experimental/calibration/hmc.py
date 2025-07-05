@@ -100,9 +100,9 @@ class HMCCalibrator(TorchDeviceMixin):
         Parameters
         ----------
         predict: bool
-            Indicates whether to make predictions rather than do inference with the
-            model. This is meant to be used in combination with MCMC samples to generate
-            posterior predictive samples. Defaults to False.
+            Indicates whether to sample without conditioning on data. This is meant to
+            be used in combination with MCMC samples to generate posterior predictive
+            samples. Defaults to False.
         """
 
         # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
@@ -139,7 +139,8 @@ class HMCCalibrator(TorchDeviceMixin):
                 pyro.sample(
                     output,
                     dist.MultivariateNormal(
-                        pred_mean[:, i], covariance_matrix=pred_cov
+                        pred_mean[:, i].expand(self.n_observations),
+                        covariance_matrix=pred_cov,
                     ),
                     obs=self.observations[output],
                 )
@@ -147,7 +148,8 @@ class HMCCalibrator(TorchDeviceMixin):
                 pyro.sample(
                     output,
                     dist.MultivariateNormal(
-                        pred_mean[:, i], covariance_matrix=pred_cov
+                        pred_mean[:, i].expand(self.n_observations),
+                        covariance_matrix=pred_cov,
                     ),
                 )
 
@@ -185,7 +187,7 @@ class HMCCalibrator(TorchDeviceMixin):
             for param, init_vals in initial_params.items():
                 if init_vals.shape[0] != num_chains:
                     msg = (
-                        "An initial value per chain must be provided, parameter "
+                        "An initial value must be provided for each chain, parameter "
                         f"{param} tensor only has {init_vals.shape[0]} values."
                     )
                     raise ValueError(msg)
