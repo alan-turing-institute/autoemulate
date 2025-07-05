@@ -170,7 +170,7 @@ class HMCCalibrator(TorchDeviceMixin):
                     ),
                 )
 
-    def run_mcmc(
+    def run(
         self,
         warmup_steps: int = 500,
         num_samples: int = 1000,

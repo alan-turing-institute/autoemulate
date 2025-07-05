@@ -29,7 +29,7 @@ def test_hmc_single_obs():
     assert torch.allclose(hmc.obs_noise, torch.tensor([1.0, 1.0]))
 
     # check samples are generates
-    mcmc = hmc.run_mcmc(warmup_steps=5, num_samples=5)
+    mcmc = hmc.run(warmup_steps=5, num_samples=5)
     samples = mcmc.get_samples()
     assert "c" in samples
     assert "v0" in samples
@@ -63,7 +63,7 @@ def test_hmc_multiple_obs():
     assert torch.allclose(hmc.obs_noise, torch.tensor([20.0, 10.0]))
 
     # check samples are generates
-    mcmc = hmc.run_mcmc(warmup_steps=5, num_samples=5)
+    mcmc = hmc.run(warmup_steps=5, num_samples=5)
     samples = mcmc.get_samples()
     assert "c" in samples
     assert "v0" in samples
