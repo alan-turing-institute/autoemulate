@@ -22,8 +22,8 @@ class HMCCalibrator(TorchDeviceMixin):
     def __init__(  # noqa: PLR0913
         self,
         emulator: Emulator,
-        parameter_range: dict[str, list[float]],
-        observations: dict[str, float] | dict[str, list[float]],
+        parameter_range: dict[str, tuple[float, float]],
+        observations: dict[str, TensorLike],
         observation_noise: float | dict[str, float] = 0.1,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
@@ -37,9 +37,9 @@ class HMCCalibrator(TorchDeviceMixin):
             Fitted Emulator object.
         parameters_range : dict[str, tuple[float, float]]
             A dictionary mapping input parameter names to their (min, max) ranges.
-        observations: dict[str, float] | dict[str, list[float]]
-            A dictionary of either a single value or a list of values per output.
-        observation_noise: float | dict[str, float]
+        observations: dict[str, TensorLike]
+            A dictionary of observations for each output.
+        observation_noise: float |  dict[str, float]
             A single value or a dictionary of values (one per output). Defaults to 0.1.
         calibration_params: list[str] | None
             Optional list of input parameters to calibrate. Any parameters that are not
@@ -63,54 +63,25 @@ class HMCCalibrator(TorchDeviceMixin):
         self.calibration_params = calibration_params
         self.emulator = emulator
         self.output_names = list(observations.keys())
-        self._process_observations(observations)
-        self._process_obs_noise(observation_noise)
 
-    def _process_observations(
-        self,
-        observations: dict[str, float] | dict[str, list[float]],
-    ):
-        """
-        Turn `observations` into tensor shaped [n_obs, n_ouputs], save attribute.
+        self.observations = observations
 
-        Parameters
-        ----------
-        observations: dict[str, float] | dict[str, list[float]]
-            A dictionary of either a single value or a list of values per output.
-        """
-
-        observation_values = [
-            (torch.tensor(value) if isinstance(value, list) else torch.tensor([value]))
-            for value in observations.values()
+        # get number of observations
+        observation_lengths = [
+            output_obs.shape[0] for output_obs in observations.values()
         ]
-        # shape: [n_obs, n_outputs]
-        self.observations = torch.stack(observation_values, dim=1).to(self.device)
+        if len(set(observation_lengths)) != 1:
+            msg = "All outputs must have the same number of observations."
+            raise ValueError(msg)
+        self.n_observations = observation_lengths[0]
 
-    def _process_obs_noise(
-        self,
-        observation_noise: float | dict[str, float] = 0.1,
-    ):
-        """
-        Convert `observation_noise` to tensor and save as attribute.
-
-        Parameters
-        ----------
-        observation_noise: float | dict[str, float]
-           A single value or a dictionary of values (one per output). Defaults to 0.1.
-        """
+        # save observation noise as {output: value} dictionary
         if isinstance(observation_noise, float):
-            # Broadcast to match output size
-            self.obs_noise = torch.full(
-                (self.observations.shape[1],), observation_noise
-            ).to(self.device)
+            self.observation_noise = dict.fromkeys(self.output_names, observation_noise)
         elif isinstance(observation_noise, dict):
-            # Ensure order matches self.observations
-            noise_values = [
-                torch.tensor(observation_noise[key]) for key in self.output_names
-            ]
-            self.obs_noise = torch.tensor(noise_values).to(self.device)
+            self.observation_noise = observation_noise
         else:
-            msg = "`observation_noise` must be a float or dict."
+            msg = "Noise must be either a float or a dictionary of floats."
             raise ValueError(msg)
 
     def model(self, predict: bool = False):
@@ -120,7 +91,7 @@ class HMCCalibrator(TorchDeviceMixin):
         Parameters
         ----------
         predict: bool
-            Once MCMC has been run, one can call this methods to generate posterior
+            Once MCMC has been run, one can call this method to generate posterior
             predictive samples. Defaults to False.
         """
 
@@ -151,16 +122,16 @@ class HMCCalibrator(TorchDeviceMixin):
 
         # MultivariateNormal likelihood over observations (diagonal covariance)
         for i, output in enumerate(self.output_names):
-            pred_cov = self.obs_noise[i] * torch.eye(self.observations.shape[0]).to(
-                self.device
-            )
+            pred_cov = self.observation_noise[output] * torch.eye(
+                self.n_observations
+            ).to(self.device)
             if not predict:
                 pyro.sample(
                     output,
                     dist.MultivariateNormal(
                         pred_mean[:, i], covariance_matrix=pred_cov
                     ),
-                    obs=self.observations[:, i],
+                    obs=self.observations[output],
                 )
             else:
                 pyro.sample(
@@ -191,12 +162,12 @@ class HMCCalibrator(TorchDeviceMixin):
             Number of parallel chains to run. Defaults to 1.
         initial_params: dict[str, TensorLike] | None
             Optional dictionary specifiying initial values for each calibration
-            parameters. The list length must be the same as the number of chains.
+            parameter. The list length must be the same as the number of chains.
 
         Returns
         -------
         MCMC
-            The Pyro MCMC object, methods include `summary()` and `get_samples()`.
+            The Pyro MCMC object. Methods include `summary()` and `get_samples()`.
         """
 
         # TODO: add checks for initial params
@@ -234,7 +205,7 @@ class HMCCalibrator(TorchDeviceMixin):
         self, mcmc: MCMC, posterior_predictive: bool = False
     ) -> az.data.inference_data.InferenceData:
         """
-        Convert MCMC object to Arviz InferenceData object to enable plotting.
+        Convert MCMC object to Arviz InferenceData object for plotting.
 
         Parameters
         ----------
