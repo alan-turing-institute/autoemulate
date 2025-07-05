@@ -2,12 +2,38 @@ from autoemulate.experimental.calibration.hmc import HMCCalibrator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
-from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
+from autoemulate.experimental.simulations.projectile import (
+    Projectile,
+    ProjectileMultioutput,
+)
 
 
-def test_hmc_single_obs():
+def test_hmc_single_output():
     """
-    Test HMC with single observation per output.
+    Test HMC with single output (single observation).
+    """
+    sim = Projectile()
+    x = sim.sample_inputs(100)
+    y = sim.forward_batch(x)
+    gp = GaussianProcessExact(x, y)
+    gp.fit(x, y)
+
+    # pick the first sim output as an observation
+    observations = {"distance": y[0]}
+    hmc = HMCCalibrator(gp, sim.parameters_range, observations, 1.0)
+    assert hmc.observation_noise == {"distance": 1.0}
+
+    # check samples are generates
+    mcmc = hmc.run(warmup_steps=5, num_samples=5)
+    samples = mcmc.get_samples()
+    assert "c" in samples
+    assert "v0" in samples
+    assert samples["c"].shape[0] == 5
+
+
+def test_hmc_multiple_output():
+    """
+    Test HMC with multiple outputs (single observation per output).
     """
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)

@@ -47,6 +47,8 @@ class HMCCalibrator(TorchDeviceMixin):
             will calibrate all input parameters. Defaults to None.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
+            TODO: do we need to do anything more to ensure the device is correctly
+            handled for the pyro model?
 
         Notes
         -----
