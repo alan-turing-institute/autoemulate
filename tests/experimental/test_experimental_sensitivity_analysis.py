@@ -142,6 +142,11 @@ def test_sobol_analysis_2d(model_2d):
     assert "y1" in list(df["output"].unique())
     assert "y2" in list(df["output"].unique())
 
+    assert len(sa.top_n_sobol_params(df, 1)) == 1
+    assert len(sa.top_n_sobol_params(df, 2)) == 2
+    assert sa.top_n_sobol_params(df, 1)[0] == "c"
+    assert sa.top_n_sobol_params(df, 2)[-1] == "v0"
+
 
 # test _generate_problem -----------------------------------------------------
 
