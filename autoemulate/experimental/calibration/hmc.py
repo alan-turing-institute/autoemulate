@@ -62,8 +62,9 @@ class HMCCalibrator(TorchDeviceMixin):
             calibration_params = list(parameter_range.keys())
         self.calibration_params = calibration_params
         self.emulator = emulator
+        self.output_names = list(observations.keys())
         self._process_observations(observations)
-        self._process_obs_noise(list(observations.keys()), observation_noise)
+        self._process_obs_noise(observation_noise)
 
     def _process_observations(
         self,
@@ -87,7 +88,6 @@ class HMCCalibrator(TorchDeviceMixin):
 
     def _process_obs_noise(
         self,
-        output_names: list[str],
         observation_noise: float | dict[str, float] = 0.1,
     ):
         """
@@ -95,8 +95,6 @@ class HMCCalibrator(TorchDeviceMixin):
 
         Parameters
         ----------
-        output_names: list[str]
-            Names of output parameters in order of `self.observations`.
         observation_noise: float | dict[str, float]
            A single value or a dictionary of values (one per output). Defaults to 0.1.
         """
@@ -108,7 +106,7 @@ class HMCCalibrator(TorchDeviceMixin):
         elif isinstance(observation_noise, dict):
             # Ensure order matches self.observations
             noise_values = [
-                torch.tensor(observation_noise[key]) for key in output_names
+                torch.tensor(observation_noise[key]) for key in self.output_names
             ]
             self.obs_noise = torch.tensor(noise_values).to(self.device)
         else:
@@ -151,19 +149,25 @@ class HMCCalibrator(TorchDeviceMixin):
             msg = "The emulator did not return a tensor or a distribution object."
             raise ValueError(msg)
 
-        # MultivariateNormal likelihood over outputs (diagonal covariance)
-        pred_cov = torch.diag(self.obs_noise.to(self.device))
-        for i in range(self.observations.shape[0]):
+        # MultivariateNormal likelihood over observations (diagonal covariance)
+        for i, output in enumerate(self.output_names):
+            pred_cov = self.obs_noise[i] * torch.eye(self.observations.shape[0]).to(
+                self.device
+            )
             if not predict:
                 pyro.sample(
-                    f"obs_{i}",
-                    dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
-                    obs=self.observations[i],
+                    output,
+                    dist.MultivariateNormal(
+                        pred_mean[:, i], covariance_matrix=pred_cov
+                    ),
+                    obs=self.observations[:, i],
                 )
             else:
                 pyro.sample(
-                    f"obs_{i}",
-                    dist.MultivariateNormal(pred_mean, covariance_matrix=pred_cov),
+                    output,
+                    dist.MultivariateNormal(
+                        pred_mean[:, i], covariance_matrix=pred_cov
+                    ),
                 )
 
     def run_mcmc(
@@ -218,7 +222,9 @@ class HMCCalibrator(TorchDeviceMixin):
         posterior_predictive = Predictive(self.model, posterior_samples)
         return posterior_predictive(predict=True)
 
-    def to_arviz(self, mcmc: MCMC) -> az.data.inference_data.InferenceData:
+    def to_arviz(
+        self, mcmc: MCMC, posterior_predictive: bool = False
+    ) -> az.data.inference_data.InferenceData:
         """
         Convert MCMC object to Arviz InferenceData object to enable plotting.
 
@@ -226,13 +232,14 @@ class HMCCalibrator(TorchDeviceMixin):
         ----------
         mcmc: MCMC
             The MCMC object.
+        posterior_predictive: bool
+            Whether to include posterior predictive samples.
 
         Returns
         -------
         az.data.inference_data.InferenceData
         """
-        # TODO: anything else we want to include here?
-        # I tried optionally including posterior predictive samples but Arviz expects
-        # them to be dimension [n_chains, n_samples] or that flattened whereas ours
-        # are [n_samples, n_outputs]
-        return az.from_pyro(mcmc)
+        pp_samples = None
+        if posterior_predictive:
+            pp_samples = self.posterior_predictive(mcmc)
+        return az.from_pyro(mcmc, posterior_predictive=pp_samples)
