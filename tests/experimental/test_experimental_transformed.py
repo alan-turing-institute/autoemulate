@@ -2,15 +2,11 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators import (
-    ALL_EMULATORS as DEFAULT_EMULATORS,
-)
-from autoemulate.experimental.emulators import (
+    ALL_EMULATORS,
     GaussianProcessExact,
 )
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
-from autoemulate.experimental.emulators.ensemble import EnsembleMLP, EnsembleMLPDropout
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -26,16 +22,8 @@ from autoemulate.experimental.types import (
     TensorLike,
 )
 
-# TODO: update once #579 completeed
-ALL_EMULATORS = [
-    emulator
-    for emulator in DEFAULT_EMULATORS
-    if emulator not in [EnsembleMLP, EnsembleMLPDropout]
-]
-
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):
-    set_random_seed(0)
     x, y = train_data
     x2, _ = test_data
     em = TransformedEmulator(
@@ -57,13 +45,19 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
             None,
-            # [StandardizeTransform(), PCATransform(n_components=3)],
-            # [StandardizeTransform(), VAETransform(latent_dim=3)],
+            [PCATransform(n_components=3)],
+            [VAETransform(latent_dim=3)],
+            [
+                StandardizeTransform(),
+                PCATransform(n_components=3),
+                VAETransform(latent_dim=2),
+            ],
         ],
         [
             None,
-            [StandardizeTransform()],
+            [PCATransform(n_components=1)],
             [StandardizeTransform(), PCATransform(n_components=1)],
+            [VAETransform(latent_dim=1)],
             [StandardizeTransform(), VAETransform(latent_dim=1)],
         ],
     ),
@@ -81,15 +75,18 @@ def test_transformed_emulator(
         [
             None,
             [StandardizeTransform()],
-            [StandardizeTransform(), PCATransform(n_components=3)],
-            [StandardizeTransform(), VAETransform(latent_dim=3)],
+            [PCATransform(n_components=3)],
+            [VAETransform(latent_dim=3)],
+            [
+                StandardizeTransform(),
+                PCATransform(n_components=3),
+                VAETransform(latent_dim=2),
+            ],
         ],
         [
-            # TODO: PCA/VAE both require StandardizeTransform for numerical stability
-            # e.g. "ValueError: Input tensor y contains non-finite values"
-            # TODO: check error when no target transforms are provided
+            # TODO: revisit failing case with largr number of targets and no transforms
             # None,
-            # [StandardizeTransform()],
+            [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=10)],
             [StandardizeTransform(), PCATransform(n_components=20)],
             [StandardizeTransform(), VAETransform(latent_dim=10)],
@@ -120,15 +117,18 @@ def test_transformed_emulator_100_targets(
         [
             None,
             [StandardizeTransform()],
-            [StandardizeTransform(), PCATransform(n_components=3)],
-            [StandardizeTransform(), VAETransform(latent_dim=3)],
+            [PCATransform(n_components=3)],
+            [VAETransform(latent_dim=3)],
+            [
+                StandardizeTransform(),
+                PCATransform(n_components=3),
+                VAETransform(latent_dim=2),
+            ],
         ],
         [
-            # TODO: PCA/VAE both require StandardizeTransform for numerical stability
-            # e.g. "ValueError: Input tensor y contains non-finite values"
-            # TODO: check error when no target transforms are provided
+            # TODO: revisit failing case with largr number of targets and no transforms
             # None,
-            # [StandardizeTransform()],
+            [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=10)],
             [StandardizeTransform(), PCATransform(n_components=20)],
             [StandardizeTransform(), VAETransform(latent_dim=10)],

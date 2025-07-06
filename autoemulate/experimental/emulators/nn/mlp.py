@@ -201,7 +201,7 @@ class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
         # Ensure positive variance
         diag_idxs = torch.arange(self.num_tasks)
         diag = (
-            torch.nn.functional.softplus(scale_tril[..., diag_idxs, diag_idxs]) + 1e-5
+            torch.nn.functional.softplus(scale_tril[..., diag_idxs, diag_idxs]) + 1e-6
         )
         scale_tril[..., diag_idxs, diag_idxs] = diag
 

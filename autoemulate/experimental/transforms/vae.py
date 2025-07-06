@@ -149,6 +149,9 @@ class VAETransform(AutoEmulateTransform):
         # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
         self._check_is_fitted()
         assert self.vae is not None
+        # Ensure the input tensor requires gradient for jacobian computation
+        if not y.requires_grad:
+            y = y.detach().clone().requires_grad_(True)
         jacobian = torch.autograd.functional.jacobian(self.vae.decode, y)
         assert isinstance(jacobian, TensorLike)
         return jacobian
