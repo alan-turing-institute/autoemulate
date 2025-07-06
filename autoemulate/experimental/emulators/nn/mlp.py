@@ -3,6 +3,7 @@ from torch import nn, optim
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import DeviceLike, GaussianLike, TensorLike
 
 from ..base import DropoutTorchBackend, GaussianEmulator
@@ -147,7 +148,13 @@ class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
         x, y = self._convert_to_tensors(x, y)
 
         # Construct the MLP layers
-        layer_dims = [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
+        # Total params required for last layer: mean + tril covariance
+        num_params = y.shape[1] + (y.shape[1] * (y.shape[1] + 1)) // 2
+        layer_dims = (
+            [x.shape[1], *layer_dims]
+            if layer_dims
+            else [x.shape[1], 4 * num_params, 2 * num_params]
+        )
         layers = []
         for idx, dim in enumerate(layer_dims[1:]):
             layers.append(nn.Linear(layer_dims[idx], dim, device=self.device))
@@ -156,15 +163,7 @@ class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
                 layers.append(nn.Dropout(p=dropout_prob))
 
         # Add final layer without activation
-        num_tasks = y.shape[1]
-        layers.append(
-            nn.Linear(
-                layer_dims[-1],
-                # mean + covariance parameters
-                num_tasks + (num_tasks * (num_tasks + 1)) // 2,
-                device=self.device,
-            )
-        )
+        layers.append(nn.Linear(layer_dims[-1], num_params, device=self.device))
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization
@@ -207,7 +206,8 @@ class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
 
         covariance_matrix = scale_tril @ scale_tril.transpose(-1, -2)
 
-        return GaussianLike(mean, covariance_matrix)
+        # TODO: for large covariance martrices, numerical instability remains
+        return GaussianLike(mean, make_positive_definite(covariance_matrix))
 
     def loss_func(self, y_pred, y_true):
         return -y_pred.log_prob(y_true).mean()

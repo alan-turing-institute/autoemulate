@@ -16,5 +16,4 @@ ALL_EMULATORS = [
     MLP,
     EnsembleMLP,
     EnsembleMLPDropout,
-    # GaussianMLP,
 ]
