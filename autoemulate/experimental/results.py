@@ -1,5 +1,7 @@
 from typing import Any
 
+import pandas as pd
+
 from autoemulate.experimental.emulators.base import Emulator
 
 
@@ -31,8 +33,25 @@ class Results:
             results = []
         self.results = results
 
-    # Equivalent of summarize_cv but with test data included
-    # def summarize(self, ...) -> pd.DataFrame: ...
+    def summarize(self) -> pd.DataFrame:
+        """
+        Summarize the results in a DataFrame.
+        Returns:
+            pd.DataFrame: DataFrame with columns:
+            ['id', 'model', 'config', 'r2_score', 'rmse_score'].
+        TODO: include test data
+        """
+        data = {
+            "id": [result.id for result in self.results],
+            # TODO: if the id is changed to not include the model name,
+            # we can include the model name in the DataFrame.
+            # "model": [result.model.__class__.__name__ for result in self.results],
+            "r2_score": [result.r2_score for result in self.results],
+            "rmse_score": [result.rmse_score for result in self.results],
+        }
+        return pd.DataFrame(data)
+
+    summarise = summarize
 
     # def plot_compare(self, ...): ...
 
