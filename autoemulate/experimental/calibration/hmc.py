@@ -100,9 +100,8 @@ class HMCCalibrator(TorchDeviceMixin):
         Parameters
         ----------
         predict: bool
-            Indicates whether to sample without conditioning on data. This is meant to
-            be used in combination with MCMC samples to generate posterior predictive
-            samples. Defaults to False.
+            Indicates whether to sample without conditioning on data. This is used to
+            generate posterior predictive samples. Defaults to False.
         """
 
         # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
@@ -113,8 +112,7 @@ class HMCCalibrator(TorchDeviceMixin):
             if param in self.calibration_params:
                 # Sample from uniform prior
                 min_val, max_val = self.parameter_range[param]
-                sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
-                full_params[0, i] = sampled_val
+                full_params[0, i] = pyro.sample(param, dist.Uniform(min_val, max_val))
             else:
                 # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
@@ -130,27 +128,21 @@ class HMCCalibrator(TorchDeviceMixin):
             msg = "The emulator did not return a tensor or a distribution object."
             raise ValueError(msg)
 
-        # MultivariateNormal likelihood over observations (diagonal covariance)
+        # Use MultivariateNormal likelihood to handle multiple observations
+        diag = torch.eye(self.n_observations).to(self.device)
         for i, output in enumerate(self.output_names):
-            pred_cov = self.observation_noise[output] * torch.eye(
-                self.n_observations
-            ).to(self.device)
+            mvn_mean = pred_mean[:, i].expand(self.n_observations)
+            mvn_cov = self.observation_noise[output] * diag
             if not predict:
                 pyro.sample(
                     output,
-                    dist.MultivariateNormal(
-                        pred_mean[:, i].expand(self.n_observations),
-                        covariance_matrix=pred_cov,
-                    ),
+                    dist.MultivariateNormal(mvn_mean, covariance_matrix=mvn_cov),
                     obs=self.observations[output],
                 )
             else:
                 pyro.sample(
                     output,
-                    dist.MultivariateNormal(
-                        pred_mean[:, i].expand(self.n_observations),
-                        covariance_matrix=pred_cov,
-                    ),
+                    dist.MultivariateNormal(mvn_mean, covariance_matrix=mvn_cov),
                 )
 
     def run(
