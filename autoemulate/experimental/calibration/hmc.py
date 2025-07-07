@@ -2,7 +2,8 @@ import arviz as az
 import pyro
 import pyro.distributions as dist
 import torch
-from pyro.infer import MCMC, NUTS, Predictive
+from pyro.infer import HMC, MCMC, NUTS, Predictive
+from pyro.infer.mcmc import RandomWalkKernel
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
@@ -94,6 +95,25 @@ class MCMC_calibration(TorchDeviceMixin):
             msg = "Noise must be either a float or a dictionary of floats."
             raise ValueError(msg)
 
+    def _get_kernel(self, sampler: str, **sampler_kwargs):
+        """Get the appropriate MCMC kernel based on sampler choice."""
+        sampler = sampler.lower()
+
+        if sampler == "nuts":
+            return NUTS(self.model, **sampler_kwargs)
+        if sampler == "hmc":
+            step_size = sampler_kwargs.pop("step_size", 0.01)
+            trajectory_length = sampler_kwargs.pop("trajectory_length", 1.0)
+            return HMC(
+                self.model,
+                step_size=step_size,
+                trajectory_length=trajectory_length,
+                **sampler_kwargs,
+            )
+        if sampler == "metropolis":
+            return RandomWalkKernel(self.model, **sampler_kwargs)
+        raise ValueError(f"Unknown sampler: {sampler}")
+
     def model(self, predict: bool = False):
         """
         Pyro model.
@@ -157,6 +177,8 @@ class MCMC_calibration(TorchDeviceMixin):
         num_samples: int = 1000,
         num_chains: int = 1,
         initial_params: dict[str, TensorLike] | None = None,
+        sampler: str = "nuts",
+        **sampler_kwargs,
     ) -> MCMC:
         """
         Run MCMC with NUTS sampler.
@@ -184,7 +206,6 @@ class MCMC_calibration(TorchDeviceMixin):
 
         if initial_params is not None:
             for param, init_vals in initial_params.items():
-                init_vals = torch.as_tensor(init_vals, device=self.device)
                 if init_vals.shape[0] != num_chains:
                     msg = (
                         "An initial value must be provided for each chain, parameter "
@@ -193,13 +214,14 @@ class MCMC_calibration(TorchDeviceMixin):
                     raise ValueError(msg)
 
         # Run NUTS
-        nuts_kernel = NUTS(self.model)
+        kernel = self._get_kernel(sampler, **sampler_kwargs)
         mcmc = MCMC(
-            nuts_kernel,
+            kernel,
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            # If None, parameter init values for each chain are sampled from the prior.
+            # If None, parameter init values for each chain
+            # are sampled from the prior.
             initial_params=initial_params,
         )
         mcmc.run()
