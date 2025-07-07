@@ -2,14 +2,13 @@ import logging
 import warnings
 from typing import Any
 
-import numpy as np
-from sklearn.model_selection import BaseCrossValidator, KFold
+import torchmetrics
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.model_selection import cross_validate
+from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
 
@@ -81,8 +80,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     def compare(
         self,
         n_iter: int = 10,
-        cv: type[BaseCrossValidator] = KFold,
-        cv_seed: int | None = None,
     ) -> dict[str, dict[str, Any]]:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         models_evaluated = {}
@@ -90,20 +87,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             scores, configs = tuner.run(model_cls)
             best_score_idx = scores.index(max(scores))
             best_model_config = configs[best_score_idx]
-            cv_results = cross_validate(
-                cv=cv(
-                    random_state=cv_seed  # type: ignore PGH003
-                ),
-                dataset=self.train_val.dataset,
-                model=model_cls,
-                random_seed=None,  # Does not need to be set the same for each model
-                **best_model_config,
-            )
-            r2_score, rmse_score = (
-                np.mean(cv_results["r2"]),
-                np.mean(cv_results["rmse"]),
+
+            val_x, val_y = self._convert_to_tensors(self.train_val)
+            test_x, test_y = self._convert_to_tensors(self.test)
+            m = model_cls(val_x, val_y, device=self.device, **best_model_config)
+            m.fit(val_x, val_y)
+            y_pred = m.predict(test_x)
+            r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
+            rmse_score = evaluate(
+                test_y, y_pred, torchmetrics.MeanSquaredError, self.device
             )
             models_evaluated[model_cls.__name__] = {
+                "model_type": model_cls.__name__,
                 "config": best_model_config,
                 "r2_score": r2_score,
                 "rmse_score": rmse_score,
