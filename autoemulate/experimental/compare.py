@@ -13,7 +13,7 @@ from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
 
 
-class AutoEmulate(ConversionMixin, TorchDeviceMixin):
+class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def __init__(
         self,
         x: InputLike,
@@ -22,6 +22,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
     ):
+        Results.__init__(self)
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
@@ -91,7 +92,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         n_iter: int = 10,
     ):
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
-        results = Results()
         for id_num, model_cls in enumerate(self.models):
             scores, configs = tuner.run(model_cls)
             best_score_idx = scores.index(max(scores))
@@ -115,12 +115,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 r2_score=r2_score,
                 rmse_score=rmse_score,
             )
-            results.results.append(result)
+            self.results.append(result)
             self.log_compare(
                 model_cls, best_config_for_this_model, r2_score, rmse_score
             )
-        self.results = results
-        self.best_result = results.best_result()
 
     # def plot_eval(self, result_id: str, y_test=None, y_pred=None):
     #     """
