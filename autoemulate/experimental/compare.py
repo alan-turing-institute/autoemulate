@@ -83,7 +83,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     ) -> Results:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         results = Results()
-        for model_cls in self.models:
+        for id_num, model_cls in enumerate(self.models):
             scores, configs = tuner.run(model_cls)
             best_score_idx = scores.index(max(scores))
             best_model_config = configs[best_score_idx]
@@ -98,7 +98,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 test_y, y_pred, torchmetrics.MeanSquaredError, self.device
             )
             result = Result(
-                id=model_cls.__name__ + "_" + str(n_iter),
+                id=model_cls.__name__ + str(id_num),
                 model=m,
                 config=best_model_config,
                 r2_score=r2_score,
