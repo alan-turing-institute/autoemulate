@@ -1,6 +1,5 @@
 import logging
 import warnings
-from typing import Any
 
 import torchmetrics
 
@@ -9,6 +8,7 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.model_selection import evaluate
+from autoemulate.experimental.results import Result, Results
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
 
@@ -80,9 +80,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     def compare(
         self,
         n_iter: int = 10,
-    ) -> dict[str, dict[str, Any]]:
+    ) -> Results:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
-        models_evaluated = {}
+        results = Results()
         for model_cls in self.models:
             scores, configs = tuner.run(model_cls)
             best_score_idx = scores.index(max(scores))
@@ -97,11 +97,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             rmse_score = evaluate(
                 test_y, y_pred, torchmetrics.MeanSquaredError, self.device
             )
-            models_evaluated[model_cls.__name__] = {
-                "model_type": model_cls.__name__,
-                "config": best_model_config,
-                "r2_score": r2_score,
-                "rmse_score": rmse_score,
-            }
+            result = Result(
+                id=model_cls.__name__ + "_" + str(n_iter),
+                model=m,
+                config=best_model_config,
+                r2_score=r2_score,
+                rmse_score=rmse_score,
+            )
+            results.results.append(result)
             self.log_compare(model_cls, best_model_config, r2_score, rmse_score)
-        return models_evaluated
+        return results
