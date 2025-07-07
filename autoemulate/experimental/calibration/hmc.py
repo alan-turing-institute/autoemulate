@@ -126,23 +126,22 @@ class MCMC_calibration(TorchDeviceMixin):
         """
 
         # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
-        full_params = torch.zeros((1, len(self.parameter_range)), device=self.device)
-
+        param_list = []
         # Each param is either sampled (if calibrated) or set to a constant value
         for i, param in enumerate(self.parameter_range.keys()):
             if param in self.calibration_params:
                 # Sample from uniform prior
                 min_val, max_val = self.parameter_range[param]
-                sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
-                full_params[0, i] = sampled_val.to(self.device)
+                param_list.append(pyro.sample(param, dist.Uniform(min_val, max_val)))
 
             else:
                 # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
-                full_params[0, i] = torch.tensor(
-                    (min_val + max_val) / 2, device=self.device
+                param_list.append(
+                    (min_val + max_val) / 2
                 )
-
+        full_params = torch.stack(param_list, dim=0).unsqueeze(0)
+        print(full_params.requires_grad)
         # Get emulator prediction
         output = self.emulator.predict(full_params)
         if isinstance(output, TensorLike):
