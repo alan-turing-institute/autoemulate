@@ -265,4 +265,21 @@ class MCMC_calibration(TorchDeviceMixin):
         pp_samples = None
         if posterior_predictive:
             pp_samples = self.posterior_predictive(mcmc)
-        return az.from_pyro(mcmc, posterior_predictive=pp_samples)
+
+        # need to create dataset manually for Metropolis Hastings
+        # this is because az.from_pyro expects kernal with `divergences`
+        if isinstance(mcmc.kernel, RandomWalkKernel):
+            if posterior_predictive:
+                az_data = az.InferenceData(
+                    posterior=az.convert_to_dataset(mcmc.get_samples()),
+                    posterior_predictive=az.convert_to_dataset(pp_samples),
+                    observed_data=az.convert_to_dataset(self.observations),
+                )
+            else:
+                az_data = az.InferenceData(
+                    posterior=az.convert_to_dataset(mcmc.get_samples()),
+                )
+        else:
+            az_data = az.from_pyro(mcmc, posterior_predictive=pp_samples)
+
+        return az_data
