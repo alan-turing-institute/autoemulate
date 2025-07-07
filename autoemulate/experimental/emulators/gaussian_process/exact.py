@@ -23,6 +23,10 @@ from autoemulate.emulators.gaussian_process import (
     rq_kernel,
     zero_mean,
 )
+from autoemulate.experimental.callbacks.early_stopping import (
+    EarlyStopping,
+    EarlyStoppingException,
+)
 from autoemulate.experimental.data.preprocessors import Preprocessor, Standardizer
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
@@ -58,6 +62,7 @@ class GaussianProcessExact(
         batch_size: int = 16,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
+        early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
     ):
         # Init device
@@ -116,6 +121,7 @@ class GaussianProcessExact(
         self.lr = lr
         self.batch_size = batch_size
         self.activation = activation
+        self.early_stopping = early_stopping
         self.to(self.device)
 
     @staticmethod
@@ -160,6 +166,12 @@ class GaussianProcessExact(
         # Set the training data in case changed since init
         self.set_train_data(x, y, strict=False)
 
+        # Initialize early stopping
+        if self.early_stopping is not None:
+            self.early_stopping.on_train_begin()
+
+        # Avoid `"epoch" is possibly unbound` type error at the end
+        epoch = 0
         for epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)
@@ -169,6 +181,17 @@ class GaussianProcessExact(
             loss.backward()
             self.log_epoch(epoch, loss)
             optimizer.step()
+
+            if self.early_stopping is not None:
+                try:
+                    # TODO: use validation loss instead, see #589
+                    self.early_stopping.on_epoch_end(self, epoch, loss.item())
+                except EarlyStoppingException:
+                    # EarlyStopping prints a message if this happens
+                    break
+
+        if self.early_stopping is not None:
+            self.early_stopping.on_train_end(self, epoch)
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()

@@ -1,7 +1,7 @@
-import numpy as np
 from torchmetrics import R2Score
 from tqdm import tqdm
 
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
@@ -12,7 +12,6 @@ from autoemulate.experimental.types import (
     InputLike,
     ModelConfig,
     TensorLike,
-    TuneConfig,
 )
 
 
@@ -36,6 +35,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         y: InputLike | None,
         n_iter: int = 10,
         device: DeviceLike | None = None,
+        random_seed: int | None = None,
     ):
         TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter
@@ -50,6 +50,9 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
 
         # Q: should users be able to choose a different validation metric?
         self.metric = R2Score
+
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
 
     def run(
         self,
@@ -80,18 +83,13 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         val_y: TensorLike
         val_x, val_y = next(iter(val_loader))
 
-        # get all the available hyperparameter options
-        tune_config: TuneConfig = model_class.get_tune_config()
-
         # keep track of what parameter values tested and how they performed
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
         for _ in tqdm(range(self.n_iter)):
             # randomly sample hyperparameters and instantiate model
-            model_config: ModelConfig = {
-                k: v[np.random.randint(len(v))] for k, v in tune_config.items()
-            }
+            model_config = model_class.get_random_config()
 
             transformed_emulator = TransformedEmulator(
                 train_x,
