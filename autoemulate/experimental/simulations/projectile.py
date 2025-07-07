@@ -19,7 +19,7 @@ class Projectile(Simulator):
         output_names=None,
     ):
         if param_ranges is None:
-            param_ranges = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
+            param_ranges =  {"c": (-2.0, 1.0), "v0": (20.0, 100), "angle": (0.0, 90.0), "h0": (0.0, 10.0)}
         if output_names is None:
             output_names = ["distance"]
         super().__init__(param_ranges, output_names)
@@ -53,7 +53,7 @@ class ProjectileMultioutput(Simulator):
         output_names=None,
     ):
         if param_ranges is None:
-            param_ranges = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
+            param_ranges =  {"c": (-2.0, 1.0), "v0": (20.0, 100), "angle": (0.0, 90.0), "h0": (0.0, 10.0)}
         if output_names is None:
             output_names = ["distance", "impact_velocity"]
         super().__init__(param_ranges, output_names)
