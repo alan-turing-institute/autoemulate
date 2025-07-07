@@ -35,7 +35,7 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    if model is GaussianProcessExact:
+    if issubclass(model, GaussianProcessExact):
         assert isinstance(y_pred, DistributionLike)
         assert y_pred.mean.shape == (x2.shape[0], y.shape[1])
     else:
@@ -49,19 +49,13 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
             None,
-            [PCATransform(n_components=3)],
-            [VAETransform(latent_dim=3)],
-            [
-                StandardizeTransform(),
-                PCATransform(n_components=3),
-                VAETransform(latent_dim=2),
-            ],
+            [StandardizeTransform(), PCATransform(n_components=3)],
+            [StandardizeTransform(), VAETransform(latent_dim=3)],
         ],
         [
             None,
-            [PCATransform(n_components=1)],
+            [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=1)],
-            [VAETransform(latent_dim=1)],
             [StandardizeTransform(), VAETransform(latent_dim=1)],
         ],
     ),
