@@ -115,7 +115,7 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
         """
         self._check_is_fitted()
-        return self._basis_matrix.repeat(y.shape[0], 1, 1)
+        return self._basis_matrix.expand(y.shape[0], 1, 1)
 
     def _inverse_sample_gaussian_like(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
@@ -302,7 +302,7 @@ def _inverse_sample_gaussian_like(
         raise NotImplementedError(msg)
 
     # Sample from the distribution `y` and apply the transformation `c`
-    samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+    samples = torch.vmap(c)(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
     assert isinstance(samples, TensorLike)
 
     # Compute the mean and covariance of the samples
