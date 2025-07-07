@@ -54,6 +54,17 @@ class Results:
 
     summarise = summarize
 
+    def best_result(self) -> Result:
+        """
+        Get the model with the best result based on the highest R2 score.
+        Returns:
+            Result: The result with the highest R2 score.
+        """
+        if not self.results:
+            msg = "No results available. Please run AutoEmulate.compare() first."
+            raise ValueError(msg)
+        return max(self.results, key=lambda r: r.r2_score)
+
     # def plot_compare(self, ...): ...
 
     # def get_best_model(self, ...) -> Emulator:
