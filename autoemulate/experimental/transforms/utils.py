@@ -5,7 +5,7 @@ from linear_operator.utils.warnings import NumericalWarning
 
 
 def make_positive_definite(
-    cov, epsilon=1e-6, min_eigval=1e-6, max_tries_epsilon=3, max_tries_min_eigval=1
+    cov, epsilon=1e-6, min_eigval=1e-6, max_tries_epsilon=3, max_tries_min_eigval=5
 ):
     """Ensure a covariance matrix is positive definite by:
         1. adding `epsilon` to the diagonal and symmetrizing the matrix
