@@ -1,6 +1,5 @@
 from typing import Any
 
-# import matplotlib.pyplot as plt
 import pandas as pd
 
 from autoemulate.experimental.emulators.base import Emulator
@@ -21,25 +20,6 @@ class Result:
         self.r2_score = r2_score
         self.rmse_score = rmse_score
 
-    # def plot(self, y_test, y_pred):
-    #     """
-    #     Plot the evaluation results of the model on the test data.
-    #     """
-    #     plt.figure(figsize=(10, 6))
-    #     plt.scatter(y_test, y_pred, alpha=0.5)
-    #     plt.plot(
-    #         [y_test.min(), y_test.max()],
-    #         [y_test.min(), y_test.max()],
-    #         color="red",
-    #         linestyle="--",
-    #     )
-    #     plt.xlabel("True Values")
-    #     plt.ylabel("Predictions")
-    #     t = f"Model: {self.id} - R2: {self.r2_score:.3f}, RMSE: {self.rmse_score:.3f}"
-    #     plt.title(t)
-    #     plt.grid()
-    #     plt.show()
-
 
 class Results:
     def __init__(
@@ -53,6 +33,10 @@ class Results:
 
     def _update_index(self):
         self._id_to_result = {result.id: result for result in self.results}
+
+    def add_result(self, result: Result):
+        self.results.append(result)
+        self._update_index()
 
     def summarize(self) -> pd.DataFrame:
         """

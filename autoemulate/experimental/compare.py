@@ -1,6 +1,7 @@
 import logging
 import warnings
 
+import matplotlib.pyplot as plt
 import torchmetrics
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
@@ -115,27 +116,51 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 r2_score=r2_score,
                 rmse_score=rmse_score,
             )
-            self.results.append(result)
+            self.add_result(result)
             self.log_compare(
                 model_cls, best_config_for_this_model, r2_score, rmse_score
             )
 
-    # def plot_eval(self, result_id: str, y_test=None, y_pred=None):
-    #     """
-    #     Plot the evaluation of the model with the given result_id.
-    #     Parameters
-    #     ----------
-    #     result_id: str
-    #         The ID of the model to plot.
-    #     input_index: list[int] | None
-    #         The indices of the inputs to plot. If None, all inputs are plotted.
-    #     """
-    #     # Get the result for the given model ID
-    #     result = self.results.get_result_by_id(result_id)
-    #     if not result:
-    #         raise ValueError(f"No result found with ID: {result_id}")
-    #     # Plot the evaluation
-    #     result.plot(
-    #         y_test=y_test,
-    #         y_pred=y_pred,
-    #     )
+    def plot(
+        self,
+        result_id: str,
+        # input_index: list[int] | None = None
+    ):
+        """
+        Plot the evaluation of the model with the given result_id.
+        Parameters
+        ----------
+        result_id: str
+            The ID of the model to plot.
+        input_index: list[int] | None
+            The indices of the inputs to plot. If None, all inputs are plotted.
+        """
+        if result_id not in self._id_to_result:
+            raise ValueError(f"No result found with ID: {result_id}")
+
+        test_x, test_y = self._convert_to_tensors(self.test)
+        model = self.get_result(result_id).model
+
+        # Re-run prediction with just this model to get the predictions
+        y_pred = model.predict(test_x)
+        r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
+        rmse_score = evaluate(
+            test_y, y_pred, torchmetrics.MeanSquaredError, self.device
+        )
+
+        # Plot the evaluation
+        # TODO: test plot - reimplement with the equivalent of plot_eval in v0
+        plt.figure(figsize=(10, 6))
+        plt.scatter(test_y, y_pred, alpha=0.5)  # type: ignore PGH003
+        plt.plot(
+            [test_y.min(), test_y.max()],
+            [test_y.min(), test_y.max()],
+            color="red",
+            linestyle="--",
+        )
+        plt.xlabel("True Values")
+        plt.ylabel("Predictions")
+        t = f"Model: {result_id} - R2: {r2_score:.3f}, RMSE: {rmse_score:.3f}"
+        plt.title(t)
+        plt.grid()
+        plt.show()
