@@ -131,7 +131,7 @@ class MCMC_calibration(TorchDeviceMixin):
         # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
         param_list = []
         # Each param is either sampled (if calibrated) or set to a constant value
-        for i, param in enumerate(self.parameter_range.keys()):
+        for param in self.parameter_range:
             if param in self.calibration_params:
                 # Sample from uniform prior
                 min_val, max_val = self.parameter_range[param]
