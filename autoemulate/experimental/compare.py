@@ -98,7 +98,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 test_y, y_pred, torchmetrics.MeanSquaredError, self.device
             )
             result = Result(
-                id=model_cls.__name__ + str(id_num),
+                id=model_cls.__name__ + str(id_num + 1),
                 model=m,
                 config=best_model_config,
                 r2_score=r2_score,
