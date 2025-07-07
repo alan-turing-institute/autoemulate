@@ -159,14 +159,14 @@ class MCMC_calibration(TorchDeviceMixin):
         # Likelihood
         for i, output in enumerate(self.output_names):
             if not predict:
-                with pyro.plate("data"):
+                with pyro.plate(f"data_{output}"):
                     pyro.sample(
                         output,
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),
                         obs=self.observations[output],
                     )
             else:
-                with pyro.plate("data"):
+                with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
                         output,
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),

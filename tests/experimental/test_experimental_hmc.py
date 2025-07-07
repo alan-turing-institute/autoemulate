@@ -70,7 +70,7 @@ def test_hmc_multiple_output():
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp
     assert "impact_velocity" in pp
-    # get a prediction per mcmc sample
+    # get a prediction per mcmc sample]
     assert pp["distance"].shape[0] == 5
     assert pp["impact_velocity"].shape[0] == 5
 
@@ -111,6 +111,8 @@ def test_hmc_multiple_obs():
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp
     assert "impact_velocity" in pp
-    # get a prediction per mcmc sample
+    # get a prediction per [mcmc sample, observation]
     assert pp["distance"].shape[0] == 5
+    assert pp["distance"].shape[1] == 10
     assert pp["impact_velocity"].shape[0] == 5
+    assert pp["impact_velocity"].shape[1] == 10
