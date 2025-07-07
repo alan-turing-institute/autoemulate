@@ -24,6 +24,8 @@ def fetch_data(dataset, split=False, test_size=0.2, random_state=42):
         - **cardiac6**: tissue electrophysiology: predict total atrial and ventricular activation times with an Eikonal model.
         - **climate1**: GENIE model: predict climate variables SAT, ACC, VEGC, SOILC, MAXPMOC, OCN_O2, fCaCO3, SIAREA_S.
         - **engineering1**: Cantilever truss simulation.
+        - **reactiondiffusion1**: Reaction-diffusion system simulated data. Spatial snapshots in correspondence for different values of reaction and diffusion parameters.
+                                  (50 snapshots in corresponence of 50 different parameter sets at time T=10).
     split : bool, optional
         Whether to split the data into training and testing sets. Default is False.
     test_size : float, optional
@@ -35,14 +37,14 @@ def fetch_data(dataset, split=False, test_size=0.2, random_state=42):
     -------
     X : array-like
         Simulation parameters / inputs.
-    y : array-like
+    Y : array-like
         Simulation outputs.
     """
     data_dir_dataset = data_dir / dataset / "processed"
     X = pd.read_csv(data_dir_dataset / "parameters.csv").to_numpy()
-    y = pd.read_csv(data_dir_dataset / "outputs.csv").to_numpy()
+    Y = pd.read_csv(data_dir_dataset / "outputs.csv").to_numpy()
 
     if split:
-        return train_test_split(X, y, test_size=test_size, random_state=random_state)
+        return train_test_split(X, Y, test_size=test_size, random_state=random_state)
     else:
-        return X, y
+        return X, Y
