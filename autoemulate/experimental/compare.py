@@ -116,6 +116,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             results.results.append(result)
             self.log_compare(model_cls, best_model_config, r2_score, rmse_score)
         self.results = results
+        self.best_result = results.best_result()
 
     # def plot(self):
     #     """
