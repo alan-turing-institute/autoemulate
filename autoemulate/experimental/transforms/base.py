@@ -303,6 +303,12 @@ def _inverse_sample_gaussian_like(
 
     # Sample from the distribution `y` and apply the transformation `c`
     samples = torch.vmap(c)(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+
+    # Remove batch dim if batch_shape is empty
+    if len(batch_shape) == 0:
+        samples = samples.squeeze(1)
+
+    # Ensure the samples are of type TensorLike
     assert isinstance(samples, TensorLike)
 
     # Compute the mean and covariance of the samples
