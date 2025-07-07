@@ -46,10 +46,11 @@ class Results:
             # TODO: if the id is changed to not include the model name,
             # we can include the model name in the DataFrame.
             # "model": [result.model.__class__.__name__ for result in self.results],
-            "r2_score": [result.r2_score for result in self.results],
             "rmse_score": [result.rmse_score for result in self.results],
+            "r2_score": [result.r2_score for result in self.results],
         }
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        return df.sort_values(by="r2_score", ascending=False)
 
     summarise = summarize
 
