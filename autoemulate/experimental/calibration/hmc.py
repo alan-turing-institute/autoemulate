@@ -2,14 +2,15 @@ import arviz as az
 import pyro
 import pyro.distributions as dist
 import torch
-from pyro.infer import MCMC, NUTS, Predictive
+from pyro.infer import HMC, MCMC, NUTS, Predictive
+from pyro.infer.mcmc import RandomWalkKernel
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 
 
-class HMCCalibrator(TorchDeviceMixin):
+class MCMC_calibration(TorchDeviceMixin):
     """
     Markov Chain Monte Carlo (MCMC) is a Bayesian calibration method that estimates the
     probability distribution over input parameters given observed data. A key advantage
@@ -64,6 +65,7 @@ class HMCCalibrator(TorchDeviceMixin):
             calibration_params = list(parameter_range.keys())
         self.calibration_params = calibration_params
         self.emulator = emulator
+        self.emulator.device = self.device
         self.output_names = list(observations.keys())
 
         # Check observation tensors are 1D (convert if 0D)
@@ -76,7 +78,7 @@ class HMCCalibrator(TorchDeviceMixin):
                 raise ValueError(f"Tensor for output '{output}' is not 1D.")
             else:
                 corrected_obs = obs
-            processed_observations[output] = corrected_obs
+            processed_observations[output] = corrected_obs.to(self.device)
             obs_lengths.append(corrected_obs.shape[0])
         if len(set(obs_lengths)) != 1:
             msg = "All outputs must have the same number of observations."
@@ -92,6 +94,25 @@ class HMCCalibrator(TorchDeviceMixin):
         else:
             msg = "Noise must be either a float or a dictionary of floats."
             raise ValueError(msg)
+
+    def _get_kernel(self, sampler: str, **sampler_kwargs):
+        """Get the appropriate MCMC kernel based on sampler choice."""
+        sampler = sampler.lower()
+
+        if sampler == "nuts":
+            return NUTS(self.model, **sampler_kwargs)
+        if sampler == "hmc":
+            step_size = sampler_kwargs.pop("step_size", 0.01)
+            trajectory_length = sampler_kwargs.pop("trajectory_length", 1.0)
+            return HMC(
+                self.model,
+                step_size=step_size,
+                trajectory_length=trajectory_length,
+                **sampler_kwargs,
+            )
+        if sampler == "metropolis":
+            return RandomWalkKernel(self.model, **sampler_kwargs)
+        raise ValueError(f"Unknown sampler: {sampler}")
 
     def model(self, predict: bool = False):
         """
@@ -112,18 +133,23 @@ class HMCCalibrator(TorchDeviceMixin):
             if param in self.calibration_params:
                 # Sample from uniform prior
                 min_val, max_val = self.parameter_range[param]
-                full_params[0, i] = pyro.sample(param, dist.Uniform(min_val, max_val))
+                sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
+                full_params[0, i] = sampled_val.to(self.device)
+
             else:
                 # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
-                full_params[0, i] = (min_val + max_val) / 2
+                full_params[0, i] = torch.tensor(
+                    (min_val + max_val) / 2, device=self.device
+                )
 
         # Get emulator prediction
         output = self.emulator.predict(full_params)
         if isinstance(output, TensorLike):
-            pred_mean = output
+            pred_mean = output.to(self.device)
+
         elif isinstance(output, DistributionLike):
-            pred_mean = output.mean
+            pred_mean = output.mean.to(self.device)
         else:
             msg = "The emulator did not return a tensor or a distribution object."
             raise ValueError(msg)
@@ -151,6 +177,8 @@ class HMCCalibrator(TorchDeviceMixin):
         num_samples: int = 1000,
         num_chains: int = 1,
         initial_params: dict[str, TensorLike] | None = None,
+        sampler: str = "nuts",
+        **sampler_kwargs,
     ) -> MCMC:
         """
         Run MCMC with NUTS sampler.
@@ -175,6 +203,7 @@ class HMCCalibrator(TorchDeviceMixin):
         """
 
         # Check initial param values match number of chains
+
         if initial_params is not None:
             for param, init_vals in initial_params.items():
                 if init_vals.shape[0] != num_chains:
@@ -185,13 +214,14 @@ class HMCCalibrator(TorchDeviceMixin):
                     raise ValueError(msg)
 
         # Run NUTS
-        nuts_kernel = NUTS(self.model)
+        kernel = self._get_kernel(sampler, **sampler_kwargs)
         mcmc = MCMC(
-            nuts_kernel,
+            kernel,
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            # If None, parameter init values for each chain are sampled from the prior.
+            # If None, parameter init values for each chain
+            # are sampled from the prior.
             initial_params=initial_params,
         )
         mcmc.run()
