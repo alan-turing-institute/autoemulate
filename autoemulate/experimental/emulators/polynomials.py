@@ -65,8 +65,11 @@ class PolynomialRegression(PyTorchBackend):
 
     @staticmethod
     def get_tune_config():
+        scheduler_params = PolynomialRegression.scheduler_config()
         return {
             "lr": [1e-3, 1e-2, 1e-1, 2e-1],
             "epochs": [50, 100, 200, 500, 1000],
             "batch_size": [8, 16, 32],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
