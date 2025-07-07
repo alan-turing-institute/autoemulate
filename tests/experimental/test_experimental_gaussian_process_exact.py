@@ -1,7 +1,8 @@
+import itertools
+
 import gpytorch
 import pytest
 import torch
-from autoemulate.emulators.gaussian_process import constant_mean, rbf, rbf_times_linear
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import (
     SUPPORTED_DEVICES,
@@ -10,14 +11,23 @@ from autoemulate.experimental.device import (
 )
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
+    GaussianProcessExactCorrelated,
 )
+from autoemulate.experimental.emulators.gaussian_process.kernel import (
+    rbf,
+    rbf_times_linear,
+)
+from autoemulate.experimental.emulators.gaussian_process.mean import constant_mean
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
+GPS = [GaussianProcessExact, GaussianProcessExactCorrelated]
 
-def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
+
+@pytest.mark.parametrize("emulator", GPS)
+def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d, emulator):
     x, y = sample_data_y1d
-    gp = GaussianProcessExact(
+    gp = emulator(
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood,
@@ -32,10 +42,11 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d):
     assert y_pred.variance.shape == y.unsqueeze(1).shape
 
 
-def test_multioutput_gp(sample_data_y2d, new_data_y2d):
+@pytest.mark.parametrize("emulator", GPS)
+def test_multioutput_gp(sample_data_y2d, new_data_y2d, emulator):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
-    gp = GaussianProcessExact(
+    gp = emulator(
         x,
         y,
         gpytorch.likelihoods.MultitaskGaussianLikelihood,
@@ -48,24 +59,28 @@ def test_multioutput_gp(sample_data_y2d, new_data_y2d):
     assert y_pred.mean.shape == (20, 2)
 
 
-@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
-def test_tune_gp(sample_data_y1d, device):
+@pytest.mark.parametrize(
+    ("device", "emulator"), itertools.product(SUPPORTED_DEVICES, GPS)
+)
+def test_tune_gp(sample_data_y1d, device, emulator):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5, device=device)
-    scores, configs = tuner.run(GaussianProcessExact)
+    scores, configs = tuner.run(emulator)
     assert len(scores) == 5
     assert len(configs) == 5
 
 
-@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
-def test_device(sample_data_y2d, new_data_y2d, device):
+@pytest.mark.parametrize(
+    ("device", "emulator"), itertools.product(SUPPORTED_DEVICES, GPS)
+)
+def test_device(sample_data_y2d, new_data_y2d, device, emulator):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
-    gp = GaussianProcessExact(x, y, device=device)
+    gp = emulator(x, y, device=device)
     assert check_model_device(gp, device)
     gp.fit(x, y)
     y_pred = gp.predict(x2)
@@ -73,31 +88,65 @@ def test_device(sample_data_y2d, new_data_y2d, device):
     assert y_pred.mean.shape == (20, 2)
 
 
-def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d):
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     """
     Gaussian Processes are deterministic given the same data and hyperparameters.
     Check that the random seed does not affect the output.
     """
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
 
     # Create 2 models that should have the same output
     seed = 42
     set_random_seed(seed)
-    model1 = GaussianProcessExact(
-        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
-    )
+    model1 = GaussianProcessExact(x, y, device=device)
     new_seed = 43
     set_random_seed(new_seed)
-    model2 = GaussianProcessExact(
-        x, y, gpytorch.likelihoods.MultitaskGaussianLikelihood, constant_mean, rbf
-    )
+    model2 = GaussianProcessExact(x, y, device=device)
+    set_random_seed(new_seed)
+    model3 = GaussianProcessExact(x, y, device=device)
     model1.fit(x, y)
     model2.fit(x, y)
+    model3.fit(x, y)
     pred1 = model1.predict(x2)
     pred2 = model2.predict(x2)
+    pred3 = model2.predict(x2)
 
     assert isinstance(pred1, DistributionLike)
     assert isinstance(pred2, DistributionLike)
+    assert isinstance(pred3, DistributionLike)
     assert torch.allclose(pred1.mean, pred2.mean)
     assert torch.allclose(pred1.variance, pred2.variance)
+    assert torch.allclose(pred1.mean, pred3.mean)
+    assert torch.allclose(pred1.variance, pred3.variance)
+
+
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_gp_corr_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
+    """Correlated GPs not currently deterministic due to task kernel initialization"""
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
+    x, y = sample_data_y1d
+    x2, _ = new_data_y1d
+    seed = 42
+    new_seed = 43
+    model1 = GaussianProcessExactCorrelated(x, y, device=device, seed=seed)
+    model2 = GaussianProcessExactCorrelated(x, y, device=device, seed=new_seed)
+    model3 = GaussianProcessExactCorrelated(x, y, device=device, seed=seed)
+    model1.fit(x, y)
+    pred1 = model1.predict(x2)
+    model2.fit(x, y)
+    pred2 = model2.predict(x2)
+    model3.fit(x, y)
+    pred3 = model3.predict(x2)
+
+    assert isinstance(pred1, DistributionLike)
+    assert isinstance(pred2, DistributionLike)
+    assert isinstance(pred3, DistributionLike)
+    assert not torch.allclose(pred1.mean, pred2.mean)
+    assert not torch.allclose(pred1.variance, pred2.variance)
+    assert torch.allclose(pred1.mean, pred3.mean)
+    assert torch.allclose(pred1.variance, pred3.variance)
