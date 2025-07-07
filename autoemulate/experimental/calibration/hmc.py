@@ -278,7 +278,6 @@ class MCMC_calibration(TorchDeviceMixin):
             else:
                 az_data = az.InferenceData(
                     posterior=az.convert_to_dataset(mcmc.get_samples()),
-                    observed_data=az.convert_to_dataset(self.observations),
                 )
         else:
             az_data = az.from_pyro(mcmc, posterior_predictive=pp_samples)
