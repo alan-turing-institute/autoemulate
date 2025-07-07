@@ -1,4 +1,4 @@
-import logging
+# import logging
 
 import gpytorch
 import numpy as np
@@ -136,14 +136,16 @@ class GaussianProcessExact(
             MultivariateNormal(mean, covar)
         )
 
-    def log_epoch(self, epoch: int, loss: TensorLike):
-        logger = logging.getLogger(__name__)
-        assert self.likelihood.noise is not None
-        msg = (
-            f"Epoch: {epoch + 1:{int(np.log10(self.epochs) + 1)}.0f}/{self.epochs}; "
-            f"MLL: {-loss:4.3f}; noise: {self.likelihood.noise.item():4.3f}"
-        )
-        logger.info(msg)
+    # def log_epoch(self, epoch: int, loss: TensorLike):
+    #     # logger = logging.getLogger(__name__)
+    #     assert self.likelihood.noise is not None
+    #     # msg = (
+    #     #     f"Epoch:
+    # {epoch + 1:{int(np.log10(self.epochs) + 1)}.0f}/{self.epochs}; "
+    #     #     f"MLL: {-loss:4.3f}; noise:
+    # {self.likelihood.noise.item():4.3f}"
+    #     # )
+    #     # logger.debug(msg)
 
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
@@ -160,14 +162,14 @@ class GaussianProcessExact(
         # Set the training data in case changed since init
         self.set_train_data(x, y, strict=False)
 
-        for epoch in range(self.epochs):
+        for _epoch in range(self.epochs):
             optimizer.zero_grad()
             output = self(x)
             loss = mll(output, y)
             assert isinstance(loss, torch.Tensor)
             loss = -loss
             loss.backward()
-            self.log_epoch(epoch, loss)
+            # self.log_epoch(epoch, loss)
             optimizer.step()
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:

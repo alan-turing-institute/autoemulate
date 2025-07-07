@@ -1,3 +1,5 @@
+import logging
+
 from torchmetrics import R2Score
 from tqdm import tqdm
 
@@ -11,6 +13,8 @@ from autoemulate.experimental.types import (
     ModelConfig,
     TensorLike,
 )
+
+logger = logging.getLogger("autoemulate")
 
 
 class Tuner(ConversionMixin, TorchDeviceMixin):
@@ -80,7 +84,18 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
-        for _ in tqdm(range(self.n_iter)):
+        # Check if logger is at DEBUG level
+        # Use the level of the first StreamHandler if present,
+        #  else fallback to logger level
+        stream_handler = next(
+            (h for h in logger.handlers if isinstance(h, logging.StreamHandler)), None
+        )
+        if stream_handler is not None:
+            show_progress = stream_handler.level <= logging.DEBUG
+        else:
+            show_progress = logger.isEnabledFor(logging.DEBUG)
+
+        for _ in tqdm(range(self.n_iter), disable=not show_progress):
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
             m = model_class(train_x, train_y, device=self.device, **model_config)

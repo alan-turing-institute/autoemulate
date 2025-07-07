@@ -1,27 +1,30 @@
-import logging
 import warnings
 from typing import Any
 
 import numpy as np
+import tqdm
 from sklearn.model_selection import BaseCrossValidator, KFold
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.logging_config import configure_logging
 from autoemulate.experimental.model_selection import cross_validate
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
 
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: InputLike,
         y: InputLike,
         models: list[type[Emulator]] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        log_level: str = "info",
+        progress_bar: bool = False,
     ):
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
@@ -42,6 +45,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
+
+        self.logger = configure_logging(level=log_level)
+        self.progress_bar = progress_bar
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -68,15 +74,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 updated_models.append(model)
         return updated_models
 
-    def log_compare(self, model_cls, best_model_config, r2_score, rmse_score):
-        logger = logging.getLogger(__name__)
+    def log_compare(self, best_model_name, best_model_config, r2_score, rmse_score):
         msg = (
-            f"Model: {model_cls.__name__}, "
+            "Comparison results:\n"
+            f"Best Model: {best_model_name}, "
             f"Best params: {best_model_config}, "
             f"R2 score: {r2_score:.3f}, "
             f"RMSE score: {rmse_score:.3f}"
         )
-        logger.info(msg)
+        self.logger.debug(msg)
 
     def compare(
         self,
@@ -86,10 +92,36 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     ) -> dict[str, dict[str, Any]]:
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         models_evaluated = {}
-        for model_cls in self.models:
+
+        self.logger.info(
+            "Comparing %s", [model_cls.__name__ for model_cls in self.models]
+        )
+        for idx, model_cls in tqdm.tqdm(
+            enumerate(self.models), disable=not self.progress_bar
+        ):
+            self.logger.info(
+                "Running Model: %s: %d/%d",
+                model_cls.__name__,
+                idx + 1,
+                len(self.models),
+            )
+
+            self.logger.debug('Running tuner for model "%s"', model_cls.__name__)
             scores, configs = tuner.run(model_cls)
             best_score_idx = scores.index(max(scores))
             best_model_config = configs[best_score_idx]
+            self.logger.debug(
+                'Tuner found best config for model "%s": %s with score: %s',
+                model_cls.__name__,
+                best_model_config,
+                scores[best_score_idx],
+            )
+
+            self.logger.debug(
+                'Running cross-validation for model "%s" for "%s" iterations',
+                model_cls.__name__,
+                n_iter,
+            )
             cv_results = cross_validate(
                 cv=cv(
                     random_state=cv_seed  # type: ignore PGH003
@@ -108,5 +140,33 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 "r2_score": r2_score,
                 "rmse_score": rmse_score,
             }
-            self.log_compare(model_cls, best_model_config, r2_score, rmse_score)
+            self.logger.debug(
+                'Cross-validation for model "%s"'
+                " completed with R2 score: %.3f, RMSE score: %.3f",
+                model_cls.__name__,
+                r2_score,
+                rmse_score,
+            )
+            self.logger.info("Finished running Model: %s\n", model_cls.__name__)
+
+        # Find the best model based on R2 score
+        best_model_cls = max(
+            models_evaluated.items(),
+            key=lambda item: item[1]["r2_score"],
+        )[0]
+        best_model_config = models_evaluated[best_model_cls]["config"]
+        r2_score = models_evaluated[best_model_cls]["r2_score"]
+        rmse_score = models_evaluated[best_model_cls]["rmse_score"]
+
+        self.log_compare(best_model_cls, best_model_config, r2_score, rmse_score)
+        self.logger.info("Compare completed successfully.")
         return models_evaluated
+
+
+if __name__ == "__main__":
+    x = np.random.rand(100, 3)
+    y = np.random.rand(100, 2)
+
+    autoemulate = AutoEmulate(x, y, log_level="debug")
+
+    results = autoemulate.compare(n_iter=5)
