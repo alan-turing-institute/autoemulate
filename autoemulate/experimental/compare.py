@@ -76,11 +76,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
                 updated_models.append(model)
         return updated_models
 
-    def log_compare(self, model_cls, best_model_config, r2_score, rmse_score):
+    def log_compare(self, model_cls, best_config_for_this_model, r2_score, rmse_score):
         logger = logging.getLogger(__name__)
         msg = (
             f"Model: {model_cls.__name__}, "
-            f"Best params: {best_model_config}, "
+            f"Best params: {best_config_for_this_model}, "
             f"R2 score: {r2_score:.3f}, "
             f"RMSE score: {rmse_score:.3f}"
         )
@@ -95,11 +95,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         for id_num, model_cls in enumerate(self.models):
             scores, configs = tuner.run(model_cls)
             best_score_idx = scores.index(max(scores))
-            best_model_config = configs[best_score_idx]
+            best_config_for_this_model = configs[best_score_idx]
 
             val_x, val_y = self._convert_to_tensors(self.train_val)
             test_x, test_y = self._convert_to_tensors(self.test)
-            m = model_cls(val_x, val_y, device=self.device, **best_model_config)
+            m = model_cls(
+                val_x, val_y, device=self.device, **best_config_for_this_model
+            )
             m.fit(val_x, val_y)
             y_pred = m.predict(test_x)
             r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
@@ -109,16 +111,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             result = Result(
                 id=model_cls.__name__ + str(id_num + 1),
                 model=m,
-                config=best_model_config,
+                config=best_config_for_this_model,
                 r2_score=r2_score,
                 rmse_score=rmse_score,
             )
             results.results.append(result)
-            self.log_compare(model_cls, best_model_config, r2_score, rmse_score)
+            self.log_compare(
+                model_cls, best_config_for_this_model, r2_score, rmse_score
+            )
         self.results = results
         self.best_result = results.best_result()
-
-    # def plot(self):
-    #     """
-    #     Plot the evaluation results of the model on the test data.
-    #     """
