@@ -86,7 +86,7 @@ class Results:
             raise ValueError(msg)
         return max(self.results, key=lambda r: r.r2_score)
 
-    def get_result_by_id(self, result_id: str) -> Result:
+    def get_result(self, result_id: str) -> Result:
         """
         Get a result by its ID.
         Parameters
