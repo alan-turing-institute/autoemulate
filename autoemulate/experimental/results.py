@@ -20,9 +20,6 @@ class Result:
         self.r2_score = r2_score
         self.rmse_score = rmse_score
 
-    # Equiv of plot_eval
-    # def plot(self, ...):
-
 
 class Results:
     def __init__(

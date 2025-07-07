@@ -42,6 +42,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             set_random_seed(seed=random_seed)
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
 
+        # Run the compare method with the provided models
+        if not self.models:
+            msg = (
+                "No models provided or available for comparison. "
+                "Please provide a list of models to compare."
+            )
+            raise ValueError(msg)
+        self.compare()
+
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
         return ALL_EMULATORS
@@ -80,7 +89,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
     def compare(
         self,
         n_iter: int = 10,
-    ) -> Results:
+    ):
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         results = Results()
         for id_num, model_cls in enumerate(self.models):
@@ -106,4 +115,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             )
             results.results.append(result)
             self.log_compare(model_cls, best_model_config, r2_score, rmse_score)
-        return results
+        self.results = results
+
+    # def plot(self):
+    #     """
+    #     Plot the evaluation results of the model on the test data.
+    #     """
