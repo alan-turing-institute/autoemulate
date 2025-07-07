@@ -252,6 +252,7 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
             # Ensure positive definite
             if cov_orig.ndim > 2:
+                # TODO: consider revising whether to only use jitter
                 cov_orig = torch.stack([make_positive_definite(c) for c in cov_orig], 0)
 
             return GaussianLike(mean_orig, cov_orig)
