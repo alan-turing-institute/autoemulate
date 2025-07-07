@@ -1,4 +1,4 @@
-from autoemulate.experimental.calibration.hmc import HMCCalibrator
+from autoemulate.experimental.calibration.hmc import MCMC_calibration
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -20,7 +20,7 @@ def test_hmc_single_output():
 
     # pick the first sim output as an observation
     observations = {"distance": y[0]}
-    hmc = HMCCalibrator(gp, sim.parameters_range, observations, 1.0)
+    hmc = MCMC_calibration(gp, sim.parameters_range, observations, 1.0)
     assert hmc.observation_noise == {"distance": 1.0}
 
     # check samples are generated
@@ -54,7 +54,7 @@ def test_hmc_multiple_output():
         "distance": y[:1, 0],
         "impact_velocity": y[:1, 1],
     }
-    hmc = HMCCalibrator(gp, sim.parameters_range, observations, 1.0)
+    hmc = MCMC_calibration(gp, sim.parameters_range, observations, 1.0)
     assert hmc.observation_noise == {"distance": 1.0, "impact_velocity": 1.0}
 
     # check samples are generated
@@ -90,7 +90,7 @@ def test_hmc_multiple_obs():
         "distance": y[:10, 0],
         "impact_velocity": y[:10, 1],
     }
-    hmc = HMCCalibrator(
+    hmc = MCMC_calibration(
         gp,
         sim.parameters_range,
         observations,

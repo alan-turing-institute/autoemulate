@@ -9,7 +9,7 @@ from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 
 
-class HMCCalibrator(TorchDeviceMixin):
+class MCMC_calibration(TorchDeviceMixin):
     """
     Markov Chain Monte Carlo (MCMC) is a Bayesian calibration method that estimates the
     probability distribution over input parameters given observed data. A key advantage
@@ -64,6 +64,7 @@ class HMCCalibrator(TorchDeviceMixin):
             calibration_params = list(parameter_range.keys())
         self.calibration_params = calibration_params
         self.emulator = emulator
+        self.emulator.device = self.device
         self.output_names = list(observations.keys())
 
         # Check observation tensors are 1D (convert if 0D)
@@ -76,7 +77,7 @@ class HMCCalibrator(TorchDeviceMixin):
                 raise ValueError(f"Tensor for output '{output}' is not 1D.")
             else:
                 corrected_obs = obs
-            processed_observations[output] = corrected_obs
+            processed_observations[output] = corrected_obs.to(self.device)
             obs_lengths.append(corrected_obs.shape[0])
         if len(set(obs_lengths)) != 1:
             msg = "All outputs must have the same number of observations."
@@ -112,18 +113,23 @@ class HMCCalibrator(TorchDeviceMixin):
             if param in self.calibration_params:
                 # Sample from uniform prior
                 min_val, max_val = self.parameter_range[param]
-                full_params[0, i] = pyro.sample(param, dist.Uniform(min_val, max_val))
+                sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
+                full_params[0, i] = sampled_val.to(self.device)
+
             else:
                 # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
-                full_params[0, i] = (min_val + max_val) / 2
+                full_params[0, i] = torch.tensor(
+                    (min_val + max_val) / 2, device=self.device
+                )
 
         # Get emulator prediction
         output = self.emulator.predict(full_params)
         if isinstance(output, TensorLike):
-            pred_mean = output
+            pred_mean = output.to(self.device)
+
         elif isinstance(output, DistributionLike):
-            pred_mean = output.mean
+            pred_mean = output.mean.to(self.device)
         else:
             msg = "The emulator did not return a tensor or a distribution object."
             raise ValueError(msg)
@@ -175,8 +181,10 @@ class HMCCalibrator(TorchDeviceMixin):
         """
 
         # Check initial param values match number of chains
+
         if initial_params is not None:
             for param, init_vals in initial_params.items():
+                init_vals = torch.as_tensor(init_vals, device=self.device)
                 if init_vals.shape[0] != num_chains:
                     msg = (
                         "An initial value must be provided for each chain, parameter "
