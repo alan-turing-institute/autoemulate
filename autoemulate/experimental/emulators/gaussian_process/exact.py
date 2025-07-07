@@ -1,5 +1,4 @@
 import logging
-from functools import partial
 
 import gpytorch
 import numpy as np
@@ -62,7 +61,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
-    scheduler_cls: type[LRScheduler] | partial[LRScheduler] | None = None
+    lr: float = 1e-1
+    scheduler_cls: type[LRScheduler] | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
