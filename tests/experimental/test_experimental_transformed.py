@@ -2,14 +2,8 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.emulators import (
-    ALL_EMULATORS as DEFAULT_EMULATORS,
-)
-from autoemulate.experimental.emulators import (
-    GaussianProcessExact,
-)
+from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
-from autoemulate.experimental.emulators.nn.mlp import GaussianMLP
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -24,8 +18,6 @@ from autoemulate.experimental.types import (
     GaussianProcessLike,
     TensorLike,
 )
-
-ALL_EMULATORS = [*DEFAULT_EMULATORS, GaussianMLP]
 
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):
