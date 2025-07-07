@@ -1,5 +1,6 @@
 from typing import Any
 
+# import matplotlib.pyplot as plt
 import pandas as pd
 
 from autoemulate.experimental.emulators.base import Emulator
@@ -20,6 +21,25 @@ class Result:
         self.r2_score = r2_score
         self.rmse_score = rmse_score
 
+    # def plot(self, y_test, y_pred):
+    #     """
+    #     Plot the evaluation results of the model on the test data.
+    #     """
+    #     plt.figure(figsize=(10, 6))
+    #     plt.scatter(y_test, y_pred, alpha=0.5)
+    #     plt.plot(
+    #         [y_test.min(), y_test.max()],
+    #         [y_test.min(), y_test.max()],
+    #         color="red",
+    #         linestyle="--",
+    #     )
+    #     plt.xlabel("True Values")
+    #     plt.ylabel("Predictions")
+    #     t = f"Model: {self.id} - R2: {self.r2_score:.3f}, RMSE: {self.rmse_score:.3f}"
+    #     plt.title(t)
+    #     plt.grid()
+    #     plt.show()
+
 
 class Results:
     def __init__(
@@ -29,6 +49,10 @@ class Results:
         if results is None:
             results = []
         self.results = results
+        self._id_to_result = {result.id: result for result in self.results}
+
+    def _update_index(self):
+        self._id_to_result = {result.id: result for result in self.results}
 
     def summarize(self) -> pd.DataFrame:
         """
@@ -61,6 +85,22 @@ class Results:
             msg = "No results available. Please run AutoEmulate.compare() first."
             raise ValueError(msg)
         return max(self.results, key=lambda r: r.r2_score)
+
+    def get_result_by_id(self, result_id: str) -> Result:
+        """
+        Get a result by its ID.
+        Parameters
+        ----------
+        result_id: str
+            The ID of the model to retrieve.
+        Returns
+        -------
+        Result: The result with the specified ID.
+        """
+        try:
+            return self._id_to_result[result_id]
+        except KeyError as err:
+            raise ValueError(f"No result found with ID: {result_id}") from err
 
     # def plot_compare(self, ...): ...
 

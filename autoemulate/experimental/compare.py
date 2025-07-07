@@ -121,3 +121,23 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             )
         self.results = results
         self.best_result = results.best_result()
+
+    # def plot_eval(self, result_id: str, y_test=None, y_pred=None):
+    #     """
+    #     Plot the evaluation of the model with the given result_id.
+    #     Parameters
+    #     ----------
+    #     result_id: str
+    #         The ID of the model to plot.
+    #     input_index: list[int] | None
+    #         The indices of the inputs to plot. If None, all inputs are plotted.
+    #     """
+    #     # Get the result for the given model ID
+    #     result = self.results.get_result_by_id(result_id)
+    #     if not result:
+    #         raise ValueError(f"No result found with ID: {result_id}")
+    #     # Plot the evaluation
+    #     result.plot(
+    #         y_test=y_test,
+    #         y_pred=y_pred,
+    #     )
