@@ -349,3 +349,9 @@ class SklearnBackend(DeterministicEmulator):
         if self.normalize_y:
             y_pred = self._denormalize(y_pred, self.y_mean, self.y_std)
         return y_pred
+
+
+class DropoutTorchBackend(PyTorchBackend):
+    """
+    Torch backend model that is meant to support dropout.
+    """
