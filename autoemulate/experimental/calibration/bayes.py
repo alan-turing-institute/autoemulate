@@ -122,8 +122,8 @@ class BayesianCalibration(TorchDeviceMixin):
         Parameters
         ----------
         predict: bool
-            Indicates whether to sample without conditioning on data. This is used to
-            generate posterior predictive samples. Defaults to False.
+            Whether to run the model with existing samples to generate posterior
+            predictive distribution. Used with `pyro.infer.Predictive`.
         """
 
         # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
@@ -220,8 +220,7 @@ class BayesianCalibration(TorchDeviceMixin):
             warmup_steps=warmup_steps,
             num_samples=num_samples,
             num_chains=num_chains,
-            # If None, parameter init values for each chain
-            # are sampled from the prior.
+            # If None, init values are sampled from the prior.
             initial_params=initial_params,
         )
         mcmc.run()
@@ -266,8 +265,8 @@ class BayesianCalibration(TorchDeviceMixin):
         if posterior_predictive:
             pp_samples = self.posterior_predictive(mcmc)
 
-        # need to create dataset manually for Metropolis Hastings
-        # this is because az.from_pyro expects kernal with `divergences`
+        # Need to create dataset manually for Metropolis Hastings
+        # This is because az.from_pyro expects kernel with `divergences`
         if isinstance(mcmc.kernel, RandomWalkKernel):
             if posterior_predictive:
                 az_data = az.InferenceData(
