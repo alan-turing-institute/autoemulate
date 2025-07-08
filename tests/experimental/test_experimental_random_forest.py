@@ -1,7 +1,7 @@
+import pytest
 import torch
-from autoemulate.experimental.emulators.random_forest import (
-    RandomForest,
-)
+
+from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
 
@@ -13,6 +13,10 @@ def test_predict_rf(sample_data_y1d, new_data_y1d):
     x2, _ = new_data_y1d
     y_pred = rf.predict(x2)
     assert isinstance(y_pred, TensorLike)
+    assert not y_pred.requires_grad
+
+    with pytest.raises(ValueError, match="cannot compute gradients"):
+        rf.predict(x2, with_grad=True)
 
 
 def test_predict_rf_2d(sample_data_y2d, new_data_y2d):

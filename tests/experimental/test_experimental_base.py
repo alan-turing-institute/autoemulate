@@ -80,6 +80,10 @@ class TestPyTorchBackend:
         assert isinstance(y_pred, torch.Tensor)
         assert y_pred.shape == (1, 1)
         assert y_pred.shape == (1, 1)
+        assert not y_pred.requires_grad
+
+        y_pred_grad = self.model.predict(X_test, with_grad=True)
+        assert y_pred_grad
 
     def test_tune_xy(self):
         """

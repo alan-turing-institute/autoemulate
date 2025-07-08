@@ -23,6 +23,11 @@ def test_predict_rbf(sample_data_rbf, new_data_rbf):
 
     assert isinstance(y_pred, TensorLike)
     assert y_pred.shape == (56, 2)
+    assert not y_pred.requires_grad
+
+    y_pred_grad = rbf.predict(x2, with_grad=True)
+    assert isinstance(y_pred_grad, TensorLike)
+    assert y_pred_grad.requires_grad
 
     RBFscipy = RBFInterpolator(
         x,

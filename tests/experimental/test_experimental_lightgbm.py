@@ -1,4 +1,6 @@
+import pytest
 import torch
+
 from autoemulate.experimental.emulators.lightgbm import LightGBM
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
@@ -11,6 +13,10 @@ def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
     x2, _ = new_data_y1d
     y_pred = lgbm.predict(x2)
     assert isinstance(y_pred, TensorLike)
+    assert not y_pred.requires_grad
+
+    with pytest.raises(ValueError, match="cannot compute gradients"):
+        lgbm.predict(x2, with_grad=True)
 
 
 def test_tune_lightgbm(sample_data_y1d):
