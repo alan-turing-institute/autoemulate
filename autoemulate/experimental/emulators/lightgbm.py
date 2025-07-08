@@ -99,8 +99,10 @@ class LightGBM(DeterministicEmulator):
         self.n_features_in_ = x_np.shape[1]
         self.model_.fit(x_np, y_np)
 
-    def _predict(self, x: TensorLike) -> TensorLike:
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
         """Predicts the output of the emulator for a given input."""
+        if with_grad:
+            raise ValueError("LightGBM cannot compute gradients.")
         y_pred = self.model_.predict(x)
         assert not isinstance(y_pred, spmatrix | list)
         _, y = self._convert_to_tensors(x, y_pred)

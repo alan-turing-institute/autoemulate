@@ -122,13 +122,15 @@ class ProbabilisticEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
         pred = super().predict(x, with_grad)
         assert isinstance(pred, DistributionLike)
         return pred
 
-    def predict_mean_and_variance(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
+    def predict_mean_and_variance(
+        self, x: TensorLike, with_grad: bool = False
+    ) -> tuple[TensorLike, TensorLike]:
         """
         Predict mean and variance from the probabilistic output.
 
@@ -136,6 +138,8 @@ class ProbabilisticEmulator(Emulator):
         ----------
         x : TensorLike
             Input tensor to make predictions for.
+        with_grad : bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -213,11 +217,10 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
         Parameters
         ----------
-            X: TensorLike
-                Input features as numpy array, PyTorch tensor, or DataLoader.
-            y: OutputLike or None
-                Target values (not needed if x is a DataLoader).
-
+        X: TensorLike
+            Input features as numpy array, PyTorch tensor, or DataLoader.
+        y: OutputLike or None
+            Target values (not needed if x is a DataLoader).
         """
 
         self.train()  # Set model to training mode
@@ -346,6 +349,8 @@ class SklearnBackend(DeterministicEmulator):
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
     def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+        if with_grad:
+            raise ValueError("SKlearnBackendEmulator cannot compute gradients.")
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
