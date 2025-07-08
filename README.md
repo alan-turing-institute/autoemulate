@@ -37,7 +37,7 @@
 | autoemulate/experimental/callbacks/early\_stopping.py                                |       52 |        9 |     83% |69-71, 75, 102, 126, 131, 146, 151 |
 | autoemulate/experimental/compare.py                                                  |       57 |        1 |     98% |        43 |
 | autoemulate/experimental/data/preprocessors.py                                       |       25 |        0 |    100% |           |
-| autoemulate/experimental/data/utils.py                                               |      177 |       18 |     90% |65, 94, 100, 116-120, 134, 167, 172, 404, 407-409, 435, 438-440, 470 |
+| autoemulate/experimental/data/utils.py                                               |      183 |       18 |     90% |67, 100, 106, 122-126, 140, 173, 178, 410, 413-415, 441, 444-446, 476 |
 | autoemulate/experimental/device.py                                                   |       45 |        8 |     82% |15-16, 45, 99, 105, 154-159, 164 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                                   |        7 |        0 |    100% |           |
 | autoemulate/experimental/emulators/base.py                                           |      150 |        8 |     95% |55, 96-100, 258, 335-337, 350 |
@@ -63,7 +63,7 @@
 | autoemulate/experimental/learners/membership.py                                      |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/pool.py                                            |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/stream.py                                          |      131 |       13 |     90% |85-95, 141, 488, 539-543, 546, 574-579, 582 |
-| autoemulate/experimental/model\_selection.py                                         |       53 |        4 |     92% |32-39, 113 |
+| autoemulate/experimental/model\_selection.py                                         |       52 |        4 |     92% |32-39, 112 |
 | autoemulate/experimental/sensitivity\_analysis.py                                    |       95 |       29 |     69% |58-62, 73-74, 77-78, 80-81, 87-88, 106-107, 121-125, 139-143, 199-200, 210-211, 216, 238, 258 |
 | autoemulate/experimental/simulations/\_\_init\_\_.py                                 |        0 |        0 |    100% |           |
 | autoemulate/experimental/simulations/base.py                                         |       59 |        2 |     97% |    40, 87 |
@@ -154,7 +154,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **9925** | **2049** | **79%** |           |
+|                                                                            **TOTAL** | **9930** | **2049** | **79%** |           |
 
 
 ## Setup coverage badge
