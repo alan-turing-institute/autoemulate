@@ -107,7 +107,6 @@ def make_positive_definite(
             # Clamp both minimum and maximum eigvals
             cov = (cov + cov.transpose(-1, -2)) / 2
             eigvals, eigvecs = torch.linalg.eigh(cov)
-            eigvals = torch.clamp(eigvals, min=1e-4)
 
             # Ensure condition number around 10**6
             min_eigval = max(torch.min(eigvals).item(), MIN_EIGVAL)
