@@ -314,10 +314,9 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         if with_grad:
             x = self.preprocess(x)
             return self(x)
-        else:
-            with torch.no_grad():
-                x = self.preprocess(x)
-                return self(x)
+        with torch.no_grad():
+            x = self.preprocess(x)
+            return self(x)
 
 
 class SklearnBackend(DeterministicEmulator):
@@ -350,7 +349,8 @@ class SklearnBackend(DeterministicEmulator):
 
     def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
         if with_grad:
-            raise ValueError("SKlearnBackendEmulator cannot compute gradients.")
+            msg = "SKlearnBackendEmulator cannot compute gradients."
+            raise ValueError(msg)
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))
