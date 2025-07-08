@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.svm import SupportVectorMachine
 from autoemulate.experimental.tuner import Tuner

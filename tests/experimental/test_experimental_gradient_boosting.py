@@ -1,5 +1,4 @@
 import pytest
-
 from autoemulate.experimental.emulators.gradient_boosting import GradientBoosting
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike

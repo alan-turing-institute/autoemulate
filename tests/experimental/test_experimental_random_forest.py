@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import TensorLike
