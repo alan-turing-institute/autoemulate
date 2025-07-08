@@ -63,7 +63,6 @@ class Ensemble(GaussianEmulator):
             e.fit(x, y)
         self.is_fitted_ = True
 
-    @torch.inference_mode()
     def _predict(self, x: Tensor, with_grad: bool = False) -> GaussianLike:
         # Inference mode to disable autograd computation graph
         device = x.device
@@ -204,8 +203,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self.model.fit(x, y)
         self.is_fitted_ = True
 
-    @torch.inference_mode()
-    def _predict(self, x: Tensor) -> GaussianLike:
+    def _predict(self, x: Tensor, with_grad: bool = False) -> GaussianLike:
         if not self.is_fitted_:
             s = "DropoutEnsemble: model is not fitted yet."
             raise RuntimeError(s)
@@ -219,9 +217,14 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         # collect M outputs
         samples = []
         for _ in range(self.n_samples):
-            # apply any preprocessing the model expects
-            x_proc = self.model.preprocess(x)
-            out = self.model.forward(x_proc)
+            if with_grad:
+                # apply any preprocessing the model expects
+                x_proc = self.model.preprocess(x)
+                out = self.model.forward(x_proc)
+            else:
+                with torch.no_grad():
+                    x_proc = self.model.preprocess(x)
+                    out = self.model.forward(x_proc)
             # out: Tensor of shape (batch_size, output_dim)
             samples.append(out)
 
