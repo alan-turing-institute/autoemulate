@@ -9,6 +9,11 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.model_selection import evaluate
+from autoemulate.experimental.plotting import (
+    calculate_subplot_layout,
+    display_figure,
+    plot_Xy,
+)
 from autoemulate.experimental.results import Result, Results
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
@@ -124,7 +129,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def plot(
         self,
         result_id: str,
-        # input_index: list[int] | None = None
+        input_index: list[int] | int | None = None,
+        output_index: list[int] | int | None = None,
+        figsize=None,
+        n_cols: int = 3,
     ):
         """
         Plot the evaluation of the model with the given result_id.
@@ -132,8 +140,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ----------
         result_id: str
             The ID of the model to plot.
-        input_index: list[int] | None
-            The indices of the inputs to plot. If None, all inputs are plotted.
+        input_index: int
+            The index of the input feature to plot against the output.
+        output_index: int
+            The index of the output feature to plot against the input.
         """
         if result_id not in self._id_to_result:
             raise ValueError(f"No result found with ID: {result_id}")
@@ -144,23 +154,74 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Re-run prediction with just this model to get the predictions
         y_pred = model.predict(test_x)
         r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
-        rmse_score = evaluate(
-            test_y, y_pred, torchmetrics.MeanSquaredError, self.device
-        )
 
-        # Plot the evaluation
-        # TODO: test plot - reimplement with the equivalent of plot_eval in v0
-        plt.figure(figsize=(10, 6))
-        plt.scatter(test_y, y_pred, alpha=0.5)  # type: ignore PGH003
-        plt.plot(
-            [test_y.min(), test_y.max()],
-            [test_y.min(), test_y.max()],
-            color="red",
-            linestyle="--",
-        )
-        plt.xlabel("True Values")
-        plt.ylabel("Predictions")
-        t = f"Model: {result_id} - R2: {r2_score:.3f}, RMSE: {rmse_score:.3f}"
-        plt.title(t)
-        plt.grid()
-        plt.show()
+        # Convert to numpy arrays for plotting and ensure correct shapes
+        test_x, test_y = self._convert_to_numpy(test_x, test_y)
+        # TODO: decide what to do if model.predict returns a Distribution
+        y_pred, _ = self._convert_to_numpy(y_pred, None)  # type: ignore[assignment]
+        assert test_x is not None
+        assert test_y is not None
+        assert y_pred is not None
+        test_x = self._ensure_numpy_2d(test_x)
+        test_y = self._ensure_numpy_2d(test_y)
+        y_pred = self._ensure_numpy_2d(y_pred)
+
+        _, n_features = test_x.shape
+
+        n_outputs = test_y.shape[1] if test_y.ndim > 1 else 1
+
+        # Handle input and output indices
+        if input_index is None:
+            input_index = list(range(n_features))
+        elif isinstance(input_index, int):
+            input_index = [input_index]
+
+        if output_index is None:
+            output_index = list(range(n_outputs))
+        elif isinstance(output_index, int):
+            output_index = [output_index]
+
+        # check that input_index and output_index are valid
+        if any(idx >= n_features for idx in input_index):
+            msg = f"input_index {input_index} is out of range. "
+            msg += f"The index should be between 0 and {n_features - 1}."
+            raise ValueError(msg)
+        if any(idx >= n_outputs for idx in output_index):
+            msg = f"output_index {output_index} is out of range. "
+            msg += f"The index should be between 0 and {n_outputs - 1}."
+            raise ValueError(msg)
+
+        # Calculate number of subplots
+        n_plots = len(input_index) * len(output_index)
+
+        # Calculate number of rows
+        n_rows, n_cols = calculate_subplot_layout(n_plots, n_cols)
+
+        # Set up the figure
+        if figsize is None:
+            figsize = (5 * n_cols, 4 * n_rows)
+        fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+        axs = axs.flatten()
+
+        plot_index = 0
+        for out_idx in output_index:
+            for in_idx in input_index:
+                if plot_index < len(axs):
+                    plot_Xy(
+                        test_x[:, in_idx],
+                        test_y[:, out_idx],
+                        y_pred[:, out_idx],
+                        ax=axs[plot_index],
+                        title=f"$X_{in_idx}$ vs. $y_{out_idx}$",
+                        input_index=in_idx,
+                        output_index=out_idx,
+                        r2_score=r2_score,
+                    )
+                    plot_index += 1
+
+        # Hide any unused subplots
+        for ax in axs[plot_index:]:
+            ax.set_visible(False)
+        plt.tight_layout()
+
+        return display_figure(fig)

@@ -145,6 +145,12 @@ class ConversionMixin:
         x_tensor = result
         return x_tensor.cpu().numpy(), None
 
+    def _ensure_numpy_2d(self, arr: np.ndarray) -> np.ndarray:
+        """Ensure that arr is a 2D numpy array."""
+        if arr.ndim == 1:
+            arr = arr.reshape(-1, 1)
+        return arr
+
     def _random_split(
         self,
         dataset: Dataset,
@@ -471,12 +477,6 @@ class ValidationMixin:
 
     ### Validation methods from old utils.py ###
     ### Leave here in case want to restore/refactor later ###
-
-    # def _ensure_2d(arr):
-    #     """Ensure that arr is a 2D."""
-    #     if arr.ndim == 1:
-    #         arr = arr.reshape(-1, 1)
-    #     return arr
 
     # def _ensure_1d_if_column_vec(arr):
     #     """Ensure that arr is 1D if shape is (n, 1)."""
