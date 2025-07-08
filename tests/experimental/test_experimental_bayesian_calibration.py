@@ -1,4 +1,4 @@
-from autoemulate.experimental.calibration.hmc import MCMC_calibration
+from autoemulate.experimental.calibration.bayes import BayesianCalibration
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
@@ -20,18 +20,18 @@ def test_hmc_single_output():
 
     # pick the first sim output as an observation
     observations = {"distance": y[0]}
-    hmc = MCMC_calibration(gp, sim.parameters_range, observations, 1.0)
-    assert hmc.observation_noise == {"distance": 1.0}
+    bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
+    assert bc.observation_noise == {"distance": 1.0}
 
     # check samples are generated
-    mcmc = hmc.run(warmup_steps=5, num_samples=5)
+    mcmc = bc.run_mcmc(warmup_steps=5, num_samples=5)
     samples = mcmc.get_samples()
     assert "c" in samples
     assert "v0" in samples
     assert samples["c"].shape[0] == 5
 
     # posterior predictive
-    pp = hmc.posterior_predictive(mcmc)
+    pp = bc.posterior_predictive(mcmc)
     assert isinstance(pp, dict)
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp
@@ -54,18 +54,18 @@ def test_hmc_multiple_output():
         "distance": y[:1, 0],
         "impact_velocity": y[:1, 1],
     }
-    hmc = MCMC_calibration(gp, sim.parameters_range, observations, 1.0)
-    assert hmc.observation_noise == {"distance": 1.0, "impact_velocity": 1.0}
+    bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
+    assert bc.observation_noise == {"distance": 1.0, "impact_velocity": 1.0}
 
     # check samples are generated
-    mcmc = hmc.run(warmup_steps=5, num_samples=5)
+    mcmc = bc.run_mcmc(warmup_steps=5, num_samples=5)
     samples = mcmc.get_samples()
     assert "c" in samples
     assert "v0" in samples
     assert samples["c"].shape[0] == 5
 
     # posterior predictive
-    pp = hmc.posterior_predictive(mcmc)
+    pp = bc.posterior_predictive(mcmc)
     assert isinstance(pp, dict)
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp
@@ -90,23 +90,23 @@ def test_hmc_multiple_obs():
         "distance": y[:10, 0],
         "impact_velocity": y[:10, 1],
     }
-    hmc = MCMC_calibration(
+    bc = BayesianCalibration(
         gp,
         sim.parameters_range,
         observations,
         observation_noise={"distance": 20.0, "impact_velocity": 10.0},
     )
-    assert hmc.observation_noise == {"distance": 20.0, "impact_velocity": 10.0}
+    assert bc.observation_noise == {"distance": 20.0, "impact_velocity": 10.0}
 
     # check samples are generated
-    mcmc = hmc.run(warmup_steps=5, num_samples=5)
+    mcmc = bc.run_mcmc(warmup_steps=5, num_samples=5)
     samples = mcmc.get_samples()
     assert "c" in samples
     assert "v0" in samples
     assert samples["c"].shape[0] == 5
 
     # posterior predictive
-    pp = hmc.posterior_predictive(mcmc)
+    pp = bc.posterior_predictive(mcmc)
     assert isinstance(pp, dict)
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp

@@ -10,11 +10,10 @@ from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 
 
-class MCMC_calibration(TorchDeviceMixin):
+class BayesianCalibration(TorchDeviceMixin):
     """
-    Markov Chain Monte Carlo (MCMC) is a Bayesian calibration method that estimates the
-    probability distribution over input parameters given observed data. A key advantage
-    is that it provides uncertainty estimates over the parameter space.
+    Bayesian calibration estimates the probability distribution over input parameters
+    given observed data, providing uncertainty estimates.
     """
 
     def __init__(  # noqa: PLR0913
@@ -146,11 +145,10 @@ class MCMC_calibration(TorchDeviceMixin):
 
         # Get emulator prediction
         output = self.emulator.predict(full_params)
-
         if isinstance(output, TensorLike):
-            pred_mean = output.to(self.device)
+            pred_mean = output
         elif isinstance(output, DistributionLike):
-            pred_mean = output.mean.to(self.device)
+            pred_mean = output.mean
         else:
             msg = "The emulator did not return a tensor or a distribution object."
             raise ValueError(msg)
@@ -171,7 +169,7 @@ class MCMC_calibration(TorchDeviceMixin):
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),
                     )
 
-    def run(
+    def run_mcmc(
         self,
         warmup_steps: int = 500,
         num_samples: int = 1000,
@@ -181,7 +179,7 @@ class MCMC_calibration(TorchDeviceMixin):
         **sampler_kwargs,
     ) -> MCMC:
         """
-        Run MCMC with NUTS sampler.
+        Run Markov Chain Monte Carlo (MCMC). Defaults to using the NUTS sampler.
 
         Parameters
         ----------

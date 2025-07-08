@@ -195,10 +195,10 @@ class GaussianProcessExact(
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
-        with torch.no_grad():
-            x = x.to(self.device)
-            x = self.preprocess(x)
-            return self(x)
+        # with torch.no_grad():
+        x = x.to(self.device)
+        x = self.preprocess(x)
+        return self(x)
 
     @staticmethod
     def get_tune_config():
