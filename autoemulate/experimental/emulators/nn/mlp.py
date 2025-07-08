@@ -21,7 +21,7 @@ class MLP(DropoutTorchBackend):
         scale: float = 1.0,
         bias_init: str = "default",
         dropout_prob: float | None = None,
-        lr: float = 1e-1,
+        lr: float = 1e-2,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
         **kwargs,
@@ -85,7 +85,8 @@ class MLP(DropoutTorchBackend):
                 layers.append(nn.Dropout(p=dropout_prob))
 
         # Add final layer without activation
-        layers.append(nn.Linear(layer_dims[-1], y.shape[1], device=self.device))
+        num_tasks = y.shape[1]
+        layers.append(nn.Linear(layer_dims[-1], num_tasks, device=self.device))
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization

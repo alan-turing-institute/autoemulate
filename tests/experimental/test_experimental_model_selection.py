@@ -30,7 +30,7 @@ def test_cross_validate():
             if with_grad:
                 msg = "Error!"
                 raise ValueError(msg)
-            return x.unsqueeze(1)
+            return x
 
         @staticmethod
         def get_tune_config():
@@ -40,8 +40,9 @@ def test_cross_validate():
         def is_multioutput():
             return False
 
-    x = torch.tensor(np.arange(32)).float()
-    y = x.unsqueeze(1)  # Dummy target, same shape as _predict output
+    # Make 2D
+    x = torch.tensor(np.arange(32)).unsqueeze(1).float()
+    y = x  # Dummy target, same shape as _predict output
     dataset = TensorDataset(x, y)
 
     emulator_cls = DummyEmulator
