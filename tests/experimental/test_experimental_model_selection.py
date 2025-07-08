@@ -27,7 +27,7 @@ def test_cross_validate():
             Dummy predict that always returns
             a 2D tensor.
             """
-            return x.unsqueeze(1)
+            return x
 
         @staticmethod
         def get_tune_config():
@@ -37,8 +37,9 @@ def test_cross_validate():
         def is_multioutput():
             return False
 
-    x = torch.tensor(np.arange(32)).float()
-    y = x.unsqueeze(1)  # Dummy target, same shape as _predict output
+    # Make 2D
+    x = torch.tensor(np.arange(32)).unsqueeze(1).float()
+    y = x  # Dummy target, same shape as _predict output
     dataset = TensorDataset(x, y)
 
     emulator_cls = DummyEmulator
