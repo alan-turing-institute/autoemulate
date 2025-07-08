@@ -12,6 +12,7 @@ from autoemulate.experimental.emulators.transformed.base import TransformedEmula
 from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.results import Result, Results
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DeviceLike, InputLike
 
@@ -35,8 +36,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x, y = self._move_tensors_to_device(x, y)
 
         # Transforms to search over
-        self.x_transforms_list = x_transforms_list or [[]]
-        self.y_transforms_list = y_transforms_list or [[]]
+        self.x_transforms_list = x_transforms_list or [[StandardizeTransform()]]
+        self.y_transforms_list = y_transforms_list or [[StandardizeTransform()]]
 
         # Set default models if None
         updated_models = self.get_models(models)
