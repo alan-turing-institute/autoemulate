@@ -3,52 +3,54 @@ import pytest
 import torch
 from sklearn.datasets import make_regression
 
+N_S = 20
+
 
 @pytest.fixture
 def sample_data_y1d():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=0)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=1, random_state=0)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def new_data_y1d():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=1, random_state=1)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=1, random_state=1)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def sample_data_y2d():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=0)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=2, random_state=0)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def new_data_y2d():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=2, random_state=1)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=2, random_state=1)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def sample_data_y2d_100_targets():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=100, random_state=0)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=100, random_state=0)  # type: ignore  # noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def new_data_y2d_100_targets():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=100, random_state=1)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=100, random_state=1)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def sample_data_y2d_1000_targets():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=1000, random_state=0)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=1000, random_state=0)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 
 @pytest.fixture
 def new_data_y2d_1000_targets():
-    x, y = make_regression(n_samples=20, n_features=5, n_targets=1000, random_state=1)  # type: ignore noqa: PGH003
+    x, y = make_regression(n_samples=N_S, n_features=5, n_targets=1000, random_state=1)  # type: ignore noqa: PGH003
     return torch.Tensor(x), torch.Tensor(y)
 
 

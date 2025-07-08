@@ -5,6 +5,7 @@ from autoemulate.experimental.device import (
     check_torch_device_is_available,
 )
 from autoemulate.experimental.emulators import ALL_EMULATORS
+from autoemulate.experimental.results import Result, Results
 from autoemulate.experimental.transforms import (
     PCATransform,
     StandardizeTransform,
@@ -44,13 +45,14 @@ def test_compare_user_models(sample_data_y2d, recwarn):
     x, y = sample_data_y2d
     ae = AutoEmulate(x, y, models=ALL_EMULATORS)
     results = ae.compare(1)
-    print(results)
     assert len(recwarn) == 2
     assert str(recwarn.pop().message) == (
         "Model (<class 'autoemulate.experimental.emulators.lightgbm.Li"
         "ghtGBM'>) is not multioutput but the data is multioutput. Skipping model "
         "(<class 'autoemulate.experimental.emulators.lightgbm.LightGBM'>)..."
     )
+    assert type(results) is Results
+    assert type(results.results[0]) is Result
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
