@@ -6,7 +6,7 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from autoemulate.experimental.data.utils import set_random_seed
+from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import (
@@ -105,7 +105,6 @@ def cross_validate(
         # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())
         val_subset = Subset(dataset, val_idx.tolist())
-        train_loader = DataLoader(train_subset, batch_size=batch_size)
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
         # Handle random seed for reproducibility
@@ -116,8 +115,9 @@ def cross_validate(
         if "random_seed" in model_init_params:
             model_kwargs["random_seed"] = random_seed
 
-        # fit model
-        x, y = next(iter(train_loader))
+        # Convert dataloader to tensors to pass to model
+        x, y = ConversionMixin._convert_to_tensors(train_subset)
+
         m = model(x, y, device=device, **model_kwargs)
         m.fit(x, y)
 
