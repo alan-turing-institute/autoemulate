@@ -1,11 +1,12 @@
+import torch
+from sklearn.model_selection import KFold
 from torchmetrics import R2Score
 from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
-from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.model_selection import evaluate
+from autoemulate.experimental.model_selection import cross_validate
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import (
     DeviceLike,
@@ -54,11 +55,14 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         if random_seed is not None:
             set_random_seed(seed=random_seed)
 
-    def run(
+    def run(  # noqa: PLR0913
         self,
         model_class: type[Emulator],
         x_transforms: list[AutoEmulateTransform] | None = None,
         y_transforms: list[AutoEmulateTransform] | None = None,
+        n_splits: int = 5,
+        seed: int | None = None,
+        shuffle: bool = True,
     ) -> tuple[list[float], list[ModelConfig]]:
         """
         Parameters
@@ -91,22 +95,19 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
 
-            transformed_emulator = TransformedEmulator(
-                train_x,
-                train_y,
-                model=model_class,
+            scores = cross_validate(
+                cv=KFold(n_splits=n_splits, random_state=seed, shuffle=shuffle),
+                dataset=ConversionMixin._convert_to_dataset(
+                    torch.cat([train_x, val_x], dim=0),
+                    torch.cat([train_y, val_y], dim=0),
+                ),
                 x_transforms=x_transforms,
                 y_transforms=y_transforms,
+                model=model_class,
                 device=self.device,
+                random_seed=None,
             )
-            transformed_emulator.fit(train_x, train_y)
-
-            # evaluate
-            y_pred = transformed_emulator.predict(val_x)
-            score = evaluate(val_y, y_pred, self.metric, self.device)
-
-            # record score and config
             model_config_tested.append(model_config)
-            val_scores.append(score)
+            val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
 
         return val_scores, model_config_tested
