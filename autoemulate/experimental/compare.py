@@ -25,6 +25,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator]] | None = None,
         x_transforms_list: list[list[AutoEmulateTransform]] | None = None,
         y_transforms_list: list[list[AutoEmulateTransform]] | None = None,
+        n_iter: int = 10,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
     ):
@@ -60,7 +61,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 "Please provide a list of models to compare."
             )
             raise ValueError(msg)
-        self.compare()
+        self.compare(n_iter=n_iter)
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -107,10 +108,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         )
         logger.info(msg)
 
-    def compare(
-        self,
-        n_iter: int = 10,
-    ):
+    def compare(self, n_iter: int = 100):
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
