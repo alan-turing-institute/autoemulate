@@ -115,7 +115,7 @@ class Ensemble(GaussianEmulator):
         return GaussianLike(
             mu_ens,
             make_positive_definite(
-                sigma_ens, max_tries_epsilon=2, max_tries_min_eigval=0
+                sigma_ens, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
             ),
         )
 
@@ -242,7 +242,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         return GaussianLike(
             mu,
             make_positive_definite(
-                sigma_epi, max_tries_epsilon=2, max_tries_min_eigval=0
+                sigma_epi, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
             ),
         )
 

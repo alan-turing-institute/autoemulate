@@ -238,7 +238,9 @@ class AutoEmulateTransform(
             cov_orig = expanded_basis_matrix @ cov @ expanded_basis_matrix.T
 
             # Ensure positive definite
-            cov_orig = make_positive_definite(cov_orig)
+            cov_orig = make_positive_definite(
+                cov_orig, min_jitter=1e-6, max_tries=3, clamp_eigvals=True
+            )
 
             return GaussianProcessLike(mean_orig, cov_orig)
 
@@ -256,7 +258,15 @@ class AutoEmulateTransform(
             # Ensure positive definite
             if cov_orig.ndim > 2:
                 # TODO: consider revising whether to only use jitter
-                cov_orig = torch.stack([make_positive_definite(c) for c in cov_orig], 0)
+                cov_orig = torch.stack(
+                    [
+                        make_positive_definite(
+                            c, min_jitter=1e-6, max_tries=3, clamp_eigvals=True
+                        )
+                        for c in cov_orig
+                    ],
+                    0,
+                )
 
             return GaussianLike(mean_orig, cov_orig)
 
@@ -322,11 +332,19 @@ def _inverse_sample_gaussian_like(
     cov = (
         # Loop over the batch dimension and compute covariance for each sample
         torch.stack(
-            [make_positive_definite(s.T.cov()) for s in samples.transpose(0, 1)], 0
+            [
+                make_positive_definite(
+                    s.T.cov(), min_jitter=1e-6, max_tries=3, clamp_eigvals=False
+                )
+                for s in samples.transpose(0, 1)
+            ],
+            0,
         )
         if len(batch_shape) > 0
         # If no batch shape, compute covariance for the entire sample set
-        else make_positive_definite(samples.T.cov())
+        else make_positive_definite(
+            samples.T.cov(), min_jitter=1e-6, max_tries=3, clamp_eigvals=False
+        )
     )
     return GaussianLike(mean, cov)
 
@@ -370,7 +388,12 @@ def _inverse_sample_gaussian_process_like(
     assert isinstance(samples, TensorLike)
     mean = samples.mean(dim=0)
     cov = (
-        make_positive_definite(samples.reshape(n_samples, -1).T.cov())
+        make_positive_definite(
+            samples.reshape(n_samples, -1).T.cov(),
+            min_jitter=1e-6,
+            max_tries=3,
+            clamp_eigvals=True,
+        )
         if full_covariance
         else DiagLinearOperator(samples.reshape(n_samples, -1).var(dim=0))
     )
