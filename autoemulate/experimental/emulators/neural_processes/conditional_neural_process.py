@@ -102,8 +102,8 @@
 #     points.
 
 #     TODO:
-#     this currently just adds zeros. These shouldn't have an impact on the output as long
-#     as we don't do layernorm or attention, but we should modify cnp etc. to handle this
+#     this currently just adds zeros. These shouldn't have an impact on the output as long # noqa: E501
+#     as we don't do layernorm or attention, but we should modify cnp etc. to handle this # noqa: E501
 #     better.
 #     """
 #     X, y = zip(*batch, strict=False)
@@ -114,8 +114,8 @@
 #     max_target = max(x["x_target"].shape[0] for x in X)
 
 #     # Initialize tensors to hold the batched data
-#     x_context_batched = torch.zeros(len(batch), max_context, X[0]["x_context"].shape[1])
-#     y_context_batched = torch.zeros(len(batch), max_context, X[0]["y_context"].shape[1])
+#     x_context_batched = torch.zeros(len(batch), max_context, X[0]["x_context"].shape[1]) # noqa: E501
+#     y_context_batched = torch.zeros(len(batch), max_context, X[0]["y_context"].shape[1]) # noqa: E501
 #     x_target_batched = torch.zeros(len(batch), max_target, X[0]["x_target"].shape[1])
 #     y_batched = torch.zeros(len(batch), max_target, y[0].shape[1])
 
@@ -432,11 +432,11 @@
 #             self.loss_history.append(avg_epoch_loss)
 
 #             if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
-#                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
+#                 print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}") # noqa: E501
 
 #     def _predict(self, x: TensorLike) -> DistributionLike:
 #         """
-#         Predict uses the training data as the context data and the input x as the target
+#         Predict uses the training data as the context data and the input x as the target # noqa: E501
 #         data. The data is preprocessed within the method.
 
 #         Parameters
