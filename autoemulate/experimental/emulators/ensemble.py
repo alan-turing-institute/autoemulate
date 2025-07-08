@@ -242,7 +242,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         return GaussianLike(
             mu,
             make_positive_definite(
-                sigma_epi, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
+                sigma_epi, min_jitter=self.jitter, max_tries=1, clamp_eigvals=True
             ),
         )
 
