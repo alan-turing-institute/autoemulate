@@ -15,9 +15,6 @@ class MCMC_calibration(TorchDeviceMixin):
     Markov Chain Monte Carlo (MCMC) is a Bayesian calibration method that estimates the
     probability distribution over input parameters given observed data. A key advantage
     is that it provides uncertainty estimates over the parameter space.
-
-    Hamiltonian Monte Carlo (HMC) is a type of MCMC, which efficiently handles high
-    dimensional parameter spaces. In particular, we use the NUTS sampler.
     """
 
     def __init__(  # noqa: PLR0913
@@ -99,7 +96,9 @@ class MCMC_calibration(TorchDeviceMixin):
             raise ValueError(msg)
 
     def _get_kernel(self, sampler: str, **sampler_kwargs):
-        """Get the appropriate MCMC kernel based on sampler choice."""
+        """
+        Get the appropriate MCMC kernel based on sampler choice.
+        """
         sampler = sampler.lower()
 
         if sampler == "nuts":
@@ -196,6 +195,8 @@ class MCMC_calibration(TorchDeviceMixin):
         initial_params: dict[str, TensorLike] | None
             Optional dictionary specifiying initial values for each calibration
             parameter per chain. The tensors must be of length `num_chains`.
+        sampler: str
+            The MCMC kernel to use, one of "hmc", "nuts" or "metropolis".
 
         Returns
         -------
