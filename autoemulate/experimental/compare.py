@@ -19,7 +19,7 @@ from autoemulate.experimental.results import Result, Results
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DeviceLike, InputLike
+from autoemulate.experimental.types import DeviceLike, DistributionLike, InputLike
 
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
@@ -157,7 +157,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         rmse_score,
                     )
 
-    def plot(
+    def plot(  # noqa: PLR0912
         self,
         result_id: str,
         input_index: list[int] | int | None = None,
@@ -184,6 +184,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Re-run prediction with just this model to get the predictions
         y_pred = model.predict(test_x)
+        if isinstance(y_pred, DistributionLike):
+            y_pred = y_pred.mean
         r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
 
         # Convert to numpy arrays for plotting and ensure correct shapes
