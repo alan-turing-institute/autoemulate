@@ -1,11 +1,12 @@
 import numpy as np
 import torch
-from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.model_selection import cross_validate
 from sklearn.model_selection import KFold, LeavePOut
 from torch import nn
 from torch.utils.data import TensorDataset
+
+from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.model_selection import cross_validate
 
 
 def test_cross_validate():
@@ -27,6 +28,9 @@ def test_cross_validate():
             Dummy predict that always returns
             a 2D tensor.
             """
+            if with_grad:
+                msg = "Error!"
+                raise ValueError(msg)
             return x.unsqueeze(1)
 
         @staticmethod
