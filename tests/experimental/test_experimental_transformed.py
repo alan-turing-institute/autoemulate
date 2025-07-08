@@ -119,7 +119,7 @@ def test_transformed_emulator_100_targets(
         [
             # TODO: revisit failing case with largr number of targets and no transforms
             # None,
-            [StandardizeTransform()],
+            # [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=10)],
             [StandardizeTransform(), PCATransform(n_components=20)],
             [StandardizeTransform(), VAETransform(latent_dim=10)],

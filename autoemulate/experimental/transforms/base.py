@@ -252,6 +252,7 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
             # Ensure positive definite
             if cov_orig.ndim > 2:
+                # TODO: consider revising whether to only use jitter
                 cov_orig = torch.stack([make_positive_definite(c) for c in cov_orig], 0)
 
             return GaussianLike(mean_orig, cov_orig)
@@ -301,7 +302,13 @@ def _inverse_sample_gaussian_like(
         raise NotImplementedError(msg)
 
     # Sample from the distribution `y` and apply the transformation `c`
-    samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+    samples = torch.vmap(c)(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
+
+    # Remove batch dim if batch_shape is empty
+    if len(batch_shape) == 0:
+        samples = samples.squeeze(1)
+
+    # Ensure the samples are of type TensorLike
     assert isinstance(samples, TensorLike)
 
     # Compute the mean and covariance of the samples
