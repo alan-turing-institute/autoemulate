@@ -31,6 +31,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x_transforms_list: list[list[AutoEmulateTransform]] | None = None,
         y_transforms_list: list[list[AutoEmulateTransform]] | None = None,
         n_iter: int = 10,
+        n_splits: int = 5,
+        shuffle: bool = True,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
     ):
@@ -66,6 +68,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 "Please provide a list of models to compare."
             )
             raise ValueError(msg)
+
+        # Assign tuner parameters
+        self.n_splits = n_splits
+        self.shuffle = shuffle
+
+        # Run compare
         self.compare(n_iter=n_iter)
 
     @staticmethod
@@ -118,21 +126,27 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
                 for id_num, model_cls in enumerate(self.models):
-                    scores, configs = tuner.run(model_cls, x_transforms, y_transforms)
+                    scores, configs = tuner.run(
+                        model_cls,
+                        x_transforms,
+                        y_transforms,
+                        n_splits=self.n_splits,
+                        shuffle=self.shuffle,
+                    )
                     best_score_idx = scores.index(max(scores))
                     best_config_for_this_model = configs[best_score_idx]
-                    val_x, val_y = self._convert_to_tensors(self.train_val)
+                    train_val_x, train_val_y = self._convert_to_tensors(self.train_val)
                     test_x, test_y = self._convert_to_tensors(self.test)
                     transformed_emulator = TransformedEmulator(
-                        val_x,
-                        val_y,
+                        train_val_x,
+                        train_val_y,
                         model=model_cls,
                         x_transforms=x_transforms,
                         y_transforms=y_transforms,
                         device=self.device,
                         **best_config_for_this_model,
                     )
-                    transformed_emulator.fit(val_x, val_y)
+                    transformed_emulator.fit(train_val_x, train_val_y)
                     y_pred = transformed_emulator.predict(test_x)
                     r2_score = evaluate(
                         test_y, y_pred, torchmetrics.R2Score, self.device
