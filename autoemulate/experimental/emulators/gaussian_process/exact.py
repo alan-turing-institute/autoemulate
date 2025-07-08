@@ -194,10 +194,9 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         if with_grad:
             x = x.to(self.device)
             return self(x)
-        else:
-            with torch.no_grad():
-                x = x.to(self.device)
-                return self(x)
+        with torch.no_grad():
+            x = x.to(self.device)
+            return self(x)
 
     @staticmethod
     def get_tune_config():
