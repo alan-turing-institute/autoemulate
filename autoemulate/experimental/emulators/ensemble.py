@@ -10,6 +10,7 @@ from autoemulate.experimental.emulators.base import (
     GaussianEmulator,
 )
 from autoemulate.experimental.emulators.nn.mlp import MLP
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DeviceLike,
     GaussianLike,
@@ -110,14 +111,13 @@ class Ensemble(GaussianEmulator):
         # Total covariance
         sigma_ens = sigma_alea + sigma_epi  # (batch, dim, dim)
 
-        # Add some jitter to avoid positive-definite warnings
-        b, d = mu_ens.shape
-        eye = torch.eye(d, device=sigma_epi.device)  # (dim, dim)
-        jitter_mat = eye.unsqueeze(0).expand(b, d, d) * self.jitter
-        sigma_epi += jitter_mat
-
         # Return as MultivariateNormal
-        return GaussianLike(mu_ens, sigma_ens)
+        return GaussianLike(
+            mu_ens,
+            make_positive_definite(
+                sigma_ens, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
+            ),
+        )
 
 
 class EnsembleMLP(Ensemble):
@@ -239,13 +239,12 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
             self.n_samples - 1
         )
 
-        # Add some jitter to avoid positive-definite warnings
-        b, d = mu.shape
-        eye = torch.eye(d, device=sigma_epi.device)  # (dim, dim)
-        jitter_mat = eye.unsqueeze(0).expand(b, d, d) * self.jitter
-        sigma_epi += jitter_mat
-
-        return GaussianLike(mu, sigma_epi)
+        return GaussianLike(
+            mu,
+            make_positive_definite(
+                sigma_epi, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
+            ),
+        )
 
 
 class EnsembleMLPDropout(DropoutEnsemble):
