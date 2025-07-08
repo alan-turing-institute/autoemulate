@@ -7,10 +7,7 @@ from sklearn.base import BaseEstimator
 from torch import nn, optim
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import (
-    ConversionMixin,
-    ValidationMixin,
-)
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import (
     DistributionLike,
@@ -51,16 +48,16 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return cls.__name__
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
         pass
 
-    def predict(self, x: TensorLike) -> OutputLike:
+    def predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
         if not self.is_fitted_:
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
         (x,) = self._move_tensors_to_device(x)
-        output = self._predict(x)
+        output = self._predict(x, with_grad)
         self._check_output(output)
         return output
 
@@ -112,9 +109,9 @@ class DeterministicEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> TensorLike: ...
-    def predict(self, x: TensorLike) -> TensorLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, TensorLike)
         return pred
 
@@ -125,14 +122,15 @@ class ProbabilisticEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> DistributionLike: ...
-    def predict(self, x: TensorLike) -> DistributionLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, DistributionLike)
         return pred
 
     def predict_mean_and_variance(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """Predict mean and variance from the probabilistic output.
+        """
+        Predict mean and variance from the probabilistic output.
 
         Parameters
         ----------
@@ -143,9 +141,8 @@ class ProbabilisticEmulator(Emulator):
         -------
         tuple[TensorLike, TensorLike]
             The emulator predicted mean and variance for `x`.
-
         """
-        pred = self.predict(x)
+        pred = self.predict(x, with_grad)
         return pred.mean, pred.variance
 
 
@@ -155,9 +152,9 @@ class GaussianEmulator(ProbabilisticEmulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> GaussianLike: ...
-    def predict(self, x: TensorLike) -> GaussianLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianLike)
         return pred
 
@@ -168,9 +165,11 @@ class GaussianProcessEmulator(GaussianEmulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> GaussianProcessLike: ...
-    def predict(self, x: TensorLike) -> GaussianProcessLike:
-        pred = super().predict(x)
+    def _predict(
+        self, x: TensorLike, with_grad: bool = False
+    ) -> GaussianProcessLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianProcessLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianProcessLike)
         return pred
 
@@ -307,11 +306,15 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 if module.bias is not None and bias_init == "zeros":
                     nn.init.zeros_(module.bias)
 
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
         self.eval()
-        with torch.no_grad():
+        if with_grad:
             x = self.preprocess(x)
             return self(x)
+        else:
+            with torch.no_grad():
+                x = self.preprocess(x)
+                return self(x)
 
 
 class SklearnBackend(DeterministicEmulator):
@@ -342,7 +345,7 @@ class SklearnBackend(DeterministicEmulator):
         self._model_specific_check(x_np, y_np)
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
-    def _predict(self, x: TensorLike) -> TensorLike:
+    def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))

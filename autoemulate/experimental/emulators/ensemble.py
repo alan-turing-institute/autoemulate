@@ -64,7 +64,7 @@ class Ensemble(GaussianEmulator):
         self.is_fitted_ = True
 
     @torch.inference_mode()
-    def _predict(self, x: Tensor) -> GaussianLike:
+    def _predict(self, x: Tensor, with_grad: bool = False) -> GaussianLike:
         # Inference mode to disable autograd computation graph
         device = x.device
         means: list[Tensor] = []
@@ -72,7 +72,7 @@ class Ensemble(GaussianEmulator):
 
         # Outputs from each emulator
         for e in self.emulators:
-            out = e.predict(x)
+            out = e.predict(x, with_grad)
             if isinstance(out, GaussianLike):
                 mu_i = out.mean.to(device)  # (batch_size, n_dims)
                 assert isinstance(out.covariance_matrix, TensorLike)
