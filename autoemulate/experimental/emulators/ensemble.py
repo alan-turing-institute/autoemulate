@@ -66,6 +66,10 @@ class Ensemble(GaussianEmulator):
         self.is_fitted_ = True
 
     def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
+        if with_grad and not self.supports_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
+
         # Inference mode to disable autograd computation graph
         device = x.device
         means: list[Tensor] = []

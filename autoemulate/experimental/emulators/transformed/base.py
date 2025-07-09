@@ -133,8 +133,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
         TorchDeviceMixin.__init__(self, device=device)
-        # this should also consider transforms
-        self.supports_grad = self.model.supports_grad
+        self.supports_grad = (
+            self.model.supports_grad
+            and all(t.bijective for t in self.x_transforms)
+            and all(t.bijective for t in self.y_transforms)
+        )
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """Fit the transforms on the provided training data.
@@ -366,6 +369,10 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.model.fit(x_t, y_t)
 
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+        if with_grad and not self.supports_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
+
         # Transform and invert transform for prediction in original data space
         x_t = self._transform_x(x)
         y_t_pred = self.model.predict(x_t, with_grad)
