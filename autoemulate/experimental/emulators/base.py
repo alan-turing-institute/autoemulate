@@ -28,6 +28,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     """
 
     is_fitted_: bool = False
+    supports_grad: bool = False
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -48,7 +49,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return cls.__name__
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         pass
 
     def predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
@@ -109,7 +110,7 @@ class DeterministicEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike: ...
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
         pred = super().predict(x, with_grad)
         assert isinstance(pred, TensorLike)
@@ -122,7 +123,7 @@ class ProbabilisticEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike: ...
+    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
         pred = super().predict(x, with_grad)
         assert isinstance(pred, DistributionLike)
@@ -155,8 +156,10 @@ class GaussianEmulator(ProbabilisticEmulator):
     `GaussianLike`.
     """
 
+    supports_grad: bool = True
+
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike: ...
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
         pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianLike)
@@ -169,9 +172,7 @@ class GaussianProcessEmulator(GaussianEmulator):
     """
 
     @abstractmethod
-    def _predict(
-        self, x: TensorLike, with_grad: bool = False
-    ) -> GaussianProcessLike: ...
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianProcessLike:
         pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianProcessLike)
@@ -194,6 +195,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     preprocessor: Preprocessor | None = None
     loss_fn: nn.Module = nn.MSELoss()
     optimizer: optim.Optimizer
+    supports_grad: bool = True
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
@@ -309,12 +311,8 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 if module.bias is not None and bias_init == "zeros":
                     nn.init.zeros_(module.bias)
 
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
-        self.eval()
-        if with_grad:
-            x = self.preprocess(x)
-            return self(x)
-        with torch.no_grad():
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+        with torch.set_grad_enabled(with_grad):
             x = self.preprocess(x)
             return self(x)
 
@@ -331,6 +329,7 @@ class SklearnBackend(DeterministicEmulator):
     normalize_y: bool = False
     y_mean: TensorLike
     y_std: TensorLike
+    supports_grad: bool = False
 
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
@@ -347,9 +346,9 @@ class SklearnBackend(DeterministicEmulator):
         self._model_specific_check(x_np, y_np)
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike:
         if with_grad:
-            msg = "Emulators with `SklearnBackend` base cannot compute gradients."
+            msg = "Gradient calculation is not supported."
             raise ValueError(msg)
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003

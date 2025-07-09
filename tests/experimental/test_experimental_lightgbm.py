@@ -14,7 +14,7 @@ def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
     assert isinstance(y_pred, TensorLike)
     assert not y_pred.requires_grad
 
-    with pytest.raises(ValueError, match="cannot compute gradients"):
+    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
         lgbm.predict(x2, with_grad=True)
 
 

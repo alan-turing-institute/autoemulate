@@ -49,6 +49,7 @@ class Ensemble(GaussianEmulator):
         self.emulators = list(emulators)
         self.is_fitted_ = all(e.is_fitted_ for e in emulators)
         self.jitter = jitter
+        self.supports_grad = all(e.supports_grad for e in self.emulators)
         TorchDeviceMixin.__init__(self, device=device)
 
     @staticmethod
@@ -64,7 +65,7 @@ class Ensemble(GaussianEmulator):
             e.fit(x, y)
         self.is_fitted_ = True
 
-    def _predict(self, x: Tensor, with_grad: bool = False) -> GaussianLike:
+    def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
         # Inference mode to disable autograd computation graph
         device = x.device
         means: list[Tensor] = []
@@ -187,6 +188,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self.n_samples = n_samples
         self.is_fitted_ = model.is_fitted_
         self.jitter = jitter
+        self.supports_grad = True
 
     @staticmethod
     def is_multioutput() -> bool:
@@ -203,7 +205,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self.model.fit(x, y)
         self.is_fitted_ = True
 
-    def _predict(self, x: Tensor, with_grad: bool = False) -> GaussianLike:
+    def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
         if not self.is_fitted_:
             s = "DropoutEnsemble: model is not fitted yet."
             raise RuntimeError(s)
@@ -216,17 +218,14 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
         # collect M outputs
         samples = []
-        for _ in range(self.n_samples):
-            if with_grad:
+        with torch.set_grad_enabled(with_grad):
+            for _ in range(self.n_samples):
                 # apply any preprocessing the model expects
                 x_proc = self.model.preprocess(x)
+
                 out = self.model.forward(x_proc)
-            else:
-                with torch.no_grad():
-                    x_proc = self.model.preprocess(x)
-                    out = self.model.forward(x_proc)
-            # out: Tensor of shape (batch_size, output_dim)
-            samples.append(out)
+                # out: Tensor of shape (batch_size, output_dim)
+                samples.append(out)
 
         # stack to shape (M, batch, dim)
         stack = torch.stack(samples, dim=0)

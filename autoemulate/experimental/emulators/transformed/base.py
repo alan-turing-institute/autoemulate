@@ -1,6 +1,5 @@
 from typing import cast
 
-import torch
 from torch.distributions import ComposeTransform, Transform, TransformedDistribution
 
 from autoemulate.experimental.data.utils import ValidationMixin
@@ -134,6 +133,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
         TorchDeviceMixin.__init__(self, device=device)
+        # this should also consider transforms
+        self.supports_grad = self.model.supports_grad
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """Fit the transforms on the provided training data.
@@ -364,24 +365,14 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
 
-    def _predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
-        if with_grad:
-            # Transform and invert transform for prediction in original data space
-            x_t = self._transform_x(x)
-            y_t_pred = self.model.predict(x_t, with_grad)
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+        # Transform and invert transform for prediction in original data space
+        x_t = self._transform_x(x)
+        y_t_pred = self.model.predict(x_t, with_grad)
 
-            # If TensorLike, transform tensor back to original space
-            if isinstance(y_t_pred, TensorLike):
-                return self._inv_transform_y_tensor(y_t_pred)
-        else:
-            with torch.no_grad():
-                # Transform and invert transform for prediction in original data space
-                x_t = self._transform_x(x)
-                y_t_pred = self.model.predict(x_t, with_grad)
-
-                # If TensorLike, transform tensor back to original space
-                if isinstance(y_t_pred, TensorLike):
-                    return self._inv_transform_y_tensor(y_t_pred)
+        # If TensorLike, transform tensor back to original space
+        if isinstance(y_t_pred, TensorLike):
+            return self._inv_transform_y_tensor(y_t_pred)
 
         # Output derived by analytical/approximate transformations
         if not self.output_from_samples:
