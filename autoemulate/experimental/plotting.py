@@ -36,6 +36,7 @@ def plot_Xy(  # noqa: PLR0913
     X: NumpyLike,
     y: NumpyLike,
     y_pred: NumpyLike,
+    y_variance: NumpyLike | None = None,
     ax=None,
     title: str = "Xy",
     input_index: int | None = None,
@@ -51,12 +52,27 @@ def plot_Xy(  # noqa: PLR0913
     X_sorted = X[sort_idx]
     y_sorted = y[sort_idx]
     y_pred_sorted = y_pred[sort_idx]
+    y_variance_sorted = None
+    if y_variance is not None:
+        y_variance_sorted = y_variance[sort_idx]
+        # TODO: switch to using standard deviation
+        # y_std = np.sqrt(y_variance_sorted)
 
     org_points_color = "Goldenrod"
     pred_points_color = "#6A5ACD"
     pred_line_color = "#6A5ACD"
+    ci_color = "lightblue"
 
     assert ax is not None, "ax must be provided"
+    if y_variance_sorted is not None:
+        ax.fill_between(
+            X_sorted,
+            y_pred_sorted - 2 * y_variance_sorted,
+            y_pred_sorted + 2 * y_variance_sorted,
+            color=ci_color,
+            alpha=0.25,
+            label="95% Confidence Interval",
+        )
     ax.plot(
         X_sorted,
         y_pred_sorted,
@@ -93,9 +109,10 @@ def plot_Xy(  # noqa: PLR0913
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
+    lbl = "pred." if y_variance is None else "pred. mean"
     legend = ax.legend(
         handles[-2:],
-        ["data", "pred."],
+        ["data", lbl],
         loc="best",
         handletextpad=0,
         columnspacing=0,

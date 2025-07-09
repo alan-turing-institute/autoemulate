@@ -171,7 +171,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         rmse_score,
                     )
 
-    def plot(  # noqa: PLR0912
+    def plot(  # noqa: PLR0912, PLR0915
         self,
         result_id: str,
         input_index: list[int] | int | None = None,
@@ -198,7 +198,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Re-run prediction with just this model to get the predictions
         y_pred = model.predict(test_x)
+        y_variance = None
         if isinstance(y_pred, DistributionLike):
+            y_variance = y_pred.variance
             y_pred = y_pred.mean
         r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
 
@@ -211,6 +213,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         test_x = self._ensure_numpy_2d(test_x)
         test_y = self._ensure_numpy_2d(test_y)
         y_pred = self._ensure_numpy_2d(y_pred)
+        if y_variance is not None:
+            y_variance, _ = self._convert_to_numpy(y_variance, None)
+            y_variance = self._ensure_numpy_2d(y_variance)
 
         _, n_features = test_x.shape
 
@@ -257,6 +262,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         test_x[:, in_idx],
                         test_y[:, out_idx],
                         y_pred[:, out_idx],
+                        y_variance[:, out_idx] if y_variance is not None else None,
                         ax=axs[plot_index],
                         title=f"$X_{in_idx}$ vs. $y_{out_idx}$",
                         input_index=in_idx,

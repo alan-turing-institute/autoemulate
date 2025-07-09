@@ -91,10 +91,3 @@ class Results:
             return self._id_to_result[result_id]
         except KeyError as err:
             raise ValueError(f"No result found with ID: {result_id}") from err
-
-    # def plot_compare(self, ...): ...
-
-    # def get_best_model(self, ...) -> Emulator:
-    #     return self.get_best_result["model"]
-
-    # def get_best_result(self, metric: str = "r2", ) -> Result: ...
