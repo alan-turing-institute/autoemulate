@@ -261,7 +261,7 @@ class BayesianCalibration(TorchDeviceMixin):
 
         Returns
         -------
-        az.data.inference_data.InferenceData
+        az.InferenceData
         """
         pp_samples = None
         if posterior_predictive:
