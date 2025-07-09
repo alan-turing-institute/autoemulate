@@ -129,6 +129,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         - For targets with dimensionality > max_targets, the emulator automatically
           switches to sampling-based predictions with diagonal covariance for efficiency
         """
+        TorchDeviceMixin.__init__(self, device=device)
         self.x_transforms = x_transforms or []
         self.y_transforms = y_transforms or []
         self._fit_transforms(x, y)
@@ -138,7 +139,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
-        TorchDeviceMixin.__init__(self, device=device)
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """Fit the transforms on the provided training data.
@@ -199,7 +199,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Transformed input tensor after applying all x_transforms.
 
         """
-        x_t = ComposeTransform(self._cast(self.x_transforms))(x)
+        x_t = ComposeTransform(self._cast(self.x_transforms))(x.to(self.device))
         assert isinstance(x_t, TensorLike)
         return x_t
 
@@ -218,7 +218,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Transformed target tensor after applying all `y_transforms`.
 
         """
-        y_t = ComposeTransform(self._cast(self.y_transforms))(y)
+        y_t = ComposeTransform(self._cast(self.y_transforms))(y.to(self.device))
         assert isinstance(y_t, TensorLike)
         return y_t
 

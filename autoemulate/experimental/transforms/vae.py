@@ -4,7 +4,6 @@ import torch
 from torch.distributions import Transform, constraints
 
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import TensorLike
 from autoemulate.preprocess_target import VAE
@@ -84,12 +83,10 @@ class VAETransform(AutoEmulateTransform):
             intput_dim, self.hidden_layers, self.latent_dim, device=self.device
         ).to(self.device)
 
-    def fit(self, x: TensorLike):
+    def _fit(self, x: TensorLike):
         """
         Fit the VAE on the training data.
         """
-        TorchDeviceMixin.__init__(self, device=x.device)
-
         # Set random seed for reproducibility
         if self.random_seed is not None:
             set_random_seed(self.random_seed)

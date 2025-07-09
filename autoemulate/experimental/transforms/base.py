@@ -35,8 +35,27 @@ class AutoEmulateTransform(
         assert isinstance(output, TensorLike)
         return output
 
+    def fit(self, x: TensorLike):
+        """Fit the transform to the data `x`.
+
+        This method is a wrapper around the `_fit` method, which should be implemented
+        by subclasses to define the fitting procedure. The method initializes the device
+        for the transform based on the input tensor `x`.
+
+        Parameters
+        ----------
+        x : TensorLike
+            Input tensor of shape `(n, d)` where `n` is the number of samples and
+            `d` is the dimensionality of the data.
+
+        """
+        TorchDeviceMixin.__init__(self, device=x.device)
+        x = x.to(self.device)
+        self._fit(x)
+        self._is_fitted = True
+
     @abstractmethod
-    def fit(self, x: TensorLike): ...
+    def _fit(self, x: TensorLike): ...
 
     def _check_is_fitted(self):
         """Check if the transform has been fitted and otherwise raise an error."""
