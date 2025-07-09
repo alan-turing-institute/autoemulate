@@ -52,6 +52,15 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     def model_name(cls) -> str:
         return cls.__name__
 
+    @classmethod
+    def short_name(cls) -> str:
+        """
+        Take the capital letters of the class name and return them as a string.
+        For example, if the class name is `GaussianProcessExact`,
+        this will return `GPE`.
+        """
+        return "".join([c for c in cls.__name__ if c.isupper()])
+
     @abstractmethod
     def _predict(self, x: TensorLike) -> OutputLike:
         pass

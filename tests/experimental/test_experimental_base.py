@@ -63,6 +63,12 @@ class TestPyTorchBackend:
             scheduler_cls=ExponentialLR, scheduler_kwargs={"gamma": 0.9}
         )
 
+    def test_short_name(self):
+        """
+        Test the short_name class method of Emulator.
+        """
+        assert self.model.short_name() == "DM"
+
     def test_fit(self):
         """
         Test the fit method of PyTorchBackend.
