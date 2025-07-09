@@ -72,7 +72,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
@@ -139,7 +138,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         # Extract scheduler-specific kwargs if present
         scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
@@ -271,7 +269,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
@@ -348,7 +345,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         # Extract scheduler-specific kwargs if present
         scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
