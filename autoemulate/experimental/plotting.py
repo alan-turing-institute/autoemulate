@@ -52,11 +52,10 @@ def plot_Xy(  # noqa: PLR0913
     X_sorted = X[sort_idx]
     y_sorted = y[sort_idx]
     y_pred_sorted = y_pred[sort_idx]
-    y_variance_sorted = None
+    y_std = None
     if y_variance is not None:
         y_variance_sorted = y_variance[sort_idx]
-        # TODO: switch to using standard deviation
-        # y_std = np.sqrt(y_variance_sorted)
+        y_std = np.sqrt(y_variance_sorted)
 
     org_points_color = "Goldenrod"
     pred_points_color = "#6A5ACD"
@@ -64,11 +63,11 @@ def plot_Xy(  # noqa: PLR0913
     ci_color = "lightblue"
 
     assert ax is not None, "ax must be provided"
-    if y_variance_sorted is not None:
+    if y_std is not None:
         ax.fill_between(
             X_sorted,
-            y_pred_sorted - 2 * y_variance_sorted,
-            y_pred_sorted + 2 * y_variance_sorted,
+            y_pred_sorted - 2 * y_std,
+            y_pred_sorted + 2 * y_std,
             color=ci_color,
             alpha=0.25,
             label="95% Confidence Interval",
@@ -109,7 +108,7 @@ def plot_Xy(  # noqa: PLR0913
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    lbl = "pred." if y_variance is None else "pred. mean"
+    lbl = "pred." if y_variance is None else "pred. (±2σ)"  # noqa: RUF001
     legend = ax.legend(
         handles[-2:],
         ["data", lbl],
