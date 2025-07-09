@@ -2,6 +2,7 @@ import logging
 import warnings
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import torchmetrics
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
@@ -78,6 +79,21 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
         return ALL_EMULATORS
+
+    @staticmethod
+    def list_emulators() -> pd.DataFrame:
+        """
+        Return a dataframe with the model_name and short_name
+        of all available emulators.
+        Returns:
+            pd.DataFrame: DataFrame with columns ['model_name', 'short_name'].
+        """
+        return pd.DataFrame(
+            {
+                "model_name": [emulator.model_name() for emulator in ALL_EMULATORS],
+                "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
+            }
+        )
 
     def get_models(self, models: list[type[Emulator]] | None) -> list[type[Emulator]]:
         if models is None:
