@@ -222,6 +222,8 @@ class BayesianCalibration(TorchDeviceMixin):
             num_chains=num_chains,
             # If None, init values are sampled from the prior.
             initial_params=initial_params,
+            # Multiprocessing
+            mp_context="spawn" if num_chains > 1 else None,
         )
         mcmc.run()
         return mcmc
