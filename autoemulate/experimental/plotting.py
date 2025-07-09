@@ -92,8 +92,8 @@ def plot_Xy(  # noqa: PLR0913
     # Get the handles and labels for the scatter plots
     handles, _ = ax.get_legend_handles_labels()
 
-    # Add legend
-    ax.legend(
+    # Add legend and get its bounding box
+    legend = ax.legend(
         handles[-2:],
         ["data", "pred."],
         loc="best",
@@ -102,13 +102,31 @@ def plot_Xy(  # noqa: PLR0913
         ncol=2,
     )
 
-    ax.text(
-        0.05,
-        0.05,
-        f"R\u00b2 = {r2_score:.2f}",
-        transform=ax.transAxes,
-        verticalalignment="bottom",
-    )
+    # Place R² just below the legend
+    if legend:
+        # Get the bounding box of the legend in axes coordinates
+        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())
+        inv = ax.transAxes.inverted()
+        bbox_axes = bbox.transformed(inv)
+        # Place the text just below the legend
+        x = bbox_axes.x0
+        y = bbox_axes.y0 - 0.04  # small offset below legend
+        ax.text(
+            x,
+            y,
+            f"R\u00b2 = {r2_score:.6f}",
+            transform=ax.transAxes,
+            verticalalignment="top",
+        )
+    else:
+        # fallback: place in lower left
+        ax.text(
+            0.05,
+            0.05,
+            f"R\u00b2 = {r2_score:.6f}",
+            transform=ax.transAxes,
+            verticalalignment="bottom",
+        )
 
 
 def calculate_subplot_layout(n_plots, n_cols=3):
