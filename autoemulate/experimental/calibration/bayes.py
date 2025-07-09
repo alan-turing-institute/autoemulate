@@ -272,13 +272,17 @@ class BayesianCalibration(TorchDeviceMixin):
         if isinstance(mcmc.kernel, RandomWalkKernel):
             if posterior_predictive:
                 az_data = az.InferenceData(
-                    posterior=az.convert_to_dataset(mcmc.get_samples()),
+                    posterior=az.convert_to_dataset(
+                        mcmc.get_samples(group_by_chain=True)
+                    ),
                     posterior_predictive=az.convert_to_dataset(pp_samples),
                     observed_data=az.convert_to_dataset(self.observations),
                 )
             else:
                 az_data = az.InferenceData(
-                    posterior=az.convert_to_dataset(mcmc.get_samples()),
+                    posterior=az.convert_to_dataset(
+                        mcmc.get_samples(group_by_chain=True)
+                    ),
                 )
         else:
             az_data = az.from_pyro(mcmc, posterior_predictive=pp_samples)
