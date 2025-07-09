@@ -204,8 +204,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Convert to numpy arrays for plotting and ensure correct shapes
         test_x, test_y = self._convert_to_numpy(test_x, test_y)
-        # TODO: decide what to do if model.predict returns a Distribution
-        y_pred, _ = self._convert_to_numpy(y_pred, None)  # type: ignore[assignment]
+        y_pred, _ = self._convert_to_numpy(y_pred, None)
         assert test_x is not None
         assert test_y is not None
         assert y_pred is not None
