@@ -248,7 +248,7 @@ class BayesianCalibration(TorchDeviceMixin):
 
     def to_arviz(
         self, mcmc: MCMC, posterior_predictive: bool = False
-    ) -> az.data.inference_data.InferenceData:
+    ) -> az.InferenceData:
         """
         Convert MCMC object to Arviz InferenceData object for plotting.
 
