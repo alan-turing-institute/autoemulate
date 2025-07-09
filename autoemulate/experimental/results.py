@@ -6,15 +6,17 @@ from autoemulate.experimental.emulators.transformed.base import TransformedEmula
 
 
 class Result:
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         id: str,
+        model_name: str,
         model: TransformedEmulator,
         config: dict[str, Any],
         r2_score: float,
         rmse_score: float,
     ):
         self.id = id
+        self.model_name = model_name
         self.model = model
         self.x_transforms = model.x_transforms
         self.y_transforms = model.y_transforms
@@ -51,10 +53,7 @@ class Results:
         """
         data = {
             "id": [result.id for result in self.results],
-            # TODO: if the id is changed to not include the model name,
-            # we can include the model name in the DataFrame.
-            # "model": [result.model.__class__.__name__ for result in self.results],
-            "model": [result.model for result in self.results],
+            "model_name": [result.model_name for result in self.results],
             "x_transforms": [result.x_transforms for result in self.results],
             "y_transforms": [result.y_transforms for result in self.results],
             "rmse_score": [result.rmse_score for result in self.results],

@@ -155,7 +155,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         test_y, y_pred, torchmetrics.MeanSquaredError, self.device
                     )
                     result = Result(
-                        id=model_cls.__name__ + str(id_num + 1),
+                        id=model_cls.short_name() + str(id_num + 1),
+                        model_name=model_cls.model_name(),
                         model=transformed_emulator,
                         config=best_config_for_this_model,
                         r2_score=r2_score,
