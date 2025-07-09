@@ -21,11 +21,7 @@ from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
-from autoemulate.experimental.types import (
-    DeviceLike,
-    GaussianProcessLike,
-    TensorLike,
-)
+from autoemulate.experimental.types import DeviceLike, GaussianProcessLike, TensorLike
 
 from .kernel import (
     matern_3_2_kernel,
@@ -37,12 +33,7 @@ from .kernel import (
     rbf_times_linear,
     rq_kernel,
 )
-from .mean import (
-    constant_mean,
-    linear_mean,
-    poly_mean,
-    zero_mean,
-)
+from .mean import constant_mean, linear_mean, poly_mean, zero_mean
 
 
 class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
@@ -200,9 +191,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
-        with torch.no_grad():
-            x = x.to(self.device)
-            return self(x)
+        x = x.to(self.device)
+        return self(x)
 
     @staticmethod
     def get_tune_config():
