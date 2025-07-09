@@ -349,7 +349,7 @@ class SklearnBackend(DeterministicEmulator):
 
     def _predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
         if with_grad:
-            msg = "SKlearnBackendEmulator cannot compute gradients."
+            msg = "Emulators with `SklearnBackend` base cannot compute gradients."
             raise ValueError(msg)
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
