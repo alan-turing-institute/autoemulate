@@ -1,6 +1,6 @@
 import torch
 from sklearn.preprocessing import PolynomialFeatures
-from torch import nn, optim
+from torch import nn
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -23,9 +23,9 @@ class PolynomialRegression(PyTorchBackend):
         lr: float = 0.1,
         epochs: int = 500,
         batch_size: int = 16,
-        optimizer_cls: type[optim.Optimizer] = optim.Adam,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
+        **kwargs,
     ):
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
@@ -44,7 +44,13 @@ class PolynomialRegression(PyTorchBackend):
         self.linear = nn.Linear(x_poly.shape[1], self.n_outputs_, bias=False).to(
             self.device
         )
-        self.optimizer = optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Transform input using the fitted PolynomialFeatures
@@ -59,8 +65,11 @@ class PolynomialRegression(PyTorchBackend):
 
     @staticmethod
     def get_tune_config():
+        scheduler_params = PolynomialRegression.scheduler_config()
         return {
             "lr": [1e-3, 1e-2, 1e-1, 2e-1],
             "epochs": [50, 100, 200, 500, 1000],
             "batch_size": [8, 16, 32],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
