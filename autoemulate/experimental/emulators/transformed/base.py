@@ -133,10 +133,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
         TorchDeviceMixin.__init__(self, device=device)
-        self.supports_grad = (
-            self.model.supports_grad
-            and all(t.bijective for t in self.x_transforms)
-            and all(t.bijective for t in self.y_transforms)
+        self.supports_grad = self.model.supports_grad and all(
+            t.bijective for t in self.x_transforms
         )
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
