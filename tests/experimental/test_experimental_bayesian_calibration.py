@@ -1,5 +1,4 @@
 import pytest
-
 from autoemulate.experimental.calibration.bayes import BayesianCalibration
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
