@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
@@ -5,12 +6,10 @@ import numpy as np
 import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
+from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import (
-    ConversionMixin,
-    ValidationMixin,
-)
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import (
     DistributionLike,
@@ -31,6 +30,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     """
 
     is_fitted_: bool = False
+    supports_grad: bool = False
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -51,16 +51,16 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return cls.__name__
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         pass
 
-    def predict(self, x: TensorLike) -> OutputLike:
+    def predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
         if not self.is_fitted_:
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
         (x,) = self._move_tensors_to_device(x)
-        output = self._predict(x)
+        output = self._predict(x, with_grad)
         self._check_output(output)
         return output
 
@@ -112,9 +112,9 @@ class DeterministicEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> TensorLike: ...
-    def predict(self, x: TensorLike) -> TensorLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, TensorLike)
         return pred
 
@@ -125,27 +125,31 @@ class ProbabilisticEmulator(Emulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> DistributionLike: ...
-    def predict(self, x: TensorLike) -> DistributionLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, DistributionLike)
         return pred
 
-    def predict_mean_and_variance(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
-        """Predict mean and variance from the probabilistic output.
+    def predict_mean_and_variance(
+        self, x: TensorLike, with_grad: bool = False
+    ) -> tuple[TensorLike, TensorLike]:
+        """
+        Predict mean and variance from the probabilistic output.
 
         Parameters
         ----------
         x : TensorLike
             Input tensor to make predictions for.
+        with_grad : bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
         tuple[TensorLike, TensorLike]
             The emulator predicted mean and variance for `x`.
-
         """
-        pred = self.predict(x)
+        pred = self.predict(x, with_grad)
         return pred.mean, pred.variance
 
 
@@ -154,10 +158,12 @@ class GaussianEmulator(ProbabilisticEmulator):
     `GaussianLike`.
     """
 
+    supports_grad: bool = True
+
     @abstractmethod
-    def _predict(self, x: TensorLike) -> GaussianLike: ...
-    def predict(self, x: TensorLike) -> GaussianLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianLike)
         return pred
 
@@ -168,9 +174,9 @@ class GaussianProcessEmulator(GaussianEmulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike) -> GaussianProcessLike: ...
-    def predict(self, x: TensorLike) -> GaussianProcessLike:
-        pred = super().predict(x)
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianProcessLike:
+        pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianProcessLike)
         return pred
 
@@ -190,7 +196,11 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     verbose: bool = False
     preprocessor: Preprocessor | None = None
     loss_fn: nn.Module = nn.MSELoss()
+    optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
+    supports_grad: bool = True
+    lr: float = 1e-1
+    scheduler_cls: type[LRScheduler] | None = None
 
     def preprocess(self, x: TensorLike) -> TensorLike:
         if self.preprocessor is None:
@@ -204,6 +214,62 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         """
         return nn.MSELoss()(y_pred, y_true)
 
+    @classmethod
+    def scheduler_config(cls) -> dict:
+        """
+        Returns a random configuration for the learning rate scheduler.
+        This should be added to the `get_tune_config()` method of subclasses
+        to allow tuning of the scheduler parameters.
+        """
+        all_params = [
+            {
+                "scheduler_cls": [ExponentialLR],
+                "scheduler_kwargs": [
+                    {"gamma": 0.9},
+                    {"gamma": 0.95},
+                ],
+            },
+            {
+                "scheduler_cls": [LRScheduler],
+                "scheduler_kwargs": [
+                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
+                ],
+            },
+            # TODO: investigate these suggestions from copilot
+            # {
+            #     "scheduler_cls": [CosineAnnealingLR],
+            #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
+            # },
+            # {
+            #     "scheduler_cls": [ReduceLROnPlateau],
+            #     "scheduler_kwargs": [{"mode": "min", "factor": 0.1, "patience": 5}],
+            # },
+            # {
+            #     "scheduler_cls": [StepLR],
+            #     "scheduler_kwargs": [{"step_size": 10, "gamma": 0.1}],
+            # },
+            # {
+            #     "scheduler_cls": [CyclicLR],
+            #     "scheduler_kwargs": [{
+            #         "base_lr": 1e-3,
+            #         "max_lr": 1e-1,
+            #         "step_size_up": 5,
+            #         "step_size_down": 5,
+            #     }],
+            # },
+            # {
+            #     "scheduler_cls": [OneCycleLR],
+            #     "scheduler_kwargs": [{
+            #         "max_lr": 1e-1,
+            #         "total_steps": self.epochs,
+            #         "pct_start": 0.3,
+            #         "anneal_strategy": "linear",
+            #     }],
+            # },
+        ]
+        # Randomly select one of the parameter sets
+        return random.choice(all_params)
+
     def _fit(
         self,
         x: TensorLike,
@@ -214,11 +280,10 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
         Parameters
         ----------
-            X: TensorLike
-                Input features as numpy array, PyTorch tensor, or DataLoader.
-            y: OutputLike or None
-                Target values (not needed if x is a DataLoader).
-
+        X: TensorLike
+            Input features as numpy array, PyTorch tensor, or DataLoader.
+        y: OutputLike or None
+            Target values (not needed if x is a DataLoader).
         """
 
         self.train()  # Set model to training mode
@@ -249,6 +314,9 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 # Track loss
                 epoch_loss += loss.item()
                 batches += 1
+            # Update learning rate if scheduler is defined
+            if self.scheduler is not None:
+                self.scheduler.step()  # type: ignore[call-arg]
 
             # Average loss for the epoch
             avg_epoch_loss = epoch_loss / batches
@@ -307,9 +375,9 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                 if module.bias is not None and bias_init == "zeros":
                     nn.init.zeros_(module.bias)
 
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         self.eval()
-        with torch.no_grad():
+        with torch.set_grad_enabled(with_grad):
             x = self.preprocess(x)
             return self(x)
 
@@ -326,6 +394,7 @@ class SklearnBackend(DeterministicEmulator):
     normalize_y: bool = False
     y_mean: TensorLike
     y_std: TensorLike
+    supports_grad: bool = False
 
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
@@ -342,7 +411,10 @@ class SklearnBackend(DeterministicEmulator):
         self._model_specific_check(x_np, y_np)
         self.model.fit(x_np, y_np)  # type: ignore PGH003
 
-    def _predict(self, x: TensorLike) -> TensorLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike:
+        if with_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
         x_np, _ = self._convert_to_numpy(x, None)
         y_pred = self.model.predict(x_np)  # type: ignore PGH003
         _, y_pred = self._move_tensors_to_device(*self._convert_to_tensors(x, y_pred))

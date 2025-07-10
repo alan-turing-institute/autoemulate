@@ -17,8 +17,9 @@ class ConversionMixin:
     Mixin class to convert input data to pytorch Datasets and DataLoaders.
     """
 
+    @classmethod
     def _convert_to_dataset(
-        self,
+        cls,
         x: InputLike,
         y: InputLike | None = None,
     ) -> Dataset:
@@ -49,8 +50,9 @@ class ConversionMixin:
 
         return dataset
 
+    @classmethod
     def _convert_to_dataloader(
-        self,
+        cls,
         x: InputLike,
         y: InputLike | None = None,
         batch_size: int = 16,
@@ -66,12 +68,13 @@ class ConversionMixin:
                 f"Since x is already a DataLoader, expect y to be None, not {type(y)}."
             )
         else:
-            dataset = self._convert_to_dataset(x, y)
+            dataset = cls._convert_to_dataset(x, y)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return dataloader
 
+    @classmethod
     def _convert_to_tensors(
-        self,
+        cls,
         x: InputLike,
         y: InputLike | None = None,
         dtype: torch.dtype = torch.float32,
@@ -79,12 +82,15 @@ class ConversionMixin:
         """
         Convert InputLike x, y to Tensor or tuple of Tensors.
         """
-        dataset = self._convert_to_dataset(x, y)
+        dataset = cls._convert_to_dataset(x, y)
 
         # Handle Subset of TensorDataset
         if isinstance(dataset, Subset):
-            if isinstance(dataset.dataset, TensorDataset):
-                tensors = dataset.dataset.tensors
+            ds = dataset
+            while isinstance(ds, Subset):
+                ds = ds.dataset
+            if isinstance(ds, TensorDataset):
+                tensors = ds.tensors
                 indices = dataset.indices
 
                 # Use indexing to get subset tensors

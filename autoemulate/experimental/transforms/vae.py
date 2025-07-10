@@ -143,11 +143,29 @@ class VAETransform(AutoEmulateTransform):
         msg = "log det Jacobian not computable since transform is not bijective."
         raise RuntimeError(msg)
 
-    def _expanded_basis_matrix(self, y):
-        # Delta method to compute covariance in original space of transform's domain.
+    def _jacobian(self, y: TensorLike) -> TensorLike:
+        # Delta method to computing covariance in original space of transform's domain
+        # requires the calculation of the jacobian of the transform.
         # https://github.com/alan-turing-institute/autoemulate/issues/376#issuecomment-2891374970
         self._check_is_fitted()
         assert self.vae is not None
-        jacobian_y = torch.autograd.functional.jacobian(self.vae.decode, y)
-        # Reshape jacobian to match the shape of cov_y (n_tasks x n_samples)
-        return jacobian_y.view(jacobian_y.shape[0] * jacobian_y.shape[1], -1)
+        # Ensure the input tensor requires gradient for jacobian computation
+        if not y.requires_grad:
+            y = y.detach().clone().requires_grad_(True)
+        jacobian = torch.autograd.functional.jacobian(self.vae.decode, y)
+        assert isinstance(jacobian, TensorLike)
+        return jacobian
+
+    def _batch_basis_matrix(self, y):
+        n = y.shape[0]
+        jacobian = self._jacobian(y)
+
+        # Reshape jacobian to a batch local basis matrices by stacking along the diag
+        return torch.stack([jacobian[i, :, i, :] for i in range(n)], 0)
+
+    def _expanded_basis_matrix(self, y):
+        jacobian = self._jacobian(y)
+        n = y.shape[0]
+
+        # Reshape jacobian for shape of cov_y (n_tasks x n_samples)
+        return jacobian.reshape(n * jacobian.shape[1], -1)

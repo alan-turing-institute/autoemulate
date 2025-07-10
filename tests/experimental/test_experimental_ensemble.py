@@ -30,6 +30,10 @@ def test_mlp_ensemble():
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)
     assert y_test_hat.covariance_matrix.shape == (1000, 1, 1)
+    assert not y_test_hat.loc.requires_grad
+
+    y_test_hat_grad = emulator.predict(x_test, with_grad=True)
+    assert y_test_hat_grad.loc.requires_grad
 
 
 def test_dropout_ensemble():
@@ -52,6 +56,10 @@ def test_dropout_ensemble():
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)
     assert y_test_hat.covariance_matrix.shape == (1000, 1, 1)
+    assert not y_test_hat.loc.requires_grad
+
+    y_test_hat_grad = emulator.predict(x_test, with_grad=True)
+    assert y_test_hat_grad.loc.requires_grad
 
 
 def test_ensemble_ensemble():
@@ -84,3 +92,7 @@ def test_ensemble_ensemble():
     assert isinstance(y_test_hat.covariance_matrix, TensorLike)
     assert y_test_hat.loc.shape == (1000, 1)
     assert y_test_hat.covariance_matrix.shape == (1000, 1, 1)
+    assert not y_test_hat.loc.requires_grad
+
+    y_test_hat_grad = emulator.predict(x_test, with_grad=True)
+    assert y_test_hat_grad.loc.requires_grad
