@@ -18,7 +18,7 @@ chapters:
   - file: tutorials/02_speed
   - file: tutorials/03_emulation_sensitivity
   - file: tutorials/05_reaction_diffusion
-  - file: experimental/active_learning
+  - file: experimental/tutorials/simulator/02_active_learning
 
 - file: community/index
   sections:
