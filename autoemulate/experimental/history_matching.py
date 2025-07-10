@@ -1,3 +1,4 @@
+import logging
 import warnings
 
 import torch
@@ -7,6 +8,8 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.types import DeviceLike, TensorLike
+
+logger = logging.getLogger("autoemulate")
 
 
 class HistoryMatching(TorchDeviceMixin):
@@ -405,6 +408,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters and their implausibility scores from
             which simulation samples were then selected.
         """
+        logger.debug(
+            "Running history matching workflow with"
+            " %d simulations and %d test samples.",
+            n_simulations,
+            n_test_samples,
+        )
 
         test_parameters_list, impl_scores_list, nroy_parameters_list = (
             [],

@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
@@ -16,6 +18,8 @@ from autoemulate.sensitivity_analysis import (
     _plot_sobol_analysis,
     _sobol_results_to_df,
 )
+
+logger = logging.getLogger("autoemulate")
 
 
 class SensitivityAnalysis(ConversionMixin):
@@ -195,6 +199,13 @@ class SensitivityAnalysis(ConversionMixin):
         of input parameters. For example, with N=1024 and 5 parameters, this requires
         12,288 evaluations. The Morris method requires far fewer computations.
         """
+        logger.debug(
+            "Running sensitivity analysis with method=%s, n_samples=%d, conf_level=%s",
+            method,
+            n_samples,
+            conf_level,
+        )
+
         if method not in ["sobol", "morris"]:
             msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
             raise ValueError(msg)
