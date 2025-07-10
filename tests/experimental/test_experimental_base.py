@@ -6,7 +6,8 @@ from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.tuner import Tuner
-from torch import nn, optim
+from torch import nn
+from torch.optim.lr_scheduler import ExponentialLR
 
 
 class TestPyTorchBackend:
@@ -27,7 +28,13 @@ class TestPyTorchBackend:
             _, _ = x, y  # unused variables
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
-            self.optimizer = optim.SGD(self.parameters(), lr=0.01)
+            self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg]
+            # Extract scheduler-specific kwargs if present
+            scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+            if self.scheduler_cls is None:
+                self.scheduler = None
+            else:
+                self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(
@@ -52,7 +59,9 @@ class TestPyTorchBackend:
         """
         Define the PyTorchBackend instance.
         """
-        self.model = self.DummyModel()
+        self.model = self.DummyModel(
+            scheduler_cls=ExponentialLR, scheduler_kwargs={"gamma": 0.9}
+        )
 
     def test_fit(self):
         """
@@ -80,6 +89,10 @@ class TestPyTorchBackend:
         assert isinstance(y_pred, torch.Tensor)
         assert y_pred.shape == (1, 1)
         assert y_pred.shape == (1, 1)
+        assert not y_pred.requires_grad
+
+        y_pred_grad = self.model.predict(X_test, with_grad=True)
+        assert y_pred_grad
 
     def test_tune_xy(self):
         """

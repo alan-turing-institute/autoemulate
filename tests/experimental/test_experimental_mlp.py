@@ -17,6 +17,11 @@ def test_predict_mlp(sample_data_y1d, new_data_y1d):
     y_pred = mlp.predict(x2)
     assert isinstance(y_pred, TensorLike)
     assert y_pred.shape == y.unsqueeze(1).shape
+    assert not y_pred.requires_grad
+
+    y_pred_grad = mlp.predict(x2, with_grad=True)
+    assert isinstance(y_pred_grad, TensorLike)
+    assert y_pred_grad.requires_grad
 
 
 def test_multioutput_mlp(sample_data_y2d, new_data_y2d):

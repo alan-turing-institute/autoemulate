@@ -7,6 +7,8 @@ from autoemulate.experimental.transforms import (
     StandardizeTransform,
     VAETransform,
 )
+from autoemulate.experimental.transforms.base import _inverse_sample_gaussian_like
+from autoemulate.experimental.types import GaussianLike, TensorLike
 from sklearn.decomposition import PCA as SklearnPCA
 
 
@@ -86,3 +88,26 @@ def test_pca(sample_data_y2d):
     print(x_inv)
     print(x_inv_sk)
     assert np.allclose(x_inv.cpu().numpy(), x_inv_sk, atol=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("loc", "scale", "expected_shape"),
+    [
+        (torch.zeros(4), torch.eye(4), (10, 10)),
+        (torch.zeros(1, 4), torch.eye(4).repeat(1, 1, 1), (1, 10, 10)),
+        (torch.zeros(3, 4), torch.eye(4).repeat(3, 1, 1), (3, 10, 10)),
+    ],
+)
+def test_inverse_sample_gaussian_like(loc, scale, expected_shape):
+    n = 100
+    y_t = GaussianLike(loc, scale)
+    pca = PCATransform(n_components=4)
+    pca.fit(torch.randn(100, 10))
+
+    y = _inverse_sample_gaussian_like(pca.inv, y_t, n_samples=n, full_covariance=False)
+    assert isinstance(y.covariance_matrix, TensorLike)
+    assert y.covariance_matrix.shape == expected_shape
+
+    y = _inverse_sample_gaussian_like(pca.inv, y_t, n_samples=n, full_covariance=True)
+    assert isinstance(y.covariance_matrix, TensorLike)
+    assert y.covariance_matrix.shape == expected_shape
