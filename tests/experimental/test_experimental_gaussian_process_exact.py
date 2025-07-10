@@ -40,6 +40,10 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d, emulator):
     assert isinstance(y_pred, DistributionLike)
     assert y_pred.mean.shape == y.unsqueeze(1).shape
     assert y_pred.variance.shape == y.unsqueeze(1).shape
+    assert not y_pred.mean.requires_grad
+
+    y_pred_grad = gp.predict(x2, with_grad=True)
+    assert y_pred_grad.mean.requires_grad
 
 
 @pytest.mark.parametrize("emulator", GPS)
