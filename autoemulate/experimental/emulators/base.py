@@ -312,6 +312,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                     nn.init.zeros_(module.bias)
 
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+        self.eval()
         with torch.set_grad_enabled(with_grad):
             x = self.preprocess(x)
             return self(x)
