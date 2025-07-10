@@ -34,6 +34,9 @@
 | autoemulate/emulators/random\_forest.py                                      |       39 |        0 |    100% |           |
 | autoemulate/emulators/support\_vector\_machines.py                           |       54 |        3 |     94% |     80-82 |
 | autoemulate/experimental/\_\_init\_\_.py                                     |        0 |        0 |    100% |           |
+| autoemulate/experimental/calibration/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
+| autoemulate/experimental/calibration/bayes.py                                |       98 |       33 |     66% |72, 74, 80-81, 91-95, 105-116, 140-141, 149, 153-154, 208-214, 266-290 |
+| autoemulate/experimental/calibration/history\_matching.py                    |      114 |       12 |     89% |62, 93-94, 100-101, 174, 250, 308, 313-314, 361, 386 |
 | autoemulate/experimental/callbacks/early\_stopping.py                        |       52 |        9 |     83% |69-71, 75, 102, 126, 131, 146, 151 |
 | autoemulate/experimental/compare.py                                          |       57 |        1 |     98% |        43 |
 | autoemulate/experimental/data/preprocessors.py                               |       25 |        0 |    100% |           |
@@ -56,16 +59,15 @@
 | autoemulate/experimental/emulators/svm.py                                    |       31 |        0 |    100% |           |
 | autoemulate/experimental/emulators/transformed/\_\_init\_\_.py               |        0 |        0 |    100% |           |
 | autoemulate/experimental/emulators/transformed/base.py                       |       88 |       13 |     85% |181-183, 358-359, 386-389, 394-399, 403-407 |
-| autoemulate/experimental/history\_matching.py                                |      103 |       11 |     89% |62, 93-94, 100-101, 174, 263, 268-269, 319, 344 |
 | autoemulate/experimental/learners/\_\_init\_\_.py                            |        4 |        0 |    100% |           |
 | autoemulate/experimental/learners/base.py                                    |      109 |       24 |     78% |61-64, 75-79, 92-101, 120, 124-131 |
 | autoemulate/experimental/learners/membership.py                              |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/pool.py                                    |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/stream.py                                  |      131 |       13 |     90% |85-95, 141, 488, 539-543, 546, 574-579, 582 |
 | autoemulate/experimental/model\_selection.py                                 |       52 |        4 |     92% |32-39, 112 |
-| autoemulate/experimental/sensitivity\_analysis.py                            |       95 |       29 |     69% |58-62, 73-74, 77-78, 80-81, 87-88, 106-107, 121-125, 139-143, 199-200, 210-211, 216, 238, 258 |
+| autoemulate/experimental/sensitivity\_analysis.py                            |      102 |       31 |     70% |58-62, 73-74, 77-78, 80-81, 87-88, 106-107, 121-125, 139-143, 205-206, 216-217, 224, 246, 266, 294-298 |
 | autoemulate/experimental/simulations/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
-| autoemulate/experimental/simulations/base.py                                 |       59 |        2 |     97% |    40, 87 |
+| autoemulate/experimental/simulations/base.py                                 |       59 |        1 |     98% |        87 |
 | autoemulate/experimental/simulations/epidemic.py                             |       14 |        0 |    100% |           |
 | autoemulate/experimental/simulations/projectile.py                           |       24 |        0 |    100% |           |
 | autoemulate/experimental/transforms/\_\_init\_\_.py                          |        4 |        0 |    100% |           |
@@ -106,6 +108,7 @@
 | tests/experimental/test\_device.py                                           |       11 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_base.py                               |       98 |        2 |     98% |    37, 56 |
 | tests/experimental/test\_experimental\_base\_simulator.py                    |       83 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_bayesian\_calibration.py              |       55 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_compare.py                            |       28 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_conditional\_neural\_process.py       |        0 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_early\_stopping.py                    |       27 |        0 |    100% |           |
@@ -120,7 +123,7 @@
 | tests/experimental/test\_experimental\_preprocessors.py                      |       49 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_radial\_basis\_functions.py           |       49 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_random\_forest.py                     |       48 |        0 |    100% |           |
-| tests/experimental/test\_experimental\_sensitivity\_analysis.py              |       85 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_sensitivity\_analysis.py              |       89 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_svm.py                                |       40 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_transformed.py                        |      108 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_utils.py                              |      218 |        0 |    100% |           |
@@ -132,7 +135,7 @@
 | tests/models/test\_cnp\_dataset.py                                           |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                               |       97 |        2 |     98% |     45-46 |
-| tests/test\_compare.py                                                       |      183 |        3 |     98% |239, 263, 272 |
+| tests/test\_compare.py                                                       |      183 |        5 |     97% |239, 263, 272, 377-378 |
 | tests/test\_cross\_validate.py                                               |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                               |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                      |       13 |        0 |    100% |           |
@@ -153,7 +156,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **9861** | **2040** | **79%** |           |
+|                                                                    **TOTAL** | **10036** | **2077** | **79%** |           |
 
 
 ## Setup coverage badge
