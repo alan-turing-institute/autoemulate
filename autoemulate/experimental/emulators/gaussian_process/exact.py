@@ -201,11 +201,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
         if self.early_stopping is not None:
             self.early_stopping.on_train_end(self, epoch)
-            
+
         # Update learning rate if scheduler is defined
         if self.scheduler is not None:
             self.scheduler.step()
-            
+
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike:
         with torch.set_grad_enabled(with_grad):
             self.eval()
