@@ -148,17 +148,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             MultivariateNormal(mean, covar)
         )
 
-    # def log_epoch(self, epoch: int, loss: TensorLike):
-    #     # logger = logging.getLogger(__name__)
-    #     assert self.likelihood.noise is not None
-    #     # msg = (
-    #     #     f"Epoch:
-    # {epoch + 1:{int(np.log10(self.epochs) + 1)}.0f}/{self.epochs}; "
-    #     #     f"MLL: {-loss:4.3f}; noise:
-    # {self.likelihood.noise.item():4.3f}"
-    #     # )
-    #     # logger.debug(msg)
-
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
@@ -186,7 +175,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             assert isinstance(loss, torch.Tensor)
             loss = -loss
             loss.backward()
-            # self.log_epoch(epoch, loss)
             optimizer.step()
 
             if self.early_stopping is not None:
