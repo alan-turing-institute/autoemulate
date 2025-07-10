@@ -191,8 +191,9 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
-        x = x.to(self.device)
-        return self(x)
+        with torch.no_grad():
+            x = x.to(self.device)
+            return self(x)
 
     @staticmethod
     def get_tune_config():
