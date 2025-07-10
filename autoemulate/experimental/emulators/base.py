@@ -224,6 +224,10 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                     {"gamma": 0.95},
                 ],
             },
+            {
+                "scheduler_cls": LRScheduler,
+                "scheduler_kwargs": [{"policy":"ReduceLROnPlateau", "patience": 5, "factor": 0.5)}]
+            },
             # TODO: investigate these suggestions from copilot
             # {
             #     "scheduler_cls": [CosineAnnealingLR],
