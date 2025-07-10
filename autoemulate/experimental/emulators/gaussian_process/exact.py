@@ -180,7 +180,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             loss = -loss
             loss.backward()
             self.optimizer.step()
-            
+
             if self.early_stopping is not None:
                 try:
                     # TODO: use validation loss instead, see #589
