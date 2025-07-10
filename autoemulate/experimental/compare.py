@@ -183,12 +183,3 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         self.log_compare(best_model_cls, best_model_config, r2_score, rmse_score)
         self.logger.info("Compare completed successfully.")
         return models_evaluated
-
-
-if __name__ == "__main__":
-    x = np.random.rand(100, 3)
-    y = np.random.rand(100, 2)
-
-    autoemulate = AutoEmulate(x, y, log_level="progress_bar")
-
-    results = autoemulate.compare(n_iter=5)
