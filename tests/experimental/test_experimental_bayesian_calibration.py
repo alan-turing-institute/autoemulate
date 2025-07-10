@@ -1,4 +1,5 @@
 import pytest
+
 from autoemulate.experimental.calibration.bayes import BayesianCalibration
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
@@ -15,7 +16,7 @@ from autoemulate.experimental.simulations.projectile import (
 )
 def test_hmc_single_output(n_obs, n_chains, n_samples):
     """
-    Test HMC with single output (single observation).
+    Test HMC with single output.
     """
     sim = Projectile()
     x = sim.sample_inputs(100)
@@ -43,7 +44,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples):
     assert isinstance(pp, dict)
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp
-    # get a prediction per mcmc sample
+    # get a prediction per mcmc sample and observation
     assert pp["distance"].shape[0] == n_samples * n_chains
     assert pp["distance"].shape[1] == n_obs
 
@@ -54,7 +55,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples):
 )
 def test_hmc_multiple_output(n_obs, n_chains, n_samples):
     """
-    Test HMC with multiple outputs (single observation per output).
+    Test HMC with multiple outputs.
     """
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)
@@ -62,7 +63,7 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples):
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
 
-    # pick the first sim output as an observation
+    # pick the first n_obs sim outputs as observations
     observations = {
         "distance": y[:n_obs, 0],
         "impact_velocity": y[:n_obs, 1],
@@ -86,7 +87,7 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples):
     pp = dict(pp)  # keeping type checker happy
     assert "distance" in pp
     assert "impact_velocity" in pp
-    # get a prediction per mcmc sample]
+    # get a prediction per mcmc sample and observation
     assert pp["distance"].shape[0] == n_samples * n_chains
     assert pp["distance"].shape[1] == n_obs
     assert pp["impact_velocity"].shape[0] == n_samples * n_chains
