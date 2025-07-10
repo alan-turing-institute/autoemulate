@@ -24,7 +24,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "info",
-        progress_bar: bool = False,
     ):
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
@@ -46,8 +45,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             set_random_seed(seed=random_seed)
         self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
 
+        # Handle log level parameter
+        valid_log_levels = [
+            "progress_bar",
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "critical",
+        ]
+        log_level = log_level.lower()
+        if log_level not in valid_log_levels:
+            raise ValueError(
+                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
+            )
+        if log_level == "progress_bar":
+            log_level = "error"
+            self.progress_bar = True
+        else:
+            self.progress_bar = False
         self.logger = configure_logging(level=log_level)
-        self.progress_bar = progress_bar
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -97,7 +114,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
         )
         for idx, model_cls in tqdm.tqdm(
-            enumerate(self.models), disable=not self.progress_bar
+            enumerate(self.models),
+            disable=not self.progress_bar,
+            desc="Comparing models",
+            total=len(self.models),
+            unit="model",
+            unit_scale=True,
         ):
             self.logger.info(
                 "Running Model: %s: %d/%d",
@@ -167,6 +189,6 @@ if __name__ == "__main__":
     x = np.random.rand(100, 3)
     y = np.random.rand(100, 2)
 
-    autoemulate = AutoEmulate(x, y, log_level="debug")
+    autoemulate = AutoEmulate(x, y, log_level="progress_bar")
 
     results = autoemulate.compare(n_iter=5)
