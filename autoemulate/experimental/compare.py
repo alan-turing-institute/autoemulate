@@ -14,7 +14,7 @@ from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.plotting import (
     calculate_subplot_layout,
     display_figure,
-    plot_Xy,
+    plot_xy,
 )
 from autoemulate.experimental.results import Result, Results
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
@@ -274,7 +274,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         for out_idx in output_index:
             for in_idx in input_index:
                 if plot_index < len(axs):
-                    plot_Xy(
+                    plot_xy(
                         test_x[:, in_idx],
                         test_y[:, out_idx],
                         y_pred[:, out_idx],

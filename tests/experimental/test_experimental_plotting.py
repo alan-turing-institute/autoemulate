@@ -26,12 +26,12 @@ def test_display_figure_terminal(monkeypatch):
     assert result is fig
 
 
-def test_plot_Xy():
+def test_plot_xy():
     X = np.linspace(0, 5, 10).reshape(-1, 1)
     y = X.flatten()
     y_pred = y * 1.1
     fig, ax = plt.subplots()
-    plotting.plot_Xy(
+    plotting.plot_xy(
         X, y, y_pred, None, ax=ax, input_index=1, output_index=2, r2_score=0.5
     )
     assert len(ax.lines) > 0

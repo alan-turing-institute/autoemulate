@@ -32,7 +32,7 @@ def display_figure(fig):
     return fig
 
 
-def plot_Xy(  # noqa: PLR0913
+def plot_xy(  # noqa: PLR0913
     X: NumpyLike,
     y: NumpyLike,
     y_pred: NumpyLike,
