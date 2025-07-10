@@ -8,7 +8,8 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import MultitaskKernel, ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
-from torch import nn
+from torch import nn, optim
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.experimental.callbacks.early_stopping import (
     EarlyStopping,
@@ -56,6 +57,12 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     - custom mean and kernel specification
 
     """
+
+    # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
+    optimizer_cls: type[optim.Optimizer] = optim.Adam
+    optimizer: optim.Optimizer
+    lr: float = 1e-1
+    scheduler_cls: type[LRScheduler] | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
@@ -133,6 +140,13 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.epochs = epochs
         self.lr = lr
         self.activation = activation
+        self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
         self.early_stopping = early_stopping
         self.to(self.device)
 
@@ -165,7 +179,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         # TODO: move conversion out of _fit() and instead rely on for impl check
         x, y = self._convert_to_tensors(x, y)
 
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
 
         # Set the training data in case changed since init
@@ -178,14 +191,14 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         # Avoid `"epoch" is possibly unbound` type error at the end
         epoch = 0
         for epoch in range(self.epochs):
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
             output = self(x)
             loss = mll(output, y)
             assert isinstance(loss, torch.Tensor)
             loss = -loss
             loss.backward()
             self.log_epoch(epoch, loss)
-            optimizer.step()
+            self.optimizer.step()
 
             if self.early_stopping is not None:
                 try:
@@ -197,6 +210,10 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
         if self.early_stopping is not None:
             self.early_stopping.on_train_end(self, epoch)
+
+        # Update learning rate if scheduler is defined
+        if self.scheduler is not None:
+            self.scheduler.step()
 
     def _predict(self, x: TensorLike) -> GaussianProcessLike:
         self.eval()
@@ -332,6 +349,13 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.epochs = epochs
         self.lr = lr
         self.activation = activation
+        self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
         self.early_stopping = early_stopping
         self.to(self.device)
 

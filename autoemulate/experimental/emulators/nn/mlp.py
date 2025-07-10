@@ -1,4 +1,4 @@
-from torch import nn, optim
+from torch import nn
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -14,7 +14,6 @@ class MLP(DropoutTorchBackend):
         y: TensorLike,
         activation_cls: type[nn.Module] = nn.ReLU,
         loss_fn_cls: type[nn.Module] = nn.MSELoss,
-        optimizer_cls: type[optim.Optimizer] = optim.Adam,
         epochs: int = 100,
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
@@ -93,7 +92,14 @@ class MLP(DropoutTorchBackend):
         self._initialize_weights(weight_init, scale, bias_init)
         self.epochs = epochs
         self.loss_fn = loss_fn_cls()
-        self.optimizer = optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.lr = lr
+        self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
         self.to(device)
 
     def forward(self, x):
@@ -105,6 +111,7 @@ class MLP(DropoutTorchBackend):
 
     @staticmethod
     def get_tune_config():
+        scheduler_params = MLP.scheduler_config()
         return {
             "epochs": [50, 100, 200],
             "layer_dims": [[32, 16], [64, 32, 16]],
@@ -114,4 +121,6 @@ class MLP(DropoutTorchBackend):
             "scale": [0.1, 1.0],
             "bias_init": ["default", "zeros"],
             "dropout_prob": [0.3, 0.5, None],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
