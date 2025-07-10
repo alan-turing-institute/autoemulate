@@ -40,18 +40,18 @@
 | autoemulate/experimental/data/utils.py                                               |      183 |       18 |     90% |67, 100, 106, 122-126, 140, 173, 178, 410, 413-415, 441, 444-446, 476 |
 | autoemulate/experimental/device.py                                                   |       45 |        8 |     82% |15-16, 45, 99, 105, 154-159, 164 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                                   |        7 |        0 |    100% |           |
-| autoemulate/experimental/emulators/base.py                                           |      150 |        8 |     95% |55, 96-100, 258, 335-337, 350 |
+| autoemulate/experimental/emulators/base.py                                           |      161 |        9 |     94% |57, 98-102, 315, 322, 399-401, 414 |
 | autoemulate/experimental/emulators/ensemble.py                                       |      103 |        6 |     94% |60, 91-92, 198, 210-211 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py                 |        8 |        0 |    100% |           |
-| autoemulate/experimental/emulators/gaussian\_process/exact.py                        |      116 |        0 |    100% |           |
-| autoemulate/experimental/emulators/gaussian\_process/kernel.py                       |       36 |        4 |     89% |     78-84 |
+| autoemulate/experimental/emulators/gaussian\_process/exact.py                        |      132 |        3 |     98% |149, 216, 358 |
+| autoemulate/experimental/emulators/gaussian\_process/kernel.py                       |       36 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/mean.py                         |       13 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gradient\_boosting.py                             |       29 |        1 |     97% |        67 |
 | autoemulate/experimental/emulators/lightgbm.py                                       |       45 |        0 |    100% |           |
 | autoemulate/experimental/emulators/neural\_processes/conditional\_neural\_process.py |      168 |        8 |     95% |47-48, 193-194, 432, 461-462, 485 |
 | autoemulate/experimental/emulators/nn/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
-| autoemulate/experimental/emulators/nn/mlp.py                                         |       35 |        0 |    100% |           |
-| autoemulate/experimental/emulators/polynomials.py                                    |       34 |        1 |     97% |        58 |
+| autoemulate/experimental/emulators/nn/mlp.py                                         |       41 |        1 |     98% |       102 |
+| autoemulate/experimental/emulators/polynomials.py                                    |       39 |        2 |     95% |    53, 64 |
 | autoemulate/experimental/emulators/radial\_basis\_functions.py                       |       26 |        1 |     96% |        52 |
 | autoemulate/experimental/emulators/random\_forest.py                                 |       26 |        0 |    100% |           |
 | autoemulate/experimental/emulators/svm.py                                            |       31 |        0 |    100% |           |
@@ -105,7 +105,7 @@
 | tests/experimental/\_\_init\_\_.py                                                   |        0 |        0 |    100% |           |
 | tests/experimental/conftest.py                                                       |       73 |        0 |    100% |           |
 | tests/experimental/test\_device.py                                                   |       11 |        0 |    100% |           |
-| tests/experimental/test\_experimental\_base.py                                       |       90 |        1 |     99% |        49 |
+| tests/experimental/test\_experimental\_base.py                                       |       95 |        2 |     98% |    37, 56 |
 | tests/experimental/test\_experimental\_base\_simulator.py                            |       83 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_compare.py                                    |       28 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_conditional\_neural\_process.py               |       50 |        8 |     84% |     85-92 |
@@ -133,7 +133,7 @@
 | tests/models/test\_cnp\_dataset.py                                                   |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                        |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                                       |       97 |        2 |     98% |     45-46 |
-| tests/test\_compare.py                                                               |      183 |        5 |     97% |239, 263, 272, 377-378 |
+| tests/test\_compare.py                                                               |      183 |        3 |     98% |239, 263, 272 |
 | tests/test\_cross\_validate.py                                                       |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                                       |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                              |       13 |        0 |    100% |           |
@@ -154,7 +154,7 @@
 | tests/test\_sensitivity\_analysis.py                                                 |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                                    |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                                 |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                            **TOTAL** | **9930** | **2049** | **79%** |           |
+|                                                                            **TOTAL** | **9973** | **2050** | **79%** |           |
 
 
 ## Setup coverage badge
