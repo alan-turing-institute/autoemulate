@@ -3,10 +3,7 @@ import itertools
 import pytest
 import torch
 from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
-from autoemulate.experimental.emulators.base import (
-    ProbabilisticEmulator,
-    PyTorchBackend,
-)
+from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -70,7 +67,7 @@ def test_transformed_emulator(
         [
             emulator
             for emulator in ALL_EMULATORS
-            if emulator.is_multioutput() and issubclass(emulator, PyTorchBackend)
+            if emulator.supports_grad and emulator.supports_grad
         ],
         [
             None,
@@ -106,6 +103,38 @@ def test_transformed_emulator_grad(
     else:
         assert isinstance(y_pred_grad, TensorLike)
         assert y_pred_grad.requires_grad
+
+
+@pytest.mark.parametrize(
+    ("model", "x_transforms"),
+    itertools.product(
+        [
+            emulator
+            for emulator in ALL_EMULATORS
+            if emulator.supports_grad and emulator.supports_grad
+        ],
+        [[PCATransform(n_components=3)], [VAETransform(latent_dim=3)]],
+    ),
+)
+def test_transformed_emulator_no_grad(
+    sample_data_y2d, new_data_y2d, model, x_transforms
+):
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    em = TransformedEmulator(
+        x, y, x_transforms=x_transforms, y_transforms=None, model=model
+    )
+    em.fit(x, y)
+    y_pred = em.predict(x2)
+    if issubclass(model, ProbabilisticEmulator):
+        assert isinstance(y_pred, DistributionLike)
+        assert not y_pred.mean.requires_grad
+    else:
+        assert isinstance(y_pred, TensorLike)
+        assert not y_pred.requires_grad
+
+    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
+        em.predict(x2, with_grad=True)
 
 
 @pytest.mark.parametrize(
