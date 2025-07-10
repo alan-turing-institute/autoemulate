@@ -7,6 +7,7 @@ import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
+from typing_extensions import Self
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import (
@@ -106,6 +107,32 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return {
             k: v[np.random.randint(len(v))] for k, v in cls.get_tune_config().items()
         }
+
+    @classmethod
+    def with_tune_config(cls: type[Self], config: TuneConfig) -> type[Self]:
+        """
+        Instantiate the emulator with a given configuration.
+
+        Parameters
+        ----------
+        config : dict
+            Configuration dictionary containing parameters for the emulator.
+
+        Returns
+        -------
+        type[Self]
+            A class with the specified configuration.
+        """
+
+        class EmulatorWithConfig(cls):
+            @staticmethod
+            def get_tune_config() -> TuneConfig:
+                parent_config = cls.get_tune_config()
+                for key, value in config.items():
+                    parent_config[key] = parent_config.get(key, value)
+                return parent_config
+
+        return EmulatorWithConfig  # type: ignore[return-value]
 
 
 class DeterministicEmulator(Emulator):
