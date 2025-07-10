@@ -136,6 +136,8 @@ class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
         activation_cls=nn.ReLU,
         loss_fn_cls=nn.MSELoss,
         optimizer_cls=optim.Adam,
+        scheduler_cls=None,
+        scheduler_kwargs=None,
         epochs=100,
         layer_dims=None,
         weight_init="default",
@@ -181,6 +183,12 @@ class GaussianMLP(DropoutTorchBackend, GaussianEmulator):
         self.loss_fn = loss_fn_cls()
         self.num_tasks = y.shape[1]
         self.optimizer = optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore[call-arg] since all optimizers include lr
+        # Extract scheduler-specific kwargs if present
+        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        if scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = scheduler_cls(self.optimizer, **scheduler_kwargs)
         self.to(device)
 
     def _predict(self, x, with_grad=False):
