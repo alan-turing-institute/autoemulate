@@ -23,8 +23,31 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin):
         models: list[type[Emulator]] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        log_level: str = "info",
+        log_level: str = "progress_bar",
     ):
+        """
+        Initialize the AutoEmulate class.
+
+        Parameters
+        ----------
+        x: InputLike
+            Input features.
+        y: InputLike or None
+            Target values (not needed if x is a Dataset).
+        models: list[type[Emulator]] | None
+            List of emulator classes to compare. If None, all available emulators
+            are used.
+        device: DeviceLike | None
+            Device to run the emulators on (e.g., "cpu" or "cuda").
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
+        log_level: str
+            Logging level. Can be "progress_bar", "debug", "info", "warning",
+            "error", or "critical". Defaults to "progress_bar". If "progress_bar",
+            it will show a progress bar during model comparison. It will set the
+            logging level to "error" to avoid cluttering the output
+            with debug/info logs.
+        """
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
         # TODO: refactor in https://github.com/alan-turing-institute/autoemulate/issues/400
