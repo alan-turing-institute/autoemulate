@@ -29,7 +29,7 @@ class Ensemble(GaussianEmulator):
     def __init__(
         self,
         emulators: Sequence[Emulator] | None = None,
-        jitter: float = 1e-6,
+        jitter: float = 1e-4,
         device: DeviceLike | None = None,
     ):
         """
@@ -37,7 +37,7 @@ class Ensemble(GaussianEmulator):
         ----------
         emulators: Sequence[Emulator]
             A sequence of emulators to construct the ensemble with.
-        jitter: float, default=1e-6
+        jitter: float, default=1e-4
             Amount of jitter to add to the covariance diagonal to avoid degeneracy.
         device: DeviceLike | None
             The device to put torch tensors on.
@@ -115,7 +115,7 @@ class Ensemble(GaussianEmulator):
         return GaussianLike(
             mu_ens,
             make_positive_definite(
-                sigma_ens, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
+                sigma_ens, min_jitter=self.jitter, max_tries=3, clamp_eigvals=False
             ),
         )
 
@@ -166,7 +166,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self,
         model: DropoutTorchBackend,
         n_samples: int = 20,
-        jitter: float = 1e-6,
+        jitter: float = 1e-4,
         device: DeviceLike | None = None,
     ):
         """
@@ -242,7 +242,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         return GaussianLike(
             mu,
             make_positive_definite(
-                sigma_epi, min_jitter=self.jitter, max_tries=1, clamp_eigvals=False
+                sigma_epi, min_jitter=self.jitter, max_tries=3, clamp_eigvals=False
             ),
         )
 
