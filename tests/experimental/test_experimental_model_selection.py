@@ -22,11 +22,14 @@ def test_cross_validate():
         def _fit(self, x, y):
             pass
 
-        def _predict(self, x):
+        def _predict(self, x, with_grad=False):
             """
             Dummy predict that always returns
             a 2D tensor.
             """
+            if with_grad:
+                msg = "Error!"
+                raise ValueError(msg)
             return x
 
         @staticmethod
