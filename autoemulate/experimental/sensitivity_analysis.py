@@ -108,7 +108,7 @@ class SensitivityAnalysis(ConversionMixin):
 
         return {
             "num_vars": x.shape[1],
-            "names": [f"X{i + 1}" for i in range(x.shape[1])],
+            "names": [f"x{i + 1}" for i in range(x.shape[1])],
             "bounds": [
                 [x[:, i].min().item(), x[:, i].max().item()] for i in range(x.shape[1])
             ],

@@ -33,12 +33,12 @@ def display_figure(fig):
 
 
 def plot_xy(  # noqa: PLR0913
-    X: NumpyLike,
+    x: NumpyLike,
     y: NumpyLike,
     y_pred: NumpyLike,
     y_variance: NumpyLike | None = None,
     ax=None,
-    title: str = "Xy",
+    title: str = "xy",
     input_index: int | None = None,
     output_index: int | None = None,
     r2_score: float | None = None,
@@ -48,8 +48,8 @@ def plot_xy(  # noqa: PLR0913
     """
 
     # Sort the data
-    sort_idx = np.argsort(X).flatten()
-    X_sorted = X[sort_idx]
+    sort_idx = np.argsort(x).flatten()
+    x_sorted = x[sort_idx]
     y_sorted = y[sort_idx]
     y_pred_sorted = y_pred[sort_idx]
     y_std = None
@@ -65,7 +65,7 @@ def plot_xy(  # noqa: PLR0913
     assert ax is not None, "ax must be provided"
     if y_std is not None:
         ax.fill_between(
-            X_sorted,
+            x_sorted,
             y_pred_sorted - 2 * y_std,
             y_pred_sorted + 2 * y_std,
             color=ci_color,
@@ -73,7 +73,7 @@ def plot_xy(  # noqa: PLR0913
             label="95% Confidence Interval",
         )
     ax.plot(
-        X_sorted,
+        x_sorted,
         y_pred_sorted,
         color=pred_line_color,
         label="pred.",
@@ -81,7 +81,7 @@ def plot_xy(  # noqa: PLR0913
         linewidth=1,
     )  # , linestyle='--'
     ax.scatter(
-        X_sorted,
+        x_sorted,
         y_sorted,
         color=org_points_color,
         alpha=0.7,
@@ -90,7 +90,7 @@ def plot_xy(  # noqa: PLR0913
         label="data",
     )
     ax.scatter(
-        X_sorted,
+        x_sorted,
         y_pred_sorted,
         color=pred_points_color,
         edgecolor="black",
@@ -99,7 +99,7 @@ def plot_xy(  # noqa: PLR0913
         label="pred.",
     )
 
-    ax.set_xlabel(f"$X_{input_index}$", fontsize=13)
+    ax.set_xlabel(f"$x_{input_index}$", fontsize=13)
     ax.set_ylabel(f"$y_{output_index}$", fontsize=13)
     ax.set_title(title, fontsize=13)
     ax.grid(True, alpha=0.3)

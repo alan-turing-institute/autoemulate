@@ -289,7 +289,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
         Parameters
         ----------
-        X: TensorLike
+        x: TensorLike
             Input features as numpy array, PyTorch tensor, or DataLoader.
         y: OutputLike or None
             Target values (not needed if x is a DataLoader).
@@ -307,12 +307,12 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             epoch_loss = 0.0
             batches = 0
 
-            for X_batch, y_batch in dataloader:
+            for x_batch, y_batch in dataloader:
                 # Preprocess x_batch
-                x = self.preprocess(X_batch)
+                x = self.preprocess(x_batch)
 
                 # Forward pass
-                y_pred = self.forward(X_batch)
+                y_pred = self.forward(x_batch)
                 loss = self.loss_func(y_pred, y_batch)
 
                 # Backward pass and optimize

@@ -280,7 +280,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         y_pred[:, out_idx],
                         y_variance[:, out_idx] if y_variance is not None else None,
                         ax=axs[plot_index],
-                        title=f"$X_{in_idx}$ vs. $y_{out_idx}$",
+                        title=f"$x_{in_idx}$ vs. $y_{out_idx}$",
                         input_index=in_idx,
                         output_index=out_idx,
                         r2_score=r2_score,

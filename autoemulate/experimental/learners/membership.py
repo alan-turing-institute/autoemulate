@@ -17,7 +17,7 @@ class Membership(Active):
 
     @abstractmethod
     def query(
-        self, X: TensorLike | None = None
+        self, x: TensorLike | None = None
     ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples using a membership strategy.
