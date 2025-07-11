@@ -2,7 +2,6 @@ import itertools
 
 import pytest
 import torch
-
 from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
