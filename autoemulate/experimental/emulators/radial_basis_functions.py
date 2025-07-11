@@ -14,6 +14,8 @@ class RadialBasisFunctions(PyTorchBackend):
     Wraps the Radial Basis Function Interpolation in PyTorch.
     """
 
+    supports_grad = False
+
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,  # noqa: ARG002
@@ -32,7 +34,6 @@ class RadialBasisFunctions(PyTorchBackend):
         self.epsilon = epsilon
         self.degree = degree
         self.device = device
-        self.supports_grad = False
 
     def _fit(self, x: TensorLike, y: TensorLike):
         self.model = RBFInterpolator(
