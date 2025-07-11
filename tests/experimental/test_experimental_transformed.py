@@ -2,11 +2,8 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.emulators import (
-    ALL_EMULATORS,
-    GaussianProcessExact,
-    RadialBasisFunctions,
-)
+
+from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
@@ -68,11 +65,7 @@ def test_transformed_emulator(
 @pytest.mark.parametrize(
     ("model", "x_transforms", "y_transforms"),
     itertools.product(
-        [
-            emulator
-            for emulator in ALL_EMULATORS
-            if emulator.supports_grad and emulator.supports_grad
-        ],
+        [emulator for emulator in ALL_EMULATORS if emulator.supports_grad],
         [
             None,
             [StandardizeTransform()],
@@ -88,9 +81,6 @@ def test_transformed_emulator_grad(
 ):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
-    # TODO: investigate why RadialBasisFunctions fails here, issue: #615
-    if model is RadialBasisFunctions:
-        pytest.skip("Gradient failing for RadialBasisFunctions")
     em = TransformedEmulator(
         x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=model
     )
