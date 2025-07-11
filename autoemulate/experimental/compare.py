@@ -247,6 +247,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     rmse_score = evaluate(
                         test_y, y_pred, torchmetrics.MeanSquaredError, self.device
                     )
+                    self.logger.debug(
+                        'Cross-validation for model "%s"'
+                        " completed with R2 score: %.3f, RMSE score: %.3f",
+                        model_cls.__name__,
+                        r2_score,
+                        rmse_score,
+                    )
+                    self.logger.info("Finished running Model: %s\n", model_cls.__name__)
                     result = Result(
                         id=model_cls.short_name() + str(id_num + 1),
                         model_name=model_cls.model_name(),
@@ -256,23 +264,17 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         rmse_score=rmse_score,
                     )
                     self.add_result(result)
-                    # TODO: this should be logging the best model
-                    self.log_compare(
-                        model_cls,
-                        best_config_for_this_model,
-                        x_transforms,
-                        y_transforms,
-                        r2_score,
-                        rmse_score,
-                    )
-                    self.logger.debug(
-                        'Cross-validation for model "%s"'
-                        " completed with R2 score: %.3f, RMSE score: %.3f",
-                        model_cls.__name__,
-                        r2_score,
-                        rmse_score,
-                    )
-                    self.logger.info("Finished running Model: %s\n", model_cls.__name__)
+
+        # Get the best result and log the comparison
+        best_result = self.best_result()
+        self.log_compare(
+            best_model_name=best_result.model_name,
+            x_transforms=best_result.x_transforms,
+            y_transforms=best_result.y_transforms,
+            best_config_for_this_model=best_result.config,
+            r2_score=best_result.r2_score,
+            rmse_score=best_result.rmse_score,
+        )
 
     def plot(  # noqa: PLR0912, PLR0915
         self,
