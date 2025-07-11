@@ -187,25 +187,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
         )
-        for idx, model_cls in tqdm.tqdm(
-            enumerate(self.models),
-            disable=not self.progress_bar,
-            desc="Comparing models",
-            total=len(self.models),
-            unit="model",
-            unit_scale=True,
-        ):
-            self.logger.info(
-                "Running Model: %s: %d/%d",
-                model_cls.__name__,
-                idx + 1,
-                len(self.models),
-            )
-
-            self.logger.debug('Running tuner for model "%s"', model_cls.__name__)
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
-                for id_num, model_cls in enumerate(self.models):
+                for id_num, model_cls in tqdm.tqdm(
+                    enumerate(self.models),
+                    disable=not self.progress_bar,
+                    desc="Comparing models",
+                    total=len(self.models),
+                    unit="model",
+                    unit_scale=True,
+                ):
+                    self.logger.info(
+                        "Running Model: %s: %d/%d",
+                        model_cls.__name__,
+                        id_num + 1,
+                        len(self.models),
+                    )
+
+                    self.logger.debug(
+                        'Running tuner for model "%s"', model_cls.__name__
+                    )
                     scores, configs = tuner.run(
                         model_cls,
                         x_transforms,
@@ -213,13 +214,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         n_splits=self.n_splits,
                         shuffle=self.shuffle,
                     )
-                    best_score_idx = scores.index(max(scores))
-                    best_config_for_this_model = configs[best_score_idx]
+                    best_score_id_num = scores.index(max(scores))
+                    best_config_for_this_model = configs[best_score_id_num]
                     self.logger.debug(
                         'Tuner found best config for model "%s": %s with score: %s',
                         model_cls.__name__,
                         best_config_for_this_model,
-                        scores[best_score_idx],
+                        scores[best_score_id_num],
                     )
 
                     self.logger.debug(
