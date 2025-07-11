@@ -11,7 +11,7 @@ from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.simulations.base import Simulator
 
-from ..types import GaussianLike, TensorLike
+from ..types import GaussianLike, TensorLike, TorchDefaultDType
 
 
 @dataclass(kw_only=True)
@@ -40,6 +40,7 @@ class Learner(ValidationMixin, ABC):
     y_train: TensorLike
     in_dim: int = field(init=False)
     out_dim: int = field(init=False)
+    dtype: torch.dtype = field(default=TorchDefaultDType)
 
     def __post_init__(self):
         """
@@ -199,8 +200,8 @@ class Active(Learner):
                   cumulative number of queries.
         """
         # pull histories into float tensors
-        mse = torch.tensor(self.metrics["mse"], dtype=torch.float32)
-        q = torch.tensor(self.metrics["n_queries"], dtype=torch.float32)
+        mse = torch.tensor(self.metrics["mse"], dtype=self.dtype)
+        q = torch.tensor(self.metrics["n_queries"], dtype=self.dtype)
 
         # build per-query ratios safely (avoid zero division)
         d = {}

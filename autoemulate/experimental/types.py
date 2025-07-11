@@ -20,4 +20,12 @@ ModelConfig: TypeAlias = dict[str, ParamLike]
 DeviceLike: TypeAlias = str | torch.device
 
 # Torch dtype's
-TorchScalarDType = (torch.float32, torch.float64, torch.int32, torch.int64)
+TorchScalarDType: tuple[torch.dtype, ...] = (
+    torch.float32,
+    torch.float64,
+    torch.int32,
+    torch.int64,
+)
+
+# Default torch dtype (float32)
+TorchDefaultDType: torch.dtype = torch.float32

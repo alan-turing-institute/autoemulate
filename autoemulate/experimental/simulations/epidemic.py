@@ -1,7 +1,7 @@
 import torch
 
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import TensorLike, TorchDefaultDType
 from autoemulate.simulations.epidemic import simulate_epidemic
 
 
@@ -10,11 +10,7 @@ class Epidemic(Simulator):
     Simulator of infectious disease spread (SIR).
     """
 
-    def __init__(
-        self,
-        param_ranges=None,
-        output_names=None,
-    ):
+    def __init__(self, param_ranges=None, output_names=None):
         if param_ranges is None:
             param_ranges = {"beta": (0.1, 0.5), "gamma": (0.01, 0.2)}
         if output_names is None:
@@ -36,5 +32,4 @@ class Epidemic(Simulator):
             Peak infection rate.
         """
         y = simulate_epidemic(x.cpu().numpy()[0])
-        # TODO (#537): update with default dtype
-        return torch.tensor([y], dtype=torch.float32).view(-1, 1)
+        return torch.tensor([y], dtype=TorchDefaultDType).view(-1, 1)
