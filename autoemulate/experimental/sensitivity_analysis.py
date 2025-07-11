@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
@@ -8,7 +10,7 @@ from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DistributionLike, NumpyLike, TensorLike
 
-# NOTE: we still use these functions from main
+# NOTE: we still use these functions from main #544
 # should we just move them to experimental as well?
 from autoemulate.sensitivity_analysis import (
     _morris_results_to_df,
@@ -16,6 +18,8 @@ from autoemulate.sensitivity_analysis import (
     _plot_sobol_analysis,
     _sobol_results_to_df,
 )
+
+logger = logging.getLogger("autoemulate")
 
 
 class SensitivityAnalysis(ConversionMixin):
@@ -137,7 +141,7 @@ class SensitivityAnalysis(ConversionMixin):
         if isinstance(y_pred, TensorLike):
             y_pred_np, _ = self._convert_to_numpy(y_pred)
         elif isinstance(y_pred, DistributionLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred.mean)
+            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float().detach())
         else:
             msg = "Emulator has to return Tensor or Distribution"
             raise ValueError(msg)
@@ -177,8 +181,7 @@ class SensitivityAnalysis(ConversionMixin):
             accurate results but increase computation time. Default is 1024.
         conf_level : float
             Confidence level (between 0 and 1) for calculating confidence intervals
-            of the Sobol sensitivity indices. Default is 0.95 (95% confidence). This
-            is not used in Morris sensitivity analysis.
+            of the Sobol sensitivity indices. Default is 0.95 (95% confidence).
 
         Returns
         -------
@@ -186,8 +189,15 @@ class SensitivityAnalysis(ConversionMixin):
             DataFrame with columns:
                 - 'parameter': Input parameter name
                 - 'output': Output variable name
-                - 'S1', 'S2', 'ST': First, second, and total order sensitivity indices
-                - 'S1_conf', 'S2_conf', 'ST_conf': Confidence intervals for each index
+            If using Sobol, the columns include:
+                - 'index': S1, S2 or ST (first, second, and total order sensitivity)
+                - 'confidence': confidence intervals for each index
+            If using Morris, the columns include:
+                - 'mu': mean of the distribution of elementary effects
+                - 'mu_star': mean of the distribution of absolute value
+                - 'sigma': standard deviation of the distribution, used as indication of
+                    interactions between parameters
+                - 'mu_star_conf: boostrapped confidence interval
 
         Notes
         -----
@@ -195,6 +205,13 @@ class SensitivityAnalysis(ConversionMixin):
         of input parameters. For example, with N=1024 and 5 parameters, this requires
         12,288 evaluations. The Morris method requires far fewer computations.
         """
+        logger.debug(
+            "Running sensitivity analysis with method=%s, n_samples=%d, conf_level=%s",
+            method,
+            n_samples,
+            conf_level,
+        )
+
         if method not in ["sobol", "morris"]:
             msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
             raise ValueError(msg)
@@ -208,7 +225,9 @@ class SensitivityAnalysis(ConversionMixin):
             if method == "sobol":
                 Si = sobol_analyze(self.problem, y[:, i], conf_level=conf_level)
             elif method == "morris":
-                Si = morris_analyze(self.problem, param_samples, y[:, i])
+                Si = morris_analyze(
+                    self.problem, param_samples, y[:, i], conf_level=conf_level
+                )
             results[name] = Si  # type: ignore PGH003
 
         if method == "sobol":
@@ -256,3 +275,46 @@ class SensitivityAnalysis(ConversionMixin):
             Figure size as (width, height) in inches.If None, set calculated.
         """
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)
+
+    @staticmethod
+    def top_n_sobol_params(
+        sa_results_df: pd.DataFrame, top_n: int, sa_index: str = "ST"
+    ) -> list:
+        """
+        Return `top_n` most important parameters given Sobol sensitivity analysis
+        results dataframe. In case of multiple outputs, averages over them
+        to rank the parameters.
+
+        Parameters:
+        -----------
+        sa_results_df: pd.DataFrame
+            Dataframe results by `SensitivityAnalysis().run()`
+        top_n: int
+            Number of parameters to return.
+        sa_index: str
+            Which sensitivity index to rank the parameters by. One of ["S1", "S2", "ST].
+
+        Returns
+        -------
+        list[str]
+            List of `top_n` parameter names.
+        """
+        if not all(
+            col in sa_results_df.columns for col in ["index", "parameter", "value"]
+        ):
+            msg = (
+                "sa_results_df is missing required columns: 'index', 'parameter',"
+                "or 'value'"
+            )
+            raise ValueError(msg)
+
+        st_results = sa_results_df[sa_results_df["index"] == sa_index]
+
+        return (
+            st_results.groupby("parameter")["value"]  # pyright: ignore[reportCallIssue]
+            # each parameter is evalued against each output
+            # to rank parameters, average over how sensitive all outputs are to it
+            .mean()
+            .nlargest(top_n)
+            .index.tolist()
+        )

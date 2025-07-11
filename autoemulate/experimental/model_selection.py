@@ -1,4 +1,5 @@
 import inspect
+import logging
 from typing import Any
 
 import numpy as np
@@ -19,6 +20,8 @@ from autoemulate.experimental.types import (
     OutputLike,
     TensorLike,
 )
+
+logger = logging.getLogger("autoemulate")
 
 
 def _update(
@@ -106,7 +109,16 @@ def cross_validate(  # noqa: PLR0913
     cv_results = {"r2": [], "rmse": []}
     batch_size = best_model_config.get("batch_size", 16)
     device = get_torch_device(device)
-    for train_idx, val_idx in cv.split(dataset):  # type: ignore TODO: identify type handling here
+
+    logger.debug("Cross-validation configuration: %s", cv)
+    for i, (train_idx, val_idx) in enumerate(cv.split(dataset)):  # type: ignore TODO: identify type handling here
+        logger.debug(
+            "Cross-validation split %d: %d train samples, %d validation samples",
+            i,
+            len(train_idx),
+            len(val_idx),
+        )
+
         # create train/val data subsets
         # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())

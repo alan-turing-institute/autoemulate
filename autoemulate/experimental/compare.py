@@ -1,15 +1,16 @@
-import logging
 import warnings
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import torchmetrics
+import tqdm
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
+from autoemulate.experimental.logging_config import configure_logging
 from autoemulate.experimental.model_selection import evaluate
 from autoemulate.experimental.plotting import (
     calculate_subplot_layout,
@@ -36,7 +37,31 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         shuffle: bool = True,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        log_level: str = "progress_bar",
     ):
+        """
+        Initialize the AutoEmulate class.
+
+        Parameters
+        ----------
+        x: InputLike
+            Input features.
+        y: InputLike or None
+            Target values (not needed if x is a Dataset).
+        models: list[type[Emulator]] | None
+            List of emulator classes to compare. If None, all available emulators
+            are used.
+        device: DeviceLike | None
+            Device to run the emulators on (e.g., "cpu" or "cuda").
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
+        log_level: str
+            Logging level. Can be "progress_bar", "debug", "info", "warning",
+            "error", or "critical". Defaults to "progress_bar". If "progress_bar",
+            it will show a progress bar during model comparison. It will set the
+            logging level to "error" to avoid cluttering the output
+            with debug/info logs.
+        """
         Results.__init__(self)
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
@@ -75,6 +100,27 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Run compare
         self.compare(n_iter=n_iter)
+
+        # Handle log level parameter
+        valid_log_levels = [
+            "progress_bar",
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "critical",
+        ]
+        log_level = log_level.lower()
+        if log_level not in valid_log_levels:
+            raise ValueError(
+                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
+            )
+        if log_level == "progress_bar":
+            log_level = "error"
+            self.progress_bar = True
+        else:
+            self.progress_bar = False
+        self.logger = configure_logging(level=log_level)
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -118,26 +164,45 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     def log_compare(  # noqa: PLR0913
         self,
-        model_cls,
+        best_model_name,
         x_transforms,
         y_transforms,
         best_config_for_this_model,
         r2_score,
         rmse_score,
     ):
-        logger = logging.getLogger(__name__)
         msg = (
-            f"Model: {model_cls.__name__}, "
+            "Comparison results:\n"
+            f"Best Model: {best_model_name}, "
             f"x transforms: {x_transforms}, "
             f"y transforms: {y_transforms}",
             f"Best params: {best_config_for_this_model}, "
             f"R2 score: {r2_score:.3f}, "
             f"RMSE score: {rmse_score:.3f}",
         )
-        logger.info(msg)
+        self.logger.debug(msg)
 
     def compare(self, n_iter: int = 100):
         tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
+        self.logger.info(
+            "Comparing %s", [model_cls.__name__ for model_cls in self.models]
+        )
+        for idx, model_cls in tqdm.tqdm(
+            enumerate(self.models),
+            disable=not self.progress_bar,
+            desc="Comparing models",
+            total=len(self.models),
+            unit="model",
+            unit_scale=True,
+        ):
+            self.logger.info(
+                "Running Model: %s: %d/%d",
+                model_cls.__name__,
+                idx + 1,
+                len(self.models),
+            )
+
+            self.logger.debug('Running tuner for model "%s"', model_cls.__name__)
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
                 for id_num, model_cls in enumerate(self.models):
@@ -150,6 +215,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     )
                     best_score_idx = scores.index(max(scores))
                     best_config_for_this_model = configs[best_score_idx]
+                    self.logger.debug(
+                        'Tuner found best config for model "%s": %s with score: %s',
+                        model_cls.__name__,
+                        best_config_for_this_model,
+                        scores[best_score_idx],
+                    )
+
+                    self.logger.debug(
+                        'Running cross-validation for model "%s" for "%s" iterations',
+                        model_cls.__name__,
+                        n_iter,
+                    )
                     train_val_x, train_val_y = self._convert_to_tensors(self.train_val)
                     test_x, test_y = self._convert_to_tensors(self.test)
                     transformed_emulator = TransformedEmulator(
@@ -178,6 +255,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         rmse_score=rmse_score,
                     )
                     self.add_result(result)
+                    # TODO: this should be logging the best model
                     self.log_compare(
                         model_cls,
                         best_config_for_this_model,
@@ -186,6 +264,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         r2_score,
                         rmse_score,
                     )
+                    self.logger.debug(
+                        'Cross-validation for model "%s"'
+                        " completed with R2 score: %.3f, RMSE score: %.3f",
+                        model_cls.__name__,
+                        r2_score,
+                        rmse_score,
+                    )
+                    self.logger.info("Finished running Model: %s\n", model_cls.__name__)
 
     def plot(  # noqa: PLR0912, PLR0915
         self,

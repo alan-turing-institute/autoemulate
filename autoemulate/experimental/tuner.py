@@ -1,6 +1,7 @@
+import logging
+
 from sklearn.model_selection import KFold
 from torchmetrics import R2Score
-from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -8,6 +9,8 @@ from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.model_selection import cross_validate
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import DeviceLike, InputLike, ModelConfig
+
+logger = logging.getLogger("autoemulate")
 
 
 class Tuner(ConversionMixin, TorchDeviceMixin):
@@ -72,7 +75,14 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         # keep track of what parameter values tested and how they performed
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
-        for _ in tqdm(range(self.n_iter)):
+
+        for i in range(self.n_iter):
+            logger.debug(
+                "Tuning Model: Iteration %s: %d/%d",
+                model_class.__name__,
+                i + 1,
+                self.n_iter,
+            )
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
 
