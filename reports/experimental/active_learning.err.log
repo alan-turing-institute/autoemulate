@@ -1,0 +1,75 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 154, in wrapped
+    asyncio.get_running_loop()
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/nbclient/client.py", line 1319, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 158, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+# Learner components
+simulator = Sin()
+
+X_train = simulator.sample_inputs(5)
+Y_train = simulator.forward_batch(X_train)
+emulator = GaussianProcessExact(X_train, Y_train)
+
+# Learner itself!
+learner = stream.Random(
+    simulator=simulator,
+    emulator=emulator,
+    X_train=X_train,
+    Y_train=Y_train,
+    p_query=0.2,
+    show_progress=show_progress,
+)
+
+# Stream of 500 samples
+X_stream = simulator.sample_inputs(500)
+learner.fit_samples(X_stream)
+------------------
+
+----- stderr -----
+Running simulations:   0%|          | 0.00/5.00 [00:00<?, ?sample/s]
+----- stderr -----
+Running simulations: 100%|██████████| 5.00/5.00 [00:00<00:00, 8.33ksample/s]
+----- stderr -----
+
+------------------
+
+[31m---------------------------------------------------------------------------[39m
+[31mTypeError[39m                                 Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[8][39m[32m, line 9[39m
+[32m      6[39m emulator = GaussianProcessExact(X_train, Y_train)
+[32m      8[39m [38;5;66;03m# Learner itself![39;00m
+[32m----> [39m[32m9[39m learner = [43mstream[49m[43m.[49m[43mRandom[49m[43m([49m
+[32m     10[39m [43m    [49m[43msimulator[49m[43m=[49m[43msimulator[49m[43m,[49m
+[32m     11[39m [43m    [49m[43memulator[49m[43m=[49m[43memulator[49m[43m,[49m
+[32m     12[39m [43m    [49m[43mX_train[49m[43m=[49m[43mX_train[49m[43m,[49m
+[32m     13[39m [43m    [49m[43mY_train[49m[43m=[49m[43mY_train[49m[43m,[49m
+[32m     14[39m [43m    [49m[43mp_query[49m[43m=[49m[32;43m0.2[39;49m[43m,[49m
+[32m     15[39m [43m    [49m[43mshow_progress[49m[43m=[49m[43mshow_progress[49m[43m,[49m
+[32m     16[39m [43m)[49m
+[32m     18[39m [38;5;66;03m# Stream of 500 samples[39;00m
+[32m     19[39m X_stream = simulator.sample_inputs([32m500[39m)
+
+[31mTypeError[39m: Random.__init__() got an unexpected keyword argument 'X_train'
+
