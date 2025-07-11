@@ -6,6 +6,7 @@ from linear_operator.operators import DiagLinearOperator
 from torch.distributions import Transform
 
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
+from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DistributionLike,
@@ -15,7 +16,9 @@ from autoemulate.experimental.types import (
 )
 
 
-class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
+class AutoEmulateTransform(
+    Transform, ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin
+):
     """Base class for transforms in the AutoEmulate framework.
 
     This class subclasses the `torch.distributions.Transform` class and provides
@@ -80,7 +83,7 @@ class AutoEmulateTransform(Transform, ABC, ValidationMixin, ConversionMixin):
 
         """
         self._check_is_fitted()
-        return torch.kron(torch.eye(y.shape[0]), self._basis_matrix)
+        return torch.kron(torch.eye(y.shape[0], device=self.device), self._basis_matrix)
 
     def _batch_basis_matrix(self, y: TensorLike) -> TensorLike:
         """Batch basis matrix for the transformation of the number of samples in

@@ -151,6 +151,12 @@ class ConversionMixin:
         x_tensor = result
         return x_tensor.cpu().numpy(), None
 
+    def _ensure_numpy_2d(self, arr: np.ndarray) -> np.ndarray:
+        """Ensure that arr is a 2D numpy array."""
+        if arr.ndim == 1:
+            arr = arr.reshape(-1, 1)
+        return arr
+
     def _random_split(
         self,
         dataset: Dataset,
@@ -275,7 +281,7 @@ class ValidationMixin:
             raise ValueError(f"Expected output to be 2D tensor, got {output.ndim}D")
 
     @staticmethod
-    def check_vector(X: TensorLike) -> TensorLike:
+    def check_vector(x: TensorLike) -> TensorLike:
         """
         Validate that the input is a 1D TensorLike.
 
@@ -292,22 +298,22 @@ class ValidationMixin:
         Raises
         ------
         ValueError
-            If X is not a TensorLike or is not 1-dimensional.
+            If x is not a TensorLike or is not 1-dimensional.
         """
-        if not isinstance(X, TensorLike):
-            raise ValueError(f"Expected TensorLike, got {type(X)}")
-        if X.ndim != 1:
-            raise ValueError(f"Expected 1D tensor, got {X.ndim}D")
-        return X
+        if not isinstance(x, TensorLike):
+            raise ValueError(f"Expected TensorLike, got {type(x)}")
+        if x.ndim != 1:
+            raise ValueError(f"Expected 1D tensor, got {x.ndim}D")
+        return x
 
     @staticmethod
-    def check_matrix(X: TensorLike) -> TensorLike:
+    def check_matrix(x: TensorLike) -> TensorLike:
         """
         Validate that the input is a 2D TensorLike.
 
         Parameters
         ----------
-        X : TensorLike
+        x : TensorLike
             Input tensor to validate.
 
         Returns
@@ -318,24 +324,24 @@ class ValidationMixin:
         Raises
         ------
         ValueError
-            If X is not a TensorLike or is not 2-dimensional.
+            If x is not a TensorLike or is not 2-dimensional.
         """
-        if not isinstance(X, TensorLike):
-            raise ValueError(f"Expected TensorLike, got {type(X)}")
-        if X.ndim != 2:
-            raise ValueError(f"Expected 2D tensor, got {X.ndim}D")
-        return X
+        if not isinstance(x, TensorLike):
+            raise ValueError(f"Expected TensorLike, got {type(x)}")
+        if x.ndim != 2:
+            raise ValueError(f"Expected 2D tensor, got {x.ndim}D")
+        return x
 
     @staticmethod
-    def check_pair(X: TensorLike, Y: TensorLike) -> tuple[TensorLike, TensorLike]:
+    def check_pair(x: TensorLike, y: TensorLike) -> tuple[TensorLike, TensorLike]:
         """
         Validate that two tensors have the same number of rows.
 
         Parameters
         ----------
-        X : TensorLike
+        x : TensorLike
             First tensor.
-        Y : TensorLike
+        y : TensorLike
             Second tensor.
 
         Returns
@@ -346,21 +352,21 @@ class ValidationMixin:
         Raises
         ------
         ValueError
-            If X and Y do not have the same number of rows.
+            If x and y do not have the same number of rows.
         """
-        if X.shape[0] != Y.shape[0]:
-            msg = "X and Y must have the same number of rows"
+        if x.shape[0] != y.shape[0]:
+            msg = "x and y must have the same number of rows"
             raise ValueError(msg)
-        return X, Y
+        return x, y
 
     @staticmethod
-    def check_covariance(Y: TensorLike, Sigma: TensorLike) -> TensorLike:
+    def check_covariance(y: TensorLike, Sigma: TensorLike) -> TensorLike:
         """
         Validate and return the covariance matrix.
 
         Parameters
         ----------
-        Y : TensorLike
+        y : TensorLike
             Output tensor.
         Sigma : TensorLike
             Covariance matrix, which may be full, diagonal, or a scalar per sample.
@@ -373,12 +379,12 @@ class ValidationMixin:
         Raises
         ------
         ValueError
-            If Sigma does not have a valid shape relative to Y.
+            If Sigma does not have a valid shape relative to y.
         """
         if (
-            Sigma.shape == (Y.shape[0], Y.shape[1], Y.shape[1])
-            or Sigma.shape == (Y.shape[0], Y.shape[1])
-            or Sigma.shape == (Y.shape[0],)
+            Sigma.shape == (y.shape[0], y.shape[1], y.shape[1])
+            or Sigma.shape == (y.shape[0], y.shape[1])
+            or Sigma.shape == (y.shape[0],)
         ):
             return Sigma
         msg = "Invalid covariance matrix shape"
@@ -477,12 +483,6 @@ class ValidationMixin:
 
     ### Validation methods from old utils.py ###
     ### Leave here in case want to restore/refactor later ###
-
-    # def _ensure_2d(arr):
-    #     """Ensure that arr is a 2D."""
-    #     if arr.ndim == 1:
-    #         arr = arr.reshape(-1, 1)
-    #     return arr
 
     # def _ensure_1d_if_column_vec(arr):
     #     """Ensure that arr is 1D if shape is (n, 1)."""

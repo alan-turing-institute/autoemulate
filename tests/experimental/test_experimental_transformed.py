@@ -64,11 +64,7 @@ def test_transformed_emulator(
 @pytest.mark.parametrize(
     ("model", "x_transforms", "y_transforms"),
     itertools.product(
-        [
-            emulator
-            for emulator in ALL_EMULATORS
-            if emulator.supports_grad and emulator.supports_grad
-        ],
+        [emulator for emulator in ALL_EMULATORS if emulator.supports_grad],
         [
             None,
             [StandardizeTransform()],

@@ -189,6 +189,10 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                     # EarlyStopping prints a message if this happens
                     break
 
+            # Update learning rate if scheduler is defined
+            if self.scheduler is not None:
+                self.scheduler.step()
+
         if self.early_stopping is not None:
             self.early_stopping.on_train_end(self, epoch)
 
@@ -221,7 +225,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 matern_5_2_plus_rq,
                 rbf_times_linear,
             ],
-            "epochs": [100, 200, 500, 1000],
+            "epochs": [10, 50, 100, 200],
             "batch_size": [16, 32],
             "activation": [
                 nn.ReLU,

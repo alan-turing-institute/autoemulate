@@ -25,14 +25,14 @@ class Stream(Active):
 
     @abstractmethod
     def query(
-        self, X: TensorLike | None = None
+        self, x: TensorLike | None = None
     ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples from a stream.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Stream of input samples.
 
         Returns
@@ -45,52 +45,52 @@ class Stream(Active):
             - A dictionary of additional metrics.
         """
 
-    def fit_samples(self, X: torch.Tensor):
+    def fit_samples(self, x: torch.Tensor):
         """
         Fit the active learner using a stream of samples.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Stream of input samples.
         """
-        X = self.check_matrix(X)
-        for x in (
+        x = self.check_matrix(x)
+        for xi in (
             pb := tqdm(
-                X,
+                x,
                 desc=self.__class__.__name__,
                 leave=True,
                 disable=not self.show_progress,
             )
         ):
-            self.fit(x.reshape(1, -1))
+            self.fit(xi.reshape(1, -1))
             pb.set_postfix(
                 ordered_dict={key: val[-1] for key, val in self.metrics.items()}
             )
 
-    def fit_batches(self, X: torch.Tensor, batch_size: int):
+    def fit_batches(self, x: torch.Tensor, batch_size: int):
         """
         Fit the active learner using batches of samples.
 
-        This method automatically splits X into batches of the specified size and then
+        This method automatically splits x into batches of the specified size and then
         sequentially fits each batch.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Stream of input samples.
         batch_size : int
             Number of samples per batch.
         """
-        X = self.check_matrix(X)
+        x = self.check_matrix(x)
         for i in (
             pb := tqdm(
-                range(0, X.shape[0], batch_size),
+                range(0, x.shape[0], batch_size),
                 desc=f"{self.__class__.__name__} (batches)",
                 disable=not self.show_progress,
             )
         ):
-            batch = X[i : i + batch_size]
+            batch = x[i : i + batch_size]
             self.fit(batch)
             pb.set_postfix(ordered_dict={k: v[-1] for k, v in self.metrics.items()})
 
@@ -112,7 +112,7 @@ class Random(Stream):
 
     def query(
         self,
-        X: TensorLike | None = None,
+        x: TensorLike | None = None,
         random_seed: int | None = None,
     ) -> tuple[torch.Tensor | None, TensorLike | GaussianLike, dict[str, float]]:
         """
@@ -120,7 +120,7 @@ class Random(Stream):
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Stream of input samples.
 
         Returns
@@ -132,15 +132,15 @@ class Random(Stream):
             - The covariance estimates,
             - An empty dictionary of additional metrics.
         """
-        assert isinstance(X, TensorLike)
+        assert isinstance(x, TensorLike)
         # TODO: move handling to check method in base class
-        output = self.emulator.predict(X)
+        output = self.emulator.predict(x)
         assert isinstance(output, TensorLike | GaussianLike)
         # assert isinstance(output, TensorLike | DistributionLike)
         if random_seed is not None:
             set_random_seed(seed=random_seed)
-        X = X if np.random.rand() < self.p_query else None
-        return X, output, {}
+        x = x if np.random.rand() < self.p_query else None
+        return x, output, {}
 
 
 @dataclass(kw_only=True)
@@ -163,9 +163,9 @@ class Threshold(Stream):
 
         Parameters
         ----------
-        X_train : torch.Tensor
+        x_train : torch.Tensor
             Training input tensor.
-        Y_train : torch.Tensor
+        y_train : torch.Tensor
             Training output tensor.
         """
         super().__post_init__()
@@ -173,16 +173,16 @@ class Threshold(Stream):
 
     @abstractmethod
     def score(
-        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
         Abstract method to compute a score for querying based on the input sample.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Input sample tensor.
-        Y : torch.Tensor
+        y : torch.Tensor
             Predicted output tensor.
         Sigma : torch.Tensor
             Covariance estimates tensor.
@@ -194,7 +194,7 @@ class Threshold(Stream):
         """
 
     def query(
-        self, X: TensorLike | None = None
+        self, x: TensorLike | None = None
     ) -> tuple[
         torch.Tensor | None,
         torch.Tensor | GaussianLike,
@@ -205,7 +205,7 @@ class Threshold(Stream):
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Stream of input samples.
 
         Returns
@@ -218,13 +218,13 @@ class Threshold(Stream):
             - A dictionary with the computed score.
         """
         # TODO: move handling to check method in base class
-        assert isinstance(X, torch.Tensor)
-        output = self.emulator.predict(X)
+        assert isinstance(x, torch.Tensor)
+        output = self.emulator.predict(x)
         assert isinstance(output, GaussianLike)
         assert isinstance(output.variance, torch.Tensor)
-        score = self.score(X, output.mean, output.variance)
-        X = X if score > self.threshold else None
-        return X, output, {"score": score.item()}
+        score = self.score(x, output.mean, output.variance)
+        x = x if score > self.threshold else None
+        return x, output, {"score": score.item()}
 
 
 @dataclass(kw_only=True)
@@ -251,7 +251,7 @@ class Distance(Input):
     """
 
     def score(
-        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
         Compute the average minimum distance from the input samples to the training
@@ -259,7 +259,7 @@ class Distance(Input):
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Input samples.
 
         Returns
@@ -267,8 +267,8 @@ class Distance(Input):
         float
             The average minimum distance.
         """
-        _, _, _ = X, Y, Sigma  # Unused variables
-        distances = torch.cdist(X, self.X_train)
+        _, _, _ = x, y, Sigma  # Unused variables
+        distances = torch.cdist(x, self.x_train)
         min_dists, _ = distances.min(dim=1)
         return min_dists.mean()
 
@@ -297,16 +297,16 @@ class A_Optimal(Output):
     """
 
     def score(
-        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
         Compute the score using the trace of the covariance matrix.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Input samples.
-        Y : torch.Tensor
+        y : torch.Tensor
             Predicted outputs (not used).
         Sigma : torch.Tensor
             Covariance estimates (not used).
@@ -316,7 +316,7 @@ class A_Optimal(Output):
         torch.Tensor
             Score based on the trace of the covariance matrix.
         """
-        _, _ = X, Y  # Unused variables
+        _, _ = x, y  # Unused variables
         return self.trace(Sigma, self.out_dim)
 
 
@@ -333,16 +333,16 @@ class D_Optimal(Output):
     """
 
     def score(
-        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
         Compute the score using the log-determinant of the covariance matrix.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Input samples.
-        Y : torch.Tensor
+        y : torch.Tensor
             Predicted outputs.
         Sigma : torch.Tensor
             Covariance estimates.
@@ -352,7 +352,7 @@ class D_Optimal(Output):
         torch.Tensor
             Score based on the log-determinant of the covariance matrix.
         """
-        _, _ = X, Y  # Unused variables
+        _, _ = x, y  # Unused variables
         return self.logdet(Sigma, self.out_dim)
 
 
@@ -369,16 +369,16 @@ class E_Optimal(Output):
     """
 
     def score(
-        self, X: torch.Tensor, Y: torch.Tensor, Sigma: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
         Compute the score using the maximum eigenvalue of the covariance matrix.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Input samples.
-        Y : torch.Tensor
+        y : torch.Tensor
             Predicted outputs.
         Sigma : torch.Tensor
             Covariance estimates.
@@ -388,7 +388,7 @@ class E_Optimal(Output):
         torch.Tensor
             Score based on the maximum eigenvalue of the covariance matrix.
         """
-        _, _ = X, Y  # Unused variables
+        _, _ = x, y  # Unused variables
         return self.max_eigval(Sigma)
 
 
@@ -438,9 +438,9 @@ class Adaptive(Threshold):
 
         Parameters
         ----------
-        X_train : torch.Tensor
+        x_train : torch.Tensor
             Training input tensor.
-        Y_train : torch.Tensor
+        y_train : torch.Tensor
             Training output tensor.
         """
         super().__post_init__()
@@ -454,7 +454,7 @@ class Adaptive(Threshold):
         )
 
     def query(
-        self, X: TensorLike | None = None
+        self, x: TensorLike | None = None
     ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Query new samples and adapt the threshold using a PID controller with a sliding
@@ -462,7 +462,7 @@ class Adaptive(Threshold):
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Stream of input samples.
 
         Returns
@@ -476,7 +476,7 @@ class Adaptive(Threshold):
         """
         # Call the parent query (e.g., from Threshold) to get initial values and
         # metrics.
-        X, output, metrics = super().query(X)
+        x, output, metrics = super().query(x)
 
         # Retrieve the error history for the specified metric.
         error_list = self.metrics.get(self.key, [])
@@ -510,7 +510,7 @@ class Adaptive(Threshold):
                 "error_deriv": ed,
             }
         )
-        return X, output, metrics
+        return x, output, metrics
 
 
 @dataclass(kw_only=True)

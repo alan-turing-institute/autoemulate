@@ -17,14 +17,14 @@ class Pool(Active):
 
     @abstractmethod
     def query(
-        self, X: TensorLike | None = None
+        self, x: TensorLike | None = None
     ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples from a given pool.
 
         Parameters
         ----------
-        X : torch.Tensor
+        x : torch.Tensor
             Pool of input samples.
 
         Returns

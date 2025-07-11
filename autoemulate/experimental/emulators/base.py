@@ -50,6 +50,15 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     def model_name(cls) -> str:
         return cls.__name__
 
+    @classmethod
+    def short_name(cls) -> str:
+        """
+        Take the capital letters of the class name and return them as a string.
+        For example, if the class name is `GaussianProcessExact`,
+        this will return `GPE`.
+        """
+        return "".join([c for c in cls.__name__ if c.isupper()])
+
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         pass
@@ -280,7 +289,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
 
         Parameters
         ----------
-        X: TensorLike
+        x: TensorLike
             Input features as numpy array, PyTorch tensor, or DataLoader.
         y: OutputLike or None
             Target values (not needed if x is a DataLoader).
@@ -298,12 +307,12 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             epoch_loss = 0.0
             batches = 0
 
-            for X_batch, y_batch in dataloader:
+            for x_batch, y_batch in dataloader:
                 # Preprocess x_batch
-                x = self.preprocess(X_batch)
+                x = self.preprocess(x_batch)
 
                 # Forward pass
-                y_pred = self.forward(X_batch)
+                y_pred = self.forward(x_batch)
                 loss = self.loss_func(y_pred, y_batch)
 
                 # Backward pass and optimize
