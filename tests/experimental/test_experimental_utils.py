@@ -24,9 +24,9 @@ class TestConversionMixin:
         """
         Test converting numpy arrays to a Dataset.
         """
-        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+        x = np.array([[1.0, 2.0], [3.0, 4.0]])
         y = np.array([1.0, 2.0])
-        dataset = self.mixin._convert_to_dataset(X, y)
+        dataset = self.mixin._convert_to_dataset(x, y)
 
         assert isinstance(dataset, TensorDataset)
         assert torch.equal(dataset.tensors[0], torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
@@ -36,29 +36,29 @@ class TestConversionMixin:
         """
         Test converting torch tensors to a Dataset.
         """
-        X = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
         y = torch.tensor([1.0, 2.0])
-        dataset = self.mixin._convert_to_dataset(X, y)
+        dataset = self.mixin._convert_to_dataset(x, y)
 
         assert isinstance(dataset, TensorDataset)
-        assert torch.equal(dataset.tensors[0], X)
+        assert torch.equal(dataset.tensors[0], x)
         assert torch.equal(dataset.tensors[1], y)
 
     def test_convert_to_dataset_invalid(self):
         """
         Test invalid input to _convert_to_dataset.
         """
-        X = "invalid input"
+        x = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for x"):
-            self.mixin._convert_to_dataset(X)  # type: ignore - test for invalid type
+            self.mixin._convert_to_dataset(x)  # type: ignore - test for invalid type
 
     def test_convert_to_tensors(self):
         """
         Test converting input data to tensors.
         """
-        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+        x = np.array([[1.0, 2.0], [3.0, 4.0]])
         y = np.array([1.0, 2.0])
-        x_tensor, y_tensor = self.mixin._convert_to_tensors(X, y)
+        x_tensor, y_tensor = self.mixin._convert_to_tensors(x, y)
 
         assert isinstance(x_tensor, torch.Tensor)
         assert isinstance(y_tensor, torch.Tensor)
@@ -69,9 +69,9 @@ class TestConversionMixin:
         """
         Test converting a Subset of a TensorDataset to tensors.
         """
-        X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
         y = torch.tensor([1.0, 2.0, 3.0])
-        dataset = TensorDataset(X, y)
+        dataset = TensorDataset(x, y)
         subset = Subset(dataset, [0, 1])
         x_tensor, y_tensor = self.mixin._convert_to_tensors(subset)
 
@@ -82,18 +82,18 @@ class TestConversionMixin:
         """
         Test invalid input to _convert_to_tensors.
         """
-        X = "invalid input"
+        x = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for x"):
-            self.mixin._convert_to_dataset(X)  # type: ignore - test for invalid type
+            self.mixin._convert_to_dataset(x)  # type: ignore - test for invalid type
 
     def test_convert_numpy_array(self):
         """
         Test converting a numpy array to a DataLoader object.
         """
-        X = np.array([[1.0], [2.0], [3.0]])
+        x = np.array([[1.0], [2.0], [3.0]])
         y = np.array([1.0, 2.0, 3.0])
         dataloader = self.mixin._convert_to_dataloader(
-            X, y, batch_size=2, shuffle=False
+            x, y, batch_size=2, shuffle=False
         )
 
         assert isinstance(dataloader, DataLoader)
@@ -106,10 +106,10 @@ class TestConversionMixin:
         """
         Test converting a torch tensor to a DataLoader object.
         """
-        X = torch.tensor([[1.0], [2.0], [3.0]])
+        x = torch.tensor([[1.0], [2.0], [3.0]])
         y = torch.tensor([1.0, 2.0, 3.0])
         dataloader = self.mixin._convert_to_dataloader(
-            X, y, batch_size=2, shuffle=False
+            x, y, batch_size=2, shuffle=False
         )
 
         assert isinstance(dataloader, DataLoader)
@@ -122,9 +122,9 @@ class TestConversionMixin:
         """
         Test converting a DataLoader object to itself.
         """
-        X = torch.tensor([[1.0], [2.0], [3.0]])
+        x = torch.tensor([[1.0], [2.0], [3.0]])
         y = torch.tensor([1.0, 2.0, 3.0])
-        dataset = TensorDataset(X, y)
+        dataset = TensorDataset(x, y)
         dataloader = DataLoader(dataset, batch_size=2, shuffle=False)
 
         result = self.mixin._convert_to_dataloader(dataloader)
@@ -138,9 +138,9 @@ class TestConversionMixin:
         """
         Test converting an invalid input type.
         """
-        X = "invalid input"
+        x = "invalid input"
         with pytest.raises(ValueError, match="Unsupported type for x."):
-            self.mixin._convert_to_dataloader(X)  # type: ignore - test for invalid type
+            self.mixin._convert_to_dataloader(x)  # type: ignore - test for invalid type
 
     def test_convert_to_numpy_1d(self, sample_data_y1d):
         x, y = sample_data_y1d
@@ -162,9 +162,9 @@ class TestConversionMixin:
         """
         Test splitting a dataset into train and test DataLoaders.
         """
-        X = torch.tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        x = torch.tensor([[1.0], [2.0], [3.0], [4.0], [5.0]])
         y = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0])
-        dataset = TensorDataset(X, y)
+        dataset = TensorDataset(x, y)
         train_loader, test_loader = self.mixin._random_split(
             dataset, train_size=0.6, test_size=0.4
         )
@@ -179,24 +179,24 @@ class TestConversionMixin:
         """
         Test normalizing a tensor.
         """
-        X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
-        normalized, mean, std = self.mixin._normalize(X)
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        normalized, mean, std = self.mixin._normalize(x)
 
         # we use torch.allclose to compare tensors
         assert torch.allclose(mean, torch.tensor([[3.0, 4.0]]))
         assert torch.allclose(std, torch.tensor([[2.0, 2.0]]))
-        assert torch.allclose(normalized, (X - mean) / std)
+        assert torch.allclose(normalized, (x - mean) / std)
 
     def test_denormalize(self):
         """
         Test denormalizing a tensor.
         """
-        X = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        x = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
         mean = torch.tensor([[3.0, 4.0]])
         std = torch.tensor([[2.0, 2.0]])
-        denormalized = self.mixin._denormalize((X - mean) / std, mean, std)
+        denormalized = self.mixin._denormalize((x - mean) / std, mean, std)
 
-        assert torch.allclose(denormalized, X)
+        assert torch.allclose(denormalized, x)
 
 
 class TestValidationMixin:
@@ -373,7 +373,7 @@ class TestValidationMixin:
         Test check_pair with tensors of mismatched rows.
         """
         with pytest.raises(
-            ValueError, match="X and Y must have the same number of rows"
+            ValueError, match="x and y must have the same number of rows"
         ):
             self.mixin.check_pair(tensor_2d, tensor_2d_mismatch)
 
