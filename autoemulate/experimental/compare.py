@@ -98,9 +98,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_splits = n_splits
         self.shuffle = shuffle
 
-        # Run compare
-        self.compare(n_iter=n_iter)
-
         # Handle log level parameter
         valid_log_levels = [
             "progress_bar",
@@ -121,6 +118,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         else:
             self.progress_bar = False
         self.logger = configure_logging(level=log_level)
+
+        # Run compare
+        self.compare(n_iter=n_iter)
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
