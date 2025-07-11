@@ -3,7 +3,7 @@ import torch
 from scipy.integrate import solve_ivp
 
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike, TensorLike
+from autoemulate.experimental.types import NumpyLike, TensorLike, TorchDefaultDType
 
 
 class Epidemic(Simulator):
@@ -41,8 +41,7 @@ class Epidemic(Simulator):
             f"Simulator._forward expects a single input, got {x.shape[0]}"
         )
         y = simulate_epidemic(x.cpu().numpy()[0])
-        # TODO (#537): update with default dtype
-        return torch.tensor([y], dtype=torch.float32).view(-1, 1)
+        return torch.tensor([y], dtype=TorchDefaultDType).view(-1, 1)
 
 
 def simulate_epidemic(x: NumpyLike, N: int = 1000, I0: int = 1) -> float:

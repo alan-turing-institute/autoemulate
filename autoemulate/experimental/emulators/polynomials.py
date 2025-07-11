@@ -52,7 +52,7 @@ class PolynomialRegression(PyTorchBackend):
         # Transform input using the fitted PolynomialFeatures
         x_np, _ = self._convert_to_numpy(x)
         x_poly = self.poly.transform(x_np)
-        x_poly_tensor = torch.tensor(x_poly, dtype=torch.float32, device=self.device)
+        x_poly_tensor = torch.tensor(x_poly, dtype=x.dtype, device=self.device)
         return self.linear(x_poly_tensor)
 
     @staticmethod

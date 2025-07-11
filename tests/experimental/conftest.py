@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import torch
+from autoemulate.experimental.types import TorchDefaultDType
 from sklearn.datasets import make_regression
 
 N_S = 20
@@ -115,7 +116,7 @@ def noisy_data():
     Generate a highly noisy dataset to test stochasticity effects.
     """
     rng = np.random.RandomState(0)
-    x = torch.tensor(rng.normal(size=(100, 2)), dtype=torch.float32)
-    y = torch.tensor(rng.normal(size=(100,)), dtype=torch.float32)
+    x = torch.tensor(rng.normal(size=(100, 2)), dtype=TorchDefaultDType)
+    y = torch.tensor(rng.normal(size=(100,)), dtype=TorchDefaultDType)
     x2 = x[:4].clone()
     return x, y, x2

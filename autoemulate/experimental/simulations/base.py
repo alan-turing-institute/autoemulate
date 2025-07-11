@@ -7,7 +7,7 @@ from tqdm import tqdm
 from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
 from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.simulations.experimental_design import LatinHypercube
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import TensorLike, TorchDefaultDType
 
 logger = logging.getLogger("autoemulate")
 
@@ -85,7 +85,10 @@ class Simulator(ABC, ValidationMixin):
         return self._out_dim
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None
+        self,
+        n_samples: int,
+        random_seed: int | None = None,
+        dtype: torch.dtype = TorchDefaultDType,
     ) -> TensorLike:
         """
         Generate random samples using Latin Hypercube Sampling.
@@ -106,7 +109,7 @@ class Simulator(ABC, ValidationMixin):
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
         lhd = LatinHypercube(self.param_bounds)
-        return lhd.sample(n_samples)
+        return lhd.sample(n_samples, dtype=dtype)
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike | None:

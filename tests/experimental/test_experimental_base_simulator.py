@@ -1,7 +1,7 @@
 import pytest
 import torch
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import TensorLike, TorchDefaultDType
 from torch import Tensor
 
 
@@ -9,9 +9,7 @@ class MockSimulator(Simulator):
     """Mock implementation of Simulator for testing purposes"""
 
     def __init__(
-        self,
-        parameters_range: dict[str, tuple[float, float]],
-        output_names: list[str],
+        self, parameters_range: dict[str, tuple[float, float]], output_names: list[str]
     ):
         # Call parent constructor
         super().__init__(parameters_range, output_names)
@@ -90,7 +88,7 @@ def test_sample_inputs(mock_simulator):
 def test_forward(mock_simulator):
     """Test that forward method works correctly"""
     # Create test input
-    test_input = torch.tensor([[0.5, 0.0, 7.5]], dtype=torch.float32)
+    test_input = torch.tensor([[0.5, 0.0, 7.5]], dtype=TorchDefaultDType)
 
     # Get output
     output = mock_simulator.forward(test_input)
@@ -109,7 +107,7 @@ def test_forward_batch(mock_simulator):
     # Create test batch
     n_samples = 3
     batch = torch.tensor(
-        [[0.5, 0.0, 7.5], [0.2, 0.3, 6.0], [0.8, -0.5, 9.0]], dtype=torch.float32
+        [[0.5, 0.0, 7.5], [0.2, 0.3, 6.0], [0.8, -0.5, 9.0]], dtype=TorchDefaultDType
     )
 
     # Process batch
@@ -183,7 +181,7 @@ def test_handle_simulation_failure():
             [0.1, 0.5, 0.5],  # Below threshold
             [0.7, 0.5, 0.5],  # Above threshold
         ],
-        dtype=torch.float32,
+        dtype=TorchDefaultDType,
     )
 
     # This should process all samples without errors
