@@ -8,7 +8,7 @@ from autoemulate.experimental.emulators.transformed.base import TransformedEmula
 class Result:
     def __init__(  # noqa: PLR0913
         self,
-        id: str,
+        id: int,
         model_name: str,
         model: TransformedEmulator,
         config: dict[str, Any],
@@ -47,12 +47,11 @@ class Results:
         Summarize the results in a DataFrame.
         Returns:
             pd.DataFrame: DataFrame with columns:
-            ['id', 'model', 'x_transforms', 'y_transforms', 'config', 'r2_score',
+            ['model', 'x_transforms', 'y_transforms', 'config', 'r2_score',
              'rmse_score'].
         TODO: include test data
         """
         data = {
-            "id": [result.id for result in self.results],
             "model_name": [result.model_name for result in self.results],
             "x_transforms": [result.x_transforms for result in self.results],
             "y_transforms": [result.y_transforms for result in self.results],
@@ -75,12 +74,12 @@ class Results:
             raise ValueError(msg)
         return max(self.results, key=lambda r: r.r2_score)
 
-    def get_result(self, result_id: str) -> Result:
+    def get_result(self, result_id: int) -> Result:
         """
         Get a result by its ID.
         Parameters
         ----------
-        result_id: str
+        result_id: int
             The ID of the model to retrieve.
         Returns
         -------
@@ -89,4 +88,4 @@ class Results:
         try:
             return self._id_to_result[result_id]
         except KeyError as err:
-            raise ValueError(f"No result found with ID: {result_id}") from err
+            raise ValueError(f"No result found with ID: {result_id!s}") from err
