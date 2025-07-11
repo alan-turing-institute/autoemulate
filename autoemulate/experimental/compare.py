@@ -214,13 +214,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         n_splits=self.n_splits,
                         shuffle=self.shuffle,
                     )
-                    best_score_id_num = scores.index(max(scores))
-                    best_config_for_this_model = configs[best_score_id_num]
+                    best_score_idx = scores.index(max(scores))
+                    best_config_for_this_model = configs[best_score_idx]
                     self.logger.debug(
                         'Tuner found best config for model "%s": %s with score: %s',
                         model_cls.__name__,
                         best_config_for_this_model,
-                        scores[best_score_id_num],
+                        scores[best_score_idx],
                     )
 
                     self.logger.debug(
