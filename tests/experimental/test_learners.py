@@ -25,49 +25,49 @@ class Projectile(Simulator):
 def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
-    X_train = simulator.sample_inputs(n_initial_samples)
-    Y_train = simulator.forward(X_train)
+    x_train = simulator.sample_inputs(n_initial_samples)
+    y_train = simulator.forward(x_train)
     yield stream.Random(
         simulator=simulator,
-        emulator=GaussianProcessExact(X_train, Y_train),
-        X_train=X_train,
-        Y_train=Y_train,
+        emulator=GaussianProcessExact(x_train, y_train),
+        x_train=x_train,
+        y_train=y_train,
         p_query=0.25,
     )
     if not adaptive_only:
         yield stream.Distance(
             simulator=simulator,
-            emulator=GaussianProcessExact(X_train, Y_train),
-            X_train=X_train,
-            Y_train=Y_train,
+            emulator=GaussianProcessExact(x_train, y_train),
+            x_train=x_train,
+            y_train=y_train,
             threshold=0.5,
         )
         yield stream.A_Optimal(
             simulator=simulator,
-            emulator=GaussianProcessExact(X_train, Y_train),
-            X_train=X_train,
-            Y_train=Y_train,
+            emulator=GaussianProcessExact(x_train, y_train),
+            x_train=x_train,
+            y_train=y_train,
             threshold=1.0,
         )
         yield stream.D_Optimal(
             simulator=simulator,
-            emulator=GaussianProcessExact(X_train, Y_train),
-            X_train=X_train,
-            Y_train=Y_train,
+            emulator=GaussianProcessExact(x_train, y_train),
+            x_train=x_train,
+            y_train=y_train,
             threshold=-4.2,
         )
         yield stream.E_Optimal(
             simulator=simulator,
-            emulator=GaussianProcessExact(X_train, Y_train),
-            X_train=X_train,
-            Y_train=Y_train,
+            emulator=GaussianProcessExact(x_train, y_train),
+            x_train=x_train,
+            y_train=y_train,
             threshold=1.0,
         )
     yield stream.Adaptive_Distance(
         simulator=simulator,
-        emulator=GaussianProcessExact(X_train, Y_train),
-        X_train=X_train,
-        Y_train=Y_train,
+        emulator=GaussianProcessExact(x_train, y_train),
+        x_train=x_train,
+        y_train=y_train,
         threshold=0.5,
         Kp=1.0,
         Ki=1.0,
@@ -80,9 +80,9 @@ def learners(
     )
     yield stream.Adaptive_A_Optimal(
         simulator=simulator,
-        emulator=GaussianProcessExact(X_train, Y_train),
-        X_train=X_train,
-        Y_train=Y_train,
+        emulator=GaussianProcessExact(x_train, y_train),
+        x_train=x_train,
+        y_train=y_train,
         threshold=1e-1,
         Kp=2.0,
         Ki=1.0,
@@ -95,9 +95,9 @@ def learners(
     )
     yield stream.Adaptive_D_Optimal(
         simulator=simulator,
-        emulator=GaussianProcessExact(X_train, Y_train),
-        X_train=X_train,
-        Y_train=Y_train,
+        emulator=GaussianProcessExact(x_train, y_train),
+        x_train=x_train,
+        y_train=y_train,
         threshold=-4.0,
         Kp=2.0,
         Ki=1.0,
@@ -110,9 +110,9 @@ def learners(
     )
     yield stream.Adaptive_E_Optimal(
         simulator=simulator,
-        emulator=GaussianProcessExact(X_train, Y_train),
-        X_train=X_train,
-        Y_train=Y_train,
+        emulator=GaussianProcessExact(x_train, y_train),
+        x_train=x_train,
+        y_train=y_train,
         threshold=0.75 if isinstance(simulator, Sin) else 1000,
         Kp=2.0,
         Ki=1.0,
@@ -137,15 +137,15 @@ def run_experiment(
     for seed in seeds:
         torch.manual_seed(seed)
         np.random.seed(seed)
-        X_stream = simulator.sample_inputs(n_stream_samples)
+        x_stream = simulator.sample_inputs(n_stream_samples)
         tqdm.write(f"Trial with seed {seed}")
         for learner in learners(
             simulator=simulator,
             n_initial_samples=n_initial_samples,
             adaptive_only=adaptive_only,
         ):
-            print("input: ", X_stream.type())
-            learner.fit_samples(X_stream)
+            print("input: ", x_stream.type())
+            learner.fit_samples(x_stream)
             metrics.append(dict(name=learner.__class__.__name__, **learner.metrics))
             summary.append(dict(name=learner.__class__.__name__, **learner.summary))
     return metrics, summary
@@ -153,7 +153,7 @@ def run_experiment(
 
 def test_learners_sin():
     metrics, summary = run_experiment(
-        simulator=Sin(parameters_range={"X": (0, 50.0)}, output_names=["Y"]),
+        simulator=Sin(parameters_range={"x": (0, 50.0)}, output_names=["y"]),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
@@ -164,7 +164,7 @@ def test_learners_sin():
 def test_learners_projectile():
     metrics, summary = run_experiment(
         simulator=Projectile(
-            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_names=["Y"]
+            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_names=["y"]
         ),
         seeds=[0],
         n_initial_samples=5,
