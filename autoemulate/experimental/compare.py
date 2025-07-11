@@ -189,7 +189,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         )
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
-                for id_num, model_cls in tqdm.tqdm(
+                for id, model_cls in tqdm.tqdm(
                     enumerate(self.models),
                     disable=not self.progress_bar,
                     desc="Comparing models",
@@ -200,7 +200,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     self.logger.info(
                         "Running Model: %s: %d/%d",
                         model_cls.__name__,
-                        id_num + 1,
+                        id,
                         len(self.models),
                     )
 
@@ -256,7 +256,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     )
                     self.logger.info("Finished running Model: %s\n", model_cls.__name__)
                     result = Result(
-                        id=model_cls.short_name() + str(id_num + 1),
+                        id=id,
                         model_name=model_cls.model_name(),
                         model=transformed_emulator,
                         config=best_config_for_this_model,
