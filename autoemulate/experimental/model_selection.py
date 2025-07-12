@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 import numpy as np
+import torch
 import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
@@ -162,3 +163,58 @@ def cross_validate(  # noqa: PLR0913
         cv_results["r2"].append(r2)
         cv_results["rmse"].append(rmse)
     return cv_results
+
+
+def bootstrap(
+    model: Emulator,
+    x: TensorLike,
+    y: TensorLike,
+    n_bootstraps: int = 100,
+    device: str | torch.device = "cpu",
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Gets bootstrap estimates of R2 and RMSE
+
+    Parameters
+    ----------
+    model : Emulator
+        An instance of an Emulator subclass.
+    x : TensorLike
+        Input features for the model.
+    y : TensorLike
+        Target values corresponding to the input features.
+    n_bootstraps : int=100
+        Number of bootstrap samples to generate.
+    device : str | torch.device, default="cpu"
+        The device to use for computations (default is "cpu").
+
+    Returns
+    -------
+    tuple[tuple[float, float], tuple[float, float]]
+        ((r2_mean, r2_std), (rmse_mean, rmse_std))
+    """
+    device = get_torch_device(device)
+    x, y = move_tensors_to_device(x, y, device=device)
+
+    r2_scores = torch.empty(n_bootstraps, device=device)
+    rmse_scores = torch.empty(n_bootstraps, device=device)
+    for i in range(n_bootstraps):
+        # Bootstrap sample indices with replacement
+        idxs = torch.randint(0, x.shape[0], size=(x.shape[0],), device=device)
+
+        # Get bootstrap sample
+        x_bootstrap = x[idxs]
+        y_bootstrap = y[idxs]
+
+        # Make predictions
+        y_pred = model.predict(x_bootstrap)
+
+        # Compute metrics for this bootstrap sample
+        r2_scores[i] = evaluate(y_bootstrap, y_pred, torchmetrics.R2Score, device)
+        mse_score = evaluate(y_bootstrap, y_pred, torchmetrics.MeanSquaredError, device)
+        rmse_scores[i] = mse_score**0.5
+
+    # Return mean and std
+    return (
+        (r2_scores.mean().item(), r2_scores.std().item()),
+        (rmse_scores.mean().item(), rmse_scores.std().item()),
+    )

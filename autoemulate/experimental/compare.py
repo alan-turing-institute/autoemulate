@@ -11,7 +11,7 @@ from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.logging_config import configure_logging
-from autoemulate.experimental.model_selection import evaluate
+from autoemulate.experimental.model_selection import bootstrap, evaluate
 from autoemulate.experimental.plotting import (
     calculate_subplot_layout,
     display_figure,
@@ -240,19 +240,23 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         **best_config_for_this_model,
                     )
                     transformed_emulator.fit(train_val_x, train_val_y)
-                    y_pred = transformed_emulator.predict(test_x)
-                    r2_score = evaluate(
-                        test_y, y_pred, torchmetrics.R2Score, self.device
+
+                    (r2_score, r2_std), (rmse_score, rmse_std) = bootstrap(
+                        transformed_emulator,
+                        test_x,
+                        test_y,
+                        n_bootstraps=100,
+                        device=self.device,
                     )
-                    rmse_score = evaluate(
-                        test_y, y_pred, torchmetrics.MeanSquaredError, self.device
-                    )
+
                     self.logger.debug(
                         'Cross-validation for model "%s"'
-                        " completed with R2 score: %.3f, RMSE score: %.3f",
+                        " completed with R2 score: %.3f (%.3f), RMSE score: %.3f (%.3f)",
                         model_cls.__name__,
                         r2_score,
+                        r2_std,
                         rmse_score,
+                        rmse_std,
                     )
                     self.logger.info("Finished running Model: %s\n", model_cls.__name__)
                     result = Result(
