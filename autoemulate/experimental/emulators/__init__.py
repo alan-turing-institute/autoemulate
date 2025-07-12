@@ -8,6 +8,7 @@ from .nn.mlp import MLP
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
 from .svm import SupportVectorMachine
+from .transformed.base import TransformedEmulator
 
 ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcessExact,
@@ -50,3 +51,17 @@ def get_emulator_class(name: str) -> type[Emulator]:
         )
 
     return emulator_cls
+
+
+__all__ = [
+    "MLP",
+    "EnsembleMLP",
+    "EnsembleMLPDropout",
+    "GaussianProcessExact",
+    "GaussianProcessExactCorrelated",
+    "LightGBM",
+    "RadialBasisFunctions",
+    "RandomForest",
+    "SupportVectorMachine",
+    "TransformedEmulator",
+]
