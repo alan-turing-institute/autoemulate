@@ -54,7 +54,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
     optimizer_cls: type[optim.Optimizer] = optim.AdamW
     optimizer: optim.Optimizer
-    lr: float = 1e-1
+    lr: float = 2e-1
     scheduler_cls: type[LRScheduler] | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
@@ -67,7 +67,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         posterior_predictive: bool = False,
         epochs: int = 50,
         activation: type[nn.Module] = nn.ReLU,
-        lr: float = 2e-1,
+        lr: float = 1e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
         **kwargs,
