@@ -5,7 +5,7 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import MultitaskKernel, ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
-from torch import nn, optim
+from torch import optim
 from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.experimental.callbacks.early_stopping import (
@@ -66,7 +66,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
         posterior_predictive: bool = False,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 1e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
@@ -95,9 +94,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             False, it will return the posterior distribution over the modelled function.
         epochs: int, default=50
             Number of training epochs.
-        activation: type[nn.Module], default=nn.ReLU
-            Activation function to use in the model.
-        lr: float, default=2e-1
+        lr : float, default=2e-1
             Learning rate for the optimizer.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
@@ -140,7 +137,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
@@ -275,6 +271,42 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             assert output_distribution.event_shape == torch.Size([num_tasks])
             return output_distribution
 
+    @classmethod
+    def scheduler_config(cls) -> dict:
+        """
+        Returns a random configuration for the learning rate scheduler.
+        This should be added to the `get_tune_config()` method of subclasses
+        to allow tuning of the scheduler parameters.
+        """
+        all_params = [
+            {"scheduler_cls": None, "scheduler_kwargs": None},
+            {
+                "scheduler_cls": [LRScheduler],
+                "scheduler_kwargs": [
+                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
+                ],
+            },
+        ]
+        return np.random.choice(all_params)
+
+    @classmethod
+    def scheduler_config(cls) -> dict:
+        """
+        Returns a random configuration for the learning rate scheduler.
+        This should be added to the `get_tune_config()` method of subclasses
+        to allow tuning of the scheduler parameters.
+        """
+        all_params = [
+            {"scheduler_cls": None, "scheduler_kwargs": None},
+            {
+                "scheduler_cls": [LRScheduler],
+                "scheduler_kwargs": [
+                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
+                ],
+            },
+        ]
+        return np.random.choice(all_params)
+
     @staticmethod
     def get_tune_config():
         scheduler_config = GaussianProcessExact.scheduler_config()
@@ -325,7 +357,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
         posterior_predictive: bool = False,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
@@ -409,7 +440,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
