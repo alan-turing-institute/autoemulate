@@ -2,7 +2,6 @@ import warnings
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import torchmetrics
 import tqdm
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
@@ -11,7 +10,7 @@ from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.logging_config import configure_logging
-from autoemulate.experimental.model_selection import bootstrap, evaluate
+from autoemulate.experimental.model_selection import bootstrap, evaluate, r2_metric
 from autoemulate.experimental.plotting import (
     calculate_subplot_layout,
     display_figure,
@@ -251,7 +250,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
                     self.logger.debug(
                         'Cross-validation for model "%s"'
-                        " completed with R2 score: %.3f (%.3f), RMSE score: %.3f (%.3f)",
+                        " completed with R2 score: %.3f (%.3f), "
+                        "RMSE score: %.3f (%.3f)",
                         model_cls.__name__,
                         r2_score,
                         r2_std,
@@ -311,7 +311,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         if isinstance(y_pred, DistributionLike):
             y_variance = y_pred.variance
             y_pred = y_pred.mean
-        r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
+        r2_score = evaluate(y_pred, test_y, r2_metric())
 
         # Convert to numpy arrays for plotting and ensure correct shapes
         test_x, test_y = self._convert_to_numpy(test_x, test_y)

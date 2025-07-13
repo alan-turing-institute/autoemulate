@@ -1,12 +1,12 @@
 import inspect
 import logging
+from functools import partial
 from typing import Any
 
-import numpy as np
 import torch
 import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
-from torch.utils.data import DataLoader, Dataset, Subset
+from torch.utils.data import Dataset, Subset
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
@@ -25,6 +25,16 @@ from autoemulate.experimental.types import (
 logger = logging.getLogger("autoemulate")
 
 
+def r2_metric() -> type[torchmetrics.Metric]:
+    """Returns a torchmetrics.R2Score metric."""
+    return torchmetrics.R2Score
+
+
+def rmse_metric() -> partial[torchmetrics.Metric]:
+    """Returns a torchmetrics.MeanSquaredError metric with squared=False."""
+    return partial(torchmetrics.MeanSquaredError, squared=False)
+
+
 def _update(
     y_true: InputLike,
     y_pred: OutputLike,
@@ -32,24 +42,20 @@ def _update(
 ):
     # handle types
     if isinstance(y_pred, TensorLike):
-        metric.update(y_true, y_pred)
+        metric.to(y_pred.device)
+        metric.update(y_pred, y_true)
     elif isinstance(y_pred, DistributionLike):
-        metric.update(y_true, y_pred.mean)
-    elif (
-        isinstance(y_pred, tuple)
-        and len(y_pred) == 2
-        and all(isinstance(item, TensorLike) for item in y_pred)
-    ):
-        metric.update(y_true, y_pred)
+        metric.to(y_pred.mean.device)
+        metric.update(y_pred.mean, y_true)
     else:
         raise ValueError(f"Metric not implmented for {type(y_pred)}")
 
 
 def evaluate(
-    y_true: InputLike,
     y_pred: OutputLike,
-    metric: type[torchmetrics.Metric],
-    device: DeviceLike,
+    y_true: InputLike,
+    metric: type[torchmetrics.Metric]
+    | partial[torchmetrics.Metric] = torchmetrics.R2Score,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -68,9 +74,9 @@ def evaluate(
     float
     """
 
-    metric_instance = metric().to(device)
-    _update(y_true, y_pred, metric_instance)
-    return metric_instance.compute().item()
+    _metric = metric()
+    _update(y_true, y_pred, _metric)
+    return _metric.compute().item()
 
 
 def cross_validate(  # noqa: PLR0913
@@ -108,7 +114,6 @@ def cross_validate(  # noqa: PLR0913
     x_transforms = x_transforms or []
     y_transforms = y_transforms or []
     cv_results = {"r2": [], "rmse": []}
-    batch_size = best_model_config.get("batch_size", 16)
     device = get_torch_device(device)
 
     logger.debug("Cross-validation configuration: %s", cv)
@@ -124,7 +129,6 @@ def cross_validate(  # noqa: PLR0913
         # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())
         val_subset = Subset(dataset, val_idx.tolist())
-        val_loader = DataLoader(val_subset, batch_size=batch_size)
 
         # Handle random seed for reproducibility
         if random_seed is not None:
@@ -136,6 +140,7 @@ def cross_validate(  # noqa: PLR0913
 
         # Convert dataloader to tensors to pass to model
         x, y = ConversionMixin._convert_to_tensors(train_subset)
+        x_val, y_val = ConversionMixin._convert_to_tensors(val_subset)
 
         transformed_emulator = TransformedEmulator(
             x,
@@ -148,18 +153,10 @@ def cross_validate(  # noqa: PLR0913
         )
         transformed_emulator.fit(x, y)
 
-        # evaluate on batches
-        r2_metric = torchmetrics.R2Score().to(device)
-        mse_metric = torchmetrics.MeanSquaredError().to(device)
-        for x_b, y_b in val_loader:
-            x_b_device, y_b_device = move_tensors_to_device(x_b, y_b, device=device)
-            y_batch_pred = transformed_emulator.predict(x_b_device)
-            _update(y_b_device, y_batch_pred, r2_metric)
-            _update(y_b_device, y_batch_pred, mse_metric)
-
         # compute and save results
-        r2 = r2_metric.compute().item()
-        rmse = np.sqrt(mse_metric.compute().item())
+        y_pred = transformed_emulator.predict(x_val)
+        r2 = evaluate(y_pred, y_val, r2_metric())
+        rmse = evaluate(y_pred, y_val, rmse_metric())
         cv_results["r2"].append(r2)
         cv_results["rmse"].append(rmse)
     return cv_results
@@ -209,9 +206,11 @@ def bootstrap(
         y_pred = model.predict(x_bootstrap)
 
         # Compute metrics for this bootstrap sample
-        r2_scores[i] = evaluate(y_bootstrap, y_pred, torchmetrics.R2Score, device)
-        mse_score = evaluate(y_bootstrap, y_pred, torchmetrics.MeanSquaredError, device)
+        r2_scores[i] = evaluate(y_pred, y_bootstrap, r2_metric())
+        mse_score = evaluate(y_pred, y_bootstrap, rmse_metric())
         rmse_scores[i] = mse_score**0.5
+
+    print(r2_scores, r2_scores.mean(), r2_scores.std())
 
     # Return mean and std
     return (
