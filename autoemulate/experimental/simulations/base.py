@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
-from autoemulate.experimental.logging_config import configure_logging
+from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
 
@@ -48,27 +48,7 @@ class Simulator(ABC, ValidationMixin):
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
         self._has_sample_forward = False
-
-        # Handle log level parameter
-        valid_log_levels = [
-            "progress_bar",
-            "debug",
-            "info",
-            "warning",
-            "error",
-            "critical",
-        ]
-        log_level = log_level.lower()
-        if log_level not in valid_log_levels:
-            raise ValueError(
-                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
-            )
-        if log_level == "progress_bar":
-            log_level = "error"
-            self.progress_bar = True
-        else:
-            self.progress_bar = False
-        self.logger = configure_logging(level=log_level)
+        self.logger, self.progress_bar = get_configured_logger(log_level)
 
     @property
     def parameters_range(self) -> dict[str, tuple[float, float]]:

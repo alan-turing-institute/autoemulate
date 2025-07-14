@@ -9,7 +9,7 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.logging_config import configure_logging
+from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.model_selection import bootstrap, evaluate, r2_metric
 from autoemulate.experimental.plotting import (
     calculate_subplot_layout,
@@ -100,26 +100,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
 
-        # Handle log level parameter
-        valid_log_levels = [
-            "progress_bar",
-            "debug",
-            "info",
-            "warning",
-            "error",
-            "critical",
-        ]
-        log_level = log_level.lower()
-        if log_level not in valid_log_levels:
-            raise ValueError(
-                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
-            )
-        if log_level == "progress_bar":
-            log_level = "error"
-            self.progress_bar = True
-        else:
-            self.progress_bar = False
-        self.logger = configure_logging(level=log_level)
+        self.logger, self.progress_bar = get_configured_logger(log_level)
 
         # Run compare
         self.compare()
