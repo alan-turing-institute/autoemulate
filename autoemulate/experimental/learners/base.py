@@ -9,6 +9,7 @@ from torcheval.metrics import MeanSquaredError, R2Score
 
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.logging_config import configure_logging
 from autoemulate.experimental.simulations.base import Simulator
 
 from ..types import GaussianLike, TensorLike
@@ -45,6 +46,9 @@ class Learner(ValidationMixin, ABC):
         """
         Initialize the learner with training data and fit the emulator.
         """
+        log_level = "error"
+        self.progress_bar = True
+        self.logger = configure_logging(level=log_level)
         self.emulator.fit(self.x_train, self.y_train)
         self.in_dim = self.x_train.shape[1]
         self.out_dim = self.y_train.shape[1]
