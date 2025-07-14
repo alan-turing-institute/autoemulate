@@ -63,7 +63,7 @@ def run_benchmark(
     default=42,
     help="Seed for the permutations over params",
 )
-@click.option("--log_level", default=None, help="Logging level")
+@click.option("--log_level", default="progress_bar", help="Logging level")
 def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level):  # noqa: PLR0913
     dfs = []
     for simulator_str in simulators:
@@ -84,7 +84,7 @@ def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level
                 df["n_splits"] = n_splits
                 dfs.append(df)
                 final_df = pd.concat(dfs, ignore_index=True)
-                final_df.sort_values("r2", ascending=False).to_csv(
+                final_df.sort_values("r2_test", ascending=False).to_csv(
                     "benchmark_results.csv", index=False
                 )
             except Exception as e:
