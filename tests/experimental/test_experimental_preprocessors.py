@@ -1,6 +1,7 @@
 import pytest
 import torch
 from autoemulate.experimental.data.preprocessors import Standardizer
+from autoemulate.experimental.types import TorchDefaultDType
 
 
 class TestStandardizer:
@@ -37,7 +38,7 @@ class TestStandardizer:
         Test that small std values are replaced with 1.0.
         """
         mean = torch.zeros((1, 2))
-        std = torch.tensor([[1e-40, 2.0]], dtype=torch.float32)
+        std = torch.tensor([[1e-40, 2.0]], dtype=TorchDefaultDType)
         s = Standardizer(mean, std)
         assert s.std[0, 0] == 1.0
         assert s.std[0, 1] == 2.0
