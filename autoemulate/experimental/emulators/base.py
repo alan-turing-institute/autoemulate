@@ -168,7 +168,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             # },
         ]
         # Randomly select one of the parameter sets
-        return random.choice(all_params)
+        return np.random.choice(all_params)
 
     def scheduler_setup(self, kwargs: dict | None = None):
         """
