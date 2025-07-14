@@ -31,25 +31,29 @@ def run_benchmark(
 @click.command()
 @click.option(
     "--simulators",
-    type=list[str],
+    type=str,
+    multiple=True,
     default=["ProjectileMultioutput"],
     help="Number of samples to generate",
 )
 @click.option(
     "--n_samples_list",
-    type=list[int],
+    type=int,
+    multiple=True,
     default=[10, 50, 100, 200, 500],
     help="Number of samples to generate",
 )
 @click.option(
     "--n_iter_list",
-    type=list[int],
+    type=int,
+    multiple=True,
     default=[10, 50, 100, 200],
     help="Number of iterations to run",
 )
 @click.option(
     "--n_splits_list",
-    type=list[int],
+    type=int,
+    multiple=True,
     default=[2, 4],
     help="Number of splits for cross-validation",
 )
