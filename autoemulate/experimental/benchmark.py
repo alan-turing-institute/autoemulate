@@ -3,18 +3,20 @@ import itertools
 import click
 import numpy as np
 import pandas as pd
+import torch
 from tqdm import tqdm
 
 from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.emulators import ALL_EMULATORS
-from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
+from autoemulate.experimental.simulations import SIMULATOR_FROM_STR
+from autoemulate.experimental.simulations.base import Simulator
 
 
-def run_benchmark(n_samples, n_iter, n_splits, log_level) -> pd.DataFrame:
-    projectile = ProjectileMultioutput()
-    x = projectile.sample_inputs(n_samples).float()
-    y = projectile.forward_batch(x).float()
-
+def run_benchmark(
+    simulator: Simulator, n_samples: int, n_iter: int, n_splits: int, log_level: str
+) -> pd.DataFrame:
+    x = simulator.sample_inputs(n_samples).to(torch.float32)
+    y = simulator.forward_batch(x).to(torch.float32)
     ae = AutoEmulate(
         x,
         y,
@@ -23,11 +25,16 @@ def run_benchmark(n_samples, n_iter, n_splits, log_level) -> pd.DataFrame:
         n_splits=n_splits,
         log_level=log_level,
     )
-
     return ae.summarise()
 
 
 @click.command()
+@click.option(
+    "--simulators",
+    type=list[str],
+    default=["ProjectileMultioutput"],
+    help="Number of samples to generate",
+)
 @click.option(
     "--n_samples_list",
     type=list[int],
@@ -46,29 +53,35 @@ def run_benchmark(n_samples, n_iter, n_splits, log_level) -> pd.DataFrame:
     default=[2, 4],
     help="Number of splits for cross-validation",
 )
+@click.option(
+    "--seed",
+    type=int,
+    default=42,
+    help="Seed for the permutations over params",
+)
 @click.option("--log_level", default=None, help="Logging level")
-def main(n_samples_list, n_iter_list, n_splits_list, log_level):
-    """Run the benchmark for MLP and GaussianProcessExact emulators."""
-
+def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level):  # noqa: PLR0913
     dfs = []
-
-    params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
-    np.random.seed(43)
-    params = np.random.permutation(params)
-    for n_samples, n_iter, n_splits in tqdm(params):
-        print(
-            f"Running benchmark with {n_samples} samples, {n_iter} iterations, "
-            f"and {n_splits} splits"
-        )
-        df = run_benchmark(n_samples, n_iter, n_splits, log_level)
-        df["n_samples"] = n_samples
-        df["n_iter"] = n_iter
-        df["n_splits"] = n_splits
-        dfs.append(df)
-        final_df = pd.concat(dfs, ignore_index=True)
-        final_df.sort_values("r2", ascending=False).to_csv(
-            "benchmark_results.csv", index=False
-        )
+    for simulator_str in simulators:
+        simulator = SIMULATOR_FROM_STR[simulator_str]
+        params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
+        np.random.seed(seed)
+        params = np.random.permutation(params)
+        for n_samples, n_iter, n_splits in tqdm(params):
+            print(
+                f"Running benchmark with {n_samples} samples, {n_iter} iterations, "
+                f"and {n_splits} splits"
+            )
+            df = run_benchmark(simulator, n_samples, n_iter, n_splits, log_level)
+            df["simulator"] = simulator_str
+            df["n_samples"] = n_samples
+            df["n_iter"] = n_iter
+            df["n_splits"] = n_splits
+            dfs.append(df)
+            final_df = pd.concat(dfs, ignore_index=True)
+            final_df.sort_values("r2", ascending=False).to_csv(
+                "benchmark_results.csv", index=False
+            )
 
 
 if __name__ == "__main__":
