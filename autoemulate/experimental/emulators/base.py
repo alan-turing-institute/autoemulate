@@ -244,7 +244,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
                     {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
                 ],
             },
-            # TODO: investigate these suggestions from copilot
+            # TODO: investigate these suggestions from copilot, issue: #597
             # {
             #     "scheduler_cls": [CosineAnnealingLR],
             #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
