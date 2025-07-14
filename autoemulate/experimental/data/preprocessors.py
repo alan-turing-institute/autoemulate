@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-
 from autoemulate.experimental.types import TensorLike
 
 
