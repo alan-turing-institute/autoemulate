@@ -78,3 +78,30 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
     warnings_logger.setLevel(logger.getEffectiveLevel())
 
     return logger
+
+
+def get_configured_logger(log_level, progress_bar_attr="progress_bar"):
+    """
+    Utility to consistently configure logger and progress bar flag.
+    Returns (logger, progress_bar: bool)
+    """
+    valid_log_levels = [
+        "progress_bar",
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "critical",
+    ]
+    log_level = log_level.lower()
+    if log_level not in valid_log_levels:
+        raise ValueError(
+            f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
+        )
+    if log_level == progress_bar_attr:
+        log_level = "error"
+        progress_bar = True
+    else:
+        progress_bar = False
+    logger = configure_logging(level=log_level)
+    return logger, progress_bar
