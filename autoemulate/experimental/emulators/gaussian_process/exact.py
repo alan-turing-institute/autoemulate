@@ -1,5 +1,3 @@
-# import logging
-
 import gpytorch
 import numpy as np
 import torch
@@ -63,7 +61,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        lr: float = 1e-1,
+        lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
         **kwargs,
@@ -241,7 +239,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 rbf_times_linear,
             ],
             "epochs": [50, 100, 200],
-            "lr": list(np.logspace(-3, 0, 100)),
+            "lr": list(np.logspace(-3, np.log10(0.5), 100)),
             "likelihood_cls": [MultitaskGaussianLikelihood],
             "scheduler_cls": scheduler_params["scheduler_cls"],
             "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
