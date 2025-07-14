@@ -69,19 +69,22 @@ def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level
         params = np.random.permutation(params)
         for n_samples, n_iter, n_splits in tqdm(params):
             print(
-                f"Running benchmark with {n_samples} samples, {n_iter} iterations, "
-                f"and {n_splits} splits"
+                f"Running benchmark for {simulator_str} with {n_samples} samples, "
+                f"{n_iter} iterations, and {n_splits} splits"
             )
-            df = run_benchmark(simulator, n_samples, n_iter, n_splits, log_level)
-            df["simulator"] = simulator_str
-            df["n_samples"] = n_samples
-            df["n_iter"] = n_iter
-            df["n_splits"] = n_splits
-            dfs.append(df)
-            final_df = pd.concat(dfs, ignore_index=True)
-            final_df.sort_values("r2", ascending=False).to_csv(
-                "benchmark_results.csv", index=False
-            )
+            try:
+                df = run_benchmark(simulator, n_samples, n_iter, n_splits, log_level)
+                df["simulator"] = simulator_str
+                df["n_samples"] = n_samples
+                df["n_iter"] = n_iter
+                df["n_splits"] = n_splits
+                dfs.append(df)
+                final_df = pd.concat(dfs, ignore_index=True)
+                final_df.sort_values("r2", ascending=False).to_csv(
+                    "benchmark_results.csv", index=False
+                )
+            except Exception as e:
+                print(f"Error raised while testing :\n{e}")
 
 
 if __name__ == "__main__":
