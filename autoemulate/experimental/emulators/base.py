@@ -127,10 +127,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Optimizer must be set before setting up the scheduler."
             raise RuntimeError(msg)
 
-        if not hasattr(self, "scheduler_cls"):
-            msg = "Scheduler class must be set before setting up the scheduler."
-            raise RuntimeError(msg)
-
         # Extract scheduler-specific kwargs if present
         try:
             assert type(kwargs) is dict

@@ -29,12 +29,7 @@ class TestPyTorchBackend:
             self.linear = nn.Linear(1, 1)
             self.loss_func = nn.MSELoss()
             self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg]
-            # Extract scheduler-specific kwargs if present
-            scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
-            if self.scheduler_cls is None:
-                self.scheduler = None
-            else:
-                self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
+            self.scheduler_setup(kwargs)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
             self.preprocessor = Standardizer(
@@ -175,3 +170,36 @@ class TestPyTorchBackend:
         assert torch.allclose(pred1, pred2)
         msg = "Predictions should differ with different seeds."
         assert not torch.allclose(pred1, pred3), msg
+
+    def test_scheduler_setup(self):
+        # Should raise ValueError if kwargs is None
+        with pytest.raises(ValueError, match="Provide a kwargs dictionary including"):
+            self.model.scheduler_setup(None)
+
+        # Should raise RuntimeError if optimizer is missing
+        model_no_opt = self.DummyModel()
+        delattr(model_no_opt, "optimizer")
+        with pytest.raises(RuntimeError, match="Optimizer must be set before"):
+            model_no_opt.scheduler_setup(
+                {"scheduler_cls": ExponentialLR, "scheduler_kwargs": {"gamma": 0.9}}
+            )
+
+        # Should set scheduler to None if scheduler_cls is None
+        model_none_sched = self.DummyModel()
+        model_none_sched.scheduler_cls = None
+        model_none_sched.optimizer = model_none_sched.optimizer_cls(
+            model_none_sched.parameters(),
+            lr=model_none_sched.lr,  # type: ignore[call-arg]
+        )
+        model_none_sched.scheduler_setup({"scheduler_kwargs": {}})
+        assert model_none_sched.scheduler is None
+
+        # Should set scheduler if scheduler_cls is valid
+        model_valid_sched = self.DummyModel()
+        model_valid_sched.scheduler_cls = ExponentialLR
+        model_valid_sched.optimizer = model_valid_sched.optimizer_cls(
+            model_valid_sched.parameters(),
+            lr=model_valid_sched.lr,  # type: ignore[call-arg]
+        )
+        model_valid_sched.scheduler_setup({"scheduler_kwargs": {"gamma": 0.9}})
+        assert isinstance(model_valid_sched.scheduler, ExponentialLR)
