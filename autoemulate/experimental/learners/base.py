@@ -28,16 +28,16 @@ class Learner(ValidationMixin, ABC):
         Simulator instance used to generate ground truth outputs.
     emulator : Emulator
         Emulator instance used to approximate the simulator.
-    X_train : TensorLike
+    x_train : TensorLike
         Initial training input tensor.
-    Y_train : TensorLike
+    y_train : TensorLike
         Initial training output tensor.
     """
 
     simulator: Simulator
     emulator: Emulator
-    X_train: TensorLike
-    Y_train: TensorLike
+    x_train: TensorLike
+    y_train: TensorLike
     in_dim: int = field(init=False)
     out_dim: int = field(init=False)
 
@@ -45,9 +45,9 @@ class Learner(ValidationMixin, ABC):
         """
         Initialize the learner with training data and fit the emulator.
         """
-        self.emulator.fit(self.X_train, self.Y_train)
-        self.in_dim = self.X_train.shape[1]
-        self.out_dim = self.Y_train.shape[1]
+        self.emulator.fit(self.x_train, self.y_train)
+        self.in_dim = self.x_train.shape[1]
+        self.out_dim = self.y_train.shape[1]
 
     @classmethod
     def registry(cls) -> dict:
@@ -115,14 +115,14 @@ class Active(Learner):
 
     def fit(self, *args):
         # Query simulator and fit emulator
-        X, output, extra = self.query(*args)
+        x, output, extra = self.query(*args)
         if isinstance(output, TensorLike):
-            Y_pred = output
+            y_pred = output
         elif isinstance(output, GaussianLike):
             assert output.variance.ndim == 2
-            Y_pred, _ = output.mean, output.variance
+            y_pred, _ = output.mean, output.variance
         elif isinstance(output, GaussianLike):
-            Y_pred, _ = output.loc, None
+            y_pred, _ = output.loc, None
         else:
             msg = (
                 f"Output must be either `Tensor` or `MultivariateNormal` but got "
@@ -130,14 +130,14 @@ class Active(Learner):
             )
             raise TypeError(msg)
 
-        if X is not None:
-            # If X is not, we skip the point (typically for Stream learners)
-            Y_true = self.simulator.forward(X)
-            self.X_train = torch.cat([self.X_train, X])
-            self.Y_train = torch.cat([self.Y_train, Y_true])
-            self.emulator.fit(self.X_train, self.Y_train)
-            self.mse.update(Y_pred, Y_true)
-            self.r2.update(Y_pred, Y_true)
+        if x is not None:
+            # If x is not, we skip the point (typically for Stream learners)
+            y_true = self.simulator.forward(x)
+            self.x_train = torch.cat([self.x_train, x])
+            self.y_train = torch.cat([self.y_train, y_true])
+            self.emulator.fit(self.x_train, self.y_train)
+            self.mse.update(y_pred, y_true)
+            self.r2.update(y_pred, y_true)
             self.n_queries += 1
 
         # Only compute once we have ≥2 labeled points
@@ -226,7 +226,7 @@ class Active(Learner):
 
     @abstractmethod
     def query(
-        self, X: TensorLike | None = None
+        self, x: TensorLike | None = None
     ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
         Abstract method to query new samples.

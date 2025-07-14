@@ -62,6 +62,7 @@ class LightGBM(DeterministicEmulator):
         self.n_jobs = n_jobs
         self.importance_type = importance_type
         self.verbose = verbose
+        self.supports_grad = False
         self.model_ = LGBMRegressor(
             boosting_type=self.boosting_type,
             num_leaves=self.num_leaves,
@@ -99,8 +100,11 @@ class LightGBM(DeterministicEmulator):
         self.n_features_in_ = x_np.shape[1]
         self.model_.fit(x_np, y_np)
 
-    def _predict(self, x: TensorLike) -> TensorLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike:
         """Predicts the output of the emulator for a given input."""
+        if with_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
         y_pred = self.model_.predict(x)
         assert not isinstance(y_pred, spmatrix | list)
         _, y = self._convert_to_tensors(x, y_pred)

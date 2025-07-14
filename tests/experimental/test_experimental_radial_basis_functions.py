@@ -14,8 +14,8 @@ from autoemulate.experimental.types import TensorLike
 from scipy.interpolate import RBFInterpolator
 
 
-def test_predict_rbf(sample_data_rbf, new_data_rbf):
-    x, y = sample_data_rbf
+def test_predict_rbf(sample_data_for_ae_compare, new_data_rbf):
+    x, y = sample_data_for_ae_compare
     rbf = RadialBasisFunctions(x, y)
     rbf.fit(x, y)
     x2, _ = new_data_rbf
@@ -23,6 +23,10 @@ def test_predict_rbf(sample_data_rbf, new_data_rbf):
 
     assert isinstance(y_pred, TensorLike)
     assert y_pred.shape == (56, 2)
+    assert not y_pred.requires_grad
+
+    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
+        rbf.predict(x2, with_grad=True)
 
     RBFscipy = RBFInterpolator(
         x,
@@ -37,10 +41,10 @@ def test_predict_rbf(sample_data_rbf, new_data_rbf):
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
-def test_tune_rbf(sample_data_rbf, device):
+def test_tune_rbf(sample_data_for_ae_compare, device):
     if not check_torch_device_is_available(device):
         pytest.skip(f"Device ({device}) is not available.")
-    x, y = sample_data_rbf
+    x, y = sample_data_for_ae_compare
     n_iter = 5
     tuner = Tuner(x, y, n_iter=n_iter, device=device)
     scores, configs = tuner.run(RadialBasisFunctions)
@@ -48,12 +52,12 @@ def test_tune_rbf(sample_data_rbf, device):
     assert len(configs) == n_iter
 
 
-def test_rbf_predict_deterministic_with_seed(sample_data_rbf, new_data_rbf):
+def test_rbf_predict_deterministic_with_seed(sample_data_for_ae_compare, new_data_rbf):
     """
     RBFInterpolator should be deterministic given the same data
     and parameters so we do not expect different outputs for different seeds.
     """
-    x, y = sample_data_rbf
+    x, y = sample_data_for_ae_compare
     x2, _ = new_data_rbf
 
     # Set a random seed

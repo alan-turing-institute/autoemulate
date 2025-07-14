@@ -11,7 +11,7 @@ from autoemulate.experimental.simulations.projectile import (
 
 
 @pytest.fixture
-def Xy_1d():
+def xy_1d():
     sim = Projectile()
     x = sim.sample_inputs(100)
     y = sim.forward_batch(x)
@@ -19,7 +19,7 @@ def Xy_1d():
 
 
 @pytest.fixture
-def Xy_2d():
+def xy_2d():
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)
     y = sim.forward_batch(x)
@@ -27,18 +27,18 @@ def Xy_2d():
 
 
 @pytest.fixture
-def model_1d(Xy_1d):
-    X, y = Xy_1d
-    rf = RandomForest(X, y)
-    rf.fit(X, y)
+def model_1d(xy_1d):
+    x, y = xy_1d
+    rf = RandomForest(x, y)
+    rf.fit(x, y)
     return rf
 
 
 @pytest.fixture
-def model_2d(Xy_2d):
-    X, y = Xy_2d
-    rf = RandomForest(X, y)
-    rf.fit(X, y)
+def model_2d(xy_2d):
+    x, y = xy_2d
+    rf = RandomForest(x, y)
+    rf.fit(x, y)
     return rf
 
 
@@ -142,13 +142,18 @@ def test_sobol_analysis_2d(model_2d):
     assert "y1" in list(df["output"].unique())
     assert "y2" in list(df["output"].unique())
 
+    assert len(sa.top_n_sobol_params(df, 1)) == 1
+    assert len(sa.top_n_sobol_params(df, 2)) == 2
+    assert sa.top_n_sobol_params(df, 1)[0] == "c"
+    assert sa.top_n_sobol_params(df, 2)[-1] == "v0"
+
 
 # test _generate_problem -----------------------------------------------------
 
 
 def test_generate_problem(sa_1d):
-    X = np.array([[0, 0], [1, 1], [2, 2]])
-    problem = sa_1d._generate_problem(torch.tensor(X))
+    x = np.array([[0, 0], [1, 1], [2, 2]])
+    problem = sa_1d._generate_problem(torch.tensor(x))
     assert problem["num_vars"] == 2
-    assert problem["names"] == ["X1", "X2"]
+    assert problem["names"] == ["x1", "x2"]
     assert problem["bounds"] == [[0, 2], [0, 2]]

@@ -2,13 +2,8 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.emulators import (
-    ALL_EMULATORS as DEFAULT_EMULATORS,
-)
-from autoemulate.experimental.emulators import (
-    GaussianProcessExact,
-)
-from autoemulate.experimental.emulators.ensemble import EnsembleMLP, EnsembleMLPDropout
+from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
+from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -17,14 +12,12 @@ from autoemulate.experimental.transforms import (
 )
 
 # from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike, GaussianLike, TensorLike
-
-# TODO: update once #579 completeed
-ALL_EMULATORS = [
-    emulator
-    for emulator in DEFAULT_EMULATORS
-    if emulator not in [EnsembleMLP, EnsembleMLPDropout]
-]
+from autoemulate.experimental.types import (
+    DistributionLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
 
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):
@@ -35,12 +28,14 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    if issubclass(model, GaussianProcessExact):
+    if issubclass(model, ProbabilisticEmulator):
         assert isinstance(y_pred, DistributionLike)
         assert y_pred.mean.shape == (x2.shape[0], y.shape[1])
+        assert not y_pred.mean.requires_grad
     else:
         assert isinstance(y_pred, TensorLike)
         assert y_pred.shape == (x2.shape[0], y.shape[1])
+        assert not y_pred.requires_grad
 
 
 @pytest.mark.parametrize(
@@ -69,6 +64,78 @@ def test_transformed_emulator(
 @pytest.mark.parametrize(
     ("model", "x_transforms", "y_transforms"),
     itertools.product(
+        [emulator for emulator in ALL_EMULATORS if emulator.supports_grad],
+        [
+            None,
+            [StandardizeTransform()],
+        ],
+        [
+            None,
+            [StandardizeTransform()],
+        ],
+    ),
+)
+def test_transformed_emulator_grad(
+    sample_data_y2d, new_data_y2d, model, x_transforms, y_transforms
+):
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    em = TransformedEmulator(
+        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=model
+    )
+    em.fit(x, y)
+    y_pred = em.predict(x2)
+    if issubclass(model, ProbabilisticEmulator):
+        assert isinstance(y_pred, DistributionLike)
+        assert not y_pred.mean.requires_grad
+    else:
+        assert isinstance(y_pred, TensorLike)
+        assert not y_pred.requires_grad
+
+    y_pred_grad = em.predict(x2, with_grad=True)
+    if issubclass(model, ProbabilisticEmulator):
+        assert isinstance(y_pred_grad, DistributionLike)
+        assert y_pred_grad.mean.requires_grad
+    else:
+        assert isinstance(y_pred_grad, TensorLike)
+        assert y_pred_grad.requires_grad
+
+
+@pytest.mark.parametrize(
+    ("model", "x_transforms"),
+    itertools.product(
+        [
+            emulator
+            for emulator in ALL_EMULATORS
+            if emulator.supports_grad and emulator.supports_grad
+        ],
+        [[PCATransform(n_components=3)], [VAETransform(latent_dim=3)]],
+    ),
+)
+def test_transformed_emulator_no_grad(
+    sample_data_y2d, new_data_y2d, model, x_transforms
+):
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
+    em = TransformedEmulator(
+        x, y, x_transforms=x_transforms, y_transforms=None, model=model
+    )
+    em.fit(x, y)
+    y_pred = em.predict(x2)
+    if issubclass(model, ProbabilisticEmulator):
+        assert isinstance(y_pred, DistributionLike)
+        assert not y_pred.mean.requires_grad
+    else:
+        assert isinstance(y_pred, TensorLike)
+        assert not y_pred.requires_grad
+
+    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
+        em.predict(x2, with_grad=True)
+
+
+@pytest.mark.parametrize(
+    ("model", "x_transforms", "y_transforms"),
+    itertools.product(
         [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
         [
             None,
@@ -82,11 +149,9 @@ def test_transformed_emulator(
             ],
         ],
         [
-            # TODO: PCA/VAE both require StandardizeTransform for numerical stability
-            # e.g. "ValueError: Input tensor y contains non-finite values"
-            # TODO: check error when no target transforms are provided
+            # TODO: revisit failing case with largr number of targets and no transforms
             # None,
-            # [StandardizeTransform()],
+            [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=10)],
             [StandardizeTransform(), PCATransform(n_components=20)],
             [StandardizeTransform(), VAETransform(latent_dim=10)],
@@ -126,9 +191,7 @@ def test_transformed_emulator_100_targets(
             ],
         ],
         [
-            # TODO: PCA/VAE both require StandardizeTransform for numerical stability
-            # e.g. "ValueError: Input tensor y contains non-finite values"
-            # TODO: check error when no target transforms are provided
+            # TODO: revisit failing case with largr number of targets and no transforms
             # None,
             # [StandardizeTransform()],
             [StandardizeTransform(), PCATransform(n_components=10)],
@@ -171,8 +234,8 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     y_pred2 = em.y_transforms[0]._inverse_sample(
         z_pred, n_samples=10000, full_covariance=True
     )
-    assert isinstance(y_pred, GaussianLike)
-    assert isinstance(y_pred2, GaussianLike)
+    assert isinstance(y_pred, GaussianProcessLike)
+    assert isinstance(y_pred2, GaussianProcessLike)
     print()
     print(y_pred.covariance_matrix)
     print(y_pred2.covariance_matrix)

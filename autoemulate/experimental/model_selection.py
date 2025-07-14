@@ -1,4 +1,5 @@
 import inspect
+import logging
 from typing import Any
 
 import numpy as np
@@ -6,9 +7,11 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from autoemulate.experimental.data.utils import set_random_seed
+from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
+from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.types import (
     DeviceLike,
     DistributionLike,
@@ -17,6 +20,8 @@ from autoemulate.experimental.types import (
     OutputLike,
     TensorLike,
 )
+
+logger = logging.getLogger("autoemulate")
 
 
 def _update(
@@ -67,10 +72,12 @@ def evaluate(
     return metric_instance.compute().item()
 
 
-def cross_validate(
+def cross_validate(  # noqa: PLR0913
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
+    x_transforms: list[AutoEmulateTransform] | None = None,
+    y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
     **kwargs: Any,
@@ -97,15 +104,25 @@ def cross_validate(
        Contains r2 and rmse scores computed for each cross validation fold.
     """
     best_model_config: ModelConfig = kwargs
+    x_transforms = x_transforms or []
+    y_transforms = y_transforms or []
     cv_results = {"r2": [], "rmse": []}
     batch_size = best_model_config.get("batch_size", 16)
     device = get_torch_device(device)
-    for train_idx, val_idx in cv.split(dataset):  # type: ignore TODO: identify type handling here
+
+    logger.debug("Cross-validation configuration: %s", cv)
+    for i, (train_idx, val_idx) in enumerate(cv.split(dataset)):  # type: ignore TODO: identify type handling here
+        logger.debug(
+            "Cross-validation split %d: %d train samples, %d validation samples",
+            i,
+            len(train_idx),
+            len(val_idx),
+        )
+
         # create train/val data subsets
         # convert idx to list to satisfy type checker
         train_subset = Subset(dataset, train_idx.tolist())
         val_subset = Subset(dataset, val_idx.tolist())
-        train_loader = DataLoader(train_subset, batch_size=batch_size)
         val_loader = DataLoader(val_subset, batch_size=batch_size)
 
         # Handle random seed for reproducibility
@@ -116,17 +133,26 @@ def cross_validate(
         if "random_seed" in model_init_params:
             model_kwargs["random_seed"] = random_seed
 
-        # fit model
-        x, y = next(iter(train_loader))
-        m = model(x, y, device=device, **model_kwargs)
-        m.fit(x, y)
+        # Convert dataloader to tensors to pass to model
+        x, y = ConversionMixin._convert_to_tensors(train_subset)
+
+        transformed_emulator = TransformedEmulator(
+            x,
+            y,
+            model=model,
+            x_transforms=x_transforms,
+            y_transforms=y_transforms,
+            device=device,
+            **model_kwargs,
+        )
+        transformed_emulator.fit(x, y)
 
         # evaluate on batches
         r2_metric = torchmetrics.R2Score().to(device)
         mse_metric = torchmetrics.MeanSquaredError().to(device)
         for x_b, y_b in val_loader:
             x_b_device, y_b_device = move_tensors_to_device(x_b, y_b, device=device)
-            y_batch_pred = m.predict(x_b_device)
+            y_batch_pred = transformed_emulator.predict(x_b_device)
             _update(y_b_device, y_batch_pred, r2_metric)
             _update(y_b_device, y_batch_pred, mse_metric)
 

@@ -1,16 +1,16 @@
+import logging
+
+from sklearn.model_selection import KFold
 from torchmetrics import R2Score
-from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
-from autoemulate.experimental.model_selection import evaluate
-from autoemulate.experimental.types import (
-    DeviceLike,
-    InputLike,
-    ModelConfig,
-    TensorLike,
-)
+from autoemulate.experimental.model_selection import cross_validate
+from autoemulate.experimental.transforms.base import AutoEmulateTransform
+from autoemulate.experimental.types import DeviceLike, InputLike, ModelConfig
+
+logger = logging.getLogger("autoemulate")
 
 
 class Tuner(ConversionMixin, TorchDeviceMixin):
@@ -52,7 +52,15 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         if random_seed is not None:
             set_random_seed(seed=random_seed)
 
-    def run(self, model_class: type[Emulator]) -> tuple[list[float], list[ModelConfig]]:
+    def run(  # noqa: PLR0913
+        self,
+        model_class: type[Emulator],
+        x_transforms: list[AutoEmulateTransform] | None = None,
+        y_transforms: list[AutoEmulateTransform] | None = None,
+        n_splits: int = 5,
+        seed: int | None = None,
+        shuffle: bool = True,
+    ) -> tuple[list[float], list[ModelConfig]]:
         """
         Parameters
         ----------
@@ -64,34 +72,30 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         Tuple[list[float], list[ModelConfig]]
             The validation scores and parameter values used in each search iteration.
         """
-        # split data into train/validation sets
-        # batch size defaults to size of train data if not otherwise specified
-        train_loader, val_loader = self._random_split(self.dataset)
-
-        train_x: TensorLike
-        train_y: TensorLike
-        train_x, train_y = next(iter(train_loader))
-
-        val_x: TensorLike
-        val_y: TensorLike
-        val_x, val_y = next(iter(val_loader))
-
         # keep track of what parameter values tested and how they performed
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
-        for _ in tqdm(range(self.n_iter)):
+        for i in range(self.n_iter):
+            logger.debug(
+                "Tuning Model: Iteration %s: %d/%d",
+                model_class.__name__,
+                i + 1,
+                self.n_iter,
+            )
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
-            m = model_class(train_x, train_y, device=self.device, **model_config)
-            m.fit(train_x, train_y)
 
-            # evaluate
-            y_pred = m.predict(val_x)
-            score = evaluate(val_y, y_pred, self.metric, self.device)
-
-            # record score and config
+            scores = cross_validate(
+                cv=KFold(n_splits=n_splits, random_state=seed, shuffle=shuffle),
+                dataset=self.dataset,
+                x_transforms=x_transforms,
+                y_transforms=y_transforms,
+                model=model_class,
+                device=self.device,
+                random_seed=None,
+            )
             model_config_tested.append(model_config)
-            val_scores.append(score)
+            val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
 
         return val_scores, model_config_tested

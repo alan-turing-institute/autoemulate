@@ -10,6 +10,7 @@ from autoemulate.experimental.emulators.base import (
     GaussianEmulator,
 )
 from autoemulate.experimental.emulators.nn.mlp import MLP
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DeviceLike,
     GaussianLike,
@@ -28,7 +29,7 @@ class Ensemble(GaussianEmulator):
     def __init__(
         self,
         emulators: Sequence[Emulator] | None = None,
-        jitter: float = 1e-6,
+        jitter: float = 1e-4,
         device: DeviceLike | None = None,
     ):
         """
@@ -36,7 +37,7 @@ class Ensemble(GaussianEmulator):
         ----------
         emulators: Sequence[Emulator]
             A sequence of emulators to construct the ensemble with.
-        jitter: float, default=1e-6
+        jitter: float, default=1e-4
             Amount of jitter to add to the covariance diagonal to avoid degeneracy.
         device: DeviceLike | None
             The device to put torch tensors on.
@@ -48,6 +49,7 @@ class Ensemble(GaussianEmulator):
         self.emulators = list(emulators)
         self.is_fitted_ = all(e.is_fitted_ for e in emulators)
         self.jitter = jitter
+        self.supports_grad = all(e.supports_grad for e in self.emulators)
         TorchDeviceMixin.__init__(self, device=device)
 
     @staticmethod
@@ -63,8 +65,11 @@ class Ensemble(GaussianEmulator):
             e.fit(x, y)
         self.is_fitted_ = True
 
-    @torch.inference_mode()
-    def _predict(self, x: Tensor) -> GaussianLike:
+    def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
+        if with_grad and not self.supports_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
+
         # Inference mode to disable autograd computation graph
         device = x.device
         means: list[Tensor] = []
@@ -72,7 +77,7 @@ class Ensemble(GaussianEmulator):
 
         # Outputs from each emulator
         for e in self.emulators:
-            out = e.predict(x)
+            out = e.predict(x, with_grad)
             if isinstance(out, GaussianLike):
                 mu_i = out.mean.to(device)  # (batch_size, n_dims)
                 assert isinstance(out.covariance_matrix, TensorLike)
@@ -110,14 +115,13 @@ class Ensemble(GaussianEmulator):
         # Total covariance
         sigma_ens = sigma_alea + sigma_epi  # (batch, dim, dim)
 
-        # Add some jitter to avoid positive-definite warnings
-        b, d = mu_ens.shape
-        eye = torch.eye(d, device=sigma_epi.device)  # (dim, dim)
-        jitter_mat = eye.unsqueeze(0).expand(b, d, d) * self.jitter
-        sigma_epi += jitter_mat
-
         # Return as MultivariateNormal
-        return GaussianLike(mu_ens, sigma_ens)
+        return GaussianLike(
+            mu_ens,
+            make_positive_definite(
+                sigma_ens, min_jitter=self.jitter, max_tries=3, clamp_eigvals=False
+            ),
+        )
 
 
 class EnsembleMLP(Ensemble):
@@ -166,7 +170,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self,
         model: DropoutTorchBackend,
         n_samples: int = 20,
-        jitter: float = 1e-6,
+        jitter: float = 1e-4,
         device: DeviceLike | None = None,
     ):
         """
@@ -188,6 +192,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self.n_samples = n_samples
         self.is_fitted_ = model.is_fitted_
         self.jitter = jitter
+        self.supports_grad = True
 
     @staticmethod
     def is_multioutput() -> bool:
@@ -204,8 +209,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         self.model.fit(x, y)
         self.is_fitted_ = True
 
-    @torch.inference_mode()
-    def _predict(self, x: Tensor) -> GaussianLike:
+    def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
         if not self.is_fitted_:
             s = "DropoutEnsemble: model is not fitted yet."
             raise RuntimeError(s)
@@ -218,12 +222,14 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
         # collect M outputs
         samples = []
-        for _ in range(self.n_samples):
-            # apply any preprocessing the model expects
-            x_proc = self.model.preprocess(x)
-            out = self.model.forward(x_proc)
-            # out: Tensor of shape (batch_size, output_dim)
-            samples.append(out)
+        with torch.set_grad_enabled(with_grad):
+            for _ in range(self.n_samples):
+                # apply any preprocessing the model expects
+                x_proc = self.model.preprocess(x)
+
+                out = self.model.forward(x_proc)
+                # out: Tensor of shape (batch_size, output_dim)
+                samples.append(out)
 
         # stack to shape (M, batch, dim)
         stack = torch.stack(samples, dim=0)
@@ -239,13 +245,12 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
             self.n_samples - 1
         )
 
-        # Add some jitter to avoid positive-definite warnings
-        b, d = mu.shape
-        eye = torch.eye(d, device=sigma_epi.device)  # (dim, dim)
-        jitter_mat = eye.unsqueeze(0).expand(b, d, d) * self.jitter
-        sigma_epi += jitter_mat
-
-        return GaussianLike(mu, sigma_epi)
+        return GaussianLike(
+            mu,
+            make_positive_definite(
+                sigma_epi, min_jitter=self.jitter, max_tries=3, clamp_eigvals=False
+            ),
+        )
 
 
 class EnsembleMLPDropout(DropoutEnsemble):

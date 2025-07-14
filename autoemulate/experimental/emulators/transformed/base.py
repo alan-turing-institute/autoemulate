@@ -1,10 +1,6 @@
 from typing import cast
 
-from torch.distributions import (
-    ComposeTransform,
-    Transform,
-    TransformedDistribution,
-)
+from torch.distributions import ComposeTransform, Transform, TransformedDistribution
 
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -132,11 +128,16 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.x_transforms = x_transforms or []
         self.y_transforms = y_transforms or []
         self._fit_transforms(x, y)
-        self.model = model(self._transform_x(x), self._transform_y_tensor(y), **kwargs)
+        self.model = model(
+            self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
+        )
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
         TorchDeviceMixin.__init__(self, device=device)
+        self.supports_grad = self.model.supports_grad and all(
+            t.bijective for t in self.x_transforms
+        )
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """Fit the transforms on the provided training data.
@@ -317,11 +318,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
             )
 
-        # TODO (#579): remove raise once fully implemented
-        msg = "Implementation to be complete in #579"
-        raise NotImplementedError(msg)
-
-        # If `y_t` is not a `GaussianProcessLike``, sample from it and return a
+        # If `y_t` is not a `GaussianProcessLike`, sample from it and return a
         # `GaussianLike`
         return _inverse_sample_gaussian_like(
             self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
@@ -371,10 +368,14 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
 
-    def _predict(self, x: TensorLike) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+        if with_grad and not self.supports_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
+
         # Transform and invert transform for prediction in original data space
         x_t = self._transform_x(x)
-        y_t_pred = self.model.predict(x_t)
+        y_t_pred = self.model.predict(x_t, with_grad)
 
         # If TensorLike, transform tensor back to original space
         if isinstance(y_t_pred, TensorLike):

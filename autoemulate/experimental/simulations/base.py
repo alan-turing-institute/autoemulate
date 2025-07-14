@@ -1,11 +1,15 @@
+import logging
 from abc import ABC, abstractmethod
 
 import torch
 from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
+from autoemulate.experimental.logging_config import configure_logging
 from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
+
+logger = logging.getLogger("autoemulate")
 
 
 class Simulator(ABC, ValidationMixin):
@@ -16,7 +20,10 @@ class Simulator(ABC, ValidationMixin):
     """
 
     def __init__(
-        self, parameters_range: dict[str, tuple[float, float]], output_names: list[str]
+        self,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        log_level: str = "progress_bar",
     ):
         """
         Parameters
@@ -25,6 +32,14 @@ class Simulator(ABC, ValidationMixin):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
+        log_level: str
+            Logging level for the simulator. Can be one of:
+            - "progress_bar": shows a progress bar during batch simulations
+            - "debug": shows debug messages
+            - "info": shows informational messages
+            - "warning": shows warning messages
+            - "error": shows error messages
+            - "critical": shows critical messages
         """
         self._parameters_range = parameters_range
         self._param_names = list(parameters_range.keys())
@@ -33,6 +48,27 @@ class Simulator(ABC, ValidationMixin):
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
         self._has_sample_forward = False
+
+        # Handle log level parameter
+        valid_log_levels = [
+            "progress_bar",
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "critical",
+        ]
+        log_level = log_level.lower()
+        if log_level not in valid_log_levels:
+            raise ValueError(
+                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
+            )
+        if log_level == "progress_bar":
+            log_level = "error"
+            self.progress_bar = True
+        else:
+            self.progress_bar = False
+        self.logger = configure_logging(level=log_level)
 
     @property
     def parameters_range(self) -> dict[str, tuple[float, float]]:
@@ -143,20 +179,37 @@ class Simulator(ABC, ValidationMixin):
         TensorLike
             Tensor of simulation results of shape (n_batch, self.out_dim).
         """
+        self.logger.info("Running batch simulation for %d samples", len(samples))
+
         results = []
         successful = 0
 
         # Process each sample with progress tracking
-        for i in tqdm(range(len(samples)), desc="Running simulations"):
+        for i in tqdm(
+            range(len(samples)),
+            desc="Running simulations",
+            disable=not self.progress_bar,
+            total=len(samples),
+            unit="sample",
+            unit_scale=True,
+        ):
+            logger.debug("Running simulation for sample %d/%d", i + 1, len(samples))
             result = self.forward(samples[i : i + 1])
             if result is not None:
                 results.append(result)
                 successful += 1
+                logger.debug("Simulation %d/%d successful", i + 1, len(samples))
+            else:
+                logger.warning(
+                    "Simulation %d/%d failed. Result is None.", i + 1, len(samples)
+                )
 
         # Report results
-        print(
-            f"Successfully completed {successful}/{len(samples)}"
-            f" simulations ({successful / len(samples) * 100:.1f}%)"
+        self.logger.info(
+            "Successfully completed %d/%d simulations (%.1f%%)",
+            successful,
+            len(samples),
+            (successful / len(samples) * 100 if len(samples) > 0 else 0.0),
         )
 
         # stack results into a 2D array on first dim using torch
