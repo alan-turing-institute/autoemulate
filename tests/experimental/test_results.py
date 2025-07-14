@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
@@ -106,7 +107,7 @@ def test_results_summarize():
         "r2_train": [0.75, 0.55],
         "r2_train_std": [0.025, 0.02],
     }
-    expected_summary = pd.DataFrame(expected_data, index=[1, 0])
+    expected_summary = pd.DataFrame(expected_data, index=np.array([1, 0]))
 
     summary = res.summarize()
     assert isinstance(summary, pd.DataFrame)
