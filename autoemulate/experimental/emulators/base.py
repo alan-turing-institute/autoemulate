@@ -353,9 +353,9 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             - bound for uniform distribution (range: [-scale, scale])
             - ignored for Kaiming methods (uses optimal scaling)
         bias_init : str
-            Bias initialization method. Options: "zeros", "default"
-            "zeros" initializes biases to zero
-            "default" uses PyTorch's default uniform initialization
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
         """
         # Dictionary mapping for weight initialization methods
         init_methods = {

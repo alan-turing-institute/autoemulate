@@ -91,6 +91,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Activation function to use in the model.
         lr : float, default=2e-1
             Learning rate for the optimizer.
+        early_stopping: EarlyStopping | None
+            An optional EarlyStopping callback. Defaults to None.
         device : DeviceLike | None, default=None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU).
@@ -285,6 +287,8 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
             Activation function to use in the model.
         lr : float, default=2e-1
             Learning rate for the optimizer.
+        early_stopping: EarlyStopping | None
+            An optional EarlyStopping callback. Defaults to None.
         seed : int | None, default=None
             Random seed for reproducibility. If None, no seed is set.
         device : DeviceLike | None, default=None

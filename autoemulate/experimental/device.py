@@ -24,9 +24,9 @@ def get_torch_device(device: DeviceLike | None) -> torch.device:
     ----------
     device : DeviceLike | None
         The device to get. If None, the default torch device is returned.
+
     Returns
     -------
-
     torch.device
         The device.
 
@@ -34,7 +34,6 @@ def get_torch_device(device: DeviceLike | None) -> torch.device:
     ------
     TorchDeviceError
         If the device is not a valid torch device.
-
     """
     if isinstance(device, torch.device):
         return device
@@ -55,6 +54,8 @@ def move_tensors_to_device(
     ----------
     *args : TensorLike
         The tensors to move.
+    device: torch.device
+        The device to move the tensors to.
 
     Returns
     -------
@@ -82,7 +83,6 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
     ------
     TorchDeviceError
         If the device is not a valid torch device.
-
     """
     if device == "cpu" or (
         isinstance(device, torch.device) and device.type == torch.device("cpu").type
@@ -141,7 +141,6 @@ class TorchDeviceMixin:
     ------
     TorchDeviceError
         If the device is not a valid torch device.
-
     """
 
     def __init__(self, device: DeviceLike | None = None, cpu_only: bool = False):

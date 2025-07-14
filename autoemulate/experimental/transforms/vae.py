@@ -35,7 +35,6 @@ class VAETransform(AutoEmulateTransform):
 
         Parameters
         ----------
-
         latent_dim : int, default=3
             The dimensionality of the VAE latent space.
         hidden_layers : list of int, default=None
@@ -60,7 +59,6 @@ class VAETransform(AutoEmulateTransform):
             repeated expensive calls with the same input data but is by default
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
             for more details on caching.
-
         """
 
         Transform.__init__(self, cache_size=cache_size)

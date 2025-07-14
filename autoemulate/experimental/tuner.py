@@ -66,6 +66,19 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         ----------
         model_class: type[Emulator]
             A concrete Emulator subclass.
+        x_transforms_list: list[list[AutoEmulateTransform]] | None
+            An optional list of sequences of transforms to apply to the input data.
+            Defaults to None, in which case the data is standardized.
+        y_transforms_list: list[list[AutoEmulateTransform]] | None
+            An optional list of sequences of transforms to apply to the output data.
+            Defaults to None, in which case the data is standardized.
+        n_splits: int
+            Number of cross validation folds to split data into. Defaults to 5.
+        seed: int | None
+            Random seed to use in cross validation. If None, no seed is set.
+        shuffle: bool
+            Whether to shuffle data before splitting into cross validation folds.
+            Defaults to True.
 
         Returns
         -------

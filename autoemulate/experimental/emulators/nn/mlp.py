@@ -50,10 +50,16 @@ class MLP(DropoutTorchBackend):
             - std for normal distribution
             - bound for uniform distribution (range: [-scale, scale])
             - ignored for Kaiming methods (uses optimal scaling)
+        bias_init : str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
         dropout_prob : float | None, default=None
             Dropout probability for regularization. If None, no dropout is applied.
         lr : float, default=1e-1
             Learning rate for the optimizer.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
         device : DeviceLike | None, default=None
             Device to run the model on (e.g., "cpu", "cuda", "mps")
         **kwargs : dict
@@ -63,7 +69,6 @@ class MLP(DropoutTorchBackend):
         ------
         ValueError
             If the input dimensions of `x` and `y` are not matrices.
-
         """
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)

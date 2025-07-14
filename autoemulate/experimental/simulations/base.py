@@ -108,10 +108,10 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-            n_samples: int
-                Number of samples to generate.
-            random_seed: int | None
-                Random seed for reproducibility. If None, no seed is set.
+        n_samples: int
+            Number of samples to generate.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
 
         Returns
         -------
