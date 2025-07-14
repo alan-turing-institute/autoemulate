@@ -28,7 +28,7 @@ class Simulator(ABC, ValidationMixin):
         """
         Parameters
         ----------
-        parameters_range : dict[str, tuple[float, float]]
+        parameters_range: dict[str, tuple[float, float]]
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
@@ -115,7 +115,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input parameters into the simulation forward run.
 
         Returns
@@ -133,7 +133,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input tensor of shape (n_samples, self.in_dim).
 
         Returns
@@ -201,7 +201,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        name : str
+        name: str
             Name of the parameter to retrieve.
 
         Returns

@@ -32,7 +32,7 @@ class Standardizer(Preprocessor):
         """
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             The input tensor to be standardized.
         """
         if not isinstance(x, TensorLike):

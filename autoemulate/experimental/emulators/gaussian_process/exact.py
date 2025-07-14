@@ -46,7 +46,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     It supports:
     - multi-task Gaussian processes
     - custom mean and kernel specification
-
     """
 
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
@@ -69,31 +68,32 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         device: DeviceLike | None = None,
         **kwargs,
     ):
-        """Initialize the GaussianProcessExact emulator.
+        """
+        Initialize the GaussianProcessExact emulator.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
-        y : TensorLike
+        y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
-        likelihood_cls : type[MultitaskGaussianLikelihood],
+        likelihood_cls: type[MultitaskGaussianLikelihood],
             default=MultitaskGaussianLikelihood
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
-        mean_module_fn : MeanModuleFn, default=constant_mean
+        mean_module_fn: MeanModuleFn, default=constant_mean
             Function to create the mean module.
-        covar_module_fn : CovarModuleFn, default=rbf
+        covar_module_fn: CovarModuleFn, default=rbf
             Function to create the covariance module.
-        epochs : int, default=50
+        epochs: int, default=50
             Number of training epochs.
-        activation : type[nn.Module], default=nn.ReLU
+        activation: type[nn.Module], default=nn.ReLU
             Activation function to use in the model.
-        lr : float, default=2e-1
+        lr: float, default=2e-1
             Learning rate for the optimizer.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        device : DeviceLike | None, default=None
+        device: DeviceLike | None, default=None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU).
         """
@@ -239,7 +239,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
 
 class GaussianProcessExactCorrelated(GaussianProcessExact):
-    """Multioutput exact GP implementation with correlated task covariance.
+    """
+    Multioutput exact GP implementation with correlated task covariance.
 
     This class extends the `GaussianProcessExact` to support correlated task covariance
     by using a `MultitaskKernel` with a rank-1 covariance factor and a `MultitaskMean`
@@ -265,33 +266,34 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         device: DeviceLike | None = None,
         **kwargs,
     ):
-        """Initialize the GaussianProcessExactCorrelated emulator.
+        """
+        Initialize the GaussianProcessExactCorrelated emulator.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
-        y : TensorLike
+        y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
-        likelihood_cls : type[MultitaskGaussianLikelihood],
+        likelihood_cls: type[MultitaskGaussianLikelihood],
             default=MultitaskGaussianLikelihood
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
-        mean_module_fn : MeanModuleFn, default=constant_mean
+        mean_module_fn: MeanModuleFn, default=constant_mean
             Function to create the mean module.
-        covar_module_fn : CovarModuleFn, default=rbf
+        covar_module_fn: CovarModuleFn, default=rbf
             Function to create the covariance module.
-        epochs : int, default=50
+        epochs: int, default=50
             Number of training epochs.
-        activation : type[nn.Module], default=nn.ReLU
+        activation: type[nn.Module], default=nn.ReLU
             Activation function to use in the model.
-        lr : float, default=2e-1
+        lr: float, default=2e-1
             Learning rate for the optimizer.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        seed : int | None, default=None
+        seed: int | None, default=None
             Random seed for reproducibility. If None, no seed is set.
-        device : DeviceLike | None, default=None
+        device: DeviceLike | None, default=None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU).
         """

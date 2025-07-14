@@ -184,6 +184,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.logger.debug(msg)
 
     def compare(self):
+        """
+        Tune hyperparameters of all emulators using the train/validation data
+        and evaluate performance of all tuned emulators on the test data.
+        """
         tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]

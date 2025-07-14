@@ -22,7 +22,7 @@ def get_torch_device(device: DeviceLike | None) -> torch.device:
 
     Parameters
     ----------
-    device : DeviceLike | None
+    device: DeviceLike | None
         The device to get. If None, the default torch device is returned.
 
     Returns
@@ -52,7 +52,7 @@ def move_tensors_to_device(
 
     Parameters
     ----------
-    *args : TensorLike
+    *args: TensorLike
         The tensors to move.
     device: torch.device
         The device to move the tensors to.
@@ -71,7 +71,7 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
 
     Parameters
     ----------
-    device : DeviceLike
+    device: DeviceLike
         The device to check.
 
     Returns
@@ -111,9 +111,9 @@ def check_model_device(model: nn.Module, expected_device: str) -> bool:
 
     Parameters
     ----------
-    model : nn.Module
+    model: nn.Module
         The model to check.
-    expected_device : str
+    expected_device: str
         The expected device.
 
     Returns
@@ -134,7 +134,7 @@ class TorchDeviceMixin:
 
     Attributes
     ----------
-    device : torch.device
+    device: torch.device
         The device to use. If None, the default torch device is used.
 
     Raises
@@ -168,7 +168,7 @@ class TorchDeviceMixin:
 
         Parameters
         ----------
-        *args : TensorLike
+        *args: TensorLike
             The tensors to move.
 
         Returns

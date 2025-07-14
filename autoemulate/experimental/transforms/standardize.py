@@ -7,14 +7,14 @@ from autoemulate.experimental.types import TensorLike
 
 
 class StandardizeTransform(AutoEmulateTransform):
-    """Standardize transform for normalizing data.
+    """
+    Standardize transform for normalizing data.
 
     This transform is effectively a composition of two AffineTransforms with a
     translation by the mean and a scaling by the inverse of the standard deviation.
 
     The transform assumes that the input data is a matrix of shape `(n, d)`, where `n`
     is the number of samples and `d` is the number of features.
-
     """
 
     domain = constraints.real
