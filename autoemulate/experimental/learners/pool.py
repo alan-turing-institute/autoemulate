@@ -24,7 +24,7 @@ class Pool(Active):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Pool of input samples.
 
         Returns

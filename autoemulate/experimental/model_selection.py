@@ -54,8 +54,9 @@ def _update(
 def evaluate(
     y_pred: OutputLike,
     y_true: InputLike,
-    metric: type[torchmetrics.Metric]
-    | partial[torchmetrics.Metric] = torchmetrics.R2Score,
+    metric: (
+        type[torchmetrics.Metric] | partial[torchmetrics.Metric]
+    ) = torchmetrics.R2Score,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -105,6 +106,7 @@ def cross_validate(  # noqa: PLR0913
         The device to use for model training and evaluation.
     random_seed: int | None
         Optional random seed for reproducibility.
+
     Returns
     -------
     dict[str, list[float]]
@@ -169,20 +171,21 @@ def bootstrap(
     n_bootstraps: int = 100,
     device: str | torch.device = "cpu",
 ) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Gets bootstrap estimates of R2 and RMSE
+    """
+    Gets bootstrap estimates of R2 and RMSE.
 
     Parameters
     ----------
-    model : Emulator
+    model: Emulator
         An instance of an Emulator subclass.
-    x : TensorLike
+    x: TensorLike
         Input features for the model.
-    y : TensorLike
+    y: TensorLike
         Target values corresponding to the input features.
-    n_bootstraps : int=100
-        Number of bootstrap samples to generate.
-    device : str | torch.device, default="cpu"
-        The device to use for computations (default is "cpu").
+    n_bootstraps: int
+        Number of bootstrap samples to generate. Defaults to 100.
+    device: str | torch.device
+        The device to use for computations. Default is "cpu".
 
     Returns
     -------

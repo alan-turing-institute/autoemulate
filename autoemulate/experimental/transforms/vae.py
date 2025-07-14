@@ -30,37 +30,36 @@ class VAETransform(AutoEmulateTransform):
         verbose: bool = False,
         cache_size: int = 0,
     ):
-        """Intialize the VAE transform parameters but defer intialization of the inner
+        """
+        Intialize the VAE transform parameters but defer intialization of the inner
         VAE model until fit is called when the input data is available.
 
         Parameters
         ----------
-
-        latent_dim : int, default=3
+        latent_dim: int, default=3
             The dimensionality of the VAE latent space.
-        hidden_layers : list of int, default=None
+        hidden_layers: list of int, default=None
             The number of hidden layers and their sizes in the VAE. If None, defaults to
             [64, 32].
-        epochs : int, default=800
+        epochs: int, default=800
             The number of training epochs for the VAE.
-        batch_size : int, default=32
+        batch_size: int, default=32
             The batch size for training the VAE.
-        learning_rate : float, default=1e-3
+        learning_rate: float, default=1e-3
             The learning rate for the VAE optimizer.
-        random_seed : int, default=None
+        random_seed: int, default=None
             Random seed for reproducibility.
-        beta : float, default=1.0
+        beta: float, default=1.0
             The beta parameter for the VAE loss function, controlling the trade-off
             between reconstruction loss and KL divergence.
-        verbose : bool, default=False
+        verbose: bool, default=False
             If True, log training progress.
-        cache_size : int, default=0
+        cache_size: int, default=0
             Whether to cache previous transform. Set to 0 to disable caching. Set to
             1 to enable caching of the last single value. This might be useful for
             repeated expensive calls with the same input data but is by default
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
             for more details on caching.
-
         """
 
         Transform.__init__(self, cache_size=cache_size)

@@ -7,7 +7,8 @@ from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class RandomForest(SklearnBackend):
-    """Random forest Emulator.
+    """
+    Random forest Emulator.
 
     Implements Random Forests regression from scikit-learn.
     """

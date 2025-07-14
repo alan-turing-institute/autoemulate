@@ -5,14 +5,15 @@ from pathlib import Path
 
 
 def configure_logging(log_to_file=False, level: str = "INFO"):
-    """Configures the logging system.
+    """
+    Configures the logging system.
 
     Parameters
     ----------
-    log_to_file : bool or string, optional
+    log_to_file: bool or string, optional
         If True, logs will be written to a file.
         If a string, logs will be written to the specified file.
-    verbose : str, optional
+    verbose: str, optional
         The verbosity level. Can be "error", "warning",
           "info", or "debug". Defaults to "info".
     """

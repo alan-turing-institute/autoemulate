@@ -28,7 +28,7 @@ class Projectile(Simulator):
         """
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Dictionary of input parameter values to simulate:
             - `c`: the drag coefficient on a log scale
             - `v0`: velocity
@@ -62,7 +62,7 @@ class ProjectileMultioutput(Simulator):
         """
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Dictionary of input parameter values to simulate:
             - `c`: the drag coefficient on a log scale
             - `v0`: velocity

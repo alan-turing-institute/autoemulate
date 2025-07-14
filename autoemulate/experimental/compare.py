@@ -51,6 +51,21 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator]] | None
             List of emulator classes to compare. If None, all available emulators
             are used.
+        x_transforms_list: list[list[AutoEmulateTransform]] | None
+            An optional list of sequences of transforms to apply to the input data.
+            Defaults to None, in which case the data is standardized.
+        y_transforms_list: list[list[AutoEmulateTransform]] | None
+            An optional list of sequences of transforms to apply to the output data.
+            Defaults to None, in which case the data is standardized.
+        n_iter: int
+            Number of parameter settings to randomly sample and test during tuning.
+        n_splits: int
+            Number of cross validation folds to split data into. Defaults to 5.
+        shuffle: bool
+            Whether to shuffle data before splitting into cross validation folds.
+            Defaults to True.
+        n_bootstraps: int
+            Number of times to resample the data when evaluating performance.
         device: DeviceLike | None
             Device to run the emulators on (e.g., "cpu" or "cuda").
         random_seed: int | None
@@ -114,8 +129,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         Return a dataframe with the model_name and short_name
         of all available emulators.
-        Returns:
-            pd.DataFrame: DataFrame with columns ['model_name', 'short_name'].
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with columns ['model_name', 'short_name'].
         """
         return pd.DataFrame(
             {
@@ -166,6 +184,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.logger.debug(msg)
 
     def compare(self):
+        """
+        Tune hyperparameters of all emulators using the train/validation data
+        and evaluate performance of all tuned emulators on the test data.
+        """
         tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
@@ -289,6 +311,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     ):
         """
         Plot the evaluation of the model with the given result_id.
+
         Parameters
         ----------
         result_id: str

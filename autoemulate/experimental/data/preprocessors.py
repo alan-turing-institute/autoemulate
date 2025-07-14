@@ -32,10 +32,8 @@ class Standardizer(Preprocessor):
         """
         Parameters
         ----------
-
-        x : TensorLike
+        x: TensorLike
             The input tensor to be standardized.
-
         """
         if not isinstance(x, TensorLike):
             raise ValueError(f"Expected 2D TensorLike, actual type {type(x)}")

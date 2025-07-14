@@ -32,7 +32,7 @@ class Stream(Active):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Stream of input samples.
 
         Returns
@@ -51,7 +51,7 @@ class Stream(Active):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Stream of input samples.
         """
         x = self.check_matrix(x)
@@ -77,9 +77,9 @@ class Stream(Active):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Stream of input samples.
-        batch_size : int
+        batch_size: int
             Number of samples per batch.
         """
         x = self.check_matrix(x)
@@ -102,9 +102,9 @@ class Random(Stream):
 
     Parameters
     ----------
-    p_query : float
+    p_query: float
         Query probability for selecting a sample.
-    random_seed : int | None
+    random_seed: int | None
         Optional random seed for reproducibility.
     """
 
@@ -120,7 +120,7 @@ class Random(Stream):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Stream of input samples.
 
         Returns
@@ -163,9 +163,9 @@ class Threshold(Stream):
 
         Parameters
         ----------
-        x_train : torch.Tensor
+        x_train: torch.Tensor
             Training input tensor.
-        y_train : torch.Tensor
+        y_train: torch.Tensor
             Training output tensor.
         """
         super().__post_init__()
@@ -180,11 +180,11 @@ class Threshold(Stream):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Input sample tensor.
-        y : torch.Tensor
+        y: torch.Tensor
             Predicted output tensor.
-        Sigma : torch.Tensor
+        Sigma: torch.Tensor
             Covariance estimates tensor.
 
         Returns
@@ -205,7 +205,7 @@ class Threshold(Stream):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Stream of input samples.
 
         Returns
@@ -259,7 +259,7 @@ class Distance(Input):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Input samples.
 
         Returns
@@ -304,11 +304,11 @@ class A_Optimal(Output):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Input samples.
-        y : torch.Tensor
+        y: torch.Tensor
             Predicted outputs (not used).
-        Sigma : torch.Tensor
+        Sigma: torch.Tensor
             Covariance estimates (not used).
 
         Returns
@@ -340,11 +340,11 @@ class D_Optimal(Output):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Input samples.
-        y : torch.Tensor
+        y: torch.Tensor
             Predicted outputs.
-        Sigma : torch.Tensor
+        Sigma: torch.Tensor
             Covariance estimates.
 
         Returns
@@ -376,11 +376,11 @@ class E_Optimal(Output):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Input samples.
-        y : torch.Tensor
+        y: torch.Tensor
             Predicted outputs.
-        Sigma : torch.Tensor
+        Sigma: torch.Tensor
             Covariance estimates.
 
         Returns
@@ -404,21 +404,21 @@ class Adaptive(Threshold):
 
     Parameters
     ----------
-    Kp : float
+    Kp: float
         Proportional gain.
-    Ki : float
+    Ki: float
         Integral gain.
-    Kd : float
+    Kd: float
         Derivative gain.
-    key : str
+    key: str
         Key used to reference a metric.
-    target : float
+    target: float
         Target value for the metric.
-    min_threshold : float or None
+    min_threshold: float or None
         Minimum allowable threshold.
-    max_threshold : float or None
+    max_threshold: float or None
         Maximum allowable threshold.
-    window_size : int or None, optional
+    window_size: int or None, optional
         Size of the sliding window to use for error computation. If None, use the full
         error history.
     """
@@ -438,9 +438,9 @@ class Adaptive(Threshold):
 
         Parameters
         ----------
-        x_train : torch.Tensor
+        x_train: torch.Tensor
             Training input tensor.
-        y_train : torch.Tensor
+        y_train: torch.Tensor
             Training output tensor.
         """
         super().__post_init__()
@@ -462,7 +462,7 @@ class Adaptive(Threshold):
 
         Parameters
         ----------
-        x : torch.Tensor
+        x: torch.Tensor
             Stream of input samples.
 
         Returns

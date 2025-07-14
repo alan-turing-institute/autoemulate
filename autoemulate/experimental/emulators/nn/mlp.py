@@ -25,45 +25,51 @@ class MLP(DropoutTorchBackend):
         device: DeviceLike | None = None,
         **kwargs,
     ):
-        """Multi-Layer Perceptron (MLP) emulator.
+        """
+        Multi-Layer Perceptron (MLP) emulator.
 
         MLP provides a simple deterministic emulator with optional model stochasticity
         provided by different weight initialization and dropout.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input features.
-        y : TensorLike
+        y: TensorLike
             Target values.
-        activation_cls : type[nn.Module], default=nn.ReLU
+        activation_cls: type[nn.Module], default=nn.ReLU
             Activation function to use in the hidden layers.
-        layer_dims : list[int] | None, default=None
+        layer_dims: list[int] | None, default=None
             Dimensions of the hidden layers. If None, defaults to [32, 16].
-        weight_init : str, default="default"
+        weight_init: str, default="default"
             Weight initialization method. Options are "default", "normal", "uniform",
             "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
             "kaiming_normal".
-        scale : float, default=1.0
+        scale: float, default=1.0
             Scale parameter for weight initialization methods. Used as:
             - gain for Xavier methods
             - std for normal distribution
             - bound for uniform distribution (range: [-scale, scale])
             - ignored for Kaiming methods (uses optimal scaling)
-        dropout_prob : float | None, default=None
+        bias_init: str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
+        dropout_prob: float | None, default=None
             Dropout probability for regularization. If None, no dropout is applied.
-        lr : float, default=1e-1
+        lr: float, default=1e-1
             Learning rate for the optimizer.
-        device : DeviceLike | None, default=None
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
+        device: DeviceLike | None, default=None
             Device to run the model on (e.g., "cpu", "cuda", "mps")
-        **kwargs : dict
+        **kwargs: dict
             Additional keyword arguments.
 
         Raises
         ------
         ValueError
             If the input dimensions of `x` and `y` are not matrices.
-
         """
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)

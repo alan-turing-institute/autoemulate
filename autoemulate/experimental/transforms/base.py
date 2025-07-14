@@ -19,7 +19,8 @@ from autoemulate.experimental.types import (
 class AutoEmulateTransform(
     Transform, ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin
 ):
-    """Base class for transforms in the AutoEmulate framework.
+    """
+    Base class for transforms in the AutoEmulate framework.
 
     This class subclasses the `torch.distributions.Transform` class and provides
     additional functionality for fitting transforms to data and transforming
@@ -46,14 +47,16 @@ class AutoEmulateTransform(
 
     @property
     def _basis_matrix(self) -> TensorLike:
-        """Constant basis matrix for transforming matrices. Subclasses should implement
+        """
+        Constant basis matrix for transforming matrices. Subclasses should implement
         this property (if possible) to return the appropriate basis matrix.
         """
         msg = "This method should be implemented in subclasses."
         raise NotImplementedError(msg)
 
     def _expanded_basis_matrix(self, y: TensorLike) -> TensorLike:
-        """Expanded basis matrix for the transformation of the number of samples in
+        """
+        Expanded basis matrix for the transformation of the number of samples in
         a given codomain `y` sample tensor.
 
         Given `n` samples in `y`, this returns a Kronecker product of the identity
@@ -67,7 +70,7 @@ class AutoEmulateTransform(
 
         Parameters
         ----------
-        y : TensorLike
+        y: TensorLike
             Input tensor of shape `(n, )` from which to compute the expanded
             basis matrix. The number of samples `n` is inferred from the shape of `y`.
 
@@ -80,13 +83,13 @@ class AutoEmulateTransform(
         ------
         RuntimeError
             If the transform has not been fitted yet.
-
         """
         self._check_is_fitted()
         return torch.kron(torch.eye(y.shape[0], device=self.device), self._basis_matrix)
 
     def _batch_basis_matrix(self, y: TensorLike) -> TensorLike:
-        """Batch basis matrix for the transformation of the number of samples in
+        """
+        Batch basis matrix for the transformation of the number of samples in
         a given codomain `y` sample tensor.
 
         Given `n` samples in `y`, this returns a basis matrix for transforming each
@@ -99,10 +102,9 @@ class AutoEmulateTransform(
         However, the method takes a `y` tensor argument to allow the method to be
         overriden with local approximations such as through the delta method.
 
-
         Parameters
         ----------
-        y : TensorLike
+        y: TensorLike
             Input tensor of shape `(n, )` from which to compute the batch
             basis matrix. The number of samples `n` is inferred from the shape of `y`.
 
@@ -115,7 +117,6 @@ class AutoEmulateTransform(
         ------
         RuntimeError
             If the transform has not been fitted yet.
-
         """
         self._check_is_fitted()
         return self._basis_matrix.repeat(y.shape[0], 1, 1)
@@ -137,7 +138,8 @@ class AutoEmulateTransform(
     def _inverse_sample(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
-        """Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the domain
+        """
+        Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the domain
         through generating samples from `y` in the codomain and mapping those back
         to the original space `x`.
 
@@ -146,11 +148,11 @@ class AutoEmulateTransform(
 
         Parameters
         ----------
-        y : GaussianLike
+        y: GaussianLike
             The distribution in the codomain.
-        n_samples : int, default=1000
+        n_samples: int, default=1000
             Number of samples to generate from the distribution `y`.
-        full_covariance : bool, default=True
+        full_covariance: bool, default=True
             If True, calculates a full covariance matrix from samples; otherwise,
             calculates only the diagonal of the covariance matrix. This is useful
             for a high-dimensional domain where full covariance might be
@@ -166,7 +168,6 @@ class AutoEmulateTransform(
         ------
         RuntimeError
             If covariance matrix cannot be made positive definite.
-
         """
         if isinstance(y, GaussianProcessLike):
             return self._inverse_sample_gaussian_process_like(
@@ -178,7 +179,8 @@ class AutoEmulateTransform(
         )
 
     def _inverse_gaussian(self, y: GaussianLike) -> GaussianLike:
-        r"""Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the
+        r"""
+        Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the
         domain by applying the inverse of the transform to the mean and covariance of
         `y` in the codomain.
 
@@ -188,7 +190,7 @@ class AutoEmulateTransform(
 
         Parameters
         ----------
-        y : GaussianLike
+        y: GaussianLike
             The distribution in the codomain to be transformed back to the domain.
 
         Returns
@@ -205,7 +207,6 @@ class AutoEmulateTransform(
         TypeError
             If the input `y` is not of type `GaussianLike` or `GaussianProcessLike`.
 
-
         Notes
         -----
         This method assumes that the transform is either an exactly linear or a
@@ -221,7 +222,6 @@ class AutoEmulateTransform(
         of the distribution in the codomain, :math:`\Sigma_y` is the covariance matrix
         of the distribution in the codomain, and :math:`A` is the linear transformation
         matrix (expanded basis matrix) derived from the transform.
-
         """
         mean = y.mean
         cov = y.covariance_matrix
@@ -280,17 +280,18 @@ def _inverse_sample_gaussian_like(
     n_samples: int = 1000,
     full_covariance: bool = True,
 ) -> GaussianLike:
-    """Transforms a `DistributionLike` to a `GaussianLike` through sampling from `y`.
+    """
+    Transforms a `DistributionLike` to a `GaussianLike` through sampling from `y`.
 
     Parameters
     ----------
-    c : Callable
+    c: Callable
         A callable that applies a transformation to the generated samples.
-    y : DistributionLike
+    y: DistributionLike
         The distribution from which to sample.
-    n_samples : int, default=1000
+    n_samples: int, default=1000
         Number of samples to generate from the distribution `y`.
-    full_covariance : bool, default=True
+    full_covariance: bool, default=True
         If True, calculates a full covariance matrix from samples; otherwise,
         calculates only the diagonal of the covariance matrix. This is useful
         for a high-dimensional domain where full covariance might be
@@ -307,7 +308,6 @@ def _inverse_sample_gaussian_like(
     NotImplementedError
         If the batch shape of `y` is greater than 1, as this implementation does
         not support multi-dimensional batch shapes.
-
     """
     batch_shape = y.batch_shape
     if len(batch_shape) > 1:
@@ -355,22 +355,23 @@ def _inverse_sample_gaussian_process_like(
     n_samples: int = 1000,
     full_covariance: bool = True,
 ) -> GaussianProcessLike:
-    """Transforms a `GaussianProcessLike` to another `GaussianProcessLike` through
+    """
+    Transforms a `GaussianProcessLike` to another `GaussianProcessLike` through
     sampling from `y`.
 
     Parameters
     ----------
-    c : Callable
+    c: Callable
         A callable that applies a transformation to the generated samples.
-    y : GaussianProcessLike
+    y: GaussianProcessLike
         The Gaussian Process from which to sample.
-    n_samples : int, default=1000
-        Number of samples to generate from the distribution `y`.
-    full_covariance : bool, default=True
+    n_samples: int
+        Number of samples to generate from the distribution `y`. Defaults to 1000.
+    full_covariance: bool
         If True, calculates a full covariance matrix from samples; otherwise, calculates
         only the diagonal of the covariance matrix. This is useful for a
         high-dimensional domain where full covariance might be computationally
-        expensive.
+        expensive. Defaults to True.
 
     Returns
     -------
@@ -382,7 +383,6 @@ def _inverse_sample_gaussian_process_like(
     ------
     RuntimeError
         If the covariance matrix cannot be made positive definite.
-
     """
     samples = c(torch.stack([y.sample() for _ in range(n_samples)], dim=0))
     assert isinstance(samples, TensorLike)

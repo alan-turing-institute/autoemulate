@@ -129,7 +129,8 @@ class DeterministicEmulator(Emulator):
 
 
 class ProbabilisticEmulator(Emulator):
-    """An emulator subclass that predicts with probabilistic outputs returning a
+    """
+    An emulator subclass that predicts with probabilistic outputs returning a
     `DistributionLike`.
     """
 
@@ -148,9 +149,9 @@ class ProbabilisticEmulator(Emulator):
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input tensor to make predictions for.
-        with_grad : bool
+        with_grad: bool
             Whether to enable gradient calculation. Defaults to False.
 
         Returns
@@ -163,7 +164,8 @@ class ProbabilisticEmulator(Emulator):
 
 
 class GaussianEmulator(ProbabilisticEmulator):
-    """An emulator subclass that predicts with Gaussian outputs returning a
+    """
+    An emulator subclass that predicts with Gaussian outputs returning a
     `GaussianLike`.
     """
 
@@ -178,7 +180,8 @@ class GaussianEmulator(ProbabilisticEmulator):
 
 
 class GaussianProcessEmulator(GaussianEmulator):
-    """A Gaussian Process emulator subclass that predicts with output
+    """
+    A Gaussian Process emulator subclass that predicts with output
     `GaussianProcessLike`.
     """
 
@@ -340,22 +343,23 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         scale: float = 1.0,
         bias_init: str = "default",
     ):
-        """Initialize the weights.
+        """
+        Initialize the weights.
 
         Parameters
         ----------
-        weight_init : str
+        weight_init: str
             Initialization method name
-        scale : float
+        scale: float
             Scale parameter for initialization methods. Used as:
             - gain for Xavier methods
             - std for normal distribution
             - bound for uniform distribution (range: [-scale, scale])
             - ignored for Kaiming methods (uses optimal scaling)
-        bias_init : str
-            Bias initialization method. Options: "zeros", "default"
-            "zeros" initializes biases to zero
-            "default" uses PyTorch's default uniform initialization
+        bias_init: str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
         """
         # Dictionary mapping for weight initialization methods
         init_methods = {

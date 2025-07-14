@@ -25,13 +25,13 @@ class Learner(ValidationMixin, ABC):
 
     Parameters
     ----------
-    simulator : Simulator
+    simulator: Simulator
         Simulator instance used to generate ground truth outputs.
-    emulator : Emulator
+    emulator: Emulator
         Emulator instance used to approximate the simulator.
-    x_train : TensorLike
+    x_train: TensorLike
         Initial training input tensor.
-    y_train : TensorLike
+    y_train: TensorLike
         Initial training output tensor.
     """
 
@@ -61,7 +61,9 @@ class Learner(ValidationMixin, ABC):
         Recursively builds a dictionary mapping class names to class objects,
         starting from cls.
 
-        Returns:
+        Returns
+        -------
+        dict
             A dictionary where keys are class names and values are the class objects.
         """
         d = {cls.__name__: cls}
@@ -75,7 +77,9 @@ class Learner(ValidationMixin, ABC):
         Recursively collects the inheritance relationships (as ordered pairs)
         starting from cls.
 
-        Returns:
+        Returns
+        -------
+        list[tuple[str, str]]
             A list of tuples where each tuple is (parent_class_name, child_class_name).
         """
         edges = []
@@ -244,7 +248,7 @@ class Active(Learner):
 
         Parameters
         ----------
-        *arg : TensorLike or None
+        *arg: TensorLike or None
             Optional input samples.
 
         Returns

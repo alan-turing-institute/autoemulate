@@ -36,11 +36,11 @@ class SensitivityAnalysis(ConversionMixin):
         """
         Parameters
         ----------
-        emulator : Emulator
+        emulator: Emulator
             Fitted emulator.
-        x : InputLike | None
+        x: InputLike | None
             Simulator input parameter values.
-        problem : dict | None
+        problem: dict | None
             The problem definition dictionary. If None, the problem is generated
             from x using minimum and maximum values of the features as bounds.
             The dictionary should contain:
@@ -103,7 +103,7 @@ class SensitivityAnalysis(ConversionMixin):
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Simulator input parameter values [n_samples, n_parameters].
         """
         if x.ndim == 1:
@@ -176,10 +176,10 @@ class SensitivityAnalysis(ConversionMixin):
         ----------
         method: str
             The sensitivity analysis method to perform, one of ["sobol", "morris"].
-        n_samples : int
+        n_samples: int
             Number of samples to generate for the analysis. Higher values give more
             accurate results but increase computation time. Default is 1024.
-        conf_level : float
+        conf_level: float
             Confidence level (between 0 and 1) for calculating confidence intervals
             of the Sobol sensitivity indices. Default is 0.95 (95% confidence).
 
@@ -241,17 +241,17 @@ class SensitivityAnalysis(ConversionMixin):
 
         Parameters:
         -----------
-        results : pd.DataFrame
+        results: pd.DataFrame
             The results from sobol_results_to_df.
-        index : str, default "S1"
+        index: str, default "S1"
             The type of sensitivity index to plot.
             - "S1": first-order indices
             - "S2": second-order/interaction indices
             - "ST": total-order indices
-        n_cols : int, optional
+        n_cols: int, optional
             The number of columns in the plot. Defaults to 3 if there are 3 or
             more outputs, otherwise the number of outputs.
-        figsize : tuple, optional
+        figsize: tuple, optional
             Figure size as (width, height) in inches. If None, set automatically.
         """
         return _plot_sobol_analysis(results, index, n_cols, figsize)
@@ -263,15 +263,15 @@ class SensitivityAnalysis(ConversionMixin):
 
         Parameters:
         -----------
-        results : pd.DataFrame
+        results: pd.DataFrame
             The results from sobol_results_to_df.
-        param_groups : dic[str, list[str]] | None
+        param_groups: dic[str, list[str]] | None
             Optional parameter groupings used to give all the same plot color
             of the form ({<group name> : [param1, ...], }).
-        n_cols : int, optional
+        n_cols: int, optional
             The number of columns in the plot. Defaults to 3 if there are 3 or
             more outputs, otherwise the number of outputs.
-        figsize : tuple, optional
+        figsize: tuple, optional
             Figure size as (width, height) in inches.If None, set calculated.
         """
         return _plot_morris_analysis(results, param_groups, n_cols, figsize)

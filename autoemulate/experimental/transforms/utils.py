@@ -7,7 +7,8 @@ from linear_operator.utils.warnings import NumericalWarning
 def make_positive_definite(
     cov, min_jitter: float = 1e-6, max_tries: int = 3, clamp_eigvals: bool = False
 ):
-    """Ensure a covariance matrix is positive definite by:
+    """
+    Ensure a covariance matrix is positive definite by:
         1. adding increasing amounts of jitter to the diagonal and symmetrizing
            the matrix
         2. if this fails, clamping eigenvalues to a minimum value
@@ -19,15 +20,15 @@ def make_positive_definite(
 
     Parameters
     ----------
-    cov : torch.Tensor
+    cov: torch.Tensor
         The covariance matrix to be made positive definite. Must be a 2D or 3D tensor.
-    min_jitter : float, default=1e-6
+    min_jitter: float, default=1e-6
         Starting value for jitter to add to the diagonal. Jitter is increased by
         powers of 10 for each attempt.
-    max_tries : int, default=3
+    max_tries: int, default=3
         Number of attempts to add jitter before moving to eigenvalue clamping
         (if enabled) or raising an error.
-    clamp_eigvals : bool, default=False
+    clamp_eigvals: bool, default=False
         Whether to attempt eigenvalue clamping if adding jitter fails. If False,
         will raise an error after max_tries jitter attempts.
 
@@ -42,7 +43,6 @@ def make_positive_definite(
         If cov is not a 2D or 3D tensor.
     RuntimeError
         If the matrix cannot be made positive definite after all attempts.
-
     """
 
     # If already positive definite, return as is
