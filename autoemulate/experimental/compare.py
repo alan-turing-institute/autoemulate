@@ -34,6 +34,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
+        n_bootstraps: int = 100,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
@@ -96,6 +97,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Assign tuner parameters
         self.n_splits = n_splits
         self.shuffle = shuffle
+        self.n_iter = n_iter
+        self.n_bootstraps = n_bootstraps
 
         # Handle log level parameter
         valid_log_levels = [
@@ -119,7 +122,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.logger = configure_logging(level=log_level)
 
         # Run compare
-        self.compare(n_iter=n_iter)
+        self.compare()
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -181,8 +184,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         )
         self.logger.debug(msg)
 
-    def compare(self, n_iter: int = 100):
-        tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
+    def compare(self):
+        tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
         )
@@ -225,7 +228,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     self.logger.debug(
                         'Running cross-validation for model "%s" for "%s" iterations',
                         model_cls.__name__,
-                        n_iter,
+                        self.n_iter,
                     )
                     train_val_x, train_val_y = self._convert_to_tensors(self.train_val)
                     test_x, test_y = self._convert_to_tensors(self.test)
@@ -246,14 +249,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         transformed_emulator,
                         train_val_x,
                         train_val_y,
-                        n_bootstraps=100,
+                        n_bootstraps=self.n_bootstraps,
                         device=self.device,
                     )
                     (r2_test, r2_test_std), (rmse_test, rmse_test_std) = bootstrap(
                         transformed_emulator,
                         test_x,
                         test_y,
-                        n_bootstraps=100,
+                        n_bootstraps=self.n_bootstraps,
                         device=self.device,
                     )
 
