@@ -66,7 +66,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
         posterior_predictive: bool = False,
         epochs: int = 50,
-        lr: float = 1e-1,
+        lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
         **kwargs,
