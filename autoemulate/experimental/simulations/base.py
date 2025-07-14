@@ -50,6 +50,10 @@ class Simulator(ABC, ValidationMixin):
         self._has_sample_forward = False
         self.logger, self.progress_bar = get_configured_logger(log_level)
 
+    @classmethod
+    def simulator_name(cls) -> str:
+        return cls.__name__
+
     @property
     def parameters_range(self) -> dict[str, tuple[float, float]]:
         """Dictionary mapping input parameter names to their (min, max) ranges."""
