@@ -43,7 +43,7 @@ def plot_xy(  # noqa: PLR0913
     y: NumpyLike,
     y_pred: NumpyLike,
     y_variance: NumpyLike | None = None,
-    ax: Axes = None,
+    ax: Axes | None = None,
     title: str = "xy",
     input_index: int | None = None,
     output_index: int | None = None,
@@ -148,15 +148,15 @@ def plot_xy(  # noqa: PLR0913
     # Place R² just below the legend
     if legend:
         # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())
+        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
         inv = ax.transAxes.inverted()
         bbox_axes = bbox.transformed(inv)
         # Place the text just below the legend
-        x = bbox_axes.x0
-        y = bbox_axes.y0 - 0.04  # small offset below legend
+        text_x = bbox_axes.x0
+        text_y = bbox_axes.y0 - 0.04  # small offset below legend
         ax.text(
-            x,
-            y,
+            text_x,
+            text_y,
             f"R\u00b2 = {r2_score:.6f}",
             transform=ax.transAxes,
             verticalalignment="top",
