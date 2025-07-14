@@ -210,8 +210,6 @@ def bootstrap(
         mse_score = evaluate(y_pred, y_bootstrap, rmse_metric())
         rmse_scores[i] = mse_score**0.5
 
-    print(r2_scores, r2_scores.mean(), r2_scores.std())
-
     # Return mean and std
     return (
         (r2_scores.mean().item(), r2_scores.std().item()),
