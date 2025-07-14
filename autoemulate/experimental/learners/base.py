@@ -46,8 +46,26 @@ class Learner(ValidationMixin, ABC):
         """
         Initialize the learner with training data and fit the emulator.
         """
-        log_level = "error"
-        self.progress_bar = True
+        # Consistent logger setup as in AutoEmulate
+        log_level = getattr(self, "log_level", "progress_bar")
+        valid_log_levels = [
+            "progress_bar",
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "critical",
+        ]
+        log_level = log_level.lower()
+        if log_level not in valid_log_levels:
+            raise ValueError(
+                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
+            )
+        if log_level == "progress_bar":
+            log_level = "error"
+            self.progress_bar = True
+        else:
+            self.progress_bar = False
         self.logger = configure_logging(level=log_level)
         self.logger.info("Initializing Learner with training data.")
         self.emulator.fit(self.x_train, self.y_train)
