@@ -124,6 +124,10 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         """
         all_params = [
             {
+                "sheduler_cls": [None],
+                "scheduler_kwargs": [{}],
+            },
+            {
                 "scheduler_cls": [ExponentialLR],
                 "scheduler_kwargs": [
                     {"gamma": 0.9},
