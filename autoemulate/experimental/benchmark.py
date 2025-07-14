@@ -3,10 +3,11 @@ import itertools
 import click
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
+
 from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
-from tqdm import tqdm
 
 
 def run_benchmark(n_samples, n_iter, n_splits, log_level) -> pd.DataFrame:
@@ -20,7 +21,7 @@ def run_benchmark(n_samples, n_iter, n_splits, log_level) -> pd.DataFrame:
         models=ALL_EMULATORS,
         n_iter=n_iter,
         n_splits=n_splits,
-        # log_level=log_level,
+        log_level=log_level,
     )
 
     return ae.summarise()
@@ -45,7 +46,7 @@ def run_benchmark(n_samples, n_iter, n_splits, log_level) -> pd.DataFrame:
     default=[2, 4],
     help="Number of splits for cross-validation",
 )
-@click.option("--log_level", default="info", help="Logging level")
+@click.option("--log_level", default=None, help="Logging level")
 def main(n_samples_list, n_iter_list, n_splits_list, log_level):
     """Run the benchmark for MLP and GaussianProcessExact emulators."""
 
@@ -60,14 +61,13 @@ def main(n_samples_list, n_iter_list, n_splits_list, log_level):
             f"and {n_splits} splits"
         )
         df = run_benchmark(n_samples, n_iter, n_splits, log_level)
-
         df["n_samples"] = n_samples
         df["n_iter"] = n_iter
         df["n_splits"] = n_splits
         dfs.append(df)
         final_df = pd.concat(dfs, ignore_index=True)
         final_df.sort_values("r2", ascending=False).to_csv(
-            "notebooks/benchmark_results.csv", index=False
+            "benchmark_results.csv", index=False
         )
 
 
