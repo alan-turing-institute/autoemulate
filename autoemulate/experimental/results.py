@@ -12,8 +12,14 @@ class Result:
         model_name: str,
         model: TransformedEmulator,
         config: dict[str, Any],
-        r2_score: float,
-        rmse_score: float,
+        r2_test: float,
+        rmse_test: float,
+        r2_train: float,
+        rmse_train: float,
+        r2_test_std: float,
+        rmse_test_std: float,
+        r2_train_std: float,
+        rmse_train_std: float,
     ):
         self.id = id
         self.model_name = model_name
@@ -21,8 +27,14 @@ class Result:
         self.x_transforms = model.x_transforms
         self.y_transforms = model.y_transforms
         self.config = config
-        self.r2_score = r2_score
-        self.rmse_score = rmse_score
+        self.r2_test = r2_test
+        self.rmse_test = rmse_test
+        self.r2_test_std = r2_test_std
+        self.rmse_test_std = rmse_test_std
+        self.r2_train = r2_train
+        self.rmse_train = rmse_train
+        self.r2_train_std = r2_train_std
+        self.rmse_train_std = rmse_train_std
 
 
 class Results:
@@ -55,11 +67,15 @@ class Results:
             "model_name": [result.model_name for result in self.results],
             "x_transforms": [result.x_transforms for result in self.results],
             "y_transforms": [result.y_transforms for result in self.results],
-            "rmse_score": [result.rmse_score for result in self.results],
-            "r2_score": [result.r2_score for result in self.results],
+            "config": [result.config for result in self.results],
+            "rmse_test": [result.rmse_test for result in self.results],
+            "r2_test": [result.r2_test for result in self.results],
+            "r2_test_std": [result.r2_test_std for result in self.results],
+            "r2_train": [result.r2_train for result in self.results],
+            "r2_train_std": [result.r2_train_std for result in self.results],
         }
         df = pd.DataFrame(data)
-        return df.sort_values(by="r2_score", ascending=False)
+        return df.sort_values(by="r2_test", ascending=False)
 
     summarise = summarize
 
@@ -72,7 +88,7 @@ class Results:
         if not self.results:
             msg = "No results available. Please run AutoEmulate.compare() first."
             raise ValueError(msg)
-        return max(self.results, key=lambda r: r.r2_score)
+        return max(self.results, key=lambda r: r.r2_test)
 
     def get_result(self, result_id: int) -> Result:
         """
