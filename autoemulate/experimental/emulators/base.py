@@ -31,6 +31,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     is_fitted_: bool = False
     supports_grad: bool = False
+    scheduler_cls: type[optim.lr_scheduler.LRScheduler] | None = None
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -113,6 +114,100 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return {
             k: v[np.random.randint(len(v))] for k, v in cls.get_tune_config().items()
         }
+
+    @classmethod
+    def scheduler_config(cls) -> dict:
+        """
+        Returns a random configuration for the learning rate scheduler.
+        This should be added to the `get_tune_config()` method of subclasses
+        to allow tuning of the scheduler parameters.
+        """
+        all_params = [
+            {
+                "scheduler_cls": [None],
+                "scheduler_kwargs": [{}],
+            },
+            {
+                "scheduler_cls": [ExponentialLR],
+                "scheduler_kwargs": [
+                    {"gamma": 0.9},
+                    {"gamma": 0.95},
+                ],
+            },
+            {
+                "scheduler_cls": [LRScheduler],
+                "scheduler_kwargs": [
+                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
+                ],
+            },
+            # TODO: investigate these suggestions from copilot, issue: #597
+            # {
+            #     "scheduler_cls": [CosineAnnealingLR],
+            #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
+            # },
+            # {
+            #     "scheduler_cls": [ReduceLROnPlateau],
+            #     "scheduler_kwargs": [{"mode": "min", "factor": 0.1, "patience": 5}],
+            # },
+            # {
+            #     "scheduler_cls": [StepLR],
+            #     "scheduler_kwargs": [{"step_size": 10, "gamma": 0.1}],
+            # },
+            # {
+            #     "scheduler_cls": [CyclicLR],
+            #     "scheduler_kwargs": [{
+            #         "base_lr": 1e-3,
+            #         "max_lr": 1e-1,
+            #         "step_size_up": 5,
+            #         "step_size_down": 5,
+            #     }],
+            # },
+            # {
+            #     "scheduler_cls": [OneCycleLR],
+            #     "scheduler_kwargs": [{
+            #         "max_lr": 1e-1,
+            #         "total_steps": self.epochs,
+            #         "pct_start": 0.3,
+            #         "anneal_strategy": "linear",
+            #     }],
+            # },
+        ]
+        # Randomly select one of the parameter sets
+        return random.choice(all_params)
+
+    def scheduler_setup(self, kwargs: dict | None = None):
+        """
+        Setup the learning rate scheduler for the emulator.
+        Parameters
+        ----------
+        kwargs : dict | None
+            Keyword arguments for the model. This should include scheduler_kwargs.
+        """
+        if kwargs is None:
+            msg = (
+                "Provide a kwargs dictionary including "
+                "scheduler_kwargs to set up the scheduler."
+            )
+            raise ValueError(msg)
+
+        if not hasattr(self, "optimizer"):
+            msg = "Optimizer must be set before setting up the scheduler."
+            raise RuntimeError(msg)
+
+        # Extract scheduler-specific kwargs if present
+        try:
+            assert type(kwargs) is dict
+            scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
+        except AttributeError:
+            # If kwargs does not contain scheduler_kwargs, throw an error
+            msg = "No kwargs for scheduler setup detected."
+            raise ValueError(msg) from None
+
+        # Set up the scheduler if a scheduler class is defined
+        if self.scheduler_cls is None:
+            self.scheduler = None
+        else:
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
 
 
 class DeterministicEmulator(Emulator):
@@ -222,62 +317,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
         This can be overridden by subclasses to use a different loss function.
         """
         return nn.MSELoss()(y_pred, y_true)
-
-    @classmethod
-    def scheduler_config(cls) -> dict:
-        """
-        Returns a random configuration for the learning rate scheduler.
-        This should be added to the `get_tune_config()` method of subclasses
-        to allow tuning of the scheduler parameters.
-        """
-        all_params = [
-            {
-                "scheduler_cls": [ExponentialLR],
-                "scheduler_kwargs": [
-                    {"gamma": 0.9},
-                    {"gamma": 0.95},
-                ],
-            },
-            {
-                "scheduler_cls": [LRScheduler],
-                "scheduler_kwargs": [
-                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
-                ],
-            },
-            # TODO: investigate these suggestions from copilot
-            # {
-            #     "scheduler_cls": [CosineAnnealingLR],
-            #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
-            # },
-            # {
-            #     "scheduler_cls": [ReduceLROnPlateau],
-            #     "scheduler_kwargs": [{"mode": "min", "factor": 0.1, "patience": 5}],
-            # },
-            # {
-            #     "scheduler_cls": [StepLR],
-            #     "scheduler_kwargs": [{"step_size": 10, "gamma": 0.1}],
-            # },
-            # {
-            #     "scheduler_cls": [CyclicLR],
-            #     "scheduler_kwargs": [{
-            #         "base_lr": 1e-3,
-            #         "max_lr": 1e-1,
-            #         "step_size_up": 5,
-            #         "step_size_down": 5,
-            #     }],
-            # },
-            # {
-            #     "scheduler_cls": [OneCycleLR],
-            #     "scheduler_kwargs": [{
-            #         "max_lr": 1e-1,
-            #         "total_steps": self.epochs,
-            #         "pct_start": 0.3,
-            #         "anneal_strategy": "linear",
-            #     }],
-            # },
-        ]
-        # Randomly select one of the parameter sets
-        return random.choice(all_params)
 
     def _fit(
         self,
