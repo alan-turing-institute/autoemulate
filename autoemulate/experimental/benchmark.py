@@ -67,7 +67,7 @@ def run_benchmark(
 def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level):  # noqa: PLR0913
     dfs = []
     for simulator_str in simulators:
-        simulator = SIMULATOR_FROM_STR[simulator_str]
+        simulator = SIMULATOR_FROM_STR[simulator_str]()
         params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
         np.random.seed(seed)
         params = np.random.permutation(params)
