@@ -239,8 +239,17 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         **best_config_for_this_model,
                     )
                     transformed_emulator.fit(train_val_x, train_val_y)
-
-                    (r2_score, r2_std), (rmse_score, rmse_std) = bootstrap(
+                    (
+                        (r2_train_val, r2_train_val_std),
+                        (rmse_train_val, rmse_train_val_std),
+                    ) = bootstrap(
+                        transformed_emulator,
+                        train_val_x,
+                        train_val_y,
+                        n_bootstraps=100,
+                        device=self.device,
+                    )
+                    (r2_test, r2_test_std), (rmse_test, rmse_test_std) = bootstrap(
                         transformed_emulator,
                         test_x,
                         test_y,
@@ -253,10 +262,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         " completed with R2 score: %.3f (%.3f), "
                         "RMSE score: %.3f (%.3f)",
                         model_cls.__name__,
-                        r2_score,
-                        r2_std,
-                        rmse_score,
-                        rmse_std,
+                        r2_test,
+                        r2_test_std,
+                        rmse_test,
+                        rmse_test_std,
                     )
                     self.logger.info("Finished running Model: %s\n", model_cls.__name__)
                     result = Result(
@@ -264,8 +273,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         model_name=model_cls.model_name(),
                         model=transformed_emulator,
                         config=best_config_for_this_model,
-                        r2_score=r2_score,
-                        rmse_score=rmse_score,
+                        r2_test=r2_test,
+                        rmse_test=rmse_test,
+                        r2_test_std=r2_test_std,
+                        rmse_test_std=rmse_test_std,
+                        r2_train=r2_train_val,
+                        rmse_train=rmse_train_val,
+                        r2_train_std=r2_train_val_std,
+                        rmse_train_std=rmse_train_val_std,
                     )
                     self.add_result(result)
 
@@ -276,8 +291,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             x_transforms=best_result.x_transforms,
             y_transforms=best_result.y_transforms,
             best_config_for_this_model=best_result.config,
-            r2_score=best_result.r2_score,
-            rmse_score=best_result.rmse_score,
+            r2_score=best_result.r2_test,
+            rmse_score=best_result.rmse_test,
         )
 
     def plot(  # noqa: PLR0912, PLR0915
