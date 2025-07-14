@@ -31,6 +31,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     is_fitted_: bool = False
     supports_grad: bool = False
+    scheduler_cls: type[optim.lr_scheduler.LRScheduler] | None = None
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -168,7 +169,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             # },
         ]
         # Randomly select one of the parameter sets
-        return np.random.choice(all_params)
+        return random.choice(all_params)
 
     def scheduler_setup(self, kwargs: dict | None = None):
         """
@@ -199,7 +200,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             raise ValueError(msg) from None
 
         # Set up the scheduler if a scheduler class is defined
-        if self.scheduler_cls is None:  # type: ignore[comparison-overlap]
+        if self.scheduler_cls is None:
             self.scheduler = None
         else:
             self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
