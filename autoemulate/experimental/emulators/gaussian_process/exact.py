@@ -289,24 +289,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         ]
         return np.random.choice(all_params)
 
-    @classmethod
-    def scheduler_config(cls) -> dict:
-        """
-        Returns a random configuration for the learning rate scheduler.
-        This should be added to the `get_tune_config()` method of subclasses
-        to allow tuning of the scheduler parameters.
-        """
-        all_params = [
-            {"scheduler_cls": None, "scheduler_kwargs": None},
-            {
-                "scheduler_cls": [LRScheduler],
-                "scheduler_kwargs": [
-                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
-                ],
-            },
-        ]
-        return np.random.choice(all_params)
-
     @staticmethod
     def get_tune_config():
         scheduler_config = GaussianProcessExact.scheduler_config()
