@@ -2,7 +2,6 @@ import warnings
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import torchmetrics
 import tqdm
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
@@ -11,7 +10,7 @@ from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.logging_config import configure_logging
-from autoemulate.experimental.model_selection import evaluate
+from autoemulate.experimental.model_selection import bootstrap, evaluate, r2_metric
 from autoemulate.experimental.plotting import (
     calculate_subplot_layout,
     display_figure,
@@ -35,6 +34,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
+        n_bootstraps: int = 100,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
@@ -97,6 +97,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Assign tuner parameters
         self.n_splits = n_splits
         self.shuffle = shuffle
+        self.n_iter = n_iter
+        self.n_bootstraps = n_bootstraps
 
         # Handle log level parameter
         valid_log_levels = [
@@ -120,7 +122,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.logger = configure_logging(level=log_level)
 
         # Run compare
-        self.compare(n_iter=n_iter)
+        self.compare()
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
@@ -182,8 +184,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         )
         self.logger.debug(msg)
 
-    def compare(self, n_iter: int = 100):
-        tuner = Tuner(self.train_val, y=None, n_iter=n_iter, device=self.device)
+    def compare(self):
+        tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
         )
@@ -226,7 +228,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     self.logger.debug(
                         'Running cross-validation for model "%s" for "%s" iterations',
                         model_cls.__name__,
-                        n_iter,
+                        self.n_iter,
                     )
                     train_val_x, train_val_y = self._convert_to_tensors(self.train_val)
                     test_x, test_y = self._convert_to_tensors(self.test)
@@ -240,19 +242,33 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         **best_config_for_this_model,
                     )
                     transformed_emulator.fit(train_val_x, train_val_y)
-                    y_pred = transformed_emulator.predict(test_x)
-                    r2_score = evaluate(
-                        test_y, y_pred, torchmetrics.R2Score, self.device
+                    (
+                        (r2_train_val, r2_train_val_std),
+                        (rmse_train_val, rmse_train_val_std),
+                    ) = bootstrap(
+                        transformed_emulator,
+                        train_val_x,
+                        train_val_y,
+                        n_bootstraps=self.n_bootstraps,
+                        device=self.device,
                     )
-                    rmse_score = evaluate(
-                        test_y, y_pred, torchmetrics.MeanSquaredError, self.device
+                    (r2_test, r2_test_std), (rmse_test, rmse_test_std) = bootstrap(
+                        transformed_emulator,
+                        test_x,
+                        test_y,
+                        n_bootstraps=self.n_bootstraps,
+                        device=self.device,
                     )
+
                     self.logger.debug(
                         'Cross-validation for model "%s"'
-                        " completed with R2 score: %.3f, RMSE score: %.3f",
+                        " completed with R2 score: %.3f (%.3f), "
+                        "RMSE score: %.3f (%.3f)",
                         model_cls.__name__,
-                        r2_score,
-                        rmse_score,
+                        r2_test,
+                        r2_test_std,
+                        rmse_test,
+                        rmse_test_std,
                     )
                     self.logger.info("Finished running Model: %s\n", model_cls.__name__)
                     result = Result(
@@ -260,8 +276,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         model_name=model_cls.model_name(),
                         model=transformed_emulator,
                         config=best_config_for_this_model,
-                        r2_score=r2_score,
-                        rmse_score=rmse_score,
+                        r2_test=r2_test,
+                        rmse_test=rmse_test,
+                        r2_test_std=r2_test_std,
+                        rmse_test_std=rmse_test_std,
+                        r2_train=r2_train_val,
+                        rmse_train=rmse_train_val,
+                        r2_train_std=r2_train_val_std,
+                        rmse_train_std=rmse_train_val_std,
                     )
                     self.add_result(result)
 
@@ -272,8 +294,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             x_transforms=best_result.x_transforms,
             y_transforms=best_result.y_transforms,
             best_config_for_this_model=best_result.config,
-            r2_score=best_result.r2_score,
-            rmse_score=best_result.rmse_score,
+            r2_score=best_result.r2_test,
+            rmse_score=best_result.rmse_test,
         )
 
     def plot(  # noqa: PLR0912, PLR0915
@@ -307,7 +329,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         if isinstance(y_pred, DistributionLike):
             y_variance = y_pred.variance
             y_pred = y_pred.mean
-        r2_score = evaluate(test_y, y_pred, torchmetrics.R2Score, self.device)
+        r2_score = evaluate(y_pred, test_y, r2_metric())
 
         # Convert to numpy arrays for plotting and ensure correct shapes
         test_x, test_y = self._convert_to_numpy(test_x, test_y)
