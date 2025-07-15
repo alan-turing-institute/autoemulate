@@ -1,3 +1,6 @@
+import os
+import tempfile
+
 import pytest
 from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.device import (
@@ -12,4 +15,13 @@ def test_ae(sample_data_for_ae_compare, device):
         pytest.skip(f"Device ({device}) is not available.")
 
     x, y = sample_data_for_ae_compare
-    AutoEmulate(x, y, device=device)
+    ae = AutoEmulate(x, y, device=device)
+    best_result = ae.best_result()
+    assert best_result is not None
+    # Save the best model to a temporary file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        save_path = os.path.join(tmpdir, "best_model.pt")
+        saved_model_full_path = ae.save(best_result, save_path)
+        # Load the model back
+        loaded_model = ae.load(saved_model_full_path)
+        assert loaded_model is not None

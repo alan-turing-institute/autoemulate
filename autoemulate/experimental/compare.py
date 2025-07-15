@@ -1,4 +1,5 @@
 import warnings
+from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -427,6 +428,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         path : str
             Path to save the model.
         """
+        result = None
         if isinstance(model_obj, int):
             if model_obj not in self._id_to_result:
                 raise ValueError(f"No result found with ID: {model_obj}")
@@ -443,7 +445,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             model = model_obj.model
             model_name = model_obj.model_name
 
-        self.model_serialiser._save_model(model, model_name, path)
+        # Create a unique filename based on the model name, id and date
+        t = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if result is not None:
+            filename = model_name + "_" + str(result.id) + "_" + t
+        else:
+            filename = model_name + "_" + t
+
+        return self.model_serialiser._save_model(model, filename, path)
 
     def load(self, path: str | Path):
         """Loads a model from disk.
