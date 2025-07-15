@@ -312,7 +312,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     def plot(  # noqa: PLR0912, PLR0915
         self,
-        result_id: int,
+        model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         figsize=None,
@@ -323,18 +323,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         Parameters
         ----------
-        result_id: str
-            The ID of the model to plot.
+        model_obj: int | Emulator | Result
+            The model to plot. Can be an integer ID of a Result, an Emulator instance,
+            or a Result instance.
         input_index: int
             The index of the input feature to plot against the output.
         output_index: int
             The index of the output feature to plot against the input.
         """
-        if result_id not in self._id_to_result:
-            raise ValueError(f"No result found with ID: {result_id}")
+        result = None
+        if isinstance(model_obj, int):
+            if model_obj not in self._id_to_result:
+                raise ValueError(f"No result found with ID: {model_obj}")
+            result = self.get_result(model_obj)
+            model = result.model
+        elif isinstance(model_obj, Emulator):
+            model = model_obj
+        elif isinstance(model_obj, Result):
+            model = model_obj.model
 
         test_x, test_y = self._convert_to_tensors(self.test)
-        model = self.get_result(result_id).model
 
         # Re-run prediction with just this model to get the predictions
         y_pred = model.predict(test_x)
