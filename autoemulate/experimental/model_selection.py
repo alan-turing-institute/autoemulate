@@ -84,11 +84,11 @@ def cross_validate(  # noqa: PLR0913
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
+    model_config: ModelConfig,
     x_transforms: list[AutoEmulateTransform] | None = None,
     y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
-    **kwargs: Any,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -102,6 +102,8 @@ def cross_validate(  # noqa: PLR0913
         The data to use for model training and validation.
     model: Emulator
         An instance of an Emulator subclass.
+    model_config: ModelConfig
+        Hyperparameters and model config to be used to construct model upon initialize.
     device: DeviceLike
         The device to use for model training and evaluation.
     random_seed: int | None
@@ -112,7 +114,6 @@ def cross_validate(  # noqa: PLR0913
     dict[str, list[float]]
        Contains r2 and rmse scores computed for each cross validation fold.
     """
-    best_model_config: ModelConfig = kwargs
     x_transforms = x_transforms or []
     y_transforms = y_transforms or []
     cv_results = {"r2": [], "rmse": []}
@@ -136,7 +137,7 @@ def cross_validate(  # noqa: PLR0913
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
-        model_kwargs = dict(best_model_config)
+        model_kwargs = dict(model_config)
         if "random_seed" in model_init_params:
             model_kwargs["random_seed"] = random_seed
 
