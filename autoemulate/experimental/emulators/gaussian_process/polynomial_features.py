@@ -1,13 +1,11 @@
 import itertools
 
-import numpy as np
 import torch
 
 
 class PolynomialFeatures:
     """
-    This class is used to map an existing feature set to a
-    polynomial feature set.
+    This class is used to map an existing feature set to a polynomial feature set.
 
     Examples
     -------
@@ -15,7 +13,8 @@ class PolynomialFeatures:
 
     >>> pf = PolynomialFeatures(degree=2, input_size=X.shape[1])
 
-    Fit the instance in order to predefine the features that need to be multiplied to create the new features.
+    Fit the instance in order to predefine the features that need to be multiplied to
+    create the new features.
 
     >>> pf.fit()
 
@@ -25,7 +24,7 @@ class PolynomialFeatures:
 
     Parameters
     --------
-    degree : int
+    degree: int
         The degree of the polynomial for which we are defining
         the mapping.
     input_size : int
@@ -34,9 +33,10 @@ class PolynomialFeatures:
 
     def __init__(self, degree: int, input_size: int):
         assert degree > 0, "`degree` input must be greater than 0."
-        assert (
-            input_size > 0
-        ), "`input_size`, which defines the number of features, for has to be greate than 0"
+        assert input_size > 0, (
+            "`input_size`, which defines the number of features, for has to be "
+            "greater than 0"
+        )
         self.degree = degree
         self.indices = None
         self.input_size = input_size
@@ -47,28 +47,28 @@ class PolynomialFeatures:
         d = self.degree
         L = []
         while d > 1:
-            l = [list(p) for p in itertools.product(x, repeat=d)]
-            for li in l:
+            combinations = [list(p) for p in itertools.product(x, repeat=d)]
+            for li in combinations:
                 li.sort()
-            L += list(map(list, np.unique(l, axis=0)))
+            L += list(map(list, torch.unique(torch.tensor(combinations), dim=0)))
             d -= 1
         L += [[i] for i in x]
 
         Ls = []
         for d in range(1, self.degree + 1):
             ld = []
-            for l in L:
-                if len(l) == d:
-                    ld.append(l)
+            for combination in L:
+                if len(combination) == d:
+                    ld.append(combination)
             ld.sort()
             Ls += ld
         self.indices = Ls
 
     def transform(self, x):
         if not self.indices:
-            raise ValueError(
-                "self.indices is set to None. Did you forget to call 'fit'?"
-            )
+            msg = "self.indices is set to None. Did you forget to call 'fit'?"
+            raise ValueError(msg)
 
-        x_ = torch.stack([torch.prod(x[..., i], dim=-1) for i in self.indices], dim=-1)
-        return x_
+        return torch.stack(
+            [torch.prod(x[..., i], dim=-1) for i in self.indices], dim=-1
+        )
