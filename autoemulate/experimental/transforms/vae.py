@@ -31,7 +31,7 @@ class VAE(nn.Module, TorchDeviceMixin):
     def __init__(
         self,
         input_dim: int,
-        hidden_layers: int,
+        hidden_layers: list,
         latent_dim: int,
         device: DeviceLike | None = None,
     ):

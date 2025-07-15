@@ -2,14 +2,13 @@ from collections.abc import Iterable
 
 import numpy as np
 import torch
-from tqdm import tqdm
-
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
+from tqdm import tqdm
 
 
 # Define a simple sine simulator.
