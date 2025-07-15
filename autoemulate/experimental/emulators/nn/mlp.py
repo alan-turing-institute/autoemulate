@@ -100,12 +100,7 @@ class MLP(DropoutTorchBackend):
         self.loss_fn = loss_fn_cls()
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        # Extract scheduler-specific kwargs if present
-        scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
-        if self.scheduler_cls is None:
-            self.scheduler = None
-        else:
-            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)
+        self.scheduler_setup(kwargs)
         self.to(device)
 
     def forward(self, x):
