@@ -57,10 +57,13 @@ class Results:
     def summarize(self) -> pd.DataFrame:
         """
         Summarize the results in a DataFrame.
-        Returns:
-            pd.DataFrame: DataFrame with columns:
-            ['model', 'x_transforms', 'y_transforms', 'config', 'r2_score',
-             'rmse_score'].
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with columns:
+                ['model', 'x_transforms', 'y_transforms', 'config', 'r2_score',
+                'rmse_score'].
         TODO: include test data
         """
         data = {
@@ -82,8 +85,11 @@ class Results:
     def best_result(self) -> Result:
         """
         Get the model with the best result based on the highest R2 score.
-        Returns:
-            Result: The result with the highest R2 score.
+
+        Returns
+        -------
+        Result
+            The result with the highest R2 score.
         """
         if not self.results:
             msg = "No results available. Please run AutoEmulate.compare() first."
@@ -93,13 +99,16 @@ class Results:
     def get_result(self, result_id: int) -> Result:
         """
         Get a result by its ID.
+
         Parameters
         ----------
         result_id: int
             The ID of the model to retrieve.
+
         Returns
         -------
-        Result: The result with the specified ID.
+        Result
+            The result with the specified ID.
         """
         try:
             return self._id_to_result[result_id]

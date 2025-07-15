@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
-from autoemulate.experimental.logging_config import configure_logging
+from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.types import TensorLike
 from autoemulate.experimental_design import LatinHypercube
 
@@ -28,7 +28,7 @@ class Simulator(ABC, ValidationMixin):
         """
         Parameters
         ----------
-        parameters_range : dict[str, tuple[float, float]]
+        parameters_range: dict[str, tuple[float, float]]
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
@@ -48,27 +48,7 @@ class Simulator(ABC, ValidationMixin):
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
         self._has_sample_forward = False
-
-        # Handle log level parameter
-        valid_log_levels = [
-            "progress_bar",
-            "debug",
-            "info",
-            "warning",
-            "error",
-            "critical",
-        ]
-        log_level = log_level.lower()
-        if log_level not in valid_log_levels:
-            raise ValueError(
-                f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
-            )
-        if log_level == "progress_bar":
-            log_level = "error"
-            self.progress_bar = True
-        else:
-            self.progress_bar = False
-        self.logger = configure_logging(level=log_level)
+        self.logger, self.progress_bar = get_configured_logger(log_level)
 
     @classmethod
     def simulator_name(cls) -> str:
@@ -112,10 +92,10 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-            n_samples: int
-                Number of samples to generate.
-            random_seed: int | None
-                Random seed for reproducibility. If None, no seed is set.
+        n_samples: int
+            Number of samples to generate.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
 
         Returns
         -------
@@ -139,7 +119,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input parameters into the simulation forward run.
 
         Returns
@@ -157,7 +137,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input tensor of shape (n_samples, self.in_dim).
 
         Returns
@@ -225,7 +205,7 @@ class Simulator(ABC, ValidationMixin):
 
         Parameters
         ----------
-        name : str
+        name: str
             Name of the parameter to retrieve.
 
         Returns

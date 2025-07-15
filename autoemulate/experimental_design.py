@@ -19,7 +19,7 @@ class ExperimentalDesign(ABC):
         upper bounds of a parameter.
     """
 
-    def __init__(self, bounds_list):
+    def __init__(self, bounds_list: list[tuple[float, float]]):
         """Initializes a Sampler object."""
         pass
 
@@ -61,7 +61,7 @@ class LatinHypercube(ExperimentalDesign):
         upper bounds of a parameter.
     """
 
-    def __init__(self, bounds_list):
+    def __init__(self, bounds_list: list[tuple[float, float]]):
         """Initializes a LatinHypercube object."""
         self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
 

@@ -8,7 +8,8 @@ from autoemulate.experimental.types import DeviceLike, NumpyLike, TensorLike
 
 
 class SupportVectorMachine(SklearnBackend):
-    """Support Vector Machines Emulator.
+    """
+    Support Vector Machines Emulator.
 
     Wraps Support Vector Regressor from scikit-learn.
     """

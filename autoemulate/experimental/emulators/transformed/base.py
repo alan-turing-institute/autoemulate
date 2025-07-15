@@ -21,7 +21,8 @@ from autoemulate.experimental.types import (
 
 
 class TransformedEmulator(Emulator, ValidationMixin):
-    """A transformed emulator that applies transformations to input and target data.
+    """
+    A transformed emulator that applies transformations to input and target data.
 
     This class wraps an emulator model with configurable transformations applied to
     both input features (x) and target variables (y). The emulator is trained and
@@ -56,13 +57,12 @@ class TransformedEmulator(Emulator, ValidationMixin):
     Attributes
     ----------
 
-    x_transforms : list[AutoEmulateTransform]
+    x_transforms: list[AutoEmulateTransform]
         List of transformations applied to input data (x) in sequential order.
-    model : Emulator
+    model: Emulator
         The underlying emulator model that operates on transformed data.
-    y_transforms : list[AutoEmulateTransform]
+    y_transforms: list[AutoEmulateTransform]
         List of transformations applied to target data (y) in sequential order.
-
     """
 
     x_transforms: list[AutoEmulateTransform]
@@ -83,38 +83,41 @@ class TransformedEmulator(Emulator, ValidationMixin):
         device: DeviceLike | None = None,
         **kwargs,
     ):
-        """Initialize a transformed emulator.
+        """
+        Initialize a transformed emulator.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input training data tensor of shape (n_samples, n_features).
-        y : TensorLike
+        y: TensorLike
             Target training data tensor of shape (n_samples, n_targets).
-        x_transforms : list[AutoEmulateTransform] | None
+        x_transforms: list[AutoEmulateTransform] | None
             List of transforms to apply to input data in sequential order.
             If None, no transformations are applied to x.
-        y_transforms : list[AutoEmulateTransform] | None
+        y_transforms: list[AutoEmulateTransform] | None
             List of transforms to apply to target data in sequential order.
             If None, no transformations are applied to y.
-        model : type[Emulator]
+        model: type[Emulator]
             The emulator class to instantiate and train on transformed data.
-        output_from_samples : bool, default=False
+        output_from_samples: bool
             Whether to obtain predictions by sampling from the model's predictive
             distribution. Automatically set to True for high-dimensional targets
-            (n_targets > max_targets).
-        n_samples : int, default=1000
+            (n_targets > max_targets). Defaults to False.
+        n_samples: int
             Number of samples to draw when using sampling-based predictions.
-            Only used when output_from_samples=True.
-        full_covariance : bool, default=False
+            Only used when output_from_samples=True. Defauls to 1000.
+        full_covariance: bool
             Whether to use full covariance matrix for predictions. If False,
             uses diagonal covariance. Automatically set to False for
-            high-dimensional targets (n_targets > max_targets).
-        max_targets : int, default=200
+            high-dimensional targets (n_targets > max_targets). Defaults to False.
+        max_targets: int
             Threshold for switching to approximate sampling-based predictions
             with diagonal covariance when dealing with high-dimensional targets.
-        device : DeviceLike | None, default=None
+            Defaults to 200.
+        device: DeviceLike | None
             Device for tensor operations. If None, uses the default device.
+            Defaults to None.
         **kwargs
             Additional keyword arguments passed to the emulator constructor.
 
@@ -140,15 +143,15 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
-        """Fit the transforms on the provided training data.
+        """
+        Fit the transforms on the provided training data.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input training data tensor of shape `(n_samples, n_features)`.
-        y : TensorLike
+        y: TensorLike
             Target training data tensor of shape `(n_samples, n_targets)`.
-
         """
         # Fit transforms
         current_x = x
@@ -162,15 +165,16 @@ class TransformedEmulator(Emulator, ValidationMixin):
             current_y = transform(current_y)
 
     def refit(self, x: TensorLike, y: TensorLike, retrain_transforms: bool = False):
-        """Refit the emulator with new data and optionally retrain transforms.
+        """
+        Refit the emulator with new data and optionally retrain transforms.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             New input training data tensor of shape `(n_samples, n_features)`.
-        y : TensorLike
+        y: TensorLike
             New target training data tensor of shape `(n_samples, n_targets)`.
-        retrain_transforms : bool, default=False
+        retrain_transforms: bool, default=False
             Whether to retrain the transforms on the new data. If False,
             uses the existing fitted transforms from initialization.
 
@@ -185,11 +189,12 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.fit(x, y)
 
     def _transform_x(self, x: TensorLike) -> TensorLike:
-        """Transform the input tensor `x` using `x_transforms` returning a `TensorLike`.
+        """
+        Transform the input tensor `x` using `x_transforms` returning a `TensorLike`.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input tensor to be transformed.
 
         Returns
@@ -203,12 +208,13 @@ class TransformedEmulator(Emulator, ValidationMixin):
         return x_t
 
     def _transform_y_tensor(self, y: TensorLike) -> TensorLike:
-        """Transform the target tensor `y` using `y_transforms` returning a
+        """
+        Transform the target tensor `y` using `y_transforms` returning a
         `TensorLike`.
 
         Parameters
         ----------
-        y : TensorLike
+        y: TensorLike
             Target tensor to be transformed.
 
         Returns
@@ -227,11 +233,12 @@ class TransformedEmulator(Emulator, ValidationMixin):
         return cast(list[Transform], transforms)
 
     def _inv_transform_y_tensor(self, y_t: TensorLike) -> TensorLike:
-        """Invert the transformed target tensor `y_t` back to the original space.
+        """
+        Invert the transformed target tensor `y_t` back to the original space.
 
         Parameters
         ----------
-        y_t : TensorLike
+        y_t: TensorLike
             Transformed target tensor to be inverted.
 
         Returns
@@ -239,7 +246,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         TensorLike
             Inverted target tensor in the original data space after applying all
             inverse `y_transforms`.
-
         """
         target_transforms = self._cast(self.y_transforms)
         y = ComposeTransform(target_transforms).inv(y_t)
@@ -247,7 +253,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         return y
 
     def _inv_transform_y_gaussian(self, y_t: GaussianLike) -> GaussianLike:
-        """Invert the transformed `GaussianLike` `y_t` back to the original space.
+        """
+        Invert the transformed `GaussianLike` `y_t` back to the original space.
 
         The inversion is performed with calls to each transform's inverse_gaussian
         method that aims to use the analytical or approximate non-sampling inverse of
@@ -255,7 +262,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Parameters
         ----------
-        y_t : GaussianLike
+        y_t: GaussianLike
             Transformed MultitaskMultivariateNormal target distribution to be inverted.
 
         Returns
@@ -263,7 +270,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         GaussianLike
             Inverted GaussianLike distribution in the original data space after applying
             all inverse `y_transforms` with the transforms `inverse_gaussian` methods.
-
         """
         # Invert the order since the combined transform is an inversion
         for transform in self.y_transforms[::-1]:
@@ -273,7 +279,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
     def _inv_transform_y_gaussian_sample(
         self, y_t: DistributionLike
     ) -> GaussianLike | GaussianProcessLike:
-        """Invert the transformed distribution `y_t` by sampling and calculating
+        """
+        Invert the transformed distribution `y_t` by sampling and calculating
         empirical mean and covariance from the samples in the original space to
         parameterize a `GaussianLike` distribution.
 
@@ -288,7 +295,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Parameters
         ----------
-        y_t : DistributionLike
+        y_t: DistributionLike
             Transformed target distribution to be inverted by sampling.
 
         Returns
@@ -310,7 +317,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         This method can be used when the emulator's predictive distribution is not
         `GaussianLike` or when analytical or alternative approximate inversion is not
         possible.
-
         """
         # Handle GaussianProcessLike distinctly
         if isinstance(y_t, GaussianProcessLike):
@@ -325,7 +331,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
 
     def _inv_transform_y_distribution(self, y_t: DistributionLike) -> DistributionLike:
-        """Invert the transformed distribution `y_t` back to the original space `y`.
+        """
+        Invert the transformed distribution `y_t` back to the original space `y`.
 
         This method applies the inverse transformations to the distribution `y_t`
         using the `inv` method of the `ComposeTransform` class, which is a composition
@@ -333,7 +340,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Parameters
         ----------
-        y_t : DistributionLike
+        y_t: DistributionLike
 
         Returns
         -------
@@ -355,7 +362,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         - does not return a distribution with mean and variance readily implemented
           (this would require further empirical estimation from samples from the
           returned transformed distribution `y`).
-
         """
         target_transforms = self._cast(self.y_transforms)
         return TransformedDistribution(y_t, [ComposeTransform(target_transforms).inv])

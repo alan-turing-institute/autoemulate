@@ -9,7 +9,8 @@ from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class PolynomialRegression(PyTorchBackend):
-    """PolynomialRegression emulator.
+    """
+    PolynomialRegression emulator.
 
     Implements a linear model including all main effects, interactions,
     and quadratic terms.

@@ -19,17 +19,16 @@ class PCATransform(AutoEmulateTransform):
 
         Parameters
         ----------
-        n_components : int
+        n_components: int
             The number of principal components to use for the transformation.
-        niter : int, default=1000
+        niter: int, default=1000
             The number of iterations for the PCA algorithm.
-        cache_size : int, default=0
+        cache_size: int, default=0
             Whether to cache previous transform. Set to 0 to disable caching. Set to
             1 to enable caching of the last single value. This might be useful for
             repeated expensive calls with the same input data but is by default
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
             for more details on caching.
-
         """
         Transform.__init__(self, cache_size=cache_size)
         self.n_components = n_components  # n_c

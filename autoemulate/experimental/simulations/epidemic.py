@@ -25,7 +25,7 @@ class Epidemic(Simulator):
         """
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             input parameter values to simulate [beta, gamma]:
             - `beta`: the transimission rate per day
             - `gamma`: the recovery rate per day

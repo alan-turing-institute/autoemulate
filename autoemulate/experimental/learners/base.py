@@ -9,6 +9,7 @@ from torcheval.metrics import MeanSquaredError, R2Score
 
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.simulations.base import Simulator
 
 from ..types import GaussianLike, TensorLike
@@ -24,13 +25,13 @@ class Learner(ValidationMixin, ABC):
 
     Parameters
     ----------
-    simulator : Simulator
+    simulator: Simulator
         Simulator instance used to generate ground truth outputs.
-    emulator : Emulator
+    emulator: Emulator
         Emulator instance used to approximate the simulator.
-    x_train : TensorLike
+    x_train: TensorLike
         Initial training input tensor.
-    y_train : TensorLike
+    y_train: TensorLike
         Initial training output tensor.
     """
 
@@ -38,6 +39,7 @@ class Learner(ValidationMixin, ABC):
     emulator: Emulator
     x_train: TensorLike
     y_train: TensorLike
+    log_level: str = "progress_bar"
     in_dim: int = field(init=False)
     out_dim: int = field(init=False)
 
@@ -45,7 +47,11 @@ class Learner(ValidationMixin, ABC):
         """
         Initialize the learner with training data and fit the emulator.
         """
+        log_level = getattr(self, "log_level", "progress_bar")
+        self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.logger.info("Initializing Learner with training data.")
         self.emulator.fit(self.x_train, self.y_train)
+        self.logger.info("Emulator fitted with initial training data.")
         self.in_dim = self.x_train.shape[1]
         self.out_dim = self.y_train.shape[1]
 
@@ -55,7 +61,9 @@ class Learner(ValidationMixin, ABC):
         Recursively builds a dictionary mapping class names to class objects,
         starting from cls.
 
-        Returns:
+        Returns
+        -------
+        dict
             A dictionary where keys are class names and values are the class objects.
         """
         d = {cls.__name__: cls}
@@ -69,7 +77,9 @@ class Learner(ValidationMixin, ABC):
         Recursively collects the inheritance relationships (as ordered pairs)
         starting from cls.
 
-        Returns:
+        Returns
+        -------
+        list[tuple[str, str]]
             A list of tuples where each tuple is (parent_class_name, child_class_name).
         """
         edges = []
@@ -132,6 +142,7 @@ class Active(Learner):
 
         if x is not None:
             # If x is not, we skip the point (typically for Stream learners)
+            self.logger.info("Appending new training data and refitting emulator.")
             y_true = self.simulator.forward(x)
             self.x_train = torch.cat([self.x_train, x])
             self.y_train = torch.cat([self.y_train, y_true])
@@ -139,6 +150,7 @@ class Active(Learner):
             self.mse.update(y_pred, y_true)
             self.r2.update(y_pred, y_true)
             self.n_queries += 1
+            self.logger.info("Training data updated. Total queries: %s", self.n_queries)
 
         # Only compute once we have ≥2 labeled points
         if self.n_queries >= 2:
@@ -152,6 +164,7 @@ class Active(Learner):
         self.metrics["r2"].append(r2_val)
         self.metrics["rate"].append(self.n_queries / (len(self.metrics["rate"]) + 1))
         self.metrics["n_queries"].append(self.n_queries)
+        self.logger.info("Metrics updated: MSE=%s, R2=%s", mse_val, r2_val)
 
         # If Gaussian output
         # TODO: check generality for other GPs (e.g. with full covariance)
@@ -165,10 +178,12 @@ class Active(Learner):
             self.metrics["trace"].append(self.trace(covariance, self.out_dim).item())
             self.metrics["logdet"].append(self.logdet(covariance, self.out_dim).item())
             self.metrics["max_eigval"].append(self.max_eigval(covariance).item())
+            self.logger.info("Gaussian output metrics updated.")
 
         # extra per-strategy metrics
         for k, v in extra.items():
             self.metrics.setdefault(k, []).append(v)
+            self.logger.info("Extra metric '%s' updated: %s", k, v)
 
     @property
     def summary(self):
@@ -233,7 +248,7 @@ class Active(Learner):
 
         Parameters
         ----------
-        *arg : TensorLike or None
+        *arg: TensorLike or None
             Optional input samples.
 
         Returns

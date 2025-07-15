@@ -205,13 +205,14 @@ class ConversionMixin:
 
 
 def set_random_seed(seed: int = 42, deterministic: bool = True):
-    """Set random seed for Python, NumPy and PyTorch.
+    """
+    Set random seed for Python, NumPy and PyTorch.
 
     Parameters
     ----------
-    seed : int
+    seed: int
         The random seed to use.
-    deterministic : bool
+    deterministic: bool
         Use "deterministic" algorithms in PyTorch.
     """
     random.seed(seed)
@@ -287,7 +288,7 @@ class ValidationMixin:
 
         Parameters
         ----------
-        X : TensorLike
+        x: TensorLike
             Input tensor to validate.
 
         Returns
@@ -313,7 +314,7 @@ class ValidationMixin:
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input tensor to validate.
 
         Returns
@@ -339,9 +340,9 @@ class ValidationMixin:
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             First tensor.
-        y : TensorLike
+        y: TensorLike
             Second tensor.
 
         Returns
@@ -366,9 +367,9 @@ class ValidationMixin:
 
         Parameters
         ----------
-        y : TensorLike
+        y: TensorLike
             Output tensor.
-        Sigma : TensorLike
+        Sigma: TensorLike
             Covariance matrix, which may be full, diagonal, or a scalar per sample.
 
         Returns
@@ -397,9 +398,9 @@ class ValidationMixin:
 
         Parameters
         ----------
-        Sigma : TensorLike
+        Sigma: TensorLike
             Covariance matrix (full, diagonal, or scalar).
-        d : int
+        d: int
             Dimension of the output.
 
         Returns
@@ -428,9 +429,9 @@ class ValidationMixin:
 
         Parameters
         ----------
-        Sigma : TensorLike
+        Sigma: TensorLike
             Covariance matrix (full, diagonal, or scalar).
-        dim : int
+        dim: int
             Dimension of the output.
 
         Returns
@@ -459,7 +460,7 @@ class ValidationMixin:
 
         Parameters
         ----------
-        Sigma : TensorLike
+        Sigma: TensorLike
             Covariance matrix (full, diagonal, or scalar).
 
         Returns

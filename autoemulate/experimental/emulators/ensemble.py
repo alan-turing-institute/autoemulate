@@ -133,21 +133,21 @@ class EnsembleMLP(Ensemble):
         device: DeviceLike | None = None,
         **mlp_kwargs,
     ):
-        """Initialize an ensemble of MLPs.
+        """
+        Initialize an ensemble of MLPs.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input data tensor of shape (batch_size, n_features).
-        y : TensorLike
+        y: TensorLike
             Target values tensor of shape (batch_size, n_outputs).
-        n_emulators : int, default=4
+        n_emulators: int, default=4
             Number of MLP emulators to create in the ensemble.
-        device : DeviceLike | None, default=None
+        device: DeviceLike | None, default=None
             Device to run the model on (e.g., "cpu", "cuda").
-        **mlp_kwargs : dict
+        **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
-
         """
         emulators = [
             MLP(x, y, random_seed=i, device=device, **mlp_kwargs)
@@ -176,13 +176,13 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         """
         Parameters
         ----------
-        model : PyTorchBackend
+        model: PyTorchBackend
             A fitted PyTorchBackend (or any nn.Module with dropout layers).
-        n_samples : int
+        n_samples: int
             Number of forward passes to perform.
-        jitter : float
+        jitter: float
             Amount of jitter to add to covariance diagonal to avoide degeneracy.
-        device : DeviceLike | None
+        device: DeviceLike | None
             torch device for inference (e.g. "cpu", "cuda").
         """
         assert isinstance(model, DropoutTorchBackend), "model must be a PyTorchBackend"
@@ -262,21 +262,21 @@ class EnsembleMLPDropout(DropoutEnsemble):
         device: DeviceLike | None = None,
         **mlp_kwargs,
     ):
-        """Initialize an ensemble of MLPs with dropout.
+        """
+        Initialize an ensemble of MLPs with dropout.
 
         Parameters
         ----------
-        x : TensorLike
+        x: TensorLike
             Input data tensor of shape (batch_size, n_features).
-        y : TensorLike
+        y: TensorLike
             Target values tensor of shape (batch_size, n_outputs).
-        dropout_prob : float, default=0.2
+        dropout_prob: float, default=0.2
             Dropout probability to use in the MLP layers.
-        device : DeviceLike | None, default=None
+        device: DeviceLike | None, default=None
             Device to run the model on (e.g., "cpu", "cuda").
-        **mlp_kwargs : dict
+        **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
-
         """
         super().__init__(
             MLP(x, y, dropout_prob=dropout_prob, device=device, **mlp_kwargs),

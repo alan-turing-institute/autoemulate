@@ -1,20 +1,26 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.core.getipython import get_ipython
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from autoemulate.experimental.types import NumpyLike
 
 
-def display_figure(fig):
+def display_figure(fig: Figure):
     """
     Display a matplotlib figure appropriately based on the environment
     (Jupyter notebook or terminal).
 
-    Args:
-        fig: matplotlib figure object to display
+    Parameters
+    ----------
+    fig: Figure
+        The object to display.
 
-    Returns:
-        fig: the input figure object
+    Returns
+    -------
+    Figure
+        The input figure object.
     """
     # Are we in Jupyter?
     try:
@@ -37,7 +43,7 @@ def plot_xy(  # noqa: PLR0913
     y: NumpyLike,
     y_pred: NumpyLike,
     y_variance: NumpyLike | None = None,
-    ax=None,
+    ax: Axes | None = None,
     title: str = "xy",
     input_index: int | None = None,
     output_index: int | None = None,
@@ -45,6 +51,27 @@ def plot_xy(  # noqa: PLR0913
 ):
     """
     Plots observed and predicted values vs. features.
+
+    Parameters
+    ----------
+    x: NumpyLike
+        An array of inputs.
+    y: NumpyLike
+        An array of outputs.
+    y_pred: NumpyLike
+        An array of predictions.
+    y_variance: NumpyLike | None
+        An optional array of predictive variances.
+    ax: Axes | None
+        An optional matplotlib Axes object to plot on.
+    title: str
+        An optional title for the plot.
+    input_index: int | None
+        An optional index of the input dimension to plot.
+    output_index: int | None
+        An optional index of the output dimension to plot.
+    r2_score: float | None
+        An option r2 score to include in the plot legend.
     """
 
     # Sort the data
@@ -121,15 +148,15 @@ def plot_xy(  # noqa: PLR0913
     # Place R² just below the legend
     if legend:
         # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())
+        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
         inv = ax.transAxes.inverted()
         bbox_axes = bbox.transformed(inv)
         # Place the text just below the legend
-        x = bbox_axes.x0
-        y = bbox_axes.y0 - 0.04  # small offset below legend
+        text_x = bbox_axes.x0
+        text_y = bbox_axes.y0 - 0.04  # small offset below legend
         ax.text(
-            x,
-            y,
+            text_x,
+            text_y,
             f"R\u00b2 = {r2_score:.6f}",
             transform=ax.transAxes,
             verticalalignment="top",
@@ -146,19 +173,20 @@ def plot_xy(  # noqa: PLR0913
 
 
 def calculate_subplot_layout(n_plots, n_cols=3):
-    """Calculate optimal number of rows and columns for subplots.
+    """
+    Calculate optimal number of rows and columns for subplots.
 
     Parameters
     ----------
-    n_plots : int
-        Number of plots to display
-    n_cols : int, optional
-        Maximum number of columns allowed, default is 3
+    n_plots: int
+        Number of plots to display.
+    n_cols: int, optional
+        Maximum number of columns allowed, default is 3.
 
     Returns
     -------
     tuple
-        (n_rows, n_cols) for the subplot layout
+        (n_rows, n_cols) for the subplot layout.
     """
     if n_plots <= 1:
         return (1, 1)

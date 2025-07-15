@@ -9,7 +9,8 @@ from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
 class RadialBasisFunctions(PyTorchBackend):
-    """Radial basis function Emulator.
+    """
+    Radial basis function Emulator.
 
     Wraps the Radial Basis Function Interpolation in PyTorch.
     """

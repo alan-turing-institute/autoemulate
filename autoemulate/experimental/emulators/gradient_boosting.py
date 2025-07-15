@@ -10,7 +10,8 @@ from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class GradientBoosting(SklearnBackend):
-    """Gradient Boosting Emulator.
+    """
+    Gradient Boosting Emulator.
 
     Wraps Gradient Boosting regression from scikit-learn.
     """
