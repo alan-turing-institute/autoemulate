@@ -121,7 +121,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
 
+        # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.model_serialiser = ModelSerialiser(self.logger)
 
         # Run compare
         self.compare()
@@ -428,6 +430,20 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         if result_id not in self._id_to_result:
             raise ValueError(f"No result found with ID: {result_id}")
 
-        serialiser = ModelSerialiser(self.logger)
         model = self.get_result(result_id).model
-        serialiser._save_model(model, path)
+        self.model_serialiser._save_model(model, path)
+        self.logger.info(
+            "Model %s saved to %s",
+            model.model_name(),
+            path,
+        )
+
+    def load(self, path: str | Path):
+        """Loads a model from disk.
+
+        Parameters
+        ----------
+        path : str
+            Path to model.
+        """
+        return self.model_serialiser._load_model(path)
