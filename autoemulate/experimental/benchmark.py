@@ -63,8 +63,16 @@ def run_benchmark(
     default=42,
     help="Seed for the permutations over params",
 )
+@click.option(
+    "--output_file",
+    type=str,
+    default="benchmark_results.csv",
+    help="File name for output",
+)
 @click.option("--log_level", default="progress_bar", help="Logging level")
-def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level):  # noqa: PLR0913
+def main(  # noqa: PLR0913
+    simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
+):
     dfs = []
     for simulator_str in simulators:
         simulator = SIMULATOR_FROM_STR[simulator_str]()
@@ -85,7 +93,7 @@ def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, log_level
                 dfs.append(df)
                 final_df = pd.concat(dfs, ignore_index=True)
                 final_df.sort_values("r2_test", ascending=False).to_csv(
-                    "benchmark_results.csv", index=False
+                    output_file, index=False
                 )
             except Exception as e:
                 print(f"Error raised while testing :\n{e}")
