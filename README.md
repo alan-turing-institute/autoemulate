@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       22 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        7 |     93% |254-255, 261-277, 282, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        9 |     91% |73, 274, 282, 289, 300, 310, 321, 332, 340 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        8 |     92% |73, 259, 274, 282, 289, 300, 321, 340 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       33 |      0% |      1-82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        9 |     91% |71, 240, 246, 254, 265, 271, 278, 286, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -47,8 +47,8 @@
 | autoemulate/experimental/emulators/ensemble.py                               |      107 |        8 |     93% |61, 70-71, 95-96, 203, 214-215 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py         |        8 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/exact.py                |      121 |        2 |     98% |  191, 198 |
-| autoemulate/experimental/emulators/gaussian\_process/kernel.py               |       36 |       18 |     50% |42-47, 55-59, 67-73, 78-84, 91-104 |
-| autoemulate/experimental/emulators/gaussian\_process/mean.py                 |       13 |        1 |     92% |        20 |
+| autoemulate/experimental/emulators/gaussian\_process/kernel.py               |       36 |        0 |    100% |           |
+| autoemulate/experimental/emulators/gaussian\_process/mean.py                 |       13 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gradient\_boosting.py                     |       29 |        1 |     97% |        68 |
 | autoemulate/experimental/emulators/lightgbm.py                               |       49 |        0 |    100% |           |
 | autoemulate/experimental/emulators/nn/\_\_init\_\_.py                        |        0 |        0 |    100% |           |
@@ -65,7 +65,7 @@
 | autoemulate/experimental/learners/pool.py                                    |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/stream.py                                  |      131 |       13 |     90% |85-95, 141, 488, 539-543, 546, 574-579, 582 |
 | autoemulate/experimental/logging\_config.py                                  |       58 |       25 |     57% |30-38, 54-71, 99, 106 |
-| autoemulate/experimental/model\_selection.py                                 |       72 |        2 |     97% |   51, 137 |
+| autoemulate/experimental/model\_selection.py                                 |       70 |        2 |     97% |   50, 138 |
 | autoemulate/experimental/plotting.py                                         |       57 |        8 |     86% |28-29, 33-34, 84-85, 94, 166 |
 | autoemulate/experimental/results.py                                          |       45 |        0 |    100% |           |
 | autoemulate/experimental/sensitivity\_analysis.py                            |      105 |       31 |     70% |62-66, 77-78, 81-82, 84-85, 91-92, 110-111, 125-129, 143-147, 216-217, 227-228, 235, 257, 277, 305-309 |
@@ -161,7 +161,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **10428** | **2190** | **79%** |           |
+|                                                                    **TOTAL** | **10426** | **2170** | **79%** |           |
 
 
 ## Setup coverage badge
