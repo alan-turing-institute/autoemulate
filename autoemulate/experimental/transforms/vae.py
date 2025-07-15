@@ -1,13 +1,92 @@
 import logging
 
 import torch
+import torch.nn.functional as F
+from torch import nn
 from torch.distributions import Transform, constraints
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.types import TensorLike
-from autoemulate.preprocess_target import VAE
+from autoemulate.experimental.types import DeviceLike, TensorLike
+
+
+class VAE(nn.Module, TorchDeviceMixin):
+    """
+    Variational Autoencoder implementation in PyTorch.
+
+    Parameters
+    ----------
+    input_dim: int
+        Dimensionality of input data.
+    hidden_layers: list
+        List of hidden dimensions for encoder and decoder networks.
+    latent_dim: int
+        Dimensionality of the latent space.
+    """
+
+    def __init__(
+        self, input_dim, hidden_layers, latent_dim, device: DeviceLike | None = None
+    ):
+        nn.Module.__init__(self)
+        TorchDeviceMixin.__init__(self, device=device)
+
+        # Encoder layers
+        encoder_layers = []
+        prev_dim = input_dim
+        for dim in hidden_layers:
+            encoder_layers.append(nn.Linear(prev_dim, dim, device=self.device))
+            encoder_layers.append(nn.ReLU())
+            prev_dim = dim
+
+        self.encoder = nn.Sequential(*encoder_layers)
+        self.fc_mu = nn.Linear(hidden_layers[-1], latent_dim, device=self.device)
+        self.fc_var = nn.Linear(hidden_layers[-1], latent_dim, device=self.device)
+
+        # Decoder layers
+        decoder_layers = []
+        prev_dim = latent_dim
+        for dim in reversed(hidden_layers):
+            decoder_layers.append(nn.Linear(prev_dim, dim, device=self.device))
+            decoder_layers.append(nn.ReLU())
+            prev_dim = dim
+        decoder_layers.append(nn.Linear(prev_dim, input_dim, device=self.device))
+
+        self.decoder = nn.Sequential(*decoder_layers)
+
+    def encode(self, x):
+        """Encode input to mean and log variance of latent distribution."""
+        x = self.encoder(x)
+        mu = self.fc_mu(x)
+        log_var = self.fc_var(x)
+        return mu, log_var
+
+    def reparameterize(self, mu, log_var):
+        """Sample from latent distribution using reparameterization trick."""
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z):
+        """Decode latent representation back to original space."""
+        return self.decoder(z)
+
+    def forward(self, x):
+        """Full forward pass through the VAE."""
+        mu, log_var = self.encode(x)
+        z = self.reparameterize(mu, log_var)
+        recon = self.decode(z)
+        return recon, mu, log_var
+
+    def loss_function(self, recon_x, x, mu, log_var, beta=1.0):
+        """Calculate VAE loss: reconstruction + KL divergence."""
+        # MSE reconstruction loss
+        recon_loss = F.mse_loss(recon_x, x, reduction="sum")
+
+        # KL divergence
+        kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+
+        return recon_loss + beta * kl_loss
 
 
 class VAETransform(AutoEmulateTransform):
