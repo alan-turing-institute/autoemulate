@@ -310,7 +310,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     def plot(  # noqa: PLR0912, PLR0915
         self,
-        result_id: str,
+        result_id: int,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         figsize=None,
@@ -416,20 +416,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         return display_figure(fig)
 
-    def save(self, result_id: str, path: str | Path | None = None):
+    def save(self, model_obj: int | Emulator | Result, path: str | Path | None = None):
         """Saves model to disk.
 
         Parameters
         ----------
-        result_id : str
-            The ID of the model to save.
+        model_obj : int | Emulator | Result
+            The model to save. Can be an integer ID of a Result, an Emulator instance,
+            or a Result instance.
         path : str
             Path to save the model.
         """
-        if result_id not in self._id_to_result:
-            raise ValueError(f"No result found with ID: {result_id}")
+        if isinstance(model_obj, int):
+            if model_obj not in self._id_to_result:
+                raise ValueError(f"No result found with ID: {model_obj}")
+            model = self.get_result(model_obj).model
+        elif isinstance(model_obj, Emulator):
+            model = model_obj
+        elif isinstance(model_obj, Result):
+            model = model_obj.model
 
-        model = self.get_result(result_id).model
         self.model_serialiser._save_model(model, path)
         self.logger.info(
             "Model %s saved to %s",
