@@ -15,14 +15,14 @@ class Projectile(Simulator):
 
     def __init__(
         self,
-        param_ranges=None,
+        parameters_range=None,
         output_names=None,
     ):
-        if param_ranges is None:
-            param_ranges = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
+        if parameters_range is None:
+            parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
         if output_names is None:
             output_names = ["distance"]
-        super().__init__(param_ranges, output_names)
+        super().__init__(parameters_range, output_names)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -49,14 +49,14 @@ class ProjectileMultioutput(Simulator):
 
     def __init__(
         self,
-        param_ranges=None,
+        parameters_range=None,
         output_names=None,
     ):
-        if param_ranges is None:
-            param_ranges = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
+        if parameters_range is None:
+            parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
         if output_names is None:
             output_names = ["distance", "impact_velocity"]
-        super().__init__(param_ranges, output_names)
+        super().__init__(parameters_range, output_names)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """

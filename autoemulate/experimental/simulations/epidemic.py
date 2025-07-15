@@ -12,14 +12,14 @@ class Epidemic(Simulator):
 
     def __init__(
         self,
-        param_ranges=None,
+        parameters_range=None,
         output_names=None,
     ):
-        if param_ranges is None:
-            param_ranges = {"beta": (0.1, 0.5), "gamma": (0.01, 0.2)}
+        if parameters_range is None:
+            parameters_range = {"beta": (0.1, 0.5), "gamma": (0.01, 0.2)}
         if output_names is None:
             output_names = ["infection_rate"]
-        super().__init__(param_ranges, output_names)
+        super().__init__(parameters_range, output_names)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
