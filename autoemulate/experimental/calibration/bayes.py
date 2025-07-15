@@ -7,6 +7,7 @@ from pyro.infer.mcmc import RandomWalkKernel
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 
 
@@ -24,6 +25,7 @@ class BayesianCalibration(TorchDeviceMixin):
         observation_noise: float | dict[str, float] = 0.1,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
+        log_level: str = "progress_bar",
     ):
         """
         Initialize the HMC calibration object.
@@ -46,6 +48,14 @@ class BayesianCalibration(TorchDeviceMixin):
             The device to use. If None, the default torch device is returned.
             TODO: do we need to do anything more to ensure the device is correctly
             handled for the pyro model?
+        log_level: str
+            Logging level for the calibration. Can be one of:
+            - "progress_bar": shows a progress bar during batch simulations
+            - "debug": shows debug messages
+            - "info": shows informational messages
+            - "warning": shows warning messages
+            - "error": shows error messages
+            - "critical": shows critical messages
 
         Notes
         -----
@@ -63,6 +73,7 @@ class BayesianCalibration(TorchDeviceMixin):
         self.emulator = emulator
         self.emulator.device = self.device
         self.output_names = list(observations.keys())
+        self.logger, self.progress_bar = get_configured_logger(log_level)
 
         # Check observation tensors are 1D (convert if 0D)
         processed_observations = {}
