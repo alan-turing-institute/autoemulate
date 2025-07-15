@@ -9,18 +9,24 @@ class ModelSerialiser:
     def __init__(self, logger):
         self.logger = logger
 
-    def _save_model(self, model: Emulator, path: str | Path | None = None):
+    def _save_model(
+        self, model: Emulator, model_name: str | None, path: str | Path | None = None
+    ):
         """Saves a model to disk.
 
         Parameters
         ----------
         model : Emulator model
             Model to save.
+        model_name : str or None, optional
+            Name of the model to save.
+            If None, the model's name will be used.
         path : str, Path or None, optional
             Path to save the model.
             If None, the model will be saved with the model name.
         """
-        model_name = self._get_model_name(model)
+        if model_name is None:
+            model_name = self._get_model_name(model)
         full_path = self._prepare_path(path, model_name)
 
         try:

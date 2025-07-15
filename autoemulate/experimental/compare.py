@@ -431,13 +431,20 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         if isinstance(model_obj, int):
             if model_obj not in self._id_to_result:
                 raise ValueError(f"No result found with ID: {model_obj}")
-            model = self.get_result(model_obj).model
+            result = self.get_result(model_obj)
+            model = result.model
+            model_name = result.model_name
         elif isinstance(model_obj, Emulator):
             model = model_obj
+            if isinstance(model_obj, TransformedEmulator):
+                model_name = model_obj.untransformed_model_name
+            else:
+                model_name = model.model_name()
         elif isinstance(model_obj, Result):
             model = model_obj.model
+            model_name = model_obj.model_name
 
-        self.model_serialiser._save_model(model, path)
+        self.model_serialiser._save_model(model, model_name, path)
 
     def load(self, path: str | Path):
         """Loads a model from disk.
