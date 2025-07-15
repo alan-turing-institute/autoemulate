@@ -417,7 +417,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         return display_figure(fig)
 
-    def save(self, model_obj: int | Emulator | Result, path: str | Path | None = None):
+    def save(
+        self,
+        model_obj: int | Emulator | Result,
+        path: str | Path | None = None,
+        use_timestamp: bool = True,
+    ):
         """Saves model to disk.
 
         Parameters
@@ -427,6 +432,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             or a Result instance.
         path : str
             Path to save the model.
+        use_timestamp : bool
+            If True, appends a timestamp to the filename to ensure uniqueness.
         """
         result = None
         if isinstance(model_obj, int):
@@ -446,11 +453,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             model_name = model_obj.model_name
 
         # Create a unique filename based on the model name, id and date
-        t = datetime.now().strftime("%Y%m%d_%H%M%S")
-        if result is not None:
-            filename = model_name + "_" + str(result.id) + "_" + t
-        else:
-            filename = model_name + "_" + t
+        filename = f"{model_name}_{result.id}" if result is not None else model_name
+        if use_timestamp:
+            t = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename += f"_{t}"
 
         return self.model_serialiser._save_model(model, filename, path)
 
