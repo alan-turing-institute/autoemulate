@@ -94,6 +94,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 model=model_class,
                 device=self.device,
                 random_seed=None,
+                **model_config,
             )
             model_config_tested.append(model_config)
             val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
