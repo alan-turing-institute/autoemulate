@@ -201,9 +201,6 @@ class BayesianCalibration(TorchDeviceMixin):
                         output,
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),
                     )
-                self.logger.debug(
-                    "Sampled likelihood for output '%s' without obs.", output
-                )
 
     def run_mcmc(
         self,
