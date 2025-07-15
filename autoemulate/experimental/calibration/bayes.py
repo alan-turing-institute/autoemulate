@@ -181,7 +181,6 @@ class BayesianCalibration(TorchDeviceMixin):
             pred_mean = output.to(self.device)
         elif isinstance(output, DistributionLike):
             pred_mean = output.mean.to(self.device)
-            self.logger.debug("Emulator returned DistributionLike output.")
         else:
             msg = "The emulator did not return a tensor or a distribution object."
             self.logger.error(msg)
