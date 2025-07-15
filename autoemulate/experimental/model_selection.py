@@ -1,7 +1,6 @@
 import inspect
 import logging
 from functools import partial
-from typing import Any
 
 import torch
 import torchmetrics
