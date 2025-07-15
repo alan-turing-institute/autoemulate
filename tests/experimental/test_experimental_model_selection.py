@@ -48,7 +48,7 @@ def test_cross_validate():
     emulator_cls = DummyEmulator
 
     # KFold
-    results = cross_validate(KFold(n_splits=2), dataset, emulator_cls)
+    results = cross_validate(KFold(n_splits=2), dataset, emulator_cls, {})
     assert "r2" in results
     assert "rmse" in results
     assert len(results["r2"]) == 2
@@ -56,7 +56,7 @@ def test_cross_validate():
 
     # LeavePOut: LOO raised an error with torchmetrics R2Score since it requires at
     # least 2 samples
-    results = cross_validate(LeavePOut(p=2), dataset, emulator_cls)
+    results = cross_validate(LeavePOut(p=2), dataset, emulator_cls, {})
     expected_n = (x.shape[0] * (x.shape[0] - 1)) / 2
     assert len(results["r2"]) == expected_n
     assert len(results["rmse"]) == expected_n
