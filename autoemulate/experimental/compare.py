@@ -436,6 +436,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             model.model_name(),
             path,
         )
+        print(
+            f"Model {model.model_name()} saved to {path}. "
+            "You can load it using AutoEmulate.load(path)."
+        )
 
     def load(self, path: str | Path):
         """Loads a model from disk.
