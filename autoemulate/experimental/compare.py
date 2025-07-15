@@ -40,7 +40,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         log_level: str = "progress_bar",
     ):
         """
-        Initialize the AutoEmulate class.
+        The AutoEmulate class is the main class of the AutoEmulate package.
+        It is used to set up and compare different emulator models on a given dataset.
+        It can also be used to summarise and visualise results,
+        and to save and load models.
 
         Parameters
         ----------
