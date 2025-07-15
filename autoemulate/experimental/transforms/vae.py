@@ -23,10 +23,17 @@ class VAE(nn.Module, TorchDeviceMixin):
         List of hidden dimensions for encoder and decoder networks.
     latent_dim: int
         Dimensionality of the latent space.
+    device: DeviceLike | None
+        Device to run the model on. If None, uses the default device (usually CPU or
+        GPU). Defaults to None.
     """
 
     def __init__(
-        self, input_dim, hidden_layers, latent_dim, device: DeviceLike | None = None
+        self,
+        input_dim: int,
+        hidden_layers: int,
+        latent_dim: int,
+        device: DeviceLike | None = None,
     ):
         nn.Module.__init__(self)
         TorchDeviceMixin.__init__(self, device=device)
@@ -115,30 +122,30 @@ class VAETransform(AutoEmulateTransform):
 
         Parameters
         ----------
-        latent_dim: int, default=3
-            The dimensionality of the VAE latent space.
+        latent_dim: int
+            The dimensionality of the VAE latent space. Defaults to 3.
         hidden_layers: list of int, default=None
             The number of hidden layers and their sizes in the VAE. If None, defaults to
             [64, 32].
-        epochs: int, default=800
-            The number of training epochs for the VAE.
-        batch_size: int, default=32
-            The batch size for training the VAE.
-        learning_rate: float, default=1e-3
-            The learning rate for the VAE optimizer.
-        random_seed: int, default=None
-            Random seed for reproducibility.
-        beta: float, default=1.0
+        epochs: int
+            The number of training epochs for the VAE. Defaults to 800.
+        batch_size: int
+            The batch size for training the VAE. Defaults to 32.
+        learning_rate: float
+            The learning rate for the VAE optimizer. Defaults to 1e-3.
+        random_seed: int
+            Random seed for reproducibility. Defaults to None.
+        beta: float
             The beta parameter for the VAE loss function, controlling the trade-off
-            between reconstruction loss and KL divergence.
-        verbose: bool, default=False
-            If True, log training progress.
-        cache_size: int, default=0
+            between reconstruction loss and KL divergence. Defaults to 1.0.
+        verbose: bool
+            If True, log training progress. Defaults to False.
+        cache_size: int
             Whether to cache previous transform. Set to 0 to disable caching. Set to
             1 to enable caching of the last single value. This might be useful for
             repeated expensive calls with the same input data but is by default
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
-            for more details on caching.
+            for more details on caching. Defaults to 0.
         """
 
         Transform.__init__(self, cache_size=cache_size)

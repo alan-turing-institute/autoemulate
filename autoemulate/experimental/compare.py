@@ -67,9 +67,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_bootstraps: int
             Number of times to resample the data when evaluating performance.
         device: DeviceLike | None
-            Device to run the emulators on (e.g., "cpu" or "cuda").
+            Device to run the emulators. If None, uses the default device (usually CPU
+            or GPU). Defauls to None.
         random_seed: int | None
-            Random seed for reproducibility. If None, no seed is set.
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
         log_level: str
             Logging level. Can be "progress_bar", "debug", "info", "warning",
             "error", or "critical". Defaults to "progress_bar". If "progress_bar",
