@@ -2,13 +2,14 @@ from collections.abc import Iterable
 
 import numpy as np
 import torch
+from tqdm import tqdm
+
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
 )
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.simulations.projectile import simulate_projectile_multioutput
-from tqdm import tqdm
+from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
 
 
 # Define a simple sine simulator.
@@ -17,16 +18,11 @@ class Sin(Simulator):
         return torch.sin(x)
 
 
-class Projectile(Simulator):
-    def _forward(self, x: torch.Tensor) -> torch.Tensor:
-        return torch.tensor([simulate_projectile_multioutput(val) for val in x])
-
-
 def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
     x_train = simulator.sample_inputs(n_initial_samples)
-    y_train = simulator.forward(x_train)
+    y_train = simulator.forward_batch(x_train)
     yield stream.Random(
         simulator=simulator,
         emulator=GaussianProcessExact(x_train, y_train),
@@ -163,9 +159,7 @@ def test_learners_sin():
 
 def test_learners_projectile():
     metrics, summary = run_experiment(
-        simulator=Projectile(
-            parameters_range={"c": (-5, 1.0), "v0": (0, 1000.0)}, output_names=["y"]
-        ),
+        simulator=ProjectileMultioutput(),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
