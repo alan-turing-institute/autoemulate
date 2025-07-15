@@ -1,4 +1,5 @@
 import warnings
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,6 +18,7 @@ from autoemulate.experimental.plotting import (
     plot_xy,
 )
 from autoemulate.experimental.results import Result, Results
+from autoemulate.experimental.save import ModelSerialiser
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.tuner import Tuner
@@ -411,3 +413,20 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         plt.tight_layout()
 
         return display_figure(fig)
+
+    def save(self, result_id: str, path: str | Path | None = None):
+        """Saves model to disk.
+
+        Parameters
+        ----------
+        result_id : str
+            The ID of the model to save.
+        path : str
+            Path to save the model.
+        """
+        if result_id not in self._id_to_result:
+            raise ValueError(f"No result found with ID: {result_id}")
+
+        serialiser = ModelSerialiser(self.logger)
+        model = self.get_result(result_id).model
+        serialiser._save_model(model, path)
