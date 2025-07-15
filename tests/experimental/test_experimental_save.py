@@ -1,4 +1,3 @@
-import logging
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -6,9 +5,10 @@ from tempfile import TemporaryDirectory
 import pytest
 from autoemulate.experimental.emulators.polynomials import PolynomialRegression
 from autoemulate.experimental.emulators.random_forest import RandomForest
-from autoemulate.save import ModelSerialiser
+from autoemulate.experimental.logging_config import get_configured_logger
+from autoemulate.experimental.save import ModelSerialiser
 
-logger = logging.getLogger(__name__)
+logger, _ = get_configured_logger("info")
 
 
 @pytest.fixture
