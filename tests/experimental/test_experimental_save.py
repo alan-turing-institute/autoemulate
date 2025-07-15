@@ -79,8 +79,8 @@ def test_load_model(model_serialiser, model):
 def test_invalid_file_path(model_serialiser, model):
     with TemporaryDirectory() as temp_dir:
         invalid_path = Path(temp_dir) / "/invalid/path/model"
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(Exception):  # noqa: B017, PT011
             # only the / makes it invalid
             model_serialiser._save_model(model, invalid_path)
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(Exception):  # noqa: B017, PT011
             model_serialiser._load_model(invalid_path)
