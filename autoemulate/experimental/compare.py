@@ -145,8 +145,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         return pd.DataFrame(
             {
-                "model_name": [emulator.model_name() for emulator in ALL_EMULATORS],
-                "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
+                "Emulator": [emulator.model_name() for emulator in ALL_EMULATORS],
+                # TODO: short_name not currently used for anything, so commented out
+                # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
         )
 
