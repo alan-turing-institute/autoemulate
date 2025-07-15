@@ -167,12 +167,6 @@ class BayesianCalibration(TorchDeviceMixin):
                 min_val, max_val = self.parameter_range[param]
                 sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
                 param_list.append(sampled_val.to(self.device))
-                self.logger.debug(
-                    "Sampled parameter '%s' from Uniform(%s, %s)",
-                    param,
-                    min_val,
-                    max_val,
-                )
             else:
                 # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
