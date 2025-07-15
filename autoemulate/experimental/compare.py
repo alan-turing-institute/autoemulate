@@ -284,7 +284,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     self.logger.info("Finished running Model: %s\n", model_cls.__name__)
                     result = Result(
                         id=id,
-                        model_name=model_cls.model_name(),
+                        model_name=transformed_emulator.untransformed_model_name,
                         model=transformed_emulator,
                         config=best_config_for_this_model,
                         r2_test=r2_test,
@@ -438,15 +438,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             model = model_obj.model
 
         self.model_serialiser._save_model(model, path)
-        self.logger.info(
-            "Model %s saved to %s",
-            model.model_name(),
-            path,
-        )
-        print(
-            f"Model {model.model_name()} saved to {path}. "
-            "You can load it using AutoEmulate.load(path)."
-        )
 
     def load(self, path: str | Path):
         """Loads a model from disk.
