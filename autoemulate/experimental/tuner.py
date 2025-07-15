@@ -105,6 +105,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 x_transforms=x_transforms,
                 y_transforms=y_transforms,
                 model=model_class,
+                model_config=model_config,
                 device=self.device,
                 random_seed=None,
             )
