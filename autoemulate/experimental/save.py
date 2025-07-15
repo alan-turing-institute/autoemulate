@@ -32,6 +32,7 @@ class ModelSerialiser:
         try:
             joblib.dump(model, full_path)
             self.logger.info("%s saved to %s", model_name, full_path)
+            return full_path
         except Exception as e:
             self.logger.error("Failed to save %s to %s: %s", model_name, full_path, e)
             raise

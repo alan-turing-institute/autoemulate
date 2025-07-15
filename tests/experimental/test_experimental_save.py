@@ -39,7 +39,7 @@ def test_save_model_wo_path(model_serialiser, model):
         os.chdir(temp_dir)
 
         try:
-            model_serialiser._save_model(model, None)
+            model_serialiser._save_model(model, None, None)
             model_name = model_serialiser._get_model_name(model)
             expected_path = Path(model_name)
             assert expected_path.exists()
@@ -53,7 +53,7 @@ def test_save_model_w_name(model_serialiser, model):
         os.chdir(temp_dir)
 
         try:
-            model_serialiser._save_model(model, "rf")
+            model_serialiser._save_model(model, None, "rf")
             expected_path = Path("rf")
             assert expected_path.exists()
         finally:
@@ -63,7 +63,7 @@ def test_save_model_w_name(model_serialiser, model):
 def test_save_model_w_dir(model_serialiser, model):
     with TemporaryDirectory() as temp_dir:
         test_path = Path(temp_dir)
-        model_serialiser._save_model(model, test_path)
+        model_serialiser._save_model(model, None, test_path)
         assert test_path.exists()
         assert (test_path / model_serialiser._get_model_name(model)).exists()
 
@@ -71,7 +71,7 @@ def test_save_model_w_dir(model_serialiser, model):
 def test_load_model(model_serialiser, model):
     with TemporaryDirectory() as temp_dir:
         test_path = Path(temp_dir) / "test_model"
-        model_serialiser._save_model(model, test_path)
+        model_serialiser._save_model(model, None, test_path)
         loaded_model = model_serialiser._load_model(test_path)
         assert isinstance(loaded_model, type(model))
 
@@ -81,6 +81,19 @@ def test_invalid_file_path(model_serialiser, model):
         invalid_path = Path(temp_dir) / "/invalid/path/model"
         with pytest.raises(Exception):  # noqa: B017, PT011
             # only the / makes it invalid
-            model_serialiser._save_model(model, invalid_path)
+            model_serialiser._save_model(model, None, invalid_path)
         with pytest.raises(Exception):  # noqa: B017, PT011
             model_serialiser._load_model(invalid_path)
+
+
+def test_save_model_with_model_name(model_serialiser, model):
+    with TemporaryDirectory() as temp_dir:
+        original_wd = os.getcwd()
+        os.chdir(temp_dir)
+        try:
+            model_name = "custom_name.joblib"
+            saved_path = model_serialiser._save_model(model, model_name)
+            assert Path(saved_path).exists()
+            assert Path(saved_path).name == model_name
+        finally:
+            os.chdir(original_wd)
