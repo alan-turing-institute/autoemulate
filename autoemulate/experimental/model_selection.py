@@ -102,7 +102,8 @@ def cross_validate(  # noqa: PLR0913
     model: Emulator
         An instance of an Emulator subclass.
     model_config: ModelConfig
-        Hyperparameters and model config to be used to construct model upon initialize.
+        Model parameters to be used to construct model upon initialization. Passing an
+        empty dictionary `{}` will use default parameters.
     device: DeviceLike
         The device to use for model training and evaluation.
     random_seed: int | None
