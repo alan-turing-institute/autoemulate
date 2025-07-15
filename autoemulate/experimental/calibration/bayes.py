@@ -195,9 +195,6 @@ class BayesianCalibration(TorchDeviceMixin):
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),
                         obs=self.observations[output],
                     )
-                self.logger.debug(
-                    "Sampled likelihood for output '%s' with obs.", output
-                )
             else:
                 with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
