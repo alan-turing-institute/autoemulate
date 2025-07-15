@@ -2,19 +2,19 @@ from pathlib import Path
 
 import joblib
 
-from autoemulate.utils import get_model_name
+from autoemulate.experimental.emulators.base import Emulator
 
 
 class ModelSerialiser:
     def __init__(self, logger):
         self.logger = logger
 
-    def _save_model(self, model, path):
+    def _save_model(self, model: Emulator, path: str | Path | None = None):
         """Saves a model to disk.
 
         Parameters
         ----------
-        model : scikit-learn model
+        model : Emulator model
             Model to save.
         path : str, Path or None, optional
             Path to save the model.
@@ -30,7 +30,7 @@ class ModelSerialiser:
             self.logger.error("Failed to save %s to %s: %s", model_name, full_path, e)
             raise
 
-    def _load_model(self, path):
+    def _load_model(self, path: str | Path):
         """Loads a model from disk.
 
         Parameters
@@ -62,5 +62,5 @@ class ModelSerialiser:
     @staticmethod
     def _get_model_name(model):
         """Gets the name of the model to save."""
-        model_name = get_model_name(model)
+        model_name = model.model_name()
         return f"{model_name}.joblib"
