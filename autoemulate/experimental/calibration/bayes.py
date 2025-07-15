@@ -74,6 +74,9 @@ class BayesianCalibration(TorchDeviceMixin):
         self.emulator.device = self.device
         self.output_names = list(observations.keys())
         self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.logger.info(
+            "Initializing BayesianCalibration with parameters: %s", calibration_params
+        )
 
         # Check observation tensors are 1D (convert if 0D)
         processed_observations = {}
@@ -81,7 +84,12 @@ class BayesianCalibration(TorchDeviceMixin):
         for output, obs in observations.items():
             if obs.ndim == 0:
                 corrected_obs = obs.unsqueeze(0)
+                self.logger.debug(
+                    "Observation for output '%s' converted from 0D to 1D.",
+                    output,
+                )
             elif obs.ndim > 1:
+                self.logger.error("Tensor for output '%s' is not 1D.", output)
                 raise ValueError(f"Tensor for output '{output}' is not 1D.")
             else:
                 corrected_obs = obs
@@ -89,9 +97,11 @@ class BayesianCalibration(TorchDeviceMixin):
             obs_lengths.append(corrected_obs.shape[0])
         if len(set(obs_lengths)) != 1:
             msg = "All outputs must have the same number of observations."
+            self.logger.error(msg)
             raise ValueError(msg)
         self.observations = processed_observations
         self.n_observations = obs_lengths[0]
+        self.logger.info("Processed observations for outputs: %s", self.output_names)
 
         # Save observation noise as {output: value} dictionary
         if isinstance(observation_noise, float):
@@ -99,10 +109,13 @@ class BayesianCalibration(TorchDeviceMixin):
                 self.output_names,
                 torch.tensor(observation_noise).to(self.device),
             )
+            self.logger.debug("Observation noise set as float: %s", observation_noise)
         elif isinstance(observation_noise, dict):
             self.observation_noise = observation_noise
+            self.logger.debug("Observation noise set as dict: %s", observation_noise)
         else:
             msg = "Noise must be either a float or a dictionary of floats."
+            self.logger.error(msg)
             raise ValueError(msg)
 
     def _get_kernel(self, sampler: str, **sampler_kwargs):
@@ -112,10 +125,16 @@ class BayesianCalibration(TorchDeviceMixin):
         sampler = sampler.lower()
 
         if sampler == "nuts":
+            self.logger.debug("Using NUTS kernel.")
             return NUTS(self.model, **sampler_kwargs)
         if sampler == "hmc":
             step_size = sampler_kwargs.pop("step_size", 0.01)
             trajectory_length = sampler_kwargs.pop("trajectory_length", 1.0)
+            self.logger.debug(
+                "Using HMC kernel with step_size=%s, trajectory_length=%s",
+                step_size,
+                trajectory_length,
+            )
             return HMC(
                 self.model,
                 step_size=step_size,
@@ -123,7 +142,9 @@ class BayesianCalibration(TorchDeviceMixin):
                 **sampler_kwargs,
             )
         if sampler == "metropolis":
+            self.logger.debug("Using Metropolis (RandomWalkKernel).")
             return RandomWalkKernel(self.model, **sampler_kwargs)
+        self.logger.error("Unknown sampler: %s", sampler)
         raise ValueError(f"Unknown sampler: {sampler}")
 
     def model(self, predict: bool = False):
@@ -146,11 +167,19 @@ class BayesianCalibration(TorchDeviceMixin):
                 min_val, max_val = self.parameter_range[param]
                 sampled_val = pyro.sample(param, dist.Uniform(min_val, max_val))
                 param_list.append(sampled_val.to(self.device))
+                self.logger.debug(
+                    "Sampled parameter '%s' from Uniform(%s, %s)",
+                    param,
+                    min_val,
+                    max_val,
+                )
             else:
                 # Set to midpoint value in parameter range
                 min_val, max_val = self.parameter_range[param]
-                param_list.append(
-                    torch.tensor((min_val + max_val) / 2, device=self.device)
+                midpoint_val = (min_val + max_val) / 2
+                param_list.append(torch.tensor(midpoint_val, device=self.device))
+                self.logger.debug(
+                    "Set parameter '%s' to midpoint value %s", param, midpoint_val
                 )
         full_params = torch.stack(param_list, dim=0).unsqueeze(0).float()
 
@@ -158,10 +187,13 @@ class BayesianCalibration(TorchDeviceMixin):
         output = self.emulator.predict(full_params)
         if isinstance(output, TensorLike):
             pred_mean = output.to(self.device)
+            self.logger.debug("Emulator returned TensorLike output.")
         elif isinstance(output, DistributionLike):
             pred_mean = output.mean.to(self.device)
+            self.logger.debug("Emulator returned DistributionLike output.")
         else:
             msg = "The emulator did not return a tensor or a distribution object."
+            self.logger.error(msg)
             raise ValueError(msg)
 
         # Likelihood
@@ -173,12 +205,18 @@ class BayesianCalibration(TorchDeviceMixin):
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),
                         obs=self.observations[output],
                     )
+                self.logger.debug(
+                    "Sampled likelihood for output '%s' with obs.", output
+                )
             else:
                 with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
                         output,
                         dist.Normal(pred_mean[0, i], self.observation_noise[output]),
                     )
+                self.logger.debug(
+                    "Sampled likelihood for output '%s' without obs.", output
+                )
 
     def run_mcmc(
         self,
@@ -222,7 +260,11 @@ class BayesianCalibration(TorchDeviceMixin):
                         "An initial value must be provided for each chain, parameter "
                         f"{param} tensor only has {init_vals.shape[0]} values."
                     )
+                    self.logger.error(msg)
                     raise ValueError(msg)
+            self.logger.debug(
+                "Initial parameters provided for MCMC: %s", initial_params
+            )
 
         # Run NUTS
         kernel = self._get_kernel(sampler, **sampler_kwargs)
@@ -236,7 +278,9 @@ class BayesianCalibration(TorchDeviceMixin):
             # Multiprocessing
             mp_context="spawn" if num_chains > 1 else None,
         )
+        self.logger.info("Starting MCMC run.")
         mcmc.run()
+        self.logger.info("MCMC run completed.")
         return mcmc
 
     def posterior_predictive(self, mcmc: MCMC) -> TensorLike:
@@ -255,7 +299,9 @@ class BayesianCalibration(TorchDeviceMixin):
         """
         posterior_samples = mcmc.get_samples()
         posterior_predictive = Predictive(self.model, posterior_samples)
-        return posterior_predictive(predict=True)
+        samples = posterior_predictive(predict=True)
+        self.logger.debug("Posterior predictive samples generated.")
+        return samples
 
     def to_arviz(
         self, mcmc: MCMC, posterior_predictive: bool = False
@@ -276,11 +322,15 @@ class BayesianCalibration(TorchDeviceMixin):
         """
         pp_samples = None
         if posterior_predictive:
+            self.logger.info("Including posterior predictive samples in Arviz output.")
             pp_samples = self.posterior_predictive(mcmc)
 
         # Need to create dataset manually for Metropolis Hastings
         # This is because az.from_pyro expects kernel with `divergences`
         if isinstance(mcmc.kernel, RandomWalkKernel):
+            self.logger.debug(
+                "Using manual conversion for Metropolis (RandomWalkKernel) kernel."
+            )
             if posterior_predictive:
                 az_data = az.InferenceData(
                     posterior=az.convert_to_dataset(
@@ -296,6 +346,8 @@ class BayesianCalibration(TorchDeviceMixin):
                     ),
                 )
         else:
+            self.logger.debug("Using az.from_pyro for conversion.")
             az_data = az.from_pyro(mcmc, posterior_predictive=pp_samples)
 
+        self.logger.info("Arviz InferenceData conversion complete.")
         return az_data
