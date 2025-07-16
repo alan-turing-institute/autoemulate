@@ -1,23 +1,17 @@
 import logging
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
 from SALib.sample.morris import sample as morris_sample
 from SALib.sample.sobol import sample as sobol_sample
+from SALib.util import ResultDict
 
 from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.types import DistributionLike, NumpyLike, TensorLike
-
-# NOTE: we still use these functions from main #544
-# should we just move them to experimental as well?
-from autoemulate.sensitivity_analysis import (
-    _morris_results_to_df,
-    _plot_morris_analysis,
-    _plot_sobol_analysis,
-    _sobol_results_to_df,
-)
 
 logger = logging.getLogger("autoemulate")
 
@@ -318,3 +312,421 @@ class SensitivityAnalysis(ConversionMixin):
             .nlargest(top_n)
             .index.tolist()
         )
+
+
+def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
+    """
+    Convert Sobol results to a (long-format) pandas DataFrame.
+
+    Parameters:
+    -----------
+    results : dict
+        The Sobol indices returned by sobol_analysis.
+    problem : dict, optional
+        The problem definition, including 'names'.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
+    """
+    rename_dict = {
+        "variable": "index",
+        "S1": "value",
+        "S1_conf": "confidence",
+        "ST": "value",
+        "ST_conf": "confidence",
+        "S2": "value",
+        "S2_conf": "confidence",
+    }
+    rows = []
+    for output, result in results.items():
+        s1, st, s2 = result.to_df()
+        s1 = (
+            s1.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        s1["index"] = "S1"
+        st = (
+            st.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        st["index"] = "ST"
+        s2 = (
+            s2.reset_index()
+            .rename(columns={"index": "parameter"})
+            .rename(columns=rename_dict)
+        )
+        s2["index"] = "S2"
+
+        df = pd.concat([s1, st, s2])
+        df["output"] = output
+        rows.append(df[["output", "parameter", "index", "value", "confidence"]])
+
+    return pd.concat(rows)
+
+
+def _validate_input(results, index):
+    if not isinstance(results, pd.DataFrame):
+        results = _sobol_results_to_df(results)
+        # we only want to plot one index type at a time
+    valid_indices = ["S1", "S2", "ST"]
+    if index not in valid_indices:
+        raise ValueError(
+            f"Invalid index type: {index}. Must be one of {valid_indices}."
+        )
+    return results[results["index"].isin([index])]
+
+
+def _calculate_layout(n_outputs, n_cols=None):
+    if n_cols is None:
+        n_cols = 3 if n_outputs >= 3 else n_outputs
+    n_rows = int(np.ceil(n_outputs / n_cols))
+    return n_rows, n_cols
+
+
+def _create_bar_plot(ax, output_data, output_name):
+    """Create a bar plot for a single output."""
+    bar_color = "#4C4B63"
+    x_pos = np.arange(len(output_data))
+
+    _ = ax.bar(
+        x_pos,
+        output_data["value"],
+        color=bar_color,
+        yerr=output_data["confidence"].values / 2,
+        capsize=3,
+    )
+
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(output_data["parameter"], rotation=45, ha="right")
+    ax.set_ylabel("Sobol Index")
+    ax.set_title(f"Output: {output_name}")
+
+
+def _plot_sobol_analysis(results, index="S1", n_cols=None, figsize=None):
+    """
+    Plot the sobol sensitivity analysis results.
+
+    Parameters:
+    -----------
+    results : pd.DataFrame
+        The results from sobol_results_to_df.
+    index : str, default "S1"
+        The type of sensitivity index to plot.
+        - "S1": first-order indices
+        - "S2": second-order/interaction indices
+        - "ST": total-order indices
+    n_cols : int, optional
+        The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
+        otherwise the number of outputs.
+    figsize : tuple, optional
+        Figure size as (width, height) in inches.If None, automatically calculated.
+
+    """
+    with plt.style.context("fast"):
+        # prepare data
+        results = _validate_input(results, index)
+        unique_outputs = results["output"].unique()
+        n_outputs = len(unique_outputs)
+
+        # layout
+        n_rows, n_cols = _calculate_layout(n_outputs, n_cols)
+        figsize = figsize or (4.5 * n_cols, 4 * n_rows)
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        if isinstance(axes, np.ndarray):
+            axes = axes.flatten()
+        elif n_outputs == 1:
+            axes = [axes]
+
+        for ax, output in zip(axes, unique_outputs, strict=False):
+            output_data = results[results["output"] == output]
+            _create_bar_plot(ax, output_data, output)
+
+        # remove any empty subplots
+        for idx in range(len(unique_outputs), len(axes)):
+            fig.delaxes(axes[idx])
+
+        index_names = {
+            "S1": "First-Order",
+            "S2": "Second-order/Interaction",
+            "ST": "Total-Order",
+        }
+
+        # title
+        fig.suptitle(
+            f"{index_names[index]} indices and 95% CI",
+            fontsize=14,
+        )
+
+        plt.tight_layout()
+
+    return _display_figure(fig)
+
+
+def _morris_results_to_df(
+    results: dict[str, ResultDict], problem: dict
+) -> pd.DataFrame:
+    """
+    Convert Morris results to a (long-format) pandas DataFrame.
+
+    Parameters:
+    -----------
+    results : dict
+        The Morris indices returned by morris_analysis.
+    problem : dict
+        The problem definition, including 'names'.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame with columns: 'output', 'parameter', 'mu', 'mu_star', 'sigma',
+        'mu_star_conf'.
+    """
+    rows = []
+    parameter_names = problem["names"]
+
+    for output, result in results.items():
+        df_data = {
+            "output": [output] * len(parameter_names),
+            "parameter": parameter_names,
+            "mu": result["mu"],
+            "mu_star": result["mu_star"],
+            "sigma": result["sigma"],
+            "mu_star_conf": result["mu_star_conf"],
+        }
+
+        df = pd.DataFrame(df_data)
+        rows.append(df)
+
+    return pd.concat(rows, ignore_index=True)
+
+
+def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None):
+    """
+    Plot the Morris sensitivity analysis results.
+
+    Parameters:
+    -----------
+    results : pd.DataFrame
+        The results from morris_results_to_df.
+    param_groups : dict, optional
+        Dictionary mapping parameter names to groups for coloring.
+    n_cols : int, optional
+        The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
+        otherwise the number of outputs.
+    figsize : tuple, optional
+        Figure size as (width, height) in inches. If None, automatically calculated.
+    """
+    with plt.style.context("fast"):
+        unique_outputs = results["output"].unique()
+        n_outputs = len(unique_outputs)
+
+        # layout - add space for legend
+        n_rows, n_cols = _calculate_layout(n_outputs, n_cols)
+        figsize = figsize or (4.5 * n_cols + 2, 4 * n_rows)  # Extra width for legend
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        if isinstance(axes, np.ndarray):
+            axes = axes.flatten()
+        elif n_outputs == 1:
+            axes = [axes]
+
+        # Create color mappings once for all plots
+        colors = [
+            "#4C4B63",
+            "#E63946",
+            "#F77F00",
+            "#FCBF49",
+            "#06D6A0",
+            "#118AB2",
+            "#073B4C",
+            "#FF6B6B",
+            "#4ECDC4",
+            "#45B7D1",
+            "#96CEB4",
+            "#FFEAA7",
+            "#DDA0DD",
+            "#98D8C8",
+        ]
+
+        if param_groups is None:
+            # Different color for each parameter
+            all_params = results["parameter"].unique()
+            param_colors = {
+                param: colors[i % len(colors)] for i, param in enumerate(all_params)
+            }
+            legend_items = [(param, param_colors[param]) for param in all_params]
+            legend_title = "Parameters"
+        else:
+            # Color by parameter groups
+            unique_groups = list(set(param_groups.values()))
+            group_colors = {
+                group: colors[i % len(colors)] for i, group in enumerate(unique_groups)
+            }
+            legend_items = [(group, group_colors[group]) for group in unique_groups]
+            legend_title = "Parameter Groups"
+
+        # Plot each output
+        for ax, output in zip(axes, unique_outputs, strict=False):
+            output_data = results[results["output"] == output]
+            _create_morris_plot(
+                ax,
+                output_data,
+                output,
+                param_groups,
+                param_colors if param_groups is None else group_colors,
+            )
+
+        # remove any empty subplots
+        for idx in range(len(unique_outputs), len(axes)):
+            fig.delaxes(axes[idx])
+
+        # Create single legend on the right side
+        legend_handles = []
+        legend_labels = []
+        for label, color in legend_items:
+            handle = plt.Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor=color,
+                markersize=8,
+                alpha=0.7,
+                linewidth=0,
+            )
+            legend_handles.append(handle)
+            legend_labels.append(label)
+
+        # Add legend to the right of the plots
+        fig.legend(
+            legend_handles,
+            legend_labels,
+            loc="center right",
+            bbox_to_anchor=(0.98, 0.5),
+            title=legend_title,
+            framealpha=0.9,
+            fontsize=10,
+        )
+
+        # title
+        fig.suptitle(
+            r"Morris Sensitivity Analysis ($\mu^*$ vs $\sigma$)",
+            fontsize=14,
+        )
+
+        plt.tight_layout()
+
+    return _display_figure(fig)
+
+
+def _create_morris_plot(
+    ax, output_data, output_name, param_groups=None, color_mapping=None
+):
+    """Create a Morris plot (mu_star vs sigma) for a single output."""
+
+    # Default colors - expanded palette for more variety
+    colors = [
+        "#4C4B63",
+        "#E63946",
+        "#F77F00",
+        "#FCBF49",
+        "#06D6A0",
+        "#118AB2",
+        "#073B4C",
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#96CEB4",
+        "#FFEAA7",
+        "#DDA0DD",
+        "#98D8C8",
+    ]
+
+    # Use provided color mapping or create default
+    if color_mapping is None:
+        if param_groups is None:
+            # Different color for each parameter when no groups specified
+            unique_params = output_data["parameter"].unique()
+            param_colors = {
+                param: colors[i % len(colors)] for i, param in enumerate(unique_params)
+            }
+            color_mapping = param_colors
+        else:
+            # Color by parameter groups
+            unique_groups = list(set(param_groups.values()))
+            group_colors = {
+                group: colors[i % len(colors)] for i, group in enumerate(unique_groups)
+            }
+            color_mapping = group_colors
+
+    # Plot points without labels for legend (legend is handled at figure level)
+    for _, row in output_data.iterrows():
+        param_name = row["parameter"]
+
+        if param_groups is None:
+            color = color_mapping[param_name]
+        else:
+            group = param_groups.get(param_name, "default")
+            color = color_mapping.get(group, colors[0])
+
+        ax.scatter(row["sigma"], row["mu_star"], color=color, alpha=0.7, s=60)
+
+    # Add parameter labels with matching colors
+    for _, row in output_data.iterrows():
+        param_name = row["parameter"]
+
+        if param_groups is None:
+            # Use same color as the dot (individual parameter color)
+            label_color = color_mapping[param_name]
+        else:
+            # Use group color
+            group = param_groups.get(param_name, "default")
+            label_color = color_mapping.get(group, colors[0])
+
+        ax.annotate(
+            param_name,
+            (row["sigma"], row["mu_star"]),
+            xytext=(5, 5),
+            textcoords="offset points",
+            fontsize=8,
+            alpha=0.9,
+            color=label_color,
+            fontweight="bold",
+        )
+
+    ax.set_xlabel("σ (Standard Deviation)")  # noqa: RUF001
+    ax.set_ylabel("μ* (Modified Mean)")
+    ax.set_title(f"Output: {output_name}")
+    ax.grid(True, alpha=0.3)
+
+
+def _display_figure(fig):
+    """
+    Display a matplotlib figure appropriately based on the environment (Jupyter
+    notebook or terminal).
+
+    Args:
+        fig: matplotlib figure object to display
+
+    Returns:
+        fig: the input figure object
+    """
+    # Are we in Jupyter?
+    try:
+        is_jupyter = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
+    except NameError:
+        is_jupyter = False
+
+    if is_jupyter:
+        # we don't show otherwise it will double plot
+        plt.close(fig)
+        return fig
+    # in terminal, show the plot
+    plt.close(fig)
+    plt.show()
+    return fig
