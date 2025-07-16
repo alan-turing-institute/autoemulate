@@ -3,7 +3,7 @@ import torch
 from scipy.integrate import solve_ivp
 
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import NumpyLike, TensorLike
 
 
 class Epidemic(Simulator):
@@ -41,7 +41,7 @@ class Epidemic(Simulator):
         return torch.tensor([y], dtype=torch.float32).view(-1, 1)
 
 
-def simulate_epidemic(x, N=1000, I0=1):
+def simulate_epidemic(x: NumpyLike, N: int = 1000, I0: int = 1) -> float:
     """
     Simulate an epidemic using the SIR model.
 
@@ -51,9 +51,9 @@ def simulate_epidemic(x, N=1000, I0=1):
         The parameters of the SIR model. The first element is the transmission rate
         (beta) and the second element is the recovery rate (gamma).
     N: int, optional
-        The total population size.
+        The total population size. Defaults to 1000.
     I0: int, optional
-        The initial number of infected individuals.
+        The initial number of infected individuals. Defaults to 1.
 
     Returns
     -------
