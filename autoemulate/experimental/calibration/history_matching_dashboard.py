@@ -3,10 +3,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from IPython.display import clear_output
-from IPython.display import display
-from sklearn.decomposition import PCA
+from IPython.display import clear_output, display
 
 from autoemulate.experimental.types import TensorLike
 
