@@ -40,7 +40,7 @@ class ModelSerialiser:
 
     def _save_result(
         self, result: Result, result_name: str | None, path: str | Path | None = None
-    ) -> tuple[Path, Path]:
+    ) -> Path:
         """Saves a model to disk.
 
         Parameters
@@ -52,6 +52,11 @@ class ModelSerialiser:
         path : str, Path or None, optional
             Path to save the model and metadata.
             If None, the result will be saved with the result_name.
+
+        Returns
+        -------
+        Path
+            Full path to the saved model file.
         """
         if result_name is None:
             result_name = f"{result.model_name}_{result.id}"
@@ -69,7 +74,7 @@ class ModelSerialiser:
             self.logger.error("Failed to save metadata to %s: %s", metadata_path, e)
             raise
 
-        return full_model_path, metadata_path
+        return full_model_path
 
     def _load_model(self, path: str | Path):
         """Loads a model from disk.
