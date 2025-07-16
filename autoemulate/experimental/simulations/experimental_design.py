@@ -1,7 +1,9 @@
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import mogp_emulator
+import torch
+
+from autoemulate.experimental.types import TensorLike
 
 
 class ExperimentalDesign(ABC):
@@ -19,31 +21,31 @@ class ExperimentalDesign(ABC):
         upper bounds of a parameter.
     """
 
+    @abstractmethod
     def __init__(self, bounds_list: list[tuple[float, float]]):
         """Initializes a Sampler object."""
-        pass
 
     @abstractmethod
-    def sample(self, n: int):
-        """Samples n points from the sample space.
+    def sample(self, n: int) -> TensorLike:
+        """
+        Samples n points from the sample space.
 
         Parameters
         ----------
-        n : int
+        n: int
             The number of points to sample.
         """
-        pass
 
     @abstractmethod
-    def get_n_parameters(self):
-        """Returns the number of parameters in the sample space.
+    def get_n_parameters(self) -> int:
+        """
+        Returns the number of parameters in the sample space.
 
         Returns
         -------
-        n_parameters : int
+        int
             The number of parameters in the sample space.
         """
-        pass
 
 
 class LatinHypercube(ExperimentalDesign):
@@ -55,7 +57,7 @@ class LatinHypercube(ExperimentalDesign):
 
     Attributes
     ----------
-    bounds_list : list
+    bounds_list: list
         List tuples with two numeric values.
         Each tuple corresponds to the lower and
         upper bounds of a parameter.
@@ -65,12 +67,13 @@ class LatinHypercube(ExperimentalDesign):
         """Initializes a LatinHypercube object."""
         self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
 
-    def sample(self, n: int):
-        """Samples n points from the sample space.
+    def sample(self, n: int) -> TensorLike:
+        """
+        Samples n points from the sample space.
 
         Parameters
         ----------
-        n : int
+        n: int
             The number of points to sample.
 
         Returns
@@ -78,14 +81,15 @@ class LatinHypercube(ExperimentalDesign):
         samples : numpy.ndarray
             A numpy array of shape (n, dim) containing the sampled points.
         """
-        return self.sampler.sample(n)
+        sample_array = self.sampler.sample(n)
+        return torch.tensor(sample_array, dtype=torch.float32)
 
-    def get_n_parameters(self):
+    def get_n_parameters(self) -> int:
         """Returns the number of parameters in the sample space.
 
         Returns
         -------
-        n_parameters : int
+        int
             The number of parameters in the sample space.
         """
         return self.sampler.get_n_parameters()

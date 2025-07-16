@@ -67,9 +67,9 @@ class ReactionDiffusion(Simulator):
         self.dt = dt
 
     def _forward(self, x: TensorLike) -> TensorLike:
-        assert (
-            x.shape[0] == 1
-        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
         u_sol, v_sol = simulate_reaction_diffusion(
             x.cpu().numpy()[0], self.return_timeseries, self.n, self.L, self.T, self.dt
         )
@@ -81,8 +81,8 @@ class ReactionDiffusion(Simulator):
         return torch.tensor(concat_array, dtype=torch.float32).reshape(1, -1)
 
 
-def reaction_diffusion(
-    t: float,
+def reaction_diffusion(  # noqa: PLR0913
+    t: float,  # noqa: ARG001
     uvt: NumpyLike,
     K22: NumpyLike,
     d1: float,
@@ -90,7 +90,7 @@ def reaction_diffusion(
     beta: float,
     n: int,
     N: int,
-):  # noqa: PLR0913, ARG001
+):
     """
     Define the reaction-diffusion PDE in the Fourier (kx, ky) space.
 

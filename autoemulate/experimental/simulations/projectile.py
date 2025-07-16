@@ -44,9 +44,9 @@ class Projectile(Simulator):
         TensorLike
             Distance travelled by projectile.
         """
-        assert (
-            x.shape[0] == 1
-        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
         y = simulate_projectile(x.cpu().numpy()[0])
         return torch.tensor([y]).view(-1, 1)
 
@@ -83,9 +83,9 @@ class ProjectileMultioutput(Simulator):
         TensorLike
             Distance travelled by projectile and impact velocity.
         """
-        assert (
-            x.shape[0] == 1
-        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
         y = simulate_projectile_multioutput(x.cpu().numpy()[0])
         return torch.tensor([y])
 

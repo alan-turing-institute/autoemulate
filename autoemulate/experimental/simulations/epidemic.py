@@ -37,9 +37,9 @@ class Epidemic(Simulator):
         TensorLike
             Peak infection rate.
         """
-        assert (
-            x.shape[0] == 1
-        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
         y = simulate_epidemic(x.cpu().numpy()[0])
         # TODO (#537): update with default dtype
         return torch.tensor([y], dtype=torch.float32).view(-1, 1)
