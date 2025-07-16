@@ -1,6 +1,9 @@
+import ast
+import contextlib
 from pathlib import Path
 
 import joblib
+import pandas as pd
 
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.results import Result  # , Results
@@ -92,6 +95,50 @@ class ModelSerialiser:
         except Exception as e:
             self.logger.error("Failed to load model from %s: %s", path, e)
             raise
+
+    def _load_result(self, path: str | Path) -> Result | Emulator:
+        """Loads a model and (if it exists) its metadata from disk,
+        returning either a Result or Emulator object.
+
+        Parameters
+        ----------
+        path : str or Path
+            Path to the model file.
+        Returns
+        -------
+        Result or Emulator
+            The loaded model or result object.
+        """
+        model = self._load_model(path)
+        metadata_path = Path(f"{path}_metadata.csv")
+        try:
+            metadata_df = pd.read_csv(metadata_path, nrows=1)
+            self.logger.info("Metadata loaded from %s", metadata_path)
+        except Exception as e:
+            msg = "Failed to load metadata from %s: %s"
+            self.logger.error(msg, metadata_path, e)
+            return model
+        row = metadata_df.iloc[0]
+        config = row["config"]
+        if isinstance(config, str):
+            with contextlib.suppress(Exception):
+                config = ast.literal_eval(config)
+        if not isinstance(config, dict):
+            config = {}
+        return Result(
+            id=row["id"],
+            model_name=row["model_name"],
+            model=model,
+            config=config,
+            r2_test=row["r2_test"],
+            rmse_test=row["rmse_test"],
+            r2_test_std=row["r2_test_std"],
+            rmse_test_std=row["rmse_test_std"],
+            r2_train=row["r2_train"],
+            rmse_train=row["rmse_train"],
+            r2_train_std=row["r2_train_std"],
+            rmse_train_std=row["rmse_train_std"],
+        )
 
     def _prepare_path(self, path, model_name):
         """Prepares path for saving model."""

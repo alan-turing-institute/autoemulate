@@ -472,12 +472,17 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             return self.model_serialiser._save_result(result, filename, path)
         return self.model_serialiser._save_model(model, filename, path)
 
-    def load(self, path: str | Path):
-        """Loads a model from disk.
+    def load(self, path: str | Path) -> Emulator | Result:
+        """Loads a stored model or result from disk.
 
         Parameters
         ----------
         path : str
             Path to model.
+
+        Returns
+        -------
+        Emulator | Result
+            The loaded model or result object.
         """
-        return self.model_serialiser._load_model(path)
+        return self.model_serialiser._load_result(path)
