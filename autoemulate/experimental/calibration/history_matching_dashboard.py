@@ -24,9 +24,6 @@ class HistoryMatchingDashboard:
         """
         Initialize the dashboard.
 
-        TODO: should just take in NROY (don't need threshold and takes
-        into account rank).
-
         Parameters
         ----------
         samples: NumpyLike or TensorLike
@@ -42,13 +39,9 @@ class HistoryMatchingDashboard:
         """
         # Convert samples to DataFrame
         if isinstance(samples, np.ndarray):
-            self.samples_df = pd.DataFrame(
-                samples, columns=param_names
-            )  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(samples, columns=param_names)  # pyright: ignore[reportArgumentType]
         elif isinstance(samples, TensorLike):
-            self.samples_df = pd.DataFrame(
-                samples.numpy(), columns=param_names
-            )  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)  # pyright: ignore[reportArgumentType]
 
         # Store other data
         if isinstance(impl_scores, TensorLike):
@@ -314,6 +307,8 @@ class HistoryMatchingDashboard:
                 return
 
             # Generate the selected plot
+            assert isinstance(filtered_df, pd.DataFrame)
+            assert isinstance(filtered_scores, NumpyLike)
             try:
                 if plot_type == "Parameter vs Implausibility":
                     self._plot_parameter_vs_implausibility(filtered_df, filtered_scores)
@@ -420,18 +415,16 @@ class HistoryMatchingDashboard:
             )
 
             # Add NROY region boundaries
-            plt.axvline(
-                x=nroy_points[param_x].min(), color="g", linestyle="--", alpha=0.5
-            )
-            plt.axvline(
-                x=nroy_points[param_x].max(), color="g", linestyle="--", alpha=0.5
-            )
-            plt.axhline(
-                y=nroy_points[param_y].min(), color="g", linestyle="--", alpha=0.5
-            )
-            plt.axhline(
-                y=nroy_points[param_y].max(), color="g", linestyle="--", alpha=0.5
-            )
+            x_min, x_max = nroy_points[param_x].min(), nroy_points[param_x].max()
+            y_min, y_max = nroy_points[param_y].min(), nroy_points[param_y].max()
+            assert isinstance(x_min, float)
+            assert isinstance(x_max, float)
+            assert isinstance(y_min, float)
+            assert isinstance(y_max, float)
+            plt.axvline(x=x_min, color="g", linestyle="--", alpha=0.5)
+            plt.axvline(x=x_max, color="g", linestyle="--", alpha=0.5)
+            plt.axhline(y=y_min, color="g", linestyle="--", alpha=0.5)
+            plt.axhline(y=y_max, color="g", linestyle="--", alpha=0.5)
 
         plt.title(f"Parameters {param_x} vs {param_y}")
         plt.xlabel(param_x)
@@ -677,9 +670,9 @@ class HistoryMatchingDashboard:
             plt.axis("off")
             plt.tight_layout()
 
-    def _plot_emulator_diagnostics(
+    def _plot_emulator_diagnostics(  # noqa: PLR0915
         self, df: pd.DataFrame, impl_scores: NumpyLike
-    ):  # noqa: PLR0915
+    ):
         """
         Plot emulator diagnostic plots similar to those in the hmer package
 
@@ -820,7 +813,9 @@ class HistoryMatchingDashboard:
 
         plt.tight_layout()
 
-    def _plot_bayesian_style_comparison(self, df: pd.DataFrame, impl_scores: NumpyLike):
+    def _plot_bayesian_style_comparison(  # noqa: PLR0915
+        self, df: pd.DataFrame, impl_scores: NumpyLike
+    ):
         """
         Create a Bayesian-style visualization showing parameter constraints
         with prior, posterior, and true values, using existing dashboard controls.
@@ -897,7 +892,7 @@ class HistoryMatchingDashboard:
             posterior_data = df.loc[nroy_mask, param]
 
             # Create bins
-            bins = np.linspace(param_min, param_max, 20)
+            bins = np.linspace(param_min, param_max, 20).tolist()
 
             # Plot prior (flat uniform distribution)
             prior_height = 0.4  # Height for the prior bar
@@ -929,6 +924,8 @@ class HistoryMatchingDashboard:
             # Set labels and limits
             ax.set_xlabel(format_param_label(param))
             ax.set_ylabel("Frequency")
+            assert isinstance(param_min, float)
+            assert isinstance(param_max, float)
             ax.set_xlim(param_min, param_max)
 
             # Show legend on first plot only
