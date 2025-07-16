@@ -3,7 +3,6 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from SALib.analyze.morris import analyze as morris_analyze
@@ -416,16 +415,19 @@ def _calculate_layout(n_outputs: int, n_cols: int | None = None):
     return n_rows, n_cols
 
 
-def _create_bar_plot(ax: Axes, output_data: dict, output_name: str):
+def _create_bar_plot(ax: Axes, output_data: pd.DataFrame, output_name: str):
     """Create a bar plot for a single output."""
     bar_color = "#4C4B63"
     x_pos = np.arange(len(output_data))
+    conf = output_data["confidence"].values
+    assert isinstance(conf, NumpyLike)
+    yerr = conf / 2
 
     _ = ax.bar(
         x_pos,
         output_data["value"],
         color=bar_color,
-        yerr=output_data["confidence"].values / 2,
+        yerr=yerr,
         capsize=3,
     )
 
@@ -478,6 +480,7 @@ def _plot_sobol_analysis(
 
         for ax, output in zip(axes, unique_outputs, strict=False):
             output_data = results[results["output"] == output]
+            assert isinstance(output_data, pd.DataFrame)
             _create_bar_plot(ax, output_data, output)
 
         # remove any empty subplots
@@ -612,6 +615,7 @@ def _plot_morris_analysis(
         # Plot each output
         for ax, output in zip(axes, unique_outputs, strict=False):
             output_data = results[results["output"] == output]
+            assert isinstance(output_data, pd.DataFrame)
             _create_morris_plot(
                 ax,
                 output_data,
@@ -722,6 +726,7 @@ def _create_morris_plot(
     # Add parameter labels with matching colors
     for _, row in output_data.iterrows():
         param_name = row["parameter"]
+        assert isinstance(param_name, str)
 
         if param_groups is None:
             # Use same color as the dot (individual parameter color)
@@ -731,9 +736,12 @@ def _create_morris_plot(
             group = param_groups.get(param_name, "default")
             label_color = color_mapping.get(group, colors[0])
 
+        x_coord, y_coord = row["sigma"], row["mu_star"]
+        assert isinstance(x_coord, float)
+        assert isinstance(y_coord, float)
         ax.annotate(
             param_name,
-            (row["sigma"], row["mu_star"]),
+            (x_coord, y_coord),
             xytext=(5, 5),
             textcoords="offset points",
             fontsize=8,
