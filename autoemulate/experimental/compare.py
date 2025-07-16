@@ -431,7 +431,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         model_obj: int | Emulator | Result,
         path: str | Path | None = None,
         use_timestamp: bool = True,
-    ):
+    ) -> Path | tuple[Path, Path]:
         """Saves model to disk.
 
         Parameters
@@ -460,6 +460,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         elif isinstance(model_obj, Result):
             model = model_obj.model
             model_name = model_obj.model_name
+            result = model_obj
 
         # Create a unique filename based on the model name, id and date
         filename = f"{model_name}_{result.id}" if result is not None else model_name
@@ -467,6 +468,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             t = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename += f"_{t}"
 
+        if result is not None:
+            return self.model_serialiser._save_result(result, filename, path)
         return self.model_serialiser._save_model(model, filename, path)
 
     def load(self, path: str | Path):

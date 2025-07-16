@@ -3,6 +3,7 @@ from pathlib import Path
 import joblib
 
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.results import Result  # , Results
 
 
 class ModelSerialiser:
@@ -36,6 +37,39 @@ class ModelSerialiser:
         except Exception as e:
             self.logger.error("Failed to save %s to %s: %s", model_name, full_path, e)
             raise
+
+    def _save_result(
+        self, result: Result, result_name: str | None, path: str | Path | None = None
+    ) -> tuple[Path, Path]:
+        """Saves a model to disk.
+
+        Parameters
+        ----------
+        result : Result
+            Result object containing the model and its metadata.
+        result_name : str or None, optional
+            Name of the result to save. If None, the result name and id will be used.
+        path : str, Path or None, optional
+            Path to save the model and metadata.
+            If None, the result will be saved with the result_name.
+        """
+        if result_name is None:
+            result_name = f"{result.model_name}_{result.id}"
+        full_path = self._prepare_path(path, result_name)
+
+        full_model_path = self._save_model(result.model, result_name, full_path)
+
+        # Save metadata to CSV
+        metadata_path = Path(f"{full_path}_metadata.csv")
+        metadata_df = result.metadata_df()
+        try:
+            metadata_df.to_csv(metadata_path, index=False)
+            self.logger.info("Metadata saved to %s", metadata_path)
+        except Exception as e:
+            self.logger.error("Failed to save metadata to %s: %s", metadata_path, e)
+            raise
+
+        return full_model_path, metadata_path
 
     def _load_model(self, path: str | Path):
         """Loads a model from disk.
