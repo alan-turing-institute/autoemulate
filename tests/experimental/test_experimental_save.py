@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.nn.mlp import MLP
 from autoemulate.experimental.emulators.polynomials import PolynomialRegression
 from autoemulate.experimental.emulators.random_forest import RandomForest
@@ -138,5 +139,17 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
             assert loaded.config == result.config
             assert loaded.r2_test == result.r2_test
             assert loaded.rmse_test == result.rmse_test
+        finally:
+            os.chdir(original_wd)
+
+
+def test_load_result_no_metadata(model_serialiser, model):
+    with TemporaryDirectory() as temp_dir:
+        original_wd = os.getcwd()
+        os.chdir(temp_dir)
+        try:
+            model_path = model_serialiser._save_model(model, None, None)
+            loaded = model_serialiser._load_result(model_path)
+            assert isinstance(loaded, Emulator)
         finally:
             os.chdir(original_wd)
