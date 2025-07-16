@@ -36,6 +36,36 @@ class Result:
         self.r2_train_std = r2_train_std
         self.rmse_train_std = rmse_train_std
 
+    def metadata_df(self) -> pd.DataFrame:
+        """
+        Return the Result object as a dataframe, without the model.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with columns:
+            ['id', 'model_name', 'x_transforms', 'y_transforms', 'config',
+            'r2_test', 'rmse_test', 'r2_test_std', 'rmse_test_std',
+            'r2_train', 'rmse_train', 'r2_train_std', 'rmse_train_std'].
+        """
+        return pd.DataFrame(
+            {
+                "id": [self.id],
+                "model_name": [self.model_name],
+                "x_transforms": [self.x_transforms],
+                "y_transforms": [self.y_transforms],
+                "config": [self.config],
+                "r2_test": [self.r2_test],
+                "rmse_test": [self.rmse_test],
+                "r2_test_std": [self.r2_test_std],
+                "rmse_test_std": [self.rmse_test_std],
+                "r2_train": [self.r2_train],
+                "rmse_train": [self.rmse_train],
+                "r2_train_std": [self.r2_train_std],
+                "rmse_train_std": [self.rmse_train_std],
+            }
+        )
+
 
 class Results:
     def __init__(
