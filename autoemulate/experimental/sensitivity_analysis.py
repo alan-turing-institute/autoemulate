@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.core.getipython import get_ipython
+from matplotlib.lines import Line2D
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
 from SALib.sample.morris import sample as morris_sample
@@ -626,7 +627,7 @@ def _plot_morris_analysis(
         legend_handles = []
         legend_labels = []
         for label, color in legend_items:
-            handle = plt.Line2D(
+            handle = Line2D(
                 [0],
                 [0],
                 marker="o",
