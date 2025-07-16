@@ -44,9 +44,9 @@ class Projectile(Simulator):
         TensorLike
             Distance travelled by projectile.
         """
-        assert x.shape[0] == 1, (
-            f"Simulator._forward expects a single input, got {x.shape[0]}"
-        )
+        assert (
+            x.shape[0] == 1
+        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
         y = simulate_projectile(x.cpu().numpy()[0])
         return torch.tensor([y]).view(-1, 1)
 
@@ -83,9 +83,9 @@ class ProjectileMultioutput(Simulator):
         TensorLike
             Distance travelled by projectile and impact velocity.
         """
-        assert x.shape[0] == 1, (
-            f"Simulator._forward expects a single input, got {x.shape[0]}"
-        )
+        assert (
+            x.shape[0] == 1
+        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
         y = simulate_projectile_multioutput(x.cpu().numpy()[0])
         return torch.tensor([y])
 
@@ -151,14 +151,14 @@ def event(t: float, y: NumpyLike, c: float) -> float:  # noqa: ARG001
 event.terminal = True  # pyright: ignore[reportFunctionMemberAccess]
 
 
-def simulator_base(x):
+def simulator_base(x: NumpyLike):
     """
     Simulator to solve ODE system for projectile motion with drag. Returns distance
     projectile travels.
 
     Parameters
     ----------
-    x: array
+    x: NumpyLike
         Array of input parameters (c, v0).
 
     Returns
@@ -194,7 +194,7 @@ def simulate_projectile(x: NumpyLike) -> float:
 
     Parameters
     ----------
-    x: array
+    x: NumpyLike
         Array of input parameters (c, v0).
 
     Returns
@@ -214,7 +214,7 @@ def simulate_projectile_multioutput(x: NumpyLike) -> tuple[float, float]:
 
     Parameters
     ----------
-    x: array
+    x: NumpyLike
         Array of input parameters (c, v0).
 
     Returns

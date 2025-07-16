@@ -37,9 +37,9 @@ class Epidemic(Simulator):
         TensorLike
             Peak infection rate.
         """
-        assert x.shape[0] == 1, (
-            f"Simulator._forward expects a single input, got {x.shape[0]}"
-        )
+        assert (
+            x.shape[0] == 1
+        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
         y = simulate_epidemic(x.cpu().numpy()[0])
         # TODO (#537): update with default dtype
         return torch.tensor([y], dtype=torch.float32).view(-1, 1)
@@ -51,12 +51,12 @@ def simulate_epidemic(x: NumpyLike, N: int = 1000, I0: int = 1) -> float:
 
     Parameters
     ----------
-    x: array-like
+    x: NumpyLike
         The parameters of the SIR model. The first element is the transmission rate
         (beta) and the second element is the recovery rate (gamma).
-    N: int, optional
+    N: int
         The total population size. Defaults to 1000.
-    I0: int, optional
+    I0: int
         The initial number of infected individuals. Defaults to 1.
 
     Returns
