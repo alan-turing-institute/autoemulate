@@ -18,8 +18,8 @@ class PolyMean(gpytorch.means.Mean):
         the mapping.
     input_size: int
         The number of features to be mapped.
-    batch_shape: int
-        Batch dimension.
+    batch_shape: int | None
+        Optional batch dimension.
     bias: bool
         Flag for including a bias in the defnition of the polymial.
         If set to `False` polynomial includes weights only.
@@ -56,7 +56,7 @@ class PolyMean(gpytorch.means.Mean):
         else:
             self.bias = None
 
-    def forward(self, x):
+    def forward(self, x: TensorLike):
         x_ = self.poly.transform(x)
         assert isinstance(self.weights, TensorLike)
         res = x_.matmul(self.weights).squeeze(-1)

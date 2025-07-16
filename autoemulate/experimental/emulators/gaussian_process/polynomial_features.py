@@ -2,10 +2,20 @@ import itertools
 
 import torch
 
+from autoemulate.experimental.types import TensorLike
+
 
 class PolynomialFeatures:
     """
     This class is used to map an existing feature set to a polynomial feature set.
+
+    Parameters
+    --------
+    degree: int
+        The degree of the polynomial for which we are defining
+        the mapping.
+    input_size: int
+        The number of features to be mapped.
 
     Examples
     -------
@@ -21,14 +31,6 @@ class PolynomialFeatures:
     Generate the new polynomial feature set:
 
     >>> X_deg_2 = pf.transform(X)
-
-    Parameters
-    --------
-    degree: int
-        The degree of the polynomial for which we are defining
-        the mapping.
-    input_size : int
-        The number of features to be mapped.
     """
 
     def __init__(self, degree: int, input_size: int):
@@ -64,7 +66,8 @@ class PolynomialFeatures:
             Ls += ld
         self.indices = Ls
 
-    def transform(self, x):
+    def transform(self, x: TensorLike):
+        """Generate the polynomial feature set."""
         if not self.indices:
             msg = "self.indices is set to None. Did you forget to call 'fit'?"
             raise ValueError(msg)
