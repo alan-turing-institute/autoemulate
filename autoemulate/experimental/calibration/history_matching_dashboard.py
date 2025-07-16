@@ -24,6 +24,9 @@ class HistoryMatchingDashboard:
         """
         Initialize the dashboard.
 
+        TODO: should just take in NROY (don't need threshold and takes
+        into account rank).
+
         Parameters
         ----------
         samples: NumpyLike or TensorLike
@@ -247,7 +250,7 @@ class HistoryMatchingDashboard:
             "Implausibility Distribution",
             "Bayesian Style Comparison",
         ]:
-            # Hide parameter selectors for plots that don't use them or where NROY isn't relevant
+            # Hide parameter selectors for plots that don't use them
             if plot_type in [
                 "Parameter Correlation Heatmap",
                 "Implausibility Distribution",
@@ -278,7 +281,8 @@ class HistoryMatchingDashboard:
 
             # Apply NROY filter if selected
             if self.nroy_filter.value:
-                nroy_mask = filtered_df["NROY"] == True
+                # values are boolean
+                nroy_mask = filtered_df["NROY"]
                 filtered_df = filtered_df[nroy_mask].copy()
 
                 # Filter implausibility scores accordingly
@@ -401,7 +405,7 @@ class HistoryMatchingDashboard:
         )
 
         # Highlight NROY points with an outline
-        nroy_points = df[df["NROY"] == True]
+        nroy_points = df[df["NROY"]]
         if not nroy_points.empty:
             plt.scatter(
                 nroy_points[param_x],
@@ -603,10 +607,10 @@ class HistoryMatchingDashboard:
             angles += angles[:1]  # Close the loop
 
             # Create extended scores array (for closing the loop)
-            extended_scores = sample_scores.tolist() + [sample_scores[0]]
+            extended_scores = [*sample_scores.tolist(), sample_scores[0]]
 
             # Create figure
-            fig, ax = plt.subplots(figsize=(12, 8), subplot_kw=dict(polar=True))
+            fig, ax = plt.subplots(figsize=(12, 8), subplot_kw={"polar": True})
 
             # Plot threshold
             plt.plot(
@@ -624,7 +628,7 @@ class HistoryMatchingDashboard:
             plt.xticks(angles[:-1], self.output_names, fontsize=10)
 
             # Set y limits
-            max_score = max(max(extended_scores), threshold * 1.5)
+            max_score = max(*extended_scores, threshold * 1.5)
             plt.ylim(0, max_score)
 
             # Create title with parameter values
@@ -674,7 +678,7 @@ class HistoryMatchingDashboard:
             plt.axis("off")
             plt.tight_layout()
 
-    def _plot_emulator_diagnostics(self, df, impl_scores):
+    def _plot_emulator_diagnostics(self, df, impl_scores):  # noqa: PLR0915
         """
         Plot emulator diagnostic plots similar to those in the hmer package
 
