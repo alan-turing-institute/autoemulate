@@ -126,12 +126,10 @@ def test_save_result_saves_model_and_metadata(model_serialiser, sample_data_y2d)
         original_wd = os.getcwd()
         os.chdir(temp_dir)
         try:
-            model_path, metadata_path = model_serialiser._save_result(
-                result, None, None
-            )
+            model_path = model_serialiser._save_result(result, None, None)
+            metadata_path = Path(f"{model_path}_metadata.csv")
             assert Path(model_path).exists()
             assert Path(metadata_path).exists()
-            assert "_metadata.csv" in metadata_path.name
             assert metadata_path.parent == Path(model_path).parent
         finally:
             os.chdir(original_wd)
