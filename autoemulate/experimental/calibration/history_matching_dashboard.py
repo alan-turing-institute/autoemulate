@@ -42,9 +42,9 @@ class HistoryMatchingDashboard:
         """
         # Convert samples to DataFrame
         if isinstance(samples, np.ndarray):
-            self.samples_df = pd.DataFrame(samples, columns=param_names)
+            self.samples_df = pd.DataFrame(samples, columns=param_names)  # pyright: ignore[reportArgumentType]
         elif isinstance(samples, TensorLike):
-            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)
+            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)  # pyright: ignore[reportArgumentType]
 
         # Store other data
         if isinstance(impl_scores, TensorLike):
@@ -189,12 +189,6 @@ class HistoryMatchingDashboard:
             [self.param_selection_label, self.param_checkbox_container]
         )
 
-        self.wave_controls = widgets.VBox(
-            [
-                self.wave_selector,
-                self.param_selection_controls,  # Add parameter selection here
-            ]
-        )
         self.radar_controls = widgets.HBox([self.sample_selector])
 
         # Main controls that are always visible
@@ -287,7 +281,9 @@ class HistoryMatchingDashboard:
 
                 # Filter implausibility scores accordingly
                 if len(filtered_scores) == len(filtered_df.index.to_list()):
-                    filtered_scores = filtered_scores[nroy_mask.values].copy()
+                    filtered_scores = filtered_scores[
+                        np.array(nroy_mask.values, dtype=bool)
+                    ].copy()
 
             # Update threshold
             threshold = self.threshold_slider.value
@@ -455,20 +451,17 @@ class HistoryMatchingDashboard:
             # Create histograms
             plt.hist(max_impl, bins=30, alpha=0.7, label="Max Implausibility")
             plt.hist(min_impl, bins=30, alpha=0.5, label="Min Implausibility")
+
+            below_threshold = (max_impl <= threshold).sum() / len(max_impl) * 100
         else:
             # Single output case
             plt.hist(impl_scores, bins=30, alpha=0.7, label="Implausibility")
+            below_threshold = (impl_scores <= threshold).sum() / len(impl_scores) * 100
 
         # Add vertical line for threshold
         plt.axvline(
             x=threshold, color="r", linestyle="--", label=f"Threshold = {threshold}"
         )
-
-        # Calculate percentage below threshold
-        if len(impl_scores.shape) > 1:
-            below_threshold = (max_impl <= threshold).sum() / len(max_impl) * 100
-        else:
-            below_threshold = (impl_scores <= threshold).sum() / len(impl_scores) * 100
 
         plt.title(
             f"Implausibility Distribution\n"
@@ -537,7 +530,7 @@ class HistoryMatchingDashboard:
             df[param_z],
             c=max_impl,
             cmap="viridis_r",
-            s=30,
+            s=30,  # pyright: ignore[reportCallIssue]
             alpha=0.7,
         )
 
@@ -549,7 +542,7 @@ class HistoryMatchingDashboard:
                 nroy_points[param_y],
                 nroy_points[param_z],
                 color="green",
-                s=50,
+                s=50,  # pyright: ignore[reportCallIssue]
                 alpha=1.0,
                 marker="o",
                 label="NROY Points",
@@ -558,7 +551,7 @@ class HistoryMatchingDashboard:
         # Add labels
         ax.set_xlabel(param_x)
         ax.set_ylabel(param_y)
-        ax.set_zlabel(param_z)
+        ax.set_zlabel(param_z)  # pyright: ignore[reportAttributeAccessIssue]
 
         # Add colorbar
         cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
