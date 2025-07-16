@@ -384,7 +384,6 @@ class HistoryMatchingDashboard:
 
     def _plot_pairwise_parameters(self, df, impl_scores):
         """Plot pairwise parameter visualization"""
-        threshold = self.threshold_slider.value
         param_x = self.param_x.value
         param_y = self.param_y.value
 
@@ -603,8 +602,7 @@ class HistoryMatchingDashboard:
             angles = np.linspace(0, 2 * np.pi, n_outputs, endpoint=False).tolist()
             angles += angles[:1]  # Close the loop
 
-            # Create extended output names and scores arrays (for closing the loop)
-            extended_output_names = self.output_names + [self.output_names[0]]
+            # Create extended scores array (for closing the loop)
             extended_scores = sample_scores.tolist() + [sample_scores[0]]
 
             # Create figure
