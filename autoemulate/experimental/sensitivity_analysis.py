@@ -3,6 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from IPython.core.getipython import get_ipython
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
 from SALib.sample.morris import sample as morris_sample
@@ -99,6 +100,11 @@ class SensitivityAnalysis(ConversionMixin):
         ----------
         x: TensorLike
             Simulator input parameter values [n_samples, n_parameters].
+
+        Returns
+        -------
+        dict
+            Dictionary with keys ["num_vars", "names", "bounds"]
         """
         if x.ndim == 1:
             msg = "x must be a 2D array."
@@ -124,7 +130,17 @@ class SensitivityAnalysis(ConversionMixin):
 
     def _predict(self, param_samples: NumpyLike) -> NumpyLike:
         """
-        Make predictions with emulator for N input samples.
+        Make predictions with emulator for parameter samples.
+
+        Parameters
+        ----------
+        param_samples: NumpyLike
+            Array of parameter samples.
+
+        Returns
+        -------
+        NumpyLike
+            Array of emulator predictions.
         """
 
         param_tensor = self._convert_to_tensors(param_samples)
@@ -135,7 +151,7 @@ class SensitivityAnalysis(ConversionMixin):
         if isinstance(y_pred, TensorLike):
             y_pred_np, _ = self._convert_to_numpy(y_pred)
         elif isinstance(y_pred, DistributionLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float().detach())
+            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float())
         else:
             msg = "Emulator has to return Tensor or Distribution"
             raise ValueError(msg)
@@ -229,7 +245,12 @@ class SensitivityAnalysis(ConversionMixin):
         return _morris_results_to_df(results, self.problem)
 
     @staticmethod
-    def plot_sobol(results, index="S1", n_cols=None, figsize=None):
+    def plot_sobol(
+        results: pd.DataFrame,
+        index: str = "S1",
+        n_cols: int | None = None,
+        figsize: tuple | None = None,
+    ):
         """
         Plot Sobol sensitivity analysis results.
 
@@ -242,16 +263,22 @@ class SensitivityAnalysis(ConversionMixin):
             - "S1": first-order indices
             - "S2": second-order/interaction indices
             - "ST": total-order indices
-        n_cols: int, optional
+        n_cols: int | None
             The number of columns in the plot. Defaults to 3 if there are 3 or
-            more outputs, otherwise the number of outputs.
-        figsize: tuple, optional
+            more outputs, otherwise the number of outputs. Defaults to None.
+        figsize: tuple | None
             Figure size as (width, height) in inches. If None, set automatically.
+            Defaults to None.
         """
         return _plot_sobol_analysis(results, index, n_cols, figsize)
 
     @staticmethod
-    def plot_morris(results, param_groups=None, n_cols=None, figsize=None):
+    def plot_morris(
+        results: pd.DataFrame,
+        param_groups: dict[str, list[str]] | None = None,
+        n_cols: int | None = None,
+        figsize: tuple | None = None,
+    ):
         """
         Plot Morris analysis results.
 
@@ -368,7 +395,7 @@ def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
     return pd.concat(rows)
 
 
-def _validate_input(results, index):
+def _validate_input(results: pd.DataFrame, index: str):
     if not isinstance(results, pd.DataFrame):
         results = _sobol_results_to_df(results)
         # we only want to plot one index type at a time
@@ -380,7 +407,7 @@ def _validate_input(results, index):
     return results[results["index"].isin([index])]
 
 
-def _calculate_layout(n_outputs, n_cols=None):
+def _calculate_layout(n_outputs: int, n_cols: int | None = None):
     if n_cols is None:
         n_cols = 3 if n_outputs >= 3 else n_outputs
     n_rows = int(np.ceil(n_outputs / n_cols))
@@ -406,29 +433,34 @@ def _create_bar_plot(ax, output_data, output_name):
     ax.set_title(f"Output: {output_name}")
 
 
-def _plot_sobol_analysis(results, index="S1", n_cols=None, figsize=None):
+def _plot_sobol_analysis(
+    results: pd.DataFrame,
+    index: str = "S1",
+    n_cols: int | None = None,
+    figsize: tuple | None = None,
+):
     """
     Plot the sobol sensitivity analysis results.
 
     Parameters:
     -----------
-    results : pd.DataFrame
+    results: pd.DataFrame
         The results from sobol_results_to_df.
-    index : str, default "S1"
+    index: str, default "S1"
         The type of sensitivity index to plot.
         - "S1": first-order indices
         - "S2": second-order/interaction indices
         - "ST": total-order indices
-    n_cols : int, optional
-        The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
-        otherwise the number of outputs.
-    figsize : tuple, optional
+    n_cols: int | None
+        The number of columns in the plot. If None, sets n_cols to 3 if there are 3 or
+        more outputs, otherwise the number of outputs. Defaults to None.
+    figsize: tuple | None
         Figure size as (width, height) in inches.If None, automatically calculated.
-
+        Defaults to None.
     """
     with plt.style.context("fast"):
         # prepare data
-        results = _validate_input(results, index)
+        results = _validate_input(results, index)  # pyright: ignore[reportAssignmentType]
         unique_outputs = results["output"].unique()
         n_outputs = len(unique_outputs)
 
@@ -475,12 +507,12 @@ def _morris_results_to_df(
 
     Parameters:
     -----------
-    results : dict
+    results: dict
         The Morris indices returned by morris_analysis.
-    problem : dict
+    problem: dict
         The problem definition, including 'names'.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'mu', 'mu_star', 'sigma',
@@ -505,20 +537,25 @@ def _morris_results_to_df(
     return pd.concat(rows, ignore_index=True)
 
 
-def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None):
+def _plot_morris_analysis(
+    results: pd.DataFrame,
+    param_groups: dict[str, list[str]] | None = None,
+    n_cols: int | None = None,
+    figsize: tuple | None = None,
+):
     """
     Plot the Morris sensitivity analysis results.
 
-    Parameters:
+    Parameters
     -----------
-    results : pd.DataFrame
+    results: pd.DataFrame
         The results from morris_results_to_df.
-    param_groups : dict, optional
+    param_groups: dict, optional
         Dictionary mapping parameter names to groups for coloring.
-    n_cols : int, optional
+    n_cols: int, optional
         The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
         otherwise the number of outputs.
-    figsize : tuple, optional
+    figsize: tuple, optional
         Figure size as (width, height) in inches. If None, automatically calculated.
     """
     with plt.style.context("fast"):
@@ -564,10 +601,10 @@ def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None)
         else:
             # Color by parameter groups
             unique_groups = list(set(param_groups.values()))
-            group_colors = {
+            param_colors = {
                 group: colors[i % len(colors)] for i, group in enumerate(unique_groups)
             }
-            legend_items = [(group, group_colors[group]) for group in unique_groups]
+            legend_items = [(group, param_colors[group]) for group in unique_groups]
             legend_title = "Parameter Groups"
 
         # Plot each output
@@ -578,7 +615,7 @@ def _plot_morris_analysis(results, param_groups=None, n_cols=None, figsize=None)
                 output_data,
                 output,
                 param_groups,
-                param_colors if param_groups is None else group_colors,
+                param_colors,
             )
 
         # remove any empty subplots
@@ -710,11 +747,15 @@ def _display_figure(fig):
     Display a matplotlib figure appropriately based on the environment (Jupyter
     notebook or terminal).
 
-    Args:
-        fig: matplotlib figure object to display
+    Parameters
+    -----------
+    fig: matplotlib figure
+        The object to display.
 
-    Returns:
-        fig: the input figure object
+    Returns
+    --------
+    fig
+        The input figure object.
     """
     # Are we in Jupyter?
     try:
