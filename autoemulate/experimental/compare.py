@@ -431,7 +431,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         model_obj: int | Emulator | Result,
         path: str | Path | None = None,
         use_timestamp: bool = True,
-    ) -> Path | tuple[Path, Path]:
+    ) -> Path:
         """Saves model to disk.
 
         Parameters
