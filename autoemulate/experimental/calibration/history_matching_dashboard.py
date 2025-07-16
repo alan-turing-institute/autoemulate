@@ -69,7 +69,7 @@ class HistoryMatchingDashboard:
         self._create_ui()
 
     def _create_ui(self):
-        """Create the user interface widgets with dynamic controls"""
+        """Create the user interface widgets with dynamic controls."""
         # Plot type selection
         self.plot_type = widgets.Dropdown(
             options=[
@@ -81,7 +81,6 @@ class HistoryMatchingDashboard:
                 "Implausibility Radar",
                 "Emulator Diagnostics",
                 "Bayesian Style Comparison",
-                # "Wave Evolution",  # New plot type
             ],
             value="Parameter vs Implausibility",
             description="Plot Type:",
@@ -209,7 +208,7 @@ class HistoryMatchingDashboard:
         self.param_selection_controls.layout.display = "none"  # Initially hidden
 
     def _update_visible_controls(self, change: dict):
-        """Show/hide controls based on selected plot type"""
+        """Show/hide controls based on selected plot type."""
         plot_type = change["new"]
 
         # Default - show X and Y parameters, hide Z parameter
@@ -234,7 +233,6 @@ class HistoryMatchingDashboard:
         elif plot_type == "Implausibility Radar":
             # Show sample selector for radar plot
             self.radar_controls.layout.display = "flex"
-            # Don't show NROY filter (single sample)
 
         elif plot_type in [
             "Parameter Correlation Heatmap",
@@ -259,20 +257,19 @@ class HistoryMatchingDashboard:
             self.nroy_filter.layout.display = "flex"
 
     def _update_plot(self, _):
-        """Update the plot based on current widget values"""
+        """Update the plot based on current widget values."""
         with self.output:
             clear_output(wait=True)
 
             # Get current plot type
             plot_type = self.plot_type.value
 
-            # filtered_df = self.samples_df.iloc[start_idx:end_idx].copy()
             filtered_df = self.samples_df.copy()
             filtered_scores = self.impl_scores.copy()
 
             # Apply NROY filter if selected
             if self.nroy_filter.value:
-                # values are boolean
+                # NROY values are boolean
                 nroy_mask = filtered_df["NROY"]
                 filtered_df = filtered_df[nroy_mask].copy()
 
@@ -345,7 +342,7 @@ class HistoryMatchingDashboard:
     def _plot_parameter_vs_implausibility(
         self, df: pd.DataFrame, impl_scores: NumpyLike
     ):
-        """Plot parameter vs implausibility"""
+        """Plot parameter vs implausibility."""
         threshold = self.threshold_slider.value
         param = self.param_x.value
 
@@ -384,7 +381,7 @@ class HistoryMatchingDashboard:
         plt.tight_layout()
 
     def _plot_pairwise_parameters(self, df: pd.DataFrame, impl_scores: NumpyLike):
-        """Plot pairwise parameter visualization"""
+        """Plot pairwise parameter visualization."""
         param_x = self.param_x.value
         param_y = self.param_y.value
 
@@ -436,7 +433,7 @@ class HistoryMatchingDashboard:
         plt.tight_layout()
 
     def _plot_implausibility_distribution(self, impl_scores: NumpyLike):
-        """Plot implausibility distribution"""
+        """Plot implausibility distribution."""
         threshold = self.threshold_slider.value
 
         plt.figure(figsize=(12, 6))
@@ -473,7 +470,7 @@ class HistoryMatchingDashboard:
         plt.tight_layout()
 
     def _plot_parameter_correlation(self, df):
-        """Plot parameter correlation heatmap"""
+        """Plot parameter correlation heatmap."""
         # Get only parameter columns
         param_names = [p for p in self.param_names if p in df.columns]
         params_df = df[param_names]
@@ -506,7 +503,7 @@ class HistoryMatchingDashboard:
         plt.tight_layout()
 
     def _plot_3d_visualization(self, df: pd.DataFrame, impl_scores: NumpyLike):
-        """Create a 3D visualization of parameters"""
+        """Create a 3D visualization of parameters."""
         threshold = self.threshold_slider.value
         param_x = self.param_x.value
         param_y = self.param_y.value
@@ -567,7 +564,7 @@ class HistoryMatchingDashboard:
         plt.tight_layout()
 
     def _plot_implausibility_radar(self, df: pd.DataFrame, impl_scores: NumpyLike):
-        """Create radar plots showing implausibility for different outputs"""
+        """Create radar plots showing implausibility for different outputs."""
         # Make sure impl_scores is 2D
         if len(impl_scores.shape) == 1:
             impl_scores = impl_scores.reshape(-1, 1)
@@ -674,7 +671,7 @@ class HistoryMatchingDashboard:
         self, df: pd.DataFrame, impl_scores: NumpyLike
     ):
         """
-        Plot emulator diagnostic plots similar to those in the hmer package
+        Plot emulator diagnostic plots similar to those in the hmer package.
 
         This creates diagnostic plots for emulator validation showing:
         1. Standardized errors
@@ -941,7 +938,7 @@ class HistoryMatchingDashboard:
             plt.subplots_adjust(top=0.9)  # Make room for suptitle
 
     def display(self):
-        """Display the dashboard"""
+        """Display the dashboard."""
 
         heading = widgets.HTML(value="<h2>History Matching Dashboard</h2>")
 
