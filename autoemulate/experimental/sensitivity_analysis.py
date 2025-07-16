@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.core.getipython import get_ipython
+from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from SALib.analyze.morris import analyze as morris_analyze
 from SALib.analyze.sobol import analyze as sobol_analyze
@@ -13,6 +14,7 @@ from SALib.util import ResultDict
 
 from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.plotting import display_figure
 from autoemulate.experimental.types import DistributionLike, NumpyLike, TensorLike
 
 logger = logging.getLogger("autoemulate")
@@ -348,12 +350,10 @@ def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
 
     Parameters:
     -----------
-    results : dict
+    results: dict
         The Sobol indices returned by sobol_analysis.
-    problem : dict, optional
-        The problem definition, including 'names'.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
@@ -409,13 +409,14 @@ def _validate_input(results: pd.DataFrame, index: str):
 
 
 def _calculate_layout(n_outputs: int, n_cols: int | None = None):
+    """Calculate plot layout (n rows, n cols)."""
     if n_cols is None:
         n_cols = 3 if n_outputs >= 3 else n_outputs
     n_rows = int(np.ceil(n_outputs / n_cols))
     return n_rows, n_cols
 
 
-def _create_bar_plot(ax, output_data, output_name):
+def _create_bar_plot(ax: Axes, output_data: dict, output_name: str):
     """Create a bar plot for a single output."""
     bar_color = "#4C4B63"
     x_pos = np.arange(len(output_data))
@@ -497,7 +498,7 @@ def _plot_sobol_analysis(
 
         plt.tight_layout()
 
-    return _display_figure(fig)
+    return display_figure(fig)
 
 
 def _morris_results_to_df(
@@ -659,11 +660,15 @@ def _plot_morris_analysis(
 
         plt.tight_layout()
 
-    return _display_figure(fig)
+    return display_figure(fig)
 
 
 def _create_morris_plot(
-    ax, output_data, output_name, param_groups=None, color_mapping=None
+    ax: Axes,
+    output_data: pd.DataFrame,
+    output_name: str,
+    param_groups: dict | None = None,
+    color_mapping: dict | None = None,
 ):
     """Create a Morris plot (mu_star vs sigma) for a single output."""
 
@@ -741,34 +746,3 @@ def _create_morris_plot(
     ax.set_ylabel("μ* (Modified Mean)")
     ax.set_title(f"Output: {output_name}")
     ax.grid(True, alpha=0.3)
-
-
-def _display_figure(fig):
-    """
-    Display a matplotlib figure appropriately based on the environment (Jupyter
-    notebook or terminal).
-
-    Parameters
-    -----------
-    fig: matplotlib figure
-        The object to display.
-
-    Returns
-    --------
-    fig
-        The input figure object.
-    """
-    # Are we in Jupyter?
-    try:
-        is_jupyter = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
-    except NameError:
-        is_jupyter = False
-
-    if is_jupyter:
-        # we don't show otherwise it will double plot
-        plt.close(fig)
-        return fig
-    # in terminal, show the plot
-    plt.close(fig)
-    plt.show()
-    return fig
