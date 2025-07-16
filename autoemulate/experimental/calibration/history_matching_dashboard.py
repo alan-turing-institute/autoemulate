@@ -42,9 +42,13 @@ class HistoryMatchingDashboard:
         """
         # Convert samples to DataFrame
         if isinstance(samples, np.ndarray):
-            self.samples_df = pd.DataFrame(samples, columns=param_names)  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(
+                samples, columns=param_names
+            )  # pyright: ignore[reportArgumentType]
         elif isinstance(samples, TensorLike):
-            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(
+                samples.numpy(), columns=param_names
+            )  # pyright: ignore[reportArgumentType]
 
         # Store other data
         if isinstance(impl_scores, TensorLike):
@@ -211,7 +215,7 @@ class HistoryMatchingDashboard:
         self.param_z.layout.display = "none"  # Initially hide Z parameter (only for 3D)
         self.param_selection_controls.layout.display = "none"  # Initially hidden
 
-    def _update_visible_controls(self, change):
+    def _update_visible_controls(self, change: dict):
         """Show/hide controls based on selected plot type"""
         plot_type = change["new"]
 
@@ -343,7 +347,9 @@ class HistoryMatchingDashboard:
                 plt.tight_layout()
                 plt.show()
 
-    def _plot_parameter_vs_implausibility(self, df, impl_scores):
+    def _plot_parameter_vs_implausibility(
+        self, df: pd.DataFrame, impl_scores: NumpyLike
+    ):
         """Plot parameter vs implausibility"""
         threshold = self.threshold_slider.value
         param = self.param_x.value
@@ -382,7 +388,7 @@ class HistoryMatchingDashboard:
         plt.legend()
         plt.tight_layout()
 
-    def _plot_pairwise_parameters(self, df, impl_scores):
+    def _plot_pairwise_parameters(self, df: pd.DataFrame, impl_scores: NumpyLike):
         """Plot pairwise parameter visualization"""
         param_x = self.param_x.value
         param_y = self.param_y.value
@@ -436,7 +442,7 @@ class HistoryMatchingDashboard:
             plt.legend()
         plt.tight_layout()
 
-    def _plot_implausibility_distribution(self, impl_scores):
+    def _plot_implausibility_distribution(self, impl_scores: NumpyLike):
         """Plot implausibility distribution"""
         threshold = self.threshold_slider.value
 
@@ -506,7 +512,7 @@ class HistoryMatchingDashboard:
         plt.colorbar(label="Correlation")
         plt.tight_layout()
 
-    def _plot_3d_visualization(self, df, impl_scores):
+    def _plot_3d_visualization(self, df: pd.DataFrame, impl_scores: NumpyLike):
         """Create a 3D visualization of parameters"""
         threshold = self.threshold_slider.value
         param_x = self.param_x.value
@@ -567,7 +573,7 @@ class HistoryMatchingDashboard:
 
         plt.tight_layout()
 
-    def _plot_implausibility_radar(self, df, impl_scores):
+    def _plot_implausibility_radar(self, df: pd.DataFrame, impl_scores: NumpyLike):
         """Create radar plots showing implausibility for different outputs"""
         # Make sure impl_scores is 2D
         if len(impl_scores.shape) == 1:
@@ -671,7 +677,9 @@ class HistoryMatchingDashboard:
             plt.axis("off")
             plt.tight_layout()
 
-    def _plot_emulator_diagnostics(self, df, impl_scores):  # noqa: PLR0915
+    def _plot_emulator_diagnostics(
+        self, df: pd.DataFrame, impl_scores: NumpyLike
+    ):  # noqa: PLR0915
         """
         Plot emulator diagnostic plots similar to those in the hmer package
 
@@ -812,7 +820,7 @@ class HistoryMatchingDashboard:
 
         plt.tight_layout()
 
-    def _plot_bayesian_style_comparison(self, df, impl_scores):
+    def _plot_bayesian_style_comparison(self, df: pd.DataFrame, impl_scores: NumpyLike):
         """
         Create a Bayesian-style visualization showing parameter constraints
         with prior, posterior, and true values, using existing dashboard controls.
