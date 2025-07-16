@@ -75,7 +75,8 @@ class BayesianCalibration(TorchDeviceMixin):
         self.output_names = list(observations.keys())
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info(
-            "Initializing BayesianCalibration with parameters: %s", calibration_params
+            "Initializing BayesianCalibration with parameters: %s",
+            self.calibration_params,
         )
 
         # Check observation tensors are 1D (convert if 0D)
