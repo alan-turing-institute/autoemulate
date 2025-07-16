@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
 from autoemulate.experimental.logging_config import get_configured_logger
+from autoemulate.experimental.simulations.experimental_design import LatinHypercube
 from autoemulate.experimental.types import TensorLike
-from autoemulate.experimental_design import LatinHypercube
 
 logger = logging.getLogger("autoemulate")
 
