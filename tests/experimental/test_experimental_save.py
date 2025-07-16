@@ -103,7 +103,7 @@ def test_save_model_with_model_name(model_serialiser, model):
             os.chdir(original_wd)
 
 
-def test_save_result_saves_model_and_metadata(model_serialiser, sample_data_y2d):
+def test_save_and_load_result(model_serialiser, sample_data_y2d):
     x, y = sample_data_y2d
     em = TransformedEmulator(
         x, y, x_transforms=[StandardizeTransform()], y_transforms=None, model=MLP
@@ -131,34 +131,6 @@ def test_save_result_saves_model_and_metadata(model_serialiser, sample_data_y2d)
             assert Path(model_path).exists()
             assert Path(metadata_path).exists()
             assert metadata_path.parent == Path(model_path).parent
-        finally:
-            os.chdir(original_wd)
-
-
-def test_load_result(model_serialiser, sample_data_y2d):
-    x, y = sample_data_y2d
-    em = TransformedEmulator(
-        x, y, x_transforms=[StandardizeTransform()], y_transforms=None, model=MLP
-    )
-    result = Result(
-        id=12345,
-        model_name="dummy_model",
-        model=em,
-        config={"foo": 1},
-        r2_test=0.9,
-        r2_test_std=0.01,
-        r2_train=0.95,
-        r2_train_std=0.015,
-        rmse_test=0.1,
-        rmse_train=0.05,
-        rmse_test_std=0.02,
-        rmse_train_std=0.025,
-    )
-    with TemporaryDirectory() as temp_dir:
-        original_wd = os.getcwd()
-        os.chdir(temp_dir)
-        try:
-            model_path = model_serialiser._save_result(result, None, None)
             loaded = model_serialiser._load_result(model_path)
             assert isinstance(loaded, Result)
             assert loaded.id == result.id
