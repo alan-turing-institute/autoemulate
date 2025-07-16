@@ -1,9 +1,10 @@
-import matplotlib.pyplot as plt
 import numpy as np
-from numpy.fft import fft2
-from numpy.fft import ifft2
+import torch
+from numpy.fft import fft2, ifft2
 from scipy.integrate import solve_ivp
-from tqdm import tqdm
+
+from autoemulate.experimental.simulations.base import Simulator
+from autoemulate.experimental.types import NumpyLike, TensorLike
 
 integrator_keywords = {}
 integrator_keywords["rtol"] = 1e-12
@@ -11,9 +12,78 @@ integrator_keywords["method"] = "RK45"
 integrator_keywords["atol"] = 1e-12
 
 
-def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
+class ReactionDiffusion(Simulator):
     """
-    Define the reaction-diffusion PDE in the Fourier (kx, ky) space
+    Simulate the reaction-diffusion PDE for a given set of parameters.
+    """
+
+    def __init__(  # noqa: PLR0913
+        self,
+        parameters_range: dict[str, tuple[float, float]] | None = None,
+        output_names: list[str] | None = None,
+        return_timeseries: bool = False,
+        log_level: str = "progress_bar",
+        n: int = 32,
+        L: int = 20,
+        T: float = 10.0,
+        dt: float = 0.1,
+    ):
+        """
+        Parameters
+        ----------
+        parameters_range: dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        output_names: list[str]
+            List of output parameters' names.
+        log_level: str
+            Logging level for the simulator. Can be one of:
+            - "progress_bar": shows a progress bar during batch simulations
+            - "debug": shows debug messages
+            - "info": shows informational messages
+            - "warning": shows warning messages
+            - "error": shows error messages
+            - "critical": shows critical messages
+        return_timeseries: bool
+            Whether to return the full timeseries or just the spatial solution at the
+            final time step. Defaults to False.
+        n: int
+            Number of spatial points in each direction.
+        L: int
+            Domain size in X and Y directions.
+        T: float
+            Total time to simulate.
+        dt: float
+            Time step size.
+        """
+        if parameters_range is None:
+            parameters_range = {"beta": (1.0, 2.0), "d": (0.05, 0.3)}
+        if output_names is None:
+            output_names = ["solution"]
+        super().__init__(parameters_range, output_names, log_level)
+        self.return_timeseries = return_timeseries
+        self.n = n
+        self.L = L
+        self.T = T
+        self.dt = dt
+
+    def _forward(self, x: TensorLike) -> TensorLike:
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
+        u_sol, v_sol = simulate_reaction_diffusion(
+            x.cpu().numpy()[0], self.return_timeseries, self.n, self.L, self.T, self.dt
+        )
+
+        # concatenate U and V arrays (flattened across time and space)
+        concat_array = np.concatenate([u_sol.ravel(), v_sol.ravel()])
+
+        # return tensor shape (1, 2*self.t*self.n*self.n)
+        return torch.tensor(concat_array, dtype=torch.float32).reshape(1, -1)
+
+
+def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):  # noqa: PLR0913, ARG001
+    """
+    Define the reaction-diffusion PDE in the Fourier (kx, ky) space.
     """
 
     ut = np.reshape(uvt[:N], (n, n))
@@ -27,37 +97,47 @@ def reaction_diffusion(t, uvt, K22, d1, d2, beta, n, N):
     utrhs = np.reshape((fft2(u - u3 - uv2 + beta * u2v + beta * v3)), (N, 1))
     vtrhs = np.reshape((fft2(v - u2v - v3 - beta * u3 - beta * uv2)), (N, 1))
     uvt_reshaped = np.reshape(uvt, (len(uvt), 1))
-    uvt_updated = np.squeeze(
+    return np.squeeze(
         np.vstack(
             (-d1 * K22 * uvt_reshaped[:N] + utrhs, -d2 * K22 * uvt_reshaped[N:] + vtrhs)
         )
     )
-    return uvt_updated
 
 
-def simulate_reaction_diffusion(x, return_timeseries=False, n=32, L=20, T=10.0, dt=0.1):
-    """ "
+def simulate_reaction_diffusion(  # noqa: PLR0913
+    x: NumpyLike,
+    return_timeseries: bool = False,
+    n: int = 32,
+    L: int = 20,
+    T: float = 10.0,
+    dt: float = 0.1,
+) -> tuple[NumpyLike, NumpyLike]:
+    """
     Simulate the reaction-diffusion PDE for a given set of parameters
 
     Parameters
     ----------
-    x : array-like
-        The parameters of the reaction-diffusion model. The first element is the reaction coefficient (beta) and the second element is the diffusion coefficient (d).
-    n : int
-        Number of spatial points in each direction
-    L : int
-        Domain size in X and Y directions
-    T : float
-        Total time to simulate
-    dt : float
-        Time step size
+    x: NumpyLike
+        The parameters of the reaction-diffusion model. The first element is the
+        reaction coefficient (beta) and the second element is the diffusion
+        coefficient (d).
+    return_timeseries: bool
+        Whether to return the full timeseries or just the spatial solution at the final
+        time step. Defaults to False.
+    n: int
+        Number of spatial points in each direction.
+    L: int
+        Domain size in X and Y directions.
+    T: float
+        Total time to simulate.
+    dt: float
+        Time step size.
 
     Returns
     -------
-    u_sol : array-like
-        The spatial solution of the reaction-diffusion PDE at the final time point
-    v_sol : array-like
-        The spatial solution of the reaction-diffusion PDE at the final time point
+    tuple[NumpyLike, NumpyLike]
+        [u_sol, v_sol], the spatial solution of the reaction-diffusion PDE, either as a
+        timeseries or at the final time point of `return_timeseries` is False.
     """
     beta, d = x
     d1 = d2 = d
@@ -102,14 +182,14 @@ def simulate_reaction_diffusion(x, return_timeseries=False, n=32, L=20, T=10.0, 
         )
     )
 
-    # Solve the PDE in the Fourier space, where it rseduces to system of ODEs
+    # Solve the PDE in the Fourier space, where it reduces to system of ODEs
     uvsol = solve_ivp(
         reaction_diffusion,
         (t[0], t[-1]),
         y0=uvt0,
         t_eval=t,
         args=(K22, d1, d2, beta, n, N),
-        **integrator_keywords
+        **integrator_keywords,
     )
     uvsol = uvsol.y
 
@@ -122,8 +202,7 @@ def simulate_reaction_diffusion(x, return_timeseries=False, n=32, L=20, T=10.0, 
 
     if return_timeseries:
         return u.transpose(2, 0, 1), v.transpose(2, 0, 1)
-    else:
-        # Return the last snapshot
-        u_sol = u[:, :, -1]
-        v_sol = v[:, :, -1]
-        return u_sol, v_sol
+    # Return the last snapshot
+    u_sol = u[:, :, -1]
+    v_sol = v[:, :, -1]
+    return u_sol, v_sol

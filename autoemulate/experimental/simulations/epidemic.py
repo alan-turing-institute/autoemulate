@@ -15,12 +15,13 @@ class Epidemic(Simulator):
         self,
         parameters_range=None,
         output_names=None,
+        log_level: str = "progress_bar",
     ):
         if parameters_range is None:
             parameters_range = {"beta": (0.1, 0.5), "gamma": (0.01, 0.2)}
         if output_names is None:
             output_names = ["infection_rate"]
-        super().__init__(parameters_range, output_names)
+        super().__init__(parameters_range, output_names, log_level)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -36,6 +37,9 @@ class Epidemic(Simulator):
         TensorLike
             Peak infection rate.
         """
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
         y = simulate_epidemic(x.cpu().numpy()[0])
         # TODO (#537): update with default dtype
         return torch.tensor([y], dtype=torch.float32).view(-1, 1)
