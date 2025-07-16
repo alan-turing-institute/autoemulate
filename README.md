@@ -12,7 +12,7 @@
 | autoemulate/emulators/\_\_init\_\_.py                                        |       22 |        0 |    100% |           |
 | autoemulate/emulators/conditional\_neural\_process.py                        |      103 |        7 |     93% |254-255, 261-277, 282, 296 |
 | autoemulate/emulators/conditional\_neural\_process\_attn.py                  |        9 |        0 |    100% |           |
-| autoemulate/emulators/gaussian\_process.py                                   |      104 |        8 |     92% |73, 259, 274, 282, 289, 300, 321, 340 |
+| autoemulate/emulators/gaussian\_process.py                                   |      104 |        9 |     91% |73, 274, 282, 289, 300, 310, 321, 332, 340 |
 | autoemulate/emulators/gaussian\_process\_mogp.py                             |       33 |       33 |      0% |      1-82 |
 | autoemulate/emulators/gaussian\_process\_mt.py                               |       97 |        9 |     91% |71, 240, 246, 254, 265, 271, 278, 286, 290 |
 | autoemulate/emulators/gaussian\_process\_sklearn.py                          |       42 |        0 |    100% |           |
@@ -35,7 +35,7 @@
 | autoemulate/emulators/support\_vector\_machines.py                           |       54 |        3 |     94% |     80-82 |
 | autoemulate/experimental/\_\_init\_\_.py                                     |        0 |        0 |    100% |           |
 | autoemulate/experimental/calibration/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
-| autoemulate/experimental/calibration/bayes.py                                |       98 |       33 |     66% |72, 74, 80-81, 91-95, 105-116, 140-141, 149, 153-154, 208-214, 266-290 |
+| autoemulate/experimental/calibration/bayes.py                                |      124 |       49 |     60% |87-88, 93-94, 100-102, 114-120, 131-149, 173-175, 181, 185-187, 241-249, 307-337 |
 | autoemulate/experimental/calibration/history\_matching.py                    |      117 |       12 |     90% |65, 96-97, 103-104, 177, 253, 311, 316-317, 364, 389 |
 | autoemulate/experimental/callbacks/early\_stopping.py                        |       52 |        9 |     83% |69-71, 75, 102, 126, 131, 146, 151 |
 | autoemulate/experimental/compare.py                                          |      145 |       62 |     57% |101, 106-110, 138, 148, 157-161, 324-410 |
@@ -161,7 +161,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **10426** | **2170** | **79%** |           |
+|                                                                    **TOTAL** | **10452** | **2187** | **79%** |           |
 
 
 ## Setup coverage badge
