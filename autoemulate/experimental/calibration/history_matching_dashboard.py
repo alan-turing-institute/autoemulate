@@ -664,7 +664,9 @@ class HistoryMatchingDashboard:
             plt.axis("off")
             plt.tight_layout()
 
-    # def _plot_bayesian_style_comparison(self, df: pd.DataFrame, impl_scores: NumpyLike):
+    # def _plot_bayesian_style_comparison(
+    #    self, df: pd.DataFrame, impl_scores: NumpyLike
+    # ):
     #     """
     #     Create a Bayesian-style visualization showing parameter constraints
     #     with prior and posterior using existing dashboard controls.
