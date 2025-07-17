@@ -4,13 +4,11 @@ from itertools import product
 import numpy as np
 import pandas as pd
 import torch
-from ModularCirc.Models.NaghaviModel import NaghaviModel
-from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import NumpyLike, TensorLike
 
 # ==================================
 # PARAMETER UTILS
@@ -179,7 +177,7 @@ class NaghaviSimulator(Simulator):
             output_stats.extend(stats)
 
         # return shape [1, n_outputs]
-        return torch.tensor(output_stats).reshape(1, -1)
+        return torch.tensor(output_stats, dtype=torch.float32).reshape(1, -1)
 
     def _create_output_names(self, output_vars: list[str]):
         output_names = []
