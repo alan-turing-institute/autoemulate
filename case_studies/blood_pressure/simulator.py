@@ -1,55 +1,54 @@
 import json
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from ModularCirc.Models.NaghaviModel import NaghaviModel
-from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental.simulations.base import Simulator
 
-### UTILS
-
-dict_parameters_condensed_range = dict()
-dict_parameters_condensed_single = dict()
+### PARAMETER UTILS
 
 
-def condense_dict_parameters(dict_param: dict, prev: str = ""):
+def condense_dict_parameters(
+    dict_param: dict, condensed_range: dict, condensed_single: dict, prev: str = ""
+) -> None:
+    """
+    Recursively condense a nested dictionary into two flat dictionaries:
+    - `condensed_range`: Stores keys with ranges (tuples of two floats).
+    - `condensed_single`: Stores keys with single values (floats).
+    """
     for key, val in dict_param.items():
         if len(prev) > 0:
             new_key = prev.split(".")[-1] + "." + key
         else:
             new_key = key
         if isinstance(val, dict):
-            condense_dict_parameters(val, new_key)
+            condense_dict_parameters(val, condensed_range, condensed_single, new_key)
         else:
             if len(val) > 1:
                 value, r = val
-                dict_parameters_condensed_range[new_key] = tuple(np.array(r) * value)
+                condensed_range[new_key] = tuple(np.array(r) * value)
             else:
-                dict_parameters_condensed_single[new_key] = val[0]
+                condensed_single[new_key] = val[0]
     return
 
 
-def extract_parameter_ranges(json_file_path: str):
+def extract_parameter_ranges(json_file_path: str) -> dict[str, tuple[float, float]]:
     """
-    Extract parameter ranges from a JSON file and return them in the format:
-    {
-        "param1": (min_val, max_val),  # MUST be tuple of exactly two floats
-        "param2": (min_val, max_val),
-        ...
-    }
+    Extract parameter ranges from a JSON file and return two dictionaries:
+     - `condensed_range`: Parameters with ranges (tuples of two floats).
+     - `condensed_single`: Parameters with single values (floats).
     """
     with open(json_file_path) as file:
         dict_parameters = json.load(file)
-        condense_dict_parameters(dict_parameters)
 
-    return dict_parameters_condensed_range
+    condensed_single = {}
+    condensed_range = {}
+    condense_dict_parameters(dict_parameters, condensed_range, condensed_single)
+
+    return condensed_range, condensed_single
 
 
 ### SIMULATOR
