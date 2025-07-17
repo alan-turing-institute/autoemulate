@@ -80,7 +80,7 @@ def test_result_metadata_df():
     assert df.loc[0, "model_name"] == "model42"
     assert df.loc[0, "x_transforms"] == ["x42"]
     assert df.loc[0, "y_transforms"] == ["y42"]
-    assert df.loc[0, "config"] == {"param": 42}
+    assert df.loc[0, "config"] == "{'param': 42}"
     assert df.loc[0, "r2_test"] == 0.8
     assert df.loc[0, "rmse_test"] == 0.12
     assert df.loc[0, "r2_test_std"] == 0.02
