@@ -77,7 +77,7 @@ def extract_parameter_ranges(
 class NaghaviSimulator(Simulator):
     def __init__(
         self,
-        parameters_range: dict[str, tuple[float, float]],
+        parameters_range: dict[str, tuple[float, float]] | None = None,
         output_variables: list[str] | None = None,
         log_level: str = "progress_bar",
         n_cycles: int = 40,
@@ -106,7 +106,7 @@ class NaghaviSimulator(Simulator):
             Time step size.
         """
         # Initialize the base class
-        if self.output_variables is not None:
+        if output_variables is not None:
             output_names = self._create_output_names(output_variables)
         else:
             # The Naghavi heart model is structured as components (e.g., lv is the
@@ -118,6 +118,10 @@ class NaghaviSimulator(Simulator):
                 for component, variable in product(components, variables)
             ]
             output_names = self._create_output_names(output_variables)
+        if parameters_range is None:
+            parameters_range, _ = extract_parameter_ranges(
+                "naghavi_model_parameters.json"
+            )
         super().__init__(parameters_range, output_names, log_level)
         assert output_variables is not None
         self._output_variables = output_variables
@@ -144,7 +148,8 @@ class NaghaviSimulator(Simulator):
         parobj = NaghaviModelParameters()
         for i, param_name in enumerate(self.param_names):
             obj, param = param_name.split(".")
-            value = x[i].item()
+            # shape of input is [1, n_input_params]
+            value = x[0, i].item()
             parobj._set_comp(obj, [obj], **{param: value})
 
         # Run simulation
@@ -170,10 +175,11 @@ class NaghaviSimulator(Simulator):
         for output_var in self.output_variables:
             component, variable = output_var.split(".")
             values = np.array(getattr(model.components[component], variable).values)
-            stats = self._calculate_output_stats(values, output_var)
+            stats = self._calculate_output_stats(values)
             output_stats.extend(stats)
 
-        return torch.tensor(output_stats)
+        # return shape [1, n_outputs]
+        return torch.tensor(output_stats).reshape(1, -1)
 
     def _create_output_names(self, output_vars: list[str]):
         output_names = []
@@ -209,39 +215,3 @@ class NaghaviSimulator(Simulator):
                 np.max(output_values) - np.min(output_values),
             ]
         )
-
-    def get_results_dataframe(
-        self, samples: list[dict[str, float]], results: NumpyLike
-    ) -> pd.DataFrame:
-        """
-        TODO: check this
-
-        Create a DataFrame with both input parameters and output results.
-
-        Parameters
-        ----------
-        samples: list[dict[str, float]]
-            List of parameter dictionaries.
-        results: NumpyLike
-            2D array of simulation results
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with parameters and results.
-        """
-        # Create DataFrame with parameters
-        df_params = pd.DataFrame(samples)
-
-        # Create DataFrame with results
-        if len(results) > 0 and len(self._output_names) == results.shape[1]:
-            df_results = pd.DataFrame(results, columns=self._output_names)
-            # Combine parameters and results
-            return pd.concat([df_params, df_results], axis=1)
-        elif len(results) > 0:
-            # If output names are not set or don't match, use generic column names
-            result_cols = [f"output_{i}" for i in range(results.shape[1])]
-            df_results = pd.DataFrame(results, columns=result_cols)
-            return pd.concat([df_params, df_results], axis=1)
-        else:
-            return df_params
