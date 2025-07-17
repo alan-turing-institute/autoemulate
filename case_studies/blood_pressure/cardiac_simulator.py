@@ -2,7 +2,6 @@ import json
 from itertools import product
 
 import numpy as np
-import pandas as pd
 import torch
 from ModularCirc.Models.NaghaviModel import NaghaviModel
 from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
@@ -143,14 +142,16 @@ class NaghaviSimulator(Simulator):
         return self._output_variables
 
     def _forward(self, x: TensorLike) -> TensorLike:
-        # TODO: has to work with tensor of values in order of self.param_names
-
+        # Set parameters of the simulation given input
         parobj = NaghaviModelParameters()
         for i, param_name in enumerate(self.param_names):
-            obj, param = param_name.split(".")
-            # shape of input is [1, n_input_params]
+            # Input param names are of the form {component}.{param}
+            component, param = param_name.split(".")
+            # Shape of input x is [1, n_input_params]
             value = x[0, i].item()
-            parobj._set_comp(obj, [obj], **{param: value})
+            # The second arg passed to `_set_comp` method is a set that has to
+            # contain the first argument (i.e., component)
+            parobj._set_comp(component, [component], **{param: value})
 
         # Run simulation
         try:
@@ -181,7 +182,22 @@ class NaghaviSimulator(Simulator):
         # return shape [1, n_outputs]
         return torch.tensor(output_stats, dtype=torch.float32).reshape(1, -1)
 
-    def _create_output_names(self, output_vars: list[str]):
+    def _create_output_names(self, output_vars: list[str]) -> list[str]:
+        """
+        Simulator returns summary statistics for each output variable, create
+        names that track which output value is which variable and which statistic.
+
+        Parameters
+        ----------
+        output_vars: list[str]
+            Name of output variables to track (e.g., ['lv.P_i', 'lv.P_o'])
+
+        Returns
+        -------
+        list[str]
+            Names of all simulator outputs identifying which param and summary
+            statistic is returned.
+        """
         output_names = []
         for base_name in output_vars:
             stat_names = [
