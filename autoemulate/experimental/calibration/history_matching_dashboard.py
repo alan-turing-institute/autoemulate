@@ -39,9 +39,13 @@ class HistoryMatchingDashboard:
         """
         # Convert samples to DataFrame
         if isinstance(samples, np.ndarray):
-            self.samples_df = pd.DataFrame(samples, columns=param_names)  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(
+                samples, columns=param_names
+            )  # pyright: ignore[reportArgumentType]
         elif isinstance(samples, TensorLike):
-            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(
+                samples.numpy(), columns=param_names
+            )  # pyright: ignore[reportArgumentType]
 
         # Store other data
         if isinstance(impl_scores, TensorLike):
@@ -79,7 +83,7 @@ class HistoryMatchingDashboard:
                 "Parameter Correlation Heatmap",
                 "3D Parameter Visualization",
                 "Implausibility Radar",
-                "Bayesian Style Comparison",
+                # "Bayesian Style Comparison",
             ],
             value="Parameter vs Implausibility",
             description="Plot Type:",
@@ -236,7 +240,7 @@ class HistoryMatchingDashboard:
         elif plot_type in [
             "Parameter Correlation Heatmap",
             "Implausibility Distribution",
-            "Bayesian Style Comparison",
+            # "Bayesian Style Comparison",
         ]:
             # Hide parameter selectors for plots that don't use them
             if plot_type in [
@@ -318,8 +322,8 @@ class HistoryMatchingDashboard:
                     self._plot_3d_visualization(filtered_df, filtered_scores)
                 elif plot_type == "Implausibility Radar":
                     self._plot_implausibility_radar(filtered_df, filtered_scores)
-                elif plot_type == "Bayesian Style Comparison":
-                    self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
+                # elif plot_type == "Bayesian Style Comparison":
+                #     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
                 plt.show()
 
             except Exception as e:
@@ -664,124 +668,124 @@ class HistoryMatchingDashboard:
             plt.axis("off")
             plt.tight_layout()
 
-    def _plot_bayesian_style_comparison(self, df: pd.DataFrame, impl_scores: NumpyLike):
-        """
-        Create a Bayesian-style visualization showing parameter constraints
-        with prior, posterior, and true values, using existing dashboard controls.
+    # def _plot_bayesian_style_comparison(self, df: pd.DataFrame, impl_scores: NumpyLike):
+    #     """
+    #     Create a Bayesian-style visualization showing parameter constraints
+    #     with prior and posterior using existing dashboard controls.
 
-        This matches the style shown in the example image with:
-        - Gray shaded prior distributions
-        - Blue histogram posterior (NROY) distributions
-        - Support for LaTeX formatted parameter labels
-        """
-        import numpy as np
+    #     This matches the style shown in the example image with:
+    #     - Gray shaded prior distributions
+    #     - Blue histogram posterior (NROY) distributions
+    #     - Support for LaTeX formatted parameter labels
+    #     """
+    #     import numpy as np
 
-        # Calculate max implausibility for each sample
-        if len(impl_scores.shape) > 1:
-            max_impl = np.max(impl_scores, axis=1)
-        else:
-            max_impl = impl_scores
+    #     # Calculate max implausibility for each sample
+    #     if len(impl_scores.shape) > 1:
+    #         max_impl = np.max(impl_scores, axis=1)
+    #     else:
+    #         max_impl = impl_scores
 
-        # Get threshold for NROY classification
-        threshold = self.threshold_slider.value
+    #     # Get threshold for NROY classification
+    #     threshold = self.threshold_slider.value
 
-        # Create NROY indicator (these are our "posterior" samples)
-        nroy_mask = max_impl <= threshold
+    #     # Create NROY indicator (these are our "posterior" samples)
+    #     nroy_mask = max_impl <= threshold
 
-        # Get the selected parameters from existing UI controls
-        selected_params = [self.param_x.value, self.param_y.value]
+    #     # Get the selected parameters from existing UI controls
+    #     selected_params = [self.param_x.value, self.param_y.value]
 
-        # Remove duplicates while preserving order
-        selected_params = list(dict.fromkeys(selected_params))
+    #     # Remove duplicates while preserving order
+    #     selected_params = list(dict.fromkeys(selected_params))
 
-        # Create the figure
-        n_params = len(selected_params)
-        n_cols = min(2, n_params)
-        n_rows = (n_params + n_cols - 1) // n_cols
+    #     # Create the figure
+    #     n_params = len(selected_params)
+    #     n_cols = min(2, n_params)
+    #     n_rows = (n_params + n_cols - 1) // n_cols
 
-        fig = plt.figure(figsize=(6 * n_cols, 4 * n_rows))
+    #     fig = plt.figure(figsize=(6 * n_cols, 4 * n_rows))
 
-        # Set the title
-        title = "History Matching Results for Parameters"
-        subtitle = "(using NROY points as posterior)"
-        full_title = f"{title}\n{subtitle}"
+    #     # Set the title
+    #     title = "History Matching Results for Parameters"
+    #     subtitle = "(using NROY points as posterior)"
+    #     full_title = f"{title}\n{subtitle}"
 
-        # Set the overall title if we have multiple plots
-        if n_params > 1:
-            fig.suptitle(full_title, fontsize=16, y=0.98)
+    #     # Set the overall title if we have multiple plots
+    #     if n_params > 1:
+    #         fig.suptitle(full_title, fontsize=16, y=0.98)
 
-        # Function to create nice parameter labels with LaTeX
-        def format_param_label(param):
-            # Format the parameter name nicely for display
-            if "log" in param.lower():
-                base_name = param.replace("log_", "").replace("log", "")
-                return rf"$\mu_{{{base_name}}}$"
-            if "_" in param:
-                parts = param.split("_")
-                if len(parts) == 2:
-                    return f"$log_{{10}}({parts[0]}_{{v}}/{parts[0]}_{{h}})$"
-                return param
-            return param
+    #     # Function to create nice parameter labels with LaTeX
+    #     def format_param_label(param):
+    #         # Format the parameter name nicely for display
+    #         if "log" in param.lower():
+    #             base_name = param.replace("log_", "").replace("log", "")
+    #             return rf"$\mu_{{{base_name}}}$"
+    #         if "_" in param:
+    #             parts = param.split("_")
+    #             if len(parts) == 2:
+    #                 return f"$log_{{10}}({parts[0]}_{{v}}/{parts[0]}_{{h}})$"
+    #             return param
+    #         return param
 
-        # Plot each parameter
-        for i, param in enumerate(selected_params):
-            ax = fig.add_subplot(n_rows, n_cols, i + 1)
+    #     # Plot each parameter
+    #     for i, param in enumerate(selected_params):
+    #         ax = fig.add_subplot(n_rows, n_cols, i + 1)
 
-            # Get the prior range (all samples)
-            param_min = df[param].min()
-            param_max = df[param].max()
+    #         # Get the prior range (all samples)
+    #         param_min = df[param].min()
+    #         param_max = df[param].max()
 
-            # Add padding
-            padding = 0.1 * (param_max - param_min)
-            param_min -= padding
-            param_max += padding
+    #         # Add padding
+    #         padding = 0.1 * (param_max - param_min)
+    #         param_min -= padding
+    #         param_max += padding
 
-            # Get the posterior data (NROY points)
-            posterior_data = df.loc[nroy_mask, param]
+    #         # Get the posterior data (NROY points)
+    #         posterior_data = df.loc[nroy_mask, param]
 
-            # Create bins
-            bins = np.linspace(param_min, param_max, 20).tolist()
+    #         # Create bins
+    #         bins = np.linspace(param_min, param_max, 20).tolist()
 
-            # Plot prior (flat uniform distribution)
-            prior_height = 0.4  # Height for the prior bar
-            ax.fill_between(
-                [param_min, param_max],
-                [0, 0],
-                [prior_height, prior_height],
-                color="lightgray",
-                alpha=0.5,
-                label="Prior",
-            )
+    #         # Plot prior (flat uniform distribution)
+    #         prior_height = 0.4  # Height for the prior bar
+    #         ax.fill_between(
+    #             [param_min, param_max],
+    #             [0, 0],
+    #             [prior_height, prior_height],
+    #             color="lightgray",
+    #             alpha=0.5,
+    #             label="Prior",
+    #         )
 
-            # Plot posterior
-            if len(posterior_data) > 0:
-                ax.hist(
-                    posterior_data,
-                    bins=bins,
-                    density=True,
-                    alpha=0.7,
-                    color="royalblue",
-                    label="Posterior",
-                )
+    #         # Plot posterior
+    #         if len(posterior_data) > 0:
+    #             ax.hist(
+    #                 posterior_data,
+    #                 bins=bins,
+    #                 density=True,
+    #                 alpha=0.7,
+    #                 color="royalblue",
+    #                 label="Posterior",
+    #             )
 
-            # Set labels and limits
-            ax.set_xlabel(format_param_label(param))
-            ax.set_ylabel("Frequency")
-            assert isinstance(param_min, float)
-            assert isinstance(param_max, float)
-            ax.set_xlim(param_min, param_max)
+    #         # Set labels and limits
+    #         ax.set_xlabel(format_param_label(param))
+    #         ax.set_ylabel("Frequency")
+    #         assert isinstance(param_min, float)
+    #         assert isinstance(param_max, float)
+    #         ax.set_xlim(param_min, param_max)
 
-            # Show legend on first plot only
-            if i == 0:
-                ax.legend()
+    #         # Show legend on first plot only
+    #         if i == 0:
+    #             ax.legend()
 
-            # Set title only for single plot
-            if n_params == 1:
-                ax.set_title(full_title)
+    #         # Set title only for single plot
+    #         if n_params == 1:
+    #             ax.set_title(full_title)
 
-        plt.tight_layout()
-        if n_params > 1:
-            plt.subplots_adjust(top=0.9)  # Make room for suptitle
+    #     plt.tight_layout()
+    #     if n_params > 1:
+    #         plt.subplots_adjust(top=0.9)  # Make room for suptitle
 
     def display(self):
         """Display the dashboard."""
