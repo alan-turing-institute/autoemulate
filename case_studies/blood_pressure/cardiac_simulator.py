@@ -4,11 +4,13 @@ from itertools import product
 import numpy as np
 import pandas as pd
 import torch
-from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel
+from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike, TensorLike
+from autoemulate.experimental.types import NumpyLike
+from autoemulate.experimental.types import TensorLike
 
 # ==================================
 # PARAMETER UTILS
