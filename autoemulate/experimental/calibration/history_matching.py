@@ -310,11 +310,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         self.emulator = emulator
+        self.emulator.device = self.device
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
-            self.train_x = train_x.to(self.device)
-            self.train_y = train_y.to(self.device)
+            self.train_x = train_x.float().to(self.device)
+            self.train_y = train_y.float().to(self.device)
         else:
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
