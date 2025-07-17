@@ -664,9 +664,7 @@ class HistoryMatchingDashboard:
             plt.axis("off")
             plt.tight_layout()
 
-    def _plot_bayesian_style_comparison(  # noqa: PLR0915
-        self, df: pd.DataFrame, impl_scores: NumpyLike
-    ):
+    def _plot_bayesian_style_comparison(self, df: pd.DataFrame, impl_scores: NumpyLike):
         """
         Create a Bayesian-style visualization showing parameter constraints
         with prior, posterior, and true values, using existing dashboard controls.
@@ -674,7 +672,6 @@ class HistoryMatchingDashboard:
         This matches the style shown in the example image with:
         - Gray shaded prior distributions
         - Blue histogram posterior (NROY) distributions
-        - Red dashed line for true values
         - Support for LaTeX formatted parameter labels
         """
         import numpy as np
@@ -766,11 +763,6 @@ class HistoryMatchingDashboard:
                     color="royalblue",
                     label="Posterior",
                 )
-
-            # Use median of posterior as a proxy for "true" value
-            if len(posterior_data) > 0:
-                true_val = posterior_data.median()
-                ax.axvline(x=true_val, color="red", linestyle="--", label="True")
 
             # Set labels and limits
             ax.set_xlabel(format_param_label(param))
