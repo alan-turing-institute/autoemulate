@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import ValidationMixin, set_random_seed
 from autoemulate.experimental.logging_config import get_configured_logger
+from autoemulate.experimental.simulations.experimental_design import LatinHypercube
 from autoemulate.experimental.types import TensorLike
-from autoemulate.experimental_design import LatinHypercube
 
 logger = logging.getLogger("autoemulate")
 
@@ -102,11 +102,7 @@ class Simulator(ABC, ValidationMixin):
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
         lhd = LatinHypercube(self.param_bounds)
-        sample_array = lhd.sample(n_samples)
-        # TODO: have option to set dtype and ensure consistency throughout codebase?
-        # added here as method was returning float64 and elsewhere had tensors of
-        # float32 and this caused issues
-        return torch.tensor(sample_array, dtype=torch.float32)
+        return lhd.sample(n_samples)
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike:
