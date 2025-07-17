@@ -4,7 +4,9 @@ from tempfile import TemporaryDirectory
 
 import pytest
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.emulators.nn.mlp import MLP
+from autoemulate.experimental.emulators.gaussian_process.exact import (
+    GaussianProcessExact,
+)
 from autoemulate.experimental.emulators.polynomials import PolynomialRegression
 from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
@@ -107,13 +109,18 @@ def test_save_model_with_model_name(model_serialiser, model):
 def test_save_and_load_result(model_serialiser, sample_data_y2d):
     x, y = sample_data_y2d
     em = TransformedEmulator(
-        x, y, x_transforms=[StandardizeTransform()], y_transforms=None, model=MLP
+        x,
+        y,
+        x_transforms=[StandardizeTransform()],
+        y_transforms=None,
+        model=GaussianProcessExact,
     )
+    config = GaussianProcessExact.get_random_config()
     result = Result(
         id=12345,
         model_name="dummy_model",
         model=em,
-        config={"foo": 1},
+        config=config,
         r2_test=0.9,
         r2_test_std=0.01,
         r2_train=0.95,
@@ -136,7 +143,12 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
             assert isinstance(loaded, Result)
             assert loaded.id == result.id
             assert loaded.model_name == result.model_name
-            assert loaded.config == result.config
+            for k, v in result.config.items():
+                loaded_v = loaded.config[k]
+                if callable(v):
+                    assert str(loaded_v) in str(v)
+                else:
+                    assert loaded_v == v
             assert loaded.r2_test == result.r2_test
             assert loaded.rmse_test == result.rmse_test
         finally:

@@ -48,13 +48,24 @@ class Result:
             'r2_test', 'rmse_test', 'r2_test_std', 'rmse_test_std',
             'r2_train', 'rmse_train', 'r2_train_std', 'rmse_train_std'].
         """
+
+        # Serialize the config dictionary to a string representation
+        def serialize_config(cfg):
+            out = {}
+            for k, v in cfg.items():
+                if callable(v) or isinstance(v, type):
+                    out[k] = v.__name__
+                else:
+                    out[k] = v
+            return out
+
         return pd.DataFrame(
             {
                 "id": [self.id],
                 "model_name": [self.model_name],
                 "x_transforms": [self.x_transforms],
                 "y_transforms": [self.y_transforms],
-                "config": [self.config],
+                "config": str(serialize_config(self.config)),
                 "r2_test": [self.r2_test],
                 "rmse_test": [self.rmse_test],
                 "r2_test_std": [self.r2_test_std],
