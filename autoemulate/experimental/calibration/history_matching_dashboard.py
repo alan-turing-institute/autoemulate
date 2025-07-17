@@ -79,7 +79,6 @@ class HistoryMatchingDashboard:
                 "Parameter Correlation Heatmap",
                 "3D Parameter Visualization",
                 "Implausibility Radar",
-                "Emulator Diagnostics",
                 "Bayesian Style Comparison",
             ],
             value="Parameter vs Implausibility",
@@ -319,8 +318,6 @@ class HistoryMatchingDashboard:
                     self._plot_3d_visualization(filtered_df, filtered_scores)
                 elif plot_type == "Implausibility Radar":
                     self._plot_implausibility_radar(filtered_df, filtered_scores)
-                elif plot_type == "Emulator Diagnostics":
-                    self._plot_emulator_diagnostics(filtered_df, filtered_scores)
                 elif plot_type == "Bayesian Style Comparison":
                     self._plot_bayesian_style_comparison(filtered_df, filtered_scores)
                 plt.show()
@@ -666,149 +663,6 @@ class HistoryMatchingDashboard:
             )
             plt.axis("off")
             plt.tight_layout()
-
-    def _plot_emulator_diagnostics(  # noqa: PLR0915
-        self, df: pd.DataFrame, impl_scores: NumpyLike
-    ):
-        """
-        Plot emulator diagnostic plots similar to those in the hmer package.
-
-        This creates diagnostic plots for emulator validation showing:
-        1. Standardized errors
-        2. Prediction vs observation plots
-        3. Optical depth visualization
-        """
-        # We'll assume we have emulator predictions in the dataframe
-        # or can calculate them based on parameter values
-
-        # For this example, we'll simulate some emulator predictions and observations
-        # In reality, you should replace this with your actual emulator predictions
-        import numpy as np
-
-        # Check if we have multiple outputs
-        if len(impl_scores.shape) > 1:
-            output_idx = 0  # Use first output by default
-
-            # Add output selector for multi-output case
-            param_output = widgets.Dropdown(
-                options=self.output_names,
-                value=self.output_names[0],
-                description="Output:",
-                disabled=False,
-            )
-            display(param_output)
-
-            # Get the selected output index
-            output_idx = self.output_names.index(param_output.value)
-
-            # Get the scores for this output
-            scores = impl_scores[:, output_idx]
-        else:
-            scores = impl_scores
-            output_idx = 0
-
-        # Generate simulated predictions and observations for the example
-        # In a real implementation, these would be actual emulator predictions
-        np.random.seed(42)  # For reproducibility
-        n_points = len(scores)
-
-        # Simulate observations (replace with real data)
-        observations = np.random.normal(0, 1, n_points)
-
-        # Simulate predictions with some correlation to observations
-        predictions = 0.8 * observations + 0.2 * np.random.normal(0, 1, n_points)
-
-        # Simulate variances/uncertainties
-        variances = np.random.uniform(0.2, 2.0, n_points)
-
-        # Calculate standardized errors
-        std_errors = (predictions - observations) / np.sqrt(variances)
-
-        # Get params for optical depth visualization
-        param_x = self.param_x.value
-        param_y = self.param_y.value
-        threshold = self.threshold_slider.value
-
-        # Create a grid for the optical depth calculation
-        x_min, x_max = df[param_x].min(), df[param_x].max()
-        y_min, y_max = df[param_y].min(), df[param_y].max()
-
-        grid_size = 50
-        x_grid = np.linspace(x_min, x_max, grid_size)
-        y_grid = np.linspace(y_min, y_max, grid_size)
-        X, Y = np.meshgrid(x_grid, y_grid)
-
-        # Initialize optical depth array
-        optical_depth = np.zeros((grid_size, grid_size))
-
-        # Calculate max implausibility for each sample
-        if len(impl_scores.shape) > 1:
-            max_impl = np.max(impl_scores, axis=1)
-        else:
-            max_impl = impl_scores
-
-        # For each grid point, count nearby non-implausible points
-        # This is a simple approach - the hmer package uses more sophisticated methods
-        for i in range(grid_size):
-            for j in range(grid_size):
-                center_x = X[i, j]
-                center_y = Y[i, j]
-
-                # Define a search radius (adjust as needed)
-                x_radius = (x_max - x_min) / 10
-                y_radius = (y_max - y_min) / 10
-
-                # Find points within this radius
-                mask = (
-                    (df[param_x] >= center_x - x_radius)
-                    & (df[param_x] <= center_x + x_radius)
-                    & (df[param_y] >= center_y - y_radius)
-                    & (df[param_y] <= center_y + y_radius)
-                )
-
-                # Count non-implausible points in this region
-                if mask.sum() > 0:
-                    non_impl_count = (max_impl[mask] <= threshold).sum()
-                    optical_depth[i, j] = non_impl_count / mask.sum()
-                else:
-                    optical_depth[i, j] = 0
-
-        # Create the combined figure with 3 subplots
-        fig = plt.figure(figsize=(18, 6))
-
-        # Plot 1: Standardized errors
-        ax1 = fig.add_subplot(121)
-        ax1.hist(std_errors, bins=20, alpha=0.7, color="blue")
-        ax1.axvline(x=-2, color="r", linestyle="--", alpha=0.7)
-        ax1.axvline(x=2, color="r", linestyle="--", alpha=0.7)
-        ax1.set_title("Standardized Errors")
-        ax1.set_xlabel("Standardized Error")
-        ax1.set_ylabel("Frequency")
-        ax1.grid(True, alpha=0.3)
-
-        # Plot 2: Predictions vs Observations with uncertainty
-        ax2 = fig.add_subplot(132)
-        ax2.errorbar(
-            observations,
-            predictions,
-            yerr=np.sqrt(variances),
-            fmt="o",
-            alpha=0.5,
-            ecolor="gray",
-            capsize=3,
-        )
-
-        # Add 1:1 line
-        min_val = min(observations.min(), predictions.min())
-        max_val = max(observations.max(), predictions.max())
-        ax2.plot([min_val, max_val], [min_val, max_val], "k--", alpha=0.7)
-
-        ax2.set_title("Predictions vs Observations")
-        ax2.set_xlabel("Observations")
-        ax2.set_ylabel("Predictions")
-        ax2.grid(True, alpha=0.3)
-
-        plt.tight_layout()
 
     def _plot_bayesian_style_comparison(  # noqa: PLR0915
         self, df: pd.DataFrame, impl_scores: NumpyLike
