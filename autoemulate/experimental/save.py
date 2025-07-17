@@ -1,5 +1,4 @@
 import ast
-import contextlib
 from pathlib import Path
 
 import joblib
@@ -120,11 +119,10 @@ class ModelSerialiser:
             return model
         row = metadata_df.iloc[0]
         config = row["config"]
-        if isinstance(config, str):
-            with contextlib.suppress(Exception):
-                config = ast.literal_eval(config)
-        if not isinstance(config, dict):
-            config = {}
+        try:
+            config = ast.literal_eval(config)
+        except Exception as e:
+            raise ValueError(f"Failed to parse config: {config!r}") from e
         return Result(
             id=row["id"],
             model_name=row["model_name"],
