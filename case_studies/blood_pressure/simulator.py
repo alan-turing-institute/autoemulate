@@ -1,12 +1,19 @@
 import json
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel
+from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental.simulations.base import Simulator
+
+### UTILS
 
 dict_parameters_condensed_range = dict()
 dict_parameters_condensed_single = dict()
@@ -40,10 +47,12 @@ def extract_parameter_ranges(json_file_path: str):
     """
     with open(json_file_path) as file:
         dict_parameters = json.load(file)
-        circ_utils.condense_dict_parameters(dict_parameters)
-        circ_utils.dict_parameters_condensed_range
+        condense_dict_parameters(dict_parameters)
 
-    return circ_utils.dict_parameters_condensed_range
+    return dict_parameters_condensed_range
+
+
+### SIMULATOR
 
 
 class NaghaviSimulator(Simulator):
