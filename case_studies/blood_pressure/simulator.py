@@ -1,4 +1,5 @@
 import json
+from itertools import product
 
 import numpy as np
 import pandas as pd
@@ -103,8 +104,20 @@ class NaghaviSimulator(Simulator):
             Time step size.
         """
         # Initialize the base class
-        output_names = []
+        if self.output_variables is not None:
+            output_names = self._create_output_names(output_variables)
+        else:
+            # The Naghavi heart model is structured as components (e.g., lv is the
+            # left ventricle) with 4 variables simulated in each component
+            components = ["ao", "art", "ven", "av", "mv", "la", "lv"]
+            variables = ["P_i", "P_o", "Q_i", "Q_o"]
+            output_variables = [
+                f"{component}.{variable}"
+                for component, variable in product(components, variables)
+            ]
+            output_names = self._create_output_names(output_variables)
         super().__init__(parameters_range, output_names, log_level)
+        assert output_variables is not None
         self._output_variables = output_variables
 
         # Naghavi-specific attributes
@@ -120,26 +133,17 @@ class NaghaviSimulator(Simulator):
 
     @property
     def output_variables(self) -> list[str]:
-        """List of original output variables without statistic suffixes"""
+        """List of original output variables without statistic suffixes."""
         return self._output_variables
 
     def _forward(self, x: TensorLike) -> TensorLike:
-
         # TODO: has to work with tensor of values in order of self.param_names
-        parobj = NaghaviModelParameters()
-        for param_name, value in params.items():
-            if param_name == "T":
-                continue
-            try:
-                obj, param = param_name.split(".")
-                parobj._set_comp(obj, [obj], **{param: value})
-            except Exception as e:
-                print(f"Error setting parameter {param_name}: {e}")
-                return None
 
-        # Set cycle time
-        t_cycle = params.get("T", 1.0)
-        self.time_setup["tcycle"] = t_cycle
+        parobj = NaghaviModelParameters()
+        for i, param_name in enumerate(self.param_names):
+            obj, param = param_name.split(".")
+            value = x[i].item()
+            parobj._set_comp(obj, [obj], **{param: value})
 
         # Run simulation
         try:
@@ -161,46 +165,27 @@ class NaghaviSimulator(Simulator):
 
         # Collect and process outputs
         output_stats = []
-        output_names = []
-
-        for component_name, component_obj in model.components.items():
-            for attr_name in dir(component_obj):
-                if (
-                    not attr_name.startswith("_")
-                    and not attr_name == "kwargs"
-                    and not callable(getattr(component_obj, attr_name))
-                ):
-                    try:
-                        attr = getattr(component_obj, attr_name)
-                        if hasattr(attr, "values"):
-                            full_name = f"{component_name}.{attr_name}"
-
-                            # Check if we should track this variable
-                            if (
-                                not self._output_variables
-                                or full_name in self._output_variables
-                            ):
-                                values = np.array(attr.values)
-
-                                # Use the base class method to calculate statistics
-                                stats, stat_names = self._calculate_output_stats(
-                                    values, full_name
-                                )
-                                output_stats.extend(stats)
-                                output_names.extend(stat_names)
-                    except Exception:
-                        continue
-
-        # Always update output names after the first simulation
-        if not self._has_sample_forward:
-            self._output_names = output_names
-            self._has_sample_forward = True
+        for output_var in self.output_variables:
+            component, variable = output_var.split(".")
+            values = np.array(getattr(model.components[component], variable).values)
+            stats = self._calculate_output_stats(values, output_var)
+            output_stats.extend(stats)
 
         return torch.tensor(output_stats)
 
-    def _calculate_output_stats(
-        self, output_values: NumpyLike, base_name: str
-    ) -> tuple[NumpyLike, list[str]]:
+    def _create_output_names(self, output_vars: list[str]):
+        output_names = []
+        for base_name in output_vars:
+            stat_names = [
+                f"{base_name}_min",
+                f"{base_name}_max",
+                f"{base_name}_mean",
+                f"{base_name}_range",
+            ]
+            output_names.extend(stat_names)
+        return output_names
+
+    def _calculate_output_stats(self, output_values: NumpyLike) -> NumpyLike:
         """
         Calculate summary statistics for an output time series.
 
@@ -208,15 +193,13 @@ class NaghaviSimulator(Simulator):
         ----------
         output_values: NumpyLike
             Array of time series values.
-        base_name: str
-            Base name of the output variable.
 
         Returns
         -------
-        tuple[NumpyLike, list[str]]
-            Array of output statistics and their names.
+        NumpyLike
+            Array of output statistics.
         """
-        stats = np.array(
+        return np.array(
             [
                 np.min(output_values),
                 np.max(output_values),
@@ -224,15 +207,6 @@ class NaghaviSimulator(Simulator):
                 np.max(output_values) - np.min(output_values),
             ]
         )
-
-        stat_names = [
-            f"{base_name}_min",
-            f"{base_name}_max",
-            f"{base_name}_mean",
-            f"{base_name}_range",
-        ]
-
-        return stats, stat_names
 
     def get_results_dataframe(
         self, samples: list[dict[str, float]], results: NumpyLike
