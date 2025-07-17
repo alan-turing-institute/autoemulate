@@ -1,17 +1,14 @@
 import json
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import torch
 from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike, TensorLike
 
-# ==================================
-# PARAMETER UTILS
-# ==================================
+### PARAMETER UTILS
 
 
 def _condense_dict_parameters(
@@ -66,17 +63,14 @@ def extract_parameter_ranges(
     return condensed_range, condensed_single
 
 
-# ==================================
-# SIMULATOR
-# ==================================
+### SIMULATOR
 
 
 class NaghaviSimulator(Simulator):
     def __init__(
         self,
-        parameters_range: dict[str, tuple[float, float]],
-        output_variables: list[str] | None = None,
-        log_level: str = "progress_bar",
+        parameters_range: Dict[str, Tuple[float, float]],
+        output_variables: Optional[List[str]] = None,
         n_cycles: int = 40,
         dt: float = 0.001,
     ):
@@ -85,26 +79,14 @@ class NaghaviSimulator(Simulator):
 
         Parameters
         ----------
-        parameters_range: dict[str, tuple[float, float]]
-            Dictionary mapping input parameter names to their (min, max) ranges.
-        output_variables: list[str]
-            Optional list of specific output variables to track. Defaults to None.
-        log_level: str
-            Logging level for the simulator. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
-        n_cycles: int
-            Number of simulation cycles.
-        dt: float
-            Time step size.
+        parameters_range: Dictionary mapping parameter names to (min, max) tuples
+            n_cycles: Number of simulation cycles
+            dt: Time step size
+            output_variables: Optional list of specific output variables to track
         """
         # Initialize the base class
         output_names = []
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(parameters_range, output_names)
         self._output_variables = output_variables
 
         # Naghavi-specific attributes
@@ -119,12 +101,25 @@ class NaghaviSimulator(Simulator):
         }
 
     @property
-    def output_variables(self) -> list[str]:
+    def output_variables(self) -> List[str]:
         """List of original output variables without statistic suffixes"""
         return self._output_variables
 
-    def _forward(self, x: TensorLike) -> TensorLike:
+    def _forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
+        """
+        TODO: params -> x: TensorLike
 
+        Run a single Naghavi model simulation and return output statistics.
+
+        Parameters
+        ----------
+        params: Dictionary of parameter values
+
+        Returns
+        -------
+            Array of output statistics or None if simulation fails
+        """
+        # Set parameters
         # TODO: has to work with tensor of values in order of self.param_names
         parobj = NaghaviModelParameters()
         for param_name, value in params.items():
@@ -196,25 +191,22 @@ class NaghaviSimulator(Simulator):
             self._output_names = output_names
             self._has_sample_forward = True
 
-        return torch.tensor(output_stats)
+        return np.array(output_stats)
 
     def _calculate_output_stats(
-        self, output_values: NumpyLike, base_name: str
-    ) -> tuple[NumpyLike, list[str]]:
+        self, output_values: np.ndarray, base_name: str
+    ) -> Tuple[np.ndarray, List[str]]:
         """
-        Calculate summary statistics for an output time series.
+        Calculate statistics for an output time series.
 
         Parameters
         ----------
-        output_values: NumpyLike
-            Array of time series values.
-        base_name: str
-            Base name of the output variable.
+            output_values: Array of time series values
+            base_name: Base name of the output variable
 
         Returns
         -------
-        tuple[NumpyLike, list[str]]
-            Array of output statistics and their names.
+            Tuple of (stats_array, stat_names)
         """
         stats = np.array(
             [
@@ -235,24 +227,19 @@ class NaghaviSimulator(Simulator):
         return stats, stat_names
 
     def get_results_dataframe(
-        self, samples: list[dict[str, float]], results: NumpyLike
+        self, samples: List[Dict[str, float]], results: np.ndarray
     ) -> pd.DataFrame:
         """
-        TODO: check this
-
         Create a DataFrame with both input parameters and output results.
 
         Parameters
         ----------
-        samples: list[dict[str, float]]
-            List of parameter dictionaries.
-        results: NumpyLike
-            2D array of simulation results
+            samples: List of parameter dictionaries
+            results: 2D array of simulation results
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame with parameters and results.
+            DataFrame with parameters and results
         """
         # Create DataFrame with parameters
         df_params = pd.DataFrame(samples)
