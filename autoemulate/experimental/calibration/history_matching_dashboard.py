@@ -39,13 +39,9 @@ class HistoryMatchingDashboard:
         """
         # Convert samples to DataFrame
         if isinstance(samples, np.ndarray):
-            self.samples_df = pd.DataFrame(
-                samples, columns=param_names
-            )  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(samples, columns=param_names)  # pyright: ignore[reportArgumentType]
         elif isinstance(samples, TensorLike):
-            self.samples_df = pd.DataFrame(
-                samples.numpy(), columns=param_names
-            )  # pyright: ignore[reportArgumentType]
+            self.samples_df = pd.DataFrame(samples.numpy(), columns=param_names)  # pyright: ignore[reportArgumentType]
 
         # Store other data
         if isinstance(impl_scores, TensorLike):
