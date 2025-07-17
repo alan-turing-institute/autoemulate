@@ -1,19 +1,14 @@
 import json
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from ModularCirc.Models.NaghaviModel import NaghaviModel
-from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 
-from autoemulate.experimental_design import LatinHypercube
-from autoemulate.simulations import circ_utils
 from autoemulate.simulations.base import Simulator
+
+from . import circ_utils
 
 
 def extract_parameter_ranges(json_file_path):
