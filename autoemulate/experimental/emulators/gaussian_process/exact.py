@@ -66,6 +66,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
+        normalize_y: bool = True,
         **kwargs,
     ):
         """
@@ -96,9 +97,13 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         device: DeviceLike | None, default=None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU).
+        normalize_y: bool, default=True
+            Whether to normalize the target values.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
+
+        self.normalize_y = normalize_y
 
         x, y = self._convert_to_tensors(x, y)
         x, y = self._move_tensors_to_device(x, y)
@@ -151,6 +156,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         )
 
     def _fit(self, x: TensorLike, y: TensorLike):
+        if self.normalize_y:
+            self._y_mean = y.mean(0, keepdim=True)
+            self._y_std = y.std(0, keepdim=True)
+            y = (y - self._y_mean) / self._y_std
+
         self.train()
         self.likelihood.train()
         x, y = self._move_tensors_to_device(x, y)
@@ -197,11 +207,35 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         if self.scheduler is not None:
             self.scheduler.step()
 
-    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> MultitaskMultivariateNormal:
         with torch.set_grad_enabled(with_grad):
             self.eval()
             x = x.to(self.device)
-            return self(x)
+
+            pred = self(x)
+
+            if self.normalize_y:
+                # Type narrowing via attribute checks
+                missing_attrs_msg = "Prediction object missing required attributes"
+                if not hasattr(pred, "mean") or not hasattr(pred, "covariance_matrix"):
+                    raise AttributeError(missing_attrs_msg)
+
+                # These will now be properly typed
+                mean: torch.Tensor = pred.mean  # type: ignore[attr-defined]
+                covar: torch.Tensor = pred.covariance_matrix  # type: ignore[attr-defined]
+                y_std: torch.Tensor = self._y_std
+                y_mean: torch.Tensor = self._y_mean
+
+                mean_unnorm = mean * y_std + y_mean
+
+                batch_size = x.shape[0]
+                y_std_expanded = y_std.repeat(batch_size, 1).t().contiguous().view(-1)
+                scaling_outer = torch.outer(y_std_expanded, y_std_expanded)
+                covar_unnorm = covar * scaling_outer
+
+                pred = MultitaskMultivariateNormal(mean_unnorm, covar_unnorm)
+
+            return pred
 
     @staticmethod
     def get_tune_config():
