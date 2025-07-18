@@ -176,7 +176,7 @@ class BayesianCalibration(TorchDeviceMixin):
         full_params = torch.stack(param_list, dim=0).unsqueeze(0).float()
 
         # Get emulator prediction
-        output = self.emulator.predict(full_params)
+        output = self.emulator.predict(full_params, with_grad=True)
         if isinstance(output, TensorLike):
             pred_mean = output.to(self.device)
         elif isinstance(output, DistributionLike):

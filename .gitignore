@@ -49,3 +49,4 @@ docs/data/simulator_results.csv
 
 # Ignore experimental exploratory data path
 autoemulate/experimental/exploratory/data
+case_studies/blood_pressure/*.csv
