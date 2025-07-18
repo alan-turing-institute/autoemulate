@@ -7,6 +7,7 @@ from .nn.mlp import MLP
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
 from .svm import SupportVectorMachine
+from .transformed.base import TransformedEmulator
 
 ALL_EMULATORS = [
     GaussianProcessExact,
@@ -19,4 +20,17 @@ ALL_EMULATORS = [
     MLP,
     EnsembleMLP,
     EnsembleMLPDropout,
+]
+
+__all__ = [
+    "MLP",
+    "EnsembleMLP",
+    "EnsembleMLPDropout",
+    "GaussianProcessExact",
+    "GaussianProcessExactCorrelated",
+    "LightGBM",
+    "RadialBasisFunctions",
+    "RandomForest",
+    "SupportVectorMachine",
+    "TransformedEmulator",
 ]

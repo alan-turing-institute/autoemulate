@@ -1,5 +1,3 @@
-# import logging
-
 import gpytorch
 import numpy as np
 import torch
@@ -8,7 +6,7 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import MultitaskKernel, ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
-from torch import nn, optim
+from torch import optim
 from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.experimental.callbacks.early_stopping import (
@@ -51,7 +49,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
-    lr: float = 1e-1
+    lr: float = 2e-1
     scheduler_cls: type[LRScheduler] | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
@@ -62,7 +60,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
@@ -87,8 +84,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Function to create the covariance module.
         epochs: int, default=50
             Number of training epochs.
-        activation: type[nn.Module], default=nn.ReLU
-            Activation function to use in the model.
         lr: float, default=2e-1
             Learning rate for the optimizer.
         early_stopping: EarlyStopping | None
@@ -132,7 +127,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
@@ -205,6 +199,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def get_tune_config():
+        scheduler_params = GaussianProcessExact.scheduler_config()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -222,14 +217,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 matern_5_2_plus_rq,
                 rbf_times_linear,
             ],
-            "epochs": [10, 50, 100, 200],
-            "batch_size": [16, 32],
-            "activation": [
-                nn.ReLU,
-                nn.GELU,
-            ],
-            "lr": list(np.logspace(-3, -1)),
+            "epochs": [50, 100, 200],
+            "lr": list(np.logspace(-3, np.log10(0.5), 100)),
             "likelihood_cls": [MultitaskGaussianLikelihood],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
 
 
@@ -254,7 +246,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
@@ -334,7 +325,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
