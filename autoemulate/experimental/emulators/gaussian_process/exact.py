@@ -1,7 +1,6 @@
 # import logging
 
 import gpytorch
-import numpy as np
 import torch
 from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
