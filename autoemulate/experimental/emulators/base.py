@@ -14,7 +14,6 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
-    GaussianProcessLike,
     NumpyLike,
     OutputLike,
     TensorLike,

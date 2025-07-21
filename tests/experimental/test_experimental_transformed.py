@@ -15,7 +15,6 @@ from autoemulate.experimental.transforms import (
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
-    GaussianProcessLike,
     TensorLike,
 )
 
