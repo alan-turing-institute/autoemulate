@@ -355,7 +355,7 @@ class SensitivityAnalysis(ConversionMixin):
         Plot a normalized Sobol sensitivity analysis heatmap.
 
         Parameters:
-            si_df (pd.DataFrame): Sensitivity index dataframe with columns ['index', 'parameter', 'output', 'value'].
+            results (pd.DataFrame): Sensitivity index dataframe with columns ['index', 'parameter', 'output', 'value'].
             index (str): The type of sensitivity index to plot (e.g., 'ST').
             top_n (int, optional): Number of top parameters to include. Defaults to all.
             cmap (str, optional): Matplotlib colormap. Defaults to 'coolwarm'.
