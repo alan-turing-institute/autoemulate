@@ -240,6 +240,9 @@ class SensitivityAnalysis(ConversionMixin):
                 Si = morris_analyze(
                     self.problem, param_samples, y[:, i], conf_level=conf_level
                 )
+            else:
+                msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
+                raise ValueError(msg)
             results[name] = Si
 
         if method == "sobol":
@@ -342,7 +345,7 @@ class SensitivityAnalysis(ConversionMixin):
             .index.tolist()
         )
 
-    def plot_sa_heatmap(
+    def plot_sa_heatmap(  # noqa: PLR0913
         self,
         results: pd.DataFrame,
         index: str = "ST",
@@ -355,13 +358,21 @@ class SensitivityAnalysis(ConversionMixin):
         Plot a normalized Sobol sensitivity analysis heatmap.
 
         Parameters:
-            results (pd.DataFrame): Sensitivity index dataframe with columns
-             ['index', 'parameter', 'output', 'value'].
-            index (str): The type of sensitivity index to plot (e.g., 'ST').
-            top_n (int, optional): Number of top parameters to include. Defaults to all.
-            cmap (str, optional): Matplotlib colormap. Defaults to 'coolwarm'.
-            normalize (bool, optional): Whether to normalize values to [0, 1]. Defaults to True.
-            figsize (tuple, optional): Figure size as (width, height) in inches. If None,
+        -----------
+        results: pd.DataFrame
+            Sensitivity index dataframe with columns ['index', 'parameter',
+            'output', 'value'].
+        index: str
+            The type of sensitivity index to plot (e.g., 'ST').
+        top_n: int | None
+            Number of top parameters to include. If None, returns all. Defaults to
+            None.
+        cmap: str
+            Matplotlib colormap. Defaults to 'coolwarm'.
+        normalize: bool
+            Wheterto normalize values to [0, 1]. Defaults to True.
+        figsize: tuple | None
+            Figure size as (width, height) in inches. Defaults to None.
         """
         # Determine which parameters to include
         parameter_list = self.top_n_sobol_params(
@@ -787,20 +798,28 @@ def _create_morris_plot(
     ax.grid(True, alpha=0.3)
 
 
-def _plot_sa_heatmap(
+def _plot_sa_heatmap(  # noqa: PLR0913
     si_df, index, parameters, cmap="coolwarm", normalize=True, fig_size=None
 ):
     """
     Plot a sensitivity analysis heatmap for a given index.
 
     Parameters:
-        si_df (pd.DataFrame): Sensitivity index dataframe with columns ['index', 'parameter', 'output', 'value'].
-        index (str): The type of sensitivity index to plot (e.g., 'ST').
-        parameters (list): List of  parameters to include in the grid.
-        cmap (str, optional): Matplotlib colormap. Defaults to 'coolwarm'.
-
-        normalize (bool, optional): Whether to normalize values to [0, 1]. Defaults to True.
-        fig_size (tuple, optional): Figure size as (width, height) in inches. If None,
+    -----------
+    results: pd.DataFrame
+        Sensitivity index dataframe with columns ['index', 'parameter',
+        'output', 'value'].
+    index: str
+        The type of sensitivity index to plot (e.g., 'ST').
+    top_n: int | None
+        Number of top parameters to include. If None, returns all. Defaults to
+        None.
+    cmap: str
+        Matplotlib colormap. Defaults to 'coolwarm'.
+    normalize: bool
+        Wheterto normalize values to [0, 1]. Defaults to True.
+    figsize: tuple | None
+        Figure size as (width, height) in inches. Defaults to None.
     """
 
     # Filter the dataframe for the specified index
