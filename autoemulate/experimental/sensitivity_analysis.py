@@ -341,6 +341,7 @@ class SensitivityAnalysis(ConversionMixin):
             .nlargest(top_n)
             .index.tolist()
         )
+
     def plot_sa_heatmap(
         self,
         results: pd.DataFrame,
@@ -362,9 +363,14 @@ class SensitivityAnalysis(ConversionMixin):
             figsize (tuple, optional): Figure size as (width, height) in inches. If None,
         """
         # Determine which parameters to include
-        parameter_list = self.top_n_sobol_params(results, top_n=len(results['parameter'].unique()) if top_n is None else top_n)
+        parameter_list = self.top_n_sobol_params(
+            results,
+            top_n=len(results["parameter"].unique()) if top_n is None else top_n,
+        )
 
-        return _plot_sa_heatmap(results, index, parameter_list, cmap, normalize, fig_size=figsize)
+        return _plot_sa_heatmap(
+            results, index, parameter_list, cmap, normalize, fig_size=figsize
+        )
 
 
 def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
@@ -780,8 +786,9 @@ def _create_morris_plot(
     ax.grid(True, alpha=0.3)
 
 
-
-def _plot_sa_heatmap(si_df, index, parameters, cmap='coolwarm', normalize=True, fig_size=None):
+def _plot_sa_heatmap(
+    si_df, index, parameters, cmap="coolwarm", normalize=True, fig_size=None
+):
     """
     Plot a sensitivity analysis heatmap for a given index.
 
@@ -795,12 +802,14 @@ def _plot_sa_heatmap(si_df, index, parameters, cmap='coolwarm', normalize=True, 
     """
 
     # Filter the dataframe for the specified index
-    df = si_df[si_df['index'] == index]
+    df = si_df[si_df["index"] == index]
 
     # Pivot the dataframe to get a matrix: rows = outputs, cols = parameters
     heatmap_df = (
-        df[df['parameter'].isin(parameters)]
-        .pivot_table(index='output', columns='parameter', values='value', fill_value=np.nan)
+        df[df["parameter"].isin(parameters)]
+        .pivot_table(
+            index="output", columns="parameter", values="value", fill_value=np.nan
+        )
         .reindex(columns=parameters)  # Ensure column order
     )
 
@@ -820,11 +829,11 @@ def _plot_sa_heatmap(si_df, index, parameters, cmap='coolwarm', normalize=True, 
 
     # Plotting
     fig, ax = plt.subplots(figsize=fig_size)
-    cax = ax.imshow(data_np, cmap=cmap, aspect='auto')
+    cax = ax.imshow(data_np, cmap=cmap, aspect="auto")
 
     # Colorbar
     cbar = fig.colorbar(cax, ax=ax)
-    cbar_label = 'Normalized Sensitivity' if normalize else 'Sensitivity'
+    cbar_label = "Normalized Sensitivity" if normalize else "Sensitivity"
     cbar.set_label(cbar_label, rotation=270, labelpad=15)
 
     # Labels and ticks
@@ -833,17 +842,16 @@ def _plot_sa_heatmap(si_df, index, parameters, cmap='coolwarm', normalize=True, 
     ax.set_ylabel("Outputs", fontsize=12)
 
     ax.set_xticks(np.arange(len(parameters)))
-    ax.set_xticklabels(parameters, rotation=45, ha='right')
+    ax.set_xticklabels(parameters, rotation=45, ha="right")
     ax.set_yticks(np.arange(len(heatmap_df.index)))
     ax.set_yticklabels(heatmap_df.index)
 
     # Gridlines
     ax.set_xticks(np.arange(-0.5, len(parameters), 1), minor=True)
     ax.set_yticks(np.arange(-0.5, len(heatmap_df.index), 1), minor=True)
-    ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
-    ax.tick_params(which='minor', bottom=False, left=False)
+    ax.grid(which="minor", color="w", linestyle="-", linewidth=2)
+    ax.tick_params(which="minor", bottom=False, left=False)
 
     plt.tight_layout()
 
     return display_figure(fig)
-
