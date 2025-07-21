@@ -240,7 +240,7 @@ class SensitivityAnalysis(ConversionMixin):
                 Si = morris_analyze(
                     self.problem, param_samples, y[:, i], conf_level=conf_level
                 )
-            results[name] = Si  # type: ignore PGH003
+            results[name] = Si
 
         if method == "sobol":
             return _sobol_results_to_df(results)
