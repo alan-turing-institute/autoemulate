@@ -797,6 +797,7 @@ def _plot_sa_heatmap(
         index (str): The type of sensitivity index to plot (e.g., 'ST').
         parameters (list): List of  parameters to include in the grid.
         cmap (str, optional): Matplotlib colormap. Defaults to 'coolwarm'.
+
         normalize (bool, optional): Whether to normalize values to [0, 1]. Defaults to True.
         fig_size (tuple, optional): Figure size as (width, height) in inches. If None,
     """
