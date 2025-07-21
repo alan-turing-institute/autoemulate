@@ -49,7 +49,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
 
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
-    optimizer_cls: type[optim.Optimizer] = optim.Adam
+    optimizer_cls: type[optim.Optimizer] = optim.AdamW
     optimizer: optim.Optimizer
     lr: float = 1e-1
     scheduler_cls: type[LRScheduler] | None = None
@@ -205,6 +205,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def get_tune_config():
+        scheduler_config = GaussianProcessExact.scheduler_config()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -222,14 +223,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 matern_5_2_plus_rq,
                 rbf_times_linear,
             ],
-            "epochs": [10, 50, 100, 200],
-            "batch_size": [16, 32],
-            "activation": [
-                nn.ReLU,
-                nn.GELU,
-            ],
-            "lr": list(np.logspace(-3, -1)),
+            "epochs": [50, 100, 200],
+            "lr": [5e-1, 1e-1, 5e-2, 1e-2],
             "likelihood_cls": [MultitaskGaussianLikelihood],
+            "scheduler_cls": scheduler_config["scheduler_cls"],
+            "scheduler_kwargs": scheduler_config["scheduler_kwargs"],
         }
 
 
