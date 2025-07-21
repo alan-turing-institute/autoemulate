@@ -19,6 +19,7 @@ from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
+from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DeviceLike,
     GaussianLike,
@@ -254,7 +255,10 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             # Concatenate batches
             means = torch.cat(means_list, dim=0)  # (num_points, num_tasks)
             covs = torch.cat(covs_list, dim=0)  # (num_points, num_tasks, num_tasks)
-            return GaussianLike(means, covariance_matrix=covs)
+
+            # TODO: consider if clamp_eigval is  correct or should be applied within
+            # transforms
+            return GaussianLike(means, make_positive_definite(covs, clamp_eigvals=True))
 
     @staticmethod
     def get_tune_config():
