@@ -19,7 +19,12 @@ from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
-from autoemulate.experimental.types import DeviceLike, GaussianProcessLike, TensorLike
+from autoemulate.experimental.types import (
+    DeviceLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
 
 from .kernel import (
     matern_3_2_kernel,
@@ -139,6 +144,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
+        self.num_tasks = num_tasks
         self.to(self.device)
 
     @staticmethod
@@ -200,17 +206,55 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         if self.scheduler is not None:
             self.scheduler.step()
 
-    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike:
-        with torch.set_grad_enabled(with_grad):
+    def _predict(self, x: TensorLike, with_grad: bool):
+        with torch.set_grad_enabled(with_grad), gpytorch.settings.fast_pred_var():
             self.eval()
             self.likelihood.eval()
             x = x.to(self.device)
-            output = self(x)
-            if not self.posterior_predictive:
-                return output
-            output = self.likelihood(output)
-            assert isinstance(output, GaussianProcessLike)
-            return output
+
+            num_points = x.shape[0]
+            num_tasks = self.num_tasks
+            max_batch_size = 128
+
+            # Lists to store batches of means and covs
+            means_list = []
+            covs_list = []
+
+            # Loop over batches of points for predictionss
+            for i in range(0, num_points, max_batch_size):
+                x_batch = x[i : i + max_batch_size]
+
+                # Get predictive output with full covariance between points and tasks
+                output = self(x)
+                if self.posterior_predictive:
+                    output = self.likelihood(output)
+                assert isinstance(output, GaussianProcessLike)
+
+                mean = output.mean
+                cov = output.covariance_matrix
+                assert isinstance(mean, TensorLike)
+                assert isinstance(cov, TensorLike)
+
+                num_batch = x_batch.shape[0]
+
+                # Reshape mean
+                mean = mean.reshape(num_batch, num_tasks)  # (num_batch, num_tasks)
+
+                # Task covariance blocks for each point
+                cov_blocks = cov.reshape(num_batch, num_tasks, num_batch, num_tasks)
+
+                # Take diagonal along batch to only keep task covariance
+                task_covs = cov_blocks[
+                    torch.arange(num_batch), :, torch.arange(num_batch), :
+                ]  # (num_batch, num_tasks, num_tasks)
+
+                means_list.append(mean)
+                covs_list.append(task_covs)
+
+            # Concatenate batches
+            means = torch.cat(means_list, dim=0)  # (num_points, num_tasks)
+            covs = torch.cat(covs_list, dim=0)  # (num_points, num_tasks, num_tasks)
+            return GaussianLike(means, covariance_matrix=covs)
 
     @staticmethod
     def get_tune_config():
@@ -351,6 +395,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
+        self.num_tasks = num_tasks
         self.to(self.device)
 
     def forward(self, x):
