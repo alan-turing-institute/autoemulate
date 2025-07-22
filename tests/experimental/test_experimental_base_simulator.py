@@ -1,8 +1,9 @@
 import pytest
 import torch
+from torch import Tensor
+
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.types import TensorLike
-from torch import Tensor
 
 
 class MockSimulator(Simulator):
@@ -16,7 +17,7 @@ class MockSimulator(Simulator):
         # Call parent constructor
         super().__init__(parameters_range, output_names)
 
-    def _forward(self, x: TensorLike) -> TensorLike:
+    def _forward(self, x: TensorLike) -> TensorLike | None:
         """
         Implement abstract _forward method with a simple transformation.
         Input shape: (n_samples, n_features)
@@ -164,17 +165,12 @@ def test_abstract_class():
 def test_handle_simulation_failure():
     """Test handling of simulation failures in forward_batch"""
 
-    # This test demonstrates that the current implementation doesn't properly handle
-    # None returns (which would be a good enhancement)
     class ThresholdSimulator(MockSimulator):
-        def _forward(self, x: TensorLike) -> TensorLike:
+        def _forward(self, x: TensorLike) -> TensorLike | None:
             # Only process inputs where the first value is > 0.5
             if x[0, 0] > 0.5:
                 return super()._forward(x)
-            # For other cases, let's return a tensor of zeros instead of None
-            # since the type system doesn't allow None returns
-            # TODO (#438): update to handle failed simulations
-            return torch.zeros((x.shape[0], len(self._output_names)))
+            return None
 
     # Create simulator with float parameters
     params = {"param1": (0.0, 1.0), "param2": (0.0, 1.0), "param3": (0.0, 1.0)}
@@ -193,7 +189,12 @@ def test_handle_simulation_failure():
 
     # This should process all samples without errors
     # We're just verifying it doesn't crash
-    results = simulator.forward_batch(batch)
+    results, invalid_indices = simulator.forward_batch(batch, return_failed_idx=True)
+    assert isinstance(results, TensorLike)
 
     # Verify results shape
-    assert results.shape == (4, 1)
+    assert results.shape == (2, 1)
+
+    assert len(invalid_indices) == 2
+    assert invalid_indices[0] == 0
+    assert invalid_indices[1] == 2
