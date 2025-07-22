@@ -44,10 +44,10 @@
 | autoemulate/experimental/datasets.py                                         |       14 |       14 |      0% |      1-67 |
 | autoemulate/experimental/device.py                                           |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                           |        8 |        0 |    100% |           |
-| autoemulate/experimental/emulators/base.py                                   |      188 |       14 |     93% |65, 69-70, 106-110, 201-204, 370, 377, 456-458, 474 |
+| autoemulate/experimental/emulators/base.py                                   |      188 |       14 |     93% |64, 68-69, 105-109, 200-203, 369, 376, 455-457, 473 |
 | autoemulate/experimental/emulators/ensemble.py                               |      107 |        8 |     93% |61, 70-71, 95-96, 203, 214-215 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py         |        8 |        0 |    100% |           |
-| autoemulate/experimental/emulators/gaussian\_process/exact.py                |      129 |        5 |     96% |194, 201, 211-213 |
+| autoemulate/experimental/emulators/gaussian\_process/exact.py                |      155 |        3 |     98% |201, 208, 235 |
 | autoemulate/experimental/emulators/gaussian\_process/kernel.py               |       36 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/mean.py                 |       13 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/poly\_mean.py           |       28 |        2 |     93% |    57, 68 |
@@ -61,7 +61,7 @@
 | autoemulate/experimental/emulators/random\_forest.py                         |       26 |        0 |    100% |           |
 | autoemulate/experimental/emulators/svm.py                                    |       31 |        0 |    100% |           |
 | autoemulate/experimental/emulators/transformed/\_\_init\_\_.py               |        0 |        0 |    100% |           |
-| autoemulate/experimental/emulators/transformed/base.py                       |       88 |       13 |     85% |187-189, 366-367, 394-397, 402-407, 411-415 |
+| autoemulate/experimental/emulators/transformed/base.py                       |       88 |       14 |     84% |187-189, 323, 366-367, 394-397, 402-407, 411-415 |
 | autoemulate/experimental/learners/\_\_init\_\_.py                            |        4 |        0 |    100% |           |
 | autoemulate/experimental/learners/base.py                                    |      120 |       24 |     80% |69-72, 85-89, 102-111, 130, 134-141 |
 | autoemulate/experimental/learners/membership.py                              |        8 |        8 |      0% |      1-19 |
@@ -79,11 +79,11 @@
 | autoemulate/experimental/simulations/projectile.py                           |       59 |        0 |    100% |           |
 | autoemulate/experimental/simulations/reaction\_diffusion.py                  |       73 |       73 |      0% |     1-236 |
 | autoemulate/experimental/transforms/\_\_init\_\_.py                          |        4 |        0 |    100% |           |
-| autoemulate/experimental/transforms/base.py                                  |       81 |       12 |     85% |45-46, 54-55, 127, 177, 249-250, 273-274, 314-315 |
+| autoemulate/experimental/transforms/base.py                                  |       81 |       23 |     72% |45-46, 54-55, 87-88, 134, 173, 235-245, 249-250, 273-274, 314-315, 387-400 |
 | autoemulate/experimental/transforms/pca.py                                   |       34 |        3 |     91% |     54-56 |
 | autoemulate/experimental/transforms/standardize.py                           |       32 |        3 |     91% |     48-50 |
 | autoemulate/experimental/transforms/utils.py                                 |       55 |        8 |     85% |63-64, 78-82, 128-136 |
-| autoemulate/experimental/transforms/vae.py                                   |      126 |        6 |     95% |180, 208-212, 232-234 |
+| autoemulate/experimental/transforms/vae.py                                   |      126 |        9 |     93% |180, 208-212, 232-234, 257-261 |
 | autoemulate/experimental/tuner.py                                            |       31 |        1 |     97% |        58 |
 | autoemulate/experimental/types.py                                            |       19 |        0 |    100% |           |
 | autoemulate/experimental\_design.py                                          |       19 |        3 |     84% |24, 35, 46 |
@@ -165,7 +165,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **10813** | **2338** | **78%** |           |
+|                                                                    **TOTAL** | **10839** | **2351** | **78%** |           |
 
 
 ## Setup coverage badge
