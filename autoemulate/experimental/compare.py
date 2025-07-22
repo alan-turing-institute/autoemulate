@@ -1,6 +1,7 @@
 import warnings
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import tqdm
 
@@ -220,7 +221,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         n_splits=self.n_splits,
                         shuffle=self.shuffle,
                     )
-                    best_score_idx = scores.index(max(scores))
+                    mean_scores = [np.mean(score).item() for score in scores]
+                    best_score_idx = scores.index(max(mean_scores))
                     best_config_for_this_model = configs[best_score_idx]
                     self.logger.debug(
                         'Tuner found best config for model "%s": %s with score: %s',
