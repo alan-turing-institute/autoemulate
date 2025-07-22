@@ -138,10 +138,11 @@ class Simulator(ABC, ValidationMixin):
             Simulated output tensor. None if the simulation failed.
         """
         y = self._forward(self.check_matrix(x))
-        assert isinstance(y, TensorLike)
-        y = self.check_matrix(y)
-        x, y = self.check_pair(x, y)
-        return y
+        if isinstance(y, TensorLike):
+            y = self.check_matrix(y)
+            x, y = self.check_pair(x, y)
+            return y
+        return None
 
     def forward_batch(
         self, samples: TensorLike, return_failed_idx: bool = False
