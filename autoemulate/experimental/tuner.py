@@ -1,6 +1,7 @@
 import json
 import logging
 
+import numpy as np
 from sklearn.model_selection import KFold
 from torchmetrics import R2Score
 
@@ -97,12 +98,6 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
 
         i = 0
         while i < self.n_iter:
-            logger.debug(
-                "Tuning Model: Iteration %s: %d/%d",
-                model_class.__name__,
-                i + 1,
-                self.n_iter,
-            )
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
             try:
@@ -119,6 +114,17 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 model_config_tested.append(model_config)
                 val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
                 i += 1
+                logger.debug(
+                    "tuning model: %s; iteration: %d/%d; mean (std) r2=%.3f (%.3f); "
+                    "model_config: %s",
+                    model_class.model_name(),
+                    i + 1,
+                    self.n_iter,
+                    np.mean(scores["r2"]),
+                    np.std(scores["r2"]),
+                    str(model_config),
+                )
+
             except Exception as e:
                 # Retry with new random config parameters
                 logger.warning(
