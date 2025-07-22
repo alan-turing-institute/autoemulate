@@ -1,3 +1,4 @@
+import json
 import logging
 
 from sklearn.model_selection import KFold
@@ -94,7 +95,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
-        for i in range(self.n_iter):
+        i = 0
+        while i < self.n_iter:
             logger.debug(
                 "Tuning Model: Iteration %s: %d/%d",
                 model_class.__name__,
@@ -103,19 +105,29 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
             )
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
-
-            scores = cross_validate(
-                cv=KFold(n_splits=n_splits, random_state=seed, shuffle=shuffle),
-                dataset=self.dataset,
-                x_transforms=x_transforms,
-                y_transforms=y_transforms,
-                model=model_class,
-                model_config=model_config,
-                device=self.device,
-                random_seed=None,
-                **model_config,
-            )
-            model_config_tested.append(model_config)
-            val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
+            try:
+                scores = cross_validate(
+                    cv=KFold(n_splits=n_splits, random_state=seed, shuffle=shuffle),
+                    dataset=self.dataset,
+                    x_transforms=x_transforms,
+                    y_transforms=y_transforms,
+                    model=model_class,
+                    model_config=model_config,
+                    device=self.device,
+                    random_seed=None,
+                    **model_config,
+                )
+                model_config_tested.append(model_config)
+                val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
+                i += 1
+            except Exception as e:
+                # Retry with new random config parameters
+                logger.warning(
+                    "Failed tuning iteration %d with model config: %s: %s",
+                    i + 1,
+                    json.dumps(model_config, default=str, separators=(",", ":")),
+                    str(e),
+                )
+                continue
 
         return val_scores, model_config_tested
