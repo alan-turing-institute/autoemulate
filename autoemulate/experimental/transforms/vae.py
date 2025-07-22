@@ -1,13 +1,99 @@
 import logging
 
 import torch
+import torch.nn.functional as F
+from torch import nn
 from torch.distributions import Transform, constraints
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.types import TensorLike
-from autoemulate.preprocess_target import VAE
+from autoemulate.experimental.types import DeviceLike, TensorLike
+
+
+class VAE(nn.Module, TorchDeviceMixin):
+    """
+    Variational Autoencoder implementation in PyTorch.
+
+    Parameters
+    ----------
+    input_dim: int
+        Dimensionality of input data.
+    hidden_layers: list
+        List of hidden dimensions for encoder and decoder networks.
+    latent_dim: int
+        Dimensionality of the latent space.
+    device: DeviceLike | None
+        Device to run the model on. If None, uses the default device (usually CPU or
+        GPU). Defaults to None.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_layers: list,
+        latent_dim: int,
+        device: DeviceLike | None = None,
+    ):
+        nn.Module.__init__(self)
+        TorchDeviceMixin.__init__(self, device=device)
+
+        # Encoder layers
+        encoder_layers = []
+        prev_dim = input_dim
+        for dim in hidden_layers:
+            encoder_layers.append(nn.Linear(prev_dim, dim, device=self.device))
+            encoder_layers.append(nn.ReLU())
+            prev_dim = dim
+
+        self.encoder = nn.Sequential(*encoder_layers)
+        self.fc_mu = nn.Linear(hidden_layers[-1], latent_dim, device=self.device)
+        self.fc_var = nn.Linear(hidden_layers[-1], latent_dim, device=self.device)
+
+        # Decoder layers
+        decoder_layers = []
+        prev_dim = latent_dim
+        for dim in reversed(hidden_layers):
+            decoder_layers.append(nn.Linear(prev_dim, dim, device=self.device))
+            decoder_layers.append(nn.ReLU())
+            prev_dim = dim
+        decoder_layers.append(nn.Linear(prev_dim, input_dim, device=self.device))
+
+        self.decoder = nn.Sequential(*decoder_layers)
+
+    def encode(self, x):
+        """Encode input to mean and log variance of latent distribution."""
+        x = self.encoder(x)
+        mu = self.fc_mu(x)
+        log_var = self.fc_var(x)
+        return mu, log_var
+
+    def reparameterize(self, mu, log_var):
+        """Sample from latent distribution using reparameterization trick."""
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z):
+        """Decode latent representation back to original space."""
+        return self.decoder(z)
+
+    def forward(self, x):
+        """Full forward pass through the VAE."""
+        mu, log_var = self.encode(x)
+        z = self.reparameterize(mu, log_var)
+        recon = self.decode(z)
+        return recon, mu, log_var
+
+    def loss_function(self, recon_x, x, mu, log_var, beta=1.0):
+        """Calculate VAE loss: reconstruction + KL divergence."""
+        # MSE reconstruction loss
+        recon_loss = F.mse_loss(recon_x, x, reduction="sum")
+
+        # KL divergence
+        kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+
+        return recon_loss + beta * kl_loss
 
 
 class VAETransform(AutoEmulateTransform):
@@ -36,30 +122,30 @@ class VAETransform(AutoEmulateTransform):
 
         Parameters
         ----------
-        latent_dim: int, default=3
-            The dimensionality of the VAE latent space.
+        latent_dim: int
+            The dimensionality of the VAE latent space. Defaults to 3.
         hidden_layers: list of int, default=None
             The number of hidden layers and their sizes in the VAE. If None, defaults to
             [64, 32].
-        epochs: int, default=800
-            The number of training epochs for the VAE.
-        batch_size: int, default=32
-            The batch size for training the VAE.
-        learning_rate: float, default=1e-3
-            The learning rate for the VAE optimizer.
-        random_seed: int, default=None
-            Random seed for reproducibility.
-        beta: float, default=1.0
+        epochs: int
+            The number of training epochs for the VAE. Defaults to 800.
+        batch_size: int
+            The batch size for training the VAE. Defaults to 32.
+        learning_rate: float
+            The learning rate for the VAE optimizer. Defaults to 1e-3.
+        random_seed: int
+            Random seed for reproducibility. Defaults to None.
+        beta: float
             The beta parameter for the VAE loss function, controlling the trade-off
-            between reconstruction loss and KL divergence.
-        verbose: bool, default=False
-            If True, log training progress.
-        cache_size: int, default=0
+            between reconstruction loss and KL divergence. Defaults to 1.0.
+        verbose: bool
+            If True, log training progress. Defaults to False.
+        cache_size: int
             Whether to cache previous transform. Set to 0 to disable caching. Set to
             1 to enable caching of the last single value. This might be useful for
             repeated expensive calls with the same input data but is by default
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
-            for more details on caching.
+            for more details on caching. Defaults to 0.
         """
 
         Transform.__init__(self, cache_size=cache_size)
