@@ -8,6 +8,7 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
+from autoemulate.experimental.types import TensorLike
 from tqdm import tqdm
 
 
@@ -22,6 +23,7 @@ def learners(
 ) -> Iterable:
     x_train = simulator.sample_inputs(n_initial_samples)
     y_train = simulator.forward_batch(x_train)
+    assert isinstance(y_train, TensorLike)
     yield stream.Random(
         simulator=simulator,
         emulator=GaussianProcessExact(x_train, y_train),

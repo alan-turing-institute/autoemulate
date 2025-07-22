@@ -107,6 +107,7 @@ def test_run(device):
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
     y = simulator.forward_batch(x)
+    assert isinstance(y, TensorLike)
 
     # Run history matching
     gp = GaussianProcessExact(x, y, device=device)
@@ -145,6 +146,7 @@ def test_run_max_tries():
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
     y = simulator.forward_batch(x)
+    assert isinstance(y, TensorLike)
 
     # Run history matching
     gp = GaussianProcessExact(x, y)
