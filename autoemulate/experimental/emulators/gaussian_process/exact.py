@@ -230,7 +230,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 x_batch = x[i : i + max_batch_size]
 
                 # Get predictive output with full covariance between points and tasks
-                output = self(x)
+                output = self(x_batch)
                 if self.posterior_predictive:
                     output = self.likelihood(output)
                 assert isinstance(output, GaussianProcessLike)
