@@ -149,10 +149,7 @@ class EnsembleMLP(Ensemble):
         **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
         """
-        emulators = [
-            MLP(x, y, random_seed=i, device=device, **mlp_kwargs)
-            for i in range(n_emulators)
-        ]
+        emulators = [MLP(x, y, device=device, **mlp_kwargs) for i in range(n_emulators)]
         super().__init__(emulators, device=device)
 
     @staticmethod
