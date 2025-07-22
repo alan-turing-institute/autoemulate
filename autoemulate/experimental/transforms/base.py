@@ -5,6 +5,7 @@ from collections.abc import Callable
 import torch
 from linear_operator.operators import DiagLinearOperator
 from torch.distributions import Transform
+from typing_extensions import Self
 
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -15,8 +16,6 @@ from autoemulate.experimental.types import (
     GaussianProcessLike,
     TensorLike,
 )
-
-from . import TRANSFORM_REGISTRY
 
 
 class AutoEmulateTransform(
@@ -97,7 +96,7 @@ class AutoEmulateTransform(
         return {transform_name: init_params}
 
     @classmethod
-    def from_dict(cls, data: dict) -> "AutoEmulateTransform":
+    def from_dict(cls, data: dict) -> Self:
         """
         Deserialize a transform from a dictionary.
 
@@ -140,9 +139,6 @@ class AutoEmulateTransform(
                     processed_params[param_name] = torch.device(value)
                 else:
                     processed_params[param_name] = None
-            elif isinstance(value, list) and param_name in ["hidden_layers"]:
-                # Keep lists as lists (e.g., for VAE hidden_layers)
-                processed_params[param_name] = value
             else:
                 processed_params[param_name] = value
 
@@ -163,6 +159,8 @@ class AutoEmulateTransform(
         type[AutoEmulateTransform] | None
             The transform class if found, None otherwise
         """
+        from . import TRANSFORM_REGISTRY  # Lazy import to avoid circular dependency
+
         return TRANSFORM_REGISTRY.get(transform_name)
 
     @classmethod
@@ -175,6 +173,8 @@ class AutoEmulateTransform(
         list[str]
             List of available transform names
         """
+        from . import TRANSFORM_REGISTRY  # Lazy import to avoid circular dependency
+
         return list(TRANSFORM_REGISTRY.keys())
 
     @property
