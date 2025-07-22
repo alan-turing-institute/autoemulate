@@ -215,7 +215,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
             num_points = x.shape[0]
             num_tasks = self.num_tasks
-            max_batch_size = 128
+
+            # Use a heuristic for max batch size based on approximate memory usage
+            # e.g. (batch_size * num_tasks) ** 2 * 4 (f32) ~ 100MB
+            # and ensure batch size is at least 1
+            max_batch_size = max(5000 // num_tasks, 1)
 
             # Lists to store batches of means and covs
             means_list = []
@@ -254,11 +258,22 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
             # Concatenate batches
             means = torch.cat(means_list, dim=0)  # (num_points, num_tasks)
+            assert means.shape == (num_points, num_tasks)
             covs = torch.cat(covs_list, dim=0)  # (num_points, num_tasks, num_tasks)
+            assert covs.shape == (num_points, num_tasks, num_tasks)
 
-            # TODO: consider if clamp_eigval is  correct or should be applied within
-            # transforms
-            return GaussianLike(means, make_positive_definite(covs, clamp_eigvals=True))
+            # Construct output distribution and ensure positive definiteness (with
+            # jitter and clamping of eigvals) since removing inter-point covariance
+            # from the output can affect postive definiteness
+            output_distribution = GaussianLike(
+                means,
+                make_positive_definite(
+                    covs, min_jitter=1e-6, max_tries=3, clamp_eigvals=True
+                ),
+            )
+            assert output_distribution.batch_shape == torch.Size([num_points])
+            assert output_distribution.event_shape == torch.Size([num_tasks])
+            return output_distribution
 
     @staticmethod
     def get_tune_config():
