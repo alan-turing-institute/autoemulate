@@ -122,7 +122,7 @@ class Simulator(ABC, ValidationMixin):
             then the shape would be (1, 2).
         """
 
-    def forward(self, x: TensorLike) -> TensorLike:
+    def forward(self, x: TensorLike) -> TensorLike | None:
         """
         Generate samples from input data using the simulator. Combines the
         abstract method `_forward` with some validation checks.
@@ -135,13 +135,15 @@ class Simulator(ABC, ValidationMixin):
         Returns
         -------
         TensorLike
-            Simulated output tensor.
+            Simulated output tensor. None if the simulation failed.
         """
         y = self.check_matrix(self._forward(self.check_matrix(x)))
         x, y = self.check_pair(x, y)
         return y
 
-    def forward_batch(self, samples: TensorLike) -> TensorLike:
+    def forward_batch(
+        self, samples: TensorLike, return_failed_idx: bool = False
+    ) -> TensorLike | tuple[TensorLike, TensorLike]:
         """
         Run multiple simulations with different parameters.
 
@@ -149,16 +151,21 @@ class Simulator(ABC, ValidationMixin):
         ----------
         samples: TensorLike
             Tensor of input parameters to make predictions for.
+        return_failed_idx: bool
+            Whether to return indexes of failed simulations. Defaults to False.
 
         Returns:
         -------
-        TensorLike
+        TensorLike | tuple[TensorLike, TensorLike]
             Tensor of simulation results of shape (n_batch, self.out_dim).
+            If `return_failed_idx` is True, also returns tensor of failed
+            simulation indexes.
         """
         self.logger.info("Running batch simulation for %d samples", len(samples))
 
         results = []
         successful = 0
+        failed_idx = []
 
         # Process each sample with progress tracking
         for i in tqdm(
@@ -176,6 +183,7 @@ class Simulator(ABC, ValidationMixin):
                 successful += 1
                 logger.debug("Simulation %d/%d successful", i + 1, len(samples))
             else:
+                failed_idx.append(i)
                 logger.warning(
                     "Simulation %d/%d failed. Result is None.", i + 1, len(samples)
                 )
@@ -189,7 +197,10 @@ class Simulator(ABC, ValidationMixin):
         )
 
         # stack results into a 2D array on first dim using torch
-        return torch.cat(results, dim=0)
+        results_tensor = torch.cat(results, dim=0)
+        if return_failed_idx:
+            return results_tensor, torch.tensor(failed_idx)
+        return results_tensor
 
     def get_parameter_idx(self, name: str) -> int:
         """
