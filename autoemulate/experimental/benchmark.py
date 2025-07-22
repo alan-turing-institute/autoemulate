@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.emulators import ALL_EMULATORS
-from autoemulate.experimental.simulations import SIMULATOR_FROM_STR
+from autoemulate.experimental.simulations import SIMULATOR_REGISTRY
 from autoemulate.experimental.simulations.base import Simulator
 
 
@@ -54,7 +54,7 @@ def run_benchmark(
     "--n_splits_list",
     type=int,
     multiple=True,
-    default=[2, 4],
+    default=[2, 5],
     help="Number of splits for cross-validation",
 )
 @click.option(
@@ -75,7 +75,7 @@ def main(  # noqa: PLR0913
 ):
     dfs = []
     for simulator_str in simulators:
-        simulator = SIMULATOR_FROM_STR[simulator_str]()
+        simulator = SIMULATOR_REGISTRY[simulator_str]()
         params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
         np.random.seed(seed)
         params = np.random.permutation(params)
