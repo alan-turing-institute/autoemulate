@@ -47,7 +47,7 @@
 | autoemulate/experimental/emulators/base.py                                   |      188 |       14 |     93% |65, 69-70, 106-110, 201-204, 370, 377, 456-458, 474 |
 | autoemulate/experimental/emulators/ensemble.py                               |      107 |        8 |     93% |61, 70-71, 95-96, 203, 214-215 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py         |        8 |        0 |    100% |           |
-| autoemulate/experimental/emulators/gaussian\_process/exact.py                |      121 |        2 |     98% |  191, 198 |
+| autoemulate/experimental/emulators/gaussian\_process/exact.py                |      129 |        5 |     96% |194, 201, 211-213 |
 | autoemulate/experimental/emulators/gaussian\_process/kernel.py               |       36 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/mean.py                 |       13 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/poly\_mean.py           |       28 |        2 |     93% |    57, 68 |
@@ -165,7 +165,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **10805** | **2335** | **78%** |           |
+|                                                                    **TOTAL** | **10813** | **2338** | **78%** |           |
 
 
 ## Setup coverage badge
