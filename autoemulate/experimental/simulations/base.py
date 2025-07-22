@@ -105,7 +105,7 @@ class Simulator(ABC, ValidationMixin):
         return lhd.sample(n_samples)
 
     @abstractmethod
-    def _forward(self, x: TensorLike) -> TensorLike:
+    def _forward(self, x: TensorLike) -> TensorLike | None:
         """
         Abstract method to perform the forward simulation.
 
@@ -116,10 +116,10 @@ class Simulator(ABC, ValidationMixin):
 
         Returns
         -------
-        TensorLike
+        TensorLike | None
             Simulated output tensor. Shape = (1, self.out_dim).
             For example, if the simulator outputs two simulated variables,
-            then the shape would be (1, 2).
+            then the shape would be (1, 2). None if the simulation fails.
         """
 
     def forward(self, x: TensorLike) -> TensorLike | None:
@@ -137,7 +137,9 @@ class Simulator(ABC, ValidationMixin):
         TensorLike
             Simulated output tensor. None if the simulation failed.
         """
-        y = self.check_matrix(self._forward(self.check_matrix(x)))
+        y = self._forward(self.check_matrix(x))
+        assert isinstance(y, TensorLike)
+        y = self.check_matrix(y)
         x, y = self.check_pair(x, y)
         return y
 
