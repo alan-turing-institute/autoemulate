@@ -14,7 +14,6 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
-    GaussianProcessLike,
     NumpyLike,
     OutputLike,
     TensorLike,
@@ -281,10 +280,10 @@ class GaussianProcessEmulator(GaussianEmulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike: ...
-    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianProcessLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
         pred = super().predict(x, with_grad)
-        assert isinstance(pred, GaussianProcessLike)
+        assert isinstance(pred, GaussianLike)
         return pred
 
 
