@@ -1,7 +1,4 @@
-# import logging
-
 import gpytorch
-import numpy as np
 import torch
 from gpytorch import ExactMarginalLogLikelihood
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
@@ -49,7 +46,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
 
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
-    optimizer_cls: type[optim.Optimizer] = optim.Adam
+    optimizer_cls: type[optim.Optimizer] = optim.AdamW
     optimizer: optim.Optimizer
     lr: float = 1e-1
     scheduler_cls: type[LRScheduler] | None = None
@@ -60,7 +57,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         y: TensorLike,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
-        covar_module_fn: CovarModuleFn = rbf,
+        covar_module_fn: CovarModuleFn = rbf_plus_constant,
+        posterior_predictive: bool = False,
         epochs: int = 50,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
@@ -85,6 +83,10 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Function to create the mean module.
         covar_module_fn: CovarModuleFn, default=rbf
             Function to create the covariance module.
+        posterior_predictive: bool, default=False
+            If True, the model will return the posterior predictive distribution that
+            by default includes observation noise (both global and task-specific). If
+            False, it will return the posterior distribution over the modelled function.
         epochs: int, default=50
             Number of training epochs.
         activation: type[nn.Module], default=nn.ReLU
@@ -136,6 +138,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
+        self.posterior_predictive = posterior_predictive
         self.to(self.device)
 
     @staticmethod
@@ -200,11 +203,18 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike:
         with torch.set_grad_enabled(with_grad):
             self.eval()
+            self.likelihood.eval()
             x = x.to(self.device)
-            return self(x)
+            output = self(x)
+            if not self.posterior_predictive:
+                return output
+            output = self.likelihood(output)
+            assert isinstance(output, GaussianProcessLike)
+            return output
 
     @staticmethod
     def get_tune_config():
+        scheduler_config = GaussianProcessExact.scheduler_config()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -222,14 +232,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 matern_5_2_plus_rq,
                 rbf_times_linear,
             ],
-            "epochs": [10, 50, 100, 200],
-            "batch_size": [16, 32],
-            "activation": [
-                nn.ReLU,
-                nn.GELU,
-            ],
-            "lr": list(np.logspace(-3, -1)),
+            "epochs": [50, 100, 200],
+            "lr": [5e-1, 1e-1, 5e-2, 1e-2],
             "likelihood_cls": [MultitaskGaussianLikelihood],
+            "scheduler_cls": scheduler_config["scheduler_cls"],
+            "scheduler_kwargs": scheduler_config["scheduler_kwargs"],
         }
 
 
@@ -252,7 +259,8 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         y: TensorLike,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
-        covar_module_fn: CovarModuleFn = rbf,
+        covar_module_fn: CovarModuleFn = rbf_plus_constant,
+        posterior_predictive: bool = False,
         epochs: int = 50,
         activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
@@ -278,6 +286,10 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
             Function to create the mean module.
         covar_module_fn: CovarModuleFn, default=rbf
             Function to create the covariance module.
+        posterior_predictive: bool, default=False
+            If True, the model will return the posterior predictive distribution that
+            by default includes observation noise (both global and task-specific). If
+            False, it will return the posterior distribution over the modelled function.
         epochs: int, default=50
             Number of training epochs.
         activation: type[nn.Module], default=nn.ReLU
@@ -338,6 +350,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
+        self.posterior_predictive = posterior_predictive
         self.to(self.device)
 
     def forward(self, x):
