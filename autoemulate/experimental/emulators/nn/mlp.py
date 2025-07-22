@@ -119,7 +119,7 @@ class MLP(DropoutTorchBackend):
             # "layer_dims": [[32, 16], [64, 32, 16]],
             "layer_dims": [[8, 4], [16, 8], [32, 16]],
             # "lr": [5e-1, 2e-1, 1e-1, 1e-2, 1e-3],
-            "lr": [5e-1, 2e-1, 1e-1, 1e-2],
+            "lr": [5e-1, 2e-1, 1e-1, 1e-2, 1e-3],
             "batch_size": [16, 32],
             "weight_init": ["default", "normal"],
             "scale": [0.1, 1.0],
