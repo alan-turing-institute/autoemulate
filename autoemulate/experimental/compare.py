@@ -143,7 +143,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             }
         )
 
-    def get_models(self, models: list[type[Emulator]] | None) -> list[type[Emulator]]:
+    def get_models(
+        self, models: list[type[Emulator]] | None = None
+    ) -> list[type[Emulator]]:
         if models is None:
             return self.all_emulators()
         return models
