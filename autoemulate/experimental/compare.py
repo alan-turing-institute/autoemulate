@@ -269,7 +269,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         shuffle=self.shuffle,
                     )
                     mean_scores = [np.mean(score).item() for score in scores]
-                    best_score_idx = scores.index(max(mean_scores))
+                    best_score_idx = np.argmax(mean_scores)
                     best_config_for_this_model = configs[best_score_idx]
                     self.logger.debug(
                         'Tuner found best config for model "%s": %s with score: %s',
