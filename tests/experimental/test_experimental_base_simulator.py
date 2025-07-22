@@ -1,9 +1,8 @@
 import pytest
 import torch
-from torch import Tensor
-
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.types import TensorLike
+from torch import Tensor
 
 
 class MockSimulator(Simulator):
