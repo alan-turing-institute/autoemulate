@@ -5,6 +5,7 @@ from torch import nn
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
@@ -20,6 +21,8 @@ class PolynomialRegression(PyTorchBackend):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         degree: int = 2,
         lr: float = 0.1,
         epochs: int = 500,
@@ -32,6 +35,8 @@ class PolynomialRegression(PyTorchBackend):
         TorchDeviceMixin.__init__(self, device=device)
         if random_seed is not None:
             set_random_seed(seed=random_seed)
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.degree = degree
         self.lr = lr
         self.epochs = epochs

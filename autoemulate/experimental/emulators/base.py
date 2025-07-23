@@ -82,14 +82,22 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         x = self.x_transform(x) if self.x_transform is not None else x
         output = self._predict(x, with_grad)
         if self.y_transform is not None:
+            print(output)
             if isinstance(output, GaussianLike):
                 output = self.y_transform._inverse_gaussian(output)
-            if isinstance(output, DistributionLike):
+            elif isinstance(output, DistributionLike):
                 output = TransformedDistribution(
                     output, transforms=[self.y_transform.inv]
                 )
-            if isinstance(output, TensorLike):
+            elif isinstance(output, TensorLike):
                 output = self.y_transform.inv(output)
+            else:
+                msg = (
+                    "Output type not supported for transformation. "
+                    f"Got {type(output)} but expected GaussianLike, "
+                    "DistributionLike, or TensorLike."
+                )
+                raise TypeError(msg)
         self._check_output(output)
         return output
 
@@ -289,6 +297,7 @@ class GaussianEmulator(ProbabilisticEmulator):
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
         pred = super().predict(x, with_grad)
+        print(pred)
         assert isinstance(pred, GaussianLike)
         return pred
 

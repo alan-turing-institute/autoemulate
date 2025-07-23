@@ -321,6 +321,8 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
@@ -404,6 +406,8 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
             train_targets=y,
             likelihood=likelihood,
         )
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.likelihood = likelihood
         self.mean_module = mean_module
         self.covar_module = covar_module
