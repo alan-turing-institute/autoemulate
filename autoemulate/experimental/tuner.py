@@ -67,6 +67,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_splits: int = 5,
         seed: int | None = None,
         shuffle: bool = True,
+        max_retries: int = 100,
     ) -> tuple[list[float], list[ModelConfig]]:
         """
         Parameters
@@ -96,7 +97,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         model_config_tested: list[ModelConfig] = []
         val_scores: list[float] = []
 
-        i = 0
+        i, retries = 0, 0
         while i < self.n_iter:
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
@@ -111,6 +112,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     device=self.device,
                     random_seed=None,
                 )
+                retries = 0
                 model_config_tested.append(model_config)
                 val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
                 i += 1
@@ -127,11 +129,18 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
 
             except Exception as e:
                 # Retry with new random config parameters
+                retries += 1
                 logger.warning(
                     "Failed tuning iteration %d with model config: %s: %s",
                     i + 1,
                     json.dumps(model_config, default=str, separators=(",", ":")),
                     str(e),
                 )
+                # If many retries, log error and break
+                if retries > max_retries:
+                    logger.error(
+                        "Failed after %s with exception %s", max_retries, str(e)
+                    )
+                    break
 
         return val_scores, model_config_tested
