@@ -73,6 +73,14 @@ def run_benchmark(
 def main(  # noqa: PLR0913
     simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
 ):
+    print(f"Running benchmark with simulators: {simulators}")
+    print(f"Number of samples: {n_samples_list}")
+    print(f"Number of iterations: {n_iter_list}")
+    print(f"Number of splits: {n_splits_list}")
+    print(f"Seed: {seed}")
+    print(f"Output file: {output_file}")
+    print(f"Log level: {log_level}")
+    print("-" * 50)
     dfs = []
     for simulator_str in simulators:
         simulator = SIMULATOR_REGISTRY[simulator_str]()
