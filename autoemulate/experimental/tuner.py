@@ -112,6 +112,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     device=self.device,
                     random_seed=None,
                 )
+                # Reset retries after a successful cross_validation call
                 retries = 0
                 model_config_tested.append(model_config)
                 val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
@@ -136,11 +137,15 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     json.dumps(model_config, default=str, separators=(",", ":")),
                     str(e),
                 )
-                # If many retries, log error and break
+                # If many consecutive retries, log error and raise exception
                 if retries > max_retries:
                     logger.error(
                         "Failed after %s with exception %s", max_retries, str(e)
                     )
-                    break
+                    msg = (
+                        f"Failed to tune model {model_class.model_name()} after "
+                        f"{max_retries} retries."
+                    )
+                    raise RuntimeError(msg) from e
 
         return val_scores, model_config_tested
