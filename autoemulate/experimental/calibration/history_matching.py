@@ -507,3 +507,78 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
+
+    def run_waves(
+        self,
+        n_waves: int = 5,
+        frac_nroy_stop: float = 0.1,
+        n_simulations: int = 100,
+        n_test_samples: int = 10000,
+        max_retries: int = 3,
+        buffer_ratio: float = 0.0,
+    ) -> list(tuple[TensorLike, TensorLike]):
+        """
+        Run multiple waves of the history matching workflow.
+
+        Parameters
+        ----------
+        n_waves: int
+            The number of waves to run.
+        frac_nroy_stop: float
+            Fraction of NROY samples to stop at. If less than this fraction of
+            NROY samples is reached, the workflow stops.
+        n_simulations: int
+            The number of simulations to run in each wave.
+        n_test_samples: int
+            Number of input parameters to test for implausibility with the emulator.
+            Parameters to simulate are sampled from this NROY subset.
+        max_retries: int
+            Maximum number of times to try to generate `n_simulations` NROY parameters.
+            That is the maximum number of times to repeat the following steps:
+                - draw `n_test_samples` parameters
+                - use emulator to make predictions for those parameters
+                - score implausibility of parameters given predictions
+                - identify NROY parameters within this set
+        buffer_ratio: float
+            A scaling factor used to expand the bounds of the (NROY) parameter space.
+            It is applied as a ratio of the range (max_val - min_val) of each input
+            parameter to create a buffer around the NROY minimum and maximum values
+            when updating the simulator parameter bounds.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            A tensor of tested input parameters and their implausibility scores.
+        """
+        wave_results = []
+        for i in range(n_waves):
+            logger.info("Running history matching wave %d/%d", i + 1, n_waves)
+            test_x, impl_scores = self.run(
+                n_simulations=n_simulations,
+                n_test_samples=n_test_samples,
+                max_retries=max_retries,
+                buffer_ratio=buffer_ratio,
+            )
+            wave_results.append((test_x, impl_scores))
+
+            # Get NROY points from impl scores and check fraction
+            nroy_x = self.get_nroy(impl_scores, test_x)
+            nroy_frac = nroy_x.shape[0] / n_test_samples
+            logger.info(
+                "Wave %d/%d: NROY fraction is %.2f%%",
+                i + 1,
+                n_waves,
+                nroy_frac * 100,
+            )
+            if nroy_frac < frac_nroy_stop:
+                logger.info(
+                    "Stopping history matching workflow at wave %d/%d "
+                    "with NROY fraction %.2f%% < %.2f%%",
+                    i + 1,
+                    n_waves,
+                    nroy_frac * 100,
+                    frac_nroy_stop * 100,
+                )
+                break
+
+        return wave_results
