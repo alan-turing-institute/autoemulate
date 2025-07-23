@@ -188,12 +188,9 @@ def test_handle_simulation_failure():
 
     # This should process all samples without errors
     # We're just verifying it doesn't crash
-    results, invalid_indices = simulator.forward_batch(batch, return_failed_idx=True)
+    results, valid_x = simulator.forward_batch(batch, return_x=True)
     assert isinstance(results, TensorLike)
 
     # Verify results shape
     assert results.shape == (2, 1)
-
-    assert len(invalid_indices) == 2
-    assert invalid_indices[0] == 0
-    assert invalid_indices[1] == 2
+    assert valid_x.shape == (2, 3)

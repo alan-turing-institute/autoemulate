@@ -149,64 +149,65 @@ class Simulator(ABC, ValidationMixin):
         return None
 
     def forward_batch(
-        self, samples: TensorLike, return_failed_idx: bool = False
+        self, x: TensorLike, return_x: bool = False
     ) -> TensorLike | tuple[TensorLike, TensorLike]:
         """
         Run multiple simulations with different parameters.
 
         Parameters
         ----------
-        samples: TensorLike
+        x: TensorLike
             Tensor of input parameters to make predictions for.
-        return_failed_idx: bool
-            Whether to return indexes of failed simulations. Defaults to False.
+        return_x: bool
+            Whether to return parameters for simulation runs that completed succesfully.
+            Set to False if simulation always completes. Defaults to False.
 
         Returns:
         -------
         TensorLike | tuple[TensorLike, TensorLike]
             Tensor of simulation results of shape (n_batch, self.out_dim).
-            If `return_failed_idx` is True, also returns tensor of failed
-            simulation indexes.
+            If `return_x` is True, also returns parameters corresponding to succesful
+            simulation results.
         """
-        self.logger.info("Running batch simulation for %d samples", len(samples))
+        self.logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         successful = 0
-        failed_idx = []
+        valid_idx = []
 
         # Process each sample with progress tracking
         for i in tqdm(
-            range(len(samples)),
+            range(len(x)),
             desc="Running simulations",
             disable=not self.progress_bar,
-            total=len(samples),
+            total=len(x),
             unit="sample",
             unit_scale=True,
         ):
-            logger.debug("Running simulation for sample %d/%d", i + 1, len(samples))
-            result = self.forward(samples[i : i + 1])
+            logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
+            result = self.forward(x[i : i + 1])
             if result is not None:
                 results.append(result)
                 successful += 1
-                logger.debug("Simulation %d/%d successful", i + 1, len(samples))
+                valid_idx.append(i)
+                logger.debug("Simulation %d/%d successful", i + 1, len(x))
             else:
-                failed_idx.append(i)
                 logger.warning(
-                    "Simulation %d/%d failed. Result is None.", i + 1, len(samples)
+                    "Simulation %d/%d failed. Result is None.", i + 1, len(x)
                 )
 
         # Report results
         self.logger.info(
             "Successfully completed %d/%d simulations (%.1f%%)",
             successful,
-            len(samples),
-            (successful / len(samples) * 100 if len(samples) > 0 else 0.0),
+            len(x),
+            (successful / len(x) * 100 if len(x) > 0 else 0.0),
         )
 
         # stack results into a 2D array on first dim using torch
         results_tensor = torch.cat(results, dim=0)
-        if return_failed_idx:
-            return results_tensor, torch.tensor(failed_idx)
+        if return_x:
+            return results_tensor, x[valid_idx]
         return results_tensor
 
     def get_parameter_idx(self, name: str) -> int:
