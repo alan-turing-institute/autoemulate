@@ -338,8 +338,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         test_x = self.simulator.sample_inputs(n).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
-        pred_means, pred_vars = self.emulator.predict_mean_and_variance(test_x)
-        impl_scores = self.calculate_implausibility(pred_means, pred_vars)
+        pred = self.emulator.predict(test_x)
+        impl_scores = self.calculate_implausibility(pred.mean, pred.variance)
 
         return test_x, impl_scores
 
