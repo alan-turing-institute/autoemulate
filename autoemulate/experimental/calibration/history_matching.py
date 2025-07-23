@@ -516,7 +516,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_test_samples: int = 10000,
         max_retries: int = 3,
         buffer_ratio: float = 0.0,
-    ) -> list(tuple[TensorLike, TensorLike]):
+    ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
 
