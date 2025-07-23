@@ -13,10 +13,8 @@ from autoemulate.experimental.simulations.base import Simulator
 
 
 def run_benchmark(
-    simulator: Simulator, n_samples: int, n_iter: int, n_splits: int, log_level: str
+    x: torch.Tensor, y: torch.Tensor, n_iter: int, n_splits: int, log_level: str
 ) -> pd.DataFrame:
-    x = simulator.sample_inputs(n_samples).to(torch.float32)
-    y = simulator.forward_batch(x).to(torch.float32)
     ae = AutoEmulate(
         x,
         y,
@@ -81,9 +79,16 @@ def main(  # noqa: PLR0913
     print(f"Output file: {output_file}")
     print(f"Log level: {log_level}")
     print("-" * 50)
+
     dfs = []
     for simulator_str in simulators:
-        simulator = SIMULATOR_REGISTRY[simulator_str]()
+        # Generate samples
+        simulator: Simulator = SIMULATOR_REGISTRY[simulator_str]()
+        max_samples = max(n_samples_list)
+        torch.manual_seed(seed)
+        x_all = simulator.sample_inputs(max_samples).to(torch.float32)
+        y_all = simulator.forward_batch(x_all).to(torch.float32)
+
         params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
         np.random.seed(seed)
         params = np.random.permutation(params)
@@ -93,7 +98,9 @@ def main(  # noqa: PLR0913
                 f"{n_iter} iterations, and {n_splits} splits"
             )
             try:
-                df = run_benchmark(simulator, n_samples, n_iter, n_splits, log_level)
+                x = x_all[:n_samples]
+                y = y_all[:n_samples]
+                df = run_benchmark(x, y, n_iter, n_splits, log_level)
                 df["simulator"] = simulator_str
                 df["n_samples"] = n_samples
                 df["n_iter"] = n_iter
