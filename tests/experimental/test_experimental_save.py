@@ -47,8 +47,8 @@ def test_save_model_wo_path(model_serialiser, model):
 
         try:
             model_serialiser._save_model(model, None, None)
-            model_name = model_serialiser._get_model_name(model)
-            expected_path = Path(model_name)
+            model_filename = model_serialiser._get_model_filename(model)
+            expected_path = Path(model_filename)
             assert expected_path.exists()
         finally:
             os.chdir(original_wd)
@@ -60,8 +60,8 @@ def test_save_model_w_name(model_serialiser, model):
         os.chdir(temp_dir)
 
         try:
-            model_serialiser._save_model(model, None, "rf")
-            expected_path = Path("rf")
+            model_serialiser._save_model(model, "rf")
+            expected_path = Path("rf.joblib")
             assert expected_path.exists()
         finally:
             os.chdir(original_wd)
@@ -72,7 +72,7 @@ def test_save_model_w_dir(model_serialiser, model):
         test_path = Path(temp_dir)
         model_serialiser._save_model(model, None, test_path)
         assert test_path.exists()
-        assert (test_path / model_serialiser._get_model_name(model)).exists()
+        assert (test_path / model_serialiser._get_model_filename(model)).exists()
 
 
 def test_load_model(model_serialiser, model):
@@ -98,10 +98,10 @@ def test_save_model_with_model_name(model_serialiser, model):
         original_wd = os.getcwd()
         os.chdir(temp_dir)
         try:
-            model_name = "custom_name.joblib"
+            model_name = "custom_name"
             saved_path = model_serialiser._save_model(model, model_name)
             assert Path(saved_path).exists()
-            assert Path(saved_path).name == model_name
+            assert Path(saved_path).name == model_name + ".joblib"
         finally:
             os.chdir(original_wd)
 
@@ -134,15 +134,20 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         original_wd = os.getcwd()
         os.chdir(temp_dir)
         try:
-            model_path = model_serialiser._save_result(result, None, None)
-            metadata_path = Path(f"{model_path}_metadata.csv")
-            assert Path(model_path).exists()
-            assert Path(metadata_path).exists()
-            assert metadata_path.parent == Path(model_path).parent
-            loaded = model_serialiser._load_result(model_path)
+            result_path = model_serialiser._save_result(result)
+
+            expected_metadata_path = Path("dummy_model_12345_metadata.csv")
+            expected_model_filename_path = Path("dummy_model_12345.joblib")
+
+            assert expected_metadata_path.exists()
+            assert expected_model_filename_path.exists()
+
+            loaded = model_serialiser._load_result(result_path)
+
             assert isinstance(loaded, Result)
             assert loaded.id == result.id
             assert loaded.model_name == result.model_name
+
             for k, v in result.config.items():
                 loaded_v = loaded.config[k]
                 if callable(v):
@@ -151,6 +156,7 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
                     assert loaded_v == v
             assert loaded.r2_test == result.r2_test
             assert loaded.rmse_test == result.rmse_test
+
         finally:
             os.chdir(original_wd)
 
@@ -160,7 +166,7 @@ def test_load_result_no_metadata(model_serialiser, model):
         original_wd = os.getcwd()
         os.chdir(temp_dir)
         try:
-            model_path = model_serialiser._save_model(model, None, None)
+            model_path = model_serialiser._save_model(model)
             loaded = model_serialiser._load_result(model_path)
             assert isinstance(loaded, Emulator)
         finally:
