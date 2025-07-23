@@ -23,9 +23,7 @@ ALL_EMULATORS: list[type[Emulator]] = [
 ]
 
 EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
-EMULATOR_REGISTRY_SHORT_NAME = {
-    em_cls.short_name().lower(): em_cls for em_cls in ALL_EMULATORS
-}
+EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
 
 
 def get_emulator_class(name: str) -> type[Emulator]:
