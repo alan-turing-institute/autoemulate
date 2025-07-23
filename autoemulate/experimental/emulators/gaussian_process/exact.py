@@ -19,6 +19,7 @@ from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DeviceLike,
@@ -61,6 +62,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
@@ -133,6 +136,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             self, train_inputs=x, train_targets=y, likelihood=likelihood
         )
         self.likelihood = likelihood
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.mean_module = mean_module
         self.covar_module = covar_module
         self.epochs = epochs
