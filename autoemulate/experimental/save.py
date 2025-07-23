@@ -13,7 +13,10 @@ class ModelSerialiser:
         self.logger = logger
 
     def _save_model(
-        self, model: Emulator, model_name: str | None, path: str | Path | None = None
+        self,
+        model: Emulator,
+        model_name: str | None = None,
+        path: str | Path | None = None,
     ):
         """Saves a model to disk.
 
@@ -28,20 +31,26 @@ class ModelSerialiser:
             Path to save the model.
             If None, the model will be saved with the model name.
         """
-        if model_name is None:
-            model_name = self._get_model_name(model)
-        full_path = self._prepare_path(path, model_name)
-
+        model_filename = self._get_model_filename(model, model_name)
+        if path:
+            full_path = self._prepare_path(path, model_filename)
+        else:
+            full_path = Path(model_filename)
         try:
             joblib.dump(model, full_path)
-            self.logger.info("%s saved to %s", model_name, full_path)
+            self.logger.info("%s saved to %s", model_filename, full_path)
             return full_path
         except Exception as e:
-            self.logger.error("Failed to save %s to %s: %s", model_name, full_path, e)
+            self.logger.error(
+                "Failed to save %s to %s: %s", model_filename, full_path, e
+            )
             raise
 
     def _save_result(
-        self, result: Result, result_name: str | None, path: str | Path | None = None
+        self,
+        result: Result,
+        result_name: str | None = None,
+        path: str | Path | None = None,
     ) -> Path:
         """Saves a result and model to disk.
 
@@ -64,7 +73,7 @@ class ModelSerialiser:
             result_name = f"{result.model_name}_{result.id}"
         full_path = self._prepare_path(path, result_name)
 
-        full_model_path = self._save_model(result.model, result_name, full_path)
+        self._save_model(result.model, result_name)
 
         # Save metadata to CSV
         metadata_path = Path(f"{full_path}_metadata.csv")
@@ -76,7 +85,7 @@ class ModelSerialiser:
             self.logger.error("Failed to save metadata to %s: %s", metadata_path, e)
             raise
 
-        return full_model_path
+        return full_path
 
     def _load_model(self, path: str | Path):
         """Loads a model from disk.
@@ -109,7 +118,11 @@ class ModelSerialiser:
         Result or Emulator
             The loaded model or result object.
         """
-        model = self._load_model(path)
+        if ".joblib" not in str(path):
+            model_path = Path(f"{path}.joblib")
+        else:
+            model_path = Path(path)
+        model = self._load_model(model_path)
         metadata_path = Path(f"{path}_metadata.csv")
         try:
             metadata_df = pd.read_csv(metadata_path, nrows=1)
@@ -137,7 +150,7 @@ class ModelSerialiser:
             rmse_train_std=row["rmse_train_std"],
         )
 
-    def _prepare_path(self, path, model_name):
+    def _prepare_path(self, path: str | Path | None, model_name: str):
         """Prepares path for saving model."""
         if path is None:
             full_path = Path(model_name)
@@ -150,7 +163,7 @@ class ModelSerialiser:
         return full_path
 
     @staticmethod
-    def _get_model_name(model):
+    def _get_model_filename(model, provided_name: str | None = None) -> str:
         """Gets the name of the model to save."""
-        model_name = model.model_name()
+        model_name = provided_name if provided_name is not None else model.model_name()
         return f"{model_name}.joblib"
