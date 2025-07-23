@@ -25,6 +25,11 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
+    device: DeviceLike | None
+        The device to use for model training and evaluation. If None, uses the default
+        device (usually CPU or GPU).
+    random_seed: int | None
+        Random seed for reproducibility. If None, no seed is set.
     """
 
     def __init__(
@@ -105,6 +110,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 x_transforms=x_transforms,
                 y_transforms=y_transforms,
                 model=model_class,
+                model_config=model_config,
                 device=self.device,
                 random_seed=None,
             )

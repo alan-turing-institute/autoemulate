@@ -1,7 +1,7 @@
 import torch
 from gpytorch.means import ConstantMean, LinearMean, ZeroMean
 
-from autoemulate.emulators.gaussian_process_utils import PolyMean
+from .poly_mean import PolyMean
 
 
 def constant_mean(n_features: int | None, n_outputs: torch.Size | None) -> ConstantMean:
@@ -24,7 +24,7 @@ def linear_mean(n_features: int, n_outputs: torch.Size | None) -> LinearMean:
     )
 
 
-def poly_mean(n_features: int | None, n_outputs: torch.Size | None) -> PolyMean:
+def poly_mean(n_features: int, n_outputs: torch.Size | None) -> PolyMean:
     return (
         PolyMean(degree=2, input_size=n_features, batch_shape=n_outputs)
         if n_outputs is not None
