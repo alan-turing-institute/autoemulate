@@ -43,7 +43,7 @@ class ModelSerialiser:
     def _save_result(
         self, result: Result, result_name: str | None, path: str | Path | None = None
     ) -> Path:
-        """Saves a model to disk.
+        """Saves a result and model to disk.
 
         Parameters
         ----------
