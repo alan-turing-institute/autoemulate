@@ -2,6 +2,7 @@ from torch import nn
 
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 from ..base import DropoutTorchBackend
@@ -12,6 +13,8 @@ class MLP(DropoutTorchBackend):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         activation_cls: type[nn.Module] = nn.ReLU,
         loss_fn_cls: type[nn.Module] = nn.MSELoss,
         epochs: int = 100,
@@ -96,6 +99,8 @@ class MLP(DropoutTorchBackend):
 
         # Finalize initialization
         self._initialize_weights(weight_init, scale, bias_init)
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.epochs = epochs
         self.loss_fn = loss_fn_cls()
         self.lr = lr

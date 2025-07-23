@@ -6,6 +6,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import SklearnBackend
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
@@ -20,6 +21,8 @@ class GradientBoosting(SklearnBackend):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         loss: Literal[
             "squared_error", "absolute_error", "huber", "quantile"
         ] = "squared_error",
@@ -38,6 +41,8 @@ class GradientBoosting(SklearnBackend):
         """Initializes a GradientBoosting object."""
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.loss = loss
         self.learning_rate = learning_rate
         self.n_estimators = n_estimators

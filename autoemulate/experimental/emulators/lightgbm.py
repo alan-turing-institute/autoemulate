@@ -4,6 +4,7 @@ from scipy.sparse import spmatrix
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import DeterministicEmulator
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
@@ -19,6 +20,8 @@ class LightGBM(DeterministicEmulator):
         self,
         x: TensorLike | None = None,
         y: TensorLike | None = None,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         boosting_type: str = "gbdt",
         num_leaves: int = 31,
         max_depth: int = -1,
@@ -43,6 +46,8 @@ class LightGBM(DeterministicEmulator):
         """Initializes a LightGBM object."""
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device)
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.boosting_type = boosting_type
         self.num_leaves = num_leaves
         self.max_depth = max_depth
