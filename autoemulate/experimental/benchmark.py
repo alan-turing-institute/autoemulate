@@ -40,14 +40,14 @@ def run_benchmark(
     "--n_samples_list",
     type=int,
     multiple=True,
-    default=[10, 50, 100, 200, 500],
+    default=[20, 50, 100, 200, 500],
     help="Number of samples to generate",
 )
 @click.option(
     "--n_iter_list",
     type=int,
     multiple=True,
-    default=[10, 50, 100, 200],
+    default=[10, 50, 100],
     help="Number of iterations to run",
 )
 @click.option(
