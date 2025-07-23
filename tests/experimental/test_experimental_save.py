@@ -77,10 +77,14 @@ def test_save_model_w_dir(model_serialiser, model):
 
 def test_load_model(model_serialiser, model):
     with TemporaryDirectory() as temp_dir:
-        test_path = Path(temp_dir) / "test_model"
-        model_serialiser._save_model(model, None, test_path)
-        loaded_model = model_serialiser._load_model(test_path)
-        assert isinstance(loaded_model, type(model))
+        original_wd = os.getcwd()
+        os.chdir(temp_dir)
+        try:
+            model_serialiser._save_model(model)
+            loaded_model = model_serialiser._load_model("RandomForest.joblib")
+            assert isinstance(loaded_model, type(model))
+        finally:
+            os.chdir(original_wd)
 
 
 def test_invalid_file_path(model_serialiser, model):
@@ -134,10 +138,12 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         original_wd = os.getcwd()
         os.chdir(temp_dir)
         try:
-            result_path = model_serialiser._save_result(result)
+            path = Path(temp_dir)
+            filename = f"{result.model_name}_{result.id}"
+            result_path = model_serialiser._save_result(result, filename, path)
 
-            expected_metadata_path = Path("dummy_model_12345_metadata.csv")
-            expected_model_filename_path = Path("dummy_model_12345.joblib")
+            expected_metadata_path = path / Path("dummy_model_12345_metadata.csv")
+            expected_model_filename_path = path / Path("dummy_model_12345.joblib")
 
             assert expected_metadata_path.exists()
             assert expected_model_filename_path.exists()

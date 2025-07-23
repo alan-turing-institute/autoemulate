@@ -32,12 +32,12 @@ class ModelSerialiser:
             If None, the model will be saved with the model name.
         """
         model_filename = self._get_model_filename(model, model_name)
-        if path:
-            full_path = self._prepare_path(path, model_filename)
-        else:
-            full_path = Path(model_filename)
+        full_path = self._prepare_path(path, model_filename)
         try:
-            joblib.dump(model, full_path)
+            if full_path.suffix != ".joblib":
+                joblib.dump(model, full_path.with_suffix(".joblib"))
+            else:
+                joblib.dump(model, full_path)
             self.logger.info("%s saved to %s", model_filename, full_path)
             return full_path
         except Exception as e:
@@ -73,7 +73,7 @@ class ModelSerialiser:
             result_name = f"{result.model_name}_{result.id}"
         full_path = self._prepare_path(path, result_name)
 
-        self._save_model(result.model, result_name)
+        self._save_model(result.model, result_name, full_path)
 
         # Save metadata to CSV
         metadata_path = Path(f"{full_path}_metadata.csv")
