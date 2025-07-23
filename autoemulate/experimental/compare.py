@@ -253,6 +253,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     unit="model",
                     unit_scale=True,
                 ):
+                    # Since refitting the model can fail after tuning, max_retries
+                    # is used to retry the whole tuning and fitting process
                     for attempt in range(self.max_retries):
                         try:
                             self.logger.info(
@@ -304,8 +306,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 device=self.device,
                                 **best_config_for_this_model,
                             )
-                            # This can fail for some model configurations,
-                            # catch and rerun
+
+                            # This can fail for some model configurations
                             transformed_emulator.fit(train_val_x, train_val_y)
 
                             (
@@ -356,7 +358,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 rmse_train_std=rmse_train_val_std,
                             )
                             self.add_result(result)
-                            # Exit retry loop
+                            # if successful, break out of the retry loop
                             break
                         except Exception as e:
                             self.logger.warning(
