@@ -67,7 +67,7 @@ class ModelSerialiser:
         Returns
         -------
         Path
-            Full path to the saved model file.
+            Full path without either the .joblib or _metadata.csv suffix.
         """
         if result_name is None:
             result_name = f"{result.model_name}_{result.id}"
