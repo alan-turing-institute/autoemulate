@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_6eed1c688cae1c9e_history_matching_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.2">coverage.py v7.9.2</a>,
-            created at 2025-07-22 14:51 +0000
+            created at 2025-07-23 14:05 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -258,7 +258,7 @@
     <p class="run"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">        <span class="nam">full_params</span> <span class="op">=</span> <span class="nam">torch</span><span class="op">.</span><span class="nam">stack</span><span class="op">(</span><span class="nam">param_list</span><span class="op">,</span> <span class="nam">dim</span><span class="op">=</span><span class="num">0</span><span class="op">)</span><span class="op">.</span><span class="nam">unsqueeze</span><span class="op">(</span><span class="num">0</span><span class="op">)</span><span class="op">.</span><span class="nam">float</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">        <span class="com"># Get emulator prediction</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">        <span class="nam">output</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">emulator</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">full_params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">        <span class="nam">output</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">emulator</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">full_params</span><span class="op">,</span> <span class="nam">with_grad</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">        <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">output</span><span class="op">,</span> <span class="nam">TensorLike</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">            <span class="nam">pred_mean</span> <span class="op">=</span> <span class="nam">output</span><span class="op">.</span><span class="nam">to</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">device</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t182" href="#t182">182</a></span><span class="t">        <span class="key">elif</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">output</span><span class="op">,</span> <span class="nam">DistributionLike</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -426,7 +426,7 @@
             <a class="nav" href="z_6eed1c688cae1c9e_history_matching_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.2">coverage.py v7.9.2</a>,
-            created at 2025-07-22 14:51 +0000
+            created at 2025-07-23 14:05 +0000
         </p>
     </div>
 </footer>

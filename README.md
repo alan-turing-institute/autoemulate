@@ -39,7 +39,7 @@
 | autoemulate/experimental/calibration/history\_matching.py                    |      117 |       12 |     90% |65, 96-97, 103-104, 177, 253, 311, 316-317, 364, 389 |
 | autoemulate/experimental/calibration/history\_matching\_dashboard.py         |      272 |      272 |      0% |     1-797 |
 | autoemulate/experimental/callbacks/early\_stopping.py                        |       52 |        9 |     83% |69-71, 75, 102, 126, 131, 146, 151 |
-| autoemulate/experimental/compare.py                                          |      145 |       62 |     57% |102, 107-111, 139, 149, 158-162, 325-411 |
+| autoemulate/experimental/compare.py                                          |      145 |       62 |     57% |102, 107-111, 139, 151, 160-164, 327-413 |
 | autoemulate/experimental/data/preprocessors.py                               |       25 |        0 |    100% |           |
 | autoemulate/experimental/data/utils.py                                       |      187 |       21 |     89% |67, 100, 106, 122-126, 140, 156-158, 179, 184, 417, 420-422, 448, 451-453, 483 |
 | autoemulate/experimental/datasets.py                                         |       14 |       14 |      0% |      1-67 |
