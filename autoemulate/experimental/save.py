@@ -103,6 +103,7 @@ class ModelSerialiser:
         ----------
         path : str or Path
             Path to the model file.
+
         Returns
         -------
         Result or Emulator
