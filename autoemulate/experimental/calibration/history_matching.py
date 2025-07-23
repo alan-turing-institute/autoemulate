@@ -407,19 +407,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
         tuple[TensorLike, TensorLike]
             Tensors of succesfully simulated input parameters and predictions.
         """
-        y, exclude_indices = self.simulator.forward_batch(x, return_failed_idx=True)
+        # if simulation fails, returned y and x have fewer rows than input x
+        y, x = self.simulator.forward_batch(x, return_x=True)
         y = y.to(self.device)
-        exclude_indices = exclude_indices.to(self.device)
+        x = x.to(self.device)
 
-        all_indices = torch.arange(x.size(0), device=self.device)
-        mask = ~torch.isin(all_indices, exclude_indices)
-        valid_x = x[mask]
-        valid_y = y[mask]
+        self.train_y = torch.cat([self.train_y, y], dim=0)
+        self.train_x = torch.cat([self.train_x, x], dim=0)
 
-        self.train_y = torch.cat([self.train_y, valid_y], dim=0)
-        self.train_x = torch.cat([self.train_x, valid_x], dim=0)
-
-        return valid_x, valid_y
+        return x, y
 
     def run(
         self,
