@@ -50,5 +50,8 @@ docs/data/simulator_results.csv
 # Ignore experimental exploratory data path
 autoemulate/experimental/exploratory/data
 
-# Benchmark data
-benchmarks/data
+# Ignore case studies data by default
+case_studies/**/data/
+
+# Benchmarking data
+benchmarks/data/
