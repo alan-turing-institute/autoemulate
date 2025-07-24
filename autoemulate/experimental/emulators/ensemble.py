@@ -126,7 +126,7 @@ class Ensemble(GaussianEmulator):
 
 
 class EnsembleMLP(Ensemble):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
@@ -176,7 +176,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
     and compute mean + epistemic covariance across them.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         model: DropoutTorchBackend,
         standardize_x: bool = False,
