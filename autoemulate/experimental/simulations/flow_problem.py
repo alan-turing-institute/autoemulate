@@ -17,12 +17,13 @@ class FlowProblem(Simulator):
 
     def __init__(
         self,
-        param_ranges,
-        output_names,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        log_level: str = "progress_bar",
         ncycles=10,
         ncomp=10,
     ):
-        super().__init__(param_ranges, output_names)
+        super().__init__(parameters_range, output_names, log_level)
         self.ncycles = ncycles
         self.ncomp = ncomp
 
