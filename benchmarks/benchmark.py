@@ -1,4 +1,5 @@
 import itertools
+from typing import cast
 
 import click
 import numpy as np
@@ -6,6 +7,7 @@ import pandas as pd
 import torch
 from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.emulators import ALL_EMULATORS
+from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.simulations import SIMULATOR_REGISTRY
 from autoemulate.experimental.simulations.base import Simulator
 from tqdm import tqdm
@@ -17,7 +19,7 @@ def run_benchmark(
     ae = AutoEmulate(
         x,
         y,
-        models=ALL_EMULATORS,
+        models=cast(list[type[Emulator] | str], ALL_EMULATORS),
         n_iter=n_iter,
         n_splits=n_splits,
         log_level=log_level,
