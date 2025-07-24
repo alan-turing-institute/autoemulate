@@ -157,6 +157,7 @@ class VAETransform(AutoEmulateTransform):
         self.beta = beta
         self.random_seed = random_seed
         self.verbose = verbose
+        self.cache_size = cache_size  # Store for serialization
 
         # Initialized during fit
         self.vae = None

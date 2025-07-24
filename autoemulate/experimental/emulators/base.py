@@ -14,7 +14,6 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
-    GaussianProcessLike,
     NumpyLike,
     OutputLike,
     TensorLike,
@@ -54,11 +53,11 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     @classmethod
     def short_name(cls) -> str:
         """
-        Take the capital letters of the class name and return them as a string.
-        For example, if the class name is `GaussianProcessExact`,
-        this will return `GPE`.
+        Take the capital letters of the class name and return them as a lower case
+        string. For example, if the class name is `GaussianProcessExact`, this will
+        return `gpe`.
         """
-        return "".join([c for c in cls.__name__ if c.isupper()])
+        return "".join([c for c in cls.__name__ if c.isupper()]).lower()
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
@@ -281,10 +280,10 @@ class GaussianProcessEmulator(GaussianEmulator):
     """
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianProcessLike: ...
-    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianProcessLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
         pred = super().predict(x, with_grad)
-        assert isinstance(pred, GaussianProcessLike)
+        assert isinstance(pred, GaussianLike)
         return pred
 
 

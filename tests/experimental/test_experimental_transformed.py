@@ -15,7 +15,6 @@ from autoemulate.experimental.transforms import (
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
-    GaussianProcessLike,
     TensorLike,
 )
 
@@ -234,8 +233,8 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     y_pred2 = em.y_transforms[0]._inverse_sample(
         z_pred, n_samples=10000, full_covariance=True
     )
-    assert isinstance(y_pred, GaussianProcessLike)
-    assert isinstance(y_pred2, GaussianProcessLike)
+    assert isinstance(y_pred, GaussianLike)
+    assert isinstance(y_pred2, GaussianLike)
     print()
     print(y_pred.covariance_matrix)
     print(y_pred2.covariance_matrix)
