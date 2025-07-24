@@ -86,12 +86,14 @@ class FlowProblem(Simulator):
             return out.reshape((-1,))
 
         def generate_pulse_function(params_dict: dict) -> Callable:
-            Q_mi_lambda = (  # noqa: E731
-                lambda t: np.sin(np.pi / params_dict["td"] * t) ** 2.0  # type: ignore  # noqa: PGH003
-                * np.heaviside(params_dict["td"] - t, 0.0)  # type: ignore  # noqa: PGH003
-                * params_dict["amp"]  # type: ignore  # noqa: PGH003
-            )
-            return Q_mi_lambda  # noqa: RET504
+            def Q_mi_lambda(t):
+                return (
+                    np.sin(np.pi / params_dict["td"] * t) ** 2.0
+                    * np.heaviside(params_dict["td"] - t, 0.0)
+                    * params_dict["amp"]
+                )
+
+            return Q_mi_lambda
 
         dfdt_fd_spec = lambda t, y: dfdt_fd(  # noqa: E731
             params_dict=params, t=t, y=y, Q_in=generate_pulse_function(params)
