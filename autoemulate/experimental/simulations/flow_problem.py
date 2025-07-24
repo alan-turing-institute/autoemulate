@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import numpy as np
 import scipy as sp
 import torch
@@ -83,7 +85,7 @@ class FlowProblem(Simulator):
                     ) / Ln
             return out.reshape((-1,))
 
-        def generate_pulse_function(params_dict: dict) -> callable:  # type: ignore  # noqa: PGH003
+        def generate_pulse_function(params_dict: dict) -> Callable:
             Q_mi_lambda = (  # noqa: E731
                 lambda t: np.sin(np.pi / params_dict["td"] * t) ** 2.0  # type: ignore  # noqa: PGH003
                 * np.heaviside(params_dict["td"] - t, 0.0)  # type: ignore  # noqa: PGH003
