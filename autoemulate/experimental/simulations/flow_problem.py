@@ -11,8 +11,8 @@ from autoemulate.experimental.types import TensorLike
 class FlowProblem(Simulator):
     """
     The system simulated is a tube with an input flow rate at any given time.
-    The tube is divided to 10 compartments which allows for the study of the pressure
-    and flow rate at various points in the tube.
+    The tube is divided to `ncomp` compartments which allows for the study of
+    the pressure and flow rate at various points in the tube.
     """
 
     def __init__(
