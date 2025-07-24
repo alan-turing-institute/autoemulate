@@ -94,7 +94,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             False, it will return the posterior distribution over the modelled function.
         epochs: int, default=50
             Number of training epochs.
-        lr : float, default=2e-1
+        lr: float, default=2e-1
             Learning rate for the optimizer.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
