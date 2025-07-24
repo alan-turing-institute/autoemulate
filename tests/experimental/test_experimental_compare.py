@@ -20,7 +20,7 @@ def test_ae(sample_data_for_ae_compare, device):
     assert best_result is not None
     # Save the best model to a temporary file
     with tempfile.TemporaryDirectory() as tmpdir:
-        save_path = os.path.join(tmpdir, "best_model.pt")
+        save_path = os.path.join(tmpdir)
         saved_model_full_path = ae.save(best_result, save_path)
         # Load the model back
         loaded_model = ae.load(saved_model_full_path)
