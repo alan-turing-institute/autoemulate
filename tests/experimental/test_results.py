@@ -56,6 +56,41 @@ def test_result_attributes():
     assert res.rmse_test == 0.1
 
 
+def test_result_metadata_df():
+    res = make_result(42, 0.8, 0.02, 0.85, 0.025, 0.12, 0.03, 0.07, 0.035)
+    df = res.metadata_df()
+    assert isinstance(df, pd.DataFrame)
+    expected_columns = [
+        "id",
+        "model_name",
+        "x_transforms",
+        "y_transforms",
+        "config",
+        "r2_test",
+        "rmse_test",
+        "r2_test_std",
+        "rmse_test_std",
+        "r2_train",
+        "rmse_train",
+        "r2_train_std",
+        "rmse_train_std",
+    ]
+    assert list(df.columns) == expected_columns
+    assert df.loc[0, "id"] == 42
+    assert df.loc[0, "model_name"] == "model42"
+    assert df.loc[0, "x_transforms"] == ["x42"]
+    assert df.loc[0, "y_transforms"] == ["y42"]
+    assert df.loc[0, "config"] == "{'param': 42}"
+    assert df.loc[0, "r2_test"] == 0.8
+    assert df.loc[0, "rmse_test"] == 0.12
+    assert df.loc[0, "r2_test_std"] == 0.02
+    assert df.loc[0, "rmse_test_std"] == 0.03
+    assert df.loc[0, "r2_train"] == 0.85
+    assert df.loc[0, "rmse_train"] == 0.07
+    assert df.loc[0, "r2_train_std"] == 0.025
+    assert df.loc[0, "rmse_train_std"] == 0.035
+
+
 def test_results_add_and_get():
     r1 = make_result(1, 0.5, 0.01, 0.55, 0.02, 1.0, 0.1, 0.9, 0.05)
     r2 = make_result(2, 0.7, 0.015, 0.75, 0.025, 0.8, 0.08, 0.7, 0.04)

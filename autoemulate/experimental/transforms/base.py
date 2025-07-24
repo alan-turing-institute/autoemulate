@@ -1,9 +1,11 @@
+import inspect
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
 import torch
 from linear_operator.operators import DiagLinearOperator
 from torch.distributions import Transform
+from typing_extensions import Self
 
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
@@ -44,6 +46,136 @@ class AutoEmulateTransform(
         if not self._is_fitted:
             msg = f"Transform ({self}) has not been fitted yet."
             raise RuntimeError(msg)
+
+    def to_dict(self) -> dict:
+        """
+        Serialize the transform to a dictionary.
+
+        Returns
+        -------
+        dict
+            A dictionary with transform name as key and initialization parameters
+            as value. The format is:
+            {
+                "transform_name": {param1: value1, param2: value2, ...}
+            }
+        """
+        # Get the transform name (convert class name to lowercase, remove 'Transform')
+        class_name = self.__class__.__name__
+        if class_name.endswith("Transform"):
+            transform_name = class_name[:-9].lower()  # Remove 'Transform' suffix
+        else:
+            transform_name = class_name.lower()
+
+        # Get initialization parameters from the __init__ signature
+        init_signature = inspect.signature(self.__class__.__init__)
+        init_params = {}
+
+        for param_name, param in init_signature.parameters.items():
+            # Skip 'self' parameter
+            if param_name == "self":
+                continue
+
+            # Get the value from the instance if it exists
+            if hasattr(self, param_name):
+                value = getattr(self, param_name)
+
+                # Handle special cases for serialization
+                if isinstance(value, torch.Tensor):
+                    # Convert tensors to lists for JSON serialization
+                    init_params[param_name] = value.tolist()
+                elif isinstance(value, torch.device):
+                    # Convert device to string
+                    init_params[param_name] = str(value)
+                else:
+                    init_params[param_name] = value
+            elif param.default is not inspect.Parameter.empty:
+                # Use default value if attribute doesn't exist
+                init_params[param_name] = param.default
+
+        return {transform_name: init_params}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
+        """
+        Deserialize a transform from a dictionary.
+
+        Parameters
+        ----------
+        data: dict
+            A dictionary with transform name as key and initialization parameters
+            as value, as created by `to_dict()`.
+
+        Returns
+        -------
+        AutoEmulateTransform
+            An instance of the transform class with the specified parameters.
+
+        Raises
+        ------
+        ValueError
+            If the dictionary format is invalid or the transform cannot be found.
+
+        """
+        if len(data) != 1:
+            msg = "Dictionary must contain exactly one transform"
+            raise ValueError(msg)
+
+        transform_name, init_params = next(iter(data.items()))
+
+        # Get transform class from registry
+        transform_class = cls._get_transform_class(transform_name)
+        if transform_class is None:
+            available = ", ".join(cls._get_available_transforms())
+            msg = f"Unknown transform: {transform_name}. Available: {available}"
+            raise ValueError(msg)
+
+        # Handle special cases for deserialization
+        processed_params = {}
+        for param_name, value in init_params.items():
+            if param_name == "device" and isinstance(value, str):
+                # Convert device string back to torch.device
+                if value != "None":
+                    processed_params[param_name] = torch.device(value)
+                else:
+                    processed_params[param_name] = None
+            else:
+                processed_params[param_name] = value
+
+        return transform_class(**processed_params)
+
+    @classmethod
+    def _get_transform_class(cls, transform_name: str):
+        """
+        Get transform class from the registry.
+
+        Parameters
+        ----------
+        transform_name: str
+            The name of the transform (e.g., 'pca', 'vae', 'standardize')
+
+        Returns
+        -------
+        type[AutoEmulateTransform] | None
+            The transform class if found, None otherwise
+        """
+        from . import TRANSFORM_REGISTRY  # Lazy import to avoid circular dependency
+
+        return TRANSFORM_REGISTRY.get(transform_name)
+
+    @classmethod
+    def _get_available_transforms(cls):
+        """
+        Get list of available transform names.
+
+        Returns
+        -------
+        list[str]
+            List of available transform names
+        """
+        from . import TRANSFORM_REGISTRY  # Lazy import to avoid circular dependency
+
+        return list(TRANSFORM_REGISTRY.keys())
 
     @property
     def _basis_matrix(self) -> TensorLike:

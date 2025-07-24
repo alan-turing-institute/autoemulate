@@ -1,4 +1,6 @@
 import warnings
+from datetime import datetime
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +9,10 @@ import tqdm
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators import ALL_EMULATORS
+from autoemulate.experimental.emulators import (
+    ALL_EMULATORS,
+    get_emulator_class,
+)
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.logging_config import get_configured_logger
@@ -18,6 +23,7 @@ from autoemulate.experimental.plotting import (
     plot_xy,
 )
 from autoemulate.experimental.results import Result, Results
+from autoemulate.experimental.save import ModelSerialiser
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.tuner import Tuner
@@ -29,9 +35,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self,
         x: InputLike,
         y: InputLike,
-        models: list[type[Emulator]] | None = None,
-        x_transforms_list: list[list[AutoEmulateTransform]] | None = None,
-        y_transforms_list: list[list[AutoEmulateTransform]] | None = None,
+        models: list[type[Emulator] | str] | None = None,
+        x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
+        y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -42,7 +48,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         log_level: str = "progress_bar",
     ):
         """
-        Initialize the AutoEmulate class.
+        The AutoEmulate class is the main class of the AutoEmulate package.
+        It is used to set up and compare different emulator models on a given dataset.
+        It can also be used to summarise and visualise results,
+        and to save and load models.
 
         Parameters
         ----------
@@ -87,8 +96,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x, y = self._move_tensors_to_device(x, y)
 
         # Transforms to search over
-        self.x_transforms_list = x_transforms_list or [[StandardizeTransform()]]
-        self.y_transforms_list = y_transforms_list or [[StandardizeTransform()]]
+        self.x_transforms_list = [
+            self.get_transforms(transforms)
+            for transforms in (x_transforms_list or [[StandardizeTransform()]])
+        ]
+        self.y_transforms_list = [
+            self.get_transforms(transforms)
+            for transforms in (y_transforms_list or [[StandardizeTransform()]])
+        ]
 
         # Set default models if None
         updated_models = self.get_models(models)
@@ -119,7 +134,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
 
+        # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.model_serialiser = ModelSerialiser(self.logger)
 
         # Run compare
         self.compare()
@@ -141,15 +158,45 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         return pd.DataFrame(
             {
-                "model_name": [emulator.model_name() for emulator in ALL_EMULATORS],
-                "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
+                "Emulator": [emulator.model_name() for emulator in ALL_EMULATORS],
+                # TODO: short_name not currently used for anything, so commented out
+                # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
         )
 
-    def get_models(self, models: list[type[Emulator]] | None) -> list[type[Emulator]]:
+    def get_models(
+        self, models: list[type[Emulator] | str] | None = None
+    ) -> list[type[Emulator]]:
         if models is None:
             return self.all_emulators()
-        return models
+
+        model_classes = []
+        for model in models:
+            if isinstance(model, str):
+                model_classes.append(get_emulator_class(model))
+            elif issubclass(model, Emulator):
+                model_classes.append(model)
+            else:
+                raise ValueError(
+                    f"Invalid model type: {type(model)}. "
+                    "Expected a string or a subclass of Emulator"
+                )
+        return model_classes
+
+    def get_transforms(
+        self, transforms: list[AutoEmulateTransform | dict[str, object]]
+    ) -> list[AutoEmulateTransform]:
+        processed_transforms = []
+        for transform in transforms:
+            if isinstance(transform, dict):
+                deserialized_transform = AutoEmulateTransform.from_dict(transform)
+                processed_transforms.append(deserialized_transform)
+            elif isinstance(transform, AutoEmulateTransform):
+                processed_transforms.append(transform)
+            else:
+                msg = f"Invalid transform type: {type(transform)}"
+                raise ValueError(msg)
+        return processed_transforms
 
     def filter_models_if_multioutput(
         self, models: list[type[Emulator]], warn: bool
@@ -296,7 +343,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             )
                             result = Result(
                                 id=id,
-                                model_name=model_cls.model_name(),
+                                model_name=transformed_emulator.untransformed_model_name,
                                 model=transformed_emulator,
                                 config=best_config_for_this_model,
                                 r2_test=r2_test,
@@ -339,7 +386,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     def plot(  # noqa: PLR0912, PLR0915
         self,
-        result_id: str,
+        model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         figsize=None,
@@ -350,18 +397,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         Parameters
         ----------
-        result_id: str
-            The ID of the model to plot.
+        model_obj: int | Emulator | Result
+            The model to plot. Can be an integer ID of a Result, an Emulator instance,
+            or a Result instance.
         input_index: int
             The index of the input feature to plot against the output.
         output_index: int
             The index of the output feature to plot against the input.
         """
-        if result_id not in self._id_to_result:
-            raise ValueError(f"No result found with ID: {result_id}")
+        result = None
+        if isinstance(model_obj, int):
+            if model_obj not in self._id_to_result:
+                raise ValueError(f"No result found with ID: {model_obj}")
+            result = self.get_result(model_obj)
+            model = result.model
+        elif isinstance(model_obj, Emulator):
+            model = model_obj
+        elif isinstance(model_obj, Result):
+            model = model_obj.model
 
         test_x, test_y = self._convert_to_tensors(self.test)
-        model = self.get_result(result_id).model
 
         # Re-run prediction with just this model to get the predictions
         y_pred = model.predict(test_x)
@@ -444,3 +499,64 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         plt.tight_layout()
 
         return display_figure(fig)
+
+    def save(
+        self,
+        model_obj: int | Emulator | Result,
+        path: str | Path | None = None,
+        use_timestamp: bool = True,
+    ) -> Path:
+        """Saves model to disk.
+
+        Parameters
+        ----------
+        model_obj : int | Emulator | Result
+            The model to save. Can be an integer ID of a Result, an Emulator instance,
+            or a Result instance.
+        path : str
+            Path to save the model.
+        use_timestamp : bool
+            If True, appends a timestamp to the filename to ensure uniqueness.
+        """
+        result = None
+        if isinstance(model_obj, int):
+            if model_obj not in self._id_to_result:
+                raise ValueError(f"No result found with ID: {model_obj}")
+            result = self.get_result(model_obj)
+            model = result.model
+            model_name = result.model_name
+        elif isinstance(model_obj, Emulator):
+            model = model_obj
+            if isinstance(model_obj, TransformedEmulator):
+                model_name = model_obj.untransformed_model_name
+            else:
+                model_name = model.model_name()
+        elif isinstance(model_obj, Result):
+            model = model_obj.model
+            model_name = model_obj.model_name
+            result = model_obj
+
+        # Create a unique filename based on the model name, id and date
+        filename = f"{model_name}_{result.id}" if result is not None else model_name
+        if use_timestamp:
+            t = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename += f"_{t}"
+
+        if result is not None:
+            return self.model_serialiser._save_result(result, filename, path)
+        return self.model_serialiser._save_model(model, filename, path)
+
+    def load(self, path: str | Path) -> Emulator | Result:
+        """Loads a stored model or result from disk.
+
+        Parameters
+        ----------
+        path : str
+            Path to model.
+
+        Returns
+        -------
+        Emulator | Result
+            The loaded model or result object.
+        """
+        return self.model_serialiser._load_result(path)
