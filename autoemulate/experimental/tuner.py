@@ -67,8 +67,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_splits: int = 5,
         seed: int | None = None,
         shuffle: bool = True,
-        max_retries: int = 100,
-    ) -> tuple[list[float], list[ModelConfig]]:
+    ) -> tuple[list[list[float]], list[ModelConfig]]:
         """
         Parameters
         ----------
@@ -95,13 +94,17 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         """
         # keep track of what parameter values tested and how they performed
         model_config_tested: list[ModelConfig] = []
-        val_scores: list[float] = []
+        val_scores: list[list[float]] = []
 
-        i, retries = 0, 0
-        while i < self.n_iter:
+        # Initialize retries and maximum number of retries for consecutive failed tuning
+        # iterations that would indicate that no model config is working for the
+        # given dataset/model and that the tuning process should be stopped
+        retries, max_retries = 0, 100
+        while len(model_config_tested) < self.n_iter:
             # randomly sample hyperparameters and instantiate model
             model_config = model_class.get_random_config()
             try:
+                # Perform cross-validation on randomly sampled model config
                 scores = cross_validate(
                     cv=KFold(n_splits=n_splits, random_state=seed, shuffle=shuffle),
                     dataset=self.dataset,
@@ -112,16 +115,20 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     device=self.device,
                     random_seed=None,
                 )
-                # Reset retries after a successful cross_validation call
+
+                # Reset retries following a successful cross_validation call
                 retries = 0
+
+                # Store the model config and validation scores
                 model_config_tested.append(model_config)
                 val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
-                i += 1
+
+                # Log the tuning iteration results
                 logger.debug(
                     "tuning model: %s; iteration: %d/%d; mean (std) r2=%.3f (%.3f); "
                     "model_config: %s",
                     model_class.model_name(),
-                    i + 1,
+                    len(model_config_tested),
                     self.n_iter,
                     np.mean(scores["r2"]),
                     np.std(scores["r2"]),
@@ -129,11 +136,11 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 )
 
             except Exception as e:
-                # Retry with new random config parameters
+                # Increment retries following a failed tuning iteration and try again
                 retries += 1
                 logger.warning(
                     "Failed tuning iteration %d with model config: %s: %s",
-                    i + 1,
+                    len(model_config_tested),
                     json.dumps(model_config, default=str, separators=(",", ":")),
                     str(e),
                 )
