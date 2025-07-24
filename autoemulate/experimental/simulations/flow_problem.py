@@ -95,9 +95,11 @@ class FlowProblem(Simulator):
 
             return Q_mi_lambda
 
-        dfdt_fd_spec = lambda t, y: dfdt_fd(  # noqa: E731
-            params_dict=params, t=t, y=y, Q_in=generate_pulse_function(params)
-        )  # type: ignore  # noqa: PGH003
+        def dfdt_fd_spec(t, y):
+            return dfdt_fd(
+                params_dict=params, t=t, y=y, Q_in=generate_pulse_function(params)
+            )
+
         res = sp.integrate.solve_ivp(
             dfdt_fd_spec,
             [0.0, params["T"] * params["ncycles"]],  # type: ignore  # noqa: PGH003
