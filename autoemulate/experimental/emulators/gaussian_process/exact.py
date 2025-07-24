@@ -41,7 +41,7 @@ from .kernel import (
 from .mean import constant_mean, linear_mean, poly_mean, zero_mean
 
 
-class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
+class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
     Gaussian Process Exact Emulator
 
@@ -274,7 +274,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def get_tune_config():
-        scheduler_config = GaussianProcessExact.scheduler_config()
+        scheduler_config = GaussianProcess.scheduler_config()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -300,7 +300,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         }
 
 
-class GaussianProcessExactCorrelated(GaussianProcessExact):
+class GaussianProcessCorrelated(GaussianProcess):
     """
     Multioutput exact GP implementation with correlated task covariance.
 
