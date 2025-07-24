@@ -78,6 +78,7 @@
 | autoemulate/experimental/simulations/base.py                                 |       69 |        3 |     96% |55, 107, 183 |
 | autoemulate/experimental/simulations/epidemic.py                             |       40 |        0 |    100% |           |
 | autoemulate/experimental/simulations/experimental\_design.py                 |       19 |        1 |     95% |        71 |
+| autoemulate/experimental/simulations/flow\_problem.py                        |       41 |       41 |      0% |     1-135 |
 | autoemulate/experimental/simulations/projectile.py                           |       59 |        0 |    100% |           |
 | autoemulate/experimental/simulations/reaction\_diffusion.py                  |       73 |       73 |      0% |     1-236 |
 | autoemulate/experimental/transforms/\_\_init\_\_.py                          |        6 |        0 |    100% |           |
@@ -168,7 +169,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **11070** | **2160** | **80%** |           |
+|                                                                    **TOTAL** | **11111** | **2201** | **80%** |           |
 
 
 ## Setup coverage badge
