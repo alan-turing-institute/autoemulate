@@ -49,3 +49,6 @@ docs/data/simulator_results.csv
 
 # Ignore experimental exploratory data path
 autoemulate/experimental/exploratory/data
+
+# Benchmark data
+benchmarks/data

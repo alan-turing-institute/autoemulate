@@ -4,7 +4,7 @@ source .venv/bin/activate
 
 # Run the benchmark script with the specified parameters
 date_time=$(date +"%Y-%m-%d_%H%M%S")
-outpath="./notebooks/${date_time}/"
+outpath="./benchmarks/data/${date_time}/"
 mkdir -p "$outpath"
 for simulator in Epidemic Projectile ProjectileMultioutput; do
   for n_iter_pair in "10 100" "20 50"; do
@@ -17,3 +17,6 @@ for simulator in Epidemic Projectile ProjectileMultioutput; do
     done
   done
 done
+
+# Combine outputs with:
+# xsv cat rows benchmarks/data/${date_time}/benchmark_*.csv > benchmark_results.csv

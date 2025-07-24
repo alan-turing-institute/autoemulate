@@ -4,12 +4,11 @@ import click
 import numpy as np
 import pandas as pd
 import torch
-from tqdm import tqdm
-
 from autoemulate.experimental.compare import AutoEmulate
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.simulations import SIMULATOR_REGISTRY
 from autoemulate.experimental.simulations.base import Simulator
+from tqdm import tqdm
 
 
 def run_benchmark(
