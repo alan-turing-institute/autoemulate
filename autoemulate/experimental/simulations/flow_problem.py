@@ -107,10 +107,10 @@ class FlowProblem(Simulator):
         )
         res.y = res.y[:, res.t >= params["T"] * (self.ncycles - 1)]
         # res.t = res.t[res.t >= x['T'] * (self.ncycles - 1)]
-        res.y = torch.tensor(res.y, dtype=torch.float32)
+        y = torch.tensor(res.y, dtype=torch.float32)
         # res.t = torch.tensor(res.t, dtype=torch.float32)
 
         # Return pressure values from the last time step,
         # reshaped to (1, n_compartments*2)
-        final_values = res.y[:, -1]  # Get final time step values
+        final_values = y[:, -1]  # Get final time step values
         return final_values.unsqueeze(0)  # Add batch dimension to match expected shape
