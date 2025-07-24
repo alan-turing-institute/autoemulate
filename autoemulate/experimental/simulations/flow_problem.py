@@ -30,7 +30,8 @@ class FlowProblem(Simulator):
         """
         Calculate the pressure and flow rate in the tube compartments.
 
-        Parameters:
+        Parameters
+        ----------
             x: TensorLike
                 Tensor of input parameter values to simulate. Will be converted to a
                 dictionary internally.
@@ -44,7 +45,8 @@ class FlowProblem(Simulator):
                     - `R_o` (float) : outflow resistance
                     - `p_o` (float) : outflow pressure
 
-        Returns:
+        Returns
+        -------
             TensorLike
                 Presssure in the tube compartments at the end of the simulation.
         """
