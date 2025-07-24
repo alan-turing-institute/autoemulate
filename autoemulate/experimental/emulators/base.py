@@ -90,7 +90,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         x = self.x_transform(x) if self.x_transform is not None else x
         output = self._predict(x, with_grad)
         if self.y_transform is not None:
-            print(output)
             if isinstance(output, GaussianLike):
                 output = self.y_transform._inverse_gaussian(output)
             elif isinstance(output, DistributionLike):
@@ -305,7 +304,6 @@ class GaussianEmulator(ProbabilisticEmulator):
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
         pred = super().predict(x, with_grad)
-        print(pred)
         assert isinstance(pred, GaussianLike)
         return pred
 
