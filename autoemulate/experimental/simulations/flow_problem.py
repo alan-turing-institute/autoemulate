@@ -102,14 +102,14 @@ class FlowProblem(Simulator):
 
         res = sp.integrate.solve_ivp(
             dfdt_fd_spec,
-            [0.0, params["T"] * params["ncycles"]],  # type: ignore  # noqa: PGH003
-            y0=np.zeros(params["ncomp"] * 2),  # type: ignore  # noqa: PGH003
+            [0.0, params["T"] * params["ncycles"]],
+            y0=np.zeros(params["ncomp"] * 2),
             method="BDF",
-            max_step=params["dt"],  # type: ignore  # noqa: PGH003
+            max_step=params["dt"],
         )
-        res.y = res.y[:, res.t >= params["T"] * (params["ncycles"] - 1)]  # type: ignore  # noqa: PGH003
+        res.y = res.y[:, res.t >= params["T"] * (params["ncycles"] - 1)]
         # res.t = res.t[res.t >= x['T'] * (x['ncycles'] - 1)]
-        res.y = torch.tensor(res.y, dtype=torch.float32)  # type: ignore  # noqa: PGH003
+        res.y = torch.tensor(res.y, dtype=torch.float32)
         # res.t = torch.tensor(res.t, dtype=torch.float32)
 
         # Return pressure values from the last time step,
