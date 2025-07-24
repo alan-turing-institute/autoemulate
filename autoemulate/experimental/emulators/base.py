@@ -33,8 +33,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     is_fitted_: bool = False
     supports_grad: bool = False
     scheduler_cls: type[optim.lr_scheduler.LRScheduler] | None = None
-    x_transform: StandardizeTransform | None = StandardizeTransform()
-    y_transform: StandardizeTransform | None = StandardizeTransform()
+    x_transform: StandardizeTransform | None = None
+    y_transform: StandardizeTransform | None = None
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
