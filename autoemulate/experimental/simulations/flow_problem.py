@@ -17,8 +17,8 @@ class FlowProblem(Simulator):
 
     def __init__(
         self,
-        parameters_range: dict[str, tuple[float, float]],
-        output_names: list[str],
+        parameters_range: dict[str, tuple[float, float]] | None = None,
+        output_names: list[str] | None = None,
         log_level: str = "progress_bar",
         ncycles: int = 10,
         ncomp: int = 10,
@@ -43,6 +43,29 @@ class FlowProblem(Simulator):
         ncomp: int
             Number of compartments in the tube.
         """
+        if parameters_range is None:
+            parameters_range = {
+                # Cardiac cycle period (s)
+                "T": (0.5, 2.0),
+                # Pulse duration (s)
+                "td": (0.1, 0.5),
+                # Amplitude (e.g., pressure or flow rate)
+                "amp": (100.0, 1000.0),
+                # Time step (s)
+                "dt": (0.0001, 0.01),
+                # Compliance (unit varies based on context)
+                "C": (20.0, 60.0),
+                # Resistance (unit varies based on context)
+                "R": (0.01, 0.1),
+                # Inductance (unit varies based on context)
+                "L": (0.001, 0.005),
+                # Outflow resistance (unit varies based on context)
+                "R_o": (0.01, 0.05),
+                # Initial pressure (unit varies based on context)
+                "p_o": (5.0, 15.0),
+            }
+        if output_names is None:
+            output_names = ["pressure"]
         super().__init__(parameters_range, output_names, log_level)
         self.ncycles = ncycles
         self.ncomp = ncomp
