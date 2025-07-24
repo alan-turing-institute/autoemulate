@@ -9,7 +9,7 @@ from autoemulate.experimental.device import (
     check_torch_device_is_available,
 )
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
+    GaussianProcess,
 )
 from autoemulate.experimental.simulations.epidemic import Epidemic
 from autoemulate.experimental.types import TensorLike
@@ -110,7 +110,7 @@ def test_run(device):
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    gp = GaussianProcessExact(x, y, device=device)
+    gp = GaussianProcess(x, y, device=device)
     gp.fit(x, y)
 
     observations = {"infection_rate": (0.3, 0.05)}
@@ -130,7 +130,7 @@ def test_run(device):
 
     # Check basic structure of results
     assert isinstance(hm.train_x, TensorLike)
-    assert isinstance(hm.emulator, GaussianProcessExact)
+    assert isinstance(hm.emulator, GaussianProcess)
 
     assert len(hm.train_x) == 5
 
@@ -149,7 +149,7 @@ def test_run_max_tries():
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    gp = GaussianProcessExact(x, y)
+    gp = GaussianProcess(x, y)
     gp.fit(x, y)
 
     # Extreme values outside the range of what the simulator returns
