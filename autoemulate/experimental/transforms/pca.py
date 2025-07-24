@@ -33,6 +33,7 @@ class PCATransform(AutoEmulateTransform):
         Transform.__init__(self, cache_size=cache_size)
         self.n_components = n_components  # n_c
         self.niter = niter
+        self.cache_size = cache_size  # Store for serialization
 
     def fit(self, x: TensorLike):
         TorchDeviceMixin.__init__(self, device=x.device)

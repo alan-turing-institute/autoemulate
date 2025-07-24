@@ -68,7 +68,7 @@ class TestPyTorchBackend:
         """
         Test the short_name class method of Emulator.
         """
-        assert self.model.short_name() == "DM"
+        assert self.model.short_name() == "dm"
 
     def test_fit(self):
         """

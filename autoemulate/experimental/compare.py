@@ -8,7 +8,10 @@ import tqdm
 
 from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators import ALL_EMULATORS
+from autoemulate.experimental.emulators import (
+    ALL_EMULATORS,
+    get_emulator_class,
+)
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.logging_config import get_configured_logger
@@ -31,9 +34,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self,
         x: InputLike,
         y: InputLike,
-        models: list[type[Emulator]] | None = None,
-        x_transforms_list: list[list[AutoEmulateTransform]] | None = None,
-        y_transforms_list: list[list[AutoEmulateTransform]] | None = None,
+        models: list[type[Emulator] | str] | None = None,
+        x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
+        y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -91,8 +94,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x, y = self._move_tensors_to_device(x, y)
 
         # Transforms to search over
-        self.x_transforms_list = x_transforms_list or [[StandardizeTransform()]]
-        self.y_transforms_list = y_transforms_list or [[StandardizeTransform()]]
+        self.x_transforms_list = [
+            self.get_transforms(transforms)
+            for transforms in (x_transforms_list or [[StandardizeTransform()]])
+        ]
+        self.y_transforms_list = [
+            self.get_transforms(transforms)
+            for transforms in (y_transforms_list or [[StandardizeTransform()]])
+        ]
 
         # Set default models if None
         updated_models = self.get_models(models)
@@ -152,10 +161,39 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             }
         )
 
-    def get_models(self, models: list[type[Emulator]] | None) -> list[type[Emulator]]:
+    def get_models(
+        self, models: list[type[Emulator] | str] | None = None
+    ) -> list[type[Emulator]]:
         if models is None:
             return self.all_emulators()
-        return models
+
+        model_classes = []
+        for model in models:
+            if isinstance(model, str):
+                model_classes.append(get_emulator_class(model))
+            elif issubclass(model, Emulator):
+                model_classes.append(model)
+            else:
+                raise ValueError(
+                    f"Invalid model type: {type(model)}. "
+                    "Expected a string or a subclass of Emulator"
+                )
+        return model_classes
+
+    def get_transforms(
+        self, transforms: list[AutoEmulateTransform | dict[str, object]]
+    ) -> list[AutoEmulateTransform]:
+        processed_transforms = []
+        for transform in transforms:
+            if isinstance(transform, dict):
+                deserialized_transform = AutoEmulateTransform.from_dict(transform)
+                processed_transforms.append(deserialized_transform)
+            elif isinstance(transform, AutoEmulateTransform):
+                processed_transforms.append(transform)
+            else:
+                msg = f"Invalid transform type: {type(transform)}"
+                raise ValueError(msg)
+        return processed_transforms
 
     def filter_models_if_multioutput(
         self, models: list[type[Emulator]], warn: bool
