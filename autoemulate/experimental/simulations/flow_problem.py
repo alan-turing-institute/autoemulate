@@ -19,8 +19,12 @@ class FlowProblem(Simulator):
         self,
         param_ranges,
         output_names,
+        ncycles=10,
+        ncomp=10,
     ):
         super().__init__(param_ranges, output_names)
+        self.ncycles = ncycles
+        self.ncomp = ncomp
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -34,8 +38,6 @@ class FlowProblem(Simulator):
                     - `td` (float): pulse duration, make sure to make this less than T
                     - `amp` (float): inflow amplitude
                     - `dt` (float): temporal discretisation resolution
-                    - `ncycles` (int): number of cycles to simulate
-                    - `ncomp` (int): number of compartments in the tube
                     - `C` (float): tube average compliance
                     - `R` (float): tube average impedance
                     - `L` (float): hydraulic impedance, inertia
@@ -54,26 +56,22 @@ class FlowProblem(Simulator):
         params = {}
         for i, param_name in enumerate(self.param_names):
             value = x_values[i]
-            # Convert integer parameters to int type
-            if param_name in ["ncycles", "ncomp"]:
-                params[param_name] = int(value)
-            else:
-                params[param_name] = value
+            params[param_name] = value
 
         def dfdt_fd(params_dict, t: float, y: np.ndarray, Q_in):
-            Cn = params_dict["C"] / params_dict["ncomp"]
-            Rn = params_dict["R"] / params_dict["ncomp"]
-            Ln = params_dict["L"] / params_dict["ncomp"]
+            Cn = params_dict["C"] / self.ncomp
+            Rn = params_dict["R"] / self.ncomp
+            Ln = params_dict["L"] / self.ncomp
 
-            out = np.zeros((params_dict["ncomp"], 2))
+            out = np.zeros((self.ncomp, 2))
             y_temp = y.reshape((-1, 2))
 
-            for i in range(params_dict["ncomp"]):
+            for i in range(self.ncomp):
                 if i > 0:
                     out[i, 0] = (y_temp[i - 1, 1] - y_temp[i, 1]) / Cn
                 else:
                     out[i, 0] = (Q_in(t % params_dict["T"]) - y_temp[i, 1]) / Cn
-                if i < params_dict["ncomp"] - 1:
+                if i < self.ncomp - 1:
                     out[i, 1] = (
                         -y_temp[i + 1, 0] + y_temp[i, 0] - Rn * y_temp[i, 1]
                     ) / Ln
@@ -102,13 +100,13 @@ class FlowProblem(Simulator):
 
         res = sp.integrate.solve_ivp(
             dfdt_fd_spec,
-            [0.0, params["T"] * params["ncycles"]],
-            y0=np.zeros(params["ncomp"] * 2),
+            [0.0, params["T"] * self.ncycles],
+            y0=np.zeros(self.ncomp * 2),
             method="BDF",
             max_step=params["dt"],
         )
-        res.y = res.y[:, res.t >= params["T"] * (params["ncycles"] - 1)]
-        # res.t = res.t[res.t >= x['T'] * (x['ncycles'] - 1)]
+        res.y = res.y[:, res.t >= params["T"] * (self.ncycles - 1)]
+        # res.t = res.t[res.t >= x['T'] * (self.ncycles - 1)]
         res.y = torch.tensor(res.y, dtype=torch.float32)
         # res.t = torch.tensor(res.t, dtype=torch.float32)
 
