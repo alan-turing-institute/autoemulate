@@ -5,7 +5,7 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import MultitaskKernel, ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
-from torch import nn, optim
+from torch import optim
 from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.experimental.callbacks.early_stopping import (
@@ -54,7 +54,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     # TODO: refactor to work more like PyTorchBackend once any subclasses implemented
     optimizer_cls: type[optim.Optimizer] = optim.AdamW
     optimizer: optim.Optimizer
-    lr: float = 1e-1
+    lr: float = 2e-1
     scheduler_cls: type[LRScheduler] | None = None
 
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
@@ -66,7 +66,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
         posterior_predictive: bool = False,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
@@ -95,8 +94,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             False, it will return the posterior distribution over the modelled function.
         epochs: int, default=50
             Number of training epochs.
-        activation: type[nn.Module], default=nn.ReLU
-            Activation function to use in the model.
         lr: float, default=2e-1
             Learning rate for the optimizer.
         early_stopping: EarlyStopping | None
@@ -140,7 +137,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping
@@ -325,7 +321,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
         posterior_predictive: bool = False,
         epochs: int = 50,
-        activation: type[nn.Module] = nn.ReLU,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
@@ -409,7 +404,6 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.covar_module = covar_module
         self.epochs = epochs
         self.lr = lr
-        self.activation = activation
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
         self.early_stopping = early_stopping

@@ -114,14 +114,14 @@ class MLP(DropoutTorchBackend):
     def get_tune_config():
         scheduler_params = MLP.scheduler_config()
         return {
-            "epochs": [50, 100, 200],
-            "layer_dims": [[32, 16], [64, 32, 16]],
-            "lr": [1e-1, 1e-2, 1e-3],
+            "epochs": [100, 200],
+            "layer_dims": [[8, 4], [16, 8], [32, 16], [64, 32, 16]],
+            "lr": [5e-1, 2e-1, 1e-1, 1e-2, 1e-3],
             "batch_size": [16, 32],
             "weight_init": ["default", "normal"],
             "scale": [0.1, 1.0],
             "bias_init": ["default", "zeros"],
-            "dropout_prob": [0.3, 0.5, None],
+            "dropout_prob": [0.3, None],
             "scheduler_cls": scheduler_params["scheduler_cls"],
             "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }

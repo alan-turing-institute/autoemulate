@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import tqdm
 
@@ -41,6 +42,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_splits: int = 5,
         shuffle: bool = True,
         n_bootstraps: int = 100,
+        max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
@@ -130,6 +132,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.shuffle = shuffle
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
+        self.max_retries = max_retries
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -250,93 +253,127 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     unit="model",
                     unit_scale=True,
                 ):
-                    self.logger.info(
-                        "Running Model: %s: %d/%d",
-                        model_cls.__name__,
-                        id,
-                        len(self.models),
-                    )
+                    # Since refitting the model can fail after tuning, max_retries
+                    # is used to retry the whole tuning and fitting process
+                    for attempt in range(self.max_retries):
+                        try:
+                            self.logger.info(
+                                "Running Model: %s: %d/%d (attempt %d/%d)",
+                                model_cls.__name__,
+                                id,
+                                len(self.models),
+                                attempt + 1,
+                                self.max_retries,
+                            )
 
-                    self.logger.debug(
-                        'Running tuner for model "%s"', model_cls.__name__
-                    )
-                    scores, configs = tuner.run(
-                        model_cls,
-                        x_transforms,
-                        y_transforms,
-                        n_splits=self.n_splits,
-                        shuffle=self.shuffle,
-                    )
-                    best_score_idx = scores.index(max(scores))
-                    best_config_for_this_model = configs[best_score_idx]
-                    self.logger.debug(
-                        'Tuner found best config for model "%s": %s with score: %s',
-                        model_cls.__name__,
-                        best_config_for_this_model,
-                        scores[best_score_idx],
-                    )
+                            self.logger.debug(
+                                'Running tuner for model "%s"', model_cls.__name__
+                            )
+                            scores, configs = tuner.run(
+                                model_cls,
+                                x_transforms,
+                                y_transforms,
+                                n_splits=self.n_splits,
+                                shuffle=self.shuffle,
+                            )
+                            mean_scores = [np.mean(score).item() for score in scores]
+                            best_score_idx = np.argmax(mean_scores)
+                            best_config_for_this_model = configs[best_score_idx]
+                            self.logger.debug(
+                                'Tuner found best config for model "%s": '
+                                "%s with score: %.3f",
+                                model_cls.__name__,
+                                best_config_for_this_model,
+                                mean_scores[best_score_idx],
+                            )
 
-                    self.logger.debug(
-                        'Running cross-validation for model "%s" for "%s" iterations',
-                        model_cls.__name__,
-                        self.n_iter,
-                    )
-                    train_val_x, train_val_y = self._convert_to_tensors(self.train_val)
-                    test_x, test_y = self._convert_to_tensors(self.test)
-                    transformed_emulator = TransformedEmulator(
-                        train_val_x,
-                        train_val_y,
-                        model=model_cls,
-                        x_transforms=x_transforms,
-                        y_transforms=y_transforms,
-                        device=self.device,
-                        **best_config_for_this_model,
-                    )
-                    transformed_emulator.fit(train_val_x, train_val_y)
-                    (
-                        (r2_train_val, r2_train_val_std),
-                        (rmse_train_val, rmse_train_val_std),
-                    ) = bootstrap(
-                        transformed_emulator,
-                        train_val_x,
-                        train_val_y,
-                        n_bootstraps=self.n_bootstraps,
-                        device=self.device,
-                    )
-                    (r2_test, r2_test_std), (rmse_test, rmse_test_std) = bootstrap(
-                        transformed_emulator,
-                        test_x,
-                        test_y,
-                        n_bootstraps=self.n_bootstraps,
-                        device=self.device,
-                    )
+                            self.logger.debug(
+                                'Running cross-validation for model "%s" '
+                                'for "%s" iterations',
+                                model_cls.__name__,
+                                self.n_iter,
+                            )
+                            train_val_x, train_val_y = self._convert_to_tensors(
+                                self.train_val
+                            )
+                            test_x, test_y = self._convert_to_tensors(self.test)
+                            transformed_emulator = TransformedEmulator(
+                                train_val_x,
+                                train_val_y,
+                                model=model_cls,
+                                x_transforms=x_transforms,
+                                y_transforms=y_transforms,
+                                device=self.device,
+                                **best_config_for_this_model,
+                            )
 
-                    self.logger.debug(
-                        'Cross-validation for model "%s"'
-                        " completed with R2 score: %.3f (%.3f), "
-                        "RMSE score: %.3f (%.3f)",
-                        model_cls.__name__,
-                        r2_test,
-                        r2_test_std,
-                        rmse_test,
-                        rmse_test_std,
-                    )
-                    self.logger.info("Finished running Model: %s\n", model_cls.__name__)
-                    result = Result(
-                        id=id,
-                        model_name=transformed_emulator.untransformed_model_name,
-                        model=transformed_emulator,
-                        config=best_config_for_this_model,
-                        r2_test=r2_test,
-                        rmse_test=rmse_test,
-                        r2_test_std=r2_test_std,
-                        rmse_test_std=rmse_test_std,
-                        r2_train=r2_train_val,
-                        rmse_train=rmse_train_val,
-                        r2_train_std=r2_train_val_std,
-                        rmse_train_std=rmse_train_val_std,
-                    )
-                    self.add_result(result)
+                            # This can fail for some model configurations
+                            transformed_emulator.fit(train_val_x, train_val_y)
+
+                            (
+                                (r2_train_val, r2_train_val_std),
+                                (rmse_train_val, rmse_train_val_std),
+                            ) = bootstrap(
+                                transformed_emulator,
+                                train_val_x,
+                                train_val_y,
+                                n_bootstraps=self.n_bootstraps,
+                                device=self.device,
+                            )
+                            (r2_test, r2_test_std), (rmse_test, rmse_test_std) = (
+                                bootstrap(
+                                    transformed_emulator,
+                                    test_x,
+                                    test_y,
+                                    n_bootstraps=self.n_bootstraps,
+                                    device=self.device,
+                                )
+                            )
+
+                            self.logger.debug(
+                                'Cross-validation for model "%s"'
+                                " completed with test mean (std) R2 score: %.3f (%.3f),"
+                                " mean (std) RMSE score: %.3f (%.3f)",
+                                model_cls.__name__,
+                                r2_test,
+                                r2_test_std,
+                                rmse_test,
+                                rmse_test_std,
+                            )
+                            self.logger.info(
+                                "Finished running Model: %s\n", model_cls.__name__
+                            )
+                            result = Result(
+                                id=id,
+                                model_name=transformed_emulator.untransformed_model_name,
+                                model=transformed_emulator,
+                                config=best_config_for_this_model,
+                                r2_test=r2_test,
+                                rmse_test=rmse_test,
+                                r2_test_std=r2_test_std,
+                                rmse_test_std=rmse_test_std,
+                                r2_train=r2_train_val,
+                                rmse_train=rmse_train_val,
+                                r2_train_std=r2_train_val_std,
+                                rmse_train_std=rmse_train_val_std,
+                            )
+                            self.add_result(result)
+                            # if successful, break out of the retry loop
+                            break
+                        except Exception as e:
+                            self.logger.warning(
+                                "Model %s failed on attempt %d/%d: %s",
+                                model_cls.__name__,
+                                attempt + 1,
+                                self.max_retries,
+                                str(e),
+                            )
+                            if attempt == self.max_retries - 1:
+                                self.logger.error(
+                                    "Model %s failed after %d attempts, skipping.",
+                                    model_cls.__name__,
+                                    self.max_retries,
+                                )
 
         # Get the best result and log the comparison
         best_result = self.best_result()
