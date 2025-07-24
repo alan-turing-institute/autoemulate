@@ -1,6 +1,5 @@
 import itertools
 
-import gpytorch
 import pytest
 import torch
 from autoemulate.experimental.data.utils import set_random_seed
@@ -13,11 +12,6 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
     GaussianProcessExactCorrelated,
 )
-from autoemulate.experimental.emulators.gaussian_process.kernel import (
-    rbf,
-    rbf_times_linear,
-)
-from autoemulate.experimental.emulators.gaussian_process.mean import constant_mean
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
