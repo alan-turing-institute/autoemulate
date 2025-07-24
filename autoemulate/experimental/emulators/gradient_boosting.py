@@ -21,8 +21,8 @@ class GradientBoosting(SklearnBackend):
         self,
         x: TensorLike,
         y: TensorLike,
-        standardize_x: bool = True,
-        standardize_y: bool = True,
+        standardize_x: bool = False,
+        standardize_y: bool = False,
         loss: Literal[
             "squared_error", "absolute_error", "huber", "quantile"
         ] = "squared_error",
