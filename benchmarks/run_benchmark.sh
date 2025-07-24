@@ -7,7 +7,7 @@ date_time=$(date +"%Y-%m-%d_%H%M%S")
 outpath="./benchmarks/data/${date_time}/"
 mkdir -p "$outpath"
 for simulator in Epidemic FlowProblem Projectile ProjectileMultioutput; do
-  for n_iter_pair in "10 100" "20 50"; do
+  for n_iter_pair in "10 100" "150 50" "200 20"; do
     for n_splits in 5 2; do  
       n_iter_array=($n_iter_pair)
       n_iter1=${n_iter_array[0]}
