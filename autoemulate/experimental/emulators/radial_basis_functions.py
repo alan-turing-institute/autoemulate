@@ -22,8 +22,8 @@ class RadialBasisFunctions(PyTorchBackend):
         self,
         x: TensorLike,  # noqa: ARG002
         y: TensorLike,  # noqa: ARG002
-        standardize_x: bool = True,
-        standardize_y: bool = True,
+        standardize_x: bool = False,
+        standardize_y: bool = False,
         smoothing: float = 0.0,
         kernel: str = "thin_plate_spline",
         epsilon: float = 1.0,
