@@ -20,9 +20,29 @@ class FlowProblem(Simulator):
         parameters_range: dict[str, tuple[float, float]],
         output_names: list[str],
         log_level: str = "progress_bar",
-        ncycles=10,
-        ncomp=10,
+        ncycles: int = 10,
+        ncomp: int = 10,
     ):
+        """
+        Parameters
+        ----------
+        parameters_range: dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        output_names: list[str]
+            List of output parameters' names.
+        log_level: str
+            Logging level for the simulator. Can be one of:
+            - "progress_bar": shows a progress bar during batch simulations
+            - "debug": shows debug messages
+            - "info": shows informational messages
+            - "warning": shows warning messages
+            - "error": shows error messages
+            - "critical": shows critical messages
+        ncycles: int
+            Number of cycles to simulate.
+        ncomp: int
+            Number of compartments in the tube.
+        """
         super().__init__(parameters_range, output_names, log_level)
         self.ncycles = ncycles
         self.ncomp = ncomp
