@@ -164,10 +164,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
-        x, y = self._move_tensors_to_device(x, y)
-
-        # TODO: move conversion out of _fit() and instead rely on for impl check
-        x, y = self._convert_to_tensors(x, y)
 
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
 
