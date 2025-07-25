@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for autoemulate/simulations/epidemic.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
-    <link rel="stylesheet" href="style_cb_81f8c14c.css" type="text/css">
+    <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_1c5d0098789d27be_flow_functions_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.9.2">coverage.py v7.9.2</a>,
-            created at 2025-07-24 16:38 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
+            created at 2025-07-25 15:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -156,8 +156,8 @@
     <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="key">return</span> <span class="op">[</span><span class="nam">dSdt</span><span class="op">,</span> <span class="nam">dIdt</span><span class="op">,</span> <span class="nam">dRdt</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="nam">t_eval</span> <span class="op">=</span> <span class="nam">np</span><span class="op">.</span><span class="nam">linspace</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="nam">t_span</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">,</span> <span class="nam">t_span</span><span class="op">[</span><span class="num">1</span><span class="op">]</span><span class="op">,</span> <span class="num">160</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="op">)</span>  <span class="com"># Evaluate each day within the time span</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="nam">t_span</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">,</span> <span class="nam">t_span</span><span class="op">[</span><span class="num">1</span><span class="op">]</span><span class="op">,</span> <span class="num">160</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="op">)</span>  <span class="com"># Evaluate each day within the time span</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="nam">sol</span> <span class="op">=</span> <span class="nam">solve_ivp</span><span class="op">(</span><span class="nam">sir_model</span><span class="op">,</span> <span class="nam">t_span</span><span class="op">,</span> <span class="nam">y0</span><span class="op">,</span> <span class="nam">args</span><span class="op">=</span><span class="op">(</span><span class="nam">N</span><span class="op">,</span> <span class="nam">beta</span><span class="op">,</span> <span class="nam">gamma</span><span class="op">)</span><span class="op">,</span> <span class="nam">t_eval</span><span class="op">=</span><span class="nam">t_eval</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="nam">S</span><span class="op">,</span> <span class="nam">I</span><span class="op">,</span> <span class="nam">R</span> <span class="op">=</span> <span class="nam">sol</span><span class="op">.</span><span class="nam">y</span>&nbsp;</span><span class="r"></span></p>
@@ -173,8 +173,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_1c5d0098789d27be_flow_functions_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.9.2">coverage.py v7.9.2</a>,
-            created at 2025-07-24 16:38 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
+            created at 2025-07-25 15:16 +0000
         </p>
     </div>
 </footer>
