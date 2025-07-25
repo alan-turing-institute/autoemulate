@@ -148,7 +148,8 @@ class Simulator(ABC, ValidationMixin):
         if isinstance(y, TensorLike):
             y = self.check_matrix(y)
             x, y = self.check_pair(x, y)
-            return y
+            # Currently assume that the output is the same dtype as input
+            return y.to(dtype=x.dtype)
         return None
 
     def forward_batch(self, x: TensorLike) -> TensorLike:
