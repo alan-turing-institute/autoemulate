@@ -188,7 +188,7 @@ def test_handle_simulation_failure():
 
     # This should process all samples without errors
     # We're just verifying it doesn't crash
-    results, valid_x = simulator.forward_batch(batch, return_x=True)
+    results, valid_x = simulator.forward_batch_skip_failures(batch)
     assert isinstance(results, TensorLike)
 
     # Verify results shape
