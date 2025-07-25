@@ -407,18 +407,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
         tuple[TensorLike, TensorLike]
             Tensors of succesfully simulated input parameters and predictions.
         """
-        y = self.simulator.forward_batch(x).to(self.device)
+        # if simulation fails, returned y and x have fewer rows than input x
+        y, x = self.simulator.forward_batch_skip_failures(x)
+        y = y.to(self.device)
+        x = x.to(self.device)
 
-        # Filter out runs that simulator failed to return predictions for
-        # TODO: this assumes that simulator returns None if it fails (see #438)
-        valid_indices = [i for i, res in enumerate(y) if res is not None]
-        valid_x = x[valid_indices]
-        valid_y = y[valid_indices]
+        self.train_y = torch.cat([self.train_y, y], dim=0)
+        self.train_x = torch.cat([self.train_x, x], dim=0)
 
-        self.train_y = torch.cat([self.train_y, valid_y], dim=0)
-        self.train_x = torch.cat([self.train_x, valid_x], dim=0)
-
-        return valid_x, valid_y
+        return x, y
 
     def run(
         self,

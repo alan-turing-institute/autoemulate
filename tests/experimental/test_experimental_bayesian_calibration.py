@@ -7,6 +7,7 @@ from autoemulate.experimental.simulations.projectile import (
     Projectile,
     ProjectileMultioutput,
 )
+from autoemulate.experimental.types import TensorLike
 
 
 @pytest.mark.parametrize(
@@ -20,6 +21,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples):
     sim = Projectile()
     x = sim.sample_inputs(100)
     y = sim.forward_batch(x)
+    assert isinstance(y, TensorLike)
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
 
@@ -59,6 +61,7 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples):
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)
     y = sim.forward_batch(x)
+    assert isinstance(y, TensorLike)
     gp = GaussianProcessExact(x, y)
     gp.fit(x, y)
 

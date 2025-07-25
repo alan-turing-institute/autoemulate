@@ -144,6 +144,7 @@ class Active(Learner):
             # If x is not, we skip the point (typically for Stream learners)
             self.logger.info("Appending new training data and refitting emulator.")
             y_true = self.simulator.forward(x)
+            assert isinstance(y_true, TensorLike)
             self.x_train = torch.cat([self.x_train, x])
             self.y_train = torch.cat([self.y_train, y_true])
             self.emulator.fit(self.x_train, self.y_train)
