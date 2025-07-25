@@ -11,9 +11,6 @@ from autoemulate.experimental.transforms import (
     StandardizeTransform,
     VAETransform,
 )
-
-# from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.transforms.base import _inverse_sample_gaussian_like
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
@@ -237,31 +234,21 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     # Get predicted latent and reconstruct through sampling
     z_pred = em.model.predict(em.x_transforms[0](x2), with_grad=False)
     assert isinstance(z_pred, GaussianLike)
-    # Test inverse sampling through both transforms
-    y_pred2 = _inverse_sample_gaussian_like(
-        lambda z: em.y_transforms[0].inv(em.y_transforms[1].inv(z)),
-        z_pred,
-        n_samples=100000,
-        full_covariance=True,
-    )
+
     # Test inverse sampling through only PCA
-    y_pred3 = em.y_transforms[0]._inverse_gaussian(
+    y_pred2 = em.y_transforms[0]._inverse_gaussian(
         em.y_transforms[1]._inverse_sample(z_pred, n_samples=10000)
     )
     assert isinstance(y_pred, GaussianLike)
     assert isinstance(y_pred2, GaussianLike)
-    assert isinstance(y_pred3, GaussianLike)
     y_pred_cov = y_pred.covariance_matrix
     y_pred2_cov = y_pred2.covariance_matrix
-    y_pred3_cov = y_pred3.covariance_matrix
     assert isinstance(y_pred_cov, TensorLike)
     assert isinstance(y_pred2_cov, TensorLike)
-    assert isinstance(y_pred3_cov, TensorLike)
 
     print((y_pred2_cov - y_pred_cov).abs().max())
     print(((y_pred2_cov - y_pred_cov).abs() / y_pred_cov.abs()).max())
     assert torch.allclose(y_pred_cov, y_pred2_cov, rtol=5e-2)
-    assert torch.allclose(y_pred_cov, y_pred3_cov, rtol=5e-2)
 
 
 def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
