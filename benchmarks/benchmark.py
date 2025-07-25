@@ -86,8 +86,7 @@ def main(  # noqa: PLR0913
         # Generate samples
         simulator: Simulator = SIMULATOR_REGISTRY[simulator_str]()
         max_samples = max(n_samples_list)
-        torch.manual_seed(seed)
-        x_all = simulator.sample_inputs(max_samples).to(torch.float32)
+        x_all = simulator.sample_inputs(max_samples, random_seed=seed).to(torch.float32)
         y_all = simulator.forward_batch(x_all).to(torch.float32)
 
         params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
