@@ -130,8 +130,8 @@ class EnsembleMLP(Ensemble):
         self,
         x: TensorLike,
         y: TensorLike,
-        standardize_x: bool = False,
-        standardize_y: bool = False,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         n_emulators: int = 4,
         device: DeviceLike | None = None,
         **mlp_kwargs,
@@ -179,8 +179,8 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
     def __init__(  # noqa: PLR0913
         self,
         model: DropoutTorchBackend,
-        standardize_x: bool = False,
-        standardize_y: bool = False,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         n_samples: int = 20,
         jitter: float = 1e-4,
         device: DeviceLike | None = None,
@@ -272,6 +272,8 @@ class EnsembleMLPDropout(DropoutEnsemble):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         dropout_prob: float = 0.2,
         device: DeviceLike | None = None,
         **mlp_kwargs,
@@ -293,7 +295,15 @@ class EnsembleMLPDropout(DropoutEnsemble):
             Additional keyword arguments for the MLP constructor.
         """
         super().__init__(
-            MLP(x, y, dropout_prob=dropout_prob, device=device, **mlp_kwargs),
+            MLP(
+                x,
+                y,
+                standardize_x=standardize_x,
+                standardize_y=standardize_y,
+                dropout_prob=dropout_prob,
+                device=device,
+                **mlp_kwargs,
+            ),
             device=device,
         )
 
