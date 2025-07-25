@@ -6,6 +6,7 @@ from autoemulate.experimental.types import (
     InputLike,
     OutputLike,
     TensorLike,
+    TorchDefaultDType,
     TorchScalarDType,
 )
 from sklearn.utils.validation import check_X_y
@@ -28,9 +29,9 @@ class ConversionMixin:
         """
         # Convert input to Dataset if not already
         if isinstance(x, np.ndarray):
-            x = torch.tensor(x, dtype=torch.float32)
+            x = torch.tensor(x, dtype=TorchDefaultDType)
         if isinstance(y, np.ndarray):
-            y = torch.tensor(y, dtype=torch.float32)
+            y = torch.tensor(y, dtype=TorchDefaultDType)
 
         if isinstance(x, torch.Tensor | np.ndarray) and isinstance(
             y, torch.Tensor | np.ndarray
@@ -77,7 +78,7 @@ class ConversionMixin:
         cls,
         x: InputLike,
         y: InputLike | None = None,
-        dtype: torch.dtype = torch.float32,
+        dtype: torch.dtype = TorchDefaultDType,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Convert InputLike x, y to Tensor or tuple of Tensors.

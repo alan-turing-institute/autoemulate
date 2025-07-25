@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import mogp_emulator
 import torch
 
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import TensorLike, TorchDefaultDType
 
 
 class ExperimentalDesign(ABC):
@@ -63,9 +63,9 @@ class LatinHypercube(ExperimentalDesign):
         """Initializes a LatinHypercube object."""
         self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
 
-    def sample(self, n: int) -> TensorLike:
+    def sample(self, n: int, dtype=TorchDefaultDType) -> TensorLike:
         sample_array = self.sampler.sample(n)
-        return torch.tensor(sample_array, dtype=torch.float32)
+        return torch.tensor(sample_array, dtype=dtype)
 
     def get_n_parameters(self) -> int:
         return self.sampler.get_n_parameters()
