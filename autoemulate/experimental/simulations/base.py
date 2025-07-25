@@ -148,26 +148,59 @@ class Simulator(ABC, ValidationMixin):
             return y
         return None
 
-    def forward_batch(
-        self, x: TensorLike, return_x: bool = False
-    ) -> TensorLike | tuple[TensorLike, TensorLike]:
-        """
-        Run multiple simulations with different parameters.
+    def forward_batch(self, x: TensorLike) -> TensorLike:
+        """Run multiple simulations with different parameters.
+
+        For infallible simulators that always succeed.
+        If your simulator might fail, use `forward_batch_skip_failures()` instead.
 
         Parameters
         ----------
         x: TensorLike
             Tensor of input parameters to make predictions for.
-        return_x: bool
-            Whether to return parameters for simulation runs that completed succesfully.
-            Set to False if simulation always completes. Defaults to False.
 
-        Returns:
+        Returns
         -------
-        TensorLike | tuple[TensorLike, TensorLike]
+        TensorLike
             Tensor of simulation results of shape (n_batch, self.out_dim).
-            If `return_x` is True, also returns parameters corresponding to succesful
-            simulation results.
+
+        Raises
+        ------
+        RuntimeError
+            If the number of simulations does not match the input.
+            Use `forward_batch_skip_failures()` to handle failures.
+        """
+        results, x_valid = self.forward_batch_skip_failures(x)
+
+        # Raise an error if the number of simulations does not match the input
+        if x.shape[0] != x_valid.shape[0]:
+            msg = (
+                "Some simulations failed. Use forward_batch_skip_failures() to handle "
+                "failures."
+            )
+            raise RuntimeError(msg)
+
+        return results
+
+    def forward_batch_skip_failures(
+        self, x: TensorLike
+    ) -> tuple[TensorLike, TensorLike]:
+        """Run multiple simulations, skipping any that fail.
+
+        For simulators where for some inputs the simulation can fail.
+        Failed simulations are skipped, and only successful results are returned
+        along with their corresponding input parameters.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Tensor of input parameters to make predictions for.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tuple of (simulation_results, valid_input_parameters).
+            Only successful simulations are included.
         """
         self.logger.info("Running batch simulation for %d samples", len(x))
 
@@ -206,9 +239,8 @@ class Simulator(ABC, ValidationMixin):
 
         # stack results into a 2D array on first dim using torch
         results_tensor = torch.cat(results, dim=0)
-        if return_x:
-            return results_tensor, x[valid_idx]
-        return results_tensor
+
+        return results_tensor, x[valid_idx]
 
     def get_parameter_idx(self, name: str) -> int:
         """
