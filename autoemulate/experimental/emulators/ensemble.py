@@ -268,7 +268,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
 
 class EnsembleMLPDropout(DropoutEnsemble):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
