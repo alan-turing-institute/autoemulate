@@ -4,6 +4,7 @@ import torch
 from autoemulate.core.types import GaussianLike, TensorLike
 from autoemulate.emulators import GaussianProcess
 from autoemulate.transforms import (
+    DiscreteFourierTransform,
     PCATransform,
     StandardizeTransform,
     VAETransform,
@@ -18,6 +19,7 @@ from sklearn.decomposition import PCA as SklearnPCA
         (PCATransform(n_components=2), (20, 2)),
         (VAETransform(latent_dim=2), (20, 2)),
         (StandardizeTransform(), (20, 5)),
+        (DiscreteFourierTransform(n_components=2), (20, 2)),
     ],
 )
 def test_transform_shapes(sample_data_y2d, transform, expected_shape):
@@ -30,7 +32,12 @@ def test_transform_shapes(sample_data_y2d, transform, expected_shape):
 
 @pytest.mark.parametrize(
     ("transform"),
-    [PCATransform(n_components=2), VAETransform(latent_dim=2), StandardizeTransform()],
+    [
+        DiscreteFourierTransform(n_components=2),
+        PCATransform(n_components=2),
+        VAETransform(latent_dim=2),
+        StandardizeTransform(),
+    ],
 )
 def test_transform_inverse_for_gaussians(sample_data_y2d, transform):
     x, y = sample_data_y2d
