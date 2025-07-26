@@ -45,6 +45,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        tune: bool = True,
         log_level: str = "progress_bar",
     ):
         """
@@ -133,6 +134,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
+        self.tune = tune
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -265,27 +267,36 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 attempt + 1,
                                 self.max_retries,
                             )
-
-                            self.logger.debug(
-                                'Running tuner for model "%s"', model_cls.__name__
-                            )
-                            scores, configs = tuner.run(
-                                model_cls,
-                                x_transforms,
-                                y_transforms,
-                                n_splits=self.n_splits,
-                                shuffle=self.shuffle,
-                            )
-                            mean_scores = [np.mean(score).item() for score in scores]
-                            best_score_idx = np.argmax(mean_scores)
-                            best_config_for_this_model = configs[best_score_idx]
-                            self.logger.debug(
-                                'Tuner found best config for model "%s": '
-                                "%s with score: %.3f",
-                                model_cls.__name__,
-                                best_config_for_this_model,
-                                mean_scores[best_score_idx],
-                            )
+                            if self.tune:
+                                self.logger.debug(
+                                    'Running tuner for model "%s"', model_cls.__name__
+                                )
+                                scores, configs = tuner.run(
+                                    model_cls,
+                                    x_transforms,
+                                    y_transforms,
+                                    n_splits=self.n_splits,
+                                    shuffle=self.shuffle,
+                                )
+                                mean_scores = [
+                                    np.mean(score).item() for score in scores
+                                ]
+                                best_score_idx = np.argmax(mean_scores)
+                                best_config_for_this_model = configs[best_score_idx]
+                                self.logger.debug(
+                                    'Tuner found best config for model "%s": '
+                                    "%s with score: %.3f",
+                                    model_cls.__name__,
+                                    best_config_for_this_model,
+                                    mean_scores[best_score_idx],
+                                )
+                            else:
+                                self.logger.debug(
+                                    'Skipping tuning for model "%s", using default'
+                                    "parameters",
+                                    model_cls.__name__,
+                                )
+                                best_config_for_this_model = {}
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
