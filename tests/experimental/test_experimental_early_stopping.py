@@ -4,7 +4,7 @@ import pytest
 import torch
 from autoemulate.experimental.callbacks.early_stopping import EarlyStopping
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
+    GaussianProcess,
 )
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 
@@ -13,7 +13,7 @@ from gpytorch.likelihoods import MultitaskGaussianLikelihood
 def gp_exact():
     x = torch.randn(10, 3)
     y = torch.randn(10, 2)
-    return GaussianProcessExact(
+    return GaussianProcess(
         x=x,
         y=y,
         likelihood_cls=MultitaskGaussianLikelihood,

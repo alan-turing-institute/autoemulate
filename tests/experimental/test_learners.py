@@ -3,7 +3,7 @@ from collections.abc import Iterable
 import numpy as np
 import torch
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
+    GaussianProcess,
 )
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
@@ -26,7 +26,7 @@ def learners(
     assert isinstance(y_train, TensorLike)
     yield stream.Random(
         simulator=simulator,
-        emulator=GaussianProcessExact(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train),
         x_train=x_train,
         y_train=y_train,
         p_query=0.25,
@@ -34,35 +34,35 @@ def learners(
     if not adaptive_only:
         yield stream.Distance(
             simulator=simulator,
-            emulator=GaussianProcessExact(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train),
             x_train=x_train,
             y_train=y_train,
             threshold=0.5,
         )
         yield stream.A_Optimal(
             simulator=simulator,
-            emulator=GaussianProcessExact(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train),
             x_train=x_train,
             y_train=y_train,
             threshold=1.0,
         )
         yield stream.D_Optimal(
             simulator=simulator,
-            emulator=GaussianProcessExact(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train),
             x_train=x_train,
             y_train=y_train,
             threshold=-4.2,
         )
         yield stream.E_Optimal(
             simulator=simulator,
-            emulator=GaussianProcessExact(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train),
             x_train=x_train,
             y_train=y_train,
             threshold=1.0,
         )
     yield stream.Adaptive_Distance(
         simulator=simulator,
-        emulator=GaussianProcessExact(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train),
         x_train=x_train,
         y_train=y_train,
         threshold=0.5,
@@ -77,7 +77,7 @@ def learners(
     )
     yield stream.Adaptive_A_Optimal(
         simulator=simulator,
-        emulator=GaussianProcessExact(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train),
         x_train=x_train,
         y_train=y_train,
         threshold=1e-1,
@@ -92,7 +92,7 @@ def learners(
     )
     yield stream.Adaptive_D_Optimal(
         simulator=simulator,
-        emulator=GaussianProcessExact(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train),
         x_train=x_train,
         y_train=y_train,
         threshold=-4.0,
@@ -107,7 +107,7 @@ def learners(
     )
     yield stream.Adaptive_E_Optimal(
         simulator=simulator,
-        emulator=GaussianProcessExact(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train),
         x_train=x_train,
         y_train=y_train,
         threshold=0.75 if isinstance(simulator, Sin) else 1000,

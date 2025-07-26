@@ -1,7 +1,7 @@
 import pytest
 from autoemulate.experimental.calibration.bayes import BayesianCalibration
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
+    GaussianProcess,
 )
 from autoemulate.experimental.simulations.projectile import (
     Projectile,
@@ -22,7 +22,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples):
     x = sim.sample_inputs(100)
     y = sim.forward_batch(x)
     assert isinstance(y, TensorLike)
-    gp = GaussianProcessExact(x, y)
+    gp = GaussianProcess(x, y)
     gp.fit(x, y)
 
     # pick the first n_obs sim outputs as observations
@@ -62,7 +62,7 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples):
     x = sim.sample_inputs(100)
     y = sim.forward_batch(x)
     assert isinstance(y, TensorLike)
-    gp = GaussianProcessExact(x, y)
+    gp = GaussianProcess(x, y)
     gp.fit(x, y)
 
     # pick the first n_obs sim outputs as observations

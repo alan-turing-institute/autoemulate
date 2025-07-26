@@ -55,4 +55,4 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     print(ae.results)
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
-    assert "GaussianProcessExact" in result_model_names
+    assert "GaussianProcess" in result_model_names

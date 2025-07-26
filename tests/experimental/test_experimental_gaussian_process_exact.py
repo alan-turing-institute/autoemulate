@@ -9,13 +9,13 @@ from autoemulate.experimental.device import (
     check_torch_device_is_available,
 )
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
-    GaussianProcessExactCorrelated,
+    GaussianProcess,
+    GaussianProcessCorrelated,
 )
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
-GPS = [GaussianProcessExact, GaussianProcessExactCorrelated]
+GPS = [GaussianProcess, GaussianProcessCorrelated]
 
 
 @pytest.mark.parametrize("emulator", GPS)
@@ -88,12 +88,12 @@ def test_gp_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     # Create 2 models that should have the same output
     seed = 42
     set_random_seed(seed)
-    model1 = GaussianProcessExact(x, y, device=device)
+    model1 = GaussianProcess(x, y, device=device)
     new_seed = 43
     set_random_seed(new_seed)
-    model2 = GaussianProcessExact(x, y, device=device)
+    model2 = GaussianProcess(x, y, device=device)
     set_random_seed(new_seed)
-    model3 = GaussianProcessExact(x, y, device=device)
+    model3 = GaussianProcess(x, y, device=device)
     model1.fit(x, y)
     model2.fit(x, y)
     model3.fit(x, y)
@@ -119,9 +119,9 @@ def test_gp_corr_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     x2, _ = new_data_y1d
     seed = 42
     new_seed = 43
-    model1 = GaussianProcessExactCorrelated(x, y, device=device, seed=seed)
-    model2 = GaussianProcessExactCorrelated(x, y, device=device, seed=new_seed)
-    model3 = GaussianProcessExactCorrelated(x, y, device=device, seed=seed)
+    model1 = GaussianProcessCorrelated(x, y, device=device, seed=seed)
+    model2 = GaussianProcessCorrelated(x, y, device=device, seed=new_seed)
+    model3 = GaussianProcessCorrelated(x, y, device=device, seed=seed)
     model1.fit(x, y)
     pred1 = model1.predict(x2)
     model2.fit(x, y)
