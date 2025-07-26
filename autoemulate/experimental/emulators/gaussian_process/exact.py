@@ -75,7 +75,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         **kwargs,
     ):
         """
-        Initialize the GaussianProcessExact emulator.
+        Initialize the GaussianProcess emulator.
 
         Parameters
         ----------
@@ -304,7 +304,7 @@ class GaussianProcessCorrelated(GaussianProcess):
     """
     Multioutput exact GP implementation with correlated task covariance.
 
-    This class extends the `GaussianProcessExact` to support correlated task covariance
+    This class extends the `GaussianProcess` to support correlated task covariance
     by using a `MultitaskKernel` with a rank-1 covariance factor and a `MultitaskMean`
     for the mean function.
 
@@ -331,7 +331,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         **kwargs,
     ):
         """
-        Initialize the GaussianProcessExactCorrelated emulator.
+        Initialize the GaussianProcessCorrelated emulator.
 
         Parameters
         ----------
