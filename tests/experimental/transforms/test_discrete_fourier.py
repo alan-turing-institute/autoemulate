@@ -2,6 +2,7 @@ import torch
 from autoemulate.experimental.transforms.discrete_fourier import (
     DiscreteFourierTransform,
 )
+from autoemulate.experimental.types import TensorLike
 
 
 def create_test_data():
@@ -27,12 +28,10 @@ def test_transform_shapes():
 
     # Test inverse transform shape
     x_reconstructed = dft.inv(y)
+    assert isinstance(x_reconstructed, TensorLike)
     assert x_reconstructed.shape == x.shape, (
         f"Expected shape {x.shape}, got {x_reconstructed.shape}"
     )
-
-    print(f"✓ Forward transform: {x.shape} → {y.shape}")
-    print(f"✓ Inverse transform: {y.shape} → {x_reconstructed.shape}")
 
 
 def test_basis_matrix_properties():
@@ -42,16 +41,13 @@ def test_basis_matrix_properties():
     dft = DiscreteFourierTransform(n_components=n_components)
     dft.fit(x)
 
-    A = dft._basis_matrix
+    A = dft._basis_matrix.T
     expected_shape = (2 * n_components, n_features)
 
     assert A.shape == expected_shape, (
         f"Expected basis matrix shape {expected_shape}, got {A.shape}"
     )
     assert A.dtype == torch.float32, f"Expected float32 dtype, got {A.dtype}"
-
-    print(f"✓ Basis matrix shape: {A.shape}")
-    print(f"✓ Basis matrix dtype: {A.dtype}")
 
 
 def test_matrix_multiplication_consistency():
@@ -61,7 +57,7 @@ def test_matrix_multiplication_consistency():
     dft = DiscreteFourierTransform(n_components=n_components)
     dft.fit(x)
 
-    A = dft._basis_matrix
+    A = dft._basis_matrix.T
 
     # Test forward transform via matrix multiplication
     y_transform = dft(x)
@@ -74,13 +70,10 @@ def test_matrix_multiplication_consistency():
     # Test inverse transform via matrix multiplication
     x_reconstructed = dft.inv(y_transform)
     x_manual = y_transform @ A
-
+    assert isinstance(x_reconstructed, TensorLike)
     assert torch.allclose(x_reconstructed, x_manual, atol=1e-6), (
         "Inverse transform doesn't match manual matrix multiplication"
     )
-
-    print("✓ Forward transform matches manual computation")
-    print("✓ Inverse transform matches manual computation")
 
 
 def test_real_valued_output():
@@ -99,8 +92,6 @@ def test_real_valued_output():
     assert A.dtype == torch.float32, f"Basis matrix should be float32, got {A.dtype}"
     assert not torch.is_complex(y), "Transform output should not be complex"
     assert not torch.is_complex(A), "Basis matrix should not be complex"
-
-    print("✓ All outputs are real-valued")
 
 
 def test_frequency_component_pairing():
@@ -123,33 +114,50 @@ def test_frequency_component_pairing():
         "Output should have even number of columns for real/imag pairs"
     )
 
-    print(
-        f"✓ Output has {n_components} frequency components "
-        f"as {2 * n_components} real/imag paired columns"
+
+def test_against_torch_fft():
+    """Test matrix-based DFT against PyTorch's FFT implementation."""
+    x, n_samples, n_features, n_components = create_test_data()
+
+    # Fit the transform to get selected frequency components
+    dft = DiscreteFourierTransform(n_components=n_components)
+    dft.fit(x)
+
+    # Get the selected frequency indices
+    freq_indices = dft.freq_indices
+
+    # Apply our matrix-based transform
+    y_matrix = dft(x)
+
+    # Apply PyTorch's FFT to the same data
+    x_fft = torch.fft.fft(x, dim=1)  # FFT along feature dimension
+
+    # Extract the same frequency components that our transform selected
+    selected_fft = x_fft[:, freq_indices]  # Shape: (n_samples, n_components)
+
+    # Convert complex FFT output to real/imag pairs format
+    # PyTorch FFT gives complex numbers, we need [real, imag, real, imag, ...]
+    fft_real = selected_fft.real  # Shape: (n_samples, n_components)
+    fft_imag = selected_fft.imag  # Shape: (n_samples, n_components)
+
+    # Interleave real and imaginary parts to match our format
+    y_fft_paired = torch.stack([fft_real, fft_imag], dim=2).reshape(
+        n_samples, 2 * n_components
     )
 
+    # Account for normalization difference
+    # Our DFT uses 1/sqrt(N) normalization, PyTorch's doesn't normalize by default
+    normalization_factor = 1.0 / torch.sqrt(
+        torch.tensor(n_features, dtype=torch.float32)
+    )
+    y_fft_normalized = y_fft_paired * normalization_factor
 
-def run_all_tests():
-    """Run all test functions."""
-    print("Running discrete Fourier transform tests...\n")
+    # Compare the results
+    max_error = torch.max(torch.abs(y_matrix - y_fft_normalized))
+    relative_error = max_error / torch.max(torch.abs(y_fft_normalized))
 
-    test_transform_shapes()
-    print()
-
-    test_basis_matrix_properties()
-    print()
-
-    test_matrix_multiplication_consistency()
-    print()
-
-    test_real_valued_output()
-    print()
-
-    test_frequency_component_pairing()
-    print()
-
-    print("All tests passed! ✓")
-
-
-if __name__ == "__main__":
-    run_all_tests()
+    # Should be very close (accounting for floating point precision)
+    assert max_error < 1e-5, (
+        f"Matrix DFT differs too much from PyTorch FFT: {max_error}"
+    )
+    assert relative_error < 1e-4, f"Relative error too large: {relative_error}"
