@@ -109,7 +109,7 @@ class Simulator(ABC, ValidationMixin):
         return lhd.sample(n_samples)
 
     @abstractmethod
-    def _forward(self, x: TensorLike) -> TensorLike:
+    def _forward(self, x: TensorLike) -> TensorLike | None:
         """
         Abstract method to perform the forward simulation.
 
@@ -120,13 +120,13 @@ class Simulator(ABC, ValidationMixin):
 
         Returns
         -------
-        TensorLike
+        TensorLike | None
             Simulated output tensor. Shape = (1, self.out_dim).
             For example, if the simulator outputs two simulated variables,
-            then the shape would be (1, 2).
+            then the shape would be (1, 2). None if the simulation fails.
         """
 
-    def forward(self, x: TensorLike) -> TensorLike:
+    def forward(self, x: TensorLike) -> TensorLike | None:
         """
         Generate samples from input data using the simulator. Combines the
         abstract method `_forward` with some validation checks.
@@ -139,61 +139,108 @@ class Simulator(ABC, ValidationMixin):
         Returns
         -------
         TensorLike
-            Simulated output tensor.
+            Simulated output tensor. None if the simulation failed.
         """
-        y = self.check_matrix(self._forward(self.check_matrix(x)))
-        x, y = self.check_pair(x, y)
-        return y
+        y = self._forward(self.check_matrix(x))
+        if isinstance(y, TensorLike):
+            y = self.check_matrix(y)
+            x, y = self.check_pair(x, y)
+            return y
+        return None
 
-    def forward_batch(self, samples: TensorLike) -> TensorLike:
-        """
-        Run multiple simulations with different parameters.
+    def forward_batch(self, x: TensorLike) -> TensorLike:
+        """Run multiple simulations with different parameters.
+
+        For infallible simulators that always succeed.
+        If your simulator might fail, use `forward_batch_skip_failures()` instead.
 
         Parameters
         ----------
-        samples: TensorLike
+        x: TensorLike
             Tensor of input parameters to make predictions for.
 
-        Returns:
+        Returns
         -------
         TensorLike
             Tensor of simulation results of shape (n_batch, self.out_dim).
+
+        Raises
+        ------
+        RuntimeError
+            If the number of simulations does not match the input.
+            Use `forward_batch_skip_failures()` to handle failures.
         """
-        self.logger.info("Running batch simulation for %d samples", len(samples))
+        results, x_valid = self.forward_batch_skip_failures(x)
+
+        # Raise an error if the number of simulations does not match the input
+        if x.shape[0] != x_valid.shape[0]:
+            msg = (
+                "Some simulations failed. Use forward_batch_skip_failures() to handle "
+                "failures."
+            )
+            raise RuntimeError(msg)
+
+        return results
+
+    def forward_batch_skip_failures(
+        self, x: TensorLike
+    ) -> tuple[TensorLike, TensorLike]:
+        """Run multiple simulations, skipping any that fail.
+
+        For simulators where for some inputs the simulation can fail.
+        Failed simulations are skipped, and only successful results are returned
+        along with their corresponding input parameters.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Tensor of input parameters to make predictions for.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tuple of (simulation_results, valid_input_parameters).
+            Only successful simulations are included.
+        """
+        self.logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         successful = 0
+        valid_idx = []
 
         # Process each sample with progress tracking
         for i in tqdm(
-            range(len(samples)),
+            range(len(x)),
             desc="Running simulations",
             disable=not self.progress_bar,
-            total=len(samples),
+            total=len(x),
             unit="sample",
             unit_scale=True,
         ):
-            logger.debug("Running simulation for sample %d/%d", i + 1, len(samples))
-            result = self.forward(samples[i : i + 1])
+            logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
+            result = self.forward(x[i : i + 1])
             if result is not None:
                 results.append(result)
                 successful += 1
-                logger.debug("Simulation %d/%d successful", i + 1, len(samples))
+                valid_idx.append(i)
+                logger.debug("Simulation %d/%d successful", i + 1, len(x))
             else:
                 logger.warning(
-                    "Simulation %d/%d failed. Result is None.", i + 1, len(samples)
+                    "Simulation %d/%d failed. Result is None.", i + 1, len(x)
                 )
 
         # Report results
         self.logger.info(
             "Successfully completed %d/%d simulations (%.1f%%)",
             successful,
-            len(samples),
-            (successful / len(samples) * 100 if len(samples) > 0 else 0.0),
+            len(x),
+            (successful / len(x) * 100 if len(x) > 0 else 0.0),
         )
 
         # stack results into a 2D array on first dim using torch
-        return torch.cat(results, dim=0)
+        results_tensor = torch.cat(results, dim=0)
+
+        return results_tensor, x[valid_idx]
 
     def get_parameter_idx(self, name: str) -> int:
         """
