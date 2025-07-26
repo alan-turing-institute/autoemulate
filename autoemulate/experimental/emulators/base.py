@@ -6,11 +6,13 @@ import numpy as np
 import torch
 from sklearn.base import BaseEstimator
 from torch import nn, optim
+from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
@@ -31,13 +33,29 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     is_fitted_: bool = False
     supports_grad: bool = False
     scheduler_cls: type[optim.lr_scheduler.LRScheduler] | None = None
+    x_transform: StandardizeTransform | None = None
+    y_transform: StandardizeTransform | None = None
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
 
     def fit(self, x: TensorLike, y: TensorLike):
         self._check(x, y)
+        # Ensure x and y are tensors and 2D
+        x, y = self._convert_to_tensors(x, y)
+
+        # Move to device
         x, y = self._move_tensors_to_device(x, y)
+
+        # Fit transforms
+        if self.x_transform is not None:
+            self.x_transform.fit(x)
+        if self.y_transform is not None:
+            self.y_transform.fit(y)
+        x = self.x_transform(x) if self.x_transform is not None else x
+        y = self.y_transform(y) if self.y_transform is not None else y
+
+        # Fit emulator
         self._fit(x, y)
         self.is_fitted_ = True
 
@@ -54,8 +72,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     def short_name(cls) -> str:
         """
         Take the capital letters of the class name and return them as a lower case
-        string. For example, if the class name is `GaussianProcessExact`, this will
-        return `gpe`.
+        string. For example, if the class name is `GaussianProcess`, this will return
+        `gp`.
         """
         return "".join([c for c in cls.__name__ if c.isupper()]).lower()
 
@@ -69,7 +87,24 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             raise RuntimeError(msg)
         self._check(x, None)
         (x,) = self._move_tensors_to_device(x)
+        x = self.x_transform(x) if self.x_transform is not None else x
         output = self._predict(x, with_grad)
+        if self.y_transform is not None:
+            if isinstance(output, GaussianLike):
+                output = self.y_transform._inverse_gaussian(output)
+            elif isinstance(output, DistributionLike):
+                output = TransformedDistribution(
+                    output, transforms=[self.y_transform.inv]
+                )
+            elif isinstance(output, TensorLike):
+                output = self.y_transform.inv(output)
+            else:
+                msg = (
+                    "Output type not supported for transformation. "
+                    f"Got {type(output)} but expected GaussianLike, "
+                    "DistributionLike, or TensorLike."
+                )
+                raise TypeError(msg)
         self._check_output(output)
         return output
 

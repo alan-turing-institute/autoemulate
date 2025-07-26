@@ -19,6 +19,7 @@ from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
     MeanModuleFn,
 )
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DeviceLike,
@@ -40,7 +41,7 @@ from .kernel import (
 from .mean import constant_mean, linear_mean, poly_mean, zero_mean
 
 
-class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
+class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
     Gaussian Process Exact Emulator
 
@@ -61,6 +62,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = False,
+        standardize_y: bool = True,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
@@ -72,7 +75,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         **kwargs,
     ):
         """
-        Initialize the GaussianProcessExact emulator.
+        Initialize the GaussianProcess emulator.
 
         Parameters
         ----------
@@ -133,6 +136,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             self, train_inputs=x, train_targets=y, likelihood=likelihood
         )
         self.likelihood = likelihood
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.mean_module = mean_module
         self.covar_module = covar_module
         self.epochs = epochs
@@ -159,10 +164,6 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
     def _fit(self, x: TensorLike, y: TensorLike):
         self.train()
         self.likelihood.train()
-        x, y = self._move_tensors_to_device(x, y)
-
-        # TODO: move conversion out of _fit() and instead rely on for impl check
-        x, y = self._convert_to_tensors(x, y)
 
         mll = ExactMarginalLogLikelihood(self.likelihood, self)
 
@@ -273,7 +274,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def get_tune_config():
-        scheduler_config = GaussianProcessExact.scheduler_config()
+        scheduler_config = GaussianProcess.scheduler_config()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -299,11 +300,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         }
 
 
-class GaussianProcessExactCorrelated(GaussianProcessExact):
+class GaussianProcessCorrelated(GaussianProcess):
     """
     Multioutput exact GP implementation with correlated task covariance.
 
-    This class extends the `GaussianProcessExact` to support correlated task covariance
+    This class extends the `GaussianProcess` to support correlated task covariance
     by using a `MultitaskKernel` with a rank-1 covariance factor and a `MultitaskMean`
     for the mean function.
 
@@ -316,6 +317,8 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = False,
+        standardize_y: bool = True,
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
@@ -328,7 +331,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         **kwargs,
     ):
         """
-        Initialize the GaussianProcessExactCorrelated emulator.
+        Initialize the GaussianProcessCorrelated emulator.
 
         Parameters
         ----------
@@ -399,6 +402,8 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
             train_targets=y,
             likelihood=likelihood,
         )
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.likelihood = likelihood
         self.mean_module = mean_module
         self.covar_module = covar_module

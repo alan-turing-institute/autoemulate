@@ -2,7 +2,8 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
+from autoemulate.experimental.data.utils import set_random_seed
+from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcess
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
@@ -10,8 +11,6 @@ from autoemulate.experimental.transforms import (
     StandardizeTransform,
     VAETransform,
 )
-
-# from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import (
     DistributionLike,
     GaussianLike,
@@ -217,34 +216,39 @@ def test_transformed_emulator_1000_targets(
 
 
 def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
+    set_random_seed(0)
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
     em = TransformedEmulator(
         x,
         y,
-        model=GaussianProcessExact,
+        model=GaussianProcess,
         x_transforms=[StandardizeTransform()],
-        y_transforms=[PCATransform(n_components=1)],
+        y_transforms=[StandardizeTransform(), PCATransform(n_components=1)],
     )
     em.fit(x, y)
+
+    # Get predicted distribution from the emulator
     y_pred = em.predict(x2)
-    z_pred = em.model.predict(em.x_transforms[0](x2))
+
+    # Get predicted latent and reconstruct through sampling
+    z_pred = em.model.predict(em.x_transforms[0](x2), with_grad=False)
     assert isinstance(z_pred, GaussianLike)
-    y_pred2 = em.y_transforms[0]._inverse_sample(
-        z_pred, n_samples=10000, full_covariance=True
+
+    # Test inverse sampling through only PCA
+    y_pred2 = em.y_transforms[0]._inverse_gaussian(
+        em.y_transforms[1]._inverse_sample(z_pred, n_samples=10000)
     )
     assert isinstance(y_pred, GaussianLike)
     assert isinstance(y_pred2, GaussianLike)
-    print()
-    print(y_pred.covariance_matrix)
-    print(y_pred2.covariance_matrix)
     y_pred_cov = y_pred.covariance_matrix
     y_pred2_cov = y_pred2.covariance_matrix
     assert isinstance(y_pred_cov, TensorLike)
     assert isinstance(y_pred2_cov, TensorLike)
-    print(y_pred2_cov - y_pred_cov)
-    # TODO: consider if this is close enough for PCA case
-    assert torch.allclose(y_pred_cov, y_pred2_cov, atol=1e-1)
+
+    print((y_pred2_cov - y_pred_cov).abs().max())
+    print(((y_pred2_cov - y_pred_cov).abs() / y_pred_cov.abs()).max())
+    assert torch.allclose(y_pred_cov, y_pred2_cov, rtol=5e-2)
 
 
 def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
@@ -254,7 +258,7 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
     em = TransformedEmulator(
         x,
         y,
-        model=GaussianProcessExact,
+        model=GaussianProcess,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), VAETransform(latent_dim=1)],
     )
@@ -279,20 +283,9 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
     assert isinstance(diff, TensorLike)
     diff_abs = (diff / y_pred_cov).abs()
 
-    # TODO: these are not necessarily expected to be close since both approximate in
-    # different ways
-    # Most are within 50% error
-    assert torch.quantile(diff_abs.flatten(), 0.9).item() < 0.25
-    assert torch.quantile(diff_abs.flatten(), 0.95).item() < 0.5
-    # Some large max differences so will not assert on these
     print("Max diff", diff_abs.abs().max())
-    # assert torch.allclose(diff_abs, torch.zeros_like(diff_abs), atol=0.4)
+    print((y_pred2_cov - y_pred_cov).abs().max())
+    print(((y_pred2_cov - y_pred_cov).abs() / y_pred_cov.abs()).max())
 
-
-# def test_tune_transformed_gp(sample_data_y2d):
-#     x, y = sample_data_y2d
-#     tuner = Tuner(x, y, n_iter=5)
-#     #TODO: consider partial for specific model
-#     scores, configs = tuner.run(TransformedEmulator)
-#     assert len(scores) == 5
-#     assert len(configs) == 5
+    # Assert with around 40% error to account for the stochastic nature of VAE sampling
+    assert torch.allclose(y_pred2_cov, y_pred_cov, rtol=0.4)

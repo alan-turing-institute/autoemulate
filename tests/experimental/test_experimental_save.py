@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import pytest
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
-    GaussianProcessExact,
+    GaussianProcess,
 )
 from autoemulate.experimental.emulators.polynomials import PolynomialRegression
 from autoemulate.experimental.emulators.random_forest import RandomForest
@@ -117,9 +117,9 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         y,
         x_transforms=[StandardizeTransform()],
         y_transforms=None,
-        model=GaussianProcessExact,
+        model=GaussianProcess,
     )
-    config = GaussianProcessExact.get_random_config()
+    config = GaussianProcess.get_random_config()
     result = Result(
         id=12345,
         model_name="dummy_model",
