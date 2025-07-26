@@ -4,6 +4,7 @@ from sklearn.utils.validation import check_X_y
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import SklearnBackend
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import DeviceLike, NumpyLike, TensorLike
 
 
@@ -18,6 +19,8 @@ class SupportVectorMachine(SklearnBackend):
         self,
         x: TensorLike,
         y: TensorLike | None,
+        standardize_x: bool = False,
+        standardize_y: bool = False,
         kernel: str = "rbf",
         degree: int = 3,
         gamma: str = "scale",
@@ -35,6 +38,8 @@ class SupportVectorMachine(SklearnBackend):
         """Initializes a SupportVectorMachines object."""
         _, _, _ = x, y, device  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.kernel = kernel
         self.degree = degree
         self.gamma = gamma

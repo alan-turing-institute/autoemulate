@@ -5,6 +5,7 @@ from torchrbf import RBFInterpolator
 
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
@@ -21,6 +22,8 @@ class RadialBasisFunctions(PyTorchBackend):
         self,
         x: TensorLike,  # noqa: ARG002
         y: TensorLike,  # noqa: ARG002
+        standardize_x: bool = False,
+        standardize_y: bool = False,
         smoothing: float = 0.0,
         kernel: str = "thin_plate_spline",
         epsilon: float = 1.0,
@@ -30,6 +33,9 @@ class RadialBasisFunctions(PyTorchBackend):
         """Initializes a RadialBasisFunctions object."""
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
+
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.smoothing = smoothing
         self.kernel = kernel
         self.epsilon = epsilon

@@ -10,6 +10,7 @@ from autoemulate.experimental.emulators.base import (
     GaussianEmulator,
 )
 from autoemulate.experimental.emulators.nn.mlp import MLP
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
 from autoemulate.experimental.types import (
     DeviceLike,
@@ -125,10 +126,12 @@ class Ensemble(GaussianEmulator):
 
 
 class EnsembleMLP(Ensemble):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         n_emulators: int = 4,
         device: DeviceLike | None = None,
         **mlp_kwargs,
@@ -149,7 +152,17 @@ class EnsembleMLP(Ensemble):
         **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
         """
-        emulators = [MLP(x, y, device=device, **mlp_kwargs) for i in range(n_emulators)]
+        emulators = [
+            MLP(
+                x,
+                y,
+                standardize_x=standardize_x,
+                standardize_y=standardize_y,
+                device=device,
+                **mlp_kwargs,
+            )
+            for i in range(n_emulators)
+        ]
         super().__init__(emulators, device=device)
 
     @staticmethod
@@ -163,9 +176,11 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
     and compute mean + epistemic covariance across them.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         model: DropoutTorchBackend,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         n_samples: int = 20,
         jitter: float = 1e-4,
         device: DeviceLike | None = None,
@@ -186,6 +201,8 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         TorchDeviceMixin.__init__(self, device=device)
         assert n_samples > 0
         self.model = model.to(self.device)
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.n_samples = n_samples
         self.is_fitted_ = model.is_fitted_
         self.jitter = jitter
@@ -251,10 +268,12 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
 
 class EnsembleMLPDropout(DropoutEnsemble):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
+        standardize_x: bool = True,
+        standardize_y: bool = True,
         dropout_prob: float = 0.2,
         device: DeviceLike | None = None,
         **mlp_kwargs,
@@ -276,7 +295,15 @@ class EnsembleMLPDropout(DropoutEnsemble):
             Additional keyword arguments for the MLP constructor.
         """
         super().__init__(
-            MLP(x, y, dropout_prob=dropout_prob, device=device, **mlp_kwargs),
+            MLP(
+                x,
+                y,
+                standardize_x=standardize_x,
+                standardize_y=standardize_y,
+                dropout_prob=dropout_prob,
+                device=device,
+                **mlp_kwargs,
+            ),
             device=device,
         )
 
