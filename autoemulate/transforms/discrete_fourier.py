@@ -156,7 +156,10 @@ class DiscreteFourierTransform(AutoEmulateTransform):
     def log_abs_det_jacobian(self, x: TensorLike, y: TensorLike):
         """Log abs det Jacobian not computable for n_components < d as not bijective."""
         _, _ = x, y
-        msg = "log det Jacobian not computable for n_components < d as not bijective."
+        msg = (
+            "log det Jacobian not computable for dimensionality reduction transform. "
+            "This transform is not bijective when 2*n_components < n_features."
+        )
         raise RuntimeError(msg)
 
     @property
@@ -170,4 +173,4 @@ class DiscreteFourierTransform(AutoEmulateTransform):
             the selected frequency components as real-valued pairs.
         """
         self._check_is_fitted()
-        return self.components
+        return self.components.T
