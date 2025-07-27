@@ -39,7 +39,7 @@ def run_benchmark(
     "--n_samples_list",
     type=int,
     multiple=True,
-    default=[20, 50, 100, 200, 500],
+    default=[20, 35, 50, 100, 200, 500],
     help="Number of samples to generate",
 )
 @click.option(
