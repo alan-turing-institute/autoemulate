@@ -23,5 +23,5 @@ TRANSFORM_REGISTRY = {
     "pca": PCATransform,
     "standardize": StandardizeTransform,
     "vae": VAETransform,
-    "discrete_fourier": DiscreteFourierTransform,
+    "discretefourier": DiscreteFourierTransform,
 }
