@@ -27,7 +27,12 @@ from autoemulate.experimental.save import ModelSerialiser
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DeviceLike, DistributionLike, InputLike
+from autoemulate.experimental.types import (
+    DeviceLike,
+    DistributionLike,
+    InputLike,
+    ModelConfig,
+)
 
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
@@ -38,6 +43,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
+        model_tuning: bool = False,
+        model_kwargs: None | ModelConfig = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -68,6 +75,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[AutoEmulateTransform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
+        model_tuning: bool, default=False
+            Whether to tune the hyperparameters of the models using cross-validation.
+            If False, the models use the model_kwargs provided.
+        model_kwargs: ModelConfig | None
+            Dictionary of model-specific parameters to use when fitting the models.
+            If None, the default parameters for each model are used.
+            This is only used if model_tuning is False.
         n_iter: int
             Number of parameter settings to randomly sample and test during tuning.
         n_splits: int
@@ -89,6 +103,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             logging level to "error" to avoid cluttering the output
             with debug/info logs.
         """
+
         Results.__init__(self)
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
@@ -133,6 +148,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
+        self.model_tuning = model_tuning
+        self.model_kwargs = model_kwargs or {}
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -265,27 +282,36 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 attempt + 1,
                                 self.max_retries,
                             )
-
-                            self.logger.debug(
-                                'Running tuner for model "%s"', model_cls.__name__
-                            )
-                            scores, configs = tuner.run(
-                                model_cls,
-                                x_transforms,
-                                y_transforms,
-                                n_splits=self.n_splits,
-                                shuffle=self.shuffle,
-                            )
-                            mean_scores = [np.mean(score).item() for score in scores]
-                            best_score_idx = np.argmax(mean_scores)
-                            best_config_for_this_model = configs[best_score_idx]
-                            self.logger.debug(
-                                'Tuner found best config for model "%s": '
-                                "%s with score: %.3f",
-                                model_cls.__name__,
-                                best_config_for_this_model,
-                                mean_scores[best_score_idx],
-                            )
+                            if self.model_tuning:
+                                self.logger.debug(
+                                    'Running tuner for model "%s"', model_cls.__name__
+                                )
+                                scores, configs = tuner.run(
+                                    model_cls,
+                                    x_transforms,
+                                    y_transforms,
+                                    n_splits=self.n_splits,
+                                    shuffle=self.shuffle,
+                                )
+                                mean_scores = [
+                                    np.mean(score).item() for score in scores
+                                ]
+                                best_score_idx = np.argmax(mean_scores)
+                                best_config_for_this_model = configs[best_score_idx]
+                                self.logger.debug(
+                                    'Tuner found best config for model "%s": '
+                                    "%s with score: %.3f",
+                                    model_cls.__name__,
+                                    best_config_for_this_model,
+                                    mean_scores[best_score_idx],
+                                )
+                            else:
+                                self.logger.debug(
+                                    'Skipping tuning for model "%s", using default'
+                                    "parameters",
+                                    model_cls.__name__,
+                                )
+                                best_config_for_this_model = self.model_kwargs
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
