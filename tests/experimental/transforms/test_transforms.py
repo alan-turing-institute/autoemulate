@@ -19,7 +19,7 @@ from sklearn.decomposition import PCA as SklearnPCA
         (PCATransform(n_components=2), (20, 2)),
         (VAETransform(latent_dim=2), (20, 2)),
         (StandardizeTransform(), (20, 5)),
-        (DiscreteFourierTransform(n_components=2), (20, 2)),
+        (DiscreteFourierTransform(n_components=2), (20, 4)),
     ],
 )
 def test_transform_shapes(sample_data_y2d, transform, expected_shape):
