@@ -276,15 +276,16 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         try:
                             self.logger.info(
                                 "Running Model: %s: %d/%d (attempt %d/%d)",
-                                model_cls.__name__,
-                                id,
+                                model_cls.model_name(),
+                                id + 1,
                                 len(self.models),
                                 attempt + 1,
                                 self.max_retries,
                             )
                             if self.model_tuning:
                                 self.logger.debug(
-                                    'Running tuner for model "%s"', model_cls.__name__
+                                    'Running tuner for model "%s"',
+                                    model_cls.model_name(),
                                 )
                                 scores, configs = tuner.run(
                                     model_cls,
@@ -301,7 +302,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 self.logger.debug(
                                     'Tuner found best config for model "%s": '
                                     "%s with score: %.3f",
-                                    model_cls.__name__,
+                                    model_cls.model_name(),
                                     best_config_for_this_model,
                                     mean_scores[best_score_idx],
                                 )
@@ -309,14 +310,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 self.logger.debug(
                                     'Skipping tuning for model "%s", using default'
                                     "parameters",
-                                    model_cls.__name__,
+                                    model_cls.model_name(),
                                 )
                                 best_config_for_this_model = self.model_kwargs
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
                                 'for "%s" iterations',
-                                model_cls.__name__,
+                                model_cls.model_name(),
                                 self.n_iter,
                             )
                             train_val_x, train_val_y = self._convert_to_tensors(
@@ -360,14 +361,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 'Cross-validation for model "%s"'
                                 " completed with test mean (std) R2 score: %.3f (%.3f),"
                                 " mean (std) RMSE score: %.3f (%.3f)",
-                                model_cls.__name__,
+                                model_cls.model_name(),
                                 r2_test,
                                 r2_test_std,
                                 rmse_test,
                                 rmse_test_std,
                             )
                             self.logger.info(
-                                "Finished running Model: %s\n", model_cls.__name__
+                                "Finished running Model: %s\n", model_cls.model_name()
                             )
                             result = Result(
                                 id=id,
@@ -389,7 +390,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         except Exception as e:
                             self.logger.warning(
                                 "Model %s failed on attempt %d/%d: %s",
-                                model_cls.__name__,
+                                model_cls.model_name(),
                                 attempt + 1,
                                 self.max_retries,
                                 str(e),
@@ -397,7 +398,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             if attempt == self.max_retries - 1:
                                 self.logger.error(
                                     "Model %s failed after %d attempts, skipping.",
-                                    model_cls.__name__,
+                                    model_cls.model_name(),
                                     self.max_retries,
                                 )
 
