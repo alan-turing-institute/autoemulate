@@ -61,11 +61,34 @@ class LatinHypercube(ExperimentalDesign):
 
     def __init__(self, bounds_list: list[tuple[float, float]]):
         """Initializes a LatinHypercube object."""
-        self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list)
+        self.bounds_list = bounds_list
+
+        # Partition indices and bounds into differing and constant parameters
+        self.diff_idxs = []
+        self.same_idxs = []
+        bounds_list_diff = []
+        for idx, bounds in enumerate(bounds_list):
+            if bounds[0] != bounds[1]:
+                self.diff_idxs.append(idx)
+                bounds_list_diff.append(bounds)
+            else:
+                self.same_idxs.append(idx)
+
+        self.sampler = mogp_emulator.LatinHypercubeDesign(bounds_list_diff)
 
     def sample(self, n: int) -> TensorLike:
-        sample_array = self.sampler.sample(n)
-        return torch.tensor(sample_array, dtype=torch.float32)
+        # Sample only from parameters that differ
+        sample_array_diff = self.sampler.sample(n)
+
+        # Create full sample array filling in constant parameters
+        sample_array_full = torch.zeros((n, len(self.bounds_list)), dtype=torch.float32)
+        sample_array_full[:, self.diff_idxs] = torch.tensor(
+            sample_array_diff, dtype=torch.float32
+        )
+        for idx in self.same_idxs:
+            sample_array_full[:, idx] = self.bounds_list[idx][0]
+
+        return sample_array_full
 
     def get_n_parameters(self) -> int:
-        return self.sampler.get_n_parameters()
+        return len(self.bounds_list)

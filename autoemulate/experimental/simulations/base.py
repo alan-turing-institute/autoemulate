@@ -59,6 +59,22 @@ class Simulator(ABC, ValidationMixin):
         """Dictionary mapping input parameter names to their (min, max) ranges."""
         return self._parameters_range
 
+    @parameters_range.setter
+    def parameters_range(
+        self, parameters_range: dict[str, tuple[float, float]]
+    ) -> None:
+        """Set the range of input parameters for the simulator.
+
+        Parameters
+        ----------
+        parameters_range: dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        """
+        self._parameters_range = parameters_range
+        self._param_names = list(parameters_range.keys())
+        self._param_bounds = list(parameters_range.values())
+        self._in_dim = len(self.param_names)
+
     @property
     def param_names(self) -> list[str]:
         """List of parameter names."""
@@ -73,6 +89,33 @@ class Simulator(ABC, ValidationMixin):
     def output_names(self) -> list[str]:
         """List of output parameter names."""
         return self._output_names
+
+    @output_names.setter
+    def output_names(self, output_names: list[str]) -> None:
+        """Set the names of output parameters for the simulator.
+
+        This setter allows renaming the output parameters but does not allow
+        changing the number of outputs (dimensionality is fixed after initialization).
+
+        Parameters
+        ----------
+        output_names: list[str]
+            List of output parameter names. Must have the same length as the current
+            number of outputs.
+
+        Raises
+        ------
+        ValueError
+            If the number of output names differs from the simulator's fixed output
+            dimension.
+        """
+        if len(output_names) != self._out_dim:
+            raise ValueError(
+                f"Number of output names ({len(output_names)}) must match "
+                f"simulator output dimension ({self._out_dim}). Cannot change "
+                f"dimensionality after initialization."
+            )
+        self._output_names = output_names
 
     @property
     def in_dim(self) -> int:
