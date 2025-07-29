@@ -7,10 +7,10 @@ from autoemulate.experimental.types import TensorLike
 
 class PolynomialFeatures:
     """
-    This class is used to map an existing feature set to a polynomial feature set.
+    Class to map existing feature set to a polynomial feature set.
 
     Parameters
-    --------
+    ----------
     degree: int
         The degree of the polynomial for which we are defining
         the mapping.
@@ -18,7 +18,7 @@ class PolynomialFeatures:
         The number of features to be mapped.
 
     Examples
-    -------
+    --------
     Initialize the class to map the feature `X` (`n1` samples x `n2` features):
 
     >>> pf = PolynomialFeatures(degree=2, input_size=X.shape[1])
@@ -44,6 +44,7 @@ class PolynomialFeatures:
         self.input_size = input_size
 
     def fit(self):
+        """Generate the feature combinations for the transformation."""
         x = list(range(self.input_size))
 
         d = self.degree

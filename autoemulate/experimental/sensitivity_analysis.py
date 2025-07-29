@@ -20,9 +20,7 @@ logger = logging.getLogger("autoemulate")
 
 
 class SensitivityAnalysis(ConversionMixin):
-    """
-    Global sensitivity analysis.
-    """
+    """Global sensitivity analysis."""
 
     def __init__(
         self,
@@ -31,6 +29,8 @@ class SensitivityAnalysis(ConversionMixin):
         problem: dict | None = None,
     ):
         """
+        Initialize the SensitivityAnalysis.
+
         Parameters
         ----------
         emulator: Emulator
@@ -67,9 +67,7 @@ class SensitivityAnalysis(ConversionMixin):
 
     @staticmethod
     def _check_problem(problem: dict) -> dict:
-        """
-        Check that the problem definition is valid.
-        """
+        """Check that the problem definition is valid."""
         if not isinstance(problem, dict):
             msg = "problem must be a dictionary."
             raise ValueError(msg)
@@ -144,7 +142,6 @@ class SensitivityAnalysis(ConversionMixin):
         NumpyLike
             Array of emulator predictions.
         """
-
         param_tensor = self._convert_to_tensors(param_samples)
         assert isinstance(param_tensor, TensorLike)
         y_pred = self.emulator.predict(param_tensor)
@@ -161,9 +158,7 @@ class SensitivityAnalysis(ConversionMixin):
         return y_pred_np
 
     def _get_output_names(self, num_outputs: int) -> list[str]:
-        """
-        Get the output names from the problem definition or generate default names.
-        """
+        """Get output names from the problem definition or generate default names."""
         # check if output_names is given
         if "output_names" not in self.problem:
             output_names = [f"y{i + 1}" for i in range(num_outputs)]
@@ -256,8 +251,8 @@ class SensitivityAnalysis(ConversionMixin):
         """
         Plot Sobol sensitivity analysis results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         results: pd.DataFrame
             The results from sobol_results_to_df.
         index: str, default "S1"
@@ -284,8 +279,8 @@ class SensitivityAnalysis(ConversionMixin):
         """
         Plot Morris analysis results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         results: pd.DataFrame
             The results from sobol_results_to_df.
         param_groups: dic[str, list[str]] | None
@@ -304,12 +299,12 @@ class SensitivityAnalysis(ConversionMixin):
         sa_results_df: pd.DataFrame, top_n: int, sa_index: str = "ST"
     ) -> list:
         """
-        Return `top_n` most important parameters given Sobol sensitivity analysis
-        results dataframe. In case of multiple outputs, averages over them
-        to rank the parameters.
+        Return `top_n` most important parameters given Sobol sensitivity analysis.
 
-        Parameters:
-        -----------
+        In case of multiple outputs, averages over them to rank the parameters.
+
+        Parameters
+        ----------
         sa_results_df: pd.DataFrame
             Dataframe results by `SensitivityAnalysis().run()`
         top_n: int
@@ -347,13 +342,13 @@ def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
     """
     Convert Sobol results to a (long-format) pandas DataFrame.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     results: dict
         The Sobol indices returned by sobol_analysis.
 
     Returns
-    --------
+    -------
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
     """
@@ -446,8 +441,8 @@ def _plot_sobol_analysis(
     """
     Plot the sobol sensitivity analysis results.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     results: pd.DataFrame
         The results from sobol_results_to_df.
     index: str, default "S1"
@@ -510,15 +505,15 @@ def _morris_results_to_df(
     """
     Convert Morris results to a (long-format) pandas DataFrame.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     results: dict
         The Morris indices returned by morris_analysis.
     problem: dict
         The problem definition, including 'names'.
 
     Returns
-    --------
+    -------
     pd.DataFrame
         A DataFrame with columns: 'output', 'parameter', 'mu', 'mu_star', 'sigma',
         'mu_star_conf'.
@@ -552,7 +547,7 @@ def _plot_morris_analysis(
     Plot the Morris sensitivity analysis results.
 
     Parameters
-    -----------
+    ----------
     results: pd.DataFrame
         The results from morris_results_to_df.
     param_groups: dict, optional
@@ -675,7 +670,6 @@ def _create_morris_plot(
     color_mapping: dict | None = None,
 ):
     """Create a Morris plot (mu_star vs sigma) for a single output."""
-
     # Default colors - expanded palette for more variety
     colors = [
         "#4C4B63",

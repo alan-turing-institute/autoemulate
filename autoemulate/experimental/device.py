@@ -18,7 +18,7 @@ class TorchDeviceError(NotImplementedError):
 
 def get_torch_device(device: DeviceLike | None) -> torch.device:
     """
-    Gets the device returning the torch default device if None.
+    Get the device returning the torch default device if None.
 
     Parameters
     ----------
@@ -48,7 +48,7 @@ def move_tensors_to_device(
     *args: TensorLike, device: torch.device
 ) -> tuple[TensorLike, ...]:
     """
-    Moves the given tensor to the device.
+    Move the given tensor to the device.
 
     Parameters
     ----------
@@ -67,7 +67,7 @@ def move_tensors_to_device(
 
 def check_torch_device_is_available(device: DeviceLike) -> bool:
     """
-    Checks if the given device type is available.
+    Check if the given device type is available.
 
     Parameters
     ----------
@@ -107,7 +107,7 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
 
 def check_model_device(model: nn.Module, expected_device: str) -> bool:
     """
-    Checks if the model is on the expected device.
+    Check if the model is on the expected device.
 
     Parameters
     ----------
@@ -164,7 +164,7 @@ class TorchDeviceMixin:
 
     def _move_tensors_to_device(self, *args: TensorLike) -> tuple[TensorLike, ...]:
         """
-        Moves the given tensor to the device.
+        Move the given tensor to the device.
 
         Parameters
         ----------

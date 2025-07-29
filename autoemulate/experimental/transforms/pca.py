@@ -36,6 +36,7 @@ class PCATransform(AutoEmulateTransform):
         self.cache_size = cache_size  # Store for serialization
 
     def fit(self, x: TensorLike):
+        """Fit the PCA transform to the data."""
         TorchDeviceMixin.__init__(self, device=x.device)
         self.check_matrix(x)
         self.mean = x.mean(0, keepdim=True)  # (1, d)
@@ -52,8 +53,11 @@ class PCATransform(AutoEmulateTransform):
         return y @ self.components.T + self.mean  # (n, n_c) x (n_c, d) + (1, d)
 
     def log_abs_det_jacobian(self, x: TensorLike, y: TensorLike):
+        """Log abs det Jacobian not computable for n_components < d as not bijective."""
         _, _ = x, y
-        msg = "log det Jacobian not computable for n_components < d as not bijective."
+        msg = (
+            "log abs det Jacobian not computable for n_components < d as not bijective."
+        )
         raise RuntimeError(msg)
 
     @property

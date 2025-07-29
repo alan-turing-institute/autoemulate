@@ -8,6 +8,8 @@ def make_positive_definite(
     cov, min_jitter: float = 1e-6, max_tries: int = 3, clamp_eigvals: bool = False
 ):
     """
+    Ensure a covariance matrix is positive definite.
+
     Ensure a covariance matrix is positive definite by:
         1. adding increasing amounts of jitter to the diagonal and symmetrizing
            the matrix
@@ -44,7 +46,6 @@ def make_positive_definite(
     RuntimeError
         If the matrix cannot be made positive definite after all attempts.
     """
-
     # If already positive definite, return as is
     try:
         torch.linalg.cholesky(cov)

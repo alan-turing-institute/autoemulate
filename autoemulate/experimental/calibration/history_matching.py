@@ -13,7 +13,9 @@ logger = logging.getLogger("autoemulate")
 
 
 class HistoryMatching(TorchDeviceMixin):
-    """
+    r"""
+    History Matching class for model calibration.
+
     History matching is a model calibration method, which uses observed data to
     rule out ``implausible`` parameter values. The implausibility metric is:
 
@@ -130,8 +132,9 @@ class HistoryMatching(TorchDeviceMixin):
         self, implausibility: TensorLike, x: TensorLike | None = None
     ) -> TensorLike:
         """
-        Get indices of NROY points from implausibility scores. If `x`
-        is provided, returns parameter values at NROY indices.
+        Get indices of NROY points from implausibility scores.
+
+        If `x` is provided, returns parameter values at NROY indices.
 
         Parameters
         ----------
@@ -155,8 +158,9 @@ class HistoryMatching(TorchDeviceMixin):
         self, implausibility: TensorLike, x: TensorLike | None = None
     ) -> TensorLike:
         """
-        Get indices of RO points from implausibility scores. If `x`
-        is provided, returns parameter values at RO indices.
+        Get indices of RO points from implausibility scores.
+
+        If `x` is provided, returns parameter values at RO indices.
 
         Parameters
         ----------
@@ -255,6 +259,8 @@ class HistoryMatching(TorchDeviceMixin):
 
 class HistoryMatchingWorkflow(HistoryMatching):
     """
+    History Matching Workflow class.
+
     Run history matching workflow:
     - sample parameter values to test from the current NROY parameter space
     - use emulator to rule out implausible parameters and update NROY space
@@ -321,6 +327,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
     def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
         """
+        Generate parameter samples and evaluate implausibility.
+
         Draw `n` samples from the simulator min/max parameter bounds and
         evaluate implausability given emulator predictions.
 

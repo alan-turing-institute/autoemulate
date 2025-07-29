@@ -32,6 +32,8 @@ class Projectile(Simulator):
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
+        Simulate the projectile motion and return the distance travelled.
+
         Parameters
         ----------
         x: TensorLike
@@ -53,6 +55,8 @@ class Projectile(Simulator):
 
 class ProjectileMultioutput(Simulator):
     """
+    Multi-output simulator of projectile motion.
+
     Simulator of projectile motion that outputs both the distance travelled by the
     projectile and its velocity on impact.
     """
@@ -71,6 +75,11 @@ class ProjectileMultioutput(Simulator):
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
+        Simulate the projectile motion with multiple outputs.
+
+        Simulate projectile motion and return the distance travelled and impact
+        velocity.
+
         Parameters
         ----------
         x: TensorLike
@@ -92,7 +101,7 @@ class ProjectileMultioutput(Simulator):
 
 def f(t: float, y: NumpyLike, c: float):  # noqa: ARG001
     """
-    Compute RHS of system of differential equations, returning vector derivative
+    Compute RHS of system of differential equations, returning vector derivative.
 
     Parameters
     ----------
@@ -103,7 +112,6 @@ def f(t: float, y: NumpyLike, c: float):  # noqa: ARG001
     c: float
         Drag coefficient (non-negative).
     """
-
     # check inputs and extract
     assert len(y) == 4
     assert c >= 0.0
@@ -140,7 +148,6 @@ def event(t: float, y: NumpyLike, c: float) -> float:  # noqa: ARG001
     float
         The height of the projectile.
     """
-
     assert len(y) == 4
     assert c >= 0.0
 
@@ -153,8 +160,9 @@ event.terminal = True  # pyright: ignore[reportFunctionMemberAccess]
 
 def simulator_base(x: NumpyLike):
     """
-    Simulator to solve ODE system for projectile motion with drag. Returns distance
-    projectile travels.
+    Simulate ODE system for projectile motion with drag.
+
+    Returns distance projectile travels.
 
     Parameters
     ----------
@@ -166,7 +174,6 @@ def simulator_base(x: NumpyLike):
     results: scipy.integrate.OdeResult
         Results of ODE integration.
     """
-
     # unpack values
 
     assert len(x) == 2
@@ -189,8 +196,9 @@ def simulator_base(x: NumpyLike):
 
 def simulate_projectile(x: NumpyLike) -> float:
     """
-    Simulator to solve ODE system for projectile motion with drag. Returns distance
-    projectile travels.
+    Return the distance travelled by the projectile.
+
+    Distance is obtained by solving the ODE system for projectile motion with drag.
 
     Parameters
     ----------
@@ -202,7 +210,6 @@ def simulate_projectile(x: NumpyLike) -> float:
     distance: float
         Distance travelled by projectile.
     """
-
     results = simulator_base(x)
 
     return results.y_events[0][0][2]
@@ -210,6 +217,8 @@ def simulate_projectile(x: NumpyLike) -> float:
 
 def simulate_projectile_multioutput(x: NumpyLike) -> tuple[float, float]:
     """
+    Return the distance travelled by the projectile and its impact velocity.
+
     Simulator to solve ODE system with multiple outputs.
 
     Parameters
@@ -222,7 +231,6 @@ def simulate_projectile_multioutput(x: NumpyLike) -> tuple[float, float]:
     float, float
         Distance travelled by projectile and its velocity on impact.
     """
-
     results = simulator_base(x)
 
     return (

@@ -25,12 +25,12 @@ logger = logging.getLogger("autoemulate")
 
 
 def r2_metric() -> type[torchmetrics.Metric]:
-    """Returns a torchmetrics.R2Score metric."""
+    """Return a torchmetrics.R2Score metric."""
     return torchmetrics.R2Score
 
 
 def rmse_metric() -> partial[torchmetrics.Metric]:
-    """Returns a torchmetrics.MeanSquaredError metric with squared=False."""
+    """Return a torchmetrics.MeanSquaredError metric with squared=False."""
     return partial(torchmetrics.MeanSquaredError, squared=False)
 
 
@@ -73,7 +73,6 @@ def evaluate(
     -------
     float
     """
-
     _metric = metric()
     _update(y_true, y_pred, _metric)
     return _metric.compute().item()
@@ -173,7 +172,7 @@ def bootstrap(
     device: str | torch.device = "cpu",
 ) -> tuple[tuple[float, float], tuple[float, float]]:
     """
-    Gets bootstrap estimates of R2 and RMSE.
+    Get bootstrap estimates of R2 and RMSE.
 
     Parameters
     ----------

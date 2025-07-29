@@ -31,6 +31,33 @@ class PolynomialRegression(PyTorchBackend):
         device: DeviceLike | None = None,
         **kwargs,
     ):
+        """Initialize a PolynomialRegression emulator.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input features.
+        y: TensorLike
+            Target values.
+        standardize_x: bool, default=False
+            Whether to standardize input features.
+        standardize_y: bool, default=False
+            Whether to standardize target values.
+        degree: int, default=2
+            Degree of the polynomial features to be generated.
+        lr: float, default=0.1
+            Learning rate for the optimizer.
+        epochs: int, default=500
+            Number of training epochs.
+        batch_size: int, default=16
+            Batch size for training.
+        random_seed: int | None, default=None
+            Random seed for reproducibility.
+        device: DeviceLike | None, default=None
+            Device to run the model on. If None, uses the default device.
+        **kwargs: dict
+            Additional keyword arguments.
+        """
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
         if random_seed is not None:
@@ -54,6 +81,7 @@ class PolynomialRegression(PyTorchBackend):
         self.scheduler_setup(kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through for polynomial regression."""
         # Transform input using the fitted PolynomialFeatures
         x_np, _ = self._convert_to_numpy(x)
         x_poly = self.poly.transform(x_np)
@@ -62,10 +90,12 @@ class PolynomialRegression(PyTorchBackend):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """Polynomial regression supports multi-output."""
         return True
 
     @staticmethod
     def get_tune_config():
+        """Return a dictionary of hyperparameters to tune."""
         scheduler_params = PolynomialRegression.scheduler_config()
         return {
             "lr": [1e-3, 1e-2, 1e-1, 2e-1],

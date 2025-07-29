@@ -13,9 +13,7 @@ integrator_keywords["atol"] = 1e-12
 
 
 class ReactionDiffusion(Simulator):
-    """
-    Simulate the reaction-diffusion PDE for a given set of parameters.
-    """
+    """Simulate the reaction-diffusion PDE for a given set of parameters."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -29,6 +27,8 @@ class ReactionDiffusion(Simulator):
         dt: float = 0.1,
     ):
         """
+        Initialize the ReactionDiffusion simulator.
+
         Parameters
         ----------
         parameters_range: dict[str, tuple[float, float]]
@@ -113,7 +113,6 @@ def reaction_diffusion(  # noqa: PLR0913
     N: int
         Total number of spatial grid points (n*n).
     """
-
     ut = np.reshape(uvt[:N], (n, n))
     vt = np.reshape(uvt[N : 2 * N], (n, n))
     u = np.real(ifft2(ut))
@@ -141,7 +140,7 @@ def simulate_reaction_diffusion(  # noqa: PLR0913
     dt: float = 0.1,
 ) -> tuple[NumpyLike, NumpyLike]:
     """
-    Simulate the reaction-diffusion PDE for a given set of parameters
+    Simulate the reaction-diffusion PDE for a given set of parameters.
 
     Parameters
     ----------
@@ -149,16 +148,16 @@ def simulate_reaction_diffusion(  # noqa: PLR0913
         The parameters of the reaction-diffusion model. The first element is the
         reaction coefficient (beta) and the second element is the diffusion
         coefficient (d).
-    return_timeseries: bool
+    return_timeseries: bool, default=False
         Whether to return the full timeseries or just the spatial solution at the final
-        time step. Defaults to False.
-    n: int
+        time step.
+    n: int, default=32
         Number of spatial points in each direction.
-    L: int
+    L: int, default=20
         Domain size in X and Y directions.
-    T: float
+    T: float, default=10.0
         Total time to simulate.
-    dt: float
+    dt: float, default=0.1
         Time step size.
 
     Returns

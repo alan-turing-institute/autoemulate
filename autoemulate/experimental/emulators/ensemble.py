@@ -22,6 +22,8 @@ from autoemulate.experimental.types import (
 
 class Ensemble(GaussianEmulator):
     """
+    Ensemble emulator that aggregates multiple Emulator instances to provide UQ.
+
     Ensemble emulator that aggregates multiple Emulator instances and returns
     a GaussianLike representing the ensemble posterior.
     Note that an Emulator instance may also be an Ensemble itself.
@@ -34,6 +36,8 @@ class Ensemble(GaussianEmulator):
         device: DeviceLike | None = None,
     ):
         """
+        Initialize the ensemble with a sequence of emulators.
+
         Parameters
         ----------
         emulators: Sequence[Emulator]
@@ -43,7 +47,6 @@ class Ensemble(GaussianEmulator):
         device: DeviceLike | None
             The device to put torch tensors on.
         """
-
         assert isinstance(emulators, Sequence)
         for e in emulators:
             assert isinstance(e, Emulator)
@@ -55,10 +58,12 @@ class Ensemble(GaussianEmulator):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """Ensemble supports multi-output."""
         return True
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
+        """Return a dictionary of hyperparameters to tune."""
         return {}
 
     def _fit(self, x: TensorLike, y: TensorLike) -> None:
@@ -126,6 +131,14 @@ class Ensemble(GaussianEmulator):
 
 
 class EnsembleMLP(Ensemble):
+    """
+    Ensemble of MLP emulators.
+
+    This class is an ensemble of MLP emulators, each initialized with the same input and
+    output data.
+
+    """
+
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
@@ -166,14 +179,22 @@ class EnsembleMLP(Ensemble):
         super().__init__(emulators, device=device)
 
     @staticmethod
+    def is_multioutput() -> bool:
+        """Ensemble of MLPs supports multi-output."""
+        return True
+
+    @staticmethod
     def get_tune_config() -> TuneConfig:
+        """Return a dictionary of hyperparameters to tune."""
         return {"n_emulators": [2, 4, 6, 8], **MLP.get_tune_config()}
 
 
 class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
     """
-    Monte-Carlo Dropout ensemble: do a number of forward passes with dropout on,
-    and compute mean + epistemic covariance across them.
+    Monte-Carlo Dropout ensemble.
+
+    DropoutEnsemble does a number of forward passes with dropout on, and computes mean
+    and epistemic covariance across them.
     """
 
     def __init__(  # noqa: PLR0913
@@ -186,10 +207,12 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         device: DeviceLike | None = None,
     ):
         """
+        Initialize the DropoutEnsemble with a fitted model.
+
         Parameters
         ----------
-        model: PyTorchBackend
-            A fitted PyTorchBackend (or any nn.Module with dropout layers).
+        model: DropoutTorchBackend
+            A fitted DropoutTorchBackend (or any nn.Module with dropout layers).
         n_samples: int
             Number of forward passes to perform.
         jitter: float
@@ -210,10 +233,12 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """DropoutEnsemble supports multi-output."""
         return True
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
+        """Return a dictionary of hyperparameters to tune."""
         return {
             "n_samples": [10, 20, 50, 100],
         }
@@ -268,6 +293,8 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 
 
 class EnsembleMLPDropout(DropoutEnsemble):
+    """Ensemble of MLP emulators with dropout."""
+
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
@@ -309,6 +336,7 @@ class EnsembleMLPDropout(DropoutEnsemble):
 
     @staticmethod
     def get_tune_config() -> TuneConfig:
+        """Return a dictionary of hyperparameters to tune."""
         config = MLP.get_tune_config()
         config["dropout_prob"] = [el for el in config["dropout_prob"] if el is not None]
         return {"n_emulators": [2, 4, 6, 8], **config}

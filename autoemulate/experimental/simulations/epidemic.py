@@ -7,9 +7,7 @@ from autoemulate.experimental.types import NumpyLike, TensorLike
 
 
 class Epidemic(Simulator):
-    """
-    Simulator of infectious disease spread (SIR).
-    """
+    """Simulator of infectious disease spread (SIR)."""
 
     def __init__(
         self,
@@ -25,6 +23,8 @@ class Epidemic(Simulator):
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
+        Simulate the epidemic using the SIR model.
+
         Parameters
         ----------
         x: TensorLike
@@ -64,7 +64,6 @@ def simulate_epidemic(x: NumpyLike, N: int = 1000, I0: int = 1) -> float:
     peak_infection_rate: float
         The peak infection rate as a fraction of the total population.
     """
-
     # check inputs
     assert len(x) == 2
     assert N > 0

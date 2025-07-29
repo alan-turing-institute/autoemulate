@@ -4,15 +4,15 @@ import torch
 from autoemulate.experimental.types import TensorLike
 
 
-class Preprocessor(ABC):
+class Preprocessor(ABC):  # noqa: D101
     @abstractmethod
     def __init__(*args, **kwargs): ...
 
     @abstractmethod
-    def preprocess(self, x: TensorLike) -> TensorLike: ...
+    def preprocess(self, x: TensorLike) -> TensorLike: ...  # noqa: D102
 
 
-class Standardizer(Preprocessor):
+class Standardizer(Preprocessor):  # noqa: D101
     mean: TensorLike
     std: TensorLike
 
@@ -34,7 +34,7 @@ class Standardizer(Preprocessor):
         ----------
         x: TensorLike
             The input tensor to be standardized.
-        """
+        """  # noqa: D205
         if not isinstance(x, TensorLike):
             raise ValueError(f"Expected 2D TensorLike, actual type {type(x)}")
         if len(x.shape) != 2:

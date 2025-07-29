@@ -9,6 +9,8 @@ from autoemulate.experimental.types import NumpyLike
 
 def display_figure(fig: Figure):
     """
+    Display a matplotlib figure.
+
     Display a matplotlib figure appropriately based on the environment
     (Jupyter notebook or terminal).
 
@@ -50,7 +52,7 @@ def plot_xy(  # noqa: PLR0913
     r2_score: float | None = None,
 ):
     """
-    Plots observed and predicted values vs. features.
+    Plot observed and predicted values vs. features.
 
     Parameters
     ----------
@@ -73,7 +75,6 @@ def plot_xy(  # noqa: PLR0913
     r2_score: float | None
         An option r2 score to include in the plot legend.
     """
-
     # Sort the data
     sort_idx = np.argsort(x).flatten()
     x_sorted = x[sort_idx]

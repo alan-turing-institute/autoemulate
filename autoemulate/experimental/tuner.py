@@ -69,6 +69,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         shuffle: bool = True,
     ) -> tuple[list[list[float]], list[ModelConfig]]:
         """
+        Run randomised hyperparameter search for a given model.
+
         Parameters
         ----------
         model_class: type[Emulator]

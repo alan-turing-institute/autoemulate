@@ -43,7 +43,7 @@ from .mean import constant_mean, linear_mean, poly_mean, zero_mean
 
 class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
-    Gaussian Process Exact Emulator
+    Gaussian Process Emulator.
 
     This class implements an exact Gaussian Process emulator using the GPyTorch library
 
@@ -151,9 +151,11 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def is_multioutput():
+        """GaussianProcess supports multioutput."""
         return True
 
     def forward(self, x: TensorLike):
+        """Forward pass of the Gaussian Process model."""
         mean = self.mean_module(x)
         assert isinstance(mean, torch.Tensor)
         covar = self.covar_module(x)
@@ -274,6 +276,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def get_tune_config():
+        """Return the hyperparameters to tune for the Gaussian Process model."""
         scheduler_config = GaussianProcess.scheduler_config()
         return {
             "mean_module_fn": [
@@ -365,7 +368,6 @@ class GaussianProcessCorrelated(GaussianProcess):
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU).
         """
-
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -417,6 +419,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         self.to(self.device)
 
     def forward(self, x):
+        """Forward pass of the Gaussian Process Correlated model."""
         mean_x = self.mean_module(x)
         assert isinstance(mean_x, TensorLike)
         covar_x = self.covar_module(x)

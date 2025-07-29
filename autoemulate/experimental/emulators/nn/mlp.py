@@ -9,6 +9,13 @@ from ..base import DropoutTorchBackend
 
 
 class MLP(DropoutTorchBackend):
+    """
+    Multi-Layer Perceptron (MLP) emulator.
+
+    MLP provides a simple deterministic emulator with optional model stochasticity
+    provided by different weight initialization and dropout.
+    """
+
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
@@ -109,14 +116,17 @@ class MLP(DropoutTorchBackend):
         self.to(device)
 
     def forward(self, x):
+        """Forward pass for the MLP."""
         return self.nn(x)
 
     @staticmethod
     def is_multioutput() -> bool:
+        """MLP supports multi-output."""
         return True
 
     @staticmethod
     def get_tune_config():
+        """Return a dictionary of hyperparameters to tune."""
         scheduler_params = MLP.scheduler_config()
         return {
             "epochs": [100, 200],

@@ -38,7 +38,44 @@ class GradientBoosting(SklearnBackend):
         random_seed: int | None = None,
         device: DeviceLike = "cpu",
     ):
-        """Initializes a GradientBoosting object."""
+        """Initialize a GradientBoosting object.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input features.
+        y: TensorLike
+            Target values.
+        standardize_x: bool, default=False
+            Whether to standardize input features.
+        standardize_y: bool, default=False
+            Whether to standardize target values.
+        loss: str, default="squared_error"
+            Loss function to be optimized.
+        learning_rate: float, default=0.1
+            Learning rate shrinks the contribution of each new tree.
+        n_estimators: int, default=100
+            The number of boosting stages to be run.
+        max_depth: int, default=3
+            Maximum depth of the individual regression estimators.
+        min_samples_split: int, default=2
+            Minimum number of samples required to split an internal node.
+        min_samples_leaf: int, default=1
+            Minimum number of samples required to be at a leaf node.
+        subsample: float, default=1.0
+            The fraction of samples to be used for fitting the individual base learners.
+        max_features: float | None, default=None
+            The number of features to consider when looking for the best split.
+        ccp_alpha: float, default=0.0
+            Complexity parameter used for Minimal Cost-Complexity Pruning.
+        n_iter_no_change: int | None, default=None
+            If not None, the number of iterations with no improvement to wait before
+            stopping.
+        random_seed: int | None, default=None
+            Random seed for reproducibility. If None, no seed is set.
+        device: DeviceLike, default="cpu"
+            Device to run the model on (e.g., "cpu", "cuda", "mps").
+        """
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device, cpu_only=True)
         self.x_transform = StandardizeTransform() if standardize_x else None
@@ -70,10 +107,12 @@ class GradientBoosting(SklearnBackend):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """GradientBoosting does not support multi-output."""
         return False
 
     @staticmethod
     def get_tune_config():
+        """Return a dictionary of hyperparameters to tune."""
         return {
             "learning_rate": [loguniform(0.01, 0.2).rvs()],
             "n_estimators": [np.random.randint(100, 500)],

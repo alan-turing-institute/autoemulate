@@ -6,7 +6,7 @@ from pathlib import Path
 
 def configure_logging(log_to_file=False, level: str = "INFO"):
     """
-    Configures the logging system.
+    Configure the logging system.
 
     Parameters
     ----------
@@ -17,7 +17,6 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
         The verbosity level. Can be "error", "warning",
           "info", or "debug". Defaults to "info".
     """
-
     logger = logging.getLogger("autoemulate")
     logger.handlers = []  # Clear existing handlers
 
@@ -81,10 +80,25 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
     return logger
 
 
-def get_configured_logger(log_level, progress_bar_attr="progress_bar"):
+def get_configured_logger(
+    log_level, progress_bar_attr="progress_bar"
+) -> tuple[logging.Logger, bool]:
     """
-    Utility to consistently configure logger and progress bar flag.
-    Returns (logger, progress_bar: bool)
+    Configure logger and progress bar flag consistently.
+
+    Parameters
+    ----------
+    log_level: str
+        The logging level to set. Can be "progress_bar", "debug", "info",
+        "warning", "error", or "critical".
+    progress_bar_attr: str, default="progress_bar"
+        The attribute to check for progress bar. If log_level is set to this value,
+        the logger will be set to "error" level and progress_bar will be True.
+
+    Returns
+    -------
+    tuple[logging.Logger, bool]
+        The configured logger and the progress bar flag.
     """
     valid_log_levels = [
         "progress_bar",

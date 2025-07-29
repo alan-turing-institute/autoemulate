@@ -9,6 +9,8 @@ from autoemulate.experimental.results import Result  # , Results
 
 
 class ModelSerialiser:
+    """ModelSerialiser handles saving and loading of models and results."""
+
     def __init__(self, logger):
         self.logger = logger
 
@@ -18,7 +20,7 @@ class ModelSerialiser:
         model_name: str | None = None,
         path: str | Path | None = None,
     ):
-        """Saves a model to disk.
+        """Save a model to disk.
 
         Parameters
         ----------
@@ -52,7 +54,7 @@ class ModelSerialiser:
         result_name: str | None = None,
         path: str | Path | None = None,
     ) -> Path:
-        """Saves a result and model to disk.
+        """Save a result and model to disk.
 
         Parameters
         ----------
@@ -88,7 +90,7 @@ class ModelSerialiser:
         return full_path
 
     def _load_model(self, path: str | Path):
-        """Loads a model from disk.
+        """Load a model from disk.
 
         Parameters
         ----------
@@ -105,7 +107,10 @@ class ModelSerialiser:
             raise
 
     def _load_result(self, path: str | Path) -> Result | Emulator:
-        """Loads a model and (if it exists) its metadata from disk,
+        """
+        Load a result or model from disk.
+
+        Load a model and (if it exists) its metadata from disk,
         returning either a Result or Emulator object.
 
         Parameters
@@ -151,7 +156,7 @@ class ModelSerialiser:
         )
 
     def _prepare_path(self, path: str | Path | None, model_name: str):
-        """Prepares path for saving model."""
+        """Prepare path for saving model."""
         if path is None:
             full_path = Path(model_name)
         else:
@@ -164,6 +169,6 @@ class ModelSerialiser:
 
     @staticmethod
     def _get_model_filename(model, provided_name: str | None = None) -> str:
-        """Gets the name of the model to save."""
+        """Get the name of the model to save."""
         model_name = provided_name if provided_name is not None else model.model_name()
         return f"{model_name}.joblib"

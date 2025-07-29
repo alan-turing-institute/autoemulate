@@ -52,7 +52,6 @@ def test_history_matcher_init(history_matcher):
 
 def test_calculate_implausibility(history_matcher, observations):
     """Test implausibility calculation."""
-
     # have 1 sample of 2 outputs arranged as [n_samples, n_outputs]
     pred_means = torch.Tensor([[0.4, 0.7]])
     pred_vars = torch.Tensor([[0.05, 0.1]])

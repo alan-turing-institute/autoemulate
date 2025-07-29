@@ -44,9 +44,7 @@ class Learner(ValidationMixin, ABC):
     out_dim: int = field(init=False)
 
     def __post_init__(self):
-        """
-        Initialize the learner with training data and fit the emulator.
-        """
+        """Initialize the learner with training data and fit the emulator."""
         log_level = getattr(self, "log_level", "progress_bar")
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info("Initializing Learner with training data.")
@@ -58,6 +56,8 @@ class Learner(ValidationMixin, ABC):
     @classmethod
     def registry(cls) -> dict:
         """
+        Build a registry of all subclasses.
+
         Recursively builds a dictionary mapping class names to class objects,
         starting from cls.
 
@@ -74,6 +74,8 @@ class Learner(ValidationMixin, ABC):
     @classmethod
     def hierarchy(cls) -> list[tuple[str, str]]:
         """
+        Build a list of inheritance relationships.
+
         Recursively collects the inheritance relationships (as ordered pairs)
         starting from cls.
 
@@ -91,6 +93,8 @@ class Learner(ValidationMixin, ABC):
     @classmethod
     def plot_hierarchy(cls):
         """
+        Print a tree representation of the class hierarchy.
+
         Builds and prints an ASCII tree of the class hierarchy starting from cls.
 
         Each class name is annotated with a marker indicating whether it is abstract:
@@ -113,7 +117,9 @@ class Learner(ValidationMixin, ABC):
 
 @dataclass(kw_only=True)
 class Active(Learner):
-    def __post_init__(self):
+    """Active learning learner that combines a simulator and an emulator."""
+
+    def __post_init__(self):  # noqa: D105
         super().__post_init__()
         self.metrics = {
             k: []
@@ -124,6 +130,12 @@ class Active(Learner):
         self.n_queries = 0
 
     def fit(self, *args):
+        """
+        Fit the emulator with new training data and update metrics.
+
+        This method queries the simulator for new data, appends it to the training set,
+        and refits the emulator. It also updates various metrics based on the new data.
+        """
         # Query simulator and fit emulator
         x, output, extra = self.query(*args)
         if isinstance(output, TensorLike):
@@ -189,6 +201,8 @@ class Active(Learner):
     @property
     def summary(self):
         """
+        Summary metrics for the active learner.
+
         Compute summary metrics for the active learner based on recorded learning
         histories.
 

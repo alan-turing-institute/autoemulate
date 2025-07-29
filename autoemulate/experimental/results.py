@@ -6,6 +6,8 @@ from autoemulate.experimental.emulators.transformed.base import TransformedEmula
 
 
 class Result:
+    """Represents a single result of an emulator evaluation."""
+
     def __init__(  # noqa: PLR0913
         self,
         id: int,
@@ -21,6 +23,36 @@ class Result:
         r2_train_std: float,
         rmse_train_std: float,
     ):
+        """Initialize a Result object.
+
+        Parameters
+        ----------
+        id: int
+            Unique identifier for the result.
+        model_name: str
+            Name of the model used in the evaluation.
+        model: TransformedEmulator
+            The emulator model used for predictions.
+        config: dict[str, Any]
+            Configuration parameters used for the model.
+        r2_test: float
+            R2 score on the test set.
+        rmse_test: float
+            Root Mean Squared Error on the test set.
+        r2_train: float
+            R2 score on the training set.
+        rmse_train: float
+            Root Mean Squared Error on the training set.
+        r2_test_std: float
+            Standard deviation of the R2 score on the test set.
+        rmse_test_std: float
+            Standard deviation of the RMSE on the test set.
+        r2_train_std: float
+            Standard deviation of the R2 score on the training set.
+        rmse_train_std: float
+            Standard deviation of the RMSE on the training set.
+
+        """
         self.id = id
         self.model_name = model_name
         self.model = model
@@ -79,10 +111,19 @@ class Result:
 
 
 class Results:
+    """Container for multiple Result objects."""
+
     def __init__(
         self,
         results: list[Result] | None = None,
     ):
+        """Initialize a Results object.
+
+        Parameters
+        ----------
+        results: list[Result] | None
+            A list of Result objects. If None, an empty list is created.
+        """
         if results is None:
             results = []
         self.results = results
@@ -92,6 +133,7 @@ class Results:
         self._id_to_result = {result.id: result for result in self.results}
 
     def add_result(self, result: Result):
+        """Add a Result object to the collection."""
         self.results.append(result)
         self._update_index()
 
