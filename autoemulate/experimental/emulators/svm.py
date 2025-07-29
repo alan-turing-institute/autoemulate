@@ -103,13 +103,13 @@ class SupportVectorMachine(SklearnBackend):
         self.model = SVR(
             kernel=self.kernel,
             degree=self.degree,
-            gamma=self.gamma,
+            gamma=self.gamma,  # type: ignore reportArgumentType
             coef0=self.coef0,
             tol=self.tol,
             C=self.C,
             epsilon=self.epsilon,
             shrinking=self.shrinking,
-            cache_size=self.cache_size,
+            cache_size=self.cache_size,  # type: ignore reportArgumentType
             verbose=self.verbose,
             max_iter=self.max_iter,
         )
