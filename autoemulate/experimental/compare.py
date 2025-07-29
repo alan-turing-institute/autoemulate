@@ -276,15 +276,27 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 n_splits=self.n_splits,
                                 shuffle=self.shuffle,
                             )
-                            mean_scores = [np.mean(score).item() for score in scores]
-                            best_score_idx = np.argmax(mean_scores)
+
+                            def mean_minus_one_stderr(score: list[float]) -> float:
+                                """Calculate the mean score and subtract one standard
+                                error to increase robustness of hyperparameter choice.
+                                """
+                                mean = np.mean(score).item()
+                                stddev = np.std(score, ddof=1).item()
+                                stderr = stddev / np.sqrt(len(score))
+                                return mean - stderr
+
+                            summary_scores = [
+                                mean_minus_one_stderr(score) for score in scores
+                            ]
+                            best_score_idx = np.argmax(summary_scores)
                             best_config_for_this_model = configs[best_score_idx]
                             self.logger.debug(
                                 'Tuner found best config for model "%s": '
                                 "%s with score: %.3f",
                                 model_cls.__name__,
                                 best_config_for_this_model,
-                                mean_scores[best_score_idx],
+                                summary_scores[best_score_idx],
                             )
 
                             self.logger.debug(
