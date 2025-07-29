@@ -186,8 +186,9 @@ class Simulator(ABC, ValidationMixin):
         """
         y = self._forward(self.check_matrix(x))
         if isinstance(y, TensorLike):
-            y = self.check_matrix(y)
-            x, y = self.check_pair(x, y)
+            # TODO: remove checks for now for spatio-temporal simulators
+            # y = self.check_matrix(y)
+            # x, y = self.check_pair(x, y)
             return y
         return None
 
