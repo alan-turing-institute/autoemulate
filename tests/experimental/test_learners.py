@@ -13,7 +13,7 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
-from autoemulate.experimental.types import DeviceLike, TensorLike
+from autoemulate.experimental.types import DeviceLike
 from tqdm import tqdm
 
 
