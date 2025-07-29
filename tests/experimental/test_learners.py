@@ -1,14 +1,19 @@
 from collections.abc import Iterable
 
 import numpy as np
+import pytest
 import torch
+from autoemulate.experimental.device import (
+    SUPPORTED_DEVICES,
+    check_torch_device_is_available,
+)
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
 )
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.types import DeviceLike, TensorLike
 from tqdm import tqdm
 
 
@@ -19,14 +24,17 @@ class Sin(Simulator):
 
 
 def learners(
-    *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
+    *,
+    simulator: Simulator,
+    n_initial_samples: int,
+    adaptive_only: bool,
+    device: DeviceLike,
 ) -> Iterable:
-    x_train = simulator.sample_inputs(n_initial_samples)
-    y_train = simulator.forward_batch(x_train)
-    assert isinstance(y_train, TensorLike)
+    x_train = simulator.sample_inputs(n_initial_samples).to(device)
+    y_train = simulator.forward_batch(x_train).to(device)
     yield stream.Random(
         simulator=simulator,
-        emulator=GaussianProcess(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train, device=device),
         x_train=x_train,
         y_train=y_train,
         p_query=0.25,
@@ -34,35 +42,35 @@ def learners(
     if not adaptive_only:
         yield stream.Distance(
             simulator=simulator,
-            emulator=GaussianProcess(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train, device=device),
             x_train=x_train,
             y_train=y_train,
             threshold=0.5,
         )
         yield stream.A_Optimal(
             simulator=simulator,
-            emulator=GaussianProcess(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train, device=device),
             x_train=x_train,
             y_train=y_train,
             threshold=1.0,
         )
         yield stream.D_Optimal(
             simulator=simulator,
-            emulator=GaussianProcess(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train, device=device),
             x_train=x_train,
             y_train=y_train,
             threshold=-4.2,
         )
         yield stream.E_Optimal(
             simulator=simulator,
-            emulator=GaussianProcess(x_train, y_train),
+            emulator=GaussianProcess(x_train, y_train, device=device),
             x_train=x_train,
             y_train=y_train,
             threshold=1.0,
         )
     yield stream.Adaptive_Distance(
         simulator=simulator,
-        emulator=GaussianProcess(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train, device=device),
         x_train=x_train,
         y_train=y_train,
         threshold=0.5,
@@ -77,7 +85,7 @@ def learners(
     )
     yield stream.Adaptive_A_Optimal(
         simulator=simulator,
-        emulator=GaussianProcess(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train, device=device),
         x_train=x_train,
         y_train=y_train,
         threshold=1e-1,
@@ -92,7 +100,7 @@ def learners(
     )
     yield stream.Adaptive_D_Optimal(
         simulator=simulator,
-        emulator=GaussianProcess(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train, device=device),
         x_train=x_train,
         y_train=y_train,
         threshold=-4.0,
@@ -107,7 +115,7 @@ def learners(
     )
     yield stream.Adaptive_E_Optimal(
         simulator=simulator,
-        emulator=GaussianProcess(x_train, y_train),
+        emulator=GaussianProcess(x_train, y_train, device=device),
         x_train=x_train,
         y_train=y_train,
         threshold=0.75 if isinstance(simulator, Sin) else 1000,
@@ -122,13 +130,14 @@ def learners(
     )
 
 
-def run_experiment(
+def run_experiment(  # noqa: PLR0913
     *,
     simulator: Simulator,
     seeds: list[int],
     n_initial_samples: int,
     n_stream_samples: int,
     adaptive_only: bool,
+    device: DeviceLike,
 ) -> tuple[list[dict], list[dict]]:
     metrics, summary = [], []
     for seed in seeds:
@@ -140,6 +149,7 @@ def run_experiment(
             simulator=simulator,
             n_initial_samples=n_initial_samples,
             adaptive_only=adaptive_only,
+            device=device,
         ):
             print("input: ", x_stream.type())
             learner.fit_samples(x_stream)
@@ -148,13 +158,17 @@ def run_experiment(
     return metrics, summary
 
 
-def test_learners_sin():
+@pytest.mark.parametrize("device", SUPPORTED_DEVICES)
+def test_learners_sin(device):
+    if not check_torch_device_is_available(device):
+        pytest.skip(f"Device ({device}) is not available.")
     metrics, summary = run_experiment(
         simulator=Sin(parameters_range={"x": (0, 50.0)}, output_names=["y"]),
         seeds=[0],
         n_initial_samples=5,
         n_stream_samples=100,
         adaptive_only=True,
+        device=device,
     )
 
 
@@ -165,4 +179,5 @@ def test_learners_projectile():
         n_initial_samples=5,
         n_stream_samples=100,
         adaptive_only=True,
+        device="cpu",
     )
