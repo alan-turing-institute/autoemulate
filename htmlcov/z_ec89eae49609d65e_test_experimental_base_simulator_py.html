@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">85 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">85<span class="text"> run</span></button>
+            <span class="text">103 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">103<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_ec89eae49609d65e_test_experimental_bayesian_calibration_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-25 15:16 +0000
+            created at 2025-07-29 09:02 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -276,6 +276,36 @@
     <p class="pln"><span class="n"><a id="t194" href="#t194">194</a></span><span class="t">    <span class="com"># Verify results shape</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">    <span class="key">assert</span> <span class="nam">results</span><span class="op">.</span><span class="nam">shape</span> <span class="op">==</span> <span class="op">(</span><span class="num">2</span><span class="op">,</span> <span class="num">1</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">    <span class="key">assert</span> <span class="nam">valid_x</span><span class="op">.</span><span class="nam">shape</span> <span class="op">==</span> <span class="op">(</span><span class="num">2</span><span class="op">,</span> <span class="num">3</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t"><span class="key">def</span> <span class="nam">test_update_parameters_range</span><span class="op">(</span><span class="nam">mock_simulator</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">    <span class="str">"""Test that parameters_range can be updated"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">    <span class="nam">new_range</span> <span class="op">=</span> <span class="op">{</span><span class="str">"param1"</span><span class="op">:</span> <span class="op">(</span><span class="num">0.1</span><span class="op">,</span> <span class="num">0.9</span><span class="op">)</span><span class="op">,</span> <span class="str">"param2"</span><span class="op">:</span> <span class="op">(</span><span class="op">-</span><span class="num">0.5</span><span class="op">,</span> <span class="num">0.5</span><span class="op">)</span><span class="op">,</span> <span class="str">"param3"</span><span class="op">:</span> <span class="op">(</span><span class="num">4.0</span><span class="op">,</span> <span class="num">6.0</span><span class="op">)</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">    <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">parameters_range</span> <span class="op">=</span> <span class="nam">new_range</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t203" href="#t203">203</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">parameters_range</span> <span class="op">==</span> <span class="nam">new_range</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t204" href="#t204">204</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">param_bounds</span> <span class="op">==</span> <span class="nam">list</span><span class="op">(</span><span class="nam">new_range</span><span class="op">.</span><span class="nam">values</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t205" href="#t205">205</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">in_dim</span> <span class="op">==</span> <span class="nam">len</span><span class="op">(</span><span class="nam">new_range</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t206" href="#t206">206</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t207" href="#t207">207</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t208" href="#t208">208</a></span><span class="t"><span class="key">def</span> <span class="nam">test_update_output_names</span><span class="op">(</span><span class="nam">mock_simulator</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t209" href="#t209">209</a></span><span class="t">    <span class="str">"""Test that output_names can be updated with same number of outputs"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t210" href="#t210">210</a></span><span class="t">    <span class="nam">new_output_names</span> <span class="op">=</span> <span class="op">[</span><span class="str">"var1_new"</span><span class="op">,</span> <span class="str">"var2_new"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t211" href="#t211">211</a></span><span class="t">    <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">output_names</span> <span class="op">=</span> <span class="nam">new_output_names</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t212" href="#t212">212</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">output_names</span> <span class="op">==</span> <span class="nam">new_output_names</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t213" href="#t213">213</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">out_dim</span> <span class="op">==</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t214" href="#t214">214</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t215" href="#t215">215</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t216" href="#t216">216</a></span><span class="t"><span class="key">def</span> <span class="nam">test_update_output_names_wrong_dimension</span><span class="op">(</span><span class="nam">mock_simulator</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t217" href="#t217">217</a></span><span class="t">    <span class="str">"""Test that setting output_names with wrong dimension raises error"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t218" href="#t218">218</a></span><span class="t">    <span class="key">with</span> <span class="nam">pytest</span><span class="op">.</span><span class="nam">raises</span><span class="op">(</span><span class="nam">ValueError</span><span class="op">,</span> <span class="nam">match</span><span class="op">=</span><span class="str">"Number of output names \\(1\\) must match"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t219" href="#t219">219</a></span><span class="t">        <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">output_names</span> <span class="op">=</span> <span class="op">[</span><span class="str">"only_one_var"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t220" href="#t220">220</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t221" href="#t221">221</a></span><span class="t">    <span class="key">with</span> <span class="nam">pytest</span><span class="op">.</span><span class="nam">raises</span><span class="op">(</span><span class="nam">ValueError</span><span class="op">,</span> <span class="nam">match</span><span class="op">=</span><span class="str">"Number of output names \\(3\\) must match"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t222" href="#t222">222</a></span><span class="t">        <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">output_names</span> <span class="op">=</span> <span class="op">[</span><span class="str">"var1"</span><span class="op">,</span> <span class="str">"var2"</span><span class="op">,</span> <span class="str">"var3"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t223" href="#t223">223</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t224" href="#t224">224</a></span><span class="t">    <span class="com"># Verify original names are unchanged after failed attempts</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t225" href="#t225">225</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">output_names</span> <span class="op">==</span> <span class="op">[</span><span class="str">"var1"</span><span class="op">,</span> <span class="str">"var2"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t226" href="#t226">226</a></span><span class="t">    <span class="key">assert</span> <span class="nam">mock_simulator</span><span class="op">.</span><span class="nam">out_dim</span> <span class="op">==</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -285,7 +315,7 @@
             <a class="nav" href="z_ec89eae49609d65e_test_experimental_bayesian_calibration_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-25 15:16 +0000
+            created at 2025-07-29 09:02 +0000
         </p>
     </div>
 </footer>

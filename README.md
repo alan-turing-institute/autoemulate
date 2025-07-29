@@ -75,9 +75,9 @@
 | autoemulate/experimental/save.py                                             |       73 |        7 |     90% |43-47, 73, 84-86 |
 | autoemulate/experimental/sensitivity\_analysis.py                            |      247 |      146 |     41% |59-63, 74-75, 78-79, 81-82, 88-89, 112-113, 127-131, 155-159, 228-229, 239-240, 247, 275, 300, 328-332, 399-407, 412-415, 420-437, 465-504, 526-542, 566-667, 680-756 |
 | autoemulate/experimental/simulations/\_\_init\_\_.py                         |        5 |        0 |    100% |           |
-| autoemulate/experimental/simulations/base.py                                 |       81 |        4 |     95% |55, 107, 177-181 |
+| autoemulate/experimental/simulations/base.py                                 |       92 |        4 |     96% |55, 150, 220-224 |
 | autoemulate/experimental/simulations/epidemic.py                             |       40 |        0 |    100% |           |
-| autoemulate/experimental/simulations/experimental\_design.py                 |       19 |        1 |     95% |        71 |
+| autoemulate/experimental/simulations/experimental\_design.py                 |       32 |        0 |    100% |           |
 | autoemulate/experimental/simulations/flow\_problem.py                        |       41 |       41 |      0% |     1-135 |
 | autoemulate/experimental/simulations/projectile.py                           |       59 |        0 |    100% |           |
 | autoemulate/experimental/simulations/reaction\_diffusion.py                  |       73 |       73 |      0% |     1-236 |
@@ -116,10 +116,11 @@
 | tests/experimental/conftest.py                                               |       73 |        0 |    100% |           |
 | tests/experimental/test\_device.py                                           |       11 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_base.py                               |      116 |        1 |     99% |        51 |
-| tests/experimental/test\_experimental\_base\_simulator.py                    |       85 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_base\_simulator.py                    |      103 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_bayesian\_calibration.py              |       58 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_compare.py                            |       32 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_conditional\_neural\_process.py       |        0 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_design.py                             |       28 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_early\_stopping.py                    |       27 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_ensemble.py                           |       70 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_gaussian\_process\_exact.py           |      106 |        0 |    100% |           |
@@ -148,7 +149,7 @@
 | tests/models/test\_cnp\_dataset.py                                           |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                               |       97 |        2 |     98% |     45-46 |
-| tests/test\_compare.py                                                       |      183 |        5 |     97% |239, 263, 272, 377-378 |
+| tests/test\_compare.py                                                       |      183 |        3 |     98% |239, 263, 272 |
 | tests/test\_cross\_validate.py                                               |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                               |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                      |       13 |        0 |    100% |           |
@@ -169,7 +170,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **11112** | **2204** | **80%** |           |
+|                                                                    **TOTAL** | **11182** | **2201** | **80%** |           |
 
 
 ## Setup coverage badge
