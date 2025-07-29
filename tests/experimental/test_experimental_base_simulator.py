@@ -194,3 +194,33 @@ def test_handle_simulation_failure():
     # Verify results shape
     assert results.shape == (2, 1)
     assert valid_x.shape == (2, 3)
+
+
+def test_update_parameters_range(mock_simulator):
+    """Test that parameters_range can be updated"""
+    new_range = {"param1": (0.1, 0.9), "param2": (-0.5, 0.5), "param3": (4.0, 6.0)}
+    mock_simulator.parameters_range = new_range
+    assert mock_simulator.parameters_range == new_range
+    assert mock_simulator.param_bounds == list(new_range.values())
+    assert mock_simulator.in_dim == len(new_range)
+
+
+def test_update_output_names(mock_simulator):
+    """Test that output_names can be updated with same number of outputs"""
+    new_output_names = ["var1_new", "var2_new"]
+    mock_simulator.output_names = new_output_names
+    assert mock_simulator.output_names == new_output_names
+    assert mock_simulator.out_dim == 2
+
+
+def test_update_output_names_wrong_dimension(mock_simulator):
+    """Test that setting output_names with wrong dimension raises error"""
+    with pytest.raises(ValueError, match="Number of output names \\(1\\) must match"):
+        mock_simulator.output_names = ["only_one_var"]
+
+    with pytest.raises(ValueError, match="Number of output names \\(3\\) must match"):
+        mock_simulator.output_names = ["var1", "var2", "var3"]
+
+    # Verify original names are unchanged after failed attempts
+    assert mock_simulator.output_names == ["var1", "var2"]
+    assert mock_simulator.out_dim == 2
