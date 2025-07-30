@@ -48,7 +48,7 @@ chapters:
     - file: reference/experimental/calibration/bayes
     - file: reference/experimental/calibration/history_matching
     - file: reference/experimental/calibration/history_matching_dashboard
-  - file: reference/experimental/code/index
+  - file: reference/experimental/core/index
     sections:
     - file: reference/experimental/core/compare
     - file: reference/experimental/core/datasets
