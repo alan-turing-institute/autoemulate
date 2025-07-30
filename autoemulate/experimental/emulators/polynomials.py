@@ -39,22 +39,23 @@ class PolynomialRegression(PyTorchBackend):
             Input features.
         y: TensorLike
             Target values.
-        standardize_x: bool, default=False
-            Whether to standardize input features.
-        standardize_y: bool, default=False
-            Whether to standardize target values.
-        degree: int, default=2
-            Degree of the polynomial features to be generated.
-        lr: float, default=0.1
-            Learning rate for the optimizer.
-        epochs: int, default=500
-            Number of training epochs.
-        batch_size: int, default=16
-            Batch size for training.
-        random_seed: int | None, default=None
-            Random seed for reproducibility.
-        device: DeviceLike | None, default=None
-            Device to run the model on. If None, uses the default device.
+        standardize_x: bool
+            Whether to standardize input features. Defaults to False.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to False.
+        degree: int
+            Degree of the polynomial features to be generated. Defaults to 2.
+        lr: float
+            Learning rate for the optimizer. Defaults to 0.1.
+        epochs: int
+            Number of training epochs. Defaults to 500.
+        batch_size: int
+            Batch size for training. Defaults to 16.
+        random_seed: int | None
+            Random seed for reproducibility. Defaults to None.
+        device: DeviceLike | None
+            Device to run the model on. If None, uses the default device. Defaults to
+            None.
         **kwargs: dict
             Additional keyword arguments.
         """

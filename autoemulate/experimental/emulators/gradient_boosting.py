@@ -62,12 +62,15 @@ class GradientBoosting(SklearnBackend):
             Minimum number of samples required to split an internal node. Defaults to 2.
         min_samples_leaf: int
             Minimum number of samples required to be at a leaf node. Defaults to 1.
-        subsample: float, default=1.0
+        subsample: float
             The fraction of samples to be used for fitting the individual base learners.
+            Defaults to 1.0.
         max_features: float | None
-            The number of features to consider when looking for the best split. Defaults to None.
+            The number of features to consider when looking for the best split. Defaults
+            to None.
         ccp_alpha: float
-            Complexity parameter used for Minimal Cost-Complexity Pruning. Defaults to 0.0.
+            Complexity parameter used for Minimal Cost-Complexity Pruning. Defaults to
+            0.0.
         n_iter_no_change: int | None
             If not None, the number of iterations with no improvement to wait before
             stopping. Defaults to None.

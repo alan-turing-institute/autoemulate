@@ -55,50 +55,56 @@ class LightGBM(DeterministicEmulator):
             Whether to standardize input features. Defaults to None.
         standardize_y: bool
             Whether to standardize target values. Defaults to None.
-        boosting_type: str, default="gbdt"
-            Type of boosting to use. Options are "gbdt", "dart", "goss", "rf".
-        num_leaves: int, default=31
-            Maximum number of leaves in one tree.
-        max_depth: int, default=-1
-            Maximum depth of the tree. -1 means no limit.
-        learning_rate: float, default=0.1
-            Learning rate shrinks the contribution of each new tree.
-        n_estimators: int, default=100
-            The number of boosting stages to be run.
-        subsample_for_bin: int, default=200000
-            Number of samples for constructing bins.
-        objective: str | None, default=None
+        boosting_type: str
+            Type of boosting to use. Options are "gbdt", "dart", "goss", "rf". Defaults
+            to "gbdt".
+        num_leaves: int
+            Maximum number of leaves in one tree. Defaults to 31.
+        max_depth: int
+            Maximum depth of the tree. -1 means no limit. Defaults to -1.
+        learning_rate: float
+            Learning rate shrinks the contribution of each new tree. Defaults to 0.1.
+        n_estimators: int
+            The number of boosting stages to be run. Defaults to 100.
+        subsample_for_bin: int
+            Number of samples for constructing bins. Defaults to 200000.
+        objective: str | None
             Objective function to be optimized. If None, defaults to "regression".
-        class_weight: dict | str | None, default=None
+            Defaults to None.
+        class_weight: dict | str | None
             Class weights for multi-class classification. If None, all classes are
-            assumed to have equal weight.
-        min_split_gain: float, default=0.0
+            assumed to have equal weight. Defaults to None.
+        min_split_gain: float
             Minimum loss reduction required to make a further partition on a leaf node.
-        min_child_weight: float, default=0.001
+            Defaults to 0.0.
+        min_child_weight: float
             Minimum sum of instance weight (hessian) needed in a child.
-        min_child_samples: int, default=20
-            Minimum number of data points in a child.
-        subsample: float, default=1.0
+            Defaults to 0.001.
+        min_child_samples: int
+            Minimum number of data points in a child. Defaults to 20.
+        subsample: float
             Fraction of samples to be used for fitting the individual base learners.
-        colsample_bytree: float, default=1.0
+            Defaults to 1.0.
+        colsample_bytree: float
             Fraction of features to be used for fitting the individual base learners.
-        reg_alpha: float, default=0.0
-            L1 regularization term on weights.
-        reg_lambda: float, default=0.0
-            L2 regularization term on weights.
-        random_seed: int | None, default=None
+            Defaults to 1.0.
+        reg_alpha: float
+            L1 regularization term on weights. Defaults to 0.0.
+        reg_lambda: float
+            L2 regularization term on weights. Defaults to 0.0.
+        random_seed: int | None
             Random seed for reproducibility. If None, no seed is set.
-        n_jobs: int | None, default=1
+        n_jobs: int | None
             Number of parallel threads used to run LightGBM. If None, uses all available
-            cores.
-        importance_type: str, default="split"
+            cores. Defaults to 1.
+        importance_type: str
             Type of feature importance to be calculated. Options are "split", "gain",
-            "cover", "total_gain", "total_cover".
-        verbose: int, default=-1
+            "cover", "total_gain", "total_cover". Defaults to "split".
+        verbose: int
             Verbosity of the output. -1 means no output, 0 means warnings only,
             1 means info, 2 means debug.
-        device: DeviceLike, default="cpu"
-            Device to run the model on (e.g., "cpu", "cuda", "mps").
+        device: DeviceLike
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to "cpu".
         """
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device)

@@ -94,8 +94,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
