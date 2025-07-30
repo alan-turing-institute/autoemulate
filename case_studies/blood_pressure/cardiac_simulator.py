@@ -1,4 +1,6 @@
+import concurrent.futures
 import json
+from concurrent.futures import ProcessPoolExecutor
 from itertools import product
 
 import numpy as np
@@ -6,6 +8,7 @@ import torch
 from ModularCirc.Models.NaghaviModel import NaghaviModel
 from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
 from ModularCirc.Solver import Solver
+from tqdm import tqdm
 
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.types import NumpyLike
@@ -181,6 +184,84 @@ class NaghaviSimulator(Simulator):
 
         # return shape [1, n_outputs]
         return torch.tensor(output_stats, dtype=torch.float32).reshape(1, -1)
+
+    def _simulate_single(self, idx, x_row):
+        parobj = NaghaviModelParameters()
+        for i, param_name in enumerate(self.param_names):
+            component, param = param_name.split(".")
+            value = x_row[i].item()
+            parobj._set_comp(component, [component], **{param: value})
+
+        try:
+            # Create a new model and solver instance for each simulation
+            model = NaghaviModel(
+                time_setup_dict=self.time_setup, parobj=parobj, suppress_printing=True
+            )
+            solver = Solver(model=model)
+            solver.setup(
+                suppress_output=True, optimize_secondary_sv=False, method="LSODA"
+            )
+            solver.solve()
+
+            if not solver.converged:
+                return None
+
+            output_stats = []
+            for output_var in self.output_variables:
+                component, variable = output_var.split(".")
+                values = np.array(getattr(model.components[component], variable).values)
+                stats = self._calculate_output_stats(values)
+                output_stats.extend(stats)
+
+            return idx, torch.tensor(output_stats, dtype=torch.float32).reshape(1, -1)
+        except Exception as e:
+            print(f"Simulation error: {e}")
+            return None
+
+    def forward_batch_skip_failures(
+        self, x: TensorLike
+    ) -> tuple[TensorLike, TensorLike]:
+        """Run multiple simulations in parallel, skipping any that fail."""
+        self.logger.info("Running batch simulation for %d samples", len(x))
+
+        results = []
+        valid_idx = []
+
+        with ProcessPoolExecutor() as executor:
+            futures = {
+                executor.submit(self._simulate_single, i, x[i]): i
+                for i in range(len(x))
+            }
+
+            for future in tqdm(
+                concurrent.futures.as_completed(futures),
+                desc="Running simulations",
+                total=len(x),
+                unit="sample",
+                unit_scale=True,
+            ):
+                result = future.result()
+                if result is not None:
+                    idx, res = result
+                    results.append(res)  # Ensure result is a Tensor
+                    valid_idx.append(idx)
+
+        # Report results
+        successful = len(results)
+        self.logger.info(
+            "Successfully completed %d/%d simulations (%.1f%%)",
+            successful,
+            len(x),
+            (successful / len(x) * 100 if len(x) > 0 else 0.0),
+        )
+
+        # Stack results into a 2D array on the first dimension using torch
+        if results:
+            results_tensor = torch.cat(results, dim=0)
+        else:
+            results_tensor = torch.empty(0)
+
+        return results_tensor, x[valid_idx]
 
     def _create_output_names(self, output_vars: list[str]) -> list[str]:
         """
