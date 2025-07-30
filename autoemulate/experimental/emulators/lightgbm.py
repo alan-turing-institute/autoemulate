@@ -2,10 +2,10 @@ import numpy as np
 from lightgbm import LGBMRegressor
 from scipy.sparse import spmatrix
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.emulators.base import DeterministicEmulator
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class LightGBM(DeterministicEmulator):
@@ -172,7 +172,7 @@ class LightGBM(DeterministicEmulator):
         return y
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         # Note: 10 ** np.random.uniform(-3, 0)
         # is equivalent to scipy.stats.loguniform(0.001, 0.1)

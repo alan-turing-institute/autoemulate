@@ -3,7 +3,13 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
+    DeviceLike,
+    GaussianLike,
+    TensorLike,
+    TuneParams,
+)
 from autoemulate.experimental.emulators.base import (
     DropoutTorchBackend,
     Emulator,
@@ -12,12 +18,6 @@ from autoemulate.experimental.emulators.base import (
 from autoemulate.experimental.emulators.nn.mlp import MLP
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import (
-    DeviceLike,
-    GaussianLike,
-    TensorLike,
-    TuneConfig,
-)
 
 
 class Ensemble(GaussianEmulator):
@@ -63,7 +63,7 @@ class Ensemble(GaussianEmulator):
         return True
 
     @staticmethod
-    def get_tune_config() -> TuneConfig:
+    def get_tune_params() -> TuneParams:
         """Return a dictionary of hyperparameters to tune."""
         return {}
 
@@ -189,9 +189,9 @@ class EnsembleMLP(Ensemble):
         return True
 
     @staticmethod
-    def get_tune_config() -> TuneConfig:
+    def get_tune_params() -> TuneParams:
         """Return a dictionary of hyperparameters to tune."""
-        return {"n_emulators": [2, 4, 6, 8], **MLP.get_tune_config()}
+        return {"n_emulators": [2, 4, 6, 8], **MLP.get_tune_params()}
 
 
 class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
@@ -242,7 +242,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         return True
 
     @staticmethod
-    def get_tune_config() -> TuneConfig:
+    def get_tune_params() -> TuneParams:
         """Return a dictionary of hyperparameters to tune."""
         return {
             "n_samples": [10, 20, 50, 100],
@@ -341,8 +341,8 @@ class EnsembleMLPDropout(DropoutEnsemble):
         )
 
     @staticmethod
-    def get_tune_config() -> TuneConfig:
+    def get_tune_params() -> TuneParams:
         """Return a dictionary of hyperparameters to tune."""
-        config = MLP.get_tune_config()
-        config["dropout_prob"] = [el for el in config["dropout_prob"] if el is not None]
-        return {"n_emulators": [2, 4, 6, 8], **config}
+        params = MLP.get_tune_params()
+        params["dropout_prob"] = [el for el in params["dropout_prob"] if el is not None]
+        return {"n_emulators": [2, 4, 6, 8], **params}

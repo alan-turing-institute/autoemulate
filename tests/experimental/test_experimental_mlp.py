@@ -1,12 +1,12 @@
 import pytest
 import torch
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.nn.mlp import MLP
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_mlp(sample_data_y1d, new_data_y1d):
@@ -41,9 +41,9 @@ def test_tune_mlp(sample_data_y1d, device):
     x, y = sample_data_y1d
     n_iter = 5
     tuner = Tuner(x, y, n_iter=n_iter, device=device)
-    scores, configs = tuner.run(MLP)
+    scores, params_list = tuner.run(MLP)
     assert len(scores) == n_iter
-    assert len(configs) == n_iter
+    assert len(params_list) == n_iter
 
 
 def test_mlp_predict_deterministic_with_seed(sample_data_y2d, new_data_y2d):

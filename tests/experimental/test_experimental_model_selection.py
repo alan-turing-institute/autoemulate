@@ -1,8 +1,8 @@
 import numpy as np
 import torch
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.model_selection import cross_validate
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.model_selection import cross_validate
 from sklearn.model_selection import KFold, LeavePOut
 from torch import nn
 from torch.utils.data import TensorDataset
@@ -33,7 +33,7 @@ def test_cross_validate():
             return x
 
         @staticmethod
-        def get_tune_config():
+        def get_tune_params():
             return {}
 
         @staticmethod

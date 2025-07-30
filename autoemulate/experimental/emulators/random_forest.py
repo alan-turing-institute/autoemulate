@@ -3,10 +3,10 @@ from typing import Literal
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class RandomForest(SklearnBackend):
@@ -124,7 +124,7 @@ class RandomForest(SklearnBackend):
         return True
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         return {
             "n_estimators": [np.random.randint(50, 500)],

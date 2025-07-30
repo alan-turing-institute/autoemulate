@@ -1,8 +1,8 @@
 import pytest
 import torch
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.random_forest import RandomForest
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_rf(sample_data_y1d, new_data_y1d):
@@ -31,9 +31,9 @@ def test_predict_rf_2d(sample_data_y2d, new_data_y2d):
 def test_tune_rf(sample_data_y1d):
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5)
-    scores, configs = tuner.run(RandomForest)
+    scores, params_list = tuner.run(RandomForest)
     assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(params_list) == 5
 
 
 def test_rf_deterministic_with_seed(sample_data_y1d, new_data_y1d):

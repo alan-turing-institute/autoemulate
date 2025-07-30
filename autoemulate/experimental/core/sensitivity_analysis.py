@@ -11,10 +11,10 @@ from SALib.sample.morris import sample as morris_sample
 from SALib.sample.sobol import sample as sobol_sample
 from SALib.util import ResultDict
 
+from autoemulate.experimental.core.plotting import display_figure
+from autoemulate.experimental.core.types import DistributionLike, NumpyLike, TensorLike
 from autoemulate.experimental.data.utils import ConversionMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.plotting import display_figure
-from autoemulate.experimental.types import DistributionLike, NumpyLike, TensorLike
 
 logger = logging.getLogger("autoemulate")
 

@@ -1,7 +1,7 @@
 import pytest
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.gradient_boosting import GradientBoosting
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_gb(sample_data_y1d, new_data_y1d):
@@ -20,9 +20,9 @@ def test_predict_gb(sample_data_y1d, new_data_y1d):
 def test_tune_gb(sample_data_y1d):
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5)
-    scores, configs = tuner.run(GradientBoosting)
+    scores, params_list = tuner.run(GradientBoosting)
     assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(params_list) == 5
 
 
 # TODO: add determinism test after #512 merged

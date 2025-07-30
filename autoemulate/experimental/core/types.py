@@ -15,8 +15,8 @@ GaussianProcessLike: TypeAlias = MultitaskMultivariateNormal
 InputLike: TypeAlias = NumpyLike | TensorLike | DataLoader | torch.utils.data.Dataset
 OutputLike: TypeAlias = DistributionLike | TensorLike
 ParamLike: TypeAlias = Any
-TuneConfig: TypeAlias = dict[str, list[ParamLike]]
-ModelConfig: TypeAlias = dict[str, ParamLike]
+TuneParams: TypeAlias = dict[str, list[ParamLike]]
+ModelParams: TypeAlias = dict[str, ParamLike]
 DeviceLike: TypeAlias = str | torch.device
 
 # Torch dtype's

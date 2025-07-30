@@ -3,6 +3,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+from autoemulate.experimental.core.logging_config import get_configured_logger
+from autoemulate.experimental.core.results import Result  # , Results
+from autoemulate.experimental.core.save import ModelSerialiser
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
@@ -10,9 +13,6 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
 from autoemulate.experimental.emulators.polynomials import PolynomialRegression
 from autoemulate.experimental.emulators.random_forest import RandomForest
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.logging_config import get_configured_logger
-from autoemulate.experimental.results import Result  # , Results
-from autoemulate.experimental.save import ModelSerialiser
 from autoemulate.experimental.transforms import StandardizeTransform
 
 logger, _ = get_configured_logger("info")
@@ -119,12 +119,12 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         y_transforms=None,
         model=GaussianProcess,
     )
-    config = GaussianProcess.get_random_config()
+    params = GaussianProcess.get_random_params()
     result = Result(
         id=12345,
         model_name="dummy_model",
         model=em,
-        config=config,
+        params=params,
         r2_test=0.9,
         r2_test_std=0.01,
         r2_train=0.95,
@@ -154,8 +154,8 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
             assert loaded.id == result.id
             assert loaded.model_name == result.model_name
 
-            for k, v in result.config.items():
-                loaded_v = loaded.config[k]
+            for k, v in result.params.items():
+                loaded_v = loaded.params[k]
                 if callable(v):
                     assert str(loaded_v) in str(v)
                 else:

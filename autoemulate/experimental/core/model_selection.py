@@ -7,19 +7,22 @@ import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.utils.data import Dataset, Subset
 
-from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
-from autoemulate.experimental.device import get_torch_device, move_tensors_to_device
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.types import (
+from autoemulate.experimental.core.device import (
+    get_torch_device,
+    move_tensors_to_device,
+)
+from autoemulate.experimental.core.types import (
     DeviceLike,
     DistributionLike,
     InputLike,
-    ModelConfig,
+    ModelParams,
     OutputLike,
     TensorLike,
 )
+from autoemulate.experimental.data.utils import ConversionMixin, set_random_seed
+from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
+from autoemulate.experimental.transforms.base import AutoEmulateTransform
 
 logger = logging.getLogger("autoemulate")
 
@@ -82,7 +85,7 @@ def cross_validate(  # noqa: PLR0913
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
-    model_config: ModelConfig,
+    model_params: ModelParams,
     x_transforms: list[AutoEmulateTransform] | None = None,
     y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",
@@ -100,7 +103,7 @@ def cross_validate(  # noqa: PLR0913
         The data to use for model training and validation.
     model: Emulator
         An instance of an Emulator subclass.
-    model_config: ModelConfig
+    model_params: ModelParams
         Model parameters to be used to construct model upon initialization. Passing an
         empty dictionary `{}` will use default parameters.
     device: DeviceLike
@@ -118,7 +121,7 @@ def cross_validate(  # noqa: PLR0913
     cv_results = {"r2": [], "rmse": []}
     device = get_torch_device(device)
 
-    logger.debug("Cross-validation configuration: %s", cv)
+    logger.debug("Cross-validation parameters: %s", cv)
     for i, (train_idx, val_idx) in enumerate(cv.split(dataset)):  # type: ignore TODO: identify type handling here
         logger.debug(
             "Cross-validation split %d: %d train samples, %d validation samples",
@@ -136,7 +139,7 @@ def cross_validate(  # noqa: PLR0913
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
-        model_kwargs = dict(model_config)
+        model_kwargs = dict(model_params)
         if "random_seed" in model_init_params:
             model_kwargs["random_seed"] = random_seed
 

@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from autoemulate.experimental.data.utils import set_random_seed
 
-from ..types import GaussianLike, TensorLike
+from ..core.types import GaussianLike, TensorLike
 from .base import Active
 
 

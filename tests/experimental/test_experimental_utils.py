@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 import torch
+from autoemulate.experimental.core.types import NumpyLike
 from autoemulate.experimental.data.utils import (
     ConversionMixin,
     ValidationMixin,
 )
-from autoemulate.experimental.types import NumpyLike
 from torch.utils.data import DataLoader, Subset, TensorDataset
 
 

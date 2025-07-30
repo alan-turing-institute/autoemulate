@@ -3,7 +3,7 @@ import logging
 import torch
 from torch import nn
 
-from autoemulate.experimental.types import DeviceLike, TensorLike
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 
 SUPPORTED_DEVICES: list[str] = ["cpu", "mps", "cuda", "xpu"]
 

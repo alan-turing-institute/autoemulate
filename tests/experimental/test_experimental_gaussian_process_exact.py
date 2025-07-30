@@ -2,18 +2,18 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_model_device,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import DistributionLike
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
 )
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike
 
 GPS = [GaussianProcess, GaussianProcessCorrelated]
 
@@ -53,9 +53,9 @@ def test_tune_gp(sample_data_y1d, device, emulator):
         pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5, device=device)
-    scores, configs = tuner.run(emulator)
+    scores, params_list = tuner.run(emulator)
     assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(params_list) == 5
 
 
 @pytest.mark.parametrize(

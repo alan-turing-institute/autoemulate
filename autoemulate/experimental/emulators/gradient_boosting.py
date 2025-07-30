@@ -4,10 +4,10 @@ import numpy as np
 from scipy.stats import loguniform
 from sklearn.ensemble import GradientBoostingRegressor
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class GradientBoosting(SklearnBackend):
@@ -114,7 +114,7 @@ class GradientBoosting(SklearnBackend):
         return False
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         return {
             "learning_rate": [loguniform(0.01, 0.2).rvs()],

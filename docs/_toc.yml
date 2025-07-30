@@ -12,13 +12,22 @@ chapters:
   - file: getting-started/installation
   - file: getting-started/quickstart
 
-- file: tutorials/index
+- file: experimental/index
   sections:
-  - file: tutorials/01_start
-  - file: tutorials/02_speed
-  - file: tutorials/03_emulation_sensitivity
-  - file: tutorials/05_reaction_diffusion
-  - file: experimental/tutorials/simulator/02_active_learning
+  - file: experimental/tutorials/emulation/index
+    sections:
+    - file: experimental/tutorials/emulation/01_quickstart
+    - file: experimental/tutorials/emulation/02_dim_reduction
+  - file: experimental/tutorials/simulator/index
+    sections:
+    - file: experimental/tutorials/simulator/01_custom_simulations
+    - file: experimental/tutorials/simulator/02_active_learning
+    - file: experimental/tutorials/simulator/03_history_matching
+  - file: experimental/tutorials/tasks/index
+    sections:
+    - file: experimental/tutorials/tasks/01_emulation_sensitivity
+    - file: experimental/tutorials/tasks/02_history_matching
+    - file: experimental/tutorials/tasks/03_bayes_calibration
 
 - file: community/index
   sections:
@@ -32,27 +41,36 @@ chapters:
     - file: community/faq/faq-users
     - file: community/faq/faq-contributors
 
-- file: reference/index
+- file: reference/experimental/index
   sections:
-  - file: reference/compare
-  - file: reference/datasets
-  - file: reference/history_matching
-  - file: reference/sensitivity_analysis
-  - file: reference/simulations/index
+  - file: reference/experimental/calibration/index
     sections:
-    - file: reference/simulations/projectile
-    - file: reference/simulations/epidemic
-  - file: reference/emulators/index
+    - file: reference/experimental/calibration/bayes
+    - file: reference/experimental/calibration/history_matching
+    - file: reference/experimental/calibration/history_matching_dashboard
+  - file: reference/experimental/core/index
     sections:
-    - file: reference/emulators/rbf
-    - file: reference/emulators/polynomials
-    - file: reference/emulators/random_forest
-    - file: reference/emulators/support_vector_machines
-    - file: reference/emulators/gradient_boosting
-    - file: reference/emulators/light_gbm
-    - file: reference/emulators/conditional_neural_process
-    - file: reference/emulators/conditional_neural_process_attn
-    - file: reference/emulators/gaussian_process
-    - file: reference/emulators/gaussian_process_mt
-    - file: reference/emulators/neural_net_sk
-    - file: reference/emulators/gaussian_process_sklearn
+    - file: reference/experimental/core/compare
+    - file: reference/experimental/core/datasets
+    - file: reference/experimental/core/model_selection
+    - file: reference/experimental/core/plotting
+    - file: reference/experimental/core/sensitivity_analysis
+    - file: reference/experimental/core/tuner
+  - file: reference/experimental/emulators/index
+    sections:
+    - file: reference/experimental/emulators/base
+    - file: reference/experimental/emulators/ensemble
+    - file: reference/experimental/emulators/gradient_boosting
+    - file: reference/experimental/emulators/lightgbm
+    - file: reference/experimental/emulators/polynomials
+    - file: reference/experimental/emulators/radial_basis_functions
+    - file: reference/experimental/emulators/random_forest
+    - file: reference/experimental/emulators/svm
+  - file: reference/experimental/simulations/index
+    sections:
+    - file: reference/experimental/simulations/base
+    - file: reference/experimental/simulations/epidemic
+    - file: reference/experimental/simulations/experimental_design
+    - file: reference/experimental/simulations/flow_problem
+    - file: reference/experimental/simulations/projectile
+    - file: reference/experimental/simulations/reaction_diffusion

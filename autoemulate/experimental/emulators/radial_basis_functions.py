@@ -3,10 +3,10 @@ import random
 import numpy as np
 from torchrbf import RBFInterpolator
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, OutputLike, TensorLike
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, OutputLike, TensorLike
 
 
 class RadialBasisFunctions(PyTorchBackend):
@@ -97,7 +97,7 @@ class RadialBasisFunctions(PyTorchBackend):
         return True
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         all_params = [
             {

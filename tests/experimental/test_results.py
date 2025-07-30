@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+from autoemulate.experimental.core.results import Result, Results
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.results import Result, Results
 
 
 class DummyEmulator(TransformedEmulator):
@@ -18,7 +18,7 @@ def make_result(  # noqa: PLR0913
         id=idx,
         model_name=f"model{idx}",
         model=DummyEmulator(x_transforms=[f"x{idx}"], y_transforms=[f"y{idx}"]),
-        config={"param": idx},
+        params={"param": idx},
         r2_test=r2,
         r2_test_std=r2_std,
         r2_train=r2_train,
@@ -36,7 +36,7 @@ def test_result_attributes():
         id=0,
         model_name="mymodel",
         model=emu,
-        config={"foo": 1},
+        params={"foo": 1},
         r2_test=0.9,
         r2_test_std=0.01,
         r2_train=0.95,
@@ -51,7 +51,7 @@ def test_result_attributes():
     assert res.model is emu
     assert res.x_transforms == ["x"]
     assert res.y_transforms == ["y"]
-    assert res.config == {"foo": 1}
+    assert res.params == {"foo": 1}
     assert res.r2_test == 0.9
     assert res.rmse_test == 0.1
 
@@ -65,7 +65,7 @@ def test_result_metadata_df():
         "model_name",
         "x_transforms",
         "y_transforms",
-        "config",
+        "params",
         "r2_test",
         "rmse_test",
         "r2_test_std",
@@ -80,7 +80,7 @@ def test_result_metadata_df():
     assert df.loc[0, "model_name"] == "model42"
     assert df.loc[0, "x_transforms"] == ["x42"]
     assert df.loc[0, "y_transforms"] == ["y42"]
-    assert df.loc[0, "config"] == "{'param': 42}"
+    assert df.loc[0, "params"] == "{'param': 42}"
     assert df.loc[0, "r2_test"] == 0.8
     assert df.loc[0, "rmse_test"] == 0.12
     assert df.loc[0, "r2_test_std"] == 0.02
@@ -135,7 +135,7 @@ def test_results_summarize():
         "model_name": ["model2", "model1"],
         "x_transforms": [["x2"], ["x1"]],
         "y_transforms": [["y2"], ["y1"]],
-        "config": [{"param": 2}, {"param": 1}],
+        "params": [{"param": 2}, {"param": 1}],
         "rmse_test": [0.8, 1.0],
         "r2_test": [0.7, 0.5],
         "r2_test_std": [0.015, 0.01],

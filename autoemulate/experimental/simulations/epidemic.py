@@ -2,8 +2,8 @@ import numpy as np
 import torch
 from scipy.integrate import solve_ivp
 
+from autoemulate.experimental.core.types import NumpyLike, TensorLike
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike, TensorLike
 
 
 class Epidemic(Simulator):

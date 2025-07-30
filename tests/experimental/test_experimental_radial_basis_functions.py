@@ -1,16 +1,16 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.radial_basis_functions import (
     RadialBasisFunctions,
 )
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 from scipy.interpolate import RBFInterpolator
 
 
@@ -47,9 +47,9 @@ def test_tune_rbf(sample_data_for_ae_compare, device):
     x, y = sample_data_for_ae_compare
     n_iter = 5
     tuner = Tuner(x, y, n_iter=n_iter, device=device)
-    scores, configs = tuner.run(RadialBasisFunctions)
+    scores, params_list = tuner.run(RadialBasisFunctions)
     assert len(scores) == n_iter
-    assert len(configs) == n_iter
+    assert len(params_list) == n_iter
 
 
 def test_rbf_predict_deterministic_with_seed(sample_data_for_ae_compare, new_data_rbf):

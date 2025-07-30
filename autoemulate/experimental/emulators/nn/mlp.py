@@ -1,9 +1,9 @@
 from torch import nn
 
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 from ..base import DropoutTorchBackend
 
@@ -128,9 +128,9 @@ class MLP(DropoutTorchBackend):
         return True
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
-        scheduler_params = MLP.scheduler_config()
+        scheduler_params = MLP.scheduler_params()
         return {
             "epochs": [100, 200],
             "layer_dims": [[8, 4], [16, 8], [32, 16], [64, 32, 16]],

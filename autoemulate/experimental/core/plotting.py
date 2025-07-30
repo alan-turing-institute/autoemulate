@@ -4,7 +4,7 @@ from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from autoemulate.experimental.types import NumpyLike
+from autoemulate.experimental.core.types import NumpyLike
 
 
 def display_figure(fig: Figure):

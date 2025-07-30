@@ -5,10 +5,10 @@ import torch
 from pyro.infer import HMC, MCMC, NUTS, Predictive
 from pyro.infer.mcmc import RandomWalkKernel
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.logging_config import get_configured_logger
+from autoemulate.experimental.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.logging_config import get_configured_logger
-from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorLike
 
 
 class BayesianCalibration(TorchDeviceMixin):

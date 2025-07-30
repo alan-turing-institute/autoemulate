@@ -12,8 +12,14 @@ from autoemulate.experimental.callbacks.early_stopping import (
     EarlyStopping,
     EarlyStoppingException,
 )
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
+    DeviceLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
@@ -21,12 +27,6 @@ from autoemulate.experimental.emulators.gaussian_process import (
 )
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import (
-    DeviceLike,
-    GaussianLike,
-    GaussianProcessLike,
-    TensorLike,
-)
 
 from .kernel import (
     matern_3_2_kernel,
@@ -275,9 +275,9 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             return output_distribution
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return the hyperparameters to tune for the Gaussian Process model."""
-        scheduler_config = GaussianProcess.scheduler_config()
+        scheduler_params = GaussianProcess.scheduler_params()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -298,8 +298,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             "epochs": [50, 100, 200],
             "lr": [5e-1, 1e-1, 5e-2, 1e-2],
             "likelihood_cls": [MultitaskGaussianLikelihood],
-            "scheduler_cls": scheduler_config["scheduler_cls"],
-            "scheduler_kwargs": scheduler_config["scheduler_kwargs"],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
 
 

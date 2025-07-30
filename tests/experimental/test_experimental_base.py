@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 import torch
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.tuner import Tuner
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
-from autoemulate.experimental.tuner import Tuner
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 
@@ -36,7 +36,7 @@ class TestPyTorchBackend:
             return self.linear(x)
 
         @staticmethod
-        def get_tune_config():
+        def get_tune_params():
             return {
                 "epochs": [100, 200, 300],
                 "batch_size": [16],

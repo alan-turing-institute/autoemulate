@@ -5,7 +5,7 @@ import click
 import numpy as np
 import pandas as pd
 import torch
-from autoemulate.experimental.compare import AutoEmulate
+from autoemulate.experimental.core.compare import AutoEmulate
 from autoemulate.experimental.emulators import ALL_EMULATORS
 from autoemulate.experimental.emulators.base import Emulator
 from autoemulate.experimental.simulations import SIMULATOR_REGISTRY

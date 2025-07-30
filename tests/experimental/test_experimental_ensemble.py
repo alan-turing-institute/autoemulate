@@ -1,7 +1,7 @@
 import torch
+from autoemulate.experimental.core.types import GaussianLike, TensorLike
 from autoemulate.experimental.emulators.ensemble import DropoutEnsemble, Ensemble
 from autoemulate.experimental.emulators.nn.mlp import MLP
-from autoemulate.experimental.types import GaussianLike, TensorLike
 
 
 def test_mlp_ensemble():

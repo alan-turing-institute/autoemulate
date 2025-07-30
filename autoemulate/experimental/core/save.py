@@ -4,8 +4,8 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from autoemulate.experimental.core.results import Result  # , Results
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.results import Result  # , Results
 
 
 class ModelSerialiser:
@@ -137,14 +137,14 @@ class ModelSerialiser:
             self.logger.error(msg, metadata_path, e)
             return model
         row = metadata_df.iloc[0]
-        config = row["config"]
-        config = ast.literal_eval(config)
+        params = row["params"]
+        params = ast.literal_eval(params)
 
         return Result(
             id=row["id"],
             model_name=row["model_name"],
             model=model,
-            config=config,
+            params=params,
             r2_test=row["r2_test"],
             rmse_test=row["rmse_test"],
             r2_test_std=row["r2_test_std"],
