@@ -36,7 +36,7 @@ class Ensemble(GaussianEmulator):
         device: DeviceLike | None = None,
     ):
         """
-        Initialize the ensemble with a sequence of emulators.
+        Initialize the Ensemble with a sequence of emulators.
 
         Parameters
         ----------
