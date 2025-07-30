@@ -154,8 +154,8 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
             assert loaded.id == result.id
             assert loaded.model_name == result.model_name
 
-            for k, v in result.config.items():
-                loaded_v = loaded.config[k]
+            for k, v in result.params.items():
+                loaded_v = loaded.params[k]
                 if callable(v):
                     assert str(loaded_v) in str(v)
                 else:

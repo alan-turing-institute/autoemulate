@@ -21,9 +21,9 @@ def test_predict_lightgbm(sample_data_y1d, new_data_y1d):
 def test_tune_lightgbm(sample_data_y1d):
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5)
-    scores, configs = tuner.run(LightGBM)
+    scores, params_list = tuner.run(LightGBM)
     assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(params_list) == 5
 
 
 def test_lightgm_class_name_returned():

@@ -337,6 +337,6 @@ class EnsembleMLPDropout(DropoutEnsemble):
     @staticmethod
     def get_tune_params() -> TuneParams:
         """Return a dictionary of hyperparameters to tune."""
-        config = MLP.get_tune_params()
-        config["dropout_prob"] = [el for el in config["dropout_prob"] if el is not None]
-        return {"n_emulators": [2, 4, 6, 8], **config}
+        params = MLP.get_tune_params()
+        params["dropout_prob"] = [el for el in params["dropout_prob"] if el is not None]
+        return {"n_emulators": [2, 4, 6, 8], **params}

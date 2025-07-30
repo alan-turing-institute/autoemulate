@@ -118,7 +118,7 @@ def cross_validate(  # noqa: PLR0913
     cv_results = {"r2": [], "rmse": []}
     device = get_torch_device(device)
 
-    logger.debug("Cross-validation configuration: %s", cv)
+    logger.debug("Cross-validation parameters: %s", cv)
     for i, (train_idx, val_idx) in enumerate(cv.split(dataset)):  # type: ignore TODO: identify type handling here
         logger.debug(
             "Cross-validation split %d: %d train samples, %d validation samples",

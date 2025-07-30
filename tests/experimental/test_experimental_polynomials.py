@@ -40,9 +40,9 @@ def test_tune_pr(sample_data_y1d, device):
     x, y = sample_data_y1d
     n_iter = 5
     tuner = Tuner(x, y, n_iter=n_iter, device=device)
-    scores, configs = tuner.run(PolynomialRegression)
+    scores, params_list = tuner.run(PolynomialRegression)
     assert len(scores) == n_iter
-    assert len(configs) == n_iter
+    assert len(params_list) == n_iter
 
 
 def test_pr_predict_deterministic_with_seed(sample_data_y2d, new_data_y2d):
