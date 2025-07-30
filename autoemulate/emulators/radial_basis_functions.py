@@ -1,115 +1,125 @@
+import random
+
 import numpy as np
-from scipy.interpolate import RBFInterpolator
-from scipy.stats import randint
-from scipy.stats import uniform
-from sklearn.base import BaseEstimator
-from sklearn.base import RegressorMixin
-from sklearn.utils.validation import check_array
-from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.validation import check_X_y
+from torchrbf import RBFInterpolator
+
+from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.types import DeviceLike, OutputLike, TensorLike
+from autoemulate.emulators.base import PyTorchBackend
+from autoemulate.transforms.standardize import StandardizeTransform
 
 
-class RadialBasisFunctions(BaseEstimator, RegressorMixin):
-    """Radial basis function Emulator.
+class RadialBasisFunctions(PyTorchBackend):
+    """
+    Radial basis function Emulator.
 
-    Wraps the RBF interpolator from scipy.
+    Wraps the Radial Basis Function Interpolation in PyTorch.
     """
 
-    def __init__(
+    supports_grad = False
+
+    def __init__(  # noqa: PLR0913
         self,
-        smoothing=0.0,
-        kernel="thin_plate_spline",
-        epsilon=1.0,
-        degree=1,
+        x: TensorLike,  # noqa: ARG002
+        y: TensorLike,  # noqa: ARG002
+        standardize_x: bool = False,
+        standardize_y: bool = False,
+        smoothing: float = 0.0,
+        kernel: str = "thin_plate_spline",
+        epsilon: float = 1.0,
+        degree: int = 1,
+        device: DeviceLike | None = None,
     ):
-        """Initializes an RBF object."""
+        """Initialize a RadialBasisFunctions emulator.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input features.
+        y: TensorLike
+            Target values.
+        standardize_x: bool
+            Whether to standardize input features. Defaults to False.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to False.
+        smoothing: float
+            Smoothing parameter for the RBF interpolator. Defaults to 0.0.
+        kernel: str
+            Kernel type for the RBF interpolator.
+            Kernel type for the RBF interpolator. Options are:
+            "linear", "multiquadric", "thin_plate_spline", "cubic", "quintic",
+            "gaussian".
+            Defaults to "thin_plate_spline".
+        epsilon: float
+            Epsilon parameter for the RBF interpolator. Defaults to 1.0.
+        degree: int
+            Degree of the polynomial to be added to the RBF interpolator. Defaults to 1.
+        device: DeviceLike | None
+            Device to run the model on. If None, uses the default device. Defaults to
+            None.
+        """
+        super().__init__()
+        TorchDeviceMixin.__init__(self, device=device)
+
+        self.x_transform = StandardizeTransform() if standardize_x else None
+        self.y_transform = StandardizeTransform() if standardize_y else None
         self.smoothing = smoothing
         self.kernel = kernel
         self.epsilon = epsilon
         self.degree = degree
+        self.device = device
 
-    def fit(self, X, y):
-        """Fits the emulator to the data.
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
-        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-            The target values (real numbers).
-
-        Returns
-        -------
-        self : object
-            Returns self.
-        """
-        X, y = check_X_y(
-            X,
-            y,
-            multi_output=True,
-            y_numeric=True,
-            dtype=np.float64,
-            ensure_min_samples=2,
-        )
-        self.n_features_in_ = X.shape[1]
-        self.model_ = RBFInterpolator(
-            X,
+    def _fit(self, x: TensorLike, y: TensorLike):
+        self.model = RBFInterpolator(
+            x,
             y,
             smoothing=self.smoothing,
             kernel=self.kernel,
             epsilon=self.epsilon,
             degree=self.degree,
+            device=self.device,  # type: ignore PGH003
         )
-        self.is_fitted_ = True
-        return self
 
-    def predict(self, X):
-        """Predicts the output of the emulator for a given input.
+    def forward(self, x: TensorLike) -> TensorLike:
+        """Forward pass for the radial basis function emulator."""
+        return self.model(x)
 
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The input samples.
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+        if with_grad:
+            msg = "Gradient calculation is not supported."
+            raise ValueError(msg)
+        self.eval()
+        return self(x)
 
-        Returns
-        -------
-        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-            The predicted values (real numbers).
-        """
-        X = check_array(X)
-        check_is_fitted(self, "is_fitted_")
-        return self.model_(X)
+    @staticmethod
+    def is_multioutput() -> bool:
+        """Radial basis functions support multi-output."""
+        return True
 
-    def get_grid_params(self, search_type="random"):
-        """Returns the grid parameters of the emulator."""
-        if search_type == "random":
-            param_space = [
-                {
-                    "kernel": ["linear", "multiquadric"],
-                    "degree": randint(0, 3),  # Degrees valid for these kernels
-                    "smoothing": uniform(0.0, 1.0),
-                },
-                {
-                    "kernel": ["thin_plate_spline", "cubic"],
-                    "degree": randint(1, 3),  # Degrees valid for the 'quintic' kernel
-                    "smoothing": uniform(0.0, 1.0),
-                },
-                {
-                    "kernel": ["quintic"],
-                    "degree": randint(2, 3),
-                    "smoothing": uniform(0.0, 1.0),
-                },
-                {
-                    "kernel": ["gaussian"],
-                    "degree": randint(-1, 3),
-                    "smoothing": uniform(0.0, 1.0),
-                },
-            ]
-        return param_space
-
-    @property
-    def model_name(self):
-        return self.__class__.__name__
-
-    def _more_tags(self):
-        return {"multioutput": True}
+    @staticmethod
+    def get_tune_params():
+        """Return a dictionary of hyperparameters to tune."""
+        all_params = [
+            {
+                "kernel": ["linear", "multiquadric"],
+                "degree": [np.random.randint(0, 3)],  # Degrees valid for these kernels
+                "smoothing": [np.random.uniform(0.0, 1.0)],
+            },
+            {
+                "kernel": ["thin_plate_spline", "cubic"],
+                "degree": [np.random.randint(1, 3)],
+                "smoothing": [np.random.uniform(0.0, 1.0)],
+            },
+            {
+                "kernel": ["quintic"],
+                "degree": [np.random.randint(2, 3)],
+                "smoothing": [np.random.uniform(0.0, 1.0)],
+            },
+            {
+                "kernel": ["gaussian"],
+                "degree": [np.random.randint(-1, 3)],
+                "smoothing": [np.random.uniform(0.0, 1.0)],
+            },
+        ]
+        # Randomly select one of the parameter sets
+        return random.choice(all_params)

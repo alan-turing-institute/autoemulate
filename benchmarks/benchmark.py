@@ -5,11 +5,11 @@ import click
 import numpy as np
 import pandas as pd
 import torch
-from autoemulate.experimental.core.compare import AutoEmulate
-from autoemulate.experimental.emulators import ALL_EMULATORS
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.simulations import SIMULATOR_REGISTRY
-from autoemulate.experimental.simulations.base import Simulator
+from autoemulate.core.compare import AutoEmulate
+from autoemulate.emulators import ALL_EMULATORS
+from autoemulate.emulators.base import Emulator
+from autoemulate.simulations import SIMULATOR_REGISTRY
+from autoemulate.simulations.base import Simulator
 from tqdm import tqdm
 
 
