@@ -32,7 +32,7 @@ def test_ae(sample_data_for_ae_compare, device):
 def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     """Test AutoEmulate with models passed as strings and transforms as dictionaries."""
     x, y = sample_data_for_ae_compare
-    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gpe"]
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
     x_transforms_list: list[list[AutoEmulateTransform | dict]] = [
         [{"standardize": {}}],
         [{"pca": {"n_components": 3}}],
@@ -55,4 +55,4 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     print(ae.results)
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
-    assert "GaussianProcessExact" in result_model_names
+    assert "GaussianProcess" in result_model_names

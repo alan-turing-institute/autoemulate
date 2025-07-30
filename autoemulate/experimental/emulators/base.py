@@ -72,8 +72,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     def short_name(cls) -> str:
         """
         Take the capital letters of the class name and return them as a lower case
-        string. For example, if the class name is `GaussianProcessExact`, this will
-        return `gpe`.
+        string. For example, if the class name is `GaussianProcess`, this will return
+        `gp`.
         """
         return "".join([c for c in cls.__name__ if c.isupper()]).lower()
 
