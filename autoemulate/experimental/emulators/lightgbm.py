@@ -47,14 +47,14 @@ class LightGBM(DeterministicEmulator):
 
         Parameters
         ----------
-        x: TensorLike | None, default=None
-            Input features. If None, the model will be fitted later.
-        y: TensorLike | None, default=None
-            Target values. If None, the model will be fitted later.
-        standardize_x: bool, default=False
-            Whether to standardize input features.
-        standardize_y: bool, default=False
-            Whether to standardize target values.
+        x: TensorLike | None
+            Input features. If None, the model will be fitted later. Defaults to None.
+        y: TensorLike | None
+            Target values. If None, the model will be fitted later. Defaults to None.
+        standardize_x: bool
+            Whether to standardize input features. Defaults to None.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to None.
         boosting_type: str, default="gbdt"
             Type of boosting to use. Options are "gbdt", "dart", "goss", "rf".
         num_leaves: int, default=31

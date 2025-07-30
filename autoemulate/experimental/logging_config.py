@@ -91,9 +91,9 @@ def get_configured_logger(
     log_level: str
         The logging level to set. Can be "progress_bar", "debug", "info",
         "warning", "error", or "critical".
-    progress_bar_attr: str, default="progress_bar"
+    progress_bar_attr: str
         The attribute to check for progress bar. If log_level is set to this value,
-        the logger will be set to "error" level and progress_bar will be True.
+        the logger will be set to "error" level and progress_bar will be True. Defaults to "progress_bar".
 
     Returns
     -------

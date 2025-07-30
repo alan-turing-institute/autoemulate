@@ -281,8 +281,8 @@ class DeterministicEmulator(Emulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -306,8 +306,8 @@ class ProbabilisticEmulator(Emulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -379,8 +379,8 @@ class GaussianProcessEmulator(GaussianEmulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
