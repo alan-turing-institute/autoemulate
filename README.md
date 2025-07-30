@@ -45,26 +45,26 @@
 | autoemulate/experimental/datasets.py                                         |       14 |       14 |      0% |      1-67 |
 | autoemulate/experimental/device.py                                           |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                           |       18 |        1 |     94% |        49 |
-| autoemulate/experimental/emulators/base.py                                   |      176 |       16 |     91% |64, 68-69, 105-109, 200-203, 256-257, 369, 376, 455-457, 473 |
-| autoemulate/experimental/emulators/ensemble.py                               |      107 |        8 |     93% |61, 70-71, 95-96, 200, 211-212 |
+| autoemulate/experimental/emulators/base.py                                   |      197 |       19 |     90% |82, 86-87, 96, 102-107, 140-144, 235-238, 291-292, 404, 411, 490-492, 508 |
+| autoemulate/experimental/emulators/ensemble.py                               |      110 |        8 |     93% |62, 71-72, 96-97, 217, 228-229 |
 | autoemulate/experimental/emulators/gaussian\_process/\_\_init\_\_.py         |        6 |        0 |    100% |           |
-| autoemulate/experimental/emulators/gaussian\_process/exact.py                |      153 |        3 |     98% |197, 204, 231 |
+| autoemulate/experimental/emulators/gaussian\_process/exact.py                |      156 |        3 |     98% |198, 205, 232 |
 | autoemulate/experimental/emulators/gaussian\_process/kernel.py               |       36 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/mean.py                 |       13 |        0 |    100% |           |
 | autoemulate/experimental/emulators/gaussian\_process/poly\_mean.py           |       28 |        2 |     93% |    57, 68 |
 | autoemulate/experimental/emulators/gaussian\_process/polynomial\_features.py |       35 |        2 |     94% |     72-73 |
-| autoemulate/experimental/emulators/gradient\_boosting.py                     |       29 |        1 |     97% |        68 |
-| autoemulate/experimental/emulators/lightgbm.py                               |       49 |        0 |    100% |           |
+| autoemulate/experimental/emulators/gradient\_boosting.py                     |       32 |        1 |     97% |        73 |
+| autoemulate/experimental/emulators/lightgbm.py                               |       52 |        0 |    100% |           |
 | autoemulate/experimental/emulators/nn/\_\_init\_\_.py                        |        0 |        0 |    100% |           |
-| autoemulate/experimental/emulators/nn/mlp.py                                 |       38 |        0 |    100% |           |
-| autoemulate/experimental/emulators/polynomials.py                            |       36 |        1 |     97% |        60 |
-| autoemulate/experimental/emulators/radial\_basis\_functions.py               |       34 |        0 |    100% |           |
-| autoemulate/experimental/emulators/random\_forest.py                         |       26 |        0 |    100% |           |
-| autoemulate/experimental/emulators/svm.py                                    |       31 |        0 |    100% |           |
+| autoemulate/experimental/emulators/nn/mlp.py                                 |       41 |        0 |    100% |           |
+| autoemulate/experimental/emulators/polynomials.py                            |       39 |        1 |     97% |        65 |
+| autoemulate/experimental/emulators/radial\_basis\_functions.py               |       37 |        0 |    100% |           |
+| autoemulate/experimental/emulators/random\_forest.py                         |       29 |        0 |    100% |           |
+| autoemulate/experimental/emulators/svm.py                                    |       34 |        0 |    100% |           |
 | autoemulate/experimental/emulators/transformed/\_\_init\_\_.py               |        0 |        0 |    100% |           |
 | autoemulate/experimental/emulators/transformed/base.py                       |       89 |       14 |     84% |188-190, 324, 367-368, 395-398, 403-408, 412-416 |
 | autoemulate/experimental/learners/\_\_init\_\_.py                            |        4 |        0 |    100% |           |
-| autoemulate/experimental/learners/base.py                                    |      121 |       24 |     80% |69-72, 85-89, 102-111, 130, 134-141 |
+| autoemulate/experimental/learners/base.py                                    |      121 |       26 |     79% |69-72, 85-89, 102-111, 130, 134-141, 229-230 |
 | autoemulate/experimental/learners/membership.py                              |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/pool.py                                    |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/stream.py                                  |      131 |       13 |     90% |85-95, 141, 488, 539-543, 546, 574-579, 582 |
@@ -123,7 +123,7 @@
 | tests/experimental/test\_experimental\_design.py                             |       28 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_early\_stopping.py                    |       27 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_ensemble.py                           |       70 |        0 |    100% |           |
-| tests/experimental/test\_experimental\_gaussian\_process\_exact.py           |      106 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_gaussian\_process\_exact.py           |      103 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_gradient\_boosting.py                 |       20 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_history\_matching.py                  |       75 |        2 |     97% |     23-24 |
 | tests/experimental/test\_experimental\_lightgbm.py                           |       43 |        0 |    100% |           |
@@ -137,7 +137,7 @@
 | tests/experimental/test\_experimental\_save.py                               |      116 |        3 |     97% | 34-35, 40 |
 | tests/experimental/test\_experimental\_sensitivity\_analysis.py              |       89 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_svm.py                                |       40 |        0 |    100% |           |
-| tests/experimental/test\_experimental\_transformed.py                        |      108 |        0 |    100% |           |
+| tests/experimental/test\_experimental\_transformed.py                        |      109 |        0 |    100% |           |
 | tests/experimental/test\_experimental\_utils.py                              |      218 |        0 |    100% |           |
 | tests/experimental/test\_learners.py                                         |       43 |        4 |     91% |     35-56 |
 | tests/experimental/test\_results.py                                          |       74 |        0 |    100% |           |
@@ -170,7 +170,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **11182** | **2201** | **80%** |           |
+|                                                                    **TOTAL** | **11228** | **2206** | **80%** |           |
 
 
 ## Setup coverage badge
