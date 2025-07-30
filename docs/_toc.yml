@@ -24,7 +24,7 @@ chapters:
   - file: experimental/tutorials/emulation/index
     sections:
     - file: experimental/tutorials/emulation/01_quickstart
-    - file: experimental/tutorials/emulation/03_reaction_diffusion_experimental
+    - file: experimental/tutorials/emulation/02_dim_reduction
   - file: experimental/tutorials/simulator/index
     sections:
     - file: experimental/tutorials/simulator/01_custom_simulations
