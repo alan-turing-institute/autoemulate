@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_0db1ec4121258c72_test_attn_cnp_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 14:15 +0000
+            created at 2025-07-30 14:18 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -83,7 +83,7 @@
     <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">import</span> <span class="nam">numpy</span> <span class="key">as</span> <span class="nam">np</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">import</span> <span class="nam">pytest</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">import</span> <span class="nam">torch</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">emulators</span> <span class="key">import</span> <span class="nam">GaussianProcessExact</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">emulators</span> <span class="key">import</span> <span class="nam">GaussianProcess</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">transforms</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">    <span class="nam">PCATransform</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t">    <span class="nam">StandardizeTransform</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -118,7 +118,7 @@
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="nam">x</span><span class="op">,</span> <span class="nam">y</span> <span class="op">=</span> <span class="nam">sample_data_y2d</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="nam">transform</span><span class="op">.</span><span class="nam">fit</span><span class="op">(</span><span class="nam">y</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="nam">z</span> <span class="op">=</span> <span class="nam">transform</span><span class="op">(</span><span class="nam">y</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="nam">gp</span> <span class="op">=</span> <span class="nam">GaussianProcessExact</span><span class="op">(</span><span class="nam">x</span><span class="op">,</span> <span class="nam">z</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="nam">gp</span> <span class="op">=</span> <span class="nam">GaussianProcess</span><span class="op">(</span><span class="nam">x</span><span class="op">,</span> <span class="nam">z</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">    <span class="nam">gp</span><span class="op">.</span><span class="nam">fit</span><span class="op">(</span><span class="nam">x</span><span class="op">,</span> <span class="nam">z</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">    <span class="nam">z_pred</span> <span class="op">=</span> <span class="nam">gp</span><span class="op">.</span><span class="nam">predict</span><span class="op">(</span><span class="nam">x</span><span class="op">[</span><span class="op">:</span> <span class="nam">x</span><span class="op">.</span><span class="nam">shape</span><span class="op">[</span><span class="num">0</span><span class="op">]</span> <span class="op">//</span> <span class="num">2</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="key">for</span> <span class="nam">method</span> <span class="key">in</span> <span class="op">[</span><span class="nam">transform</span><span class="op">.</span><span class="nam">_inverse_sample</span><span class="op">,</span> <span class="nam">transform</span><span class="op">.</span><span class="nam">_inverse_gaussian</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -202,7 +202,7 @@
             <a class="nav" href="z_0db1ec4121258c72_test_attn_cnp_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 14:15 +0000
+            created at 2025-07-30 14:18 +0000
         </p>
     </div>
 </footer>

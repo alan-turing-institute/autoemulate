@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_ec89eae49609d65e_test_experimental_design_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 14:15 +0000
+            created at 2025-07-30 14:18 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -114,7 +114,7 @@
     <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">def</span> <span class="nam">test_ae_with_str_models_and_dict_transforms</span><span class="op">(</span><span class="nam">sample_data_for_ae_compare</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="str">"""Test AutoEmulate with models passed as strings and transforms as dictionaries."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">    <span class="nam">x</span><span class="op">,</span> <span class="nam">y</span> <span class="op">=</span> <span class="nam">sample_data_for_ae_compare</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="nam">models</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span> <span class="op">|</span> <span class="nam">type</span><span class="op">[</span><span class="nam">Emulator</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="op">[</span><span class="str">"mlp"</span><span class="op">,</span> <span class="str">"RandomForest"</span><span class="op">,</span> <span class="str">"gpe"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="nam">models</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span> <span class="op">|</span> <span class="nam">type</span><span class="op">[</span><span class="nam">Emulator</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="op">[</span><span class="str">"mlp"</span><span class="op">,</span> <span class="str">"RandomForest"</span><span class="op">,</span> <span class="str">"gp"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="nam">x_transforms_list</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">list</span><span class="op">[</span><span class="nam">AutoEmulateTransform</span> <span class="op">|</span> <span class="nam">dict</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="op">[</span><span class="op">{</span><span class="str">"standardize"</span><span class="op">:</span> <span class="op">{</span><span class="op">}</span><span class="op">}</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">        <span class="op">[</span><span class="op">{</span><span class="str">"pca"</span><span class="op">:</span> <span class="op">{</span><span class="str">"n_components"</span><span class="op">:</span> <span class="num">3</span><span class="op">}</span><span class="op">}</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -137,7 +137,7 @@
     <p class="run"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="nam">ae</span><span class="op">.</span><span class="nam">results</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">    <span class="key">assert</span> <span class="str">"MLP"</span> <span class="key">in</span> <span class="nam">result_model_names</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="key">assert</span> <span class="str">"RandomForest"</span> <span class="key">in</span> <span class="nam">result_model_names</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">    <span class="key">assert</span> <span class="str">"GaussianProcessExact"</span> <span class="key">in</span> <span class="nam">result_model_names</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">    <span class="key">assert</span> <span class="str">"GaussianProcess"</span> <span class="key">in</span> <span class="nam">result_model_names</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -147,7 +147,7 @@
             <a class="nav" href="z_ec89eae49609d65e_test_experimental_design_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 14:15 +0000
+            created at 2025-07-30 14:18 +0000
         </p>
     </div>
 </footer>
