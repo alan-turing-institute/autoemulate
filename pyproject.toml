@@ -61,15 +61,18 @@ build-backend = "poetry.core.masonry.api"
 relative_files = true
 source = [".", "/tmp"]
 
+[tool.pytest.ini_options]
+addopts = "--ignore=v0"
+
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-include = ["autoemulate/experimental/*", "tests/experimental/*", "benchmarks/*"]
+include = ["autoemulate/*", "tests/*", "benchmarks/*"]
 
 [tool.ruff]
 src = ["autoemulate/"]
 line-length = 88
-include = ["autoemulate/experimental/**/*.py", "tests/experimental/**/*.py", "benchmarks/**/*.py"]
+include = ["autoemulate/**/*.py", "tests/**/*.py", "benchmarks/**/*.py"]
 target-version = "py310"
 
 [tool.ruff.format]

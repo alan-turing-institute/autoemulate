@@ -14,7 +14,7 @@ from autoemulate.emulators.gaussian_process.exact import (
 )
 from autoemulate.simulations.epidemic import Epidemic
 
-from .test_experimental_base_simulator import MockSimulator
+from .test_base_simulator import MockSimulator
 
 
 @pytest.fixture
