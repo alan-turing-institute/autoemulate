@@ -47,9 +47,9 @@ def test_tune_rbf(sample_data_for_ae_compare, device):
     x, y = sample_data_for_ae_compare
     n_iter = 5
     tuner = Tuner(x, y, n_iter=n_iter, device=device)
-    scores, configs = tuner.run(RadialBasisFunctions)
+    scores, params_list = tuner.run(RadialBasisFunctions)
     assert len(scores) == n_iter
-    assert len(configs) == n_iter
+    assert len(params_list) == n_iter
 
 
 def test_rbf_predict_deterministic_with_seed(sample_data_for_ae_compare, new_data_rbf):

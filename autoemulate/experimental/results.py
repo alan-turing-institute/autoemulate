@@ -1,8 +1,7 @@
-from typing import Any
-
 import pandas as pd
 
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
+from autoemulate.experimental.types import ModelParams
 
 
 class Result:
@@ -13,7 +12,7 @@ class Result:
         id: int,
         model_name: str,
         model: TransformedEmulator,
-        config: dict[str, Any],
+        params: ModelParams,
         r2_test: float,
         rmse_test: float,
         r2_train: float,
@@ -33,8 +32,8 @@ class Result:
             Name of the model used in the evaluation.
         model: TransformedEmulator
             The emulator model used for predictions.
-        config: dict[str, Any]
-            Configuration parameters used for the model.
+        params: ModelParams
+            Parameters used for the model.
         r2_test: float
             R2 score on the test set.
         rmse_test: float
@@ -58,7 +57,7 @@ class Result:
         self.model = model
         self.x_transforms = model.x_transforms
         self.y_transforms = model.y_transforms
-        self.config = config
+        self.params = params
         self.r2_test = r2_test
         self.rmse_test = rmse_test
         self.r2_test_std = r2_test_std
@@ -76,15 +75,15 @@ class Result:
         -------
         pd.DataFrame
             DataFrame with columns:
-            ['id', 'model_name', 'x_transforms', 'y_transforms', 'config',
+            ['id', 'model_name', 'x_transforms', 'y_transforms', 'params',
             'r2_test', 'rmse_test', 'r2_test_std', 'rmse_test_std',
             'r2_train', 'rmse_train', 'r2_train_std', 'rmse_train_std'].
         """
 
-        # Serialize the config dictionary to a string representation
-        def serialize_config(cfg):
+        # Serialize the params dictionary to a string representation
+        def serialize_params(params):
             out = {}
-            for k, v in cfg.items():
+            for k, v in params.items():
                 if callable(v) or isinstance(v, type):
                     out[k] = v.__name__
                 else:
@@ -97,7 +96,7 @@ class Result:
                 "model_name": [self.model_name],
                 "x_transforms": [self.x_transforms],
                 "y_transforms": [self.y_transforms],
-                "config": str(serialize_config(self.config)),
+                "params": str(serialize_params(self.params)),
                 "r2_test": [self.r2_test],
                 "rmse_test": [self.rmse_test],
                 "r2_test_std": [self.r2_test_std],
@@ -145,7 +144,7 @@ class Results:
         -------
         pd.DataFrame
             DataFrame with columns:
-                ['model', 'x_transforms', 'y_transforms', 'config', 'r2_score',
+                ['model', 'x_transforms', 'y_transforms', 'params', 'r2_score',
                 'rmse_score'].
         TODO: include test data
         """
@@ -153,7 +152,7 @@ class Results:
             "model_name": [result.model_name for result in self.results],
             "x_transforms": [result.x_transforms for result in self.results],
             "y_transforms": [result.y_transforms for result in self.results],
-            "config": [result.config for result in self.results],
+            "params": [result.params for result in self.results],
             "rmse_test": [result.rmse_test for result in self.results],
             "r2_test": [result.r2_test for result in self.results],
             "r2_test_std": [result.r2_test_std for result in self.results],

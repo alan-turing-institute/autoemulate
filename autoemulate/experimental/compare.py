@@ -227,7 +227,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         best_model_name,
         x_transforms,
         y_transforms,
-        best_config_for_this_model,
+        best_params_for_this_model,
         r2_score,
         rmse_score,
     ):
@@ -237,7 +237,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             f"Best Model: {best_model_name}, "
             f"x transforms: {x_transforms}, "
             f"y transforms: {y_transforms}",
-            f"Best params: {best_config_for_this_model}, "
+            f"Best params: {best_params_for_this_model}, "
             f"R2 score: {r2_score:.3f}, "
             f"RMSE score: {rmse_score:.3f}",
         )
@@ -254,7 +254,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         - Fit the best model with the tuned hyperparameters.
         - Evaluate the performance of the best model on the test data.
         - Log the results.
-        - Save the best model and its configuration.
+        - Save the best model and its parameters.
         """
         tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
         self.logger.info(
@@ -286,7 +286,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             self.logger.debug(
                                 'Running tuner for model "%s"', model_cls.__name__
                             )
-                            scores, configs = tuner.run(
+                            scores, params_list = tuner.run(
                                 model_cls,
                                 x_transforms,
                                 y_transforms,
@@ -295,12 +295,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             )
                             mean_scores = [np.mean(score).item() for score in scores]
                             best_score_idx = np.argmax(mean_scores)
-                            best_config_for_this_model = configs[best_score_idx]
+                            best_params_for_this_model = params_list[best_score_idx]
                             self.logger.debug(
-                                'Tuner found best config for model "%s": '
+                                'Tuner found best params for model "%s": '
                                 "%s with score: %.3f",
                                 model_cls.__name__,
-                                best_config_for_this_model,
+                                best_params_for_this_model,
                                 mean_scores[best_score_idx],
                             )
 
@@ -321,10 +321,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 x_transforms=x_transforms,
                                 y_transforms=y_transforms,
                                 device=self.device,
-                                **best_config_for_this_model,
+                                **best_params_for_this_model,
                             )
 
-                            # This can fail for some model configurations
+                            # This can fail for some model params
                             transformed_emulator.fit(train_val_x, train_val_y)
 
                             (
@@ -364,7 +364,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 id=id,
                                 model_name=transformed_emulator.untransformed_model_name,
                                 model=transformed_emulator,
-                                config=best_config_for_this_model,
+                                params=best_params_for_this_model,
                                 r2_test=r2_test,
                                 rmse_test=rmse_test,
                                 r2_test_std=r2_test_std,
@@ -398,7 +398,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             best_model_name=best_result.model_name,
             x_transforms=best_result.x_transforms,
             y_transforms=best_result.y_transforms,
-            best_config_for_this_model=best_result.config,
+            best_params_for_this_model=best_result.params,
             r2_score=best_result.r2_test,
             rmse_score=best_result.rmse_test,
         )

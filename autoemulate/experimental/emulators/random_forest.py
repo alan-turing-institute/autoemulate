@@ -120,7 +120,7 @@ class RandomForest(SklearnBackend):
         return True
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         return {
             "n_estimators": [np.random.randint(50, 500)],

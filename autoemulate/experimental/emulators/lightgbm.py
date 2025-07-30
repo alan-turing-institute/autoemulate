@@ -166,7 +166,7 @@ class LightGBM(DeterministicEmulator):
         return y
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         # Note: 10 ** np.random.uniform(-3, 0)
         # is equivalent to scipy.stats.loguniform(0.001, 0.1)
