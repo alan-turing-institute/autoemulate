@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.data.preprocessors import Standardizer
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
@@ -32,9 +31,6 @@ class TestPyTorchBackend:
             self.scheduler_setup(kwargs)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
-            self.preprocessor = Standardizer(
-                torch.Tensor([[-0.5]]), torch.Tensor([[0.5]])
-            )
 
         def forward(self, x):
             return self.linear(x)
@@ -109,24 +105,6 @@ class TestPyTorchBackend:
         y_train = 2 * x_train
         tuner = Tuner(x_train, y_train, n_iter=10)
         tuner.run(self.DummyModel)
-
-    def test_standardizer(self):
-        x_train = torch.Tensor(
-            [[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]]
-        )
-        x_train_preprocessed = self.model.preprocess(x_train)
-        assert isinstance(x_train_preprocessed, torch.Tensor)
-        assert torch.allclose(
-            x_train_preprocessed,
-            torch.Tensor([[3.0], [5.0], [7.0], [9.0], [11.0]]),
-        )
-
-    def test_standardizer_fail(self):
-        x_train = torch.Tensor([0.1, 2.0, 6.0, 0.2])
-        with pytest.raises(
-            ValueError, match="Expected 2D TensorLike, actual shape dim 1"
-        ):
-            self.model.preprocess(x_train)
 
     def test_tune_dataset(self):
         """
