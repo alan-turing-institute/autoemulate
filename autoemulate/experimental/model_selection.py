@@ -16,7 +16,7 @@ from autoemulate.experimental.types import (
     DeviceLike,
     DistributionLike,
     InputLike,
-    ModelConfig,
+    ModelParams,
     OutputLike,
     TensorLike,
 )
@@ -82,7 +82,7 @@ def cross_validate(  # noqa: PLR0913
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
-    model_config: ModelConfig,
+    model_config: ModelParams,
     x_transforms: list[AutoEmulateTransform] | None = None,
     y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",

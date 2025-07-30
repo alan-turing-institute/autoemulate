@@ -10,7 +10,7 @@ from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.model_selection import cross_validate
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.types import DeviceLike, InputLike, ModelConfig
+from autoemulate.experimental.types import DeviceLike, InputLike, ModelParams
 
 logger = logging.getLogger("autoemulate")
 
@@ -67,7 +67,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_splits: int = 5,
         seed: int | None = None,
         shuffle: bool = True,
-    ) -> tuple[list[list[float]], list[ModelConfig]]:
+    ) -> tuple[list[list[float]], list[ModelParams]]:
         """
         Run randomised hyperparameter search for a given model.
 
@@ -95,7 +95,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
             The validation scores and parameter values used in each search iteration.
         """
         # keep track of what parameter values tested and how they performed
-        model_config_tested: list[ModelConfig] = []
+        model_config_tested: list[ModelParams] = []
         val_scores: list[list[float]] = []
 
         # Initialize retries and maximum number of retries for consecutive failed tuning

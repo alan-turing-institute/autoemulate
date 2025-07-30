@@ -19,7 +19,7 @@ from autoemulate.experimental.types import (
     NumpyLike,
     OutputLike,
     TensorLike,
-    TuneConfig,
+    TuneParams,
 )
 
 
@@ -134,7 +134,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
-    def get_tune_config() -> TuneConfig:
+    def get_tune_config() -> TuneParams:
         """
         Return a dictionary of hyperparameters to tune.
 
