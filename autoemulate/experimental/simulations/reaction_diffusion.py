@@ -148,17 +148,17 @@ def simulate_reaction_diffusion(  # noqa: PLR0913
         The parameters of the reaction-diffusion model. The first element is the
         reaction coefficient (beta) and the second element is the diffusion
         coefficient (d).
-    return_timeseries: bool, default=False
+    return_timeseries: bool
         Whether to return the full timeseries or just the spatial solution at the final
-        time step.
-    n: int, default=32
-        Number of spatial points in each direction.
-    L: int, default=20
-        Domain size in X and Y directions.
-    T: float, default=10.0
-        Total time to simulate.
-    dt: float, default=0.1
-        Time step size.
+        time step. Defaults to False.
+    n: int
+        Number of spatial points in each direction. Defaults to 32.
+    L: int
+        Domain size in X and Y directions. Defaults to 20.
+    T: float
+        Total time to simulate. Defaults to 10.0.
+    dt: float
+        Time step size. Defaults to 0.1.
 
     Returns
     -------
