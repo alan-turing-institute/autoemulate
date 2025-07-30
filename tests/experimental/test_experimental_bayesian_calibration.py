@@ -1,5 +1,6 @@
 import pytest
 from autoemulate.experimental.calibration.bayes import BayesianCalibration
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
 )
@@ -7,7 +8,6 @@ from autoemulate.experimental.simulations.projectile import (
     Projectile,
     ProjectileMultioutput,
 )
-from autoemulate.experimental.types import TensorLike
 
 
 @pytest.mark.parametrize(

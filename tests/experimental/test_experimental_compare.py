@@ -2,8 +2,8 @@ import os
 import tempfile
 
 import pytest
-from autoemulate.experimental.compare import AutoEmulate
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.compare import AutoEmulate
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )

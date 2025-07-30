@@ -1,7 +1,7 @@
 import gpytorch
 import torch
 
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.core.types import TensorLike
 
 from .polynomial_features import PolynomialFeatures
 

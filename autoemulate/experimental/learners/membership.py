@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from ..types import GaussianLike, TensorLike
+from ..core.types import GaussianLike, TensorLike
 from .base import Active
 
 

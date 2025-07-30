@@ -2,11 +2,11 @@ import torch
 from sklearn.preprocessing import PolynomialFeatures
 from torch import nn
 
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class PolynomialRegression(PyTorchBackend):

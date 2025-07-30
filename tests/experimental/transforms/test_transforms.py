@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import torch
+from autoemulate.experimental.core.types import GaussianLike, TensorLike
 from autoemulate.experimental.emulators import GaussianProcess
 from autoemulate.experimental.transforms import (
     PCATransform,
@@ -8,7 +9,6 @@ from autoemulate.experimental.transforms import (
     VAETransform,
 )
 from autoemulate.experimental.transforms.base import _inverse_sample_gaussian_like
-from autoemulate.experimental.types import GaussianLike, TensorLike
 from sklearn.decomposition import PCA as SklearnPCA
 
 

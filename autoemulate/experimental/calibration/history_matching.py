@@ -3,11 +3,11 @@ import warnings
 
 import torch
 
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 logger = logging.getLogger("autoemulate")
 

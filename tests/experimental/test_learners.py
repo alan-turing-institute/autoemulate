@@ -2,13 +2,13 @@ from collections.abc import Iterable
 
 import numpy as np
 import torch
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
 )
 from autoemulate.experimental.learners import stream
 from autoemulate.experimental.simulations.base import Simulator
 from autoemulate.experimental.simulations.projectile import ProjectileMultioutput
-from autoemulate.experimental.types import TensorLike
 from tqdm import tqdm
 
 

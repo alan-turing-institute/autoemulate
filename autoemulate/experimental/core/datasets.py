@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from sklearn.model_selection import train_test_split
 
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.core.types import TensorLike
 
 data_dir = Path(__file__).parent.parent.parent / "data"
 

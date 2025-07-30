@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import mogp_emulator
 import torch
 
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.core.types import TensorLike
 
 
 class ExperimentalDesign(ABC):

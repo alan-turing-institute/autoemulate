@@ -4,8 +4,8 @@ import numpy as np
 import scipy as sp
 import torch
 
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import TensorLike
 
 
 class FlowProblem(Simulator):

@@ -4,15 +4,15 @@ from autoemulate.experimental.calibration.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,
 )
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
 )
 from autoemulate.experimental.simulations.epidemic import Epidemic
-from autoemulate.experimental.types import TensorLike
 
 from .test_experimental_base_simulator import MockSimulator
 

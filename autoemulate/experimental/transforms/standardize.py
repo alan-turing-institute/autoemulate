@@ -1,9 +1,9 @@
 import torch
 from torch.distributions import Transform, constraints
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.types import TensorLike
 
 
 class StandardizeTransform(AutoEmulateTransform):

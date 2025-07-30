@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
+from autoemulate.experimental.core.sensitivity_analysis import SensitivityAnalysis
 from autoemulate.experimental.emulators.random_forest import RandomForest
-from autoemulate.experimental.sensitivity_analysis import SensitivityAnalysis
 from autoemulate.experimental.simulations.projectile import (
     Projectile,
     ProjectileMultioutput,

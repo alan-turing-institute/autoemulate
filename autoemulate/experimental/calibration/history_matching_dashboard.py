@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import clear_output, display
 
-from autoemulate.experimental.types import NumpyLike, TensorLike
+from autoemulate.experimental.core.types import NumpyLike, TensorLike
 
 
 class HistoryMatchingDashboard:

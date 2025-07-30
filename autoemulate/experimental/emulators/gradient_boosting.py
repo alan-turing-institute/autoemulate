@@ -4,10 +4,10 @@ import numpy as np
 from scipy.stats import loguniform
 from sklearn.ensemble import GradientBoostingRegressor
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class GradientBoosting(SklearnBackend):

@@ -1,7 +1,7 @@
 import pytest
 import torch
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import TensorLike
 from torch import Tensor
 
 

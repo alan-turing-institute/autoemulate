@@ -9,11 +9,8 @@ from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
-from autoemulate.experimental.data.preprocessors import Preprocessor
-from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
-from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import (
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
     DistributionLike,
     GaussianLike,
     NumpyLike,
@@ -21,6 +18,9 @@ from autoemulate.experimental.types import (
     TensorLike,
     TuneConfig,
 )
+from autoemulate.experimental.data.preprocessors import Preprocessor
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
+from autoemulate.experimental.transforms.standardize import StandardizeTransform
 
 
 class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):

@@ -2,18 +2,18 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_model_device,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import DistributionLike
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
 )
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import DistributionLike
 
 GPS = [GaussianProcess, GaussianProcessCorrelated]
 

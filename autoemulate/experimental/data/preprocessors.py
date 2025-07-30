@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 import torch
-from autoemulate.experimental.types import TensorLike
+from autoemulate.experimental.core.types import TensorLike
 
 
 class Preprocessor(ABC):  # noqa: D101

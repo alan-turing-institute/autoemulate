@@ -4,10 +4,10 @@ import numpy as np
 from sklearn.svm import SVR
 from sklearn.utils.validation import check_X_y
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, NumpyLike, TensorLike
 from autoemulate.experimental.emulators.base import SklearnBackend
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
-from autoemulate.experimental.types import DeviceLike, NumpyLike, TensorLike
 
 
 class SupportVectorMachine(SklearnBackend):
