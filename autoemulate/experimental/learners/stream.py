@@ -268,7 +268,9 @@ class Distance(Input):
             The average minimum distance.
         """
         _, _, _ = x, y, Sigma  # Unused variables
-        distances = torch.cdist(x, self.x_train)
+        distances = torch.cdist(
+            x.to(self.emulator.device), self.x_train.to(self.emulator.device)
+        )
         min_dists, _ = distances.min(dim=1)
         return min_dists.mean()
 

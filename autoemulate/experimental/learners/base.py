@@ -119,8 +119,8 @@ class Active(Learner):
             k: []
             for k in ["mse", "r2", "rate", "logdet", "trace", "max_eigval", "n_queries"]
         }
-        self.mse = MeanSquaredError()
-        self.r2 = R2Score()
+        self.mse = MeanSquaredError(device=self.emulator.device)
+        self.r2 = R2Score(device=self.emulator.device)
         self.n_queries = 0
 
     def fit(self, *args):
@@ -144,7 +144,11 @@ class Active(Learner):
             # If x is not, we skip the point (typically for Stream learners)
             self.logger.info("Appending new training data and refitting emulator.")
             y_true = self.simulator.forward(x)
-            assert isinstance(y_true, TensorLike)
+            if y_true is None:
+                self.logger.warning("Simulator failed for query: %s", x)
+                return
+            y_true = y_true.to(self.emulator.device)
+            x = x.to(self.emulator.device)
             self.x_train = torch.cat([self.x_train, x])
             self.y_train = torch.cat([self.y_train, y_true])
             self.emulator.fit(self.x_train, self.y_train)
