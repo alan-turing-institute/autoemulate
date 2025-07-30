@@ -341,7 +341,7 @@ class ProbabilisticEmulator(Emulator):
 
 
 class GaussianEmulator(ProbabilisticEmulator):
-    """A base class for for Gaussian emulators."""
+    """A base class for Gaussian emulators."""
 
     supports_grad: bool = True
 
@@ -354,8 +354,8 @@ class GaussianEmulator(ProbabilisticEmulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
