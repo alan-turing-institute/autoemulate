@@ -69,7 +69,7 @@ jobs:
 
       - name: Run Tests with Coverage
         run: |
-          poetry run coverage run --source=. -m pytest
+          poetry run coverage run --source=. --omit="v0/*" -m pytest
           poetry run coverage xml -i -o coverage.xml
         env: 
           COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
