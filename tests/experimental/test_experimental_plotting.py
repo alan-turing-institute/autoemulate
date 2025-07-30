@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autoemulate.experimental import plotting
+from autoemulate.experimental.core import plotting
 
 
 def test_display_figure_jupyter(monkeypatch):

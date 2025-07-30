@@ -1,16 +1,16 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
+from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.radial_basis_functions import (
     RadialBasisFunctions,
 )
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 from scipy.interpolate import RBFInterpolator
 
 

@@ -5,10 +5,10 @@ import torch.nn.functional as F
 from torch import nn
 from torch.distributions import Transform, constraints
 
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike, TensorLike
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
-from autoemulate.experimental.types import DeviceLike, TensorLike
 
 
 class VAE(nn.Module, TorchDeviceMixin):

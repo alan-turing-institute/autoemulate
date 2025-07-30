@@ -1,12 +1,12 @@
 import pytest
 import torch
-from autoemulate.experimental.device import (
+from autoemulate.experimental.core.device import (
     SUPPORTED_DEVICES,
     check_torch_device_is_available,
 )
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.nn.mlp import MLP
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_mlp(sample_data_y1d, new_data_y1d):

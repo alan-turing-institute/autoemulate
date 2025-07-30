@@ -4,8 +4,8 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from autoemulate.experimental.core.results import Result  # , Results
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.results import Result  # , Results
 
 
 class ModelSerialiser:

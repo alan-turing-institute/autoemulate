@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+from autoemulate.experimental.core.results import Result, Results
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.results import Result, Results
 
 
 class DummyEmulator(TransformedEmulator):

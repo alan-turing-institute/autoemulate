@@ -7,12 +7,12 @@ from anytree import Node, RenderTree
 from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
+from autoemulate.experimental.core.logging_config import get_configured_logger
 from autoemulate.experimental.data.utils import ValidationMixin
 from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.logging_config import get_configured_logger
 from autoemulate.experimental.simulations.base import Simulator
 
-from ..types import GaussianLike, TensorLike
+from ..core.types import GaussianLike, TensorLike
 
 
 @dataclass(kw_only=True)

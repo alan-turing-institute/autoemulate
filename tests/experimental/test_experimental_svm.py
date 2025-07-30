@@ -1,9 +1,9 @@
 import pytest
 import torch
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.svm import SupportVectorMachine
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_svm(sample_data_y1d, new_data_y1d):

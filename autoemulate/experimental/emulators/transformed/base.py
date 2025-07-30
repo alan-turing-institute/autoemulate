@@ -2,21 +2,21 @@ from typing import cast
 
 from torch.distributions import ComposeTransform, Transform, TransformedDistribution
 
-from autoemulate.experimental.data.utils import ValidationMixin
-from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.emulators.base import Emulator
-from autoemulate.experimental.transforms.base import (
-    AutoEmulateTransform,
-    _inverse_sample_gaussian_like,
-    _inverse_sample_gaussian_process_like,
-)
-from autoemulate.experimental.types import (
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
     DeviceLike,
     DistributionLike,
     GaussianLike,
     GaussianProcessLike,
     OutputLike,
     TensorLike,
+)
+from autoemulate.experimental.data.utils import ValidationMixin
+from autoemulate.experimental.emulators.base import Emulator
+from autoemulate.experimental.transforms.base import (
+    AutoEmulateTransform,
+    _inverse_sample_gaussian_like,
+    _inverse_sample_gaussian_process_like,
 )
 
 

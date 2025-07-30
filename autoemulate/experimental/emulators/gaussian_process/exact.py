@@ -12,8 +12,14 @@ from autoemulate.experimental.callbacks.early_stopping import (
     EarlyStopping,
     EarlyStoppingException,
 )
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
+    DeviceLike,
+    GaussianLike,
+    GaussianProcessLike,
+    TensorLike,
+)
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import GaussianProcessEmulator
 from autoemulate.experimental.emulators.gaussian_process import (
     CovarModuleFn,
@@ -21,12 +27,6 @@ from autoemulate.experimental.emulators.gaussian_process import (
 )
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import (
-    DeviceLike,
-    GaussianLike,
-    GaussianProcessLike,
-    TensorLike,
-)
 
 from .kernel import (
     matern_3_2_kernel,

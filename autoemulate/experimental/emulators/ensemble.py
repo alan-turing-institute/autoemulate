@@ -3,7 +3,13 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
-from autoemulate.experimental.device import TorchDeviceMixin
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
+    DeviceLike,
+    GaussianLike,
+    TensorLike,
+    TuneParams,
+)
 from autoemulate.experimental.emulators.base import (
     DropoutTorchBackend,
     Emulator,
@@ -12,12 +18,6 @@ from autoemulate.experimental.emulators.base import (
 from autoemulate.experimental.emulators.nn.mlp import MLP
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
 from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import (
-    DeviceLike,
-    GaussianLike,
-    TensorLike,
-    TuneParams,
-)
 
 
 class Ensemble(GaussianEmulator):

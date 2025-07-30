@@ -1,7 +1,7 @@
 import pandas as pd
 
+from autoemulate.experimental.core.types import ModelParams
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
-from autoemulate.experimental.types import ModelParams
 
 
 class Result:

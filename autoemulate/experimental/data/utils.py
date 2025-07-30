@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 import torch
-from autoemulate.experimental.types import (
+from autoemulate.experimental.core.types import (
     InputLike,
     OutputLike,
     TensorLike,

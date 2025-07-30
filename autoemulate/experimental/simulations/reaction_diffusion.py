@@ -3,8 +3,8 @@ import torch
 from numpy.fft import fft2, ifft2
 from scipy.integrate import solve_ivp
 
+from autoemulate.experimental.core.types import NumpyLike, TensorLike
 from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike, TensorLike
 
 integrator_keywords = {}
 integrator_keywords["rtol"] = 1e-12

@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 import torch
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.tuner import Tuner
 from autoemulate.experimental.data.preprocessors import Standardizer
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.emulators.base import PyTorchBackend
-from autoemulate.experimental.tuner import Tuner
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 

@@ -7,15 +7,15 @@ from linear_operator.operators import DiagLinearOperator
 from torch.distributions import Transform
 from typing_extensions import Self
 
-from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
-from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.transforms.utils import make_positive_definite
-from autoemulate.experimental.types import (
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import (
     DistributionLike,
     GaussianLike,
     GaussianProcessLike,
     TensorLike,
 )
+from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
+from autoemulate.experimental.transforms.utils import make_positive_definite
 
 
 class AutoEmulateTransform(

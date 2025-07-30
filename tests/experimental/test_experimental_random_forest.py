@@ -1,8 +1,8 @@
 import pytest
 import torch
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.random_forest import RandomForest
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_rf(sample_data_y1d, new_data_y1d):

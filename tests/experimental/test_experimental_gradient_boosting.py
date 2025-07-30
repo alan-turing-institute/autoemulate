@@ -1,7 +1,7 @@
 import pytest
+from autoemulate.experimental.core.tuner import Tuner
+from autoemulate.experimental.core.types import TensorLike
 from autoemulate.experimental.emulators.gradient_boosting import GradientBoosting
-from autoemulate.experimental.tuner import Tuner
-from autoemulate.experimental.types import TensorLike
 
 
 def test_predict_gb(sample_data_y1d, new_data_y1d):
