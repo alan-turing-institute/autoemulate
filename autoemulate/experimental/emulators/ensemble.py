@@ -268,10 +268,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         samples = []
         with torch.set_grad_enabled(with_grad):
             for _ in range(self.n_samples):
-                # apply any preprocessing the model expects
-                x_proc = self.model.preprocess(x)
-
-                out = self.model.forward(x_proc)
+                out = self.model.forward(x)
                 # out: Tensor of shape (batch_size, output_dim)
                 samples.append(out)
 

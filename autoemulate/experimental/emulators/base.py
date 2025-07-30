@@ -9,7 +9,6 @@ from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
-from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.experimental.device import TorchDeviceMixin
 from autoemulate.experimental.transforms.standardize import StandardizeTransform
@@ -392,7 +391,7 @@ class GaussianProcessEmulator(GaussianEmulator):
         return pred
 
 
-class PyTorchBackend(nn.Module, Emulator, Preprocessor):
+class PyTorchBackend(nn.Module, Emulator):
     """
     `PyTorchBackend` provides a backend for PyTorch models.
 
@@ -410,18 +409,12 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     epochs: int = 10
     loss_history: ClassVar[list[float]] = []
     verbose: bool = False
-    preprocessor: Preprocessor | None = None
     loss_fn: nn.Module = nn.MSELoss()
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
     supports_grad: bool = True
     lr: float = 1e-1
     scheduler_cls: type[LRScheduler] | None = None
-
-    def preprocess(self, x: TensorLike) -> TensorLike:  # noqa: D102
-        if self.preprocessor is None:
-            return x
-        return self.preprocessor.preprocess(x)
 
     def loss_func(self, y_pred, y_true):
         """Loss function to be used for training the model."""
@@ -455,9 +448,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             batches = 0
 
             for x_batch, y_batch in dataloader:
-                # Preprocess x_batch
-                x = self.preprocess(x_batch)
-
                 # Forward pass
                 y_pred = self.forward(x_batch)
                 loss = self.loss_func(y_pred, y_batch)
@@ -535,7 +525,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         self.eval()
         with torch.set_grad_enabled(with_grad):
-            x = self.preprocess(x)
             return self(x)
 
 

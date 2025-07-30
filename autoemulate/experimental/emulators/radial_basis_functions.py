@@ -89,7 +89,6 @@ class RadialBasisFunctions(PyTorchBackend):
             msg = "Gradient calculation is not supported."
             raise ValueError(msg)
         self.eval()
-        x = self.preprocess(x)
         return self(x)
 
     @staticmethod
