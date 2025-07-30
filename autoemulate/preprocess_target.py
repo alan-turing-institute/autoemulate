@@ -15,8 +15,8 @@ from sklearn.utils.validation import check_is_fitted
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 
-from autoemulate.experimental.device import TorchDeviceMixin
-from autoemulate.experimental.types import DeviceLike
+from autoemulate.experimental.core.device import TorchDeviceMixin
+from autoemulate.experimental.core.types import DeviceLike
 
 
 def get_dim_reducer(
