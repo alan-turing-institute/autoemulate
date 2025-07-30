@@ -82,7 +82,7 @@ def cross_validate(  # noqa: PLR0913
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
-    model_config: ModelParams,
+    model_params: ModelParams,
     x_transforms: list[AutoEmulateTransform] | None = None,
     y_transforms: list[AutoEmulateTransform] | None = None,
     device: DeviceLike = "cpu",
@@ -100,7 +100,7 @@ def cross_validate(  # noqa: PLR0913
         The data to use for model training and validation.
     model: Emulator
         An instance of an Emulator subclass.
-    model_config: ModelConfig
+    model_params: ModelParams
         Model parameters to be used to construct model upon initialization. Passing an
         empty dictionary `{}` will use default parameters.
     device: DeviceLike
@@ -136,7 +136,7 @@ def cross_validate(  # noqa: PLR0913
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
-        model_kwargs = dict(model_config)
+        model_kwargs = dict(model_params)
         if "random_seed" in model_init_params:
             model_kwargs["random_seed"] = random_seed
 

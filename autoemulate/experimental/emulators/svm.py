@@ -123,7 +123,7 @@ class SupportVectorMachine(SklearnBackend):
         check_X_y(x, y, ensure_min_samples=2)
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         return {
             "kernel": ["rbf", "linear", "poly", "sigmoid"],

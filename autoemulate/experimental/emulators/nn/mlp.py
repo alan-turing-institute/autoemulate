@@ -125,9 +125,9 @@ class MLP(DropoutTorchBackend):
         return True
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
-        scheduler_params = MLP.scheduler_config()
+        scheduler_params = MLP.scheduler_params()
         return {
             "epochs": [100, 200],
             "layer_dims": [[8, 4], [16, 8], [32, 16], [64, 32, 16]],

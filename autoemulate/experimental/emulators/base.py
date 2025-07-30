@@ -134,7 +134,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
-    def get_tune_config() -> TuneParams:
+    def get_tune_params() -> TuneParams:
         """
         Return a dictionary of hyperparameters to tune.
 
@@ -166,18 +166,18 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         raise NotImplementedError(msg)
 
     @classmethod
-    def get_random_config(cls):
+    def get_random_params(cls):
         """Return a random set of params for the model."""
         return {
-            k: v[np.random.randint(len(v))] for k, v in cls.get_tune_config().items()
+            k: v[np.random.randint(len(v))] for k, v in cls.get_tune_params().items()
         }
 
     @classmethod
-    def scheduler_config(cls) -> dict:
+    def scheduler_params(cls) -> dict:
         """
-        Return a random configuration for the learning rate scheduler.
+        Return a random parameters for the learning rate scheduler.
 
-        This should be added to the `get_tune_config()` method of subclasses
+        This should be added to the `get_tune_params()` method of subclasses
         to allow tuning of the scheduler parameters.
         """
         all_params = [

@@ -144,7 +144,7 @@ class ModelSerialiser:
             id=row["id"],
             model_name=row["model_name"],
             model=model,
-            config=config,
+            params=config,
             r2_test=row["r2_test"],
             rmse_test=row["rmse_test"],
             r2_test_std=row["r2_test_std"],

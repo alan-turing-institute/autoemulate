@@ -1,8 +1,7 @@
-from typing import Any
-
 import pandas as pd
 
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
+from autoemulate.experimental.types import ModelParams
 
 
 class Result:
@@ -13,7 +12,7 @@ class Result:
         id: int,
         model_name: str,
         model: TransformedEmulator,
-        config: dict[str, Any],
+        params: ModelParams,
         r2_test: float,
         rmse_test: float,
         r2_train: float,
@@ -58,7 +57,7 @@ class Result:
         self.model = model
         self.x_transforms = model.x_transforms
         self.y_transforms = model.y_transforms
-        self.config = config
+        self.config = params
         self.r2_test = r2_test
         self.rmse_test = rmse_test
         self.r2_test_std = r2_test_std

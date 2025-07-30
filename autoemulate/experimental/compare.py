@@ -364,7 +364,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 id=id,
                                 model_name=transformed_emulator.untransformed_model_name,
                                 model=transformed_emulator,
-                                config=best_config_for_this_model,
+                                params=best_config_for_this_model,
                                 r2_test=r2_test,
                                 rmse_test=rmse_test,
                                 r2_test_std=r2_test_std,

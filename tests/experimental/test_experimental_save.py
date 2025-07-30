@@ -119,12 +119,12 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         y_transforms=None,
         model=GaussianProcess,
     )
-    config = GaussianProcess.get_random_config()
+    params = GaussianProcess.get_random_params()
     result = Result(
         id=12345,
         model_name="dummy_model",
         model=em,
-        config=config,
+        params=params,
         r2_test=0.9,
         r2_test_std=0.01,
         r2_train=0.95,

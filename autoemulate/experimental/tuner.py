@@ -104,7 +104,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         retries, max_retries = 0, 100
         while len(model_config_tested) < self.n_iter:
             # randomly sample hyperparameters and instantiate model
-            model_config = model_class.get_random_config()
+            model_params = model_class.get_random_params()
             try:
                 # Perform cross-validation on randomly sampled model config
                 scores = cross_validate(
@@ -113,7 +113,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     x_transforms=x_transforms,
                     y_transforms=y_transforms,
                     model=model_class,
-                    model_config=model_config,
+                    model_params=model_params,
                     device=self.device,
                     random_seed=None,
                 )
@@ -122,7 +122,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 retries = 0
 
                 # Store the model config and validation scores
-                model_config_tested.append(model_config)
+                model_config_tested.append(model_params)
                 val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
 
                 # Log the tuning iteration results
@@ -134,7 +134,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     self.n_iter,
                     np.mean(scores["r2"]),
                     np.std(scores["r2"]),
-                    str(model_config),
+                    str(model_params),
                 )
 
             except Exception as e:
@@ -143,7 +143,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 logger.warning(
                     "Failed tuning iteration %d with model config: %s: %s",
                     len(model_config_tested),
-                    json.dumps(model_config, default=str, separators=(",", ":")),
+                    json.dumps(model_params, default=str, separators=(",", ":")),
                     str(e),
                 )
                 # If many consecutive retries, log error and raise exception

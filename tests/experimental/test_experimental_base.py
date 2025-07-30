@@ -40,7 +40,7 @@ class TestPyTorchBackend:
             return self.linear(x)
 
         @staticmethod
-        def get_tune_config():
+        def get_tune_params():
             return {
                 "epochs": [100, 200, 300],
                 "batch_size": [16],
