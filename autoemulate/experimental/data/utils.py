@@ -13,9 +13,7 @@ from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_
 
 
 class ConversionMixin:
-    """
-    Mixin class to convert input data to pytorch Datasets and DataLoaders.
-    """
+    """Mixin class to convert input data to PyTorch Datasets and DataLoaders."""
 
     @classmethod
     def _convert_to_dataset(
@@ -23,9 +21,7 @@ class ConversionMixin:
         x: InputLike,
         y: InputLike | None = None,
     ) -> Dataset:
-        """
-        Convert input data to pytorch Dataset.
-        """
+        """Convert input data to PyTorch Dataset."""
         # Convert input to Dataset if not already
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
@@ -58,9 +54,7 @@ class ConversionMixin:
         batch_size: int = 16,
         shuffle: bool = True,
     ) -> DataLoader:
-        """
-        Convert input data to pytorch DataLoaders.
-        """
+        """Convert input data to PyTorch DataLoaders."""
         if isinstance(x, DataLoader) and y is None:
             dataloader = x
         elif isinstance(x, DataLoader) and y is not None:
@@ -79,9 +73,7 @@ class ConversionMixin:
         y: InputLike | None = None,
         dtype: torch.dtype = torch.float32,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-        """
-        Convert InputLike x, y to Tensor or tuple of Tensors.
-        """
+        """Convert InputLike x, y to Tensor or tuple of Tensors."""
         dataset = cls._convert_to_dataset(x, y)
 
         # Handle Subset of TensorDataset
@@ -133,9 +125,7 @@ class ConversionMixin:
         x: InputLike,
         y: InputLike | None = None,
     ) -> tuple[np.ndarray, np.ndarray | None]:
-        """
-        Convert InputLike x, y to tuple of numpy arrays.
-        """
+        """Convert InputLike x, y to tuple of numpy arrays."""
         if isinstance(x, np.ndarray) and (y is None or isinstance(y, np.ndarray)):
             return x, y
 
@@ -227,6 +217,7 @@ def set_random_seed(seed: int = 42, deterministic: bool = True):
 class ValidationMixin:
     """
     Mixin class for validation methods.
+
     This class provides static methods for checking the types and shapes of
     input and output data, as well as validating specific tensor shapes.
     """
@@ -235,9 +226,9 @@ class ValidationMixin:
     def _check(x: TensorLike, y: TensorLike | None):
         """
         Check the types and shape are correct for the input data.
+
         Checks are equivalent to sklearn's check_array.
         """
-
         if not isinstance(x, TensorLike):
             raise ValueError(f"Expected x to be TensorLike, got {type(x)}")
 
@@ -271,10 +262,7 @@ class ValidationMixin:
 
     @staticmethod
     def _check_output(output: OutputLike):
-        """
-        Check the types and shape are correct
-        for the output data.
-        """
+        """Check the types and shape are correct for the output data."""
         if not isinstance(output, OutputLike):
             raise ValueError(f"Expected OutputLike, got {type(output)}")
 
@@ -424,6 +412,8 @@ class ValidationMixin:
     @staticmethod
     def logdet(Sigma: TensorLike, dim: int) -> TensorLike:
         """
+        Return the log-determinant of the covariance matrix.
+
         Compute the log-determinant of the covariance matrix (D-optimal design
         criterion).
 
@@ -455,6 +445,8 @@ class ValidationMixin:
     @staticmethod
     def max_eigval(Sigma: TensorLike) -> TensorLike:
         """
+        Return the maximum eigenvalue of the covariance matrix.
+
         Compute the maximum eigenvalue of the covariance matrix (E-optimal design
         criterion).
 

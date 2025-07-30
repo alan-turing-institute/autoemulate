@@ -146,6 +146,8 @@ class Random(Stream):
 @dataclass(kw_only=True)
 class Threshold(Stream):
     """
+    Threshold-based active learning strategy.
+
     Threshold-based active learning strategy that queries samples based on a score
     threshold.
 
@@ -254,8 +256,7 @@ class Distance(Input):
         self, x: torch.Tensor, y: torch.Tensor, Sigma: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute the average minimum distance from the input samples to the training
-        data.
+        Compute average minimum distance from the input samples to the training data.
 
         Parameters
         ----------
@@ -395,8 +396,9 @@ class E_Optimal(Output):
 @dataclass(kw_only=True)
 class Adaptive(Threshold):
     """
-    Adaptive active learning strategy that adjusts the query threshold using PID
-    control.
+    Adaptive active learning strategy.
+
+    Learning strategy that adjusts the query threshold using PID control.
 
     The adaptive mechanism modifies the threshold based on proportional, integral, and
     derivative components. Errors can be computed using a sliding window to reduce
@@ -457,6 +459,8 @@ class Adaptive(Threshold):
         self, x: TensorLike | None = None
     ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
         """
+        Query new samples based on the adaptive threshold.
+
         Query new samples and adapt the threshold using a PID controller with a sliding
         window for error computation.
 
@@ -534,7 +538,7 @@ class Adaptive_A_Optimal(Adaptive, A_Optimal):
     (Inherits parameters from Adaptive and A_Optimal)
     """
 
-    def __post_init__(self):
+    def __post_init__(self):  # noqa: D105
         if self.min_threshold is not None and self.min_threshold < 0.0:
             msg = (
                 f"Minimum threashold ({self.min_threshold}) must be greater than or "
@@ -569,7 +573,7 @@ class Adaptive_E_Optimal(Adaptive, E_Optimal):
     (Inherits parameters from Adaptive and E_Optimal)
     """
 
-    def __post_init__(self):
+    def __post_init__(self):  # noqa: D105
         if self.min_threshold is not None and self.min_threshold < 0.0:
             msg = (
                 f"Minimum threshold ({self.min_threshold}) must be greater than or "

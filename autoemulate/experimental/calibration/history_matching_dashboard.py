@@ -9,6 +9,8 @@ from autoemulate.experimental.types import NumpyLike, TensorLike
 
 class HistoryMatchingDashboard:
     """
+    History Matching Dashboard.
+
     Interactive dashboard for exploring history matching with UI controls that adapt
     based on selected plot type.
     """
@@ -787,7 +789,6 @@ class HistoryMatchingDashboard:
 
     def display(self):
         """Display the dashboard."""
-
         heading = widgets.HTML(value="<h2>History Matching Dashboard</h2>")
 
         # Display the heading and instructions first

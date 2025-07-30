@@ -10,6 +10,23 @@ from gpytorch.kernels import (
 
 
 def rbf(n_features: int | None, n_outputs: torch.Size | None) -> RBFKernel:
+    """
+    Radial Basis Function (RBF) kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    RBFKernel
+        The initialized RBF kernel.
+    """
     k = RBFKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
@@ -24,6 +41,23 @@ def rbf(n_features: int | None, n_outputs: torch.Size | None) -> RBFKernel:
 def matern_5_2_kernel(
     n_features: int | None, n_outputs: torch.Size | None
 ) -> MaternKernel:
+    """
+    Matern 5/2 kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    MaternKernel
+        The initialized Matern 5/2 kernel.
+    """
     k = MaternKernel(
         nu=2.5,
         ard_num_dims=n_features,
@@ -39,6 +73,24 @@ def matern_5_2_kernel(
 def matern_3_2_kernel(
     n_features: int | None, n_outputs: torch.Size | None
 ) -> MaternKernel:
+    """
+    Matern 3/2 kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    MaternKernel
+        The initialized Matern 3/2 kernel.
+
+    """
     k = MaternKernel(
         nu=1.5,
         ard_num_dims=n_features,
@@ -52,6 +104,23 @@ def matern_3_2_kernel(
 
 
 def rq_kernel(n_features: int | None, n_outputs: torch.Size | None) -> RQKernel:
+    """
+    Rational Quadratic (RQ) kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    RQKernel
+        The initialized RQ kernel.
+    """
     k = RQKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
@@ -64,6 +133,23 @@ def rq_kernel(n_features: int | None, n_outputs: torch.Size | None) -> RQKernel:
 
 
 def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
+    """
+    Radial Basis Function (RBF) kernel plus a constant kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    Kernel
+        The initialized RBF kernel plus a constant kernel.
+    """
     rbf_kernel = RBFKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
@@ -75,6 +161,23 @@ def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> K
 
 # combinations
 def rbf_plus_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
+    """
+    Radial Basis Function (RBF) kernel plus a linear kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    Kernel
+        The initialized RBF kernel plus a linear kernel.
+    """
     rbf_kernel = RBFKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,
@@ -88,6 +191,23 @@ def rbf_plus_linear(n_features: int | None, n_outputs: torch.Size | None) -> Ker
 
 
 def matern_5_2_plus_rq(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
+    """
+    Matern 5/2 kernel plus a Rational Quadratic (RQ) kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    Kernel
+        The initialized Matern 5/2 kernel plus a Rational Quadratic kernel.
+    """
     matern_kernel = MaternKernel(
         nu=2.5,
         ard_num_dims=n_features,
@@ -105,6 +225,22 @@ def matern_5_2_plus_rq(n_features: int | None, n_outputs: torch.Size | None) -> 
 
 
 def rbf_times_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
+    """Radial Basis Function (RBF) kernel multiplied by a linear kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    Kernel
+        The initialized RBF kernel multiplied by a linear kernel.
+    """
     rbf_kernel = RBFKernel(
         ard_num_dims=n_features,
         batch_shape=n_outputs,

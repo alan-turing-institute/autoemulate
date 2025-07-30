@@ -31,6 +31,15 @@ from autoemulate.experimental.types import DeviceLike, DistributionLike, InputLi
 
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
+    """
+    Automated emulator fitting.
+
+    The AutoEmulate class is the main class of the AutoEmulate package.
+    It is used to set up and compare different emulator models on a given dataset.
+    It can also be used to summarise and visualise results, and to save and load models.
+
+    """
+
     def __init__(  # noqa: PLR0913
         self,
         x: InputLike,
@@ -48,10 +57,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         log_level: str = "progress_bar",
     ):
         """
-        The AutoEmulate class is the main class of the AutoEmulate package.
-        It is used to set up and compare different emulator models on a given dataset.
-        It can also be used to summarise and visualise results,
-        and to save and load models.
+        Initialize the AutoEmulate class.
 
         Parameters
         ----------
@@ -143,13 +149,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
+        """Return a list of all available emulators."""
         return ALL_EMULATORS
 
     @staticmethod
     def list_emulators() -> pd.DataFrame:
-        """
-        Return a dataframe with the model_name and short_name
-        of all available emulators.
+        """Return a dataframe with model names of all available emulators.
 
         Returns
         -------
@@ -167,6 +172,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def get_models(
         self, models: list[type[Emulator] | str] | None = None
     ) -> list[type[Emulator]]:
+        """Return a list of the model classes for comparisons."""
         if models is None:
             return self.all_emulators()
 
@@ -186,6 +192,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def get_transforms(
         self, transforms: list[AutoEmulateTransform | dict[str, object]]
     ) -> list[AutoEmulateTransform]:
+        """Process and return a list of transforms."""
         processed_transforms = []
         for transform in transforms:
             if isinstance(transform, dict):
@@ -201,6 +208,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def filter_models_if_multioutput(
         self, models: list[type[Emulator]], warn: bool
     ) -> list[type[Emulator]]:
+        """Filter models to only include those that support multi-output data."""
         updated_models = []
         for model in models:
             if not model.is_multioutput():
@@ -223,6 +231,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         r2_score,
         rmse_score,
     ):
+        """Log the comparison results."""
         msg = (
             "Comparison results:\n"
             f"Best Model: {best_model_name}, "
@@ -236,8 +245,16 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     def compare(self):
         """
-        Tune hyperparameters of all emulators using the train/validation data
-        and evaluate performance of all tuned emulators on the test data.
+        Compare different models on the provided dataset.
+
+        The method will:
+        - Loop over all combinations of x and y transforms and models.
+        - Set up the tuner with the training/validation data.
+        - Tune hyperparameters for each model.
+        - Fit the best model with the tuned hyperparameters.
+        - Evaluate the performance of the best model on the test data.
+        - Log the results.
+        - Save the best model and its configuration.
         """
         tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
         self.logger.info(
@@ -508,7 +525,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         path: str | Path | None = None,
         use_timestamp: bool = True,
     ) -> Path:
-        """Saves model to disk.
+        """Save model to disk.
 
         Parameters
         ----------
@@ -549,7 +566,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return self.model_serialiser._save_model(model, filename, path)
 
     def load(self, path: str | Path) -> Emulator | Result:
-        """Loads a stored model or result from disk.
+        """Load a stored model or result from disk.
 
         Parameters
         ----------

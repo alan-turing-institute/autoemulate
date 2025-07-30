@@ -30,7 +30,34 @@ class RadialBasisFunctions(PyTorchBackend):
         degree: int = 1,
         device: DeviceLike | None = None,
     ):
-        """Initializes a RadialBasisFunctions object."""
+        """Initialize a RadialBasisFunctions emulator.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input features.
+        y: TensorLike
+            Target values.
+        standardize_x: bool
+            Whether to standardize input features. Defaults to False.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to False.
+        smoothing: float
+            Smoothing parameter for the RBF interpolator. Defaults to 0.0.
+        kernel: str
+            Kernel type for the RBF interpolator.
+            Kernel type for the RBF interpolator. Options are:
+            "linear", "multiquadric", "thin_plate_spline", "cubic", "quintic",
+            "gaussian".
+            Defaults to "thin_plate_spline".
+        epsilon: float
+            Epsilon parameter for the RBF interpolator. Defaults to 1.0.
+        degree: int
+            Degree of the polynomial to be added to the RBF interpolator. Defaults to 1.
+        device: DeviceLike | None
+            Device to run the model on. If None, uses the default device. Defaults to
+            None.
+        """
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -54,6 +81,7 @@ class RadialBasisFunctions(PyTorchBackend):
         )
 
     def forward(self, x: TensorLike) -> TensorLike:
+        """Forward pass for the radial basis function emulator."""
         return self.model(x)
 
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
@@ -65,10 +93,12 @@ class RadialBasisFunctions(PyTorchBackend):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """Radial basis functions support multi-output."""
         return True
 
     @staticmethod
     def get_tune_config():
+        """Return a dictionary of hyperparameters to tune."""
         all_params = [
             {
                 "kernel": ["linear", "multiquadric"],

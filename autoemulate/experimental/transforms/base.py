@@ -34,12 +34,15 @@ class AutoEmulateTransform(
 
     # TODO: consider if the override also needs to consider DistributionLike case
     def __call__(self, x: TensorLike) -> TensorLike:
+        """Apply the transform to input tensor `x`."""
         output = super().__call__(x)
         assert isinstance(output, TensorLike)
         return output
 
     @abstractmethod
-    def fit(self, x: TensorLike): ...
+    def fit(self, x: TensorLike):
+        """Fit the transform to the input tensor `x`."""
+        ...
 
     def _check_is_fitted(self):
         """Check if the transform has been fitted and otherwise raise an error."""
@@ -180,14 +183,18 @@ class AutoEmulateTransform(
     @property
     def _basis_matrix(self) -> TensorLike:
         """
-        Constant basis matrix for transforming matrices. Subclasses should implement
-        this property (if possible) to return the appropriate basis matrix.
+        Constant basis matrix for transforming matrices.
+
+        Subclasses should implement this property (if possible) to return the
+        appropriate basis matrix.
         """
         msg = "This method should be implemented in subclasses."
         raise NotImplementedError(msg)
 
     def _expanded_basis_matrix(self, y: TensorLike) -> TensorLike:
         """
+        Return the expanded basis matrix for the transformation.
+
         Expanded basis matrix for the transformation of the number of samples in
         a given codomain `y` sample tensor.
 
@@ -221,6 +228,8 @@ class AutoEmulateTransform(
 
     def _batch_basis_matrix(self, y: TensorLike) -> TensorLike:
         """
+        Return the batch basis matrix for the transformation.
+
         Batch basis matrix for the transformation of the number of samples in
         a given codomain `y` sample tensor.
 
@@ -271,6 +280,8 @@ class AutoEmulateTransform(
         self, y: GaussianLike, n_samples: int = 1000, full_covariance: bool = True
     ) -> GaussianLike:
         """
+        Invert a `GaussianLike` distribution by sampling from the codomain.
+
         Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the domain
         through generating samples from `y` in the codomain and mapping those back
         to the original space `x`.
@@ -282,13 +293,13 @@ class AutoEmulateTransform(
         ----------
         y: GaussianLike
             The distribution in the codomain.
-        n_samples: int, default=1000
-            Number of samples to generate from the distribution `y`.
-        full_covariance: bool, default=True
+        n_samples: int
+            Number of samples to generate from the distribution `y`. Defaults to 1000.
+        full_covariance: bool
             If True, calculates a full covariance matrix from samples; otherwise,
             calculates only the diagonal of the covariance matrix. This is useful
             for a high-dimensional domain where full covariance might be
-            computationally expensive.
+            computationally expensive. Defaults to True.
 
         Returns
         -------
@@ -312,6 +323,8 @@ class AutoEmulateTransform(
 
     def _inverse_gaussian(self, y: GaussianLike) -> GaussianLike:
         r"""
+        Invert a `GaussianLike` distribution to the original space.
+
         Transforms a `GaussianLike` in the codomain to a `GaussianLike` in the
         domain by applying the inverse of the transform to the mean and covariance of
         `y` in the codomain.
@@ -413,6 +426,8 @@ def _inverse_sample_gaussian_like(
     full_covariance: bool = True,
 ) -> GaussianLike:
     """
+    Invert a `DistributionLike` to a `GaussianLike` through sampling from `y`.
+
     Transforms a `DistributionLike` to a `GaussianLike` through sampling from `y`.
 
     Parameters
@@ -421,13 +436,13 @@ def _inverse_sample_gaussian_like(
         A callable that applies a transformation to the generated samples.
     y: DistributionLike
         The distribution from which to sample.
-    n_samples: int, default=1000
-        Number of samples to generate from the distribution `y`.
-    full_covariance: bool, default=True
+    n_samples: int
+        Number of samples to generate from the distribution `y`. Defaults to 1000.
+    full_covariance: bool
         If True, calculates a full covariance matrix from samples; otherwise,
         calculates only the diagonal of the covariance matrix. This is useful
         for a high-dimensional domain where full covariance might be
-        computationally expensive.
+        computationally expensive. Defaults to True.
 
     Returns
     -------
@@ -488,6 +503,8 @@ def _inverse_sample_gaussian_process_like(
     full_covariance: bool = True,
 ) -> GaussianProcessLike:
     """
+    Invert a `GaussianProcessLike` distribution by sampling from the codomain.
+
     Transforms a `GaussianProcessLike` to another `GaussianProcessLike` through
     sampling from `y`.
 

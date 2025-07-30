@@ -8,11 +8,10 @@ from .polynomial_features import PolynomialFeatures
 
 class PolyMean(gpytorch.means.Mean):
     """
-    A geneneral polynomial mean module to be used to construct
-    `guassian_process_torch` emulators.
+    A general polynomial mean module for Gaussian Process emulators.
 
     Parameters
-    --------
+    ----------
     degree: int
         The degree of the polynomial for which we are defining
         the mapping.
@@ -21,7 +20,7 @@ class PolyMean(gpytorch.means.Mean):
     batch_shape: int | None
         Optional batch dimension.
     bias: bool
-        Flag for including a bias in the defnition of the polymial.
+        Flag for including a bias in the definition of the polynomial.
         If set to `False` polynomial includes weights only.
     """
 
@@ -57,6 +56,7 @@ class PolyMean(gpytorch.means.Mean):
             self.bias = None
 
     def forward(self, x: TensorLike):
+        """Forward pass through the polynomial mean module."""
         x_ = self.poly.transform(x)
         assert isinstance(self.weights, TensorLike)
         res = x_.matmul(self.weights).squeeze(-1)
@@ -65,4 +65,5 @@ class PolyMean(gpytorch.means.Mean):
         return res
 
     def __repr__(self):
-        return f"Polymean(degree={self.degree}, input_size={self.input_size})"
+        """Return the string representation of the PolyMean module."""
+        return f"PolyMean(degree={self.degree}, input_size={self.input_size})"

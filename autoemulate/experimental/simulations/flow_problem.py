@@ -10,6 +10,8 @@ from autoemulate.experimental.types import TensorLike
 
 class FlowProblem(Simulator):
     """
+    Flow Problem Simulator.
+
     The system simulated is a tube with an input flow rate at any given time.
     The tube is divided to `ncomp` compartments which allows for the study of
     the pressure and flow rate at various points in the tube.
@@ -24,6 +26,8 @@ class FlowProblem(Simulator):
         ncomp: int = 10,
     ):
         """
+        Initialize the FlowProblem simulator.
+
         Parameters
         ----------
         parameters_range: dict[str, tuple[float, float]]
@@ -71,7 +75,6 @@ class FlowProblem(Simulator):
             TensorLike
                 Presssure in the tube compartments at the end of the simulation.
         """
-
         # Convert tensor input to dictionary
         x_values = x.squeeze().tolist() if hasattr(x, "squeeze") else x
 

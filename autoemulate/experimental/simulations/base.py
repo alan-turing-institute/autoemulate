@@ -15,6 +15,7 @@ logger = logging.getLogger("autoemulate")
 class Simulator(ABC, ValidationMixin):
     """
     Base class for simulations. All simulators should inherit from this class.
+
     This class provides the interface and common functionality for different
     simulation implementations.
     """
@@ -26,6 +27,8 @@ class Simulator(ABC, ValidationMixin):
         log_level: str = "progress_bar",
     ):
         """
+        Initialize the simulator with parameter ranges and output names.
+
         Parameters
         ----------
         parameters_range: dict[str, tuple[float, float]]
@@ -52,6 +55,7 @@ class Simulator(ABC, ValidationMixin):
 
     @classmethod
     def simulator_name(cls) -> str:
+        """Get the name of the simulator class."""
         return cls.__name__
 
     @property
@@ -145,7 +149,6 @@ class Simulator(ABC, ValidationMixin):
         TensorLike
             Parameter samples (column order is given by self.param_names)
         """
-
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
         lhd = LatinHypercube(self.param_bounds)
@@ -171,8 +174,9 @@ class Simulator(ABC, ValidationMixin):
 
     def forward(self, x: TensorLike) -> TensorLike | None:
         """
-        Generate samples from input data using the simulator. Combines the
-        abstract method `_forward` with some validation checks.
+        Generate samples from input data using the simulator.
+
+        Combines the abstract method `_forward` with some validation checks.
 
         Parameters
         ----------

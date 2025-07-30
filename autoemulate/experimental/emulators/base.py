@@ -24,9 +24,11 @@ from autoemulate.experimental.types import (
 
 class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     """
-    The interface containing methods on emulators that are
-    expected by downstream dependents. This includes:
-    - `AutoEmulate`
+    Base class for all emulators.
+
+    This class provides the basic structure and methods for emulators in AutoEmulate.
+    It includes methods for fitting, predicting, and handling device management.
+
     """
 
     is_fitted_: bool = False
@@ -39,6 +41,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     def _fit(self, x: TensorLike, y: TensorLike): ...
 
     def fit(self, x: TensorLike, y: TensorLike):
+        """Fit the emulator to the provided data."""
         self._check(x, y)
         # Ensure x and y are tensors and 2D
         x, y = self._convert_to_tensors(x, y)
@@ -65,14 +68,17 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     @classmethod
     def model_name(cls) -> str:
+        """Return the full name of the model."""
         return cls.__name__
 
     @classmethod
     def short_name(cls) -> str:
         """
+        Return a short name for the model.
+
         Take the capital letters of the class name and return them as a lower case
-        string. For example, if the class name is `GaussianProcessExact`, this will
-        return `gpe`.
+        string. For example, if the class name is `GaussianProcess`, this will return
+        `gp`.
         """
         return "".join([c for c in cls.__name__ if c.isupper()]).lower()
 
@@ -81,6 +87,20 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         pass
 
     def predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
+        """Predict the output for the given input.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor to make predictions for.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
+
+        Returns
+        -------
+        OutputLike
+            The predicted output.
+        """
         if not self.is_fitted_:
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
@@ -115,6 +135,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     @staticmethod
     def get_tune_config() -> TuneConfig:
         """
+        Return a dictionary of hyperparameters to tune.
+
         The keys in the TuneConfig must be implemented as keyword arguments in the
         __init__ method of any subclasses.
 
@@ -144,6 +166,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     @classmethod
     def get_random_config(cls):
+        """Return a random set of params for the model."""
         return {
             k: v[np.random.randint(len(v))] for k, v in cls.get_tune_config().items()
         }
@@ -151,7 +174,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     @classmethod
     def scheduler_config(cls) -> dict:
         """
-        Returns a random configuration for the learning rate scheduler.
+        Return a random configuration for the learning rate scheduler.
+
         This should be added to the `get_tune_config()` method of subclasses
         to allow tuning of the scheduler parameters.
         """
@@ -210,7 +234,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def scheduler_setup(self, kwargs: dict | None = None):
         """
-        Setup the learning rate scheduler for the emulator.
+        Set up the learning rate scheduler for the emulator.
+
         Parameters
         ----------
         kwargs : dict | None
@@ -244,27 +269,50 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
 
 class DeterministicEmulator(Emulator):
-    """An emulator subclass that predicts with deterministic outputs returning a
-    `TensorLike`.
-    """
+    """A base class for deterministic emulators."""
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+        """Predict the output for the given input.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor to make predictions for.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
+
+        Returns
+        -------
+        TensorLike
+            The emulator predicted output for `x`.
+        """
         pred = super().predict(x, with_grad)
         assert isinstance(pred, TensorLike)
         return pred
 
 
 class ProbabilisticEmulator(Emulator):
-    """
-    An emulator subclass that predicts with probabilistic outputs returning a
-    `DistributionLike`.
-    """
+    """A base class for probabilistic emulators."""
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
+        """Predict the output distribution for the given input.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor to make predictions for.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
+
+        Returns
+        -------
+        DistributionLike
+            The emulator predicted distribution for `x`.
+        """
         pred = super().predict(x, with_grad)
         assert isinstance(pred, DistributionLike)
         return pred
@@ -292,30 +340,52 @@ class ProbabilisticEmulator(Emulator):
 
 
 class GaussianEmulator(ProbabilisticEmulator):
-    """
-    An emulator subclass that predicts with Gaussian outputs returning a
-    `GaussianLike`.
-    """
+    """A base class for Gaussian emulators."""
 
     supports_grad: bool = True
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
+        """Predict the Gaussian distribution for the given input.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor to make predictions for.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
+
+        Returns
+        -------
+        GaussianLike
+            The emulator predicted Gaussian distribution for `x`.
+        """
         pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianLike)
         return pred
 
 
 class GaussianProcessEmulator(GaussianEmulator):
-    """
-    A Gaussian Process emulator subclass that predicts with output
-    `GaussianProcessLike`.
-    """
+    """A base class for Gaussian Process emulators."""
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike: ...
     def predict(self, x: TensorLike, with_grad: bool = False) -> GaussianLike:
+        """Predict the Gaussian distribution for the given input.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor to make predictions for.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
+
+        Returns
+        -------
+        GaussianLike
+            The emulator predicted Gaussian distribution for `x`.
+        """
         pred = super().predict(x, with_grad)
         assert isinstance(pred, GaussianLike)
         return pred
@@ -323,10 +393,15 @@ class GaussianProcessEmulator(GaussianEmulator):
 
 class PyTorchBackend(nn.Module, Emulator):
     """
-    PyTorchBackend is a torch model and implements the base class.
-    This provides default implementations to further subclasses.
-    This means that models can subclass and only need to implement
-    `.forward()` to have an emulator to be run in `AutoEmulate`
+    `PyTorchBackend` provides a backend for PyTorch models.
+
+    The class provides the basic structure and methods for PyTorch-based emulators to
+    enable further subclassing and customization. This provides default implementations
+    to simplify model-specific subclasses by only needing to implement:
+      - `.__init__()`: the constructor for the model
+      - `.forward()`: the forward pass of the model
+      - `.get_tune_config()`: the hyperparameters to tune for the model
+
     """
 
     batch_size: int = 16
@@ -342,10 +417,7 @@ class PyTorchBackend(nn.Module, Emulator):
     scheduler_cls: type[LRScheduler] | None = None
 
     def loss_func(self, y_pred, y_true):
-        """
-        Loss function to be used for training the model.
-        This can be overridden by subclasses to use a different loss function.
-        """
+        """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
     def _fit(
@@ -363,7 +435,6 @@ class PyTorchBackend(nn.Module, Emulator):
         y: OutputLike or None
             Target values (not needed if x is a DataLoader).
         """
-
         self.train()  # Set model to training mode
 
         # Convert input to DataLoader if not already
@@ -459,10 +530,13 @@ class PyTorchBackend(nn.Module, Emulator):
 
 class SklearnBackend(DeterministicEmulator):
     """
-    SklearnBackend is a sklearn model and implements the base class.
-    This provides default implementations to further subclasses.
-    This means that models can subclass and only need to implement
-    `.fit()` and `.predict()` to have an emulator to be run in `AutoEmulate`
+    `SklearnBackend` provides a backend for sklearn models.
+
+    The class provides the basic structure and methods for sklearn-based emulators to
+    enable further subclassing and customization. This provides default implementations
+    to simplify model-specific subclasses by only needing to implement:
+      - `.__init__()`: the constructor for the model
+      - `.get_tune_config()`: the hyperparameters to tune for the model
     """
 
     model: BaseEstimator
@@ -499,6 +573,4 @@ class SklearnBackend(DeterministicEmulator):
 
 
 class DropoutTorchBackend(PyTorchBackend):
-    """
-    Torch backend model that is meant to support dropout.
-    """
+    """PyTorch backend model that is able to support dropout."""

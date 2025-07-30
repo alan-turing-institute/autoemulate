@@ -5,9 +5,7 @@ from torch import nn
 
 
 class EarlyStoppingException(Exception):
-    """
-    Custom exception to signal early stopping during training.
-    """
+    """Custom exception to signal early stopping during training."""
 
     def __init__(
         self, message: str = "Training stopped early due to early stopping criteria."
@@ -17,6 +15,8 @@ class EarlyStoppingException(Exception):
 
 class EarlyStopping:
     """
+    Early stopping callback for PyTorch models.
+
     Stop training early if the training loss did not improve in `patience` number of
     epochs by at least `threshold` value. Can be used inside the training loop of any
     PyTorch model.
@@ -65,12 +65,14 @@ class EarlyStopping:
         self.load_best = load_best
 
     def __getstate__(self):
+        """Return state without pickling the best model weights."""
         # Avoids having to save the module_ weights twice when pickling the model
         state = self.__dict__.copy()
         state["best_model_weights_"] = None
         return state
 
     def on_train_begin(self):
+        """Initialize early stopping parameters at the start of training."""
         if self.threshold_mode not in ["rel", "abs"]:
             raise ValueError(f"Invalid threshold mode: '{self.threshold_mode}'")
         self.misses_ = 0
@@ -91,7 +93,6 @@ class EarlyStopping:
         curr_score: float
             The current training loss.
         """
-
         if not self._is_score_improved(curr_score):
             self.misses_ += 1
         else:

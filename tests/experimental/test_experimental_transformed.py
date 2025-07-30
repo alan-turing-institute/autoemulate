@@ -3,7 +3,7 @@ import itertools
 import pytest
 import torch
 from autoemulate.experimental.data.utils import set_random_seed
-from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcessExact
+from autoemulate.experimental.emulators import ALL_EMULATORS, GaussianProcess
 from autoemulate.experimental.emulators.base import ProbabilisticEmulator
 from autoemulate.experimental.emulators.transformed.base import TransformedEmulator
 from autoemulate.experimental.transforms import (
@@ -222,7 +222,7 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     em = TransformedEmulator(
         x,
         y,
-        model=GaussianProcessExact,
+        model=GaussianProcess,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), PCATransform(n_components=1)],
     )
@@ -258,7 +258,7 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
     em = TransformedEmulator(
         x,
         y,
-        model=GaussianProcessExact,
+        model=GaussianProcess,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), VAETransform(latent_dim=1)],
     )

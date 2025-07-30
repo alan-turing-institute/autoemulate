@@ -117,6 +117,8 @@ class VAETransform(AutoEmulateTransform):
         cache_size: int = 0,
     ):
         """
+        Initialize the VAE transform parameters.
+
         Intialize the VAE transform parameters but defer intialization of the inner
         VAE model until fit is called when the input data is available.
 
@@ -124,9 +126,9 @@ class VAETransform(AutoEmulateTransform):
         ----------
         latent_dim: int
             The dimensionality of the VAE latent space. Defaults to 3.
-        hidden_layers: list of int, default=None
+        hidden_layers: list of int
             The number of hidden layers and their sizes in the VAE. If None, defaults to
-            [64, 32].
+            [64, 32]. Defaults to None.
         epochs: int
             The number of training epochs for the VAE. Defaults to 800.
         batch_size: int
@@ -147,7 +149,6 @@ class VAETransform(AutoEmulateTransform):
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
             for more details on caching. Defaults to 0.
         """
-
         Transform.__init__(self, cache_size=cache_size)
         self.latent_dim = latent_dim
         self.hidden_layers = hidden_layers or [64, 32]
@@ -171,9 +172,7 @@ class VAETransform(AutoEmulateTransform):
         ).to(self.device)
 
     def fit(self, x: TensorLike):
-        """
-        Fit the VAE on the training data.
-        """
+        """Fit the VAE on the training data."""
         TorchDeviceMixin.__init__(self, device=x.device)
 
         # Set random seed for reproducibility
@@ -230,6 +229,7 @@ class VAETransform(AutoEmulateTransform):
             return self.vae.decode(y)
 
     def log_abs_det_jacobian(self, x, y):
+        """Log abs det Jacobian not computable since transform is not bijective."""
         _, _ = x, y
         msg = "log det Jacobian not computable since transform is not bijective."
         raise RuntimeError(msg)

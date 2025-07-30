@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from autoemulate.experimental.emulators import GaussianProcessExact
+from autoemulate.experimental.emulators import GaussianProcess
 from autoemulate.experimental.transforms import (
     PCATransform,
     StandardizeTransform,
@@ -36,7 +36,7 @@ def test_transform_inverse_for_gaussians(sample_data_y2d, transform):
     x, y = sample_data_y2d
     transform.fit(y)
     z = transform(y)
-    gp = GaussianProcessExact(x, z)
+    gp = GaussianProcess(x, z)
     gp.fit(x, z)
     z_pred = gp.predict(x[: x.shape[0] // 2])
     for method in [transform._inverse_sample, transform._inverse_gaussian]:

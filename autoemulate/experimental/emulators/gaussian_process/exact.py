@@ -41,9 +41,9 @@ from .kernel import (
 from .mean import constant_mean, linear_mean, poly_mean, zero_mean
 
 
-class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
+class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     """
-    Gaussian Process Exact Emulator
+    Gaussian Process Emulator.
 
     This class implements an exact Gaussian Process emulator using the GPyTorch library
 
@@ -75,7 +75,7 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         **kwargs,
     ):
         """
-        Initialize the GaussianProcessExact emulator.
+        Initialize the GaussianProcess emulator.
 
         Parameters
         ----------
@@ -83,27 +83,27 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
         y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
-        likelihood_cls: type[MultitaskGaussianLikelihood],
-            default=MultitaskGaussianLikelihood
+        likelihood_cls: type[MultitaskGaussianLikelihood]
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
-        mean_module_fn: MeanModuleFn, default=constant_mean
-            Function to create the mean module.
-        covar_module_fn: CovarModuleFn, default=rbf
-            Function to create the covariance module.
-        posterior_predictive: bool, default=False
+        mean_module_fn: MeanModuleFn
+            Function to create the mean module. Defaults to `constant_mean`.
+        covar_module_fn: CovarModuleFn
+            Function to create the covariance module. Defaults to `rbf`.
+        posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
             False, it will return the posterior distribution over the modelled function.
-        epochs: int, default=50
-            Number of training epochs.
-        lr: float, default=2e-1
-            Learning rate for the optimizer.
+            Defaults to False.
+        epochs: int
+            Number of training epochs. Defaults to 50.
+        lr: float
+            Learning rate for the optimizer. Defaults to 2e-1.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        device: DeviceLike | None, default=None
+        device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
-            GPU).
+            GPU). Defaults to None.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -151,9 +151,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def is_multioutput():
+        """GaussianProcess supports multioutput."""
         return True
 
     def forward(self, x: TensorLike):
+        """Forward pass of the Gaussian Process model."""
         mean = self.mean_module(x)
         assert isinstance(mean, torch.Tensor)
         covar = self.covar_module(x)
@@ -274,7 +276,8 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
 
     @staticmethod
     def get_tune_config():
-        scheduler_config = GaussianProcessExact.scheduler_config()
+        """Return the hyperparameters to tune for the Gaussian Process model."""
+        scheduler_config = GaussianProcess.scheduler_config()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -300,11 +303,11 @@ class GaussianProcessExact(GaussianProcessEmulator, gpytorch.models.ExactGP):
         }
 
 
-class GaussianProcessExactCorrelated(GaussianProcessExact):
+class GaussianProcessCorrelated(GaussianProcess):
     """
     Multioutput exact GP implementation with correlated task covariance.
 
-    This class extends the `GaussianProcessExact` to support correlated task covariance
+    This class extends the `GaussianProcess` to support correlated task covariance
     by using a `MultitaskKernel` with a rank-1 covariance factor and a `MultitaskMean`
     for the mean function.
 
@@ -331,7 +334,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         **kwargs,
     ):
         """
-        Initialize the GaussianProcessExactCorrelated emulator.
+        Initialize the GaussianProcessCorrelated emulator.
 
         Parameters
         ----------
@@ -339,33 +342,32 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
         y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
-        likelihood_cls: type[MultitaskGaussianLikelihood],
-            default=MultitaskGaussianLikelihood
+        likelihood_cls: type[MultitaskGaussianLikelihood]
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
-        mean_module_fn: MeanModuleFn, default=constant_mean
-            Function to create the mean module.
-        covar_module_fn: CovarModuleFn, default=rbf
-            Function to create the covariance module.
-        posterior_predictive: bool, default=False
+        mean_module_fn: MeanModuleFn
+            Function to create the mean module. Defaults to `constant_mean`.
+        covar_module_fn: CovarModuleFn
+            Function to create the covariance module. Defaults to `rbf`.
+        posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
             False, it will return the posterior distribution over the modelled function.
-        epochs: int, default=50
+            Defaults to False.
+        epochs: int
             Number of training epochs.
-        activation: type[nn.Module], default=nn.ReLU
-            Activation function to use in the model.
-        lr: float, default=2e-1
-            Learning rate for the optimizer.
+        activation: type[nn.Module]
+            Activation function to use in the model. Defaults to `nn.ReLU`.
+        lr: float
+            Learning rate for the optimizer. Defaults to 2e-1.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        seed: int | None, default=None
-            Random seed for reproducibility. If None, no seed is set.
-        device: DeviceLike | None, default=None
+        seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
-            GPU).
+            GPU). Defaults to None.
         """
-
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
 
@@ -417,6 +419,7 @@ class GaussianProcessExactCorrelated(GaussianProcessExact):
         self.to(self.device)
 
     def forward(self, x):
+        """Forward pass of the Gaussian Process Correlated model."""
         mean_x = self.mean_module(x)
         assert isinstance(mean_x, TensorLike)
         covar_x = self.covar_module(x)

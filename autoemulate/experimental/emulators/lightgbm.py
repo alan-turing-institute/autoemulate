@@ -43,7 +43,69 @@ class LightGBM(DeterministicEmulator):
         verbose: int = -1,
         device: DeviceLike = "cpu",
     ):
-        """Initializes a LightGBM object."""
+        """Initialize a LightGBM object.
+
+        Parameters
+        ----------
+        x: TensorLike | None
+            Input features. If None, the model will be fitted later. Defaults to None.
+        y: TensorLike | None
+            Target values. If None, the model will be fitted later. Defaults to None.
+        standardize_x: bool
+            Whether to standardize input features. Defaults to None.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to None.
+        boosting_type: str
+            Type of boosting to use. Options are "gbdt", "dart", "goss", "rf". Defaults
+            to "gbdt".
+        num_leaves: int
+            Maximum number of leaves in one tree. Defaults to 31.
+        max_depth: int
+            Maximum depth of the tree. -1 means no limit. Defaults to -1.
+        learning_rate: float
+            Learning rate shrinks the contribution of each new tree. Defaults to 0.1.
+        n_estimators: int
+            The number of boosting stages to be run. Defaults to 100.
+        subsample_for_bin: int
+            Number of samples for constructing bins. Defaults to 200000.
+        objective: str | None
+            Objective function to be optimized. If None, defaults to "regression".
+            Defaults to None.
+        class_weight: dict | str | None
+            Class weights for multi-class classification. If None, all classes are
+            assumed to have equal weight. Defaults to None.
+        min_split_gain: float
+            Minimum loss reduction required to make a further partition on a leaf node.
+            Defaults to 0.0.
+        min_child_weight: float
+            Minimum sum of instance weight (hessian) needed in a child.
+            Defaults to 0.001.
+        min_child_samples: int
+            Minimum number of data points in a child. Defaults to 20.
+        subsample: float
+            Fraction of samples to be used for fitting the individual base learners.
+            Defaults to 1.0.
+        colsample_bytree: float
+            Fraction of features to be used for fitting the individual base learners.
+            Defaults to 1.0.
+        reg_alpha: float
+            L1 regularization term on weights. Defaults to 0.0.
+        reg_lambda: float
+            L2 regularization term on weights. Defaults to 0.0.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
+        n_jobs: int | None
+            Number of parallel threads used to run LightGBM. If None, uses all available
+            cores. Defaults to 1.
+        importance_type: str
+            Type of feature importance to be calculated. Options are "split", "gain",
+            "cover", "total_gain", "total_cover". Defaults to "split".
+        verbose: int
+            Verbosity of the output. -1 means no output, 0 means warnings only,
+            1 means info, 2 means debug.
+        device: DeviceLike
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to "cpu".
+        """
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device)
         self.x_transform = StandardizeTransform() if standardize_x else None
@@ -92,21 +154,15 @@ class LightGBM(DeterministicEmulator):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """LightGBM does not support multi-output."""
         return False
 
     def _fit(self, x: TensorLike, y: TensorLike):
-        """
-        Fits the emulator to the data.
-        The model expects the input data to be:
-            x (features): 2D array
-            y (target): 1D array
-        """
         x_np, y_np = self._convert_to_numpy(x, y)
         self.n_features_in_ = x_np.shape[1]
         self.model_.fit(x_np, y_np)
 
     def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike:
-        """Predicts the output of the emulator for a given input."""
         if with_grad:
             msg = "Gradient calculation is not supported."
             raise ValueError(msg)
@@ -117,6 +173,7 @@ class LightGBM(DeterministicEmulator):
 
     @staticmethod
     def get_tune_config():
+        """Return a dictionary of hyperparameters to tune."""
         # Note: 10 ** np.random.uniform(-3, 0)
         # is equivalent to scipy.stats.loguniform(0.001, 0.1)
         return {

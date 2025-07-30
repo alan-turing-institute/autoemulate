@@ -8,6 +8,8 @@ def make_positive_definite(
     cov, min_jitter: float = 1e-6, max_tries: int = 3, clamp_eigvals: bool = False
 ):
     """
+    Ensure a covariance matrix is positive definite.
+
     Ensure a covariance matrix is positive definite by:
         1. adding increasing amounts of jitter to the diagonal and symmetrizing
            the matrix
@@ -22,15 +24,15 @@ def make_positive_definite(
     ----------
     cov: torch.Tensor
         The covariance matrix to be made positive definite. Must be a 2D or 3D tensor.
-    min_jitter: float, default=1e-6
+    min_jitter: float
         Starting value for jitter to add to the diagonal. Jitter is increased by
-        powers of 10 for each attempt.
-    max_tries: int, default=3
+        powers of 10 for each attempt. Defaults to 1e-6.
+    max_tries: int
         Number of attempts to add jitter before moving to eigenvalue clamping
-        (if enabled) or raising an error.
-    clamp_eigvals: bool, default=False
+        (if enabled) or raising an error. Defaults to 3.
+    clamp_eigvals: bool
         Whether to attempt eigenvalue clamping if adding jitter fails. If False,
-        will raise an error after max_tries jitter attempts.
+        will raise an error after max_tries jitter attempts. Defaults to False.
 
     Returns
     -------
@@ -44,7 +46,6 @@ def make_positive_definite(
     RuntimeError
         If the matrix cannot be made positive definite after all attempts.
     """
-
     # If already positive definite, return as is
     try:
         torch.linalg.cholesky(cov)

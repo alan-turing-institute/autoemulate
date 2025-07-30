@@ -56,7 +56,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
     Attributes
     ----------
-
     x_transforms: list[AutoEmulateTransform]
         List of transformations applied to input data (x) in sequential order.
     model: Emulator
@@ -175,9 +174,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
             New input training data tensor of shape `(n_samples, n_features)`.
         y: TensorLike
             New target training data tensor of shape `(n_samples, n_targets)`.
-        retrain_transforms: bool, default=False
+        retrain_transforms: bool
             Whether to retrain the transforms on the new data. If False,
-            uses the existing fitted transforms from initialization.
+            uses the existing fitted transforms from initialization. Defaults to False.
 
         Notes
         -----
@@ -210,8 +209,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
     def _transform_y_tensor(self, y: TensorLike) -> TensorLike:
         """
-        Transform the target tensor `y` using `y_transforms` returning a
-        `TensorLike`.
+        Transform the target tensor `y` using `y_transforms` returning a `TensorLike`.
 
         Parameters
         ----------
@@ -281,6 +279,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self, y_t: DistributionLike
     ) -> GaussianLike | GaussianProcessLike:
         """
+        Invert the transformed distribution `y_t` by sampling.
+
         Invert the transformed distribution `y_t` by sampling and calculating
         empirical mean and covariance from the samples in the original space to
         parameterize a `GaussianLike` distribution.
@@ -409,6 +409,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
     @staticmethod
     def is_multioutput() -> bool:
+        """Not implemented for TransformedEmulator.
+
+        TransformedEmulator does not implement is_multioutput as a staticmethod
+        since it depends on the emulator instance.
+        """
         msg = (
             "TransformedEmulator does not implement is_multioutput as a staticmethod"
             "since it depends on the emulator instance."

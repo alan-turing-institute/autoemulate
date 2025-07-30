@@ -13,6 +13,8 @@ from autoemulate.experimental.types import DeviceLike, DistributionLike, TensorL
 
 class BayesianCalibration(TorchDeviceMixin):
     """
+    Bayesian calibration using Markov Chain Monte Carlo (MCMC).
+
     Bayesian calibration estimates the probability distribution over input parameters
     given observed data, providing uncertainty estimates.
     """
@@ -120,9 +122,7 @@ class BayesianCalibration(TorchDeviceMixin):
             raise ValueError(msg)
 
     def _get_kernel(self, sampler: str, **sampler_kwargs):
-        """
-        Get the appropriate MCMC kernel based on sampler choice.
-        """
+        """Get the appropriate MCMC kernel based on sampler choice."""
         sampler = sampler.lower()
 
         if sampler == "nuts":
@@ -158,7 +158,6 @@ class BayesianCalibration(TorchDeviceMixin):
             Whether to run the model with existing samples to generate posterior
             predictive distribution. Used with `pyro.infer.Predictive`.
         """
-
         # Pre-allocate tensor for all input parameters, shape [1, n_inputs]
         param_list = []
         # Each param is either sampled (if calibrated) or set to a constant value
@@ -234,7 +233,6 @@ class BayesianCalibration(TorchDeviceMixin):
         MCMC
             The Pyro MCMC object. Methods include `summary()` and `get_samples()`.
         """
-
         # Check initial param values match number of chains
 
         if initial_params is not None:

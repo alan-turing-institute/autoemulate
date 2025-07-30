@@ -26,6 +26,7 @@ class StandardizeTransform(AutoEmulateTransform):
         Transform.__init__(self, cache_size=0)
 
     def fit(self, x: TensorLike):
+        """Fit the StandardizeTransform to the data."""
         TorchDeviceMixin.__init__(self, device=x.device)
 
         self.check_matrix(x)
@@ -45,6 +46,7 @@ class StandardizeTransform(AutoEmulateTransform):
         return y * self.std + self.mean
 
     def log_abs_det_jacobian(self, x, y):
+        """Compute the log absolute determinant of the Jacobian."""
         _, _ = x, y
         self._check_is_fitted()
         return torch.abs(self.std).log().sum()
