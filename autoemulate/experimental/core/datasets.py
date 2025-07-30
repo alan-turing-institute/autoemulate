@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 from autoemulate.experimental.core.types import TensorLike
 
-data_dir = Path(__file__).parent.parent.parent / "data"
+data_dir = Path(__file__).parent.parent.parent.parent / "data"
 
 
 def fetch_data(
