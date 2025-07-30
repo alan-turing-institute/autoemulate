@@ -12,13 +12,6 @@ chapters:
   - file: getting-started/installation
   - file: getting-started/quickstart
 
-- file: tutorials/index
-  sections:
-  - file: tutorials/01_start
-  - file: tutorials/02_speed
-  - file: tutorials/03_emulation_sensitivity
-  - file: tutorials/05_reaction_diffusion
-
 - file: experimental/index
   sections:
   - file: experimental/tutorials/emulation/index
