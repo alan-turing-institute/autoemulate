@@ -1,6 +1,5 @@
 import itertools
 
-import gpytorch
 import pytest
 import torch
 from autoemulate.experimental.data.utils import set_random_seed
@@ -13,11 +12,6 @@ from autoemulate.experimental.emulators.gaussian_process.exact import (
     GaussianProcessExact,
     GaussianProcessExactCorrelated,
 )
-from autoemulate.experimental.emulators.gaussian_process.kernel import (
-    rbf,
-    rbf_times_linear,
-)
-from autoemulate.experimental.emulators.gaussian_process.mean import constant_mean
 from autoemulate.experimental.tuner import Tuner
 from autoemulate.experimental.types import DistributionLike
 
@@ -27,13 +21,7 @@ GPS = [GaussianProcessExact, GaussianProcessExactCorrelated]
 @pytest.mark.parametrize("emulator", GPS)
 def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d, emulator):
     x, y = sample_data_y1d
-    gp = emulator(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf,
-    )
+    gp = emulator(x, y)
     gp.fit(x, y)
     x2, _ = new_data_y1d
     y_pred = gp.predict(x2)
@@ -50,13 +38,7 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d, emulator):
 def test_multioutput_gp(sample_data_y2d, new_data_y2d, emulator):
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
-    gp = emulator(
-        x,
-        y,
-        gpytorch.likelihoods.MultitaskGaussianLikelihood,
-        constant_mean,
-        rbf_times_linear,
-    )
+    gp = emulator(x, y)
     gp.fit(x, y)
     y_pred = gp.predict(x2)
     assert isinstance(y_pred, DistributionLike)
