@@ -5,13 +5,7 @@ format: jb-book
 root: index
 chapters:
 
-- file: getting-started/index
-  sections:
-  # - file: getting-started/overview
-  # - file: getting-started/data_requirements
-  - file: getting-started/installation
-  # - file: getting-started/quickstart
-
+- file: installation
 - file: tutorials/index
   sections:
   - file: tutorials/emulation/index
