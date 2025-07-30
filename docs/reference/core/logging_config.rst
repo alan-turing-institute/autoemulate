@@ -1,7 +1,7 @@
-autoemulate.simulations.epidemic
+autoemulate.core.logging_config
 ============================================
 
-.. automodule:: autoemulate.simulations.epidemic
+.. automodule:: autoemulate.core.logging_config
    :members:
    :undoc-members:
    :show-inheritance:

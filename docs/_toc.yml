@@ -10,24 +10,24 @@ chapters:
   # - file: getting-started/overview
   # - file: getting-started/data_requirements
   - file: getting-started/installation
-  - file: getting-started/quickstart
+  # - file: getting-started/quickstart
 
-- file: experimental/index
+- file: index
   sections:
-  - file: experimental/tutorials/emulation/index
+  - file: tutorials/emulation/index
     sections:
-    - file: experimental/tutorials/emulation/01_quickstart
-    - file: experimental/tutorials/emulation/02_dim_reduction
-  - file: experimental/tutorials/simulator/index
+    - file: tutorials/emulation/01_quickstart
+    - file: tutorials/emulation/02_dim_reduction
+  - file: tutorials/simulator/index
     sections:
-    - file: experimental/tutorials/simulator/01_custom_simulations
-    - file: experimental/tutorials/simulator/02_active_learning
-    - file: experimental/tutorials/simulator/03_history_matching
-  - file: experimental/tutorials/tasks/index
+    - file: tutorials/simulator/01_custom_simulations
+    - file: tutorials/simulator/02_active_learning
+    - file: tutorials/simulator/03_history_matching
+  - file: tutorials/tasks/index
     sections:
-    - file: experimental/tutorials/tasks/01_emulation_sensitivity
-    - file: experimental/tutorials/tasks/02_history_matching
-    - file: experimental/tutorials/tasks/03_bayes_calibration
+    - file: tutorials/tasks/01_emulation_sensitivity
+    - file: tutorials/tasks/02_history_matching
+    - file: tutorials/tasks/03_bayes_calibration
 
 - file: community/index
   sections:
@@ -41,36 +41,36 @@ chapters:
     - file: community/faq/faq-users
     - file: community/faq/faq-contributors
 
-- file: reference/experimental/index
+- file: reference/index
   sections:
-  - file: reference/experimental/calibration/index
+  - file: reference/calibration/index
     sections:
-    - file: reference/experimental/calibration/bayes
-    - file: reference/experimental/calibration/history_matching
-    - file: reference/experimental/calibration/history_matching_dashboard
-  - file: reference/experimental/core/index
+    - file: reference/calibration/bayes
+    - file: reference/calibration/history_matching
+    - file: reference/calibration/history_matching_dashboard
+  - file: reference/core/index
     sections:
-    - file: reference/experimental/core/compare
-    - file: reference/experimental/core/datasets
-    - file: reference/experimental/core/model_selection
-    - file: reference/experimental/core/plotting
-    - file: reference/experimental/core/sensitivity_analysis
-    - file: reference/experimental/core/tuner
-  - file: reference/experimental/emulators/index
+    - file: reference/core/compare
+    - file: reference/core/datasets
+    - file: reference/core/model_selection
+    - file: reference/core/plotting
+    - file: reference/core/sensitivity_analysis
+    - file: reference/core/tuner
+  - file: reference/emulators/index
     sections:
-    - file: reference/experimental/emulators/base
-    - file: reference/experimental/emulators/ensemble
-    - file: reference/experimental/emulators/gradient_boosting
-    - file: reference/experimental/emulators/lightgbm
-    - file: reference/experimental/emulators/polynomials
-    - file: reference/experimental/emulators/radial_basis_functions
-    - file: reference/experimental/emulators/random_forest
-    - file: reference/experimental/emulators/svm
-  - file: reference/experimental/simulations/index
+    - file: reference/emulators/base
+    - file: reference/emulators/ensemble
+    - file: reference/emulators/gradient_boosting
+    - file: reference/emulators/lightgbm
+    - file: reference/emulators/polynomials
+    - file: reference/emulators/radial_basis_functions
+    - file: reference/emulators/random_forest
+    - file: reference/emulators/svm
+  - file: reference/simulations/index
     sections:
-    - file: reference/experimental/simulations/base
-    - file: reference/experimental/simulations/epidemic
-    - file: reference/experimental/simulations/experimental_design
-    - file: reference/experimental/simulations/flow_problem
-    - file: reference/experimental/simulations/projectile
-    - file: reference/experimental/simulations/reaction_diffusion
+    - file: reference/simulations/base
+    - file: reference/simulations/epidemic
+    - file: reference/simulations/experimental_design
+    - file: reference/simulations/flow_problem
+    - file: reference/simulations/projectile
+    - file: reference/simulations/reaction_diffusion

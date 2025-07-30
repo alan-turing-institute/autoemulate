@@ -1,7 +1,7 @@
-autoemulate.emulators.random_forest
+autoemulate.core.model_selection
 ===============================================
 
-.. automodule:: autoemulate.emulators.random_forest
+.. automodule:: autoemulate.core.model_selection
    :members:
    :undoc-members:
    :show-inheritance:
