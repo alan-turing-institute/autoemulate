@@ -12,7 +12,7 @@ chapters:
   - file: getting-started/installation
   # - file: getting-started/quickstart
 
-- file: index
+- file: tutorials/index
   sections:
   - file: tutorials/emulation/index
     sections:
