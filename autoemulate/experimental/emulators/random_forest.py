@@ -45,26 +45,27 @@ class RandomForest(SklearnBackend):
             Input features.
         y: TensorLike
             Target values.
-        standardize_x: bool, default=False
-            Whether to standardize input features.
-        standardize_y: bool, default=False
-            Whether to standardize target values.
-        n_estimators: int, default=100
-            Number of trees in the forest.
-        criterion: {"squared_error", "absolute_error", "friedman_mse", "poisson"},
-                default="squared_error"
+        standardize_x: bool
+            Whether to standardize input features. Defaults to False.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to False.
+        n_estimators: int
+            Number of trees in the forest. Defaults to 100.
+        criterion: {"squared_error", "absolute_error", "friedman_mse", "poisson"}
             The function to measure the quality of a split. "squared_error" for
             the mean squared error, "absolute_error" for the mean absolute error,
             "friedman_mse" for mean squared error with Friedman's improvement score,
-            and "poisson" for Poisson deviance.
-        max_depth: int | None, default=None
+            and "poisson" for Poisson deviance. Defaults to "squared_error".
+        max_depth: int | None
             The maximum depth of the tree. If None, nodes are expanded until all leaves
             are pure or until all leaves contain less than min_samples_split samples.
-        min_samples_split: int, default=2
-            The minimum number of samples required to split an internal node.
-        min_samples_leaf: int, default=1
-            The minimum number of samples required to be at a leaf node.
-        max_features: "sqrt" | "log2" | int | float, default=1.0
+            Defaults to None.
+        min_samples_split: int
+            The minimum number of samples required to split an internal node. Defaults
+            to 2.
+        min_samples_leaf: int
+            The minimum number of samples required to be at a leaf node. Defaults to 1.
+        max_features: "sqrt" | "log2" | int | float
             The number of features to consider when looking for the best split.
             If int, then consider max_features features at each split.
             If float, then max_features is a fraction and
@@ -72,17 +73,20 @@ class RandomForest(SklearnBackend):
             If "sqrt", then max_features=sqrt(n_features).
             If "log2", then max_features=log2(n_features).
             If 1.0, then max_features=n_features.
-        bootstrap: bool, default=True
-            Whether bootstrap samples are used when building trees.
-        oob_score: bool, default=False
+            Defaults to 1.0.
+        bootstrap: bool
+            Whether bootstrap samples are used when building trees. Defaults to True.
+        oob_score: bool
             Whether to use out-of-bag samples to estimate the generalization accuracy.
-        max_samples: int | None, default=None
+            Defaults to False.
+        max_samples: int | None
             If bootstrap is True, the number of samples to draw from X to train each
-            base estimator. If None, then draw n_samples.
-        random_seed: int | None, default=None
-            Random seed for reproducibility. If None, no seed is set.
-        device: DeviceLike, default="cpu"
-            Device to run the model on. If None, uses the default device.
+            base estimator. If None, then draw n_samples. Defaults to None.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike
+            Device to run the model on. If None, uses the default device. Defaults to
+            "cpu".
         **kwargs: dict
             Additional keyword arguments.
 

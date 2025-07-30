@@ -94,8 +94,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -281,8 +281,8 @@ class DeterministicEmulator(Emulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -306,8 +306,8 @@ class ProbabilisticEmulator(Emulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -341,7 +341,7 @@ class ProbabilisticEmulator(Emulator):
 
 
 class GaussianEmulator(ProbabilisticEmulator):
-    """A base class for for Gaussian emulators."""
+    """A base class for Gaussian emulators."""
 
     supports_grad: bool = True
 
@@ -354,8 +354,8 @@ class GaussianEmulator(ProbabilisticEmulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -379,8 +379,8 @@ class GaussianProcessEmulator(GaussianEmulator):
         ----------
         x: TensorLike
             Input tensor to make predictions for.
-        with_grad: bool, default=False
-            Whether to enable gradient calculation.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
@@ -392,7 +392,7 @@ class GaussianProcessEmulator(GaussianEmulator):
         return pred
 
 
-class PyTorchBackend(nn.Module, Emulator, Preprocessor):
+class PyTorchBackend(nn.Module, Emulator):
     """
     `PyTorchBackend` provides a backend for PyTorch models.
 
@@ -410,18 +410,12 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     epochs: int = 10
     loss_history: ClassVar[list[float]] = []
     verbose: bool = False
-    preprocessor: Preprocessor | None = None
     loss_fn: nn.Module = nn.MSELoss()
     optimizer_cls: type[optim.Optimizer] = optim.Adam
     optimizer: optim.Optimizer
     supports_grad: bool = True
     lr: float = 1e-1
     scheduler_cls: type[LRScheduler] | None = None
-
-    def preprocess(self, x: TensorLike) -> TensorLike:  # noqa: D102
-        if self.preprocessor is None:
-            return x
-        return self.preprocessor.preprocess(x)
 
     def loss_func(self, y_pred, y_true):
         """Loss function to be used for training the model."""
@@ -455,9 +449,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
             batches = 0
 
             for x_batch, y_batch in dataloader:
-                # Preprocess x_batch
-                x = self.preprocess(x_batch)
-
                 # Forward pass
                 y_pred = self.forward(x_batch)
                 loss = self.loss_func(y_pred, y_batch)
@@ -535,7 +526,6 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         self.eval()
         with torch.set_grad_enabled(with_grad):
-            x = self.preprocess(x)
             return self(x)
 
 

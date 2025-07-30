@@ -181,8 +181,8 @@ def calculate_subplot_layout(n_plots, n_cols=3):
     ----------
     n_plots: int
         Number of plots to display.
-    n_cols: int, optional
-        Maximum number of columns allowed, default is 3.
+    n_cols: int
+        Maximum number of columns allowed. Defaults to 3.
 
     Returns
     -------

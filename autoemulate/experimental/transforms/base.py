@@ -293,13 +293,13 @@ class AutoEmulateTransform(
         ----------
         y: GaussianLike
             The distribution in the codomain.
-        n_samples: int, default=1000
-            Number of samples to generate from the distribution `y`.
-        full_covariance: bool, default=True
+        n_samples: int
+            Number of samples to generate from the distribution `y`. Defaults to 1000.
+        full_covariance: bool
             If True, calculates a full covariance matrix from samples; otherwise,
             calculates only the diagonal of the covariance matrix. This is useful
             for a high-dimensional domain where full covariance might be
-            computationally expensive.
+            computationally expensive. Defaults to True.
 
         Returns
         -------
@@ -436,13 +436,13 @@ def _inverse_sample_gaussian_like(
         A callable that applies a transformation to the generated samples.
     y: DistributionLike
         The distribution from which to sample.
-    n_samples: int, default=1000
-        Number of samples to generate from the distribution `y`.
-    full_covariance: bool, default=True
+    n_samples: int
+        Number of samples to generate from the distribution `y`. Defaults to 1000.
+    full_covariance: bool
         If True, calculates a full covariance matrix from samples; otherwise,
         calculates only the diagonal of the covariance matrix. This is useful
         for a high-dimensional domain where full covariance might be
-        computationally expensive.
+        computationally expensive. Defaults to True.
 
     Returns
     -------

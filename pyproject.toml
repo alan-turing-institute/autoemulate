@@ -64,12 +64,12 @@ source = [".", "/tmp"]
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-include = ["autoemulate/experimental/*", "tests/experimental/*"]
+include = ["autoemulate/experimental/*", "tests/experimental/*", "benchmarks/*"]
 
 [tool.ruff]
 src = ["autoemulate/"]
 line-length = 88
-include = ["autoemulate/experimental/**/*.py", "tests/experimental/**/*.py"]
+include = ["autoemulate/experimental/**/*.py", "tests/experimental/**/*.py", "benchmarks/**/*.py"]
 target-version = "py310"
 
 [tool.ruff.format]

@@ -83,27 +83,27 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
         y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
-        likelihood_cls: type[MultitaskGaussianLikelihood],
-            default=MultitaskGaussianLikelihood
+        likelihood_cls: type[MultitaskGaussianLikelihood]
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
-        mean_module_fn: MeanModuleFn, default=constant_mean
-            Function to create the mean module.
-        covar_module_fn: CovarModuleFn, default=rbf
-            Function to create the covariance module.
-        posterior_predictive: bool, default=False
+        mean_module_fn: MeanModuleFn
+            Function to create the mean module. Defaults to `constant_mean`.
+        covar_module_fn: CovarModuleFn
+            Function to create the covariance module. Defaults to `rbf`.
+        posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
             False, it will return the posterior distribution over the modelled function.
-        epochs: int, default=50
-            Number of training epochs.
-        lr: float, default=2e-1
-            Learning rate for the optimizer.
+            Defaults to False.
+        epochs: int
+            Number of training epochs. Defaults to 50.
+        lr: float
+            Learning rate for the optimizer. Defaults to 2e-1.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        device: DeviceLike | None, default=None
+        device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
-            GPU).
+            GPU). Defaults to None.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -342,31 +342,31 @@ class GaussianProcessCorrelated(GaussianProcess):
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
         y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
-        likelihood_cls: type[MultitaskGaussianLikelihood],
-            default=MultitaskGaussianLikelihood
+        likelihood_cls: type[MultitaskGaussianLikelihood]
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
-        mean_module_fn: MeanModuleFn, default=constant_mean
-            Function to create the mean module.
-        covar_module_fn: CovarModuleFn, default=rbf
-            Function to create the covariance module.
-        posterior_predictive: bool, default=False
+        mean_module_fn: MeanModuleFn
+            Function to create the mean module. Defaults to `constant_mean`.
+        covar_module_fn: CovarModuleFn
+            Function to create the covariance module. Defaults to `rbf`.
+        posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
             False, it will return the posterior distribution over the modelled function.
-        epochs: int, default=50
+            Defaults to False.
+        epochs: int
             Number of training epochs.
-        activation: type[nn.Module], default=nn.ReLU
-            Activation function to use in the model.
-        lr: float, default=2e-1
-            Learning rate for the optimizer.
+        activation: type[nn.Module]
+            Activation function to use in the model. Defaults to `nn.ReLU`.
+        lr: float
+            Learning rate for the optimizer. Defaults to 2e-1.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        seed: int | None, default=None
-            Random seed for reproducibility. If None, no seed is set.
-        device: DeviceLike | None, default=None
+        seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
-            GPU).
+            GPU). Defaults to None.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)

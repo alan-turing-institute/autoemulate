@@ -46,35 +46,38 @@ class GradientBoosting(SklearnBackend):
             Input features.
         y: TensorLike
             Target values.
-        standardize_x: bool, default=False
-            Whether to standardize input features.
-        standardize_y: bool, default=False
-            Whether to standardize target values.
-        loss: str, default="squared_error"
-            Loss function to be optimized.
-        learning_rate: float, default=0.1
-            Learning rate shrinks the contribution of each new tree.
-        n_estimators: int, default=100
-            The number of boosting stages to be run.
-        max_depth: int, default=3
-            Maximum depth of the individual regression estimators.
-        min_samples_split: int, default=2
-            Minimum number of samples required to split an internal node.
-        min_samples_leaf: int, default=1
-            Minimum number of samples required to be at a leaf node.
-        subsample: float, default=1.0
+        standardize_x: bool
+            Whether to standardize input features. Defaults to False.
+        standardize_y: bool
+            Whether to standardize target values. Defaults to False.
+        loss: str
+            Loss function to be optimized. Defaults to "squared_error".
+        learning_rate: float
+            Learning rate shrinks the contribution of each new tree. Defaults to 0.1.
+        n_estimators: int
+            The number of boosting stages to be run. Defaults to 100.
+        max_depth: int
+            Maximum depth of the individual regression estimators. Defaults to 3.
+        min_samples_split: int
+            Minimum number of samples required to split an internal node. Defaults to 2.
+        min_samples_leaf: int
+            Minimum number of samples required to be at a leaf node. Defaults to 1.
+        subsample: float
             The fraction of samples to be used for fitting the individual base learners.
-        max_features: float | None, default=None
-            The number of features to consider when looking for the best split.
-        ccp_alpha: float, default=0.0
-            Complexity parameter used for Minimal Cost-Complexity Pruning.
-        n_iter_no_change: int | None, default=None
+            Defaults to 1.0.
+        max_features: float | None
+            The number of features to consider when looking for the best split. Defaults
+            to None.
+        ccp_alpha: float
+            Complexity parameter used for Minimal Cost-Complexity Pruning. Defaults to
+            0.0.
+        n_iter_no_change: int | None
             If not None, the number of iterations with no improvement to wait before
-            stopping.
-        random_seed: int | None, default=None
-            Random seed for reproducibility. If None, no seed is set.
-        device: DeviceLike, default="cpu"
-            Device to run the model on (e.g., "cpu", "cuda", "mps").
+            stopping. Defaults to None.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to "cpu".
         """
         _, _ = x, y  # ignore unused arguments
         TorchDeviceMixin.__init__(self, device=device, cpu_only=True)

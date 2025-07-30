@@ -32,7 +32,7 @@ from autoemulate.experimental.transforms.standardize import StandardizeTransform
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     """
-    AutoEmulate class for automated emulation.
+    Automated emulator fitting.
 
     The AutoEmulate class is the main class of the AutoEmulate package.
     It is used to set up and compare different emulator models on a given dataset.

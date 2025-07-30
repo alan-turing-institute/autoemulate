@@ -47,32 +47,35 @@ class MLP(DropoutTorchBackend):
             Input features.
         y: TensorLike
             Target values.
-        activation_cls: type[nn.Module], default=nn.ReLU
-            Activation function to use in the hidden layers.
-        layer_dims: list[int] | None, default=None
+        activation_cls: type[nn.Module]
+            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
+        layer_dims: list[int] | None
             Dimensions of the hidden layers. If None, defaults to [32, 16].
-        weight_init: str, default="default"
+            Defaults to None.
+        weight_init: str
             Weight initialization method. Options are "default", "normal", "uniform",
             "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
-            "kaiming_normal".
-        scale: float, default=1.0
+            "kaiming_normal". Defaults to "default".
+        scale: float
             Scale parameter for weight initialization methods. Used as:
             - gain for Xavier methods
             - std for normal distribution
             - bound for uniform distribution (range: [-scale, scale])
             - ignored for Kaiming methods (uses optimal scaling)
+            Defaults to 1.0.
         bias_init: str
             Bias initialization method. Options: "zeros", "default":
                 - "zeros" initializes biases to zero
                 - "default" uses PyTorch's default uniform initialization
-        dropout_prob: float | None, default=None
+        dropout_prob: float | None
             Dropout probability for regularization. If None, no dropout is applied.
-        lr: float, default=1e-1
-            Learning rate for the optimizer.
+            Defaults to None.
+        lr: float
+            Learning rate for the optimizer. Defaults to 1e-2.
         random_seed: int | None
-            Random seed for reproducibility. If None, no seed is set.
-        device: DeviceLike | None, default=None
-            Device to run the model on (e.g., "cpu", "cuda", "mps")
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
         **kwargs: dict
             Additional keyword arguments.
 

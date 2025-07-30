@@ -36,14 +36,15 @@ class Ensemble(GaussianEmulator):
         device: DeviceLike | None = None,
     ):
         """
-        Initialize the ensemble with a sequence of emulators.
+        Initialize the Ensemble with a sequence of emulators.
 
         Parameters
         ----------
         emulators: Sequence[Emulator]
             A sequence of emulators to construct the ensemble with.
-        jitter: float, default=1e-4
+        jitter: float
             Amount of jitter to add to the covariance diagonal to avoid degeneracy.
+            Defaults to 1e-4.
         device: DeviceLike | None
             The device to put torch tensors on.
         """
@@ -158,10 +159,14 @@ class EnsembleMLP(Ensemble):
             Input data tensor of shape (batch_size, n_features).
         y: TensorLike
             Target values tensor of shape (batch_size, n_outputs).
-        n_emulators: int, default=4
-            Number of MLP emulators to create in the ensemble.
-        device: DeviceLike | None, default=None
-            Device to run the model on (e.g., "cpu", "cuda").
+        standardize_x: bool
+            Whether to standardize the input data. Defaults to True.
+        standardize_y: bool
+            Whether to standardize the output data. Defaults to True.
+        n_emulators: int
+            Number of MLP emulators to create in the ensemble. Defaults to 4.
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
         **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
         """
@@ -263,10 +268,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
         samples = []
         with torch.set_grad_enabled(with_grad):
             for _ in range(self.n_samples):
-                # apply any preprocessing the model expects
-                x_proc = self.model.preprocess(x)
-
-                out = self.model.forward(x_proc)
+                out = self.model.forward(x)
                 # out: Tensor of shape (batch_size, output_dim)
                 samples.append(out)
 
@@ -314,10 +316,14 @@ class EnsembleMLPDropout(DropoutEnsemble):
             Input data tensor of shape (batch_size, n_features).
         y: TensorLike
             Target values tensor of shape (batch_size, n_outputs).
-        dropout_prob: float, default=0.2
-            Dropout probability to use in the MLP layers.
-        device: DeviceLike | None, default=None
-            Device to run the model on (e.g., "cpu", "cuda").
+        standardize_x: bool
+            Whether to standardize the input data. Defaults to True.
+        standardize_y: bool
+            Whether to standardize the output data. Defaults to True.
+        dropout_prob: float
+            Dropout probability to use in the MLP layers. Defaults to 0.2.
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
         **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
         """

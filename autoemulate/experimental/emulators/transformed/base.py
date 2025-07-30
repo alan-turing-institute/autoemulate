@@ -174,9 +174,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
             New input training data tensor of shape `(n_samples, n_features)`.
         y: TensorLike
             New target training data tensor of shape `(n_samples, n_targets)`.
-        retrain_transforms: bool, default=False
+        retrain_transforms: bool
             Whether to retrain the transforms on the new data. If False,
-            uses the existing fitted transforms from initialization.
+            uses the existing fitted transforms from initialization. Defaults to False.
 
         Notes
         -----

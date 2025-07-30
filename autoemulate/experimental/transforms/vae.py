@@ -126,9 +126,9 @@ class VAETransform(AutoEmulateTransform):
         ----------
         latent_dim: int
             The dimensionality of the VAE latent space. Defaults to 3.
-        hidden_layers: list of int, default=None
+        hidden_layers: list of int
             The number of hidden layers and their sizes in the VAE. If None, defaults to
-            [64, 32].
+            [64, 32]. Defaults to None.
         epochs: int
             The number of training epochs for the VAE. Defaults to 800.
         batch_size: int

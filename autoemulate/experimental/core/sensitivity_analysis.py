@@ -255,11 +255,12 @@ class SensitivityAnalysis(ConversionMixin):
         ----------
         results: pd.DataFrame
             The results from sobol_results_to_df.
-        index: str, default "S1"
+        index: str
             The type of sensitivity index to plot.
             - "S1": first-order indices
             - "S2": second-order/interaction indices
             - "ST": total-order indices
+            Defaults to "S1".
         n_cols: int | None
             The number of columns in the plot. Defaults to 3 if there are 3 or
             more outputs, otherwise the number of outputs. Defaults to None.
