@@ -16,6 +16,7 @@ from tqdm import tqdm
 def run_benchmark(
     x: torch.Tensor, y: torch.Tensor, n_iter: int, n_splits: int, log_level: str
 ) -> pd.DataFrame:
+    """Run the benchmark with the given parameters."""
     ae = AutoEmulate(
         x,
         y,
@@ -72,6 +73,7 @@ def run_benchmark(
 def main(  # noqa: PLR0913
     simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
 ):
+    """Run the benchmark with the specified parameters."""
     print(f"Running benchmark with simulators: {simulators}")
     print(f"Number of samples: {n_samples_list}")
     print(f"Number of iterations: {n_iter_list}")
