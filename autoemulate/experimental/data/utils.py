@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_
 
 
 class ConversionMixin:
-    """Mixin class to convert input data to pytorch Datasets and DataLoaders."""
+    """Mixin class to convert input data to PyTorch Datasets and DataLoaders."""
 
     @classmethod
     def _convert_to_dataset(
@@ -21,7 +21,7 @@ class ConversionMixin:
         x: InputLike,
         y: InputLike | None = None,
     ) -> Dataset:
-        """Convert input data to pytorch Dataset."""
+        """Convert input data to PyTorch Dataset."""
         # Convert input to Dataset if not already
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
@@ -54,7 +54,7 @@ class ConversionMixin:
         batch_size: int = 16,
         shuffle: bool = True,
     ) -> DataLoader:
-        """Convert input data to pytorch DataLoaders."""
+        """Convert input data to PyTorch DataLoaders."""
         if isinstance(x, DataLoader) and y is None:
             dataloader = x
         elif isinstance(x, DataLoader) and y is not None:
