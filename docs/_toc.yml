@@ -48,12 +48,14 @@ chapters:
     - file: reference/experimental/calibration/bayes
     - file: reference/experimental/calibration/history_matching
     - file: reference/experimental/calibration/history_matching_dashboard
-  - file: reference/experimental/compare
-  - file: reference/experimental/datasets
-  - file: reference/experimental/model_selection
-  - file: reference/experimental/plotting
-  - file: reference/experimental/sensitivity_analysis
-  - file: reference/experimental/tuner
+  - file: reference/experimental/code/index
+    sections:
+    - file: reference/experimental/core/compare
+    - file: reference/experimental/core/datasets
+    - file: reference/experimental/core/model_selection
+    - file: reference/experimental/core/plotting
+    - file: reference/experimental/core/sensitivity_analysis
+    - file: reference/experimental/core/tuner
   - file: reference/experimental/emulators/index
     sections:
     - file: reference/experimental/emulators/base
