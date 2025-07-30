@@ -16,7 +16,7 @@ from autoemulate.experimental.core.types import (
     NumpyLike,
     OutputLike,
     TensorLike,
-    TuneConfig,
+    TuneParams,
 )
 from autoemulate.experimental.data.preprocessors import Preprocessor
 from autoemulate.experimental.data.utils import ConversionMixin, ValidationMixin
@@ -134,22 +134,22 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         """Flag to indicate if the model is multioutput or not."""
 
     @staticmethod
-    def get_tune_config() -> TuneConfig:
+    def get_tune_params() -> TuneParams:
         """
         Return a dictionary of hyperparameters to tune.
 
-        The keys in the TuneConfig must be implemented as keyword arguments in the
+        The keys in the TuneParams must be implemented as keyword arguments in the
         __init__ method of any subclasses.
 
         e.g.
 
-        tune_config: TuneConfig = {
+        tune_params: TuneParams = {
             "lr": list[0.01, 0.1],
             "batch_size": [16, 32],
             "mean"
         }
 
-        model_config: ModelConfig = {
+        model_params: ModelParams = {
             "lr": 0.01,
             "batch_size": 16
         }
@@ -160,24 +160,24 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                 self.batch_size = batch_size
         """
         msg = (
-            "Subclasses should implement for generating tuning config specific to "
+            "Subclasses should implement for generating tuning params specific to "
             "each subclass."
         )
         raise NotImplementedError(msg)
 
     @classmethod
-    def get_random_config(cls):
+    def get_random_params(cls):
         """Return a random set of params for the model."""
         return {
-            k: v[np.random.randint(len(v))] for k, v in cls.get_tune_config().items()
+            k: v[np.random.randint(len(v))] for k, v in cls.get_tune_params().items()
         }
 
     @classmethod
-    def scheduler_config(cls) -> dict:
+    def scheduler_params(cls) -> dict:
         """
-        Return a random configuration for the learning rate scheduler.
+        Return a random parameters for the learning rate scheduler.
 
-        This should be added to the `get_tune_config()` method of subclasses
+        This should be added to the `get_tune_params()` method of subclasses
         to allow tuning of the scheduler parameters.
         """
         all_params = [
@@ -401,7 +401,7 @@ class PyTorchBackend(nn.Module, Emulator, Preprocessor):
     to simplify model-specific subclasses by only needing to implement:
       - `.__init__()`: the constructor for the model
       - `.forward()`: the forward pass of the model
-      - `.get_tune_config()`: the hyperparameters to tune for the model
+      - `.get_tune_params()`: the hyperparameters to tune for the model
 
     """
 
@@ -547,7 +547,7 @@ class SklearnBackend(DeterministicEmulator):
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
       - `.__init__()`: the constructor for the model
-      - `.get_tune_config()`: the hyperparameters to tune for the model
+      - `.get_tune_params()`: the hyperparameters to tune for the model
     """
 
     model: BaseEstimator

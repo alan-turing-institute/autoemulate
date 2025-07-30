@@ -94,9 +94,9 @@ class PolynomialRegression(PyTorchBackend):
         return True
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
-        scheduler_params = PolynomialRegression.scheduler_config()
+        scheduler_params = PolynomialRegression.scheduler_params()
         return {
             "lr": [1e-3, 1e-2, 1e-1, 2e-1],
             "epochs": [50, 100, 200, 500, 1000],

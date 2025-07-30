@@ -275,9 +275,9 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             return output_distribution
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return the hyperparameters to tune for the Gaussian Process model."""
-        scheduler_config = GaussianProcess.scheduler_config()
+        scheduler_params = GaussianProcess.scheduler_params()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -298,8 +298,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             "epochs": [50, 100, 200],
             "lr": [5e-1, 1e-1, 5e-2, 1e-2],
             "likelihood_cls": [MultitaskGaussianLikelihood],
-            "scheduler_cls": scheduler_config["scheduler_cls"],
-            "scheduler_kwargs": scheduler_config["scheduler_kwargs"],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
         }
 
 

@@ -111,7 +111,7 @@ class GradientBoosting(SklearnBackend):
         return False
 
     @staticmethod
-    def get_tune_config():
+    def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
         return {
             "learning_rate": [loguniform(0.01, 0.2).rvs()],

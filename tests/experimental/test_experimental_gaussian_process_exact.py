@@ -53,9 +53,9 @@ def test_tune_gp(sample_data_y1d, device, emulator):
         pytest.skip(f"Device ({device}) is not available.")
     x, y = sample_data_y1d
     tuner = Tuner(x, y, n_iter=5, device=device)
-    scores, configs = tuner.run(emulator)
+    scores, params_list = tuner.run(emulator)
     assert len(scores) == 5
-    assert len(configs) == 5
+    assert len(params_list) == 5
 
 
 @pytest.mark.parametrize(

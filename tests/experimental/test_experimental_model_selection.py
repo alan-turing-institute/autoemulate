@@ -33,7 +33,7 @@ def test_cross_validate():
             return x
 
         @staticmethod
-        def get_tune_config():
+        def get_tune_params():
             return {}
 
         @staticmethod

@@ -7,7 +7,7 @@ from torchmetrics import R2Score
 
 from autoemulate.experimental.core.device import TorchDeviceMixin
 from autoemulate.experimental.core.model_selection import cross_validate
-from autoemulate.experimental.core.types import DeviceLike, InputLike, ModelConfig
+from autoemulate.experimental.core.types import DeviceLike, InputLike, ModelParams
 from autoemulate.experimental.data.utils import set_random_seed
 from autoemulate.experimental.emulators.base import ConversionMixin, Emulator
 from autoemulate.experimental.transforms.base import AutoEmulateTransform
@@ -67,7 +67,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_splits: int = 5,
         seed: int | None = None,
         shuffle: bool = True,
-    ) -> tuple[list[list[float]], list[ModelConfig]]:
+    ) -> tuple[list[list[float]], list[ModelParams]]:
         """
         Run randomised hyperparameter search for a given model.
 
@@ -91,29 +91,29 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
 
         Returns
         -------
-        Tuple[list[float], list[ModelConfig]]
+        Tuple[list[float], list[ModelParams]]
             The validation scores and parameter values used in each search iteration.
         """
         # keep track of what parameter values tested and how they performed
-        model_config_tested: list[ModelConfig] = []
+        model_params_tested: list[ModelParams] = []
         val_scores: list[list[float]] = []
 
         # Initialize retries and maximum number of retries for consecutive failed tuning
-        # iterations that would indicate that no model config is working for the
+        # iterations that would indicate that no model params is working for the
         # given dataset/model and that the tuning process should be stopped
         retries, max_retries = 0, 100
-        while len(model_config_tested) < self.n_iter:
+        while len(model_params_tested) < self.n_iter:
             # randomly sample hyperparameters and instantiate model
-            model_config = model_class.get_random_config()
+            model_params = model_class.get_random_params()
             try:
-                # Perform cross-validation on randomly sampled model config
+                # Perform cross-validation on randomly sampled model params
                 scores = cross_validate(
                     cv=KFold(n_splits=n_splits, random_state=seed, shuffle=shuffle),
                     dataset=self.dataset,
                     x_transforms=x_transforms,
                     y_transforms=y_transforms,
                     model=model_class,
-                    model_config=model_config,
+                    model_params=model_params,
                     device=self.device,
                     random_seed=None,
                 )
@@ -121,29 +121,29 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                 # Reset retries following a successful cross_validation call
                 retries = 0
 
-                # Store the model config and validation scores
-                model_config_tested.append(model_config)
+                # Store the model params and validation scores
+                model_params_tested.append(model_params)
                 val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
 
                 # Log the tuning iteration results
                 logger.debug(
                     "tuning model: %s; iteration: %d/%d; mean (std) r2=%.3f (%.3f); "
-                    "model_config: %s",
+                    "model_params: %s",
                     model_class.model_name(),
-                    len(model_config_tested),
+                    len(model_params_tested),
                     self.n_iter,
                     np.mean(scores["r2"]),
                     np.std(scores["r2"]),
-                    str(model_config),
+                    str(model_params),
                 )
 
             except Exception as e:
                 # Increment retries following a failed tuning iteration and try again
                 retries += 1
                 logger.warning(
-                    "Failed tuning iteration %d with model config: %s: %s",
-                    len(model_config_tested),
-                    json.dumps(model_config, default=str, separators=(",", ":")),
+                    "Failed tuning iteration %d with model params: %s: %s",
+                    len(model_params_tested),
+                    json.dumps(model_params, default=str, separators=(",", ":")),
                     str(e),
                 )
                 # If many consecutive retries, log error and raise exception
@@ -157,4 +157,4 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     )
                     raise RuntimeError(msg) from e
 
-        return val_scores, model_config_tested
+        return val_scores, model_params_tested
