@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for autoemulate/experimental/types.py: 100%</title>
+    <title>Coverage for autoemulate/experimental/core/types.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -11,7 +11,7 @@
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>autoemulate/experimental/types.py</b>:
+            <span class="text">Coverage for </span><b>autoemulate/experimental/core/types.py</b>:
             <span class="pc_cov">100%</span>
         </h1>
         <aside id="help_panel_wrapper">
@@ -60,12 +60,12 @@
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
-            <a id="prevFileLink" class="nav" href="z_b86468c12c81b0dd_tuner_py.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a id="prevFileLink" class="nav" href="z_deebc2b219002f3b_tuner_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_1723575ec71c99c4_experimental_design_py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_0a23d710f0b4e65d_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 15:20 +0000
+            created at 2025-07-30 17:31 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -97,8 +97,8 @@
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="nam">InputLike</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">NumpyLike</span> <span class="op">|</span> <span class="nam">TensorLike</span> <span class="op">|</span> <span class="nam">DataLoader</span> <span class="op">|</span> <span class="nam">torch</span><span class="op">.</span><span class="nam">utils</span><span class="op">.</span><span class="nam">data</span><span class="op">.</span><span class="nam">Dataset</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="nam">OutputLike</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">DistributionLike</span> <span class="op">|</span> <span class="nam">TensorLike</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="nam">ParamLike</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">Any</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="nam">TuneConfig</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">list</span><span class="op">[</span><span class="nam">ParamLike</span><span class="op">]</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="nam">ModelConfig</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">ParamLike</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="nam">TuneParams</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">list</span><span class="op">[</span><span class="nam">ParamLike</span><span class="op">]</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="nam">ModelParams</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">ParamLike</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="nam">DeviceLike</span><span class="op">:</span> <span class="nam">TypeAlias</span> <span class="op">=</span> <span class="nam">str</span> <span class="op">|</span> <span class="nam">torch</span><span class="op">.</span><span class="nam">device</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="com"># Torch dtype's</span>&nbsp;</span><span class="r"></span></p>
@@ -107,12 +107,12 @@
 <footer>
     <div class="content">
         <p>
-            <a class="nav" href="z_b86468c12c81b0dd_tuner_py.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a class="nav" href="z_deebc2b219002f3b_tuner_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_1723575ec71c99c4_experimental_design_py.html">&#xbb; next</a>
+            <a class="nav" href="z_0a23d710f0b4e65d_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 15:20 +0000
+            created at 2025-07-30 17:31 +0000
         </p>
     </div>
 </footer>

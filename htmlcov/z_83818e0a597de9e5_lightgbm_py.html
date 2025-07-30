@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_1928bafd019e3b41_mlp_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 15:20 +0000
+            created at 2025-07-30 17:31 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -84,10 +84,10 @@
     <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">lightgbm</span> <span class="key">import</span> <span class="nam">LGBMRegressor</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">scipy</span><span class="op">.</span><span class="nam">sparse</span> <span class="key">import</span> <span class="nam">spmatrix</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">device</span> <span class="key">import</span> <span class="nam">TorchDeviceMixin</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">emulators</span><span class="op">.</span><span class="nam">base</span> <span class="key">import</span> <span class="nam">DeterministicEmulator</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">transforms</span><span class="op">.</span><span class="nam">standardize</span> <span class="key">import</span> <span class="nam">StandardizeTransform</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">types</span> <span class="key">import</span> <span class="nam">DeviceLike</span><span class="op">,</span> <span class="nam">TensorLike</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">core</span><span class="op">.</span><span class="nam">device</span> <span class="key">import</span> <span class="nam">TorchDeviceMixin</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">core</span><span class="op">.</span><span class="nam">types</span> <span class="key">import</span> <span class="nam">DeviceLike</span><span class="op">,</span> <span class="nam">TensorLike</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">emulators</span><span class="op">.</span><span class="nam">base</span> <span class="key">import</span> <span class="nam">DeterministicEmulator</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">autoemulate</span><span class="op">.</span><span class="nam">experimental</span><span class="op">.</span><span class="nam">transforms</span><span class="op">.</span><span class="nam">standardize</span> <span class="key">import</span> <span class="nam">StandardizeTransform</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">class</span> <span class="nam">LightGBM</span><span class="op">(</span><span class="nam">DeterministicEmulator</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -254,7 +254,7 @@
     <p class="run"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">        <span class="key">return</span> <span class="nam">y</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">    <span class="op">@</span><span class="nam">staticmethod</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_tune_config</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">    <span class="key">def</span> <span class="nam">get_tune_params</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">        <span class="str">"""Return a dictionary of hyperparameters to tune."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">        <span class="com"># Note: 10 ** np.random.uniform(-3, 0)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">        <span class="com"># is equivalent to scipy.stats.loguniform(0.001, 0.1)</span>&nbsp;</span><span class="r"></span></p>
@@ -275,7 +275,7 @@
             <a class="nav" href="z_1928bafd019e3b41_mlp_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.0">coverage.py v7.10.0</a>,
-            created at 2025-07-30 15:20 +0000
+            created at 2025-07-30 17:31 +0000
         </p>
     </div>
 </footer>

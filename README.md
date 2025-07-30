@@ -39,10 +39,19 @@
 | autoemulate/experimental/calibration/history\_matching.py                    |      116 |       12 |     90% |67, 98-99, 105-106, 181, 257, 317, 322-323, 372, 397 |
 | autoemulate/experimental/calibration/history\_matching\_dashboard.py         |      272 |      272 |      0% |     1-798 |
 | autoemulate/experimental/callbacks/early\_stopping.py                        |       52 |        9 |     83% |70-72, 77, 103, 127, 132, 147, 152 |
-| autoemulate/experimental/compare.py                                          |      210 |       87 |     59% |125, 130-134, 164, 183-186, 204-205, 216-220, 380-389, 427-520, 542-546, 548-552, 566 |
+| autoemulate/experimental/core/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
+| autoemulate/experimental/core/compare.py                                     |      210 |       87 |     59% |125, 130-134, 164, 183-186, 204-205, 216-220, 380-389, 427-520, 542-546, 548-552, 566 |
+| autoemulate/experimental/core/datasets.py                                    |       14 |       14 |      0% |      1-67 |
+| autoemulate/experimental/core/device.py                                      |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
+| autoemulate/experimental/core/logging\_config.py                             |       58 |       21 |     64% |30, 33-37, 53-70, 114 |
+| autoemulate/experimental/core/model\_selection.py                            |       70 |        2 |     97% |   53, 140 |
+| autoemulate/experimental/core/plotting.py                                    |       57 |        8 |     86% |30-31, 35-36, 85-86, 95, 167 |
+| autoemulate/experimental/core/results.py                                     |       54 |        0 |    100% |           |
+| autoemulate/experimental/core/save.py                                        |       73 |        7 |     90% |45-49, 75, 86-88 |
+| autoemulate/experimental/core/sensitivity\_analysis.py                       |      247 |      146 |     41% |59-63, 72-73, 76-77, 79-80, 86-87, 110-111, 125-129, 152-156, 223-224, 234-235, 242, 271, 296, 324-328, 395-403, 408-411, 416-433, 461-500, 522-538, 562-663, 675-751 |
+| autoemulate/experimental/core/tuner.py                                       |       43 |        4 |     91% |60, 151-158 |
+| autoemulate/experimental/core/types.py                                       |       19 |        0 |    100% |           |
 | autoemulate/experimental/data/utils.py                                       |      187 |       21 |     89% |61, 92, 98, 114-118, 130, 146-148, 169, 174, 405, 408-410, 438, 441-443, 475 |
-| autoemulate/experimental/datasets.py                                         |       14 |       14 |      0% |      1-67 |
-| autoemulate/experimental/device.py                                           |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
 | autoemulate/experimental/emulators/\_\_init\_\_.py                           |       18 |        1 |     94% |        49 |
 | autoemulate/experimental/emulators/base.py                                   |      189 |       19 |     90% |87, 105-106, 115, 121-126, 161-165, 259-262, 338-339, 465, 472, 553-555, 571 |
 | autoemulate/experimental/emulators/ensemble.py                               |      112 |        9 |     92% |63, 68, 77-78, 102-103, 247, 258-259 |
@@ -67,12 +76,6 @@
 | autoemulate/experimental/learners/membership.py                              |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/pool.py                                    |        8 |        8 |      0% |      1-19 |
 | autoemulate/experimental/learners/stream.py                                  |      131 |       13 |     90% |85-95, 141, 492, 543-547, 550, 578-583, 586 |
-| autoemulate/experimental/logging\_config.py                                  |       58 |       21 |     64% |30, 33-37, 53-70, 114 |
-| autoemulate/experimental/model\_selection.py                                 |       70 |        2 |     97% |   50, 137 |
-| autoemulate/experimental/plotting.py                                         |       57 |        8 |     86% |30-31, 35-36, 85-86, 95, 167 |
-| autoemulate/experimental/results.py                                          |       54 |        0 |    100% |           |
-| autoemulate/experimental/save.py                                             |       73 |        7 |     90% |45-49, 75, 86-88 |
-| autoemulate/experimental/sensitivity\_analysis.py                            |      247 |      146 |     41% |59-63, 72-73, 76-77, 79-80, 86-87, 110-111, 125-129, 152-156, 223-224, 234-235, 242, 271, 296, 324-328, 395-403, 408-411, 416-433, 461-500, 522-538, 562-663, 675-751 |
 | autoemulate/experimental/simulations/\_\_init\_\_.py                         |        6 |        0 |    100% |           |
 | autoemulate/experimental/simulations/base.py                                 |       92 |        4 |     96% |59, 153, 224-228 |
 | autoemulate/experimental/simulations/epidemic.py                             |       40 |        0 |    100% |           |
@@ -86,8 +89,6 @@
 | autoemulate/experimental/transforms/standardize.py                           |       32 |        3 |     91% |     50-52 |
 | autoemulate/experimental/transforms/utils.py                                 |       55 |        8 |     85% |64-65, 79-83, 129-137 |
 | autoemulate/experimental/transforms/vae.py                                   |      127 |        9 |     93% |180, 208-212, 233-235, 258-262 |
-| autoemulate/experimental/tuner.py                                            |       43 |        4 |     91% |60, 151-158 |
-| autoemulate/experimental/types.py                                            |       19 |        0 |    100% |           |
 | autoemulate/experimental\_design.py                                          |       19 |        3 |     84% |24, 35, 46 |
 | autoemulate/history\_matching.py                                             |      115 |       41 |     64% |67, 71, 132-134, 206, 210-217, 230, 280, 293-295, 304-306, 326, 334-357, 404-432 |
 | autoemulate/hyperparam\_searching.py                                         |       46 |        3 |     93% |93, 99-100 |
@@ -147,7 +148,7 @@
 | tests/models/test\_cnp\_dataset.py                                           |       74 |        0 |    100% |           |
 | tests/models/test\_gptorch.py                                                |       81 |        5 |     94% |     77-81 |
 | tests/test\_base\_simulator.py                                               |       97 |        2 |     98% |     45-46 |
-| tests/test\_compare.py                                                       |      183 |        3 |     98% |239, 263, 272 |
+| tests/test\_compare.py                                                       |      183 |        5 |     97% |239, 263, 272, 377-378 |
 | tests/test\_cross\_validate.py                                               |       97 |        3 |     97% | 56-59, 64 |
 | tests/test\_data\_splitting.py                                               |       11 |        0 |    100% |           |
 | tests/test\_datasets.py                                                      |       13 |        0 |    100% |           |
@@ -168,7 +169,7 @@
 | tests/test\_sensitivity\_analysis.py                                         |      116 |        0 |    100% |           |
 | tests/test\_ui.py                                                            |       57 |        0 |    100% |           |
 | tests/test\_utils.py                                                         |      202 |        6 |     97% |52, 58, 63, 68, 73, 78 |
-|                                                                    **TOTAL** | **11151** | **2198** | **80%** |           |
+|                                                                    **TOTAL** | **11151** | **2200** | **80%** |           |
 
 
 ## Setup coverage badge
