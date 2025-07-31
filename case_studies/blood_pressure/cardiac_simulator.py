@@ -5,14 +5,12 @@ from itertools import product
 
 import numpy as np
 import torch
-from ModularCirc.Models.NaghaviModel import NaghaviModel
-from ModularCirc.Models.NaghaviModel import NaghaviModelParameters
+from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 from tqdm import tqdm
 
-from autoemulate.experimental.simulations.base import Simulator
-from autoemulate.experimental.types import NumpyLike
-from autoemulate.experimental.types import TensorLike
+from autoemulate.core.types import NumpyLike, TensorLike
+from autoemulate.simulations.base import Simulator
 
 # ==================================
 # PARAMETER UTILS
