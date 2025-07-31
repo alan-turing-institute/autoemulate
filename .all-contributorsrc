@@ -117,7 +117,8 @@
         "code",
         "projectManagement",
         "maintenance",
-        "ideas"
+        "ideas",
+        "review"
       ]
     },
     {
@@ -174,7 +175,8 @@
       "contributions": [
         "code",
         "ideas",
-        "review"
+        "review",
+        "doc"
       ]
     },
     {
@@ -197,6 +199,25 @@
       "contributions": [
         "code",
         "content"
+      ]
+    },
+    {
+      "login": "nayara-focs",
+      "name": "Nayara Fonseca",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89653110?v=4",
+      "profile": "https://www.nayarafonseca.com/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "jasonmcewen",
+      "name": "Jason McEwen ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3181701?v=4",
+      "profile": "http://www.jasonmcewen.org",
+      "contributions": [
+        "ideas",
+        "projectManagement"
       ]
     }
   ]
