@@ -1,217 +1,308 @@
-from abc import ABC
-from abc import abstractmethod
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+import logging
+from abc import ABC, abstractmethod
 
-import numpy as np
-import pandas as pd
+import torch
+from tqdm import tqdm
 
-from autoemulate.experimental_design import LatinHypercube
+from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.types import TensorLike
+from autoemulate.data.utils import ValidationMixin, set_random_seed
+from autoemulate.simulations.experimental_design import LatinHypercube
+
+logger = logging.getLogger("autoemulate")
 
 
-class Simulator(ABC):
+class Simulator(ABC, ValidationMixin):
     """
-    Abstract base class for simulation models.
+    Base class for simulations. All simulators should inherit from this class.
 
     This class provides the interface and common functionality for different
-    simulation implementations. Specific simulators should inherit from this class
-    and implement the required abstract methods.
+    simulation implementations.
     """
 
     def __init__(
         self,
-        parameters_range: Dict[str, Tuple[float, float]],
-        output_variables: Optional[List[str]] = None,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        log_level: str = "progress_bar",
     ):
         """
-        Initialize the base simulator with parameter ranges and optional output variables.
+        Initialize the simulator with parameter ranges and output names.
 
-        Args:
-            parameters_range: Dictionary mapping parameter names to their (min, max) ranges
-            output_variables: Optional list of specific output variables to track
+        Parameters
+        ----------
+        parameters_range: dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        output_names: list[str]
+            List of output parameters' names.
+        log_level: str
+            Logging level for the simulator. Can be one of:
+            - "progress_bar": shows a progress bar during batch simulations
+            - "debug": shows debug messages
+            - "info": shows informational messages
+            - "warning": shows warning messages
+            - "error": shows error messages
+            - "critical": shows critical messages
         """
-        self._param_bounds = parameters_range
-        self._param_names = list(self.param_bounds.keys())
-
-        # Output configuration
-        self._output_variables = (
-            output_variables if output_variables is not None else []
-        )
-        self._output_names = []  # Will be populated after first simulation
+        self._parameters_range = parameters_range
+        self._param_names = list(parameters_range.keys())
+        self._param_bounds = list(parameters_range.values())
+        self._output_names = output_names
+        self._in_dim = len(self.param_names)
+        self._out_dim = len(self.output_names)
         self._has_sample_forward = False
+        self.logger, self.progress_bar = get_configured_logger(log_level)
+
+    @classmethod
+    def simulator_name(cls) -> str:
+        """Get the name of the simulator class."""
+        return cls.__name__
 
     @property
-    def param_names(self) -> List[str]:
-        """List of parameter names"""
+    def parameters_range(self) -> dict[str, tuple[float, float]]:
+        """Dictionary mapping input parameter names to their (min, max) ranges."""
+        return self._parameters_range
+
+    @parameters_range.setter
+    def parameters_range(
+        self, parameters_range: dict[str, tuple[float, float]]
+    ) -> None:
+        """Set the range of input parameters for the simulator.
+
+        Parameters
+        ----------
+        parameters_range: dict[str, tuple[float, float]]
+            Dictionary mapping input parameter names to their (min, max) ranges.
+        """
+        self._parameters_range = parameters_range
+        self._param_names = list(parameters_range.keys())
+        self._param_bounds = list(parameters_range.values())
+        self._in_dim = len(self.param_names)
+
+    @property
+    def param_names(self) -> list[str]:
+        """List of parameter names."""
         return self._param_names
 
     @property
-    def output_names(self) -> List[str]:
-        """List of output names with their statistics"""
-        return self._output_names
-
-    @property
-    def output_variables(self) -> List[str]:
-        """List of original output variables without statistic suffixes"""
-        return self._output_variables
-
-    @property
-    def param_bounds(self) -> Dict[str, Tuple[float, float]]:
-        """Get the parameter bounds"""
+    def param_bounds(self) -> list[tuple[float, float]]:
+        """List of parameter bounds."""
         return self._param_bounds
 
+    @property
+    def output_names(self) -> list[str]:
+        """List of output parameter names."""
+        return self._output_names
+
+    @output_names.setter
+    def output_names(self, output_names: list[str]) -> None:
+        """Set the names of output parameters for the simulator.
+
+        This setter allows renaming the output parameters but does not allow
+        changing the number of outputs (dimensionality is fixed after initialization).
+
+        Parameters
+        ----------
+        output_names: list[str]
+            List of output parameter names. Must have the same length as the current
+            number of outputs.
+
+        Raises
+        ------
+        ValueError
+            If the number of output names differs from the simulator's fixed output
+            dimension.
+        """
+        if len(output_names) != self._out_dim:
+            raise ValueError(
+                f"Number of output names ({len(output_names)}) must match "
+                f"simulator output dimension ({self._out_dim}). Cannot change "
+                f"dimensionality after initialization."
+            )
+        self._output_names = output_names
+
+    @property
+    def in_dim(self) -> int:
+        """Input dimensionality."""
+        return self._in_dim
+
+    @property
+    def out_dim(self) -> int:
+        """Output dimensionality."""
+        return self._out_dim
+
+    def sample_inputs(
+        self, n_samples: int, random_seed: int | None = None
+    ) -> TensorLike:
+        """
+        Generate random samples using Latin Hypercube Sampling.
+
+        Parameters
+        ----------
+        n_samples: int
+            Number of samples to generate.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set.
+
+        Returns
+        -------
+        TensorLike
+            Parameter samples (column order is given by self.param_names)
+        """
+        if random_seed is not None:
+            set_random_seed(random_seed)  # type: ignore PGH003
+        lhd = LatinHypercube(self.param_bounds)
+        return lhd.sample(n_samples)
+
     @abstractmethod
-    def sample_forward(self, params: Dict[str, float]) -> Optional[np.ndarray]:
+    def _forward(self, x: TensorLike) -> TensorLike | None:
         """
-        Run a single simulation with the given parameters and return output statistics.
+        Abstract method to perform the forward simulation.
 
-        Args:
-            params: Dictionary of parameter values
+        Parameters
+        ----------
+        x: TensorLike
+            Input parameters into the simulation forward run.
 
-        Returns:
-            Array of output statistics or None if simulation fails
-        """
-        pass
-
-    def sample_inputs(self, n_samples: int) -> np.ndarray:
-        """
-        Generate random samples within the parameter bounds using Latin Hypercube Sampling.
-
-        Args:
-            n_samples: Number of samples to generate
-
-        Returns:
-            np.ndarray: Parameter samples (column order is given by self.param_names)
+        Returns
+        -------
+        TensorLike | None
+            Simulated output tensor. Shape = (1, self.out_dim).
+            For example, if the simulator outputs two simulated variables,
+            then the shape would be (1, 2). None if the simulation fails.
         """
 
-        # TODO: check that sample_array has params self.param_names order
-        lhd = LatinHypercube([self.param_bounds[name] for name in self.param_names])
-        sample_array = lhd.sample(n_samples)
-        return sample_array
-
-    def convert_samples(
-        self, samples: Union[np.ndarray, pd.DataFrame]
-    ) -> list[dict[str, float]]:
+    def forward(self, x: TensorLike) -> TensorLike | None:
         """
-        Convert the sample array or dataframe to a list of parameter dictionaries.
+        Generate samples from input data using the simulator.
+
+        Combines the abstract method `_forward` with some validation checks.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape (n_samples, self.in_dim).
+
+        Returns
+        -------
+        TensorLike
+            Simulated output tensor. None if the simulation failed.
         """
-        if isinstance(samples, pd.DataFrame):
-            return samples.to_dict(orient="records")
+        y = self._forward(self.check_matrix(x))
+        if isinstance(y, TensorLike):
+            y = self.check_matrix(y)
+            x, y = self.check_pair(x, y)
+            return y
+        return None
 
-        elif isinstance(samples, np.ndarray):
-            samples_list = []
-            for i in range(len(samples)):
-                sample = {}
-                for j, name in enumerate(self.param_names):
-                    sample[name] = samples[i, j]
-                samples_list.append(sample)
-            return samples_list
-        else:
-            raise ValueError("samples must be an array or pandas dataframe")
+    def forward_batch(self, x: TensorLike) -> TensorLike:
+        """Run multiple simulations with different parameters.
 
-    def run_batch_simulations(self, samples: np.ndarray) -> np.ndarray:
+        For infallible simulators that always succeed.
+        If your simulator might fail, use `forward_batch_skip_failures()` instead.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Tensor of input parameters to make predictions for.
+
+        Returns
+        -------
+        TensorLike
+            Tensor of simulation results of shape (n_batch, self.out_dim).
+
+        Raises
+        ------
+        RuntimeError
+            If the number of simulations does not match the input.
+            Use `forward_batch_skip_failures()` to handle failures.
         """
-        Run multiple simulations with different parameters.
+        results, x_valid = self.forward_batch_skip_failures(x)
 
-        Args:
-            samples: List of parameter dictionaries or DataFrame of parameters
+        # Raise an error if the number of simulations does not match the input
+        if x.shape[0] != x_valid.shape[0]:
+            msg = (
+                "Some simulations failed. Use forward_batch_skip_failures() to handle "
+                "failures."
+            )
+            raise RuntimeError(msg)
 
-        Returns:
-            2D array of simulation results
+        return results
+
+    def forward_batch_skip_failures(
+        self, x: TensorLike
+    ) -> tuple[TensorLike, TensorLike]:
+        """Run multiple simulations, skipping any that fail.
+
+        For simulators where for some inputs the simulation can fail.
+        Failed simulations are skipped, and only successful results are returned
+        along with their corresponding input parameters.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Tensor of input parameters to make predictions for.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tuple of (simulation_results, valid_input_parameters).
+            Only successful simulations are included.
         """
-
-        # convert inputs to list of dictionaries
-        samples = self.convert_samples(samples)
+        self.logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         successful = 0
-
-        # Import tqdm here to avoid potential import errors
-        try:
-            from tqdm.auto import tqdm as progress_bar
-        except ImportError:
-            # Fallback to a simple progress tracking if tqdm is not available
-            def progress_bar(iterable, **kwargs):
-                return iterable
+        valid_idx = []
 
         # Process each sample with progress tracking
-        for sample in progress_bar(samples, desc="Running simulations", unit="sample"):
-            result = self.sample_forward(sample)
+        for i in tqdm(
+            range(len(x)),
+            desc="Running simulations",
+            disable=not self.progress_bar,
+            total=len(x),
+            unit="sample",
+            unit_scale=True,
+        ):
+            logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
+            result = self.forward(x[i : i + 1])
             if result is not None:
                 results.append(result)
                 successful += 1
+                valid_idx.append(i)
+                logger.debug("Simulation %d/%d successful", i + 1, len(x))
+            else:
+                logger.warning(
+                    "Simulation %d/%d failed. Result is None.", i + 1, len(x)
+                )
 
         # Report results
-        print(
-            f"Successfully completed {successful}/{len(samples)} simulations ({successful/len(samples)*100:.1f}%)"
+        self.logger.info(
+            "Successfully completed %d/%d simulations (%.1f%%)",
+            successful,
+            len(x),
+            (successful / len(x) * 100 if len(x) > 0 else 0.0),
         )
 
-        # Convert results to numpy array
-        if results:
-            return np.array(results)
-        else:
-            return np.array([])
+        # stack results into a 2D array on first dim using torch
+        results_tensor = torch.cat(results, dim=0)
 
-    def _calculate_output_stats(
-        self, output_values: np.ndarray, base_name: str
-    ) -> Tuple[np.ndarray, List[str]]:
+        return results_tensor, x[valid_idx]
+
+    def get_parameter_idx(self, name: str) -> int:
         """
-        Calculate statistics for an output time series.
+        Get the index of a specific parameter.
 
-        Args:
-            output_values: Array of time series values
-            base_name: Base name of the output variable
+        Parameters
+        ----------
+        name: str
+            Name of the parameter to retrieve.
 
-        Returns:
-            Tuple of (stats_array, stat_names)
+        Returns
+        -------
+        float
+            Index of the specified parameter.
         """
-        stats = np.array(
-            [
-                np.min(output_values),
-                np.max(output_values),
-                np.mean(output_values),
-                np.max(output_values) - np.min(output_values),
-            ]
-        )
-
-        stat_names = [
-            f"{base_name}_min",
-            f"{base_name}_max",
-            f"{base_name}_mean",
-            f"{base_name}_range",
-        ]
-
-        return stats, stat_names
-
-    def get_results_dataframe(
-        self, samples: List[Dict[str, float]], results: np.ndarray
-    ) -> pd.DataFrame:
-        """
-        Create a DataFrame with both input parameters and output results.
-
-        Args:
-            samples: List of parameter dictionaries
-            results: 2D array of simulation results
-
-        Returns:
-            DataFrame with parameters and results
-        """
-        # Create DataFrame with parameters
-        df_params = pd.DataFrame(samples)
-
-        # Create DataFrame with results
-        if len(results) > 0 and len(self._output_names) == results.shape[1]:
-            df_results = pd.DataFrame(results, columns=self._output_names)
-            # Combine parameters and results
-            return pd.concat([df_params, df_results], axis=1)
-        elif len(results) > 0:
-            # If output names are not set or don't match, use generic column names
-            result_cols = [f"output_{i}" for i in range(results.shape[1])]
-            df_results = pd.DataFrame(results, columns=result_cols)
-            return pd.concat([df_params, df_results], axis=1)
-        else:
-            return df_params
+        if name not in self._param_names:
+            raise ValueError(f"Parameter {name} not found.")
+        return self._param_names.index(name)
