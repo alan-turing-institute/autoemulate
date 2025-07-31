@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoemulate"
-version = "0.4.0"
+version = "1.0.0"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = ["AutoEmulate contributors (see our GitHub page)"]
@@ -61,15 +61,18 @@ build-backend = "poetry.core.masonry.api"
 relative_files = true
 source = [".", "/tmp"]
 
+[tool.pytest.ini_options]
+addopts = "--ignore=v0"
+
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-include = ["autoemulate/experimental/*", "tests/experimental/*"]
+include = ["autoemulate/*", "tests/*", "benchmarks/*"]
 
 [tool.ruff]
 src = ["autoemulate/"]
 line-length = 88
-include = ["autoemulate/experimental/**/*.py", "tests/experimental/**/*.py"]
+include = ["autoemulate/**/*.py", "tests/**/*.py", "benchmarks/**/*.py"]
 target-version = "py310"
 
 [tool.ruff.format]
@@ -77,6 +80,7 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 select = [
+    "D",   # docstring conventions
     "E",
     "F",
     "W",   # flake8
@@ -104,6 +108,9 @@ ignore = [
     "PLR2004", # Magic value used in comparison
     "EM102",   # Exception must not use an f-string literal, assign to variable first
     "ISC001",  # Conflicts with formatter
+    # "D417",    # Missing trailing new line in docstring
+    "D100",    # Missing docstring in public module
+    "D104",    # Missing docstring in public package
 ]
 
 unfixable = [
@@ -111,3 +118,9 @@ unfixable = [
     "F841", # Would remove unused variables
 ]
 flake8-unused-arguments.ignore-variadic-names = true # allow unused *args/**kwargs
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["D"]
