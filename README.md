@@ -12,7 +12,6 @@
 | autoemulate/callbacks/early\_stopping.py                        |       52 |        9 |     83% |70-72, 77, 103, 127, 132, 147, 152 |
 | autoemulate/core/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
 | autoemulate/core/compare.py                                     |      210 |       87 |     59% |125, 130-134, 164, 183-186, 204-205, 216-220, 380-389, 427-520, 542-546, 548-552, 566 |
-| autoemulate/core/datasets.py                                    |       14 |       14 |      0% |      1-67 |
 | autoemulate/core/device.py                                      |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
 | autoemulate/core/logging\_config.py                             |       58 |       21 |     64% |30, 33-37, 53-70, 114 |
 | autoemulate/core/model\_selection.py                            |       70 |        2 |     97% |   53, 140 |
@@ -23,6 +22,8 @@
 | autoemulate/core/tuner.py                                       |       43 |        4 |     91% |60, 151-158 |
 | autoemulate/core/types.py                                       |       19 |        0 |    100% |           |
 | autoemulate/data/utils.py                                       |      187 |       21 |     89% |61, 92, 98, 114-118, 130, 146-148, 169, 174, 405, 408-410, 438, 441-443, 475 |
+| autoemulate/datasets/\_\_init\_\_.py                            |        2 |        2 |      0% |       1-3 |
+| autoemulate/datasets/datasets.py                                |       14 |       14 |      0% |      1-68 |
 | autoemulate/emulators/\_\_init\_\_.py                           |       18 |        1 |     94% |        49 |
 | autoemulate/emulators/base.py                                   |      189 |       19 |     90% |87, 105-106, 115, 121-126, 161-165, 259-262, 338-339, 465, 472, 553-555, 571 |
 | autoemulate/emulators/ensemble.py                               |      112 |        9 |     92% |63, 68, 77-78, 102-103, 247, 258-259 |
@@ -91,7 +92,7 @@
 | tests/test\_utils.py                                            |       11 |        0 |    100% |           |
 | tests/transforms/test\_serde.py                                 |       86 |        1 |     99% |       146 |
 | tests/transforms/test\_transforms.py                            |       70 |        0 |    100% |           |
-|                                                       **TOTAL** | **5474** |  **949** | **83%** |           |
+|                                                       **TOTAL** | **5476** |  **951** | **83%** |           |
 
 
 ## Setup coverage badge
