@@ -101,7 +101,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         # Initialize retries and maximum number of retries for consecutive failed tuning
         # iterations that would indicate that no model params is working for the
         # given dataset/model and that the tuning process should be stopped
-        retries, max_retries = 0, 100
+        retries, max_retries = 0, 5
         while len(model_params_tested) < self.n_iter:
             # randomly sample hyperparameters and instantiate model
             model_params = model_class.get_random_params()
