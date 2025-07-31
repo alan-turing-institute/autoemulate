@@ -353,8 +353,8 @@ class SensitivityAnalysis(ConversionMixin):
         """
         Plot a normalized Sobol sensitivity analysis heatmap.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         results: pd.DataFrame
             Sensitivity index dataframe with columns ['index', 'parameter',
             'output', 'value'].
@@ -799,8 +799,8 @@ def _plot_sa_heatmap(  # noqa: PLR0913
     """
     Plot a sensitivity analysis heatmap for a given index.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     results: pd.DataFrame
         Sensitivity index dataframe with columns ['index', 'parameter',
         'output', 'value'].
@@ -816,7 +816,6 @@ def _plot_sa_heatmap(  # noqa: PLR0913
     figsize: tuple | None
         Figure size as (width, height) in inches. Defaults to None.
     """
-
     # Filter the dataframe for the specified index
     df = si_df[si_df["index"] == index]
 
