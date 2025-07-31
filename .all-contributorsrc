@@ -208,6 +208,16 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "jasonmcewen",
+      "name": "Jason McEwen ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3181701?v=4",
+      "profile": "http://www.jasonmcewen.org",
+      "contributions": [
+        "ideas",
+        "projectManagement"
+      ]
     }
   ]
 }
