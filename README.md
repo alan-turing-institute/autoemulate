@@ -11,7 +11,7 @@
 | autoemulate/calibration/history\_matching\_dashboard.py         |      272 |      272 |      0% |     1-798 |
 | autoemulate/callbacks/early\_stopping.py                        |       52 |        9 |     83% |70-72, 77, 103, 127, 132, 147, 152 |
 | autoemulate/core/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
-| autoemulate/core/compare.py                                     |      210 |       87 |     59% |125, 130-134, 164, 183-186, 204-205, 216-220, 380-389, 427-520, 542-546, 548-552, 566 |
+| autoemulate/core/compare.py                                     |      215 |       89 |     59% |134, 139-143, 175, 194-197, 215-216, 227-231, 321-326, 401-410, 448-541, 563-567, 569-573, 587 |
 | autoemulate/core/device.py                                      |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
 | autoemulate/core/logging\_config.py                             |       58 |       21 |     64% |30, 33-37, 53-70, 114 |
 | autoemulate/core/model\_selection.py                            |       70 |        2 |     97% |   53, 140 |
@@ -92,7 +92,7 @@
 | tests/test\_utils.py                                            |       11 |        0 |    100% |           |
 | tests/transforms/test\_serde.py                                 |       86 |        1 |     99% |       146 |
 | tests/transforms/test\_transforms.py                            |       70 |        0 |    100% |           |
-|                                                       **TOTAL** | **5476** |  **951** | **83%** |           |
+|                                                       **TOTAL** | **5481** |  **953** | **83%** |           |
 
 
 ## Setup coverage badge
