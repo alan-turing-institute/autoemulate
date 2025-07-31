@@ -10,7 +10,7 @@ theme:
 # See https://jupyterbook.org/content/execute.html
 execute:
   execute_notebooks: 'cache'
-  timeout: 600  # Increase timeout to 10 minutes
+  timeout: 3600  # Increase timeout to 1 hour
   exclude_patterns:
     - "case_studies/*.ipynb"
 
