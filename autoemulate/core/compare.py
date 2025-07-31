@@ -47,7 +47,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
-        model_tuning: bool = False,
+        model_tuning: bool = True,
         model_kwargs: None | ModelParams = None,
         n_iter: int = 10,
         n_splits: int = 5,
@@ -78,7 +78,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Defaults to None, in which case the data is standardized.
         model_tuning: bool
             Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_kwargs provided. Defaults to False.
+            If False, the models use the model_kwargs provided. Defaults to True.
         model_kwargs: ModelParams | None
             Dictionary of model-specific parameters to use when fitting the models.
             If None, the default parameters for each model are used.
