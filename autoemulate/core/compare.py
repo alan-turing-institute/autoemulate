@@ -18,7 +18,7 @@ from autoemulate.core.plotting import (
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
-from autoemulate.core.types import DeviceLike, DistributionLike, InputLike
+from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, ModelParams
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import (
     ALL_EMULATORS,
@@ -47,6 +47,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
+        model_tuning: bool = False,
+        model_kwargs: None | ModelParams = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -74,6 +76,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[AutoEmulateTransform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
+        model_tuning: bool
+            Whether to tune the hyperparameters of the models using cross-validation.
+            If False, the models use the model_kwargs provided. Defaults to False.
+        model_kwargs: ModelParams | None
+            Dictionary of model-specific parameters to use when fitting the models.
+            If None, the default parameters for each model are used.
+            This is only used if model_tuning is False. Defaults to None.
         n_iter: int
             Number of parameter settings to randomly sample and test during tuning.
         n_splits: int
@@ -139,6 +148,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
+        self.model_tuning = model_tuning
+        self.model_kwargs = model_kwargs or {}
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -277,32 +288,42 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             self.logger.info(
                                 "Running Model: %s: %d/%d (attempt %d/%d)",
                                 model_cls.__name__,
-                                id,
+                                id + 1,
                                 len(self.models),
                                 attempt + 1,
                                 self.max_retries,
                             )
-
-                            self.logger.debug(
-                                'Running tuner for model "%s"', model_cls.__name__
-                            )
-                            scores, params_list = tuner.run(
-                                model_cls,
-                                x_transforms,
-                                y_transforms,
-                                n_splits=self.n_splits,
-                                shuffle=self.shuffle,
-                            )
-                            mean_scores = [np.mean(score).item() for score in scores]
-                            best_score_idx = np.argmax(mean_scores)
-                            best_params_for_this_model = params_list[best_score_idx]
-                            self.logger.debug(
-                                'Tuner found best params for model "%s": '
-                                "%s with score: %.3f",
-                                model_cls.__name__,
-                                best_params_for_this_model,
-                                mean_scores[best_score_idx],
-                            )
+                            if self.model_tuning:
+                                self.logger.debug(
+                                    'Running tuner for model "%s"',
+                                    model_cls.__name__,
+                                )
+                                scores, params_list = tuner.run(
+                                    model_cls,
+                                    x_transforms,
+                                    y_transforms,
+                                    n_splits=self.n_splits,
+                                    shuffle=self.shuffle,
+                                )
+                                mean_scores = [
+                                    np.mean(score).item() for score in scores
+                                ]
+                                best_score_idx = np.argmax(mean_scores)
+                                best_params_for_this_model = params_list[best_score_idx]
+                                self.logger.debug(
+                                    'Tuner found best params for model "%s": '
+                                    "%s with score: %.3f",
+                                    model_cls.__name__,
+                                    best_params_for_this_model,
+                                    mean_scores[best_score_idx],
+                                )
+                            else:
+                                self.logger.debug(
+                                    'Skipping tuning for model "%s", using default'
+                                    "parameters",
+                                    model_cls.__name__,
+                                )
+                                best_params_for_this_model = self.model_kwargs
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
