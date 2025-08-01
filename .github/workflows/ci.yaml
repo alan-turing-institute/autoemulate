@@ -31,46 +31,30 @@ jobs:
           find . -type f -name "*.pyc" -delete
           find . -type d -name "__pycache__" -delete
           rm -f .coverage* coverage.xml
-      # Cache Poetry dependencies
-      # - name: Cache dependencies
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ~/.cache/pypoetry
-      #     key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}-cpu
-      #     restore-keys: |
-      #       ${{ runner.os }}-poetry-
       
-      - name: Install poetry
+      - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python -
-
-      - name: Configure poetry
-        run: |
-          poetry config virtualenvs.create false
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
 
       - name: Switch to CPU version of PyTorch
         run: |
-          poetry remove torch
-          poetry source add -p explicit pytorch https://download.pytorch.org/whl/cpu
-          poetry add --source pytorch "torch==2.6.0"
-
-      - name: Install dependencies
-        run: |
-          poetry install
+          pip uninstall torch -y
+          pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 
       - name: Verify PyTorch installation
         run: |
-          poetry run python -c "import torch; print(torch.__version__); print('CUDA available:', torch.cuda.is_available())"
+          python -c "import torch; print(torch.__version__); print('CUDA available:', torch.cuda.is_available())"
       
       - name: Debug Coverage Config
         run: |
           cat pyproject.toml
-          poetry run coverage debug config
+          coverage debug config
 
       - name: Run Tests with Coverage
         run: |
-          poetry run coverage run --source=. --omit="v0/*" -m pytest
-          poetry run coverage xml -i -o coverage.xml
+          coverage run --source=. --omit="v0/*" -m pytest
+          coverage xml -i -o coverage.xml
         env: 
           COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
 
