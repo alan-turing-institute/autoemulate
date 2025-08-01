@@ -72,7 +72,9 @@ def test_save_model_w_dir(model_serialiser, model):
         test_path = Path(temp_dir)
         model_serialiser._save_model(model, None, test_path)
         assert test_path.exists()
-        assert (test_path / model_serialiser._get_model_filename(model)).exists()
+        assert os.path.exists(
+            os.path.join(test_path, model_serialiser._get_model_filename(model))
+        )
 
 
 def test_load_model(model_serialiser, model):
