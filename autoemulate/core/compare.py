@@ -158,12 +158,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     @staticmethod
     def list_emulators() -> pd.DataFrame:
-        """Return a dataframe with model names of all available emulators.
+        """Return a dataframe with info on all available emulators.
+
+        The dataframe includes the model name and whether it has a PyTorch backend,
+        supports multioutput data and provides uncertainty quantification.
 
         Returns
         -------
         pd.DataFrame
-            DataFrame with columns ['model_name', 'short_name'].
+            DataFrame with columns ['Emulator', 'PyTorch', 'MO', 'UQ'].
         """
         return pd.DataFrame(
             {
