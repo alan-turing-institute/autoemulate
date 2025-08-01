@@ -10,20 +10,13 @@ import tqdm
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
-from autoemulate.core.plotting import (
-    calculate_subplot_layout,
-    display_figure,
-    plot_xy,
-)
+from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
 from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, ModelParams
 from autoemulate.data.utils import ConversionMixin, set_random_seed
-from autoemulate.emulators import (
-    ALL_EMULATORS,
-    get_emulator_class,
-)
+from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
@@ -175,6 +168,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return pd.DataFrame(
             {
                 "Emulator": [emulator.model_name() for emulator in ALL_EMULATORS],
+                "PyTorch": [
+                    emulator in PYTORCH_EMULATORS for emulator in ALL_EMULATORS
+                ],
+                "MO": [emulator.is_multioutput() for emulator in ALL_EMULATORS],
+                "UQ": [emulator.uq for emulator in ALL_EMULATORS],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }

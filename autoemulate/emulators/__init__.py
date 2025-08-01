@@ -23,6 +23,18 @@ ALL_EMULATORS: list[type[Emulator]] = [
     EnsembleMLPDropout,
 ]
 
+# listing non pytorch emulators as we do not expect this list to grow
+NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
+    LightGBM,
+    RadialBasisFunctions,
+    RandomForest,
+]
+
+PYTORCH_EMULATORS: list[type[Emulator]] = [
+    emulator for emulator in ALL_EMULATORS if emulator not in NON_PYTORCH_EMULATORS
+]
+
+
 EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
 EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
 
