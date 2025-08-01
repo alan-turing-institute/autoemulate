@@ -26,7 +26,7 @@ ALL_EMULATORS: list[type[Emulator]] = [
 # listing non pytorch emulators as we do not expect this list to grow
 NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
     LightGBM,
-    RadialBasisFunctions,
+    SupportVectorMachine,
     RandomForest,
 ]
 
