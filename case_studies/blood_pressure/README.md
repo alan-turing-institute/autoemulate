@@ -14,11 +14,11 @@ cd case_studies/blood_pressure
 2. Install dependencies:
 
 ```bash
-poetry install
+pip install -e .
 ```
 
 3. Run JupyterLab to view the notebook:
 
 ```bash
-poetry run jupyter lab
+jupyter lab
 ```

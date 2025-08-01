@@ -22,23 +22,18 @@ jobs:
         name: Pre-commit
         runs-on: ubuntu-latest
         steps:
-          - uses: actions/checkout@v3
+          - uses: actions/checkout@v4
             with:
               fetch-depth: 0
-          - uses: actions/setup-python@v4
+          - uses: actions/setup-python@v5
             with:
               python-version: "3.12"
-          - name: Install poetry
-            run: |
-              curl -sSL https://install.python-poetry.org | python -
-
-          - name: Configure poetry
-            run: |
-              poetry config virtualenvs.in-project true
-
           - name: Install dependencies
             run: |
-              poetry install --with dev
+              python -m venv .venv
+              source .venv/bin/activate
+              python -m pip install --upgrade pip
+              pip install -e .[dev]
 
           - uses: pre-commit/action@v3.0.0
             with:

@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 dist/
 .venv/
+*.egg-info/
 
 # Ignore Sphinx build artifacts
 docs/build/
