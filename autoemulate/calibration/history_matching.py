@@ -9,6 +9,7 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
 from autoemulate.simulations.base import Simulator
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("autoemulate")
 
 
@@ -463,7 +464,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             which simulation samples were then selected.
         """
         logger.debug(
-            "Running history matching workflow with"
+            " Running history matching workflow with"
             " %d simulations and %d test samples.",
             n_simulations,
             n_test_samples,
@@ -481,6 +482,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 msg = (
                     f"Could not generate n_simulations ({n_simulations}) samples "
                     f"that are NROY after {max_retries} retries."
+                    f"Only {torch.cat(nroy_parameters_list, 0).shape[0]}  samples generated."
                 )
                 raise RuntimeError(msg)
 
@@ -557,7 +559,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         wave_results = []
         for i in range(n_waves):
-            logger.info("Running history matching wave %d/%d", i + 1, n_waves)
+            logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
@@ -568,16 +570,16 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
             # Get NROY points from impl scores and check fraction
             nroy_x = self.get_nroy(impl_scores, test_x)
-            nroy_frac = nroy_x.shape[0] / n_test_samples
+            nroy_frac = nroy_x.shape[0] / test_x.shape[0]
             logger.info(
-                "Wave %d/%d: NROY fraction is %.2f%%",
+                " Wave %d/%d: NROY fraction is %.2f%%",
                 i + 1,
                 n_waves,
                 nroy_frac * 100,
             )
             if nroy_frac < frac_nroy_stop:
                 logger.info(
-                    "Stopping history matching workflow at wave %d/%d "
+                    " Stopping history matching workflow at wave %d/%d "
                     "with NROY fraction %.2f%% < %.2f%%",
                     i + 1,
                     n_waves,
