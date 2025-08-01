@@ -522,7 +522,7 @@ class HistoryMatchingDashboard:
         scatter = ax.scatter(
             df[param_x],
             df[param_y],
-            df[param_z],
+            df[param_z],  # pyright: ignore[reportArgumentType]
             c=max_impl,
             cmap="viridis_r",
             s=30,  # pyright: ignore[reportCallIssue]
@@ -535,7 +535,7 @@ class HistoryMatchingDashboard:
             ax.scatter(
                 nroy_points[param_x],
                 nroy_points[param_y],
-                nroy_points[param_z],
+                nroy_points[param_z],  # pyright: ignore[reportArgumentType]
                 color="green",
                 s=50,  # pyright: ignore[reportCallIssue]
                 alpha=1.0,
