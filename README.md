@@ -7,7 +7,7 @@
 | autoemulate/\_\_init\_\_.py                                     |        0 |        0 |    100% |           |
 | autoemulate/calibration/\_\_init\_\_.py                         |        0 |        0 |    100% |           |
 | autoemulate/calibration/bayes.py                                |      124 |       49 |     60% |89-90, 95-96, 102-104, 116-122, 131-149, 172-174, 180, 184-186, 239-247, 305-335 |
-| autoemulate/calibration/history\_matching.py                    |      116 |       12 |     90% |67, 98-99, 105-106, 181, 257, 317, 322-323, 372, 397 |
+| autoemulate/calibration/history\_matching.py                    |      116 |       12 |     90% |68, 99-100, 106-107, 182, 258, 318, 323-324, 373, 398 |
 | autoemulate/calibration/history\_matching\_dashboard.py         |      272 |      272 |      0% |     1-798 |
 | autoemulate/callbacks/early\_stopping.py                        |       52 |        9 |     83% |70-72, 77, 103, 127, 132, 147, 152 |
 | autoemulate/core/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
