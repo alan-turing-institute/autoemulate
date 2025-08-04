@@ -321,5 +321,5 @@ class Simulator(ABC, ValidationMixin):
         output_dict = {}
         for i, output_name in enumerate(self.output_names):
             output_dict[output_name] = self.results_tensor[:, i]
-            
+
         return output_dict
