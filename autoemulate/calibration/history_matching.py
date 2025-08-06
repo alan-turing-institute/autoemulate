@@ -366,10 +366,21 @@ class HistoryMatchingWorkflow(HistoryMatching):
             It is applied as a ratio of the range (max_val - min_val) of each input
             parameter to create a buffer around the NROY minimum and maximum values.
         """
-        # [n_outputs, 2] where second dim is [min, max]
-        param_bounds = self.generate_param_bounds(nroy_x, buffer_ratio)
-        if param_bounds is not None:
-            self.simulator._param_bounds = list(param_bounds.values())
+        nroy_bounds = self.generate_param_bounds(
+            nroy_x, buffer_ratio
+        )  # {str: [min, max]}
+        if nroy_bounds is not None:
+            # Ensure new bounds do not exceed the original bounds
+            original_bounds = self.simulator._param_bounds  # [(min, max)]
+            adjusted_bounds = []
+            for new_bound, original_bound in zip(
+                nroy_bounds.values(), original_bounds, strict=False
+            ):
+                # Take the intersection of the new and original bounds
+                min_bound = max(new_bound[0], original_bound[0])
+                max_bound = min(new_bound[1], original_bound[1])
+                adjusted_bounds.append([min_bound, max_bound])
+            self.simulator._param_bounds = adjusted_bounds
         else:
             warnings.warn(
                 (
@@ -482,7 +493,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 msg = (
                     f"Could not generate n_simulations ({n_simulations}) samples "
                     f"that are NROY after {max_retries} retries."
-                    f"Only {torch.cat(nroy_parameters_list, 0).shape[0]}  samples generated."
+                    f"Only {torch.cat(nroy_parameters_list, 0).shape[0]} "
+                    "samples generated."
                 )
                 raise RuntimeError(msg)
 
