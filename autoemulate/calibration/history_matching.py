@@ -373,12 +373,18 @@ class HistoryMatchingWorkflow(HistoryMatching):
             # Ensure new bounds do not exceed the original bounds
             original_bounds = self.simulator._param_bounds  # [(min, max)]
             adjusted_bounds = []
-            for new_bound, original_bound in zip(
-                nroy_bounds.values(), original_bounds, strict=False
+            for i, (new_bound, original_bound) in enumerate(
+                zip(nroy_bounds.values(), original_bounds, strict=False)
             ):
                 # Take the intersection of the new and original bounds
                 min_bound = max(new_bound[0], original_bound[0])
                 max_bound = min(new_bound[1], original_bound[1])
+                if min_bound > max_bound:
+                    warnings.warn(
+                        f"Could not update {list(nroy_bounds.keys())[i]} bounds.",
+                        stacklevel=2,
+                    )
+                    min_bound, max_bound = original_bound
                 adjusted_bounds.append([min_bound, max_bound])
             self.simulator._param_bounds = adjusted_bounds
         else:
