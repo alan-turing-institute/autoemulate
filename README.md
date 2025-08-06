@@ -49,7 +49,7 @@
 | autoemulate/learners/pool.py                                    |        8 |        8 |      0% |      1-19 |
 | autoemulate/learners/stream.py                                  |      131 |       13 |     90% |85-95, 141, 492, 543-547, 550, 578-583, 586 |
 | autoemulate/simulations/\_\_init\_\_.py                         |        6 |        0 |    100% |           |
-| autoemulate/simulations/base.py                                 |       92 |        4 |     96% |59, 153, 224-228 |
+| autoemulate/simulations/base.py                                 |       97 |        8 |     92% |59, 153, 224-228, 321-325 |
 | autoemulate/simulations/epidemic.py                             |       40 |        0 |    100% |           |
 | autoemulate/simulations/experimental\_design.py                 |       32 |        0 |    100% |           |
 | autoemulate/simulations/flow\_problem.py                        |       45 |       36 |     20% |50-75, 102-161 |
@@ -92,7 +92,7 @@
 | tests/test\_utils.py                                            |       11 |        0 |    100% |           |
 | tests/transforms/test\_serde.py                                 |       86 |        1 |     99% |       146 |
 | tests/transforms/test\_transforms.py                            |       70 |        0 |    100% |           |
-|                                                       **TOTAL** | **5481** |  **953** | **83%** |           |
+|                                                       **TOTAL** | **5486** |  **957** | **83%** |           |
 
 
 ## Setup coverage badge
