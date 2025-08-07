@@ -166,7 +166,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         Returns
         -------
         pd.DataFrame
-            DataFrame with columns ['Emulator', 'PyTorch', 'MO', 'UQ'].
+            DataFrame with columns ['Emulator', 'PyTorch', 'Multi-Output', 'Uncertainty_Quantification'].
         """
         return pd.DataFrame(
             {
