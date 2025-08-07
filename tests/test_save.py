@@ -91,9 +91,10 @@ def test_load_model(model_serialiser, model):
 
 def test_invalid_file_path(model_serialiser, model):
     with TemporaryDirectory() as temp_dir:
-        invalid_path = os.path.join(temp_dir, "/invalid/path/model")
+        # Test case 1: Path with invalid characters
+        invalid_chars = '<>:"|?*' if os.name == "nt" else "\0"
+        invalid_path = os.path.join(temp_dir, f"invalid{invalid_chars}path")
         with pytest.raises(Exception):  # noqa: B017, PT011
-            # only the / makes it invalid
             model_serialiser._save_model(model, None, invalid_path)
         with pytest.raises(Exception):  # noqa: B017, PT011
             model_serialiser._load_model(invalid_path)
