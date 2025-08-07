@@ -17,10 +17,10 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-15", "windows-latest"]
         python-version: ['3.10', '3.11', '3.12']
-    # env:
+    env:
     #   # to avoid mps errors on
     #   # PYTORCH_ENABLE_MPS_FALLBACK: 1
-    #   # PYTORCH_MPS_HIGH_WATERMARK_RATIO: 0.0
+      PYTORCH_MPS_HIGH_WATERMARK_RATIO: 0.0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
