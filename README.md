@@ -11,7 +11,7 @@
 | autoemulate/calibration/history\_matching\_dashboard.py         |      272 |      272 |      0% |     1-798 |
 | autoemulate/callbacks/early\_stopping.py                        |       52 |        9 |     83% |70-72, 77, 103, 127, 132, 147, 152 |
 | autoemulate/core/\_\_init\_\_.py                                |        0 |        0 |    100% |           |
-| autoemulate/core/compare.py                                     |      215 |       89 |     59% |134, 139-143, 175, 194-197, 215-216, 227-231, 321-326, 401-410, 448-541, 563-567, 569-573, 587 |
+| autoemulate/core/compare.py                                     |      215 |       86 |     60% |134, 139-143, 175, 194-197, 215-216, 227-231, 321-326, 410, 448-541, 563-567, 569-573, 587 |
 | autoemulate/core/device.py                                      |       45 |        8 |     82% |15-16, 44, 99, 105, 153-158, 163 |
 | autoemulate/core/logging\_config.py                             |       58 |       21 |     64% |30, 33-37, 53-70, 114 |
 | autoemulate/core/model\_selection.py                            |       70 |        2 |     97% |   53, 140 |
@@ -19,7 +19,7 @@
 | autoemulate/core/results.py                                     |       54 |        0 |    100% |           |
 | autoemulate/core/save.py                                        |       73 |        7 |     90% |45-49, 75, 86-88 |
 | autoemulate/core/sensitivity\_analysis.py                       |      247 |      146 |     41% |59-63, 72-73, 76-77, 79-80, 86-87, 110-111, 125-129, 152-156, 223-224, 234-235, 242, 271, 296, 324-328, 395-403, 408-411, 416-433, 461-500, 522-538, 562-663, 675-751 |
-| autoemulate/core/tuner.py                                       |       43 |        4 |     91% |60, 151-158 |
+| autoemulate/core/tuner.py                                       |       43 |        1 |     98% |        60 |
 | autoemulate/core/types.py                                       |       19 |        0 |    100% |           |
 | autoemulate/data/utils.py                                       |      187 |       21 |     89% |61, 92, 98, 114-118, 130, 146-148, 169, 174, 405, 408-410, 438, 441-443, 475 |
 | autoemulate/datasets/\_\_init\_\_.py                            |        2 |        2 |      0% |       1-3 |
@@ -29,7 +29,7 @@
 | autoemulate/emulators/ensemble.py                               |      112 |        9 |     92% |63, 68, 77-78, 102-103, 247, 258-259 |
 | autoemulate/emulators/gaussian\_process/\_\_init\_\_.py         |        8 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process/exact.py                |      156 |        3 |     98% |200, 207, 234 |
-| autoemulate/emulators/gaussian\_process/kernel.py               |       36 |        0 |    100% |           |
+| autoemulate/emulators/gaussian\_process/kernel.py               |       36 |        2 |     94% |     61-66 |
 | autoemulate/emulators/gaussian\_process/mean.py                 |       13 |        0 |    100% |           |
 | autoemulate/emulators/gaussian\_process/poly\_mean.py           |       28 |        2 |     93% |    56, 69 |
 | autoemulate/emulators/gaussian\_process/polynomial\_features.py |       35 |        2 |     94% |     73-74 |
@@ -92,7 +92,7 @@
 | tests/test\_utils.py                                            |       11 |        0 |    100% |           |
 | tests/transforms/test\_serde.py                                 |       86 |        1 |     99% |       146 |
 | tests/transforms/test\_transforms.py                            |       70 |        0 |    100% |           |
-|                                                       **TOTAL** | **5486** |  **957** | **83%** |           |
+|                                                       **TOTAL** | **5486** |  **953** | **83%** |           |
 
 
 ## Setup coverage badge
