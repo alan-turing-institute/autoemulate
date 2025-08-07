@@ -17,7 +17,7 @@ def test_ae(sample_data_for_ae_compare, device):
         pytest.skip(f"Device ({device}) is not available.")
 
     x, y = sample_data_for_ae_compare
-    ae = AutoEmulate(x, y, device=device)
+    ae = AutoEmulate(x, y, device=device, n_iter=2, n_splits=2)
     best_result = ae.best_result()
     assert best_result is not None
     # Save the best model to a temporary file
