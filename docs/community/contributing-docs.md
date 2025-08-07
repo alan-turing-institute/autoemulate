@@ -6,7 +6,7 @@ We welcome all documentation contributions, from fixing small typos to adding co
 
 Before contributing, please read our [contributing guide](contributing.md) to understand our workflow.
 
-To test the changes you make to the docs, install the package with [Poetry (development mode)](../getting-started/installation.md#install-using-poetry) which includes the Jupyter book package. This will allow you to build the documentation locally via the command prompt so long as the python environment activated.
+To test the changes you make to the docs, install the package with [development dependencies](../installation.md#install-from-source-for-development) which includes the Jupyter book package. This will allow you to build the documentation locally via the command prompt so long as the python environment activated.
 
 ## Types of Documentation Contributions
 

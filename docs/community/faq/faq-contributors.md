@@ -20,7 +20,7 @@
 
 2. How do I set up my development environment for AutoEmulate?
    <!-- Steps to configure a local development environment, including any necessary tools or dependencies. -->
-   See the 'Install using Poetry' section of the [installation](../../getting-started/installation.md) page.
+   See the 'Install from source for development' section of the [installation](../../installation.md) page.
 
 3. How do I run tests for AutoEmulate?
    <!-- Instructions on how to execute the project's test suite to ensure changes do not introduce regressions. -->
