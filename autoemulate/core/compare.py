@@ -167,7 +167,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         -------
         pd.DataFrame
             DataFrame with columns:
-                ['Emulator', 'PyTorch', 'Multi_Output', 'Uncertainty_Quantification'].
+                ['Emulator', 'PyTorch', 'Multioutput', 'Uncertainty_Quantification'].
         """
         return pd.DataFrame(
             {
@@ -175,7 +175,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 "PyTorch": [
                     emulator in PYTORCH_EMULATORS for emulator in ALL_EMULATORS
                 ],
-                "Multi_Output": [
+                "Multioutput": [
                     emulator.is_multioutput() for emulator in ALL_EMULATORS
                 ],
                 "Uncertainty_Quantification": [
