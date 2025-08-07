@@ -166,7 +166,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         Returns
         -------
         pd.DataFrame
-            DataFrame with columns ['Emulator', 'PyTorch', 'Multi-Output', 'Uncertainty_Quantification'].
+            DataFrame with columns:
+                ['Emulator', 'PyTorch', 'Multi_Output', 'Uncertainty_Quantification'].
         """
         return pd.DataFrame(
             {
@@ -174,8 +175,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 "PyTorch": [
                     emulator in PYTORCH_EMULATORS for emulator in ALL_EMULATORS
                 ],
-                "MO": [emulator.is_multioutput() for emulator in ALL_EMULATORS],
-                "UQ": [emulator.uq for emulator in ALL_EMULATORS],
+                "Multi_Output": [
+                    emulator.is_multioutput() for emulator in ALL_EMULATORS
+                ],
+                "Uncertainty_Quantification": [
+                    emulator.supports_uq for emulator in ALL_EMULATORS
+                ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }

@@ -36,7 +36,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     scheduler_cls: type[optim.lr_scheduler.LRScheduler] | None = None
     x_transform: StandardizeTransform | None = None
     y_transform: StandardizeTransform | None = None
-    uq: bool = False
+    supports_uq: bool = False
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -272,7 +272,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 class DeterministicEmulator(Emulator):
     """A base class for deterministic emulators."""
 
-    uq: bool = False
+    supports_uq: bool = False
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...
@@ -299,7 +299,7 @@ class DeterministicEmulator(Emulator):
 class ProbabilisticEmulator(Emulator):
     """A base class for probabilistic emulators."""
 
-    uq: bool = True
+    supports_uq: bool = True
 
     @abstractmethod
     def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
@@ -420,7 +420,7 @@ class PyTorchBackend(nn.Module, Emulator):
     supports_grad: bool = True
     lr: float = 1e-1
     scheduler_cls: type[LRScheduler] | None = None
-    uq: bool = False
+    supports_uq: bool = False
 
     def loss_func(self, y_pred, y_true):
         """Loss function to be used for training the model."""
