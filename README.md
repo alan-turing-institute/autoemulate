@@ -12,7 +12,7 @@ Simulations of physical systems are often slow and need lots of compute, which m
 
 ## Documentation
 
-You can find the project documentation [here](https://alan-turing-institute.github.io/autoemulate/), including [installation](https://alan-turing-institute.github.io/autoemulate/getting-started/installation.html).
+You can find the project documentation [here](https://alan-turing-institute.github.io/autoemulate/), including [installation](https://alan-turing-institute.github.io/autoemulate/installation.html).
 
 ## The AutoEmulate project
 

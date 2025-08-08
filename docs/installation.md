@@ -17,9 +17,9 @@ To get the latest release from PyPI:
 pip install autoemulate
 ```
 
-## Install from source for development
+## Install using UV
 
-If you'd like to contribute to `AutoEmulate`, you can install the package from source.
+If you'd like to contribute to `AutoEmulate`, you can install the package using UV.
 
 * Fork the repository on GitHub by clicking the "Fork" button at the top right of the [AutoEmulate repository](https://github.com/alan-turing-institute/autoemulate)
 
@@ -35,18 +35,22 @@ Navigate into the directory:
 cd autoemulate
 ```
 
+[Install UV](https://docs.astral.sh/uv/getting-started/installation/)
+
+Setup a virtual environment:
+```bash
+uv venv
+```
+
+Activate your virtual environment:
+```bash
+source .venv/bin/activate
+```
+
 Install the package in development mode with all dependencies:
 
 ```bash
-pip install -e .[dev]
-```
-
-Alternatively, you can create a virtual environment first:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -e .[dev]
+uv pip install -e .[dev]
 ```
 
 ## Interactive tutorials
