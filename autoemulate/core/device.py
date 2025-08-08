@@ -91,7 +91,7 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
     if device == "mps" or (
         isinstance(device, torch.device) and device.type == torch.device("mps").type
     ):
-        return torch.backends.mps.is_available()
+        return torch.backends.mps.is_available() & torch.backends.mps.is_built()
     if device == "cuda":
         return torch.cuda.is_available()
     if isinstance(device, torch.device) and device.type == "cuda":
