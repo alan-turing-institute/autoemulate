@@ -22,7 +22,7 @@ dependencies = [
     "seaborn>=0.12.2",
     "scikit-learn>=1.3.0,<1.6.0",
     "pandas>=2.1",
-    "torch>=2.1.0,
+    "torch>=2.1.0",
     "skorch>=0.15.0",
     "scipy>=1.11.3",
     "numpy>=1.24",
@@ -134,7 +134,7 @@ select = [
 
 ignore = [
     "PLR2004", # Magic value used in comparison
-    "EM102",   # Exception must not use an f-string literal, assign to variable first
+    "EM102",   # Exception must not use an f-string literal, assign to variable first
     "ISC001",  # Conflicts with formatter
     # "D417",    # Missing trailing new line in docstring
     "D100",    # Missing docstring in public module
