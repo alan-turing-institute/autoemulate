@@ -58,6 +58,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://www.nayarafonseca.com/"><img src="https://avatars.githubusercontent.com/u/89653110?v=4?s=100" width="100px;" alt="Nayara Fonseca"/><br /><sub><b>Nayara Fonseca</b></sub></a><br /><a href="#doc-nayara-focs" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://www.jasonmcewen.org"><img src="https://avatars.githubusercontent.com/u/3181701?v=4?s=100" width="100px;" alt="Jason McEwen "/><br /><sub><b>Jason McEwen </b></sub></a><br /><a href="#ideas-jasonmcewen" title="Ideas, Planning, & Feedback">🤔</a> <a href="#projectManagement-jasonmcewen" title="Project Management">📆</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/alighato"><img src="https://avatars.githubusercontent.com/u/98394988?v=4?s=100" width="100px;" alt="Amir Ali"/><br /><sub><b>Amir Ali</b></sub></a><br /><a href="#ideas-alighato" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://h-sax.github.io/"><img src="https://avatars.githubusercontent.com/u/95103895?v=4?s=100" width="100px;" alt="Harry Saxton"/><br /><sub><b>Harry Saxton</b></sub></a><br /><a href="#ideas-H-Sax" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
 </table>
