@@ -502,7 +502,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
                     f"Only {torch.cat(nroy_parameters_list, 0).shape[0]} "
                     "samples generated."
                 )
-                raise RuntimeError(msg)
+                raise Warning(msg)
+                break
 
             # Generate `n_test_samples` with implausability scores, identify NROY
             test_parameters, impl_scores = self.generate_samples(n_test_samples)
@@ -530,13 +531,26 @@ class HistoryMatchingWorkflow(HistoryMatching):
         assert self.emulator is not None
         self.emulator.fit(self.train_x, self.train_y)
 
+        prediction = self.emulator.predict(self.train_x)
+
+        print("mean", ((prediction.mean - (self.train_y)) / self.train_y).mean())
+        print("std", ((prediction.mean - self.train_y) / self.train_y).std())
+
+        print("ratio", (prediction.variance / self.train_y).mean())
+        print("ratio", (prediction.variance / self.train_y).std())
+
+        print(
+            "prediction variance mean", (prediction.variance / prediction.mean).mean()
+        )
+        print("prediction variance std", (prediction.variance / prediction.mean).std())
+
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
 
     def run_waves(  # noqa: PLR0913
         self,
         n_waves: int = 5,
-        frac_nroy_stop: float = 0.1,
+        frac_nroy_stop: float = 0.9,
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
@@ -584,6 +598,20 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 max_retries=max_retries,
                 buffer_ratio=buffer_ratio,
             )
+
+            print("Wave ", i, self.simulator.param_bounds)
+
+            if len(test_x) < n_simulations or len(impl_scores) < n_simulations:
+                logger.warning(
+                    " Not enough parameters or impl scores generated in wave %d/%d",
+                    i + 1,
+                    n_waves,
+                    "Stopping history matching workflow. Results are stored until wave %d/%d.",
+                    i,
+                    n_waves,
+                )
+                break
+
             wave_results.append((test_x, impl_scores))
 
             # Get NROY points from impl scores and check fraction
