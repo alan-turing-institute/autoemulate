@@ -134,6 +134,14 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
             self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
         )
         self.output_from_samples = output_from_samples or y.shape[1] > max_targets
+        if not output_from_samples and not all(
+            isinstance(t, AutoEmulateTransform) for t in self.y_transforms
+        ):
+            msg = (
+                "y_transforms must be a list of AutoEmulateTransform instances to "
+                f"support outputs without sampling. y_transforms: {self.y_transforms}"
+            )
+            raise RuntimeError(msg)
         self.n_samples = n_samples
         self.full_covariance = full_covariance and y.shape[1] <= max_targets
         TorchDeviceMixin.__init__(self, device=device)
@@ -269,6 +277,12 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
         """
         # Invert the order since the combined transform is an inversion
         for transform in self.y_transforms[::-1]:
+            if not isinstance(transform, AutoEmulateTransform):
+                msg = (
+                    "y_transforms must be a list of AutoEmulateTransform instances "
+                    f"to support _inverse_gaussian method. Transform used: {transform}"
+                )
+                raise TypeError(msg)
             y_t = transform._inverse_gaussian(y_t)
         return y_t
 
