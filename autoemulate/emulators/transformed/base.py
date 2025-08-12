@@ -8,10 +8,11 @@ from autoemulate.core.types import (
     DistributionLike,
     GaussianLike,
     GaussianProcessLike,
+    OutputLike,
     TensorLike,
 )
 from autoemulate.data.utils import ValidationMixin
-from autoemulate.emulators.base import Emulator, ProbabilisticEmulator
+from autoemulate.emulators.base import Emulator
 from autoemulate.transforms.base import (
     AutoEmulateTransform,
     _inverse_sample_gaussian_like,
@@ -19,7 +20,7 @@ from autoemulate.transforms.base import (
 )
 
 
-class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
+class TransformedEmulator(Emulator, ValidationMixin):
     """
     A transformed emulator that applies transformations to input and target data.
 
@@ -148,6 +149,9 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
         self.supports_grad = self.model.supports_grad and all(
             t.bijective for t in self.x_transforms
         )
+        # TODO: update to be derived from attribute of the underlying emulator
+        # For now, just set as True
+        self.supports_uq = True
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """
@@ -385,7 +389,7 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
 
-    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         if with_grad and not self.supports_grad:
             msg = "Gradient calculation is not supported."
             raise ValueError(msg)
@@ -396,12 +400,7 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
 
         # If TensorLike, transform tensor back to original space
         if isinstance(y_t_pred, TensorLike):
-            # To return a distribution for this case, use a GaussianLike with zero
-            # covariance adding an eps jitter so that it is postiive definite
-            mean: TensorLike = self._inv_transform_y_tensor(y_t_pred)
-            eps = 10 * torch.finfo(mean.dtype).eps
-            cov_diag = torch.full_like(mean, eps)
-            return GaussianLike(mean, DiagLinearOperator(cov_diag))
+            return self._inv_transform_y_tensor(y_t_pred)
 
         # Output derived by analytical/approximate transformations
         if not self.output_from_samples:
@@ -437,6 +436,29 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
         )
         raise ValueError(msg)
 
+    def predict_mean(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+        """
+        Predict the mean of tha target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_samples, n_features)` for which to predict
+            the mean and variance.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+
+        Returns
+        -------
+        TensorLike
+            Mean tensor of shape `(n_samples, n_targets)`.
+        """
+        y_pred = self._predict(x, with_grad)
+        if isinstance(y_pred, TensorLike):
+            return y_pred
+        samples = y_pred.rsample(torch.Size([self.n_samples]))
+        return samples.mean(dim=0)
+
     def predict_mean_and_variance(
         self, x: TensorLike, with_grad: bool = False
     ) -> tuple[TensorLike, TensorLike]:
@@ -458,7 +480,11 @@ class TransformedEmulator(ProbabilisticEmulator, ValidationMixin):
             - Mean tensor of shape `(n_samples, n_targets)`.
             - Variance tensor of shape `(n_samples, n_targets)`.
         """
+        if not self.model.supports_uq:
+            msg = f"TransformedEmulator model ({self.model}) does not support UQ."
+            raise RuntimeError(msg)
         y_pred = self._predict(x, with_grad)
+        assert isinstance(y_pred, DistributionLike)
         samples = y_pred.rsample(torch.Size([self.n_samples]))
         return samples.mean(dim=0), samples.var(dim=0)
 
