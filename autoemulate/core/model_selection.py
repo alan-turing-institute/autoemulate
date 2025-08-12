@@ -159,7 +159,7 @@ def cross_validate(  # noqa: PLR0913
         transformed_emulator.fit(x, y)
 
         # compute and save results
-        y_pred = transformed_emulator.predict(x_val)
+        y_pred = transformed_emulator.predict_mean(x_val)
         r2 = evaluate(y_pred, y_val, r2_metric())
         rmse = evaluate(y_pred, y_val, rmse_metric())
         cv_results["r2"].append(r2)
