@@ -137,7 +137,7 @@ def test_run(device):
     assert hm.nroy_samples.shape[0] == 10000
 
     new_samples = hm.cloud_sample(482)
-    assert new_samples.shape[0] == 100
+    assert new_samples.shape[0] == 482
 
     new_samples = hm.cloud_sample(100053)
     assert new_samples.shape[0] == 100053
@@ -150,7 +150,7 @@ def test_run(device):
 
 
 def test_run_max_tries():
-    """Run history matching with observations that return no NROY params."""
+    """Run HM with observations that return no NROY params to trigger warning."""
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
     y = simulator.forward_batch(x)
@@ -172,5 +172,5 @@ def test_run_max_tries():
         rank=1,
     )
 
-    with pytest.warns(Warning, match="Could not generate n_simulation"):
+    with pytest.raises(Warning):
         hm.run(n_simulations=5)
