@@ -60,6 +60,28 @@ class PCATransform(AutoEmulateTransform):
         )
         raise RuntimeError(msg)
 
+    def forward_shape(self, shape):
+        """
+        Compute the forward shape transformation.
+
+        For PCA: (batch_shape..., d) -> (batch_shape..., n_components)
+        """
+        if len(shape) == 0:
+            return torch.Size([self.n_components])
+        return shape[:-1] + torch.Size([self.n_components])
+
+    def inverse_shape(self, shape):
+        """
+        Compute the inverse shape transformation.
+
+        For PCA: (batch_shape..., n_components) -> (batch_shape..., d)
+        """
+        self._check_is_fitted()
+        original_dim = self.components.shape[0]  # d (original feature dimension)
+        if len(shape) == 0:
+            return torch.Size([original_dim])
+        return shape[:-1] + torch.Size([original_dim])
+
     @property
     def _basis_matrix(self) -> TensorLike:
         self._check_is_fitted()
