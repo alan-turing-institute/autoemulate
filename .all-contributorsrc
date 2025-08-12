@@ -237,6 +237,15 @@
       "contributions": [
         "ideas"
       ]
+    },
+    {
+      "login": "jvwilliams23",
+      "name": "Josh Williams",
+      "avatar_url": "https://avatars.githubusercontent.com/u/48445365?v=4",
+      "profile": "https://jvwilliams23.github.io",
+      "contributions": [
+        "bug"
+      ]
     }
   ]
 }
