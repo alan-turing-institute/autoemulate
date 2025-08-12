@@ -75,7 +75,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         x_transforms: list[Transform] | None,
         y_transforms: list[Transform] | None,
         model: type[Emulator],
-        output_from_samples: bool = False,
+        output_from_samples: bool = True,
         n_samples: int = 1000,
         full_covariance: bool = False,
         max_targets: int = 200,
