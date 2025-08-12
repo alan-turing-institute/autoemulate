@@ -354,13 +354,27 @@ class HistoryMatchingWorkflow(HistoryMatching):
         std = self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
         covariance_matrix = torch.diag(std**2)
 
-        # Determine the number of samples to draw from each NROY sample
         num_means = self.nroy_samples.shape[0]
+
+        # 1: Handle case where n < number of NROY samples
+        if num_means > n:
+            # Randomly select `n` means from `self.nroy_samples`
+            selected_indices = torch.randperm(num_means)[:n]
+            selected_means = self.nroy_samples[selected_indices]
+            samples = []
+            for mean in selected_means:
+                mvn = MultivariateNormal(mean, covariance_matrix)
+                samples.append(mvn.sample((1,)))  # Draw one sample per selected mean
+            return torch.cat(samples, dim=0)
+
+        # 2: Handle cvase where n >= number of NROY samples
+
+        # Determine the number of samples to draw from each NROY sample
+        # Handle remainder to return exactly n samples
         samples_per_mean = n // num_means
-        # Handle remainder
         remaining_samples = n % num_means
 
-        # Generate samples for each NROY sample as the mean
+        # Generate samples from a Gaussian centered on the NROY sample
         samples = []
         for i, mean in enumerate(self.nroy_samples):
             # Handle remainder
