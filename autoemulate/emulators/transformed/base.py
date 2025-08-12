@@ -91,10 +91,10 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Input training data tensor of shape (n_samples, n_features).
         y: TensorLike
             Target training data tensor of shape (n_samples, n_targets).
-        x_transforms: list[AutoEmulateTransform] | None
+        x_transforms: list[Transform] | None
             List of transforms to apply to input data in sequential order.
             If None, no transformations are applied to x.
-        y_transforms: list[AutoEmulateTransform] | None
+        y_transforms: list[Transform] | None
             List of transforms to apply to target data in sequential order.
             If None, no transformations are applied to y.
         model: type[Emulator]
