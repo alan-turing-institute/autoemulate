@@ -320,7 +320,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = emulator
         self.emulator.device = self.device
 
-        # These get updated when run() is called and used to refit the emulator
+        # These get updated when `run()` is called and used to refit the emulator
         if train_x is not None and train_y is not None:
             self.train_x = train_x.float().to(self.device)
             self.train_y = train_y.float().to(self.device)
@@ -328,14 +328,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-        # Store NROY samples geneated in last run() call to use in next step sampling
+        # Store NROY samples geneated in `run()`, use in cloud sampling at next wave
         self.nroy_samples = None
 
     def cloud_sample(self, n: int) -> TensorLike:
         """
         Generate additional samples using cloud sampling.
 
-        For each availble NROY sample, draw from a Gaussian centered on that sample.
+        From the availble NROY samples, draw from Gaussians centered on those samples.
+        If n < number of available NROY samples, randomly select which ones to use.
+        Otherwise, use each NROY sample at least once and draw from each Gaussian as
+        many times as need to reach `n`.
 
         Parameters
         ----------
@@ -349,14 +352,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
-        # Compute mean and range (std) for each input dimension
-        # Use to create diagonal covariance matrix
+        # Compute std/range for each input dimension, create diagonal covariance matrix
         std = self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
         covariance_matrix = torch.diag(std**2)
 
+        # Each NROY sample is a potential mean for a Gaussian from which to sample
         num_means = self.nroy_samples.shape[0]
 
-        # 1: Handle case where n < number of NROY samples
+        # 1: Handle cases where `n` < number of NROY samples
         if num_means > n:
             # Randomly select `n` means from `self.nroy_samples`
             selected_indices = torch.randperm(num_means)[:n]
@@ -364,17 +367,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
             samples = []
             for mean in selected_means:
                 mvn = MultivariateNormal(mean, covariance_matrix)
-                samples.append(mvn.sample((1,)))  # Draw one sample per selected mean
+                samples.append(mvn.sample((1,)))
             return torch.cat(samples, dim=0)
 
-        # 2: Handle cvase where n >= number of NROY samples
+        # 2: Handle cases where `n` >= number of NROY samples
 
-        # Determine the number of samples to draw from each NROY sample
-        # Handle remainder to return exactly n samples
+        # Determine the number of samples to draw from each NROY mean
+        # Handle remainder to return exactly `n` samples
         samples_per_mean = n // num_means
         remaining_samples = n % num_means
 
-        # Generate samples from a Gaussian centered on the NROY sample
+        # Generate samples from Gaussians centered on the NROY samples
         samples = []
         for i, mean in enumerate(self.nroy_samples):
             # Handle remainder
@@ -382,7 +385,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
             mvn = MultivariateNormal(mean, covariance_matrix)
             samples.append(mvn.sample((num_samples,)))
 
-        # Concatenate all generated samples
         return torch.cat(samples, dim=0)
 
     def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
