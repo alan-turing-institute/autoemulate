@@ -16,6 +16,7 @@ from autoemulate.transforms import (
     StandardizeTransform,
     VAETransform,
 )
+from autoemulate.transforms.base import AutoEmulateTransform
 
 
 def run_test(train_data, test_data, model, x_transforms, y_transforms):
@@ -26,14 +27,12 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
+    y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
     if issubclass(model, ProbabilisticEmulator):
         assert isinstance(y_pred, DistributionLike)
-        assert y_pred.mean.shape == (x2.shape[0], y.shape[1])
-        assert not y_pred.mean.requires_grad
-    else:
-        assert isinstance(y_pred, TensorLike)
-        assert y_pred.shape == (x2.shape[0], y.shape[1])
-        assert not y_pred.requires_grad
+        assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
+        assert not y_pred_mean.requires_grad
+        assert not y_pred_var.requires_grad
 
 
 @pytest.mark.parametrize(
@@ -83,20 +82,10 @@ def test_transformed_emulator_grad(
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    if issubclass(model, ProbabilisticEmulator):
-        assert isinstance(y_pred, DistributionLike)
-        assert not y_pred.mean.requires_grad
-    else:
-        assert isinstance(y_pred, TensorLike)
-        assert not y_pred.requires_grad
-
-    y_pred_grad = em.predict(x2, with_grad=True)
-    if issubclass(model, ProbabilisticEmulator):
-        assert isinstance(y_pred_grad, DistributionLike)
-        assert y_pred_grad.mean.requires_grad
-    else:
-        assert isinstance(y_pred_grad, TensorLike)
-        assert y_pred_grad.requires_grad
+    assert isinstance(y_pred, DistributionLike)
+    y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
+    assert not y_pred_mean.requires_grad
+    assert not y_pred_var.requires_grad
 
 
 @pytest.mark.parametrize(
@@ -232,10 +221,14 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     y_pred = em.predict(x2)
 
     # Get predicted latent and reconstruct through sampling
-    z_pred = em.model.predict(em.x_transforms[0](x2), with_grad=False)
+    x2_t = em.x_transforms[0](x2)
+    assert isinstance(x2_t, TensorLike)
+    z_pred = em.model.predict(x2_t, with_grad=False)
     assert isinstance(z_pred, GaussianLike)
 
     # Test inverse sampling through only PCA
+    assert isinstance(em.y_transforms[0], AutoEmulateTransform)
+    assert isinstance(em.y_transforms[1], AutoEmulateTransform)
     y_pred2 = em.y_transforms[0]._inverse_gaussian(
         em.y_transforms[1]._inverse_sample(z_pred, n_samples=10000)
     )
@@ -264,8 +257,11 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
+    assert isinstance(em.x_transforms[0], AutoEmulateTransform)
     z_pred = em.model.predict(em.x_transforms[0](x2))
     assert isinstance(z_pred, GaussianLike)
+    assert isinstance(em.y_transforms[0], AutoEmulateTransform)
+    assert isinstance(em.y_transforms[1], AutoEmulateTransform)
     y_pred2 = em.y_transforms[0]._inverse_gaussian(
         em.y_transforms[1]._inverse_sample(z_pred, n_samples=10000)
     )
