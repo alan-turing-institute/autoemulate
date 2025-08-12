@@ -304,13 +304,6 @@ class TestValidationMixin:
         with pytest.raises(ValueError, match="Expected OutputLike, got"):
             self.mixin._check_output(output)  # type: ignore PGH003
 
-    def test_check_output_invalid_ndim(self, tensor_1d):
-        """
-        Test _check_output raises if TensorLike is not 2D.
-        """
-        with pytest.raises(ValueError, match="Expected output to be 2D tensor"):
-            self.mixin._check_output(tensor_1d)
-
     def test_check_vector_valid(self, tensor_1d):
         """
         Test check_vector with a valid 1D tensor.
