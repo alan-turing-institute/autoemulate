@@ -4,14 +4,9 @@ from autoemulate.calibration.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,
 )
-from autoemulate.core.device import (
-    SUPPORTED_DEVICES,
-    check_torch_device_is_available,
-)
+from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.gaussian_process.exact import (
-    GaussianProcess,
-)
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.simulations.epidemic import Epidemic
 
 from .test_base_simulator import MockSimulator
@@ -124,6 +119,9 @@ def test_run(device):
         device=device,
     )
 
+    # no NROY samples are stored before run() is called
+    assert hm.nroy_samples is None
+
     # call run first time
     hm.run(n_simulations=5)
 
@@ -132,6 +130,17 @@ def test_run(device):
     assert isinstance(hm.emulator, GaussianProcess)
 
     assert len(hm.train_x) == 5
+
+    # should have access to NROY samples now that can sample from
+    # n can be less or more than number of NROY samples
+    assert hm.nroy_samples is not None
+    assert hm.nroy_samples.shape[0] == 10000
+
+    new_samples = hm.cloud_sample(482)
+    assert new_samples.shape[0] == 100
+
+    new_samples = hm.cloud_sample(100053)
+    assert new_samples.shape[0] == 100053
 
     # can run again
     hm.run(n_simulations=5)
@@ -163,5 +172,5 @@ def test_run_max_tries():
         rank=1,
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.warns(Warning, match="Could not generate n_simulation"):
         hm.run(n_simulations=5)
