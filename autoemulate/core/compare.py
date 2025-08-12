@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tqdm
+from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
@@ -38,8 +39,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x: InputLike,
         y: InputLike,
         models: list[type[Emulator] | str] | None = None,
-        x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
-        y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
+        x_transforms_list: list[list[Transform | dict]] | None = None,
+        y_transforms_list: list[list[Transform | dict]] | None = None,
         model_tuning: bool = True,
         model_kwargs: None | ModelParams = None,
         n_iter: int = 10,
@@ -63,10 +64,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator]] | None
             List of emulator classes to compare. If None, all available emulators
             are used.
-        x_transforms_list: list[list[AutoEmulateTransform]] | None
+        x_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the input data.
             Defaults to None, in which case the data is standardized.
-        y_transforms_list: list[list[AutoEmulateTransform]] | None
+        y_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
         model_tuning: bool
@@ -207,15 +208,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return model_classes
 
     def get_transforms(
-        self, transforms: list[AutoEmulateTransform | dict[str, object]]
-    ) -> list[AutoEmulateTransform]:
+        self, transforms: list[Transform | dict[str, object]]
+    ) -> list[Transform]:
         """Process and return a list of transforms."""
         processed_transforms = []
         for transform in transforms:
             if isinstance(transform, dict):
                 deserialized_transform = AutoEmulateTransform.from_dict(transform)
                 processed_transforms.append(deserialized_transform)
-            elif isinstance(transform, AutoEmulateTransform):
+            elif isinstance(transform, Transform):
                 processed_transforms.append(transform)
             else:
                 msg = f"Invalid transform type: {type(transform)}"

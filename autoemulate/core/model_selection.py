@@ -5,6 +5,7 @@ from functools import partial
 import torch
 import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
+from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
 
 from autoemulate.core.device import (
@@ -22,7 +23,6 @@ from autoemulate.core.types import (
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
-from autoemulate.transforms.base import AutoEmulateTransform
 
 logger = logging.getLogger("autoemulate")
 
@@ -86,8 +86,8 @@ def cross_validate(  # noqa: PLR0913
     dataset: Dataset,
     model: type[Emulator],
     model_params: ModelParams,
-    x_transforms: list[AutoEmulateTransform] | None = None,
-    y_transforms: list[AutoEmulateTransform] | None = None,
+    x_transforms: list[Transform] | None = None,
+    y_transforms: list[Transform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
 ):
