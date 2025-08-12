@@ -2,6 +2,7 @@ import warnings
 from datetime import datetime
 from pathlib import Path
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -606,3 +607,28 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The loaded model or result object.
         """
         return self.model_serialiser._load_result(path)
+
+    @staticmethod
+    def load_model(path: str | Path) -> Emulator:
+        """Load a stored model directly from a given path.
+
+        Parameters
+        ----------
+        path : str | Path
+            Path to the model.
+
+        Returns
+        -------
+        Emulator
+            The loaded model object.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the model file does not exist.
+        """
+        if isinstance(path, Path):
+            path = str(path)
+        if not path.endswith(".joblib"):
+            path += ".joblib"
+        return joblib.load(path)
