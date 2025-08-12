@@ -38,7 +38,7 @@ class PCATransform(AutoEmulateTransform):
     def fit(self, x: TensorLike):
         """Fit the PCA transform to the data."""
         TorchDeviceMixin.__init__(self, device=x.device)
-        self.check_matrix(x)
+        self.check_tensor_is_2d(x)
         self.mean = x.mean(0, keepdim=True)  # (1, d)
         _, _, v = torch.pca_lowrank(x, q=self.n_components, niter=self.niter)
         self.components = v[:, : self.n_components]  # (d, n_c)

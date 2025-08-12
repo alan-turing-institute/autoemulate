@@ -29,7 +29,7 @@ class StandardizeTransform(AutoEmulateTransform):
         """Fit the StandardizeTransform to the data."""
         TorchDeviceMixin.__init__(self, device=x.device)
 
-        self.check_matrix(x)
+        self.check_tensor_is_2d(x)
         self.mean = x.mean(0, keepdim=True)
         std = x.std(0, keepdim=True)
         # Ensure std is not zero to avoid division by zero errors

@@ -339,7 +339,7 @@ class TestValidationMixin:
         """
         Test check_matrix with a valid 2D tensor.
         """
-        result = self.mixin.check_matrix(tensor_2d)
+        result = self.mixin.check_tensor_is_2d(tensor_2d)
 
         assert torch.equal(result, tensor_2d)
 
@@ -350,14 +350,14 @@ class TestValidationMixin:
         with pytest.raises(
             ValueError, match="Expected TensorLike, got <class 'numpy.ndarray'>"
         ):
-            self.mixin.check_matrix(np_2d)  # type: ignore PGH003
+            self.mixin.check_tensor_is_2d(np_2d)  # type: ignore PGH003
 
     def test_check_matrix_invalid_dim(self, tensor_1d):
         """
         Test check_matrix with wrong dims.
         """
         with pytest.raises(ValueError, match="Expected 2D tensor"):
-            self.mixin.check_matrix(tensor_1d)
+            self.mixin.check_tensor_is_2d(tensor_1d)
 
     def test_check_pair_valid(self, tensor_2d, tensor_2d_pair):
         """

@@ -292,9 +292,9 @@ class ValidationMixin:
         return x
 
     @staticmethod
-    def check_matrix(x: TensorLike) -> TensorLike:
+    def check_tensor_is_2d(x: TensorLike) -> TensorLike:
         """
-        Validate that the input is a TensorLike.
+        Validate that the input is a 2D TensorLike.
 
         Parameters
         ----------
@@ -304,15 +304,17 @@ class ValidationMixin:
         Returns
         -------
         TensorLike
-            Validated tensor.
+            Validated 2D tensor.
 
         Raises
         ------
         ValueError
-            If x is not a TensorLike.
+            If x is not a TensorLike or is not 2-dimensional.
         """
         if not isinstance(x, TensorLike):
             raise ValueError(f"Expected TensorLike, got {type(x)}")
+        if x.ndim != 2:
+            raise ValueError(f"Expected 2D tensor, got {x.ndim}D")
         return x
 
     @staticmethod
