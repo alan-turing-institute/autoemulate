@@ -462,7 +462,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
             raise RuntimeError(msg)
         y_pred = self._predict(x, with_grad)
         assert isinstance(y_pred, DistributionLike)
-        samples = y_pred.rsample(torch.Size([self.n_samples]))
+        samples = (
+            y_pred.rsample(torch.Size([self.n_samples]))
+            if with_grad
+            else y_pred.sample(torch.Size([self.n_samples]))
+        )
         return samples.mean(dim=0), samples.var(dim=0)
 
     @staticmethod
