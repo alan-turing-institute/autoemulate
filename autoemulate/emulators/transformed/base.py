@@ -76,7 +76,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         y_transforms: list[Transform] | None,
         model: type[Emulator],
         output_from_samples: bool = True,
-        n_samples: int = 1000,
+        n_samples: int = 100,
         full_covariance: bool = False,
         max_targets: int = 200,
         device: DeviceLike | None = None,
@@ -105,7 +105,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             (n_targets > max_targets). Defaults to False.
         n_samples: int
             Number of samples to draw when using sampling-based predictions.
-            Only used when output_from_samples=True. Defauls to 1000.
+            Only used when output_from_samples=True. Defauls to 100.
         full_covariance: bool
             Whether to use full covariance matrix for predictions. If False,
             uses diagonal covariance. Automatically set to False for
