@@ -240,6 +240,8 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
         model=GaussianProcess,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), PCATransform(n_components=1)],
+        full_covariance=True,
+        output_from_samples=False,
     )
     em.fit(x, y)
 
@@ -280,6 +282,8 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
         model=GaussianProcess,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), VAETransform(latent_dim=1)],
+        full_covariance=True,
+        output_from_samples=False,
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
