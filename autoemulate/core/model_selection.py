@@ -14,7 +14,6 @@ from autoemulate.core.device import (
 )
 from autoemulate.core.types import (
     DeviceLike,
-    InputLike,
     ModelParams,
     TensorLike,
 )
@@ -36,21 +35,21 @@ def rmse_metric() -> partial[torchmetrics.Metric]:
 
 
 def _update(
-    y_true: InputLike,
+    y_true: TensorLike,
     y_pred: TensorLike,
     metric: torchmetrics.Metric,
 ):
     if isinstance(y_pred, TensorLike):
         metric.to(y_pred.device)
         # Assume first dim is a batch dim and flatten remaining for metric calculation
-        metric.update(y_pred.flatten(start_dim=1), y_true)
+        metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
     else:
         raise ValueError(f"Metric not implmented for {type(y_pred)}")
 
 
 def evaluate(
     y_pred: TensorLike,
-    y_true: InputLike,
+    y_true: TensorLike,
     metric: (
         type[torchmetrics.Metric] | partial[torchmetrics.Metric]
     ) = torchmetrics.R2Score,
@@ -162,7 +161,7 @@ def cross_validate(  # noqa: PLR0913
     return cv_results
 
 
-def bootstrap(
+def bootstrap(  # noqa: PLR0913
     model: Emulator,
     x: TensorLike,
     y: TensorLike,
