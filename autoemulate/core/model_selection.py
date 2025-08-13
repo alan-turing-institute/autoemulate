@@ -14,10 +14,8 @@ from autoemulate.core.device import (
 )
 from autoemulate.core.types import (
     DeviceLike,
-    DistributionLike,
     InputLike,
     ModelParams,
-    OutputLike,
     TensorLike,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
@@ -39,22 +37,19 @@ def rmse_metric() -> partial[torchmetrics.Metric]:
 
 def _update(
     y_true: InputLike,
-    y_pred: OutputLike,
+    y_pred: TensorLike,
     metric: torchmetrics.Metric,
 ):
-    # handle types
     if isinstance(y_pred, TensorLike):
         metric.to(y_pred.device)
-        metric.update(y_pred, y_true)
-    elif isinstance(y_pred, DistributionLike):
-        metric.to(y_pred.mean.device)
-        metric.update(y_pred.mean, y_true)
+        # Assume first dim is a batch dim and flatten remaining for metric calculation
+        metric.update(y_pred.flatten(start_dim=1), y_true)
     else:
         raise ValueError(f"Metric not implmented for {type(y_pred)}")
 
 
 def evaluate(
-    y_pred: OutputLike,
+    y_pred: TensorLike,
     y_true: InputLike,
     metric: (
         type[torchmetrics.Metric] | partial[torchmetrics.Metric]
@@ -172,6 +167,7 @@ def bootstrap(
     x: TensorLike,
     y: TensorLike,
     n_bootstraps: int = 100,
+    n_samples: int = 100,
     device: str | torch.device = "cpu",
 ) -> tuple[tuple[float, float], tuple[float, float]]:
     """
@@ -187,6 +183,9 @@ def bootstrap(
         Target values corresponding to the input features.
     n_bootstraps: int
         Number of bootstrap samples to generate. Defaults to 100.
+    n_samples: int
+        Number of samples to generate to predict mean when emulator does not have a
+        mean directly available. Defaults to 100.
     device: str | torch.device
         The device to use for computations. Default is "cpu".
 
@@ -209,7 +208,7 @@ def bootstrap(
         y_bootstrap = y[idxs]
 
         # Make predictions
-        y_pred = model.predict(x_bootstrap)
+        y_pred = model.predict_mean(x_bootstrap, n_samples=n_samples)
 
         # Compute metrics for this bootstrap sample
         r2_scores[i] = evaluate(y_pred, y_bootstrap, r2_metric())
