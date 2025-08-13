@@ -488,14 +488,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_simulations: int
-            The number of simulations to run.
+            Number of simulations to run.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
         max_retries: int
             Maximum number of times to try to generate `n_simulations` NROY parameters.
             That is the maximum number of times to repeat the following steps:
-                - draw `n_test_samples` parameters
+                - draw `n_test_samples` parameters (use cloud sampling if possible)
                 - use emulator to make predictions for those parameters
                 - score implausability of parameters given predictions
                 - identify NROY parameters within this set
@@ -591,19 +591,19 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_waves: int
-            The number of waves to run.
+            The maximum number of waves to run.
         frac_nroy_stop: float
             Fraction of NROY samples to stop at. If less than this fraction of
             NROY samples is reached, the workflow stops.
         n_simulations: int
-            The number of simulations to run in each wave.
+            Number of simulations to run in each wave.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
         max_retries: int
             Maximum number of times to try to generate `n_simulations` NROY parameters.
             That is the maximum number of times to repeat the following steps:
-                - draw `n_test_samples` parameters
+                - draw `n_test_samples` parameters (use cloud sampling if possible)
                 - use emulator to make predictions for those parameters
                 - score implausibility of parameters given predictions
                 - identify NROY parameters within this set
