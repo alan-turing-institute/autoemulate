@@ -2,14 +2,13 @@
 name = "autoemulate"
 version = "1.0.0"
 description = "A python package for semi-automated emulation"
-license = {text = "MIT"}
-authors = [{name = "AutoEmulate contributors (see our GitHub page)"}]
+license = "MIT"
+authors = [{ name = "AutoEmulate contributors (see our GitHub page)" }]
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -79,11 +78,12 @@ include-package-data = true
 include = ["autoemulate*"]
 
 [tool.setuptools.package-data]
-autoemulate = ["../misc/AE_logo_final.png"]
+autoemulate = ["static/AE_logo_final.png"]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
 
 [tool.coverage.run]
 relative_files = true
@@ -137,8 +137,8 @@ ignore = [
     "EM102",   # Exception must not use an f-string literal, assign to variable first
     "ISC001",  # Conflicts with formatter
     # "D417",    # Missing trailing new line in docstring
-    "D100",    # Missing docstring in public module
-    "D104",    # Missing docstring in public package
+    "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
 ]
 
 unfixable = [
