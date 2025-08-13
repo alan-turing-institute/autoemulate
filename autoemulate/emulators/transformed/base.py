@@ -436,29 +436,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
         raise ValueError(msg)
 
-    def predict_mean(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
-        """
-        Predict the mean of tha target variable for input `x`.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Input tensor of shape `(n_samples, n_features)` for which to predict
-            the mean and variance.
-        with_grad: bool
-            Whether to compute gradients with respect to the input. Defaults to False.
-
-        Returns
-        -------
-        TensorLike
-            Mean tensor of shape `(n_samples, n_targets)`.
-        """
-        y_pred = self._predict(x, with_grad)
-        if isinstance(y_pred, TensorLike):
-            return y_pred
-        samples = y_pred.rsample(torch.Size([self.n_samples]))
-        return samples.mean(dim=0)
-
     def predict_mean_and_variance(
         self, x: TensorLike, with_grad: bool = False
     ) -> tuple[TensorLike, TensorLike]:
