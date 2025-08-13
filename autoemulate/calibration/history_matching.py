@@ -331,7 +331,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Store NROY samples geneated in `run()`, use in cloud sampling at next wave
         self.nroy_samples = None
 
-    def cloud_sample(self, n: int) -> TensorLike:
+    def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
         """
         Generate additional samples using cloud sampling.
 
@@ -344,6 +344,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         n: int
             The number of additional samples to generate.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from is set to:
+            parameter range * scaling_factor.
 
         Returns
         -------
@@ -352,8 +355,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
-        # Compute std/range for each input dimension, create diagonal covariance matrix
-        std = self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
+        # Compute std as scaled parameter range, create diagonal covariance matrix
+        std = (
+            self.nroy_samples.max(dim=0).values
+            - self.nroy_samples.min(dim=0).values * scaling_factor
+        )
         covariance_matrix = torch.diag(std**2)
 
         # Each NROY sample is a potential mean for a Gaussian from which to sample
@@ -362,8 +368,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # 1: Handle cases where `n` < number of NROY samples
         if num_means > n:
             # Randomly select `n` means from `self.nroy_samples`
-            selected_indices = torch.randperm(num_means)[:n]
-            selected_means = self.nroy_samples[selected_indices]
+            selected_means = self.sample_tensor(n, self.nroy_samples)
             samples = []
             for mean in selected_means:
                 mvn = MultivariateNormal(mean, covariance_matrix)
@@ -387,7 +392,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         return torch.cat(samples, dim=0)
 
-    def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
+    def generate_samples(
+        self, n: int, scaling_factor: float = 0.1
+    ) -> tuple[TensorLike, TensorLike]:
         """
         Generate parameter samples and evaluate implausibility.
 
@@ -399,6 +406,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         n: int
             The number of parameter samples to generate.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: parameter range * scaling_factor.
 
         Returns
         -------
@@ -409,7 +419,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         if self.nroy_samples is None:
             test_x = self.simulator.sample_inputs(n).to(self.device)
         else:
-            test_x = self.cloud_sample(n).to(self.device)
+            test_x = self.cloud_sample(n, scaling_factor).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
         pred = self.emulator.predict(test_x)
@@ -470,6 +480,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
+        scaling_factor: float = 0.1,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -488,6 +499,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 - use emulator to make predictions for those parameters
                 - score implausability of parameters given predictions
                 - identify NROY parameters within this set
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: parameter range * scaling_factor.
 
         Returns
         -------
@@ -521,7 +535,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 break
 
             # Generate `n_test_samples` with implausability scores, identify NROY
-            test_parameters, impl_scores = self.generate_samples(n_test_samples)
+            test_parameters, impl_scores = self.generate_samples(
+                n_test_samples, scaling_factor
+            )
             nroy_parameters = self.get_nroy(impl_scores, test_parameters)
 
             # Store results
@@ -560,13 +576,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
 
-    def run_waves(
+    def run_waves(  # noqa: PLR0913
         self,
         n_waves: int = 5,
         frac_nroy_stop: float = 0.9,
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
+        scaling_factor: float = 0.1,
     ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
@@ -590,6 +607,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 - use emulator to make predictions for those parameters
                 - score implausibility of parameters given predictions
                 - identify NROY parameters within this set
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: parameter range * scaling_factor.
 
         Returns
         -------
@@ -603,6 +623,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
                 max_retries=max_retries,
+                scaling_factor=scaling_factor,
             )
 
             print("Wave ", i, self.simulator.param_bounds)
