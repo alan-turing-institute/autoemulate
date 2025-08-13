@@ -27,12 +27,20 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
     if issubclass(model, ProbabilisticEmulator):
         assert isinstance(y_pred, DistributionLike)
+        y_pred_mean = em.predict_mean(x2)
         assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
         assert not y_pred_mean.requires_grad
+        y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
+        assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
+        assert y_pred_var.shape == (x2.shape[0], y.shape[1])
+        assert not y_pred_mean.requires_grad
         assert not y_pred_var.requires_grad
+    else:
+        assert isinstance(y_pred, TensorLike)
+        assert y_pred.shape == (x2.shape[0], y.shape[1])
+        assert not y_pred.requires_grad
 
 
 @pytest.mark.parametrize(
@@ -82,10 +90,28 @@ def test_transformed_emulator_grad(
     )
     em.fit(x, y)
     y_pred = em.predict(x2)
-    assert isinstance(y_pred, DistributionLike)
-    y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
-    assert not y_pred_mean.requires_grad
-    assert not y_pred_var.requires_grad
+    if issubclass(model, ProbabilisticEmulator):
+        assert isinstance(y_pred, DistributionLike)
+        assert not y_pred.mean.requires_grad
+    else:
+        assert isinstance(y_pred, TensorLike)
+        assert not y_pred.requires_grad
+
+    y_pred_grad = em.predict(x2, with_grad=True)
+    if issubclass(model, ProbabilisticEmulator):
+        assert isinstance(y_pred_grad, DistributionLike)
+        y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
+        assert y_pred_grad_mean.requires_grad
+        y_pred_grad_mean, y_pred_grad_var = em.predict_mean_and_variance(
+            x2, with_grad=True
+        )
+        assert y_pred_grad_mean.requires_grad
+        assert y_pred_grad_var.requires_grad
+    else:
+        assert isinstance(y_pred_grad, TensorLike)
+        assert y_pred_grad.requires_grad
+        y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
+        assert y_pred_grad_mean.requires_grad
 
 
 @pytest.mark.parametrize(
