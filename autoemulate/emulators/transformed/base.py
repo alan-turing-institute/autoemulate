@@ -78,7 +78,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         output_from_samples: bool = True,
         n_samples: int = 100,
         full_covariance: bool = False,
-        max_targets: int = 200,
         device: DeviceLike | None = None,
         **kwargs,
     ):
@@ -110,10 +109,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Whether to use full covariance matrix for predictions. If False,
             uses diagonal covariance. Automatically set to False for
             high-dimensional targets (n_targets > max_targets). Defaults to False.
-        max_targets: int
-            Threshold for switching to approximate sampling-based predictions
-            with diagonal covariance when dealing with high-dimensional targets.
-            Defaults to 200.
         device: DeviceLike | None
             Device for tensor operations. If None, uses the default device.
             Defaults to None.
@@ -134,7 +129,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.model = model(
             self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
         )
-        self.output_from_samples = output_from_samples or y.shape[1] > max_targets
+        self.output_from_samples = output_from_samples
         if not output_from_samples and not all(
             isinstance(t, AutoEmulateTransform) for t in self.y_transforms
         ):
@@ -144,7 +139,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             )
             raise RuntimeError(msg)
         self.n_samples = n_samples
-        self.full_covariance = full_covariance and y.shape[1] <= max_targets
+        self.full_covariance = full_covariance
         TorchDeviceMixin.__init__(self, device=device)
         self.supports_grad = self.model.supports_grad and all(
             t.bijective for t in self.x_transforms
