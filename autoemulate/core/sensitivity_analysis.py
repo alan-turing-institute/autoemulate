@@ -1,5 +1,6 @@
 import logging
 
+import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -247,9 +248,10 @@ class SensitivityAnalysis(ConversionMixin):
         index: str = "S1",
         n_cols: int | None = None,
         figsize: tuple | None = None,
+        fname: str | None = None,
     ):
         """
-        Plot Sobol sensitivity analysis results.
+        Plot Sobol sensitivity analysis results. Optionally save to file.
 
         Parameters
         ----------
@@ -267,8 +269,14 @@ class SensitivityAnalysis(ConversionMixin):
         figsize: tuple | None
             Figure size as (width, height) in inches. If None, set automatically.
             Defaults to None.
+        fname: str | None
+            If provided, saves the figure to this file path. Defaults to None.
         """
-        return _plot_sobol_analysis(results, index, n_cols, figsize)
+        fig = _plot_sobol_analysis(results, index, n_cols, figsize)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
     @staticmethod
     def plot_morris(
@@ -276,9 +284,10 @@ class SensitivityAnalysis(ConversionMixin):
         param_groups: dict[str, list[str]] | None = None,
         n_cols: int | None = None,
         figsize: tuple | None = None,
+        fname: str | None = None,
     ):
         """
-        Plot Morris analysis results.
+        Plot Morris analysis results. Optionally save to file.
 
         Parameters
         ----------
@@ -292,8 +301,14 @@ class SensitivityAnalysis(ConversionMixin):
             more outputs, otherwise the number of outputs.
         figsize: tuple, optional
             Figure size as (width, height) in inches.If None, set calculated.
+        fname: str | None
+            If provided, saves the figure to this file path. Defaults to None.
         """
-        return _plot_morris_analysis(results, param_groups, n_cols, figsize)
+        fig = _plot_morris_analysis(results, param_groups, n_cols, figsize)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
     @staticmethod
     def top_n_sobol_params(
@@ -438,7 +453,7 @@ def _plot_sobol_analysis(
     index: str = "S1",
     n_cols: int | None = None,
     figsize: tuple | None = None,
-):
+) -> matplotlib.figure.Figure:
     """
     Plot the sobol sensitivity analysis results.
 
@@ -457,6 +472,11 @@ def _plot_sobol_analysis(
     figsize: tuple | None
         Figure size as (width, height) in inches.If None, automatically calculated.
         Defaults to None.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure containing the Sobol plots.
     """
     with plt.style.context("fast"):
         # prepare data
@@ -497,7 +517,7 @@ def _plot_sobol_analysis(
 
         plt.tight_layout()
 
-    return display_figure(fig)
+    return fig
 
 
 def _morris_results_to_df(
@@ -543,7 +563,7 @@ def _plot_morris_analysis(
     param_groups: dict[str, list[str]] | None = None,
     n_cols: int | None = None,
     figsize: tuple | None = None,
-):
+) -> matplotlib.figure.Figure:
     """
     Plot the Morris sensitivity analysis results.
 
@@ -558,6 +578,11 @@ def _plot_morris_analysis(
         otherwise the number of outputs.
     figsize: tuple, optional
         Figure size as (width, height) in inches. If None, automatically calculated.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure containing the Morris plots.
     """
     with plt.style.context("fast"):
         unique_outputs = results["output"].unique()
@@ -660,7 +685,7 @@ def _plot_morris_analysis(
 
         plt.tight_layout()
 
-    return display_figure(fig)
+    return fig
 
 
 def _create_morris_plot(
