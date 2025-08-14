@@ -437,7 +437,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         figsize=None,
-        n_cols: int = 3,
+        ncols: int = 3,
         fname: str | None = None,
     ):
         """
@@ -523,12 +523,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_plots = len(input_index) * len(output_index)
 
         # Calculate number of rows
-        n_rows, n_cols = calculate_subplot_layout(n_plots, n_cols)
+        nrows, ncols = calculate_subplot_layout(n_plots, ncols)
 
         # Set up the figure
         if figsize is None:
-            figsize = (5 * n_cols, 4 * n_rows)
-        fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+            figsize = (5 * ncols, 4 * nrows)
+        fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
         axs = axs.flatten()
 
         plot_index = 0
