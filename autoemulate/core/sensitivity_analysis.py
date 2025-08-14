@@ -364,6 +364,8 @@ def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
     }
     rows = []
     for output, result in results.items():
+        # https://salib.readthedocs.io/en/latest/api/SALib.analyze.html#SALib.analyze.sobol.to_df
+        # from SALib docs: `to_df()` returns indices in order of [total, first, second]
         st, s1, s2 = result.to_df()
         s1 = (
             s1.reset_index()
