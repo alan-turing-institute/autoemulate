@@ -50,7 +50,7 @@ source .venv/bin/activate
 Install the package in development mode with all dependencies:
 
 ```bash
-uv pip install -e .[dev]
+uv pip install -e '.[dev]'    
 ```
 
 ## Interactive tutorials
