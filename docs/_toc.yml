@@ -5,23 +5,30 @@ format: jb-book
 root: index
 chapters:
 
-- file: getting-started/index
-  sections:
-  # - file: getting-started/overview
-  # - file: getting-started/data_requirements
-  - file: getting-started/installation
-  - file: getting-started/quickstart
-
+- file: installation
 - file: tutorials/index
   sections:
-  - file: tutorials/01_start
-  - file: tutorials/02_speed
+  - file: tutorials/emulation/index
+    sections:
+    - file: tutorials/emulation/01_quickstart
+    - file: tutorials/emulation/02_dim_reduction
+  - file: tutorials/tasks/index
+    sections:
+    - file: tutorials/tasks/01_emulation_sensitivity
+    - file: tutorials/tasks/02_history_matching
+    - file: tutorials/tasks/03_bayes_calibration
+  - file: tutorials/simulator/index
+    sections:
+    - file: tutorials/simulator/01_custom_simulations
+    - file: tutorials/simulator/02_active_learning
+    - file: tutorials/simulator/03_history_matching
+
 
 - file: community/index
   sections:
   - file: community/contributing
-  - file: community/contributing-emulators
   - file: community/contributing-docs
+  - file: community/release
   - file: community/code-of-conduct
   - file: community/faq/index
     sections:
@@ -30,24 +37,34 @@ chapters:
 
 - file: reference/index
   sections:
-  - file: reference/compare
-  - file: reference/datasets
-  - file: reference/sensitivity_analysis
-  - file: reference/simulations/index
+  - file: reference/calibration/index
     sections:
-    - file: reference/simulations/projectile
-    - file: reference/simulations/epidemic
+    - file: reference/calibration/bayes
+    - file: reference/calibration/history_matching
+    - file: reference/calibration/history_matching_dashboard
+  - file: reference/core/index
+    sections:
+    - file: reference/core/compare
+    - file: reference/core/datasets
+    - file: reference/core/model_selection
+    - file: reference/core/plotting
+    - file: reference/core/sensitivity_analysis
+    - file: reference/core/tuner
   - file: reference/emulators/index
     sections:
-    - file: reference/emulators/rbf
-    - file: reference/emulators/polynomials
-    - file: reference/emulators/random_forest
-    - file: reference/emulators/support_vector_machines
+    - file: reference/emulators/base
+    - file: reference/emulators/ensemble
     - file: reference/emulators/gradient_boosting
-    - file: reference/emulators/light_gbm
-    - file: reference/emulators/conditional_neural_process
-    - file: reference/emulators/conditional_neural_process_attn
-    - file: reference/emulators/gaussian_process
-    - file: reference/emulators/gaussian_process_mt
-    - file: reference/emulators/neural_net_sk
-    - file: reference/emulators/gaussian_process_sklearn
+    - file: reference/emulators/lightgbm
+    - file: reference/emulators/polynomials
+    - file: reference/emulators/radial_basis_functions
+    - file: reference/emulators/random_forest
+    - file: reference/emulators/svm
+  - file: reference/simulations/index
+    sections:
+    - file: reference/simulations/base
+    - file: reference/simulations/epidemic
+    - file: reference/simulations/experimental_design
+    - file: reference/simulations/flow_problem
+    - file: reference/simulations/projectile
+    - file: reference/simulations/reaction_diffusion

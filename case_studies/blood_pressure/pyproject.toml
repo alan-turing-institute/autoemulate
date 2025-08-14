@@ -1,0 +1,14 @@
+[project]
+name = "blood_pressure"
+version = "0.1.0"
+description = "Blood pressure AutoEmulate case study with ModularCirc"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "autoemulate",
+    "jupyterlab",
+    "ModularCirc @ git+https://github.com/alan-turing-institute/ModularCirc.git@dev",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -1,10 +1,12 @@
-# Contributing to the docs
+# Contributing to the Docs
 
 We welcome all documentation contributions, from fixing small typos to adding comprehensive tutorials. This guide will help you get started.
 
 ## Prerequisites
 
-Before contributing, please read our [contributing guide](contributing.md) to set up your development environment and understand our workflow.
+Before contributing, please read our [contributing guide](contributing.md) to understand our workflow.
+
+To test the changes you make to the docs, install the package with [development dependencies](../installation.md#install-from-source-for-development) which includes the Jupyter book package. This will allow you to build the documentation locally via the command prompt so long as the python environment activated.
 
 ## Types of Documentation Contributions
 
@@ -12,7 +14,7 @@ Before contributing, please read our [contributing guide](contributing.md) to se
 
 1. Navigate to the relevant file in the `docs/` directory
 2. Make your changes
-3. Build the docs locally to verify your changes:
+3. From the top level of the repo, build the docs locally to verify your changes (drop the `--all` flag to build only the changed files):
 
    ```bash
    jupyter-book build docs --all
