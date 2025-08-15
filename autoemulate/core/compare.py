@@ -85,6 +85,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Dictionary of model-specific parameters to use when fitting the models.
             If None, the default parameters for each model are used.
             This is only used if model_tuning is False. Defaults to None.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. Defaults to None.
         n_iter: int
             Number of parameter settings to randomly sample and test during tuning.
         n_splits: int
