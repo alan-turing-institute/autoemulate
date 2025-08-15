@@ -1,0 +1,1040 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>autoemulate.calibration.history_matching &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/autoemulate/calibration/history_matching';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2F_modules/autoemulate/calibration/history_matching.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for autoemulate.calibration.history_matching</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDeviceMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceLike</span><span class="p">,</span> <span class="n">TensorLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_random_seed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.emulators.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProbabilisticEmulator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulator</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;autoemulate&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="HistoryMatching">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HistoryMatching</span><span class="p">(</span><span class="n">TorchDeviceMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    History Matching class for model calibration.</span>
+
+<span class="sd">    History matching is a model calibration method, which uses observed data to</span>
+<span class="sd">    rule out ``implausible`` parameter values. The implausibility metric is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        I_i(\bar{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\bar{x_0}))|}</span>
+<span class="sd">        {\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\bar{x_0}))]}}</span>
+
+<span class="sd">    Queried parameters above a given implausibility threshold are ruled out (RO)</span>
+<span class="sd">    whereas all other parameters are marked as not ruled out yet (NROY).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">observations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">model_discrepancy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">DeviceLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the history matching object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        observations: dict[str, tuple[float, float] | dict[str, float]</span>
+<span class="sd">            For each output variable, specifies observed [value, noise]. In case</span>
+<span class="sd">            of no uncertainty in observations, provides just the observed value.</span>
+<span class="sd">        threshold: float</span>
+<span class="sd">            Implausibility threshold (query points with implausibility scores that</span>
+<span class="sd">            exceed this value are ruled out). Defaults to 3, which is considered</span>
+<span class="sd">            a good value for simulations with a single output.</span>
+<span class="sd">        model_discrepancy: float</span>
+<span class="sd">            Additional variance to include in the implausibility calculation.</span>
+<span class="sd">        rank: int</span>
+<span class="sd">            Scoring method for multi-output problems. Must be 1 &lt;= rank &lt;= n_outputs.</span>
+<span class="sd">            When the implausibility scores are ordered across outputs, it indicates</span>
+<span class="sd">            which rank to use when determining whether the query point is NROY. The</span>
+<span class="sd">            default of ``1`` indicates that the largest implausibility will be used.</span>
+<span class="sd">        device: DeviceLike | None</span>
+<span class="sd">            The device to use. If None, the default torch device is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">TorchDeviceMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discrepancy</span> <span class="o">=</span> <span class="n">model_discrepancy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span> <span class="ow">or</span> <span class="n">rank</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Rank (</span><span class="si">{</span><span class="n">rank</span><span class="si">}</span><span class="s2">) is outside valid range between 1 and output dimension &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;of simulator (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">rank</span>
+
+        <span class="c1"># Save mean and variance of observations, shape: [1, n_outputs]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_means</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_observations</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_observations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">observations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Turn observations into tensors of shape [1, n_inputs].</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        observations: dict[str, tuple[float, float] | dict[str, float]</span>
+<span class="sd">            For each output variable, specifies observed [value, noise]. In case</span>
+<span class="sd">            of no uncertainty in observations, provides just the observed value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[TensorLike, TensorLike]</span>
+<span class="sd">            Tensors of observations and the associated noise (which can be 0).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># No variance</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">means</span> <span class="o">=</span> <span class="n">values</span>
+            <span class="n">variances</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="c1"># Values are (mean, variance)</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">means</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">variances</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Observations must be either float or tuple of two floats.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Reshape observation tensors for broadcasting</span>
+        <span class="k">return</span> <span class="n">means</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">variances</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_nroy_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">implausibility</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create mask for NROY points based on rank.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        implausibility: TensorLike</span>
+<span class="sd">            Tensor of implausibility scores for tested parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TensorLike</span>
+<span class="sd">            Tensor indicating whether each implausability score is NROY</span>
+<span class="sd">            given self.rank and self.threshold values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Sort implausibilities for each sample (descending)</span>
+        <span class="n">I_sorted</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">implausibility</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># The rank-th highest output implausibility must be &lt;= threshold</span>
+        <span class="k">return</span> <span class="n">I_sorted</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span>
+
+<div class="viewcode-block" id="HistoryMatching.get_nroy">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.get_nroy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_nroy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">implausibility</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">TensorLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get indices of NROY points from implausibility scores.</span>
+
+<span class="sd">        If `x` is provided, returns parameter values at NROY indices.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        implausibility: TensorLike</span>
+<span class="sd">            Tensor of implausibility scores for tested input parameters.</span>
+<span class="sd">        x: Tensorlike | None</span>
+<span class="sd">            Optional tensor of scored input parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TensorLike</span>
+<span class="sd">            Indices of NROY points or `x` parameters at NROY indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nroy_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_nroy_mask</span><span class="p">(</span><span class="n">implausibility</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nroy_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">idx</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatching.get_ro">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.get_ro">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_ro</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">implausibility</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">TensorLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get indices of RO points from implausibility scores.</span>
+
+<span class="sd">        If `x` is provided, returns parameter values at RO indices.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        implausibility: TensorLike</span>
+<span class="sd">            Tensor of implausibility scores for tested input parameters.</span>
+<span class="sd">        x: Tensorlike | None</span>
+<span class="sd">            Optional tensor of scored iput parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TensorLike</span>
+<span class="sd">            Indices of RO points or `x` parameters at RO indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nroy_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_nroy_mask</span><span class="p">(</span><span class="n">implausibility</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">nroy_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">idx</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatching.calculate_implausibility">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.calculate_implausibility">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_implausibility</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">pred_means</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>  <span class="c1"># [n_samples, n_outputs]</span>
+        <span class="n">pred_vars</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>  <span class="c1"># [n_samples, n_outputs]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate implausibility scores.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pred_means: TensorLike</span>
+<span class="sd">            Tensor of prediction means [n_samples, n_outputs]</span>
+<span class="sd">        pred_vars: TensorLike</span>
+<span class="sd">            Tensor of prediction variances [n_samples, n_outputs].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TensorLike</span>
+<span class="sd">            Tensor of implausibility scores.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Additional variance due to model discrepancy (defaults to 0)</span>
+        <span class="n">discrepancy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_vars</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discrepancy</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate total variance</span>
+        <span class="n">Vs</span> <span class="o">=</span> <span class="n">pred_vars</span> <span class="o">+</span> <span class="n">discrepancy</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_vars</span>
+
+        <span class="c1"># Calculate implausibility</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_means</span> <span class="o">-</span> <span class="n">pred_means</span><span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Vs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatching.generate_param_bounds">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.generate_param_bounds">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_param_bounds</span><span class="p">(</span>
+        <span class="n">nroy_x</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>
+        <span class="n">buffer_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">param_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">min_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate lower/upper parameter bounds as min/max of NROY samples.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nroy_x: TensorLike</span>
+<span class="sd">            A tensor of NROY parameter samples [n_samples, n_inputs].</span>
+<span class="sd">        buffer_ratio: float</span>
+<span class="sd">            A scaling factor used to expand the bounds of the (NROY) parameter space.</span>
+<span class="sd">            It is applied as a ratio of the range (max_val - min_val) of each input</span>
+<span class="sd">            parameter to create a buffer around the NROY minimum and maximum values.</span>
+<span class="sd">        param_names: list[str] | None</span>
+<span class="sd">            Optional list of parameter names. If None, uses default `[&quot;x1&quot;, ..., &quot;xn&quot;]`.</span>
+<span class="sd">        min_samples: int</span>
+<span class="sd">            Minimum number of samples needed to generate new bounds.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[str, [float, float]] | None</span>
+<span class="sd">            The generated [lower, upper] parameter bounds. Returns None if there are</span>
+<span class="sd">            not enough samples to generate bounds from.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">param_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">param_names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;x</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nroy_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+        <span class="k">if</span> <span class="n">nroy_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">min_samples</span><span class="p">:</span>
+            <span class="n">min_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">nroy_x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">max_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">nroy_x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span> <span class="o">*</span> <span class="n">buffer_ratio</span>
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="n">min_val</span> <span class="o">-</span> <span class="n">buffer</span>
+            <span class="n">upper_bound</span> <span class="o">=</span> <span class="n">max_val</span> <span class="o">+</span> <span class="n">buffer</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">param</span><span class="p">:</span> <span class="p">(</span><span class="n">lower_bound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">upper_bound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_names</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HistoryMatchingWorkflow">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HistoryMatchingWorkflow</span><span class="p">(</span><span class="n">HistoryMatching</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    History Matching Workflow class.</span>
+
+<span class="sd">    Run history matching workflow:</span>
+<span class="sd">    - sample parameter values to test from the current NROY parameter space</span>
+<span class="sd">    - use emulator to rule out implausible parameters and update NROY space</span>
+<span class="sd">    - make predictions for a subset the NROY parameters using the simulator</span>
+<span class="sd">    - refit the emulator using the simulated data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913 allow too many arguments since all currently required</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span><span class="p">,</span>
+        <span class="n">emulator</span><span class="p">:</span> <span class="n">ProbabilisticEmulator</span><span class="p">,</span>
+        <span class="n">observations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">model_discrepancy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">train_x</span><span class="p">:</span> <span class="n">TensorLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">train_y</span><span class="p">:</span> <span class="n">TensorLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">DeviceLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the history matching workflow object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulator: Simulator</span>
+<span class="sd">            A simulator.</span>
+<span class="sd">        emulator: ProbabilisticEmulator</span>
+<span class="sd">            A ProbabilisticEmulator pre-trained on `simulator` data.</span>
+<span class="sd">        observations: dict[str, tuple[float, float] | dict[str, float]</span>
+<span class="sd">            For each output variable, specifies observed [value, noise]. In case</span>
+<span class="sd">            of no uncertainty in observations, provides just the observed value.</span>
+<span class="sd">        threshold: float</span>
+<span class="sd">            Implausibility threshold (query points with implausibility scores that</span>
+<span class="sd">            exceed this value are ruled out). Defaults to 3, which is considered</span>
+<span class="sd">            a good value for simulations with a single output.</span>
+<span class="sd">        model_discrepancy: float</span>
+<span class="sd">            Additional variance to include in the implausibility calculation.</span>
+<span class="sd">        rank: int</span>
+<span class="sd">            Scoring method for multi-output problems. Must be 1 &lt;= rank &lt;= n_outputs.</span>
+<span class="sd">            When the implausibility scores are ordered across outputs, it indicates</span>
+<span class="sd">            which rank to use when determining whether the query point is NROY. The</span>
+<span class="sd">            default val of ``1`` indicates that the largest implausibility will be used.</span>
+<span class="sd">        train_x: TensorLike | None</span>
+<span class="sd">            Optional tensor of input data the emulator was trained on.</span>
+<span class="sd">        train_y: TensorLike | None</span>
+<span class="sd">            Optional tensor of output data the emulator was trained on.</span>
+<span class="sd">        device: DeviceLike | None</span>
+<span class="sd">            The device to use. If None, the default torch device is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">model_discrepancy</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">simulator</span>
+        <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">set_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span> <span class="o">=</span> <span class="n">emulator</span>
+
+        <span class="c1"># These get updated when run() is called and used to refit the emulator</span>
+        <span class="k">if</span> <span class="n">train_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">train_y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_x</span> <span class="o">=</span> <span class="n">train_x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_y</span> <span class="o">=</span> <span class="n">train_y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">in_dim</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">out_dim</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HistoryMatchingWorkflow.generate_samples">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.generate_samples">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate parameter samples and evaluate implausibility.</span>
+
+<span class="sd">        Draw `n` samples from the simulator min/max parameter bounds and</span>
+<span class="sd">        evaluate implausability given emulator predictions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n: int</span>
+<span class="sd">            The number of parameter samples to generate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[TensorLike, TensorLike]</span>
+<span class="sd">            A tensor of tested input parameters and their implausability scores.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Generate `n` parameter samples from within NROY bounds</span>
+        <span class="n">test_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># Rule out implausible parameters from samples using an emulator</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_x</span><span class="p">)</span>
+        <span class="n">impl_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_implausibility</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">pred</span><span class="o">.</span><span class="n">variance</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">test_x</span><span class="p">,</span> <span class="n">impl_scores</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatchingWorkflow.update_simulator_bounds">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.update_simulator_bounds">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_simulator_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nroy_x</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="n">buffer_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update simulator parameter bounds to min/max of NROY parameter samples.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nroy_x: TensorLike</span>
+<span class="sd">            A tensor of NROY parameter samples [n_samples, n_inputs]</span>
+<span class="sd">        buffer_ratio: float</span>
+<span class="sd">            A scaling factor used to expand the bounds of the (NROY) parameter space.</span>
+<span class="sd">            It is applied as a ratio of the range (max_val - min_val) of each input</span>
+<span class="sd">            parameter to create a buffer around the NROY minimum and maximum values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># [n_outputs, 2] where second dim is [min, max]</span>
+        <span class="n">param_bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_param_bounds</span><span class="p">(</span><span class="n">nroy_x</span><span class="p">,</span> <span class="n">buffer_ratio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">param_bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">_param_bounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">param_bounds</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not update simulator parameter bounds only &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nroy_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> samples were provided.&quot;</span>
+                <span class="p">),</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatchingWorkflow.sample_tensor">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.sample_tensor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly sample `n` rows from `x`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n: int</span>
+<span class="sd">            The number of samples to draw.</span>
+<span class="sd">        x: TensorLike</span>
+<span class="sd">            The tensor to sample from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TensorLike</span>
+<span class="sd">            A tensor of samples with `n` rows.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Number of tensor rows </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> is less than </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> samples.&quot;</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatchingWorkflow.simulate">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.simulate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate `x` parameter inputs and filter out failed simulations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x: TensorLike</span>
+<span class="sd">            A tensor of parameters to simulate [n_samples, n_inputs].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[TensorLike, TensorLike]</span>
+<span class="sd">            Tensors of succesfully simulated input parameters and predictions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if simulation fails, returned y and x have fewer rows than input x</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">forward_batch_skip_failures</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">train_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">train_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="HistoryMatchingWorkflow.run">
+<a class="viewcode-back" href="../../../reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_simulations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">n_test_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+        <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">buffer_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a wave of the history matching workflow.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_simulations: int</span>
+<span class="sd">            The number of simulations to run.</span>
+<span class="sd">        n_test_samples: int</span>
+<span class="sd">            Number of input parameters to test for implausibility with the emulator.</span>
+<span class="sd">            Parameters to simulate are sampled from this NROY subset.</span>
+<span class="sd">        max_retries: int</span>
+<span class="sd">            Maximum number of times to try to generate `n_simulations` NROY parameters.</span>
+<span class="sd">            That is the maximum number of times to repeat the following steps:</span>
+<span class="sd">                - draw `n_test_samples` parameters</span>
+<span class="sd">                - use emulator to make predictions for those parameters</span>
+<span class="sd">                - score implausability of parameters given predictions</span>
+<span class="sd">                - identify NROY parameters within this set</span>
+<span class="sd">        buffer_ratio: float</span>
+<span class="sd">            A scaling factor used to expand the bounds of the (NROY) parameter space.</span>
+<span class="sd">            It is applied as a ratio of the range (max_val - min_val) of each input</span>
+<span class="sd">            parameter to create a buffer around the NROY minimum and maximum values</span>
+<span class="sd">            when updating the simulator parameter bounds.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[TensorLike, TensorLike]</span>
+<span class="sd">            A tensor of tested input parameters and their implausibility scores from</span>
+<span class="sd">            which simulation samples were then selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Running history matching workflow with&quot;</span>
+            <span class="s2">&quot; </span><span class="si">%d</span><span class="s2"> simulations and </span><span class="si">%d</span><span class="s2"> test samples.&quot;</span><span class="p">,</span>
+            <span class="n">n_simulations</span><span class="p">,</span>
+            <span class="n">n_test_samples</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">test_parameters_list</span><span class="p">,</span> <span class="n">impl_scores_list</span><span class="p">,</span> <span class="n">nroy_parameters_list</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[],</span>
+            <span class="p">[],</span>
+            <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">in_dim</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)],</span>
+        <span class="p">)</span>
+
+        <span class="n">retries</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">nroy_parameters_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">n_simulations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">retries</span> <span class="o">==</span> <span class="n">max_retries</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not generate n_simulations (</span><span class="si">{</span><span class="n">n_simulations</span><span class="si">}</span><span class="s2">) samples &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;that are NROY after </span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> retries.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="c1"># Generate `n_test_samples` with implausability scores, identify NROY</span>
+            <span class="n">test_parameters</span><span class="p">,</span> <span class="n">impl_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_samples</span><span class="p">(</span><span class="n">n_test_samples</span><span class="p">)</span>
+            <span class="n">nroy_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nroy</span><span class="p">(</span><span class="n">impl_scores</span><span class="p">,</span> <span class="n">test_parameters</span><span class="p">)</span>
+
+            <span class="c1"># Store results</span>
+            <span class="n">nroy_parameters_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nroy_parameters</span><span class="p">)</span>
+            <span class="n">test_parameters_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_parameters</span><span class="p">)</span>
+            <span class="n">impl_scores_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">impl_scores</span><span class="p">)</span>
+
+            <span class="n">retries</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Update simulator parameter bounds to NROY region</span>
+        <span class="c1"># Next time that call run(), will sample from within this region</span>
+        <span class="n">nroy_parameters_all</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">nroy_parameters_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_simulator_bounds</span><span class="p">(</span><span class="n">nroy_parameters_all</span><span class="p">,</span> <span class="n">buffer_ratio</span><span class="p">)</span>
+
+        <span class="c1"># Randomly pick at most `n_simulations` parameters from NROY to simulate</span>
+        <span class="n">nroy_simulation_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_tensor</span><span class="p">(</span><span class="n">n_simulations</span><span class="p">,</span> <span class="n">nroy_parameters_all</span><span class="p">)</span>
+
+        <span class="c1"># Make predictions using simulator (this updates self.x_train and self.y_train)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">nroy_simulation_samples</span><span class="p">)</span>
+
+        <span class="c1"># Refit emulator using all available data</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_y</span><span class="p">)</span>
+
+        <span class="c1"># Return test parameters and impl scores for this run/wave</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">test_parameters_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">impl_scores_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
