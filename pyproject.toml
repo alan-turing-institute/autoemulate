@@ -78,7 +78,10 @@ include-package-data = true
 include = ["autoemulate*"]
 
 [tool.setuptools.package-data]
-autoemulate = ["static/AE_logo_final.png"]
+autoemulate = ["datasets/**/*"]
+
+[tool.setuptools.exclude-package-data]
+autoemulate = ["**/__pycache__", "**/*.pyc"]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
