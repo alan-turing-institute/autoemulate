@@ -2,6 +2,7 @@ import logging
 import warnings
 
 import torch
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
@@ -320,7 +321,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = emulator
         self.emulator.device = self.device
 
-        # These get updated when run() is called and used to refit the emulator
+        # New data is generated in `run()` and appended here
+        # The emulator is then refit on all data collected so far
         if train_x is not None and train_y is not None:
             self.train_x = train_x.float().to(self.device)
             self.train_y = train_y.float().to(self.device)
@@ -328,74 +330,105 @@ class HistoryMatchingWorkflow(HistoryMatching):
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-    def generate_samples(self, n: int) -> tuple[TensorLike, TensorLike]:
+        # NROY samples are also generated in `run()` and used in `cloud_sample()`
+        # `self.nroy_samples` gets overwritten each time `run()` is called
+        # This means we only ever use the most recent NROY samples
+        self.nroy_samples = None
+
+    def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
+        """
+        Generate `n` additional parameter samples using cloud sampling.
+
+        From the availble NROY points, draw from Gaussians centered on those points:
+        - if n < number of NROY points, randomly select a subset to use
+        - otherwise, use each NROY point at least once
+        - if the drawn candidate sample is outside the NROY bounds, draw a new sample
+
+        Parameters
+        ----------
+        n: int
+            The number of additional parameter samples to generate.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from is set to:
+            `parameter range * scaling_factor`.
+
+        Returns
+        -------
+        torch.Tensor
+            A tensor of shape [n, n_dim] containing the generated samples.
+        """
+        assert isinstance(self.nroy_samples, TensorLike)
+
+        # Set stdev as scaled parameter range, create diagonal covariance matrix
+        stdev = (
+            self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
+        ) * scaling_factor
+        covariance_matrix = torch.diag(stdev**2)
+
+        # Each NROY sample is a mean of a Gaussian that can generate candidates from
+        num_means = self.nroy_samples.shape[0]
+
+        # 1: Handle cases where `n` < number of NROY samples
+        if num_means > n:
+            # Randomly select `n` means from `self.nroy_samples`
+            selected_means = self.sample_tensor(n, self.nroy_samples)
+            samples = []
+            for mean in selected_means:
+                mvn = MultivariateNormal(mean, covariance_matrix)
+                samples.append(mvn.sample((1,)))
+            return torch.cat(samples, dim=0)
+
+        # 2: Handle cases where `n` >= number of NROY samples
+
+        # Determine the number of samples to draw from each NROY mean
+        # Handle remainder to return exactly `n` samples
+        samples_per_mean = n // num_means
+        remaining_samples = n % num_means
+
+        # Generate samples from Gaussians centered on the NROY samples
+        samples = []
+        for i, mean in enumerate(self.nroy_samples):
+            # Handle remainder here
+            num_samples = samples_per_mean + (1 if i < remaining_samples else 0)
+            mvn = MultivariateNormal(mean, covariance_matrix)
+            samples.append(mvn.sample((num_samples,)))
+
+        return torch.cat(samples, dim=0)
+
+    def generate_samples(
+        self, n: int, scaling_factor: float = 0.1
+    ) -> tuple[TensorLike, TensorLike]:
         """
         Generate parameter samples and evaluate implausibility.
 
-        Draw `n` samples from the simulator min/max parameter bounds and
-        evaluate implausability given emulator predictions.
+        Draw `n` samples either from the simulator min/max parameter bounds or
+        using cloud sampling centered at NROY samples. Evaluate sample
+        implausability using emulator predictions.
 
         Parameters
         ----------
         n: int
             The number of parameter samples to generate.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: `parameter range * scaling_factor`.
 
         Returns
         -------
         tuple[TensorLike, TensorLike]
             A tensor of tested input parameters and their implausability scores.
         """
-        # Generate `n` parameter samples from within NROY bounds
-        test_x = self.simulator.sample_inputs(n).to(self.device)
+        # Generate `n` parameter samples (use simulator if have no NROY samples)
+        if self.nroy_samples is None:
+            test_x = self.simulator.sample_inputs(n).to(self.device)
+        else:
+            test_x = self.cloud_sample(n, scaling_factor).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
         pred = self.emulator.predict(test_x)
         impl_scores = self.calculate_implausibility(pred.mean, pred.variance)
 
         return test_x, impl_scores
-
-    def update_simulator_bounds(self, nroy_x: TensorLike, buffer_ratio: float = 0.05):
-        """
-        Update simulator parameter bounds to min/max of NROY parameter samples.
-
-        Parameters
-        ----------
-        nroy_x: TensorLike
-            A tensor of NROY parameter samples [n_samples, n_inputs]
-        buffer_ratio: float
-            A scaling factor used to expand the bounds of the (NROY) parameter space.
-            It is applied as a ratio of the range (max_val - min_val) of each input
-            parameter to create a buffer around the NROY minimum and maximum values.
-        """
-        nroy_bounds = self.generate_param_bounds(
-            nroy_x, buffer_ratio
-        )  # {str: [min, max]}
-        if nroy_bounds is not None:
-            # Ensure new bounds do not exceed the original bounds
-            original_bounds = self.simulator._param_bounds  # [(min, max)]
-            adjusted_bounds = []
-            for i, (new_bound, original_bound) in enumerate(
-                zip(nroy_bounds.values(), original_bounds, strict=False)
-            ):
-                # Take the intersection of the new and original bounds
-                min_bound = max(new_bound[0], original_bound[0])
-                max_bound = min(new_bound[1], original_bound[1])
-                if min_bound > max_bound:
-                    warnings.warn(
-                        f"Could not update {list(nroy_bounds.keys())[i]} bounds.",
-                        stacklevel=2,
-                    )
-                    min_bound, max_bound = original_bound
-                adjusted_bounds.append([min_bound, max_bound])
-            self.simulator._param_bounds = adjusted_bounds
-        else:
-            warnings.warn(
-                (
-                    f"Could not update simulator parameter bounds only "
-                    f"{nroy_x.shape[0]} samples were provided."
-                ),
-                stacklevel=2,
-            )
 
     def sample_tensor(self, n: int, x: TensorLike) -> TensorLike:
         """
@@ -450,7 +483,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
-        buffer_ratio: float = 0.0,
+        scaling_factor: float = 0.1,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -458,22 +491,20 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_simulations: int
-            The number of simulations to run.
+            Number of simulations to run.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
         max_retries: int
             Maximum number of times to try to generate `n_simulations` NROY parameters.
             That is the maximum number of times to repeat the following steps:
-                - draw `n_test_samples` parameters
+                - draw `n_test_samples` parameters (use cloud sampling if possible)
                 - use emulator to make predictions for those parameters
                 - score implausability of parameters given predictions
                 - identify NROY parameters within this set
-        buffer_ratio: float
-            A scaling factor used to expand the bounds of the (NROY) parameter space.
-            It is applied as a ratio of the range (max_val - min_val) of each input
-            parameter to create a buffer around the NROY minimum and maximum values
-            when updating the simulator parameter bounds.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: `parameter range * scaling_factor`.
 
         Returns
         -------
@@ -499,7 +530,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             if retries == max_retries:
                 msg = (
                     f"Could not generate n_simulations ({n_simulations}) samples "
-                    f"that are NROY after {max_retries} retries."
+                    f"that are NROY after {max_retries} retries. "
                     f"Only {torch.cat(nroy_parameters_list, 0).shape[0]} "
                     "samples generated."
                 )
@@ -507,7 +538,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 break
 
             # Generate `n_test_samples` with implausability scores, identify NROY
-            test_parameters, impl_scores = self.generate_samples(n_test_samples)
+            test_parameters, impl_scores = self.generate_samples(
+                n_test_samples, scaling_factor
+            )
             nroy_parameters = self.get_nroy(impl_scores, test_parameters)
 
             # Store results
@@ -517,13 +550,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
             retries += 1
 
-        # Update simulator parameter bounds to NROY region
-        # Next time that call run(), will sample from within this region
-        nroy_parameters_all = torch.cat(nroy_parameters_list, 0)
-        self.update_simulator_bounds(nroy_parameters_all, buffer_ratio)
+        # Next time that call run(), will sample using these NROY points
+        self.nroy_samples = torch.cat(nroy_parameters_list, 0)
 
         # Randomly pick at most `n_simulations` parameters from NROY to simulate
-        nroy_simulation_samples = self.sample_tensor(n_simulations, nroy_parameters_all)
+        nroy_simulation_samples = self.sample_tensor(n_simulations, self.nroy_samples)
 
         # Make predictions using simulator (this updates self.x_train and self.y_train)
         _, _ = self.simulate(nroy_simulation_samples)
@@ -555,7 +586,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
-        buffer_ratio: float = 0.0,
+        scaling_factor: float = 0.1,
     ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
@@ -563,27 +594,25 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Parameters
         ----------
         n_waves: int
-            The number of waves to run.
+            The maximum number of waves to run.
         frac_nroy_stop: float
             Fraction of NROY samples to stop at. If less than this fraction of
             NROY samples is reached, the workflow stops.
         n_simulations: int
-            The number of simulations to run in each wave.
+            Number of simulations to run in each wave.
         n_test_samples: int
             Number of input parameters to test for implausibility with the emulator.
             Parameters to simulate are sampled from this NROY subset.
         max_retries: int
             Maximum number of times to try to generate `n_simulations` NROY parameters.
             That is the maximum number of times to repeat the following steps:
-                - draw `n_test_samples` parameters
+                - draw `n_test_samples` parameters (use cloud sampling if possible)
                 - use emulator to make predictions for those parameters
                 - score implausibility of parameters given predictions
                 - identify NROY parameters within this set
-        buffer_ratio: float
-            A scaling factor used to expand the bounds of the (NROY) parameter space.
-            It is applied as a ratio of the range (max_val - min_val) of each input
-            parameter to create a buffer around the NROY minimum and maximum values
-            when updating the simulator parameter bounds.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: `parameter range * scaling_factor`.
 
         Returns
         -------
@@ -597,20 +626,18 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
                 max_retries=max_retries,
-                buffer_ratio=buffer_ratio,
+                scaling_factor=scaling_factor,
             )
 
             print("Wave ", i, self.simulator.param_bounds)
 
             if len(test_x) < n_simulations or len(impl_scores) < n_simulations:
-                logger.warning(
-                    " Not enough parameters or impl scores generated in wave %d/%d",
-                    i + 1,
-                    n_waves,
-                    "Stopping history matching workflow. Results are stored until wave %d/%d.",
-                    i,
-                    n_waves,
+                msg = (
+                    f"Not enough parameters or impl scores generated in wave {i + 1}",
+                    f"/{n_waves}. Stopping history matching workflow. Results are ",
+                    f"stored until wave {i}/{n_waves}.",
                 )
+                logger.warning(msg)
                 break
 
             wave_results.append((test_x, impl_scores))
