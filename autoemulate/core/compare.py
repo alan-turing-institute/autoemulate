@@ -496,7 +496,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         Unlike TransformedEmulator.refit() which retrains an existing model,
         this method creates a completely new model instance with reinitialized
         parameters. This ensures that when fitting on new data that the same
-        initialization conditions are applied. This can be have an affect for example
+        initialization conditions are applied. This can have an affect for example
         given kernel initialization in Gaussian Processes or weight initialization in
         neural networks.
 
