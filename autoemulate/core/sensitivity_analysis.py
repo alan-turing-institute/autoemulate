@@ -13,7 +13,7 @@ from SALib.sample.sobol import sample as sobol_sample
 from SALib.util import ResultDict
 
 from autoemulate.core.plotting import display_figure
-from autoemulate.core.types import DistributionLike, NumpyLike, TensorLike
+from autoemulate.core.types import NumpyLike, TensorLike
 from autoemulate.data.utils import ConversionMixin
 from autoemulate.emulators.base import Emulator
 
@@ -145,17 +145,8 @@ class SensitivityAnalysis(ConversionMixin):
         """
         param_tensor = self._convert_to_tensors(param_samples)
         assert isinstance(param_tensor, TensorLike)
-        y_pred = self.emulator.predict(param_tensor)
-
-        # handle types, convert to numpy
-        if isinstance(y_pred, TensorLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred)
-        elif isinstance(y_pred, DistributionLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float())
-        else:
-            msg = "Emulator has to return Tensor or Distribution"
-            raise ValueError(msg)
-
+        y_pred = self.emulator.predict_mean(param_tensor)
+        y_pred_np, _ = self._convert_to_numpy(y_pred)
         return y_pred_np
 
     def _get_output_names(self, num_outputs: int) -> list[str]:
@@ -236,7 +227,10 @@ class SensitivityAnalysis(ConversionMixin):
                 Si = morris_analyze(
                     self.problem, param_samples, y[:, i], conf_level=conf_level
                 )
-            results[name] = Si  # type: ignore PGH003
+            else:
+                msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
+                raise ValueError(msg)
+            results[name] = Si
 
         if method == "sobol":
             return _sobol_results_to_df(results)
@@ -352,6 +346,53 @@ class SensitivityAnalysis(ConversionMixin):
             .nlargest(top_n)
             .index.tolist()
         )
+
+    def plot_sa_heatmap(  # noqa: PLR0913
+        self,
+        results: pd.DataFrame,
+        index: str = "ST",
+        top_n: int | None = None,
+        cmap: str = "coolwarm",
+        normalize: bool = True,
+        figsize: tuple | None = None,
+        fname: str | None = None,
+    ):
+        """
+        Plot a normalized Sobol sensitivity analysis heatmap.
+
+        Parameters
+        ----------
+        results: pd.DataFrame
+            Sensitivity index dataframe with columns ['index', 'parameter',
+            'output', 'value'].
+        index: str
+            The type of sensitivity index to plot (e.g., 'ST').
+        top_n: int | None
+            Number of top parameters to include. If None, returns all. Defaults to
+            None.
+        cmap: str
+            Matplotlib colormap. Defaults to 'coolwarm'.
+        normalize: bool
+            Wheterto normalize values to [0, 1]. Defaults to True.
+        figsize: tuple | None
+            Figure size as (width, height) in inches. Defaults to None.
+        fname: str | None
+            If provided, saves the figure to this file path. Defaults to None.
+        """
+        # Determine which parameters to include
+        parameter_list = self.top_n_sobol_params(
+            results,
+            top_n=len(results["parameter"].unique()) if top_n is None else top_n,
+        )
+
+        fig = _plot_sa_heatmap(
+            results, index, parameter_list, cmap, normalize, fig_size=figsize
+        )
+
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
 
 def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
@@ -776,3 +817,87 @@ def _create_morris_plot(
     ax.set_ylabel("μ* (Modified Mean)")
     ax.set_title(f"Output: {output_name}")
     ax.grid(True, alpha=0.3)
+
+
+def _plot_sa_heatmap(  # noqa: PLR0913
+    si_df, index, parameters, cmap="coolwarm", normalize=True, fig_size=None
+) -> matplotlib.figure.Figure:
+    """
+    Plot a sensitivity analysis heatmap for a given index.
+
+    Parameters
+    ----------
+    results: pd.DataFrame
+        Sensitivity index dataframe with columns ['index', 'parameter',
+        'output', 'value'].
+    index: str
+        The type of sensitivity index to plot (e.g., 'ST').
+    top_n: int | None
+        Number of top parameters to include. If None, returns all. Defaults to
+        None.
+    cmap: str
+        Matplotlib colormap. Defaults to 'coolwarm'.
+    normalize: bool
+        Wheterto normalize values to [0, 1]. Defaults to True.
+    figsize: tuple | None
+        Figure size as (width, height) in inches. Defaults to None.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure containing the SA heatmap.
+    """
+    # Filter the dataframe for the specified index
+    df = si_df[si_df["index"] == index]
+
+    # Pivot the dataframe to get a matrix: rows = outputs, cols = parameters
+    heatmap_df = (
+        df[df["parameter"].isin(parameters)]
+        .pivot_table(
+            index="output", columns="parameter", values="value", fill_value=np.nan
+        )
+        .reindex(columns=parameters)  # Ensure column order
+    )
+
+    # Normalize if requested
+    if normalize:
+        min_value = heatmap_df.min().min()
+        max_value = heatmap_df.max().max()
+        value_range = max_value - min_value if max_value != min_value else 1
+        heatmap_df = (heatmap_df - min_value) / value_range
+
+    # Convert to NumPy array
+    data_np = heatmap_df.to_numpy()
+
+    # layout - add space for legend
+    nrows, ncols = _calculate_layout(data_np.shape[1], data_np.shape[0])
+    fig_size = fig_size or (4.5 * ncols, 4.5 * nrows + 2)  # Extra width for legend
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=fig_size)
+    cax = ax.imshow(data_np, cmap=cmap, aspect="auto")
+
+    # Colorbar
+    cbar = fig.colorbar(cax, ax=ax)
+    cbar_label = "Normalized Sensitivity" if normalize else "Sensitivity"
+    cbar.set_label(cbar_label, rotation=270, labelpad=15)
+
+    # Labels and ticks
+    ax.set_title(f"{index} Sensitivity Analysis Heatmap", fontsize=14, pad=12)
+    ax.set_xlabel("Parameters", fontsize=12)
+    ax.set_ylabel("Outputs", fontsize=12)
+
+    ax.set_xticks(np.arange(len(parameters)))
+    ax.set_xticklabels(parameters, rotation=45, ha="right")
+    ax.set_yticks(np.arange(len(heatmap_df.index)))
+    ax.set_yticklabels(heatmap_df.index)
+
+    # Gridlines
+    ax.set_xticks(np.arange(-0.5, len(parameters), 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, len(heatmap_df.index), 1), minor=True)
+    ax.grid(which="minor", color="w", linestyle="-", linewidth=2)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    plt.tight_layout()
+
+    return fig
