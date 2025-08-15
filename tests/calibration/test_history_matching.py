@@ -159,5 +159,3 @@ def test_run_max_tries():
 
     with pytest.raises(RuntimeError):
         hm.run(n_simulations=5)
-    with pytest.raises(RuntimeError):
-        hm.run(n_simulations=5)
