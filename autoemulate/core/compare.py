@@ -244,11 +244,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         if models is None:
             if only_probabilistic and only_pytorch:
-                return [
-                    emulator
-                    for emulator in self.pytorch_emulators()
-                    if emulator.supports_uq
-                ]
+                return list(
+                    set(self.pytorch_emulators()).intersection(
+                        self.probablistic_emulators()
+                    )
+                )
             if only_probabilistic:
                 return self.probablistic_emulators()
             if only_pytorch:
