@@ -879,8 +879,8 @@ def _plot_sa_heatmap(  # noqa: PLR0913
     data_np = heatmap_df.to_numpy()
 
     # layout - add space for legend
-    n_rows, n_cols = _calculate_layout(data_np.shape[1], data_np.shape[0])
-    fig_size = fig_size or (4.5 * n_cols, 4.5 * n_rows + 2)  # Extra width for legend
+    nrows, ncols = _calculate_layout(data_np.shape[1], data_np.shape[0])
+    fig_size = fig_size or (4.5 * ncols, 4.5 * nrows + 2)  # Extra width for legend
 
     # Plotting
     fig, ax = plt.subplots(figsize=fig_size)
