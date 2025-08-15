@@ -91,7 +91,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             measure of the uncertainty in test performance. Defaults to 100.
         device: DeviceLike | None
             Device to run the emulators. If None, uses the default device (usually CPU
-            or GPU). Defauls to None.
+            or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         log_level: str
