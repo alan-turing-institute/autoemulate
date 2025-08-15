@@ -221,8 +221,7 @@ def bootstrap(  # noqa: PLR0913
 
         # Compute metrics for this bootstrap sample
         r2_scores[i] = evaluate(y_pred, y_bootstrap, r2_metric())
-        mse_score = evaluate(y_pred, y_bootstrap, rmse_metric())
-        rmse_scores[i] = mse_score**0.5
+        rmse_scores[i] = evaluate(y_pred, y_bootstrap, rmse_metric())
 
     # Return mean and std
     return (
