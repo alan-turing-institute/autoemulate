@@ -432,6 +432,112 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             rmse_score=best_result.rmse_test,
         )
 
+    def get_model(self, model_name: str | None = None) -> TransformedEmulator:
+        """
+        Get the best model or a specific model by name.
+
+        This method returns the existing fitted model from the comparison results.
+        If you want a fresh model with reinitialized parameters, use the `refit`
+        method instead.
+
+        Parameters
+        ----------
+        model_name: str | None
+            The name of the model to retrieve. If None, returns the best model.
+
+        Returns
+        -------
+        TransformedEmulator
+            The fitted model.
+        """
+        if model_name is None:
+            # Return the best model
+            best_result = self.best_result()
+            return best_result.model
+
+        # Find the model by name using the helper method
+        result = self.get_result_by_model_name(model_name)
+        return result.model
+
+    def refit(
+        self,
+        x: InputLike,
+        y: InputLike,
+        model_name: str | None = None,
+        random_seed: int | None = None,
+    ) -> TransformedEmulator:
+        """
+        Create a fresh model with the best configuration and refit on new data.
+
+        This method creates a new model instance with the same configuration as the
+        best (or specified) model from the comparison, but with freshly initialized
+        parameters fitted on the provided data. This is useful for getting
+        reproducible results or avoiding randomness from the comparison workflow.
+
+        Parameters
+        ----------
+        x: InputLike
+            Input features for training the fresh model.
+        y: InputLike
+            Target values for training the fresh model.
+        model_name: str | None
+            The name of the model configuration to use. If None, uses the best model.
+            Defaults to None.
+        random_seed: int | None
+            Random seed for parameter initialization. Defaults to None.
+
+        Returns
+        -------
+        TransformedEmulator
+            A new model instance with the same configuration but fresh parameters
+            fitted on the provided data.
+
+        Notes
+        -----
+        Unlike TransformedEmulator.refit() which retrains an existing model,
+        this method creates a completely new model instance with reinitialized
+        parameters. This ensures that when fitting on new data that the same
+        initialization conditions are applied. This can be have an affect for example
+        given kernel initialization in Gaussian Processes or weight initialization in
+        neural networks.
+
+        """
+        from autoemulate.emulators import get_emulator_class
+
+        # Get the result to use
+        result = (
+            self.best_result()
+            if model_name is None
+            else self.get_result_by_model_name(model_name)
+        )
+
+        # Set the random seed for initialization
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
+
+        # Convert and move the new data to device
+        x_tensor, y_tensor = self._convert_to_tensors(x, y)
+        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
+
+        # Get the model class from the model name
+        model_class = get_emulator_class(result.model_name)
+
+        # Create a fresh model with the same configuration
+        fresh_model = TransformedEmulator(
+            x_tensor,
+            y_tensor,
+            model=model_class,
+            x_transforms=result.x_transforms,
+            y_transforms=result.y_transforms,
+            device=self.device,
+            **result.params,
+        )
+
+        # Fit the fresh model on the new data
+        fresh_model.fit(x_tensor, y_tensor)
+
+        return fresh_model
+
     def plot(  # noqa: PLR0912, PLR0915
         self,
         model_obj: int | Emulator | Result,
