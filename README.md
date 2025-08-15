@@ -62,6 +62,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://jvwilliams23.github.io"><img src="https://avatars.githubusercontent.com/u/48445365?v=4?s=100" width="100px;" alt="Josh Williams"/><br /><sub><b>Josh Williams</b></sub></a><br /><a href="#bug-jvwilliams23" title="Bug reports">🐛</a> <a href="#ideas-jvwilliams23" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LevanBokeria"><img src="https://avatars.githubusercontent.com/u/7816766?v=4?s=100" width="100px;" alt="Levan Bokeria"/><br /><sub><b>Levan Bokeria</b></sub></a><br /><a href="#bug-LevanBokeria" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
 </table>

@@ -431,13 +431,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             rmse_score=best_result.rmse_test,
         )
 
-    def plot(  # noqa: PLR0912, PLR0915
+    def plot(  # noqa: PLR0912, PLR0913, PLR0915
         self,
         model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         figsize=None,
-        n_cols: int = 3,
+        ncols: int = 3,
+        fname: str | None = None,
     ):
         """
         Plot the evaluation of the model with the given result_id.
@@ -451,6 +452,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The index of the input feature to plot against the output.
         output_index: int
             The index of the output feature to plot against the input.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, it is set based on the number
+            of input and output features.
+        ncols: int
+            The number of columns in the subplot grid. Defaults to 3.
+        fname: str | None
+            If provided, the figure will be saved to this file path.
         """
         result = None
         if isinstance(model_obj, int):
@@ -515,12 +523,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_plots = len(input_index) * len(output_index)
 
         # Calculate number of rows
-        n_rows, n_cols = calculate_subplot_layout(n_plots, n_cols)
+        nrows, ncols = calculate_subplot_layout(n_plots, ncols)
 
         # Set up the figure
         if figsize is None:
-            figsize = (5 * n_cols, 4 * n_rows)
-        fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+            figsize = (5 * ncols, 4 * nrows)
+        fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
         axs = axs.flatten()
 
         plot_index = 0
@@ -545,7 +553,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
-        return display_figure(fig)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
     def save(
         self,
