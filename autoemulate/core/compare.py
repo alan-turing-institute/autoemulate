@@ -459,7 +459,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         result = self.get_result_by_model_name(model_name)
         return result.model
 
-    def refit(
+    def fit_from_reinitialized(
         self,
         x: InputLike,
         y: InputLike,
@@ -467,7 +467,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         random_seed: int | None = None,
     ) -> TransformedEmulator:
         """
-        Create a fresh model with the best configuration and refit on new data.
+        Fit a fresh model with reinitialized parameters using the best configuration.
 
         This method creates a new model instance with the same configuration as the
         best (or specified) model from the comparison, but with freshly initialized
