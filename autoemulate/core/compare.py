@@ -471,8 +471,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         This method creates a new model instance with the same configuration as the
         best (or specified) model from the comparison, but with freshly initialized
-        parameters fitted on the provided data. This is useful for getting
-        reproducible results or avoiding randomness from the comparison workflow.
+        parameters fitted on the provided data.
 
         Parameters
         ----------
