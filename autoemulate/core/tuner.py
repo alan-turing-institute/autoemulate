@@ -8,7 +8,12 @@ from torchmetrics import R2Score
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.model_selection import cross_validate
-from autoemulate.core.types import DeviceLike, InputLike, ModelParams
+from autoemulate.core.types import (
+    DeviceLike,
+    InputLike,
+    ModelParams,
+    TransformedEmulatorParams,
+)
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ConversionMixin, Emulator
 
@@ -64,6 +69,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         model_class: type[Emulator],
         x_transforms: list[Transform] | None = None,
         y_transforms: list[Transform] | None = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
         n_splits: int = 5,
         seed: int | None = None,
         shuffle: bool = True,
@@ -81,6 +87,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         y_transforms_list: list[list[AutoEmulateTransform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. Defaults to None.
         n_splits: int
             Number of cross validation folds to split data into. Defaults to 5.
         seed: int | None
@@ -117,6 +125,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     y_transforms=y_transforms,
                     model=model_class,
                     model_params=model_params,
+                    transformed_emulator_params=transformed_emulator_params,
                     device=self.device,
                     random_seed=None,
                 )

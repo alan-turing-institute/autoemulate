@@ -16,6 +16,7 @@ from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
     TensorLike,
+    TransformedEmulatorParams,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators.base import Emulator
@@ -80,6 +81,7 @@ def cross_validate(  # noqa: PLR0913
     dataset: Dataset,
     model: type[Emulator],
     model_params: ModelParams,
+    transformed_emulator_params: None | TransformedEmulatorParams = None,
     x_transforms: list[Transform] | None = None,
     y_transforms: list[Transform] | None = None,
     device: DeviceLike = "cpu",
@@ -100,6 +102,8 @@ def cross_validate(  # noqa: PLR0913
     model_params: ModelParams
         Model parameters to be used to construct model upon initialization. Passing an
         empty dictionary `{}` will use default parameters.
+    transformed_emulator_params: None | TransformedEmulatorParams
+        Parameters for the transformed emulator. Defaults to None.
     device: DeviceLike
         The device to use for model training and evaluation.
     random_seed: int | None
@@ -110,6 +114,7 @@ def cross_validate(  # noqa: PLR0913
     dict[str, list[float]]
        Contains r2 and rmse scores computed for each cross validation fold.
     """
+    transformed_emulator_params = transformed_emulator_params or {}
     x_transforms = x_transforms or []
     y_transforms = y_transforms or []
     cv_results = {"r2": [], "rmse": []}
@@ -133,9 +138,9 @@ def cross_validate(  # noqa: PLR0913
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
-        model_kwargs = dict(model_params)
+        model_params = dict(model_params)
         if "random_seed" in model_init_params:
-            model_kwargs["random_seed"] = random_seed
+            model_params["random_seed"] = random_seed
 
         # Convert dataloader to tensors to pass to model
         x, y = ConversionMixin._convert_to_tensors(train_subset)
@@ -148,7 +153,8 @@ def cross_validate(  # noqa: PLR0913
             x_transforms=x_transforms,
             y_transforms=y_transforms,
             device=device,
-            **model_kwargs,
+            **model_params,
+            **transformed_emulator_params,
         )
         transformed_emulator.fit(x, y)
 
