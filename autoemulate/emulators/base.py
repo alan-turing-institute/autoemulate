@@ -141,6 +141,9 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             the mean.
         with_grad: bool
             Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
 
         Returns
         -------
