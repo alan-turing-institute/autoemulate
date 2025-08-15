@@ -144,9 +144,9 @@ def cross_validate(  # noqa: PLR0913
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
-        model_kwargs = dict(model_params)
+        model_params = dict(model_params)
         if "random_seed" in model_init_params:
-            model_kwargs["random_seed"] = random_seed
+            model_params["random_seed"] = random_seed
 
         # Convert dataloader to tensors to pass to model
         x, y = ConversionMixin._convert_to_tensors(train_subset)
@@ -159,7 +159,7 @@ def cross_validate(  # noqa: PLR0913
             x_transforms=x_transforms,
             y_transforms=y_transforms,
             device=device,
-            **model_kwargs,
+            **model_params,
             **transformed_emulator_params,
         )
         transformed_emulator.fit(x, y)

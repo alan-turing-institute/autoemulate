@@ -48,7 +48,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         model_tuning: bool = True,
-        model_kwargs: None | ModelParams = None,
+        model_params: None | ModelParams = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
         n_iter: int = 10,
         n_splits: int = 5,
@@ -79,8 +79,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Defaults to None, in which case the data is standardized.
         model_tuning: bool
             Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_kwargs provided. Defaults to True.
-        model_kwargs: ModelParams | None
+            If False, the models use the model_params provided. Defaults to True.
+        model_params: ModelParams | None
             Dictionary of model-specific parameters to use when fitting the models.
             If None, the default parameters for each model are used.
             This is only used if model_tuning is False. Defaults to None.
@@ -150,7 +150,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
         self.model_tuning = model_tuning
-        self.model_kwargs = model_kwargs or {}
+        self.model_params = model_params or {}
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
@@ -339,7 +339,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                best_params_for_this_model = self.model_kwargs
+                                best_params_for_this_model = self.model_params
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
