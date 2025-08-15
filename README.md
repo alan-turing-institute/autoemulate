@@ -1,4 +1,4 @@
-# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="misc/AE_logo_final.png" align="right" height="138" /></a>
+# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/refs/heads/main/misc/AE_logo_final.png" align="right" height="138" /></a>
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
