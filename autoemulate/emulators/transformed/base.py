@@ -402,8 +402,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             if isinstance(y_t_pred, GaussianLike):
                 return self._inv_transform_y_gaussian(y_t_pred)
             msg = (
-                f"y_t_pred ({type(y_t_pred)}) is not `GaussianLike` and not currently "
-                "supported for when inverting without sampling."
+                f"Inverse transform without sampling for y_t_pred ({type(y_t_pred)}) is not currently supported, expected GaussianLike."
             )
             raise ValueError(msg)
 
