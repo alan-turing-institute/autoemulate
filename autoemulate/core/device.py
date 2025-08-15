@@ -1,4 +1,5 @@
 import logging
+import os
 
 import torch
 from torch import nn
@@ -6,6 +7,14 @@ from torch import nn
 from autoemulate.core.types import DeviceLike, TensorLike
 
 SUPPORTED_DEVICES: list[str] = ["cpu", "mps", "cuda", "xpu"]
+
+# Set this environment variable (to anything) to force mps to turn off.
+# This is necessary because in github runners
+# torch.backends.mps.is_available() returns true although it isn't.
+if "TURN_OFF_MPS_IF_RUNNING_CI" in os.environ:
+    TURN_OFF_MPS_IF_RUNNING_CI = True
+else:
+    TURN_OFF_MPS_IF_RUNNING_CI = False
 
 
 class TorchDeviceError(NotImplementedError):
@@ -65,6 +74,7 @@ def move_tensors_to_device(
     return tuple(tensor.to(device) for tensor in args)
 
 
+# ruff: noqa: PLR0911
 def check_torch_device_is_available(device: DeviceLike) -> bool:
     """
     Check if the given device type is available.
@@ -91,6 +101,8 @@ def check_torch_device_is_available(device: DeviceLike) -> bool:
     if device == "mps" or (
         isinstance(device, torch.device) and device.type == torch.device("mps").type
     ):
+        if TURN_OFF_MPS_IF_RUNNING_CI:
+            return False
         return torch.backends.mps.is_available()
     if device == "cuda":
         return torch.cuda.is_available()

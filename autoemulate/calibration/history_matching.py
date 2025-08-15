@@ -22,8 +22,9 @@ class HistoryMatching(TorchDeviceMixin):
     rule out ``implausible`` parameter values. The implausibility metric is:
 
     .. math::
-        I_i(\bar{x_0}) = \frac{|z_i - \\mathbb{E}(f_i(\bar{x_0}))|}
-        {\\sqrt{\text{Var}[z_i - \\mathbb{E}(f_i(\bar{x_0}))]}}
+
+        I_i(\bar{x_0}) = \frac{|z_i - \mathbb{E}(f_i(\bar{x_0}))|}
+        {\sqrt{\text{Var}[z_i - \mathbb{E}(f_i(\bar{x_0}))]}}
 
     Queried parameters above a given implausibility threshold are ruled out (RO)
     whereas all other parameters are marked as not ruled out yet (NROY).

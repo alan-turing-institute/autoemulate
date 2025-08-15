@@ -2,6 +2,7 @@ import warnings
 from datetime import datetime
 from pathlib import Path
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,20 +11,13 @@ import tqdm
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
-from autoemulate.core.plotting import (
-    calculate_subplot_layout,
-    display_figure,
-    plot_xy,
-)
+from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
 from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, ModelParams
 from autoemulate.data.utils import ConversionMixin, set_random_seed
-from autoemulate.emulators import (
-    ALL_EMULATORS,
-    get_emulator_class,
-)
+from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
@@ -165,16 +159,29 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     @staticmethod
     def list_emulators() -> pd.DataFrame:
-        """Return a dataframe with model names of all available emulators.
+        """Return a dataframe with info on all available emulators.
+
+        The dataframe includes the model name and whether it has a PyTorch backend,
+        supports multioutput data and provides uncertainty quantification.
 
         Returns
         -------
         pd.DataFrame
-            DataFrame with columns ['model_name', 'short_name'].
+            DataFrame with columns:
+                ['Emulator', 'PyTorch', 'Multioutput', 'Uncertainty_Quantification'].
         """
         return pd.DataFrame(
             {
                 "Emulator": [emulator.model_name() for emulator in ALL_EMULATORS],
+                "PyTorch": [
+                    emulator in PYTORCH_EMULATORS for emulator in ALL_EMULATORS
+                ],
+                "Multioutput": [
+                    emulator.is_multioutput() for emulator in ALL_EMULATORS
+                ],
+                "Uncertainty_Quantification": [
+                    emulator.supports_uq for emulator in ALL_EMULATORS
+                ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
@@ -424,13 +431,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             rmse_score=best_result.rmse_test,
         )
 
-    def plot(  # noqa: PLR0912, PLR0915
+    def plot(  # noqa: PLR0912, PLR0913, PLR0915
         self,
         model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         figsize=None,
-        n_cols: int = 3,
+        ncols: int = 3,
+        fname: str | None = None,
     ):
         """
         Plot the evaluation of the model with the given result_id.
@@ -444,6 +452,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The index of the input feature to plot against the output.
         output_index: int
             The index of the output feature to plot against the input.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, it is set based on the number
+            of input and output features.
+        ncols: int
+            The number of columns in the subplot grid. Defaults to 3.
+        fname: str | None
+            If provided, the figure will be saved to this file path.
         """
         result = None
         if isinstance(model_obj, int):
@@ -508,12 +523,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_plots = len(input_index) * len(output_index)
 
         # Calculate number of rows
-        n_rows, n_cols = calculate_subplot_layout(n_plots, n_cols)
+        nrows, ncols = calculate_subplot_layout(n_plots, ncols)
 
         # Set up the figure
         if figsize is None:
-            figsize = (5 * n_cols, 4 * n_rows)
-        fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+            figsize = (5 * ncols, 4 * nrows)
+        fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
         axs = axs.flatten()
 
         plot_index = 0
@@ -538,7 +553,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
-        return display_figure(fig)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
     def save(
         self,
@@ -600,3 +618,28 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The loaded model or result object.
         """
         return self.model_serialiser._load_result(path)
+
+    @staticmethod
+    def load_model(path: str | Path) -> Emulator:
+        """Load a stored model directly from a given path.
+
+        Parameters
+        ----------
+        path : str | Path
+            Path to the model.
+
+        Returns
+        -------
+        Emulator
+            The loaded model object.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the model file does not exist.
+        """
+        if isinstance(path, Path):
+            path = str(path)
+        if not path.endswith(".joblib"):
+            path += ".joblib"
+        return joblib.load(path)

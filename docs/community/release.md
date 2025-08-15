@@ -12,7 +12,7 @@ First, give the package a new version. We recommend [this guide](https://py-pkgs
 Update the version in `pyproject.toml`:
 
 ```toml
-[tool.poetry]
+[project]
 name = "autoemulate"
 version = "X.Y.Z"  # Update this line
 ```
@@ -34,8 +34,7 @@ Fill in the release title and description, then select the tag you just created 
    When you push a tag matching the pattern 'vX.Y.Z', the release workflow `release.yaml` will automatically:
    - Check out the code
    - Set up Python
-   - Install Poetry
-   - Install dependencies
+   - Install build tools (build, twine)
    - Build the package
    - Publish to PyPI
 
