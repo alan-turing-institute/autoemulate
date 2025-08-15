@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tqdm
+from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
@@ -15,7 +16,13 @@ from autoemulate.core.plotting import calculate_subplot_layout, display_figure, 
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
-from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, ModelParams
+from autoemulate.core.types import (
+    DeviceLike,
+    DistributionLike,
+    InputLike,
+    ModelParams,
+    TransformedEmulatorParams,
+)
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
@@ -39,14 +46,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x: InputLike,
         y: InputLike,
         models: list[type[Emulator] | str] | None = None,
-        x_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
-        y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
+        x_transforms_list: list[list[Transform | dict]] | None = None,
+        y_transforms_list: list[list[Transform | dict]] | None = None,
         model_tuning: bool = True,
-        model_kwargs: None | ModelParams = None,
+        model_params: None | ModelParams = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
-        n_bootstraps: int = 100,
+        n_bootstraps: int | None = 100,
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
@@ -64,19 +72,21 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator]] | None
             List of emulator classes to compare. If None, all available emulators
             are used.
-        x_transforms_list: list[list[AutoEmulateTransform]] | None
+        x_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the input data.
             Defaults to None, in which case the data is standardized.
-        y_transforms_list: list[list[AutoEmulateTransform]] | None
+        y_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
         model_tuning: bool
             Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_kwargs provided. Defaults to True.
-        model_kwargs: ModelParams | None
+            If False, the models use the model_params provided. Defaults to True.
+        model_params: ModelParams | None
             Dictionary of model-specific parameters to use when fitting the models.
             If None, the default parameters for each model are used.
             This is only used if model_tuning is False. Defaults to None.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. Defaults to None.
         n_iter: int
             Number of parameter settings to randomly sample and test during tuning.
         n_splits: int
@@ -84,11 +94,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         shuffle: bool
             Whether to shuffle data before splitting into cross validation folds.
             Defaults to True.
-        n_bootstraps: int
-            Number of times to resample the data when evaluating performance.
+        n_bootstraps: int | None
+            Number of times to resample the data when evaluating performance. When None
+            the evaluation uses single test set and returns a single value with no
+            measure of the uncertainty in test performance. Defaults to 100.
         device: DeviceLike | None
             Device to run the emulators. If None, uses the default device (usually CPU
-            or GPU). Defauls to None.
+            or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         log_level: str
@@ -143,7 +155,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
         self.model_tuning = model_tuning
-        self.model_kwargs = model_kwargs or {}
+        self.model_params = model_params or {}
+        self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -208,15 +221,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return model_classes
 
     def get_transforms(
-        self, transforms: list[AutoEmulateTransform | dict[str, object]]
-    ) -> list[AutoEmulateTransform]:
+        self, transforms: list[Transform | dict[str, object]]
+    ) -> list[Transform]:
         """Process and return a list of transforms."""
         processed_transforms = []
         for transform in transforms:
             if isinstance(transform, dict):
                 deserialized_transform = AutoEmulateTransform.from_dict(transform)
                 processed_transforms.append(deserialized_transform)
-            elif isinstance(transform, AutoEmulateTransform):
+            elif isinstance(transform, Transform):
                 processed_transforms.append(transform)
             else:
                 msg = f"Invalid transform type: {type(transform)}"
@@ -311,6 +324,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     y_transforms,
                                     n_splits=self.n_splits,
                                     shuffle=self.shuffle,
+                                    transformed_emulator_params=self.transformed_emulator_params,
                                 )
                                 mean_scores = [
                                     np.mean(score).item() for score in scores
@@ -330,7 +344,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                best_params_for_this_model = self.model_kwargs
+                                best_params_for_this_model = self.model_params
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
@@ -350,6 +364,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 y_transforms=y_transforms,
                                 device=self.device,
                                 **best_params_for_this_model,
+                                **self.transformed_emulator_params,
                             )
 
                             # This can fail for some model params
@@ -430,6 +445,88 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             r2_score=best_result.r2_test,
             rmse_score=best_result.rmse_test,
         )
+
+    def fit_from_reinitialized(
+        self,
+        x: InputLike,
+        y: InputLike,
+        result_id: int | None = None,
+        random_seed: int | None = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
+    ) -> TransformedEmulator:
+        """
+        Fit a fresh model with reinitialized parameters using the best configuration.
+
+        This method creates a new model instance with the same configuration as the
+        best (or specified) model from the comparison, but with freshly initialized
+        parameters fitted on the provided data.
+
+        Parameters
+        ----------
+        x: InputLike
+            Input features for training the fresh model.
+        y: InputLike
+            Target values for training the fresh model.
+        result_id: int | None
+            The ID of the result to use. If None, uses the best model. Defaults to None.
+        random_seed: int | None
+            Random seed for parameter initialization. Defaults to None.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. When None, the same parameters as
+            used when identifying the best model are used. Defaults to None.
+
+        Returns
+        -------
+        TransformedEmulator
+            A new model instance with the same configuration but fresh parameters
+            fitted on the provided data.
+
+        Notes
+        -----
+        Unlike TransformedEmulator.refit() which retrains an existing model,
+        this method creates a completely new model instance with reinitialized
+        parameters. This ensures that when fitting on new data that the same
+        initialization conditions are applied. This can have an affect for example
+        given kernel initialization in Gaussian Processes or weight initialization in
+        neural networks.
+
+        """
+        from autoemulate.emulators import get_emulator_class
+
+        transformed_emulator_params = (
+            transformed_emulator_params or self.transformed_emulator_params
+        )
+
+        # Get the result to use
+        result = self.best_result() if result_id is None else self.get_result(result_id)
+
+        # Set the random seed for initialization
+        if random_seed is not None:
+            set_random_seed(seed=random_seed)
+
+        # Convert and move the new data to device
+        x_tensor, y_tensor = self._convert_to_tensors(x, y)
+        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
+
+        # Get the model class from the model name
+        model_class = get_emulator_class(result.model_name)
+
+        # Create a fresh model with the same configuration
+        fresh_model = TransformedEmulator(
+            x_tensor,
+            y_tensor,
+            model=model_class,
+            x_transforms=result.x_transforms,
+            y_transforms=result.y_transforms,
+            device=self.device,
+            **result.params,
+            **transformed_emulator_params,
+        )
+
+        # Fit the fresh model on the new data
+        fresh_model.fit(x_tensor, y_tensor)
+
+        return fresh_model
 
     def plot(  # noqa: PLR0912, PLR0913, PLR0915
         self,

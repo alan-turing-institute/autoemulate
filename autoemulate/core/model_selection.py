@@ -5,6 +5,7 @@ from functools import partial
 import torch
 import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
+from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
 
 from autoemulate.core.device import (
@@ -13,16 +14,13 @@ from autoemulate.core.device import (
 )
 from autoemulate.core.types import (
     DeviceLike,
-    DistributionLike,
-    InputLike,
     ModelParams,
-    OutputLike,
     TensorLike,
+    TransformedEmulatorParams,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
-from autoemulate.transforms.base import AutoEmulateTransform
 
 logger = logging.getLogger("autoemulate")
 
@@ -38,24 +36,21 @@ def rmse_metric() -> partial[torchmetrics.Metric]:
 
 
 def _update(
-    y_true: InputLike,
-    y_pred: OutputLike,
+    y_true: TensorLike,
+    y_pred: TensorLike,
     metric: torchmetrics.Metric,
 ):
-    # handle types
     if isinstance(y_pred, TensorLike):
         metric.to(y_pred.device)
-        metric.update(y_pred, y_true)
-    elif isinstance(y_pred, DistributionLike):
-        metric.to(y_pred.mean.device)
-        metric.update(y_pred.mean, y_true)
+        # Assume first dim is a batch dim and flatten remaining for metric calculation
+        metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
     else:
         raise ValueError(f"Metric not implmented for {type(y_pred)}")
 
 
 def evaluate(
-    y_pred: OutputLike,
-    y_true: InputLike,
+    y_pred: TensorLike,
+    y_true: TensorLike,
     metric: (
         type[torchmetrics.Metric] | partial[torchmetrics.Metric]
     ) = torchmetrics.R2Score,
@@ -86,8 +81,9 @@ def cross_validate(  # noqa: PLR0913
     dataset: Dataset,
     model: type[Emulator],
     model_params: ModelParams,
-    x_transforms: list[AutoEmulateTransform] | None = None,
-    y_transforms: list[AutoEmulateTransform] | None = None,
+    transformed_emulator_params: None | TransformedEmulatorParams = None,
+    x_transforms: list[Transform] | None = None,
+    y_transforms: list[Transform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
 ):
@@ -106,6 +102,8 @@ def cross_validate(  # noqa: PLR0913
     model_params: ModelParams
         Model parameters to be used to construct model upon initialization. Passing an
         empty dictionary `{}` will use default parameters.
+    transformed_emulator_params: None | TransformedEmulatorParams
+        Parameters for the transformed emulator. Defaults to None.
     device: DeviceLike
         The device to use for model training and evaluation.
     random_seed: int | None
@@ -116,6 +114,7 @@ def cross_validate(  # noqa: PLR0913
     dict[str, list[float]]
        Contains r2 and rmse scores computed for each cross validation fold.
     """
+    transformed_emulator_params = transformed_emulator_params or {}
     x_transforms = x_transforms or []
     y_transforms = y_transforms or []
     cv_results = {"r2": [], "rmse": []}
@@ -139,9 +138,9 @@ def cross_validate(  # noqa: PLR0913
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         model_init_params = inspect.signature(model).parameters
-        model_kwargs = dict(model_params)
+        model_params = dict(model_params)
         if "random_seed" in model_init_params:
-            model_kwargs["random_seed"] = random_seed
+            model_params["random_seed"] = random_seed
 
         # Convert dataloader to tensors to pass to model
         x, y = ConversionMixin._convert_to_tensors(train_subset)
@@ -154,12 +153,13 @@ def cross_validate(  # noqa: PLR0913
             x_transforms=x_transforms,
             y_transforms=y_transforms,
             device=device,
-            **model_kwargs,
+            **model_params,
+            **transformed_emulator_params,
         )
         transformed_emulator.fit(x, y)
 
         # compute and save results
-        y_pred = transformed_emulator.predict(x_val)
+        y_pred = transformed_emulator.predict_mean(x_val)
         r2 = evaluate(y_pred, y_val, r2_metric())
         rmse = evaluate(y_pred, y_val, rmse_metric())
         cv_results["r2"].append(r2)
@@ -167,11 +167,12 @@ def cross_validate(  # noqa: PLR0913
     return cv_results
 
 
-def bootstrap(
+def bootstrap(  # noqa: PLR0913
     model: Emulator,
     x: TensorLike,
     y: TensorLike,
-    n_bootstraps: int = 100,
+    n_bootstraps: int | None = 100,
+    n_samples: int = 100,
     device: str | torch.device = "cpu",
 ) -> tuple[tuple[float, float], tuple[float, float]]:
     """
@@ -185,8 +186,13 @@ def bootstrap(
         Input features for the model.
     y: TensorLike
         Target values corresponding to the input features.
-    n_bootstraps: int
-        Number of bootstrap samples to generate. Defaults to 100.
+    n_bootstraps: int | None
+        Number of bootstrap samples to generate. When None the evaluation uses all
+        all given data and returns a single value with no measure of the uncertainty.
+        Defaults to 100.
+    n_samples: int
+        Number of samples to generate to predict mean when emulator does not have a
+        mean directly available. Defaults to 100.
     device: str | torch.device
         The device to use for computations. Default is "cpu".
 
@@ -197,6 +203,14 @@ def bootstrap(
     """
     device = get_torch_device(device)
     x, y = move_tensors_to_device(x, y, device=device)
+
+    # If no bootstraps are specified, fall back to a single evaluation on given data
+    if n_bootstraps is None:
+        y_pred = model.predict_mean(x, n_samples=n_samples)
+        r2_score = evaluate(y_pred, y, r2_metric())
+        rmse_score = evaluate(y_pred, y, rmse_metric())
+        # Return single score and NaN for std
+        return ((r2_score, float("nan")), (rmse_score, float("nan")))
 
     r2_scores = torch.empty(n_bootstraps, device=device)
     rmse_scores = torch.empty(n_bootstraps, device=device)
@@ -209,12 +223,11 @@ def bootstrap(
         y_bootstrap = y[idxs]
 
         # Make predictions
-        y_pred = model.predict(x_bootstrap)
+        y_pred = model.predict_mean(x_bootstrap, n_samples=n_samples)
 
         # Compute metrics for this bootstrap sample
         r2_scores[i] = evaluate(y_pred, y_bootstrap, r2_metric())
-        mse_score = evaluate(y_pred, y_bootstrap, rmse_metric())
-        rmse_scores[i] = mse_score**0.5
+        rmse_scores[i] = evaluate(y_pred, y_bootstrap, rmse_metric())
 
     # Return mean and std
     return (
