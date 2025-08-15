@@ -364,6 +364,7 @@ class SensitivityAnalysis(ConversionMixin):
         cmap: str = "coolwarm",
         normalize: bool = True,
         figsize: tuple | None = None,
+        fname: str | None = None,
     ):
         """
         Plot a normalized Sobol sensitivity analysis heatmap.
@@ -384,6 +385,8 @@ class SensitivityAnalysis(ConversionMixin):
             Wheterto normalize values to [0, 1]. Defaults to True.
         figsize: tuple | None
             Figure size as (width, height) in inches. Defaults to None.
+        fname: str | None
+            If provided, saves the figure to this file path. Defaults to None.
         """
         # Determine which parameters to include
         parameter_list = self.top_n_sobol_params(
@@ -391,9 +394,14 @@ class SensitivityAnalysis(ConversionMixin):
             top_n=len(results["parameter"].unique()) if top_n is None else top_n,
         )
 
-        return _plot_sa_heatmap(
+        fig = _plot_sa_heatmap(
             results, index, parameter_list, cmap, normalize, fig_size=figsize
         )
+
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
 
 def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
@@ -822,7 +830,7 @@ def _create_morris_plot(
 
 def _plot_sa_heatmap(  # noqa: PLR0913
     si_df, index, parameters, cmap="coolwarm", normalize=True, fig_size=None
-):
+) -> matplotlib.figure.Figure:
     """
     Plot a sensitivity analysis heatmap for a given index.
 
@@ -842,6 +850,11 @@ def _plot_sa_heatmap(  # noqa: PLR0913
         Wheterto normalize values to [0, 1]. Defaults to True.
     figsize: tuple | None
         Figure size as (width, height) in inches. Defaults to None.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure containing the SA heatmap.
     """
     # Filter the dataframe for the specified index
     df = si_df[si_df["index"] == index]
@@ -866,8 +879,8 @@ def _plot_sa_heatmap(  # noqa: PLR0913
     data_np = heatmap_df.to_numpy()
 
     # layout - add space for legend
-    n_rows, n_cols = _calculate_layout(data_np.shape[1], data_np.shape[0])
-    fig_size = fig_size or (4.5 * n_cols, 4.5 * n_rows + 2)  # Extra width for legend
+    nrows, ncols = _calculate_layout(data_np.shape[1], data_np.shape[0])
+    fig_size = fig_size or (4.5 * ncols, 4.5 * nrows + 2)  # Extra width for legend
 
     # Plotting
     fig, ax = plt.subplots(figsize=fig_size)
@@ -896,4 +909,4 @@ def _plot_sa_heatmap(  # noqa: PLR0913
 
     plt.tight_layout()
 
-    return display_figure(fig)
+    return fig
