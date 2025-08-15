@@ -132,13 +132,13 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
     ) -> TensorLike:
         """
-        Predict the mean of tha target variable for input `x`.
+        Predict the mean of the target variable for input `x`.
 
         Parameters
         ----------
         x: TensorLike
             Input tensor of shape `(n_samples, n_features)` for which to predict
-            the mean and variance.
+            the mean.
         with_grad: bool
             Whether to compute gradients with respect to the input. Defaults to False.
 
