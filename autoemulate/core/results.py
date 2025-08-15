@@ -1,7 +1,6 @@
 import pandas as pd
 
 from autoemulate.core.types import ModelParams
-from autoemulate.emulators import get_emulator_class
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
 
