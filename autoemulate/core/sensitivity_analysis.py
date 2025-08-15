@@ -1,5 +1,6 @@
 import logging
 
+import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -245,11 +246,12 @@ class SensitivityAnalysis(ConversionMixin):
     def plot_sobol(
         results: pd.DataFrame,
         index: str = "S1",
-        n_cols: int | None = None,
+        ncols: int | None = None,
         figsize: tuple | None = None,
+        fname: str | None = None,
     ):
         """
-        Plot Sobol sensitivity analysis results.
+        Plot Sobol sensitivity analysis results. Optionally save to file.
 
         Parameters
         ----------
@@ -261,24 +263,31 @@ class SensitivityAnalysis(ConversionMixin):
             - "S2": second-order/interaction indices
             - "ST": total-order indices
             Defaults to "S1".
-        n_cols: int | None
+        ncols: int | None
             The number of columns in the plot. Defaults to 3 if there are 3 or
             more outputs, otherwise the number of outputs. Defaults to None.
         figsize: tuple | None
             Figure size as (width, height) in inches. If None, set automatically.
             Defaults to None.
+        fname: str | None
+            If provided, saves the figure to this file path. Defaults to None.
         """
-        return _plot_sobol_analysis(results, index, n_cols, figsize)
+        fig = _plot_sobol_analysis(results, index, ncols, figsize)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
     @staticmethod
     def plot_morris(
         results: pd.DataFrame,
         param_groups: dict[str, list[str]] | None = None,
-        n_cols: int | None = None,
+        ncols: int | None = None,
         figsize: tuple | None = None,
+        fname: str | None = None,
     ):
         """
-        Plot Morris analysis results.
+        Plot Morris analysis results. Optionally save to file.
 
         Parameters
         ----------
@@ -287,13 +296,19 @@ class SensitivityAnalysis(ConversionMixin):
         param_groups: dic[str, list[str]] | None
             Optional parameter groupings used to give all the same plot color
             of the form ({<group name> : [param1, ...], }).
-        n_cols: int, optional
+        ncols: int, optional
             The number of columns in the plot. Defaults to 3 if there are 3 or
             more outputs, otherwise the number of outputs.
         figsize: tuple, optional
             Figure size as (width, height) in inches.If None, set calculated.
+        fname: str | None
+            If provided, saves the figure to this file path. Defaults to None.
         """
-        return _plot_morris_analysis(results, param_groups, n_cols, figsize)
+        fig = _plot_morris_analysis(results, param_groups, ncols, figsize)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
 
     @staticmethod
     def top_n_sobol_params(
@@ -364,7 +379,9 @@ def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
     }
     rows = []
     for output, result in results.items():
-        s1, st, s2 = result.to_df()
+        # https://salib.readthedocs.io/en/latest/api/SALib.analyze.html#SALib.analyze.sobol.to_df
+        # from SALib docs: `to_df()` returns indices in order of [total, first, second]
+        st, s1, s2 = result.to_df()
         s1 = (
             s1.reset_index()
             .rename(columns={"index": "parameter"})
@@ -403,12 +420,12 @@ def _validate_input(results: pd.DataFrame, index: str):
     return results[results["index"].isin([index])]
 
 
-def _calculate_layout(n_outputs: int, n_cols: int | None = None):
+def _calculate_layout(n_outputs: int, ncols: int | None = None):
     """Calculate plot layout (n rows, n cols)."""
-    if n_cols is None:
-        n_cols = 3 if n_outputs >= 3 else n_outputs
-    n_rows = int(np.ceil(n_outputs / n_cols))
-    return n_rows, n_cols
+    if ncols is None:
+        ncols = 3 if n_outputs >= 3 else n_outputs
+    nrows = int(np.ceil(n_outputs / ncols))
+    return nrows, ncols
 
 
 def _create_bar_plot(ax: Axes, output_data: pd.DataFrame, output_name: str):
@@ -436,9 +453,9 @@ def _create_bar_plot(ax: Axes, output_data: pd.DataFrame, output_name: str):
 def _plot_sobol_analysis(
     results: pd.DataFrame,
     index: str = "S1",
-    n_cols: int | None = None,
+    ncols: int | None = None,
     figsize: tuple | None = None,
-):
+) -> matplotlib.figure.Figure:
     """
     Plot the sobol sensitivity analysis results.
 
@@ -451,12 +468,17 @@ def _plot_sobol_analysis(
         - "S1": first-order indices
         - "S2": second-order/interaction indices
         - "ST": total-order indices
-    n_cols: int | None
-        The number of columns in the plot. If None, sets n_cols to 3 if there are 3 or
+    ncols: int | None
+        The number of columns in the plot. If None, sets ncols to 3 if there are 3 or
         more outputs, otherwise the number of outputs. Defaults to None.
     figsize: tuple | None
         Figure size as (width, height) in inches.If None, automatically calculated.
         Defaults to None.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure containing the Sobol plots.
     """
     with plt.style.context("fast"):
         # prepare data
@@ -465,10 +487,10 @@ def _plot_sobol_analysis(
         n_outputs = len(unique_outputs)
 
         # layout
-        n_rows, n_cols = _calculate_layout(n_outputs, n_cols)
-        figsize = figsize or (4.5 * n_cols, 4 * n_rows)
+        nrows, ncols = _calculate_layout(n_outputs, ncols)
+        figsize = figsize or (4.5 * ncols, 4 * nrows)
 
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         if isinstance(axes, np.ndarray):
             axes = axes.flatten()
         elif n_outputs == 1:
@@ -497,7 +519,7 @@ def _plot_sobol_analysis(
 
         plt.tight_layout()
 
-    return display_figure(fig)
+    return fig
 
 
 def _morris_results_to_df(
@@ -541,9 +563,9 @@ def _morris_results_to_df(
 def _plot_morris_analysis(
     results: pd.DataFrame,
     param_groups: dict[str, list[str]] | None = None,
-    n_cols: int | None = None,
+    ncols: int | None = None,
     figsize: tuple | None = None,
-):
+) -> matplotlib.figure.Figure:
     """
     Plot the Morris sensitivity analysis results.
 
@@ -553,21 +575,26 @@ def _plot_morris_analysis(
         The results from morris_results_to_df.
     param_groups: dict, optional
         Dictionary mapping parameter names to groups for coloring.
-    n_cols: int, optional
+    ncols: int, optional
         The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,
         otherwise the number of outputs.
     figsize: tuple, optional
         Figure size as (width, height) in inches. If None, automatically calculated.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure containing the Morris plots.
     """
     with plt.style.context("fast"):
         unique_outputs = results["output"].unique()
         n_outputs = len(unique_outputs)
 
         # layout - add space for legend
-        n_rows, n_cols = _calculate_layout(n_outputs, n_cols)
-        figsize = figsize or (4.5 * n_cols + 2, 4 * n_rows)  # Extra width for legend
+        nrows, ncols = _calculate_layout(n_outputs, ncols)
+        figsize = figsize or (4.5 * ncols + 2, 4 * nrows)  # Extra width for legend
 
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
         if isinstance(axes, np.ndarray):
             axes = axes.flatten()
         elif n_outputs == 1:
@@ -660,7 +687,7 @@ def _plot_morris_analysis(
 
         plt.tight_layout()
 
-    return display_figure(fig)
+    return fig
 
 
 def _create_morris_plot(
