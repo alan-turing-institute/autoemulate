@@ -203,15 +203,20 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         return pd.DataFrame(
             {
-                "Emulator": [emulator.model_name() for emulator in ALL_EMULATORS],
+                "Emulator": [
+                    emulator.model_name() for emulator in AutoEmulate.all_emulators()
+                ],
                 "PyTorch": [
-                    emulator in PYTORCH_EMULATORS for emulator in ALL_EMULATORS
+                    emulator in AutoEmulate.pytorch_emulators()
+                    for emulator in AutoEmulate.all_emulators()
                 ],
                 "Multioutput": [
-                    emulator.is_multioutput() for emulator in ALL_EMULATORS
+                    emulator.is_multioutput()
+                    for emulator in AutoEmulate.all_emulators()
                 ],
                 "Uncertainty_Quantification": [
-                    emulator.supports_uq for emulator in ALL_EMULATORS
+                    emulator in AutoEmulate.probablistic_emulators()
+                    for emulator in AutoEmulate.all_emulators()
                 ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
