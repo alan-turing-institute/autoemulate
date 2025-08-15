@@ -64,7 +64,7 @@ class PCATransform(AutoEmulateTransform):
         """
         Compute the forward shape transformation.
 
-        For PCA: (batch_shape..., d) -> (batch_shape..., n_components)
+        For PCA: (batch_shape, ..., d) -> (batch_shape, ..., n_components)
         """
         if len(shape) == 0:
             return torch.Size([self.n_components])
@@ -74,7 +74,7 @@ class PCATransform(AutoEmulateTransform):
         """
         Compute the inverse shape transformation.
 
-        For PCA: (batch_shape..., n_components) -> (batch_shape..., d)
+        For PCA: (batch_shape, ..., n_components) -> (batch_shape, ..., d)
         """
         self._check_is_fitted()
         original_dim = self.components.shape[0]  # d (original feature dimension)
