@@ -432,38 +432,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             rmse_score=best_result.rmse_test,
         )
 
-    def get_model(self, model_name: str | None = None) -> TransformedEmulator:
-        """
-        Get the best model or a specific model by name.
-
-        This method returns the existing fitted model from the comparison results.
-        If you want a fresh model with reinitialized parameters, use the `refit`
-        method instead.
-
-        Parameters
-        ----------
-        model_name: str | None
-            The name of the model to retrieve. If None, returns the best model.
-
-        Returns
-        -------
-        TransformedEmulator
-            The fitted model.
-        """
-        if model_name is None:
-            # Return the best model
-            best_result = self.best_result()
-            return best_result.model
-
-        # Find the model by name using the helper method
-        result = self.get_result_by_model_name(model_name)
-        return result.model
-
     def fit_from_reinitialized(
         self,
         x: InputLike,
         y: InputLike,
-        model_name: str | None = None,
+        result_id: int | None = None,
         random_seed: int | None = None,
     ) -> TransformedEmulator:
         """
@@ -479,9 +452,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Input features for training the fresh model.
         y: InputLike
             Target values for training the fresh model.
-        model_name: str | None
-            The name of the model configuration to use. If None, uses the best model.
-            Defaults to None.
+        result_id: int | None
+            The ID of the result to use. If None, uses the best model. Defaults to None.
         random_seed: int | None
             Random seed for parameter initialization. Defaults to None.
 
@@ -504,11 +476,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         from autoemulate.emulators import get_emulator_class
 
         # Get the result to use
-        result = (
-            self.best_result()
-            if model_name is None
-            else self.get_result_by_model_name(model_name)
-        )
+        result = self.best_result() if result_id is None else self.get_result(result_id)
 
         # Set the random seed for initialization
         if random_seed is not None:

@@ -197,23 +197,3 @@ class Results:
             return self._id_to_result[result_id]
         except KeyError as err:
             raise ValueError(f"No result found with ID: {result_id!s}") from err
-
-    def get_result_by_model_name(self, model_name: str) -> Result:
-        """
-        Get a result by its model name.
-
-        Parameters
-        ----------
-        model_name: str
-            The name of the model to retrieve.
-
-        Returns
-        -------
-        Result
-            The result with the specified model name.
-        """
-        model_class = get_emulator_class(model_name)
-        for result in self.results:
-            if model_class is get_emulator_class(result.model_name):
-                return result
-        raise ValueError(f"Model '{model_name}' not found in results")
