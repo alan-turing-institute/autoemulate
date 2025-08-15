@@ -321,7 +321,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = emulator
         self.emulator.device = self.device
 
-        # These get updated when `run()` is called and used to refit the emulator
+        # New data is generated in `run()` and appended here
+        # The emulator is then refit on all data collected so far
         if train_x is not None and train_y is not None:
             self.train_x = train_x.float().to(self.device)
             self.train_y = train_y.float().to(self.device)
@@ -329,25 +330,27 @@ class HistoryMatchingWorkflow(HistoryMatching):
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-        # Store NROY samples geneated in `run()`, use in cloud sampling at next wave
+        # NROY samples are also generated in `run()` and used in `cloud_sample()`
+        # `self.nroy_samples` gets overwritten each time `run()` is called
+        # This means we only ever use the most recent NROY samples
         self.nroy_samples = None
 
     def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
         """
-        Generate additional samples using cloud sampling.
+        Generate `n` additional parameter samples using cloud sampling.
 
-        From the availble NROY samples, draw from Gaussians centered on those samples.
-        If n < number of available NROY samples, randomly select which ones to use.
-        Otherwise, use each NROY sample at least once and draw from each Gaussian as
-        many times as need to reach `n`.
+        From the availble NROY points, draw from Gaussians centered on those points:
+        - if n < number of NROY points, randomly select a subset to use
+        - otherwise, use each NROY point at least once
+        - if the drawn candidate sample is outside the NROY bounds, draw a new sample
 
         Parameters
         ----------
         n: int
-            The number of additional samples to generate.
+            The number of additional parameter samples to generate.
         scaling_factor: float
             The standard deviation of the Gaussian to sample from is set to:
-            parameter range * scaling_factor.
+            `parameter range * scaling_factor`.
 
         Returns
         -------
@@ -356,14 +359,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
-        # Compute std as scaled parameter range, create diagonal covariance matrix
-        std = (
-            self.nroy_samples.max(dim=0).values
-            - self.nroy_samples.min(dim=0).values * scaling_factor
-        )
-        covariance_matrix = torch.diag(std**2)
+        # Set stdev as scaled parameter range, create diagonal covariance matrix
+        stdev = (
+            self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
+        ) * scaling_factor
+        covariance_matrix = torch.diag(stdev**2)
 
-        # Each NROY sample is a potential mean for a Gaussian from which to sample
+        # Each NROY sample is a mean of a Gaussian that can generate candidates from
         num_means = self.nroy_samples.shape[0]
 
         # 1: Handle cases where `n` < number of NROY samples
@@ -386,7 +388,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Generate samples from Gaussians centered on the NROY samples
         samples = []
         for i, mean in enumerate(self.nroy_samples):
-            # Handle remainder
+            # Handle remainder here
             num_samples = samples_per_mean + (1 if i < remaining_samples else 0)
             mvn = MultivariateNormal(mean, covariance_matrix)
             samples.append(mvn.sample((num_samples,)))
@@ -409,7 +411,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The number of parameter samples to generate.
         scaling_factor: float
             The standard deviation of the Gaussian to sample from in cloud sampling is
-            set to: parameter range * scaling_factor.
+            set to: `parameter range * scaling_factor`.
 
         Returns
         -------
@@ -502,7 +504,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 - identify NROY parameters within this set
         scaling_factor: float
             The standard deviation of the Gaussian to sample from in cloud sampling is
-            set to: parameter range * scaling_factor.
+            set to: `parameter range * scaling_factor`.
 
         Returns
         -------
@@ -610,7 +612,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 - identify NROY parameters within this set
         scaling_factor: float
             The standard deviation of the Gaussian to sample from in cloud sampling is
-            set to: parameter range * scaling_factor.
+            set to: `parameter range * scaling_factor`.
 
         Returns
         -------
