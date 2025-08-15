@@ -452,6 +452,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y: InputLike,
         result_id: int | None = None,
         random_seed: int | None = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
     ) -> TransformedEmulator:
         """
         Fit a fresh model with reinitialized parameters using the best configuration.
@@ -470,6 +471,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ID of the result to use. If None, uses the best model. Defaults to None.
         random_seed: int | None
             Random seed for parameter initialization. Defaults to None.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. When None, the same parameters as
+            used when identifying the best model are used. Defaults to None.
 
         Returns
         -------
@@ -488,6 +492,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         """
         from autoemulate.emulators import get_emulator_class
+
+        transformed_emulator_params = (
+            transformed_emulator_params or self.transformed_emulator_params
+        )
 
         # Get the result to use
         result = self.best_result() if result_id is None else self.get_result(result_id)
@@ -512,6 +520,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             y_transforms=result.y_transforms,
             device=self.device,
             **result.params,
+            **transformed_emulator_params,
         )
 
         # Fit the fresh model on the new data
