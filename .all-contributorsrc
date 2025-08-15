@@ -117,7 +117,8 @@
         "code",
         "projectManagement",
         "maintenance",
-        "ideas"
+        "ideas",
+        "review"
       ]
     },
     {
@@ -174,7 +175,8 @@
       "contributions": [
         "code",
         "ideas",
-        "review"
+        "review",
+        "doc"
       ]
     },
     {
@@ -187,6 +189,72 @@
         "ideas",
         "review",
         "doc"
+      ]
+    },
+    {
+      "login": "crangelsmith",
+      "name": "Camila Rangel Smith",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11162074?v=4",
+      "profile": "https://github.com/crangelsmith",
+      "contributions": [
+        "code",
+        "content"
+      ]
+    },
+    {
+      "login": "nayara-focs",
+      "name": "Nayara Fonseca",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89653110?v=4",
+      "profile": "https://www.nayarafonseca.com/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "jasonmcewen",
+      "name": "Jason McEwen ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3181701?v=4",
+      "profile": "http://www.jasonmcewen.org",
+      "contributions": [
+        "ideas",
+        "projectManagement"
+      ]
+    },
+    {
+      "login": "alighato",
+      "name": "Amir Ali",
+      "avatar_url": "https://avatars.githubusercontent.com/u/98394988?v=4",
+      "profile": "https://github.com/alighato",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "H-Sax",
+      "name": "Harry Saxton",
+      "avatar_url": "https://avatars.githubusercontent.com/u/95103895?v=4",
+      "profile": "https://h-sax.github.io/",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "jvwilliams23",
+      "name": "Josh Williams",
+      "avatar_url": "https://avatars.githubusercontent.com/u/48445365?v=4",
+      "profile": "https://jvwilliams23.github.io",
+      "contributions": [
+        "bug",
+        "ideas"
+      ]
+    },
+    {
+      "login": "LevanBokeria",
+      "name": "Levan Bokeria",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7816766?v=4",
+      "profile": "https://github.com/LevanBokeria",
+      "contributions": [
+        "bug"
       ]
     }
   ]

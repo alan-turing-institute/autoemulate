@@ -3,7 +3,7 @@
 `AutoEmulate` is a Python package that can be installed in a number of ways.
 In this section we will describe the main ways to install the package.
 For new users, we recommend installing the package from PyPI.
-For users who want to contribute to the package, we recommend using Poetry to install the package from the source code.
+For users who want to contribute to the package, we recommend installing the package from source code.
 
 ## Prerequisites
 
@@ -17,11 +17,9 @@ To get the latest release from PyPI:
 pip install autoemulate
 ```
 
-## Install using Poetry
+## Install using UV
 
-If you'd like to contribute to `AutoEmulate`, you can install the package using Poetry.
-
-* Ensure you have poetry installed. If not, install it following the [official instructions](https://python-poetry.org/docs/). This has been most recently tested with Poetry version `2.1`.
+If you'd like to contribute to `AutoEmulate`, you can install the package using UV.
 
 * Fork the repository on GitHub by clicking the "Fork" button at the top right of the [AutoEmulate repository](https://github.com/alan-turing-institute/autoemulate)
 
@@ -37,22 +35,22 @@ Navigate into the directory:
 cd autoemulate
 ```
 
-Set up poetry:
+[Install UV](https://docs.astral.sh/uv/getting-started/installation/)
 
+Setup a virtual environment:
 ```bash
-poetry install
+uv venv
 ```
 
-Create a virtual environment:
-
+Activate your virtual environment:
 ```bash
-poetry env activate
+source .venv/bin/activate
 ```
 
-Then activate the virtual environment using the command displayed by the previous command. This will be something like:
+Install the package in development mode with all dependencies:
 
 ```bash
-source /Users/yourName/Library/Caches/pypoetry/virtualenvs/autoemulate-l4vGdsmY-py3.11/bin/activate
+uv pip install -e '.[dev]'    
 ```
 
 ## Interactive tutorials

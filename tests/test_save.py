@@ -72,7 +72,9 @@ def test_save_model_w_dir(model_serialiser, model):
         test_path = Path(temp_dir)
         model_serialiser._save_model(model, None, test_path)
         assert test_path.exists()
-        assert (test_path / model_serialiser._get_model_filename(model)).exists()
+        assert os.path.exists(
+            os.path.join(test_path, model_serialiser._get_model_filename(model))
+        )
 
 
 def test_load_model(model_serialiser, model):
@@ -89,9 +91,10 @@ def test_load_model(model_serialiser, model):
 
 def test_invalid_file_path(model_serialiser, model):
     with TemporaryDirectory() as temp_dir:
-        invalid_path = Path(temp_dir) / "/invalid/path/model"
+        # Test case 1: Path with invalid characters
+        invalid_chars = '<>:"|?*' if os.name == "nt" else "\0"
+        invalid_path = os.path.join(temp_dir, f"invalid{invalid_chars}path")
         with pytest.raises(Exception):  # noqa: B017, PT011
-            # only the / makes it invalid
             model_serialiser._save_model(model, None, invalid_path)
         with pytest.raises(Exception):  # noqa: B017, PT011
             model_serialiser._load_model(invalid_path)
@@ -142,11 +145,15 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
             filename = f"{result.model_name}_{result.id}"
             result_path = model_serialiser._save_result(result, filename, path)
 
-            expected_metadata_path = path / Path("dummy_model_12345_metadata.csv")
-            expected_model_filename_path = path / Path("dummy_model_12345.joblib")
+            expected_metadata_path = os.path.join(
+                path, "dummy_model_12345_metadata.csv"
+            )
+            expected_model_filename_path = os.path.join(
+                path, "dummy_model_12345.joblib"
+            )
 
-            assert expected_metadata_path.exists()
-            assert expected_model_filename_path.exists()
+            assert os.path.exists(expected_metadata_path)
+            assert os.path.exists(expected_model_filename_path)
 
             loaded = model_serialiser._load_result(result_path)
 
