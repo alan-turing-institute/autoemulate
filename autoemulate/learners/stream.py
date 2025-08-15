@@ -54,7 +54,7 @@ class Stream(Active):
         x: torch.Tensor
             Stream of input samples.
         """
-        x = self.check_matrix(x)
+        x = self.check_tensor_is_2d(x)
         for xi in (
             pb := tqdm(
                 x,
@@ -82,7 +82,7 @@ class Stream(Active):
         batch_size: int
             Number of samples per batch.
         """
-        x = self.check_matrix(x)
+        x = self.check_tensor_is_2d(x)
         for i in (
             pb := tqdm(
                 range(0, x.shape[0], batch_size),
