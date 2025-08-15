@@ -102,7 +102,6 @@ class ConversionMixin:
             if len(dataset.tensors) == 2:
                 x, y = dataset.tensors
                 assert x.ndim == 2
-                assert y.ndim in (1, 2)
                 # Ensure always 2D tensors
                 if y.ndim == 1:
                     y = y.unsqueeze(1)
@@ -266,9 +265,6 @@ class ValidationMixin:
         if not isinstance(output, OutputLike):
             raise ValueError(f"Expected OutputLike, got {type(output)}")
 
-        if isinstance(output, TensorLike) and output.ndim != 2:
-            raise ValueError(f"Expected output to be 2D tensor, got {output.ndim}D")
-
     @staticmethod
     def check_vector(x: TensorLike) -> TensorLike:
         """
@@ -296,7 +292,7 @@ class ValidationMixin:
         return x
 
     @staticmethod
-    def check_matrix(x: TensorLike) -> TensorLike:
+    def check_tensor_is_2d(x: TensorLike) -> TensorLike:
         """
         Validate that the input is a 2D TensorLike.
 

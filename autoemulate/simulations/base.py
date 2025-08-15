@@ -188,9 +188,8 @@ class Simulator(ABC, ValidationMixin):
         TensorLike
             Simulated output tensor. None if the simulation failed.
         """
-        y = self._forward(self.check_matrix(x))
+        y = self._forward(self.check_tensor_is_2d(x))
         if isinstance(y, TensorLike):
-            y = self.check_matrix(y)
             x, y = self.check_pair(x, y)
             return y
         return None

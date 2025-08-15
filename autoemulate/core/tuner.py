@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 from sklearn.model_selection import KFold
+from torch.distributions import Transform
 from torchmetrics import R2Score
 
 from autoemulate.core.device import TorchDeviceMixin
@@ -15,7 +16,6 @@ from autoemulate.core.types import (
 )
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ConversionMixin, Emulator
-from autoemulate.transforms.base import AutoEmulateTransform
 
 logger = logging.getLogger("autoemulate")
 
@@ -67,8 +67,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
     def run(  # noqa: PLR0913
         self,
         model_class: type[Emulator],
-        x_transforms: list[AutoEmulateTransform] | None = None,
-        y_transforms: list[AutoEmulateTransform] | None = None,
+        x_transforms: list[Transform] | None = None,
+        y_transforms: list[Transform] | None = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
         n_splits: int = 5,
         seed: int | None = None,

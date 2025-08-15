@@ -38,7 +38,7 @@ class PCATransform(AutoEmulateTransform):
     def fit(self, x: TensorLike):
         """Fit the PCA transform to the data."""
         TorchDeviceMixin.__init__(self, device=x.device)
-        self.check_matrix(x)
+        self.check_tensor_is_2d(x)
         self.mean = x.mean(0, keepdim=True)  # (1, d)
         _, _, v = torch.pca_lowrank(x, q=self.n_components, niter=self.niter)
         self.components = v[:, : self.n_components]  # (d, n_c)
@@ -59,6 +59,28 @@ class PCATransform(AutoEmulateTransform):
             "log abs det Jacobian not computable for n_components < d as not bijective."
         )
         raise RuntimeError(msg)
+
+    def forward_shape(self, shape):
+        """
+        Compute the forward shape transformation.
+
+        For PCA: (batch_shape, ..., d) -> (batch_shape, ..., n_components)
+        """
+        if len(shape) == 0:
+            return torch.Size([self.n_components])
+        return shape[:-1] + torch.Size([self.n_components])
+
+    def inverse_shape(self, shape):
+        """
+        Compute the inverse shape transformation.
+
+        For PCA: (batch_shape, ..., n_components) -> (batch_shape, ..., d)
+        """
+        self._check_is_fitted()
+        original_dim = self.components.shape[0]  # d (original feature dimension)
+        if len(shape) == 0:
+            return torch.Size([original_dim])
+        return shape[:-1] + torch.Size([original_dim])
 
     @property
     def _basis_matrix(self) -> TensorLike:

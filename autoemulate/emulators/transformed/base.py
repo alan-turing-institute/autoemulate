@@ -1,5 +1,5 @@
-from typing import cast
-
+import torch
+from linear_operator.operators import DiagLinearOperator
 from torch.distributions import ComposeTransform, Transform, TransformedDistribution
 
 from autoemulate.core.device import TorchDeviceMixin
@@ -56,29 +56,28 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
     Attributes
     ----------
-    x_transforms: list[AutoEmulateTransform]
+    x_transforms: list[Transform]
         List of transformations applied to input data (x) in sequential order.
     model: Emulator
         The underlying emulator model that operates on transformed data.
-    y_transforms: list[AutoEmulateTransform]
+    y_transforms: list[Transform]
         List of transformations applied to target data (y) in sequential order.
     """
 
-    x_transforms: list[AutoEmulateTransform]
+    x_transforms: list[Transform]
     model: Emulator
-    y_transforms: list[AutoEmulateTransform]
+    y_transforms: list[Transform]
 
     def __init__(  # noqa: PLR0913
         self,
         x: TensorLike,
         y: TensorLike,
-        x_transforms: list[AutoEmulateTransform] | None,
-        y_transforms: list[AutoEmulateTransform] | None,
+        x_transforms: list[Transform] | None,
+        y_transforms: list[Transform] | None,
         model: type[Emulator],
-        output_from_samples: bool = False,
-        n_samples: int = 1000,
+        output_from_samples: bool = True,
+        n_samples: int = 100,
         full_covariance: bool = False,
-        max_targets: int = 200,
         device: DeviceLike | None = None,
         **kwargs,
     ):
@@ -91,10 +90,10 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Input training data tensor of shape (n_samples, n_features).
         y: TensorLike
             Target training data tensor of shape (n_samples, n_targets).
-        x_transforms: list[AutoEmulateTransform] | None
+        x_transforms: list[Transform] | None
             List of transforms to apply to input data in sequential order.
             If None, no transformations are applied to x.
-        y_transforms: list[AutoEmulateTransform] | None
+        y_transforms: list[Transform] | None
             List of transforms to apply to target data in sequential order.
             If None, no transformations are applied to y.
         model: type[Emulator]
@@ -105,15 +104,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
             (n_targets > max_targets). Defaults to False.
         n_samples: int
             Number of samples to draw when using sampling-based predictions.
-            Only used when output_from_samples=True. Defauls to 1000.
+            Only used when output_from_samples=True. Defauls to 100.
         full_covariance: bool
             Whether to use full covariance matrix for predictions. If False,
             uses diagonal covariance. Automatically set to False for
             high-dimensional targets (n_targets > max_targets). Defaults to False.
-        max_targets: int
-            Threshold for switching to approximate sampling-based predictions
-            with diagonal covariance when dealing with high-dimensional targets.
-            Defaults to 200.
         device: DeviceLike | None
             Device for tensor operations. If None, uses the default device.
             Defaults to None.
@@ -134,13 +129,24 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.model = model(
             self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
         )
-        self.output_from_samples = output_from_samples or y.shape[1] > max_targets
+        self.output_from_samples = output_from_samples
+        if not output_from_samples and not all(
+            isinstance(t, AutoEmulateTransform) for t in self.y_transforms
+        ):
+            msg = (
+                "y_transforms must be a list of AutoEmulateTransform instances to "
+                f"support outputs without sampling. y_transforms: {self.y_transforms}"
+            )
+            raise RuntimeError(msg)
         self.n_samples = n_samples
-        self.full_covariance = full_covariance and y.shape[1] <= max_targets
+        self.full_covariance = full_covariance
         TorchDeviceMixin.__init__(self, device=device)
         self.supports_grad = self.model.supports_grad and all(
             t.bijective for t in self.x_transforms
         )
+        # TODO: update to be derived from attribute of the underlying emulator
+        # For now, just set as True
+        self.supports_uq = True
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """
@@ -156,13 +162,17 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Fit transforms
         current_x = x
         for transform in self.x_transforms:
-            transform.fit(current_x)
+            if isinstance(transform, AutoEmulateTransform):
+                transform.fit(current_x)
             current_x = transform(current_x)
+            assert isinstance(current_x, TensorLike)
         # Fit target transforms
         current_y = y
         for transform in self.y_transforms:
-            transform.fit(current_y)
+            if isinstance(transform, AutoEmulateTransform):
+                transform.fit(current_y)
             current_y = transform(current_y)
+            assert isinstance(current_y, TensorLike)
 
     def refit(self, x: TensorLike, y: TensorLike, retrain_transforms: bool = False):
         """
@@ -203,7 +213,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Transformed input tensor after applying all x_transforms.
 
         """
-        x_t = ComposeTransform(self._cast(self.x_transforms))(x)
+        x_t = ComposeTransform(self.x_transforms)(x)
         assert isinstance(x_t, TensorLike)
         return x_t
 
@@ -222,14 +232,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Transformed target tensor after applying all `y_transforms`.
 
         """
-        y_t = ComposeTransform(self._cast(self.y_transforms))(y)
+        y_t = ComposeTransform(self.y_transforms)(y)
         assert isinstance(y_t, TensorLike)
         return y_t
-
-    @staticmethod
-    def _cast(transforms: list[AutoEmulateTransform]) -> list[Transform]:
-        """Casts a list of AutoEmulateTransform to a list of torch Transforms."""
-        return cast(list[Transform], transforms)
 
     def _inv_transform_y_tensor(self, y_t: TensorLike) -> TensorLike:
         """
@@ -246,8 +251,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             Inverted target tensor in the original data space after applying all
             inverse `y_transforms`.
         """
-        target_transforms = self._cast(self.y_transforms)
-        y = ComposeTransform(target_transforms).inv(y_t)
+        y = ComposeTransform(self.y_transforms).inv(y_t)
         assert isinstance(y, TensorLike)
         return y
 
@@ -272,6 +276,12 @@ class TransformedEmulator(Emulator, ValidationMixin):
         """
         # Invert the order since the combined transform is an inversion
         for transform in self.y_transforms[::-1]:
+            if not isinstance(transform, AutoEmulateTransform):
+                msg = (
+                    "y_transforms must be a list of AutoEmulateTransform instances "
+                    f"to support _inverse_gaussian method. Transform used: {transform}"
+                )
+                raise TypeError(msg)
             y_t = transform._inverse_gaussian(y_t)
         return y_t
 
@@ -364,8 +374,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
           (this would require further empirical estimation from samples from the
           returned transformed distribution `y`).
         """
-        target_transforms = self._cast(self.y_transforms)
-        return TransformedDistribution(y_t, [ComposeTransform(target_transforms).inv])
+        return TransformedDistribution(y_t, [ComposeTransform(self.y_transforms).inv])
 
     def _fit(self, x: TensorLike, y: TensorLike):
         # Transform x and y
@@ -392,20 +401,68 @@ class TransformedEmulator(Emulator, ValidationMixin):
         if not self.output_from_samples:
             if isinstance(y_t_pred, GaussianLike):
                 return self._inv_transform_y_gaussian(y_t_pred)
-            if isinstance(y_t_pred, DistributionLike):
-                return self._inv_transform_y_distribution(y_t_pred)
-            msg = "y_pred is not TensorLike, GaussianLike or DistributionLike"
+            msg = (
+                f"Inverse transform without sampling for y_t_pred ({type(y_t_pred)}) "
+                "is not currently supported, expected GaussianLike."
+            )
             raise ValueError(msg)
 
         # Output derived by sampling and inverting to original space
         if isinstance(y_t_pred, DistributionLike):
-            return self._inv_transform_y_gaussian_sample(y_t_pred)
+            y_pred = self._inv_transform_y_distribution(y_t_pred)
+            samples = y_pred.rsample(torch.Size([self.n_samples]))
+            if not self.full_covariance:
+                return GaussianLike(
+                    samples.mean(dim=0),
+                    DiagLinearOperator(samples.var(dim=0, unbiased=False)),
+                )
+            msg = (
+                "Full covariance sampling is not currently implemented for "
+                "`TransformedEmulator` with sampling-based predictions since a "
+                "consistent structure for the covariance matrix cannot be guranteed "
+                "for any set of composed `torch.distributions.Transform`."
+            )
+            raise NotImplementedError(msg)
+
         msg = (
             "Invalid output type from model prediction. Expected TensorLike,"
             "GaussianLike, or DistributionLike. Received: "
             f"{type(y_t_pred)}"
         )
         raise ValueError(msg)
+
+    def predict_mean_and_variance(
+        self, x: TensorLike, with_grad: bool = False
+    ) -> tuple[TensorLike, TensorLike]:
+        """
+        Predict the mean and variance of the target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_samples, n_features)` for which to predict
+            the mean and variance.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            A tuple containing:
+            - Mean tensor of shape `(n_samples, n_targets)`.
+            - Variance tensor of shape `(n_samples, n_targets)`.
+        """
+        if not self.model.supports_uq:
+            msg = f"TransformedEmulator model ({self.model}) does not support UQ."
+            raise RuntimeError(msg)
+        y_pred = self._predict(x, with_grad)
+        assert isinstance(y_pred, DistributionLike)
+        samples = (
+            y_pred.rsample(torch.Size([self.n_samples]))
+            if with_grad
+            else y_pred.sample(torch.Size([self.n_samples]))
+        )
+        return samples.mean(dim=0), samples.var(dim=0)
 
     @staticmethod
     def is_multioutput() -> bool:

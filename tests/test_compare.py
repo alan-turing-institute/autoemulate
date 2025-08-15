@@ -8,7 +8,7 @@ from autoemulate.core.device import (
     check_torch_device_is_available,
 )
 from autoemulate.emulators.base import Emulator
-from autoemulate.transforms.base import AutoEmulateTransform
+from torch.distributions import Transform
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
@@ -33,11 +33,11 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     """Test AutoEmulate with models passed as strings and transforms as dictionaries."""
     x, y = sample_data_for_ae_compare
     models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
-    x_transforms_list: list[list[AutoEmulateTransform | dict]] = [
+    x_transforms_list: list[list[Transform | dict]] = [
         [{"standardize": {}}],
         [{"pca": {"n_components": 3}}],
     ]
-    y_transforms_list: list[list[AutoEmulateTransform | dict]] = [[{"standardize": {}}]]
+    y_transforms_list: list[list[Transform | dict]] = [[{"standardize": {}}]]
 
     ae = AutoEmulate(
         x,
