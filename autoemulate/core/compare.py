@@ -15,7 +15,13 @@ from autoemulate.core.plotting import calculate_subplot_layout, display_figure, 
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
-from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, ModelParams
+from autoemulate.core.types import (
+    DeviceLike,
+    DistributionLike,
+    InputLike,
+    ModelParams,
+    TransformedEmulatorParams,
+)
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
@@ -43,6 +49,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[AutoEmulateTransform | dict]] | None = None,
         model_tuning: bool = True,
         model_kwargs: None | ModelParams = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -144,6 +151,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.max_retries = max_retries
         self.model_tuning = model_tuning
         self.model_kwargs = model_kwargs or {}
+        self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -311,6 +319,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     y_transforms,
                                     n_splits=self.n_splits,
                                     shuffle=self.shuffle,
+                                    transformed_emulator_params=self.transformed_emulator_params,
                                 )
                                 mean_scores = [
                                     np.mean(score).item() for score in scores
@@ -350,6 +359,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 y_transforms=y_transforms,
                                 device=self.device,
                                 **best_params_for_this_model,
+                                **self.transformed_emulator_params,
                             )
 
                             # This can fail for some model params
