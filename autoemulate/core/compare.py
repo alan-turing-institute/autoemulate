@@ -47,7 +47,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
-        n_bootstraps: int = 100,
+        n_bootstraps: int | None = 100,
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
@@ -85,8 +85,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         shuffle: bool
             Whether to shuffle data before splitting into cross validation folds.
             Defaults to True.
-        n_bootstraps: int
-            Number of times to resample the data when evaluating performance.
+        n_bootstraps: int | None
+            Number of times to resample the data when evaluating performance. When None
+            the evaluation uses single test set and returns a single value with no
+            measure of the uncertainty in test performance. Defaults to 100.
         device: DeviceLike | None
             Device to run the emulators. If None, uses the default device (usually CPU
             or GPU). Defauls to None.
