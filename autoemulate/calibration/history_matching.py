@@ -9,6 +9,7 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
 from autoemulate.simulations.base import Simulator
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("autoemulate")
 
 
@@ -317,11 +318,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         self.emulator = emulator
+        self.emulator.device = self.device
 
         # These get updated when run() is called and used to refit the emulator
         if train_x is not None and train_y is not None:
-            self.train_x = train_x.to(self.device)
-            self.train_y = train_y.to(self.device)
+            self.train_x = train_x.float().to(self.device)
+            self.train_y = train_y.float().to(self.device)
         else:
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
@@ -365,10 +367,27 @@ class HistoryMatchingWorkflow(HistoryMatching):
             It is applied as a ratio of the range (max_val - min_val) of each input
             parameter to create a buffer around the NROY minimum and maximum values.
         """
-        # [n_outputs, 2] where second dim is [min, max]
-        param_bounds = self.generate_param_bounds(nroy_x, buffer_ratio)
-        if param_bounds is not None:
-            self.simulator._param_bounds = list(param_bounds.values())
+        nroy_bounds = self.generate_param_bounds(
+            nroy_x, buffer_ratio
+        )  # {str: [min, max]}
+        if nroy_bounds is not None:
+            # Ensure new bounds do not exceed the original bounds
+            original_bounds = self.simulator._param_bounds  # [(min, max)]
+            adjusted_bounds = []
+            for i, (new_bound, original_bound) in enumerate(
+                zip(nroy_bounds.values(), original_bounds, strict=False)
+            ):
+                # Take the intersection of the new and original bounds
+                min_bound = max(new_bound[0], original_bound[0])
+                max_bound = min(new_bound[1], original_bound[1])
+                if min_bound > max_bound:
+                    warnings.warn(
+                        f"Could not update {list(nroy_bounds.keys())[i]} bounds.",
+                        stacklevel=2,
+                    )
+                    min_bound, max_bound = original_bound
+                adjusted_bounds.append([min_bound, max_bound])
+            self.simulator._param_bounds = adjusted_bounds
         else:
             warnings.warn(
                 (
@@ -463,7 +482,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             which simulation samples were then selected.
         """
         logger.debug(
-            "Running history matching workflow with"
+            " Running history matching workflow with"
             " %d simulations and %d test samples.",
             n_simulations,
             n_test_samples,
@@ -481,8 +500,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 msg = (
                     f"Could not generate n_simulations ({n_simulations}) samples "
                     f"that are NROY after {max_retries} retries."
+                    f"Only {torch.cat(nroy_parameters_list, 0).shape[0]} "
+                    "samples generated."
                 )
-                raise RuntimeError(msg)
+                raise Warning(msg)
+                break
 
             # Generate `n_test_samples` with implausability scores, identify NROY
             test_parameters, impl_scores = self.generate_samples(n_test_samples)
@@ -510,5 +532,107 @@ class HistoryMatchingWorkflow(HistoryMatching):
         assert self.emulator is not None
         self.emulator.fit(self.train_x, self.train_y)
 
+        prediction = self.emulator.predict(self.train_x)
+
+        print("mean", ((prediction.mean - (self.train_y)) / self.train_y).mean())
+        print("std", ((prediction.mean - self.train_y) / self.train_y).std())
+
+        print("ratio", (prediction.variance / self.train_y).mean())
+        print("ratio", (prediction.variance / self.train_y).std())
+
+        print(
+            "prediction variance mean", (prediction.variance / prediction.mean).mean()
+        )
+        print("prediction variance std", (prediction.variance / prediction.mean).std())
+
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
+
+    def run_waves(  # noqa: PLR0913
+        self,
+        n_waves: int = 5,
+        frac_nroy_stop: float = 0.9,
+        n_simulations: int = 100,
+        n_test_samples: int = 10000,
+        max_retries: int = 3,
+        buffer_ratio: float = 0.0,
+    ) -> list[tuple[TensorLike, TensorLike]]:
+        """
+        Run multiple waves of the history matching workflow.
+
+        Parameters
+        ----------
+        n_waves: int
+            The number of waves to run.
+        frac_nroy_stop: float
+            Fraction of NROY samples to stop at. If less than this fraction of
+            NROY samples is reached, the workflow stops.
+        n_simulations: int
+            The number of simulations to run in each wave.
+        n_test_samples: int
+            Number of input parameters to test for implausibility with the emulator.
+            Parameters to simulate are sampled from this NROY subset.
+        max_retries: int
+            Maximum number of times to try to generate `n_simulations` NROY parameters.
+            That is the maximum number of times to repeat the following steps:
+                - draw `n_test_samples` parameters
+                - use emulator to make predictions for those parameters
+                - score implausibility of parameters given predictions
+                - identify NROY parameters within this set
+        buffer_ratio: float
+            A scaling factor used to expand the bounds of the (NROY) parameter space.
+            It is applied as a ratio of the range (max_val - min_val) of each input
+            parameter to create a buffer around the NROY minimum and maximum values
+            when updating the simulator parameter bounds.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            A tensor of tested input parameters and their implausibility scores.
+        """
+        wave_results = []
+        for i in range(n_waves):
+            logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
+            test_x, impl_scores = self.run(
+                n_simulations=n_simulations,
+                n_test_samples=n_test_samples,
+                max_retries=max_retries,
+                buffer_ratio=buffer_ratio,
+            )
+
+            print("Wave ", i, self.simulator.param_bounds)
+
+            if len(test_x) < n_simulations or len(impl_scores) < n_simulations:
+                logger.warning(
+                    " Not enough parameters or impl scores generated in wave %d/%d",
+                    i + 1,
+                    n_waves,
+                    "Stopping history matching workflow. Results are stored until wave %d/%d.",
+                    i,
+                    n_waves,
+                )
+                break
+
+            wave_results.append((test_x, impl_scores))
+
+            # Get NROY points from impl scores and check fraction
+            nroy_x = self.get_nroy(impl_scores, test_x)
+            nroy_frac = nroy_x.shape[0] / test_x.shape[0]
+            logger.info(
+                " Wave %d/%d: NROY fraction is %.2f%%",
+                i + 1,
+                n_waves,
+                nroy_frac * 100,
+            )
+            if nroy_frac < frac_nroy_stop:
+                logger.info(
+                    " Stopping history matching workflow at wave %d/%d "
+                    "with NROY fraction %.2f%% < %.2f%%",
+                    i + 1,
+                    n_waves,
+                    nroy_frac * 100,
+                    frac_nroy_stop * 100,
+                )
+                break
+
+        return wave_results
