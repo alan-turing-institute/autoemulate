@@ -8,8 +8,7 @@ from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_ava
 from autoemulate.core.types import TensorLike
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.simulations.epidemic import Epidemic
-
-from ..simulations.test_base_simulator import MockSimulator
+from tests.simulations.test_base_simulator import MockSimulator
 
 
 @pytest.fixture
