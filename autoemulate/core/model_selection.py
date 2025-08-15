@@ -165,7 +165,7 @@ def bootstrap(  # noqa: PLR0913
     model: Emulator,
     x: TensorLike,
     y: TensorLike,
-    n_bootstraps: int = 100,
+    n_bootstraps: int | None = 100,
     n_samples: int = 100,
     device: str | torch.device = "cpu",
 ) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -180,8 +180,10 @@ def bootstrap(  # noqa: PLR0913
         Input features for the model.
     y: TensorLike
         Target values corresponding to the input features.
-    n_bootstraps: int
-        Number of bootstrap samples to generate. Defaults to 100.
+    n_bootstraps: int | None
+        Number of bootstrap samples to generate. When None the evaluation uses all
+        all given data and returns a single value with no measure of the uncertainty.
+        Defaults to 100.
     n_samples: int
         Number of samples to generate to predict mean when emulator does not have a
         mean directly available. Defaults to 100.
@@ -195,6 +197,14 @@ def bootstrap(  # noqa: PLR0913
     """
     device = get_torch_device(device)
     x, y = move_tensors_to_device(x, y, device=device)
+
+    # If no bootstraps are specified, fall back to a single evaluation on given data
+    if n_bootstraps is None:
+        y_pred = model.predict_mean(x, n_samples=n_samples)
+        r2_score = evaluate(y_pred, y, r2_metric())
+        rmse_score = evaluate(y_pred, y, rmse_metric())
+        # Return single score and NaN for std
+        return ((r2_score, float("nan")), (rmse_score, float("nan")))
 
     r2_scores = torch.empty(n_bootstraps, device=device)
     rmse_scores = torch.empty(n_bootstraps, device=device)
@@ -211,8 +221,7 @@ def bootstrap(  # noqa: PLR0913
 
         # Compute metrics for this bootstrap sample
         r2_scores[i] = evaluate(y_pred, y_bootstrap, r2_metric())
-        mse_score = evaluate(y_pred, y_bootstrap, rmse_metric())
-        rmse_scores[i] = mse_score**0.5
+        rmse_scores[i] = evaluate(y_pred, y_bootstrap, rmse_metric())
 
     # Return mean and std
     return (
