@@ -2,11 +2,10 @@ import os
 import tempfile
 
 import pytest
+import torch
 from autoemulate.core.compare import AutoEmulate
-from autoemulate.core.device import (
-    SUPPORTED_DEVICES,
-    check_torch_device_is_available,
-)
+from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
+from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS
 from autoemulate.emulators.base import Emulator
 from torch.distributions import Transform
 
@@ -56,3 +55,22 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
     assert "GaussianProcess" in result_model_names
+
+
+def test_get_model_subset():
+    """Test getting a subset of models based on pytroch and probabilistic flags."""
+
+    x, y = torch.rand(10, 2), torch.rand(10)
+    pytorch_subset = set(PYTORCH_EMULATORS)
+    probabilistic_subset = {e for e in ALL_EMULATORS if e.supports_uq}
+
+    ae = AutoEmulate(x, y, only_pytorch=True, model_tuning=False)
+    assert set(ae.models) == pytorch_subset
+
+    ae = AutoEmulate(x, y, only_probabilistic=True, model_tuning=False)
+    assert set(ae.models) == probabilistic_subset
+
+    ae = AutoEmulate(
+        x, y, only_pytorch=True, only_probabilistic=True, model_tuning=False
+    )
+    assert set(ae.models) == pytorch_subset.intersection(probabilistic_subset)
