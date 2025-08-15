@@ -16,7 +16,13 @@ from autoemulate.core.plotting import calculate_subplot_layout, display_figure, 
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
-from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, ModelParams
+from autoemulate.core.types import (
+    DeviceLike,
+    DistributionLike,
+    InputLike,
+    ModelParams,
+    TransformedEmulatorParams,
+)
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
@@ -43,7 +49,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x_transforms_list: list[list[Transform | dict]] | None = None,
         y_transforms_list: list[list[Transform | dict]] | None = None,
         model_tuning: bool = True,
-        model_kwargs: None | ModelParams = None,
+        model_params: None | ModelParams = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -73,11 +80,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Defaults to None, in which case the data is standardized.
         model_tuning: bool
             Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_kwargs provided. Defaults to True.
-        model_kwargs: ModelParams | None
+            If False, the models use the model_params provided. Defaults to True.
+        model_params: ModelParams | None
             Dictionary of model-specific parameters to use when fitting the models.
             If None, the default parameters for each model are used.
             This is only used if model_tuning is False. Defaults to None.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. Defaults to None.
         n_iter: int
             Number of parameter settings to randomly sample and test during tuning.
         n_splits: int
@@ -146,7 +155,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
         self.model_tuning = model_tuning
-        self.model_kwargs = model_kwargs or {}
+        self.model_params = model_params or {}
+        self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
@@ -314,6 +324,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     y_transforms,
                                     n_splits=self.n_splits,
                                     shuffle=self.shuffle,
+                                    transformed_emulator_params=self.transformed_emulator_params,
                                 )
                                 mean_scores = [
                                     np.mean(score).item() for score in scores
@@ -333,7 +344,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                best_params_for_this_model = self.model_kwargs
+                                best_params_for_this_model = self.model_params
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
@@ -353,6 +364,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 y_transforms=y_transforms,
                                 device=self.device,
                                 **best_params_for_this_model,
+                                **self.transformed_emulator_params,
                             )
 
                             # This can fail for some model params
@@ -440,6 +452,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y: InputLike,
         result_id: int | None = None,
         random_seed: int | None = None,
+        transformed_emulator_params: None | TransformedEmulatorParams = None,
     ) -> TransformedEmulator:
         """
         Fit a fresh model with reinitialized parameters using the best configuration.
@@ -458,6 +471,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ID of the result to use. If None, uses the best model. Defaults to None.
         random_seed: int | None
             Random seed for parameter initialization. Defaults to None.
+        transformed_emulator_params: None | TransformedEmulatorParams
+            Parameters for the transformed emulator. When None, the same parameters as
+            used when identifying the best model are used. Defaults to None.
 
         Returns
         -------
@@ -476,6 +492,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         """
         from autoemulate.emulators import get_emulator_class
+
+        transformed_emulator_params = (
+            transformed_emulator_params or self.transformed_emulator_params
+        )
 
         # Get the result to use
         result = self.best_result() if result_id is None else self.get_result(result_id)
@@ -500,6 +520,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             y_transforms=result.y_transforms,
             device=self.device,
             **result.params,
+            **transformed_emulator_params,
         )
 
         # Fit the fresh model on the new data

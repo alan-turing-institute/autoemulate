@@ -17,6 +17,7 @@ OutputLike: TypeAlias = DistributionLike | TensorLike
 ParamLike: TypeAlias = Any
 TuneParams: TypeAlias = dict[str, list[ParamLike]]
 ModelParams: TypeAlias = dict[str, ParamLike]
+TransformedEmulatorParams: TypeAlias = dict[str, ParamLike]
 DeviceLike: TypeAlias = str | torch.device
 
 # Torch dtype's
