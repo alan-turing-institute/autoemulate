@@ -13,7 +13,7 @@ from SALib.sample.sobol import sample as sobol_sample
 from SALib.util import ResultDict
 
 from autoemulate.core.plotting import display_figure
-from autoemulate.core.types import DistributionLike, NumpyLike, TensorLike
+from autoemulate.core.types import NumpyLike, TensorLike
 from autoemulate.data.utils import ConversionMixin
 from autoemulate.emulators.base import Emulator
 
@@ -145,17 +145,8 @@ class SensitivityAnalysis(ConversionMixin):
         """
         param_tensor = self._convert_to_tensors(param_samples)
         assert isinstance(param_tensor, TensorLike)
-        y_pred = self.emulator.predict(param_tensor)
-
-        # handle types, convert to numpy
-        if isinstance(y_pred, TensorLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred)
-        elif isinstance(y_pred, DistributionLike):
-            y_pred_np, _ = self._convert_to_numpy(y_pred.mean.float())
-        else:
-            msg = "Emulator has to return Tensor or Distribution"
-            raise ValueError(msg)
-
+        y_pred = self.emulator.predict_mean(param_tensor)
+        y_pred_np, _ = self._convert_to_numpy(y_pred)
         return y_pred_np
 
     def _get_output_names(self, num_outputs: int) -> list[str]:
@@ -236,7 +227,10 @@ class SensitivityAnalysis(ConversionMixin):
                 Si = morris_analyze(
                     self.problem, param_samples, y[:, i], conf_level=conf_level
                 )
-            results[name] = Si  # type: ignore PGH003
+            else:
+                msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
+                raise ValueError(msg)
+            results[name] = Si
 
         if method == "sobol":
             return _sobol_results_to_df(results)
