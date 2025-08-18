@@ -4,17 +4,11 @@ from autoemulate.calibration.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,
 )
-from autoemulate.core.device import (
-    SUPPORTED_DEVICES,
-    check_torch_device_is_available,
-)
+from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.gaussian_process.exact import (
-    GaussianProcess,
-)
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.simulations.epidemic import Epidemic
-
-from .test_base_simulator import MockSimulator
+from tests.simulations.test_base_simulator import MockSimulator
 
 
 @pytest.fixture
