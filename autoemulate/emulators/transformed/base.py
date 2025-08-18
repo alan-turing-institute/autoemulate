@@ -144,9 +144,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.supports_grad = self.model.supports_grad and all(
             t.bijective for t in self.x_transforms
         )
-        # TODO: update to be derived from attribute of the underlying emulator
-        # For now, just set as True
-        self.supports_uq = True
+        self.supports_uq = self.model.supports_uq
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """

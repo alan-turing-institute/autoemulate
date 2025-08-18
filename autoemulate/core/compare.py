@@ -51,6 +51,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         model_tuning: bool = True,
         model_params: None | ModelParams = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
+        only_pytorch: bool = False,
+        only_probabilistic: bool = False,
         n_iter: int = 10,
         n_splits: int = 5,
         shuffle: bool = True,
@@ -87,6 +89,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             This is only used if model_tuning is False. Defaults to None.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
+        only_pytorch: bool
+            If True, only PyTorch emulators are used. Defaults to False.
+        only_probabilistic: bool
+            If True, only probabilistic emulators are used. Defaults to False.
         n_iter: int
             Number of parameter settings to randomly sample and test during tuning.
         n_splits: int
@@ -127,7 +133,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ]
 
         # Set default models if None
-        updated_models = self.get_models(models)
+        updated_models = self.get_models(
+            models, only_probabilistic=only_probabilistic, only_pytorch=only_pytorch
+        )
 
         # Filter models to only be those that can handle multioutput data
         if y.shape[1] > 1:
@@ -171,6 +179,16 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return ALL_EMULATORS
 
     @staticmethod
+    def pytorch_emulators() -> list[type[Emulator]]:
+        """Return a list of all available PyTorch emulators."""
+        return PYTORCH_EMULATORS
+
+    @staticmethod
+    def probablistic_emulators() -> list[type[Emulator]]:
+        """Return a list of all available probabilistic emulators."""
+        return [emulator for emulator in ALL_EMULATORS if emulator.supports_uq]
+
+    @staticmethod
     def list_emulators() -> pd.DataFrame:
         """Return a dataframe with info on all available emulators.
 
@@ -185,26 +203,57 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         return pd.DataFrame(
             {
-                "Emulator": [emulator.model_name() for emulator in ALL_EMULATORS],
+                "Emulator": [
+                    emulator.model_name() for emulator in AutoEmulate.all_emulators()
+                ],
                 "PyTorch": [
-                    emulator in PYTORCH_EMULATORS for emulator in ALL_EMULATORS
+                    emulator in AutoEmulate.pytorch_emulators()
+                    for emulator in AutoEmulate.all_emulators()
                 ],
                 "Multioutput": [
-                    emulator.is_multioutput() for emulator in ALL_EMULATORS
+                    emulator.is_multioutput()
+                    for emulator in AutoEmulate.all_emulators()
                 ],
                 "Uncertainty_Quantification": [
-                    emulator.supports_uq for emulator in ALL_EMULATORS
+                    emulator in AutoEmulate.probablistic_emulators()
+                    for emulator in AutoEmulate.all_emulators()
                 ],
+                # TODO (#743): Add "Differentiable" feature for emulators
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
         )
 
     def get_models(
-        self, models: list[type[Emulator] | str] | None = None
+        self,
+        models: list[type[Emulator] | str] | None = None,
+        only_pytorch: bool = False,
+        only_probabilistic: bool = False,
     ) -> list[type[Emulator]]:
-        """Return a list of the model classes for comparisons."""
+        """
+        Return a list of the model classes for comparisons.
+
+        Parameters
+        ----------
+        models: list[type[Emulator] | str] | None
+            List of model classes or names to use for comparison. If None, all available
+            emulators are used (or subset based on only_pytorch and only_probabilistic).
+        only_pytorch: bool
+            If True, only PyTorch emulators are returned. Defaults to False.
+        only_probabilistic: bool
+            If True, only probabilistic emulators are returned. Defaults to False.
+        """
         if models is None:
+            if only_probabilistic and only_pytorch:
+                return list(
+                    set(self.pytorch_emulators()).intersection(
+                        self.probablistic_emulators()
+                    )
+                )
+            if only_probabilistic:
+                return self.probablistic_emulators()
+            if only_pytorch:
+                return self.pytorch_emulators()
             return self.all_emulators()
 
         model_classes = []
