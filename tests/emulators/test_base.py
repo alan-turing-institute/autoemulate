@@ -31,6 +31,7 @@ class TestPyTorchBackend:
             self.scheduler_setup(kwargs)
             self.epochs = kwargs.get("epochs", 10)
             self.batch_size = kwargs.get("batch_size", 16)
+            self.loss_history = []  # pyright: ignore[reportAttributeAccessIssue]
 
         def forward(self, x):
             return self.linear(x)
