@@ -218,6 +218,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     emulator in AutoEmulate.probablistic_emulators()
                     for emulator in AutoEmulate.all_emulators()
                 ],
+                # TODO (#743): Add "Differentiable" feature for emulators
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
