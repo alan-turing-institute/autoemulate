@@ -14,6 +14,7 @@ class TestPyTorchBackend:
     Class to test the PyTorchBackend class.
     """
 
+    @pytest.mark.usefixtures("function_scope_fixture")
     class DummyModel(PyTorchBackend):
         """
         A dummy implementation of PyTorchBackend for testing purposes.
