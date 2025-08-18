@@ -335,6 +335,37 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # This means we only ever use the most recent NROY samples
         self.nroy_samples = None
 
+    def _is_sample_within_bounds(
+        self, sample: TensorLike, bounds_dict: dict[str, tuple[float, float]]
+    ) -> bool:
+        """
+        Check if sample is within the bounds defined in `bounds_dict`.
+
+        Parameters
+        ----------
+        sample: torch.Tensor
+            A single sample of input parameters to check, shape [1, in_dim].
+        bounds_dict: dict of {param_name: [lower, upper]}
+            A dictionary of parameter bounds for each parameter.
+
+        Returns
+        -------
+        bool
+            True if the sample is within the bounds, False otherwise.
+        """
+        sample = sample.squeeze(0)  # shape: [in_dim]
+        lowers = torch.tensor(
+            [bounds[0] for bounds in bounds_dict.values()],
+            dtype=sample.dtype,
+            device=sample.device,
+        )
+        uppers = torch.tensor(
+            [bounds[1] for bounds in bounds_dict.values()],
+            dtype=sample.dtype,
+            device=sample.device,
+        )
+        return bool(torch.all((sample >= lowers) & (sample <= uppers)).item())
+
     def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
         """
         Generate `n` additional parameter samples using cloud sampling.
@@ -359,6 +390,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
+        # Ensure that we don't accept samples outside the NROY bounds
+        bounds = self.generate_param_bounds(self.nroy_samples, buffer_ratio=0.0)
+        assert bounds is not None
+
         # Set stdev as scaled parameter range, create diagonal covariance matrix
         stdev = (
             self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
@@ -375,6 +410,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
             samples = []
             for mean in selected_means:
                 mvn = MultivariateNormal(mean, covariance_matrix)
+                in_bounds = False
+                while not in_bounds:
+                    # Sample one point from the Gaussian centered on the mean
+                    # Ensure it is within the NROY bounds
+                    sample = mvn.sample((1,))
+                    if self._is_sample_within_bounds(sample, bounds):
+                        in_bounds = True
                 samples.append(mvn.sample((1,)))
             return torch.cat(samples, dim=0)
 
@@ -391,7 +433,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
             # Handle remainder here
             num_samples = samples_per_mean + (1 if i < remaining_samples else 0)
             mvn = MultivariateNormal(mean, covariance_matrix)
-            samples.append(mvn.sample((num_samples,)))
+            from_mean_samples = []
+            while len(from_mean_samples) < num_samples:
+                mvn_sample = mvn.sample((num_samples,))
+                # Ensure all samples are within the NROY bounds
+                valid_samples = [
+                    sample
+                    for sample in mvn_sample
+                    if self._is_sample_within_bounds(sample, bounds)
+                ]
+                missing_samples = num_samples - len(from_mean_samples)
+                from_mean_samples = valid_samples[:missing_samples]
 
         return torch.cat(samples, dim=0)
 
