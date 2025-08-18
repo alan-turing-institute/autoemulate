@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import mogp_emulator
 import torch
+from scipy.stats import qmc
 
 from autoemulate.core.types import TensorLike
 
@@ -14,7 +15,6 @@ class ExperimentalDesign(ABC):
     training of an emulator.
     """
 
-    @abstractmethod
     def __init__(self, bounds_list: list[tuple[float, float]]):
         """
         Initialize a Sampler object.
@@ -25,6 +25,7 @@ class ExperimentalDesign(ABC):
             List tuples with two numeric values. Each tuple corresponds to the lower and
             upper bounds of a parameter.
         """
+        self.bounds_list = bounds_list
 
     @abstractmethod
     def sample(self, n: int) -> TensorLike:
@@ -42,7 +43,6 @@ class ExperimentalDesign(ABC):
             A tensor of shape (n, dim) containing the sampled points.
         """
 
-    @abstractmethod
     def get_n_parameters(self) -> int:
         """
         Return the number of parameters in the sample space.
@@ -52,6 +52,7 @@ class ExperimentalDesign(ABC):
         int
             The number of parameters in the sample space.
         """
+        return len(self.bounds_list)
 
 
 class LatinHypercube(ExperimentalDesign):
@@ -101,13 +102,32 @@ class LatinHypercube(ExperimentalDesign):
 
         return sample_array_full
 
-    def get_n_parameters(self) -> int:
+
+class Sobol(ExperimentalDesign):
+    """Sobol experimental design class."""
+
+    def __init__(self, bounds_list: list[tuple[float, float]]):
+        self.bounds_list = bounds_list
+        self.sampler = qmc.Sobol(d=len(self.bounds_list), scramble=True)
+
+    def sample(self, n: int) -> TensorLike:
         """
-        Return the number of parameters in the sample space.
+        Sample n points from the parameter space.
+
+        Parameters
+        ----------
+        n: int
+            The number of points to sample.
 
         Returns
         -------
-        int
-            The number of parameters in the sample space.
+        TensorLike
+            A tensor of shape (n, dim) containing the sampled points.
         """
-        return len(self.bounds_list)
+        samples = self.sampler.random(n=n)
+        scaled_samples = qmc.scale(
+            samples,
+            [b[0] for b in self.bounds_list],
+            [b[1] for b in self.bounds_list],
+        )
+        return torch.tensor(scaled_samples)

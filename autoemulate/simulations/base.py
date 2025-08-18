@@ -7,7 +7,7 @@ from tqdm import tqdm
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
-from autoemulate.simulations.experimental_design import LatinHypercube
+from autoemulate.simulations.experimental_design import LatinHypercube, Sobol
 
 logger = logging.getLogger("autoemulate")
 
@@ -132,7 +132,7 @@ class Simulator(ABC, ValidationMixin):
         return self._out_dim
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None
+        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
     ) -> TensorLike:
         """
         Generate random samples using Latin Hypercube Sampling.
@@ -143,6 +143,9 @@ class Simulator(ABC, ValidationMixin):
             Number of samples to generate.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set.
+        method: str
+            Sampling method to use. One of ["lhs", "sobol"].
+
 
         Returns
         -------
@@ -151,8 +154,19 @@ class Simulator(ABC, ValidationMixin):
         """
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
-        lhd = LatinHypercube(self.param_bounds)
-        return lhd.sample(n_samples)
+
+        if method == "lhs":
+            sampler = LatinHypercube(self.param_bounds)
+        elif method == "sobol":
+            sampler = Sobol(self.param_bounds)
+        else:
+            msg = (
+                f"Invalid sampling method: {method}. "
+                "Supported methods are 'lhs' and 'sobol'."
+            )
+            raise ValueError(msg)
+
+        return sampler.sample(n_samples)
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike | None:
