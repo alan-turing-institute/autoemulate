@@ -5,7 +5,7 @@ import torch
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.types import DeviceLike, TensorLike
+from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
 from autoemulate.simulations.base import Simulator
@@ -331,8 +331,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
         # NROY samples are also generated in `run()` and used in `cloud_sample()`
-        # `self.nroy_samples` gets overwritten each time `run()` is called
-        # This means we only ever use the most recent NROY samples
+        # We only ever use the most recent NROY samples
+        # This means `self.nroy_samples` gets overwritten each time `run()` is called
         self.nroy_samples = None
 
     def _is_sample_within_bounds(
@@ -366,14 +366,46 @@ class HistoryMatchingWorkflow(HistoryMatching):
         )
         return bool(torch.all((sample >= lowers) & (sample <= uppers)).item())
 
+    def _sample_within_bounds(
+        self,
+        dist: DistributionLike,
+        bounds: dict[str, tuple[float, float]],
+        n: int,
+    ) -> list[TensorLike]:
+        """
+        Sample from distribution until n valid samples within the bounds are obtained.
+
+        Parameters
+        ----------
+        dist: DistributionLike
+            A multivariate normal distribution to sample from.
+        bounds: dict[str, tuple[float, float]]
+            A dictionary of parameter bounds for each parameter.
+        n: int
+            The number of valid samples to obtain.
+
+        Returns
+        -------
+        list[TensorLike]
+            A list of valid samples that are within the specified bounds.
+        """
+        valid_samples = []
+        while len(valid_samples) < n:
+            n_remaining = n - len(valid_samples)
+            samples = dist.sample((n_remaining,))
+            valid = [s for s in samples if self._is_sample_within_bounds(s, bounds)]
+            valid_samples.extend(valid)
+        return valid_samples
+
     def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
         """
         Generate `n` additional parameter samples using cloud sampling.
 
-        From the availble NROY points, draw from Gaussians centered on those points:
-        - if n < number of NROY points, randomly select a subset to use
-        - otherwise, use each NROY point at least once
-        - if the drawn candidate sample is outside the NROY bounds, draw a new sample
+        From the availble NROY points, draw from Gaussians centered on those points.
+            - if n < number of NROY points, randomly select a subset to use
+            - otherwise, use each NROY point at least once
+        Discard any points outside the NROY bounds and redraw until `n` valid samples
+        are obtained.
 
         Parameters
         ----------
@@ -394,58 +426,39 @@ class HistoryMatchingWorkflow(HistoryMatching):
         bounds = self.generate_param_bounds(self.nroy_samples, buffer_ratio=0.0)
         assert bounds is not None
 
+        # Each NROY sample is a mean of a Gaussian that can generate candidates from
+        num_means = self.nroy_samples.shape[0]
+
         # Set stdev as scaled parameter range, create diagonal covariance matrix
         stdev = (
             self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
         ) * scaling_factor
         covariance_matrix = torch.diag(stdev**2)
 
-        # Each NROY sample is a mean of a Gaussian that can generate candidates from
-        num_means = self.nroy_samples.shape[0]
+        all_valid_samples = []
 
-        # 1: Handle cases where `n` < number of NROY samples
         if num_means > n:
-            # Randomly select `n` means from `self.nroy_samples`
+            # Randomly select `n` NROY means and sample each once
             selected_means = self.sample_tensor(n, self.nroy_samples)
-            samples = []
             for mean in selected_means:
                 mvn = MultivariateNormal(mean, covariance_matrix)
-                in_bounds = False
-                while not in_bounds:
-                    # Sample one point from the Gaussian centered on the mean
-                    # Ensure it is within the NROY bounds
-                    sample = mvn.sample((1,))
-                    if self._is_sample_within_bounds(sample, bounds):
-                        in_bounds = True
-                samples.append(mvn.sample((1,)))
-            return torch.cat(samples, dim=0)
+                all_valid_samples.extend(self._sample_within_bounds(mvn, bounds, 1))
 
-        # 2: Handle cases where `n` >= number of NROY samples
+        else:
+            # Determine the min number of samples to draw from each NROY centered
+            # Gaussian, account for remainder to return exactly `n` samples overall
+            min_samples_per_mean = n // num_means
+            remainder_to_sample = n % num_means
 
-        # Determine the number of samples to draw from each NROY mean
-        # Handle remainder to return exactly `n` samples
-        samples_per_mean = n // num_means
-        remaining_samples = n % num_means
+            for i, mean in enumerate(self.nroy_samples):
+                # Number of samples to draw from this Gaussian, handle remainder here
+                n_samples = min_samples_per_mean + (1 if i < remainder_to_sample else 0)
+                mvn = MultivariateNormal(mean, covariance_matrix)
+                all_valid_samples.extend(
+                    self._sample_within_bounds(mvn, bounds, n_samples)
+                )
 
-        # Generate samples from Gaussians centered on the NROY samples
-        samples = []
-        for i, mean in enumerate(self.nroy_samples):
-            # Handle remainder here
-            num_samples = samples_per_mean + (1 if i < remaining_samples else 0)
-            mvn = MultivariateNormal(mean, covariance_matrix)
-            from_mean_samples = []
-            while len(from_mean_samples) < num_samples:
-                mvn_sample = mvn.sample((num_samples,))
-                # Ensure all samples are within the NROY bounds
-                valid_samples = [
-                    sample
-                    for sample in mvn_sample
-                    if self._is_sample_within_bounds(sample, bounds)
-                ]
-                missing_samples = num_samples - len(from_mean_samples)
-                from_mean_samples = valid_samples[:missing_samples]
-
-        return torch.cat(samples, dim=0)
+        return torch.stack(all_valid_samples, dim=0)
 
     def generate_samples(
         self, n: int, scaling_factor: float = 0.1
