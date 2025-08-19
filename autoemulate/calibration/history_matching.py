@@ -732,7 +732,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 n_waves,
                 nroy_frac * 100,
             )
-            if nroy_frac < frac_nroy_stop:
+            if nroy_frac > frac_nroy_stop:
                 logger.info(
                     " Stopping history matching workflow at wave %d/%d "
                     "with NROY fraction %.2f%% < %.2f%%",
