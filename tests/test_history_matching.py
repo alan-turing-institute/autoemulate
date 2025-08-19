@@ -4,9 +4,10 @@ from autoemulate.calibration.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,
 )
+from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.gaussian_process.exact import GaussianProcess
+from autoemulate.emulators import TransformedEmulator
 from autoemulate.simulations.epidemic import Epidemic
 
 from .test_base_simulator import MockSimulator
@@ -104,14 +105,14 @@ def test_run(device):
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    gp = GaussianProcess(x, y, device=device)
-    gp.fit(x, y)
+    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_tuning=False)
+    res = ae.best_result()
 
     observations = {"infection_rate": (0.3, 0.05)}
 
     hm = HistoryMatchingWorkflow(
         simulator=simulator,
-        emulator=gp,
+        result=res,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
@@ -127,7 +128,7 @@ def test_run(device):
 
     # Check basic structure of results
     assert isinstance(hm.train_x, TensorLike)
-    assert isinstance(hm.emulator, GaussianProcess)
+    assert isinstance(hm.emulator, TransformedEmulator)
 
     assert len(hm.train_x) == 5
 
@@ -157,15 +158,15 @@ def test_run_max_tries():
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    gp = GaussianProcess(x, y)
-    gp.fit(x, y)
+    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_tuning=False)
+    res = ae.best_result()
 
     # Extreme values outside the range of what the simulator returns
     observations = {"infection_rate": (100.0, 1.0)}
 
     hm = HistoryMatchingWorkflow(
         simulator=simulator,
-        emulator=gp,
+        result=res,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,

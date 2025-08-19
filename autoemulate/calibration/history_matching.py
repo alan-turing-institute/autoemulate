@@ -6,8 +6,9 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
+from autoemulate.core.results import Result
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators.base import ProbabilisticEmulator
+from autoemulate.emulators import TransformedEmulator, get_emulator_class
 from autoemulate.simulations.base import Simulator
 
 logging.basicConfig(level=logging.INFO)
@@ -274,7 +275,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
         self,
         simulator: Simulator,
-        emulator: ProbabilisticEmulator,
+        result: Result,
         observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -291,8 +292,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         simulator: Simulator
             A simulator.
-        emulator: ProbabilisticEmulator
-            A ProbabilisticEmulator pre-trained on `simulator` data.
+        result: Result
+            A Result object containing the pre-trained emulator and its parameters.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise]. In case
             of no uncertainty in observations, provides just the observed value.
@@ -318,7 +319,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed)
-        self.emulator = emulator
+        self.result = result
+        self.emulator = result.model
         self.emulator.device = self.device
 
         # New data is generated in `run()` and appended here
@@ -368,7 +370,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
     def _sample_within_bounds(
         self,
-        dist: DistributionLike,
+        dist: 
+      ibutionLike,
         bounds: dict[str, tuple[float, float]],
         n: int,
     ) -> list[TensorLike]:
@@ -490,8 +493,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             test_x = self.cloud_sample(n, scaling_factor).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator
-        pred = self.emulator.predict(test_x)
-        impl_scores = self.calculate_implausibility(pred.mean, pred.variance)
+        mean, variance = self.emulator.predict_mean_and_variance(test_x)
+        impl_scores = self.calculate_implausibility(mean, variance)
 
         return test_x, impl_scores
 
@@ -542,6 +545,21 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.train_x = torch.cat([self.train_x, x], dim=0)
 
         return x, y
+
+    def refit_emulator(self):
+        """Refit the emulator using all available training data."""
+        # Create a fresh model with the same configuration
+        self.emulator = TransformedEmulator(
+            self.train_x,
+            self.train_y,
+            model=get_emulator_class(self.result.model_name),
+            x_transforms=self.result.x_transforms,
+            y_transforms=self.result.y_transforms,
+            device=self.device,
+            **self.result.params,
+        )
+        # Fit the fresh model on the new data
+        self.emulator.fit(self.train_x, self.train_y)
 
     def run(
         self,
@@ -625,21 +643,20 @@ class HistoryMatchingWorkflow(HistoryMatching):
         _, _ = self.simulate(nroy_simulation_samples)
 
         # Refit emulator using all available data
-        assert self.emulator is not None
-        self.emulator.fit(self.train_x, self.train_y)
+        self.refit_emulator()
 
-        prediction = self.emulator.predict(self.train_x)
+        # prediction = self.emulator.predict(self.train_x)
 
-        print("mean", ((prediction.mean - (self.train_y)) / self.train_y).mean())
-        print("std", ((prediction.mean - self.train_y) / self.train_y).std())
+        # print("mean", ((prediction.mean - (self.train_y)) / self.train_y).mean())
+        # print("std", ((prediction.mean - self.train_y) / self.train_y).std())
 
-        print("ratio", (prediction.variance / self.train_y).mean())
-        print("ratio", (prediction.variance / self.train_y).std())
+        # print("ratio", (prediction.variance / self.train_y).mean())
+        # print("ratio", (prediction.variance / self.train_y).std())
 
-        print(
-            "prediction variance mean", (prediction.variance / prediction.mean).mean()
-        )
-        print("prediction variance std", (prediction.variance / prediction.mean).std())
+        # print(
+        #     "pred variance mean", (prediction.variance / prediction.mean).mean()
+        # )
+        # print("pred variance std", (prediction.variance / prediction.mean).std())
 
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
