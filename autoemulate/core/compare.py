@@ -629,11 +629,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         test_x, test_y = self._convert_to_tensors(self.test)
 
         # Re-run prediction with just this model to get the predictions
-        y_pred, y_variance = (
-            model.predict_mean_and_variance(test_x)
-            if model.supports_uq
-            else (model.predict_mean(test_x), None)
-        )
+        y_pred, y_variance = model.predict_mean_and_variance(test_x)
         r2_score = evaluate(y_pred, test_y, r2_metric())
 
         # Handle ranges
