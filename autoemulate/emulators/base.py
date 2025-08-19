@@ -166,7 +166,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def predict_mean_and_variance(
         self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
-    ) -> tuple[TensorLike, TensorLike]:
+    ) -> tuple[TensorLike, TensorLike | None]:
         """
         Predict the mean and variance of the target variable for input `x`.
 
@@ -183,14 +183,14 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
         Returns
         -------
-        tuple[TensorLike, TensorLike]
+        tuple[TensorLike, TensorLike | None]
             A tuple containing:
             - Mean tensor of shape `(n_batch, n_targets)`.
-            - Variance tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
+              otherwise None.
         """
         if not self.supports_uq:
-            msg = f"Emulator ({self}) does not support UQ."
-            raise RuntimeError(msg)
+            return (self.predict_mean(x, with_grad, n_samples), None)
         y_pred = self._predict(x, with_grad)
         assert isinstance(y_pred, DistributionLike)
         try:

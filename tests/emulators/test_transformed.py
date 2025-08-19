@@ -33,6 +33,7 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
         assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
         assert not y_pred_mean.requires_grad
         y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
+        assert isinstance(y_pred_var, TensorLike)
         assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
         assert y_pred_var.shape == (x2.shape[0], y.shape[1])
         assert not y_pred_mean.requires_grad
@@ -105,6 +106,7 @@ def test_transformed_emulator_grad(
         y_pred_grad_mean, y_pred_grad_var = em.predict_mean_and_variance(
             x2, with_grad=True
         )
+        assert isinstance(y_pred_grad_var, TensorLike)
         assert y_pred_grad_mean.requires_grad
         assert y_pred_grad_var.requires_grad
     else:
