@@ -163,6 +163,13 @@ class Simulator(ABC, ValidationMixin):
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
 
+        if len(self.sample_param_bounds) == 0:
+            # All parameters are constant
+            full_samples = torch.empty((n_samples, self.in_dim), dtype=torch.float32)
+            for idx, val in self.constant_params.items():
+                full_samples[:, idx] = val
+            return full_samples
+
         if method == "lhs":
             sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
         elif method == "sobol":
@@ -174,17 +181,27 @@ class Simulator(ABC, ValidationMixin):
             )
             raise ValueError(msg)
 
-        # samples are drawn from [0, 1]^d
+        # Samples are drawn from [0, 1]^d
         samples = sampler.random(n=n_samples)
         scaled_samples = qmc.scale(
             samples,
             [b[0] for b in self.sample_param_bounds],
             [b[1] for b in self.sample_param_bounds],
         )
+        # Convert scaled_samples to torch tensor for assignment
+        scaled_samples = torch.tensor(scaled_samples, dtype=torch.float32)
 
-        # need to insert constant parameters
+        # Insert constant parameters at correct indices
+        full_samples = torch.empty((n_samples, self.in_dim), dtype=torch.float32)
+        sample_idx = 0
+        for idx in range(self.in_dim):
+            if idx in self.constant_params:
+                full_samples[:, idx] = self.constant_params[idx]
+            else:
+                full_samples[:, idx] = scaled_samples[:, sample_idx]
+                sample_idx += 1
 
-        return torch.tensor(scaled_samples)
+        return full_samples
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike | None:

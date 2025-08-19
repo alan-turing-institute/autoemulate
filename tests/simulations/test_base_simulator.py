@@ -224,3 +224,24 @@ def test_update_output_names_wrong_dimension(mock_simulator):
     # Verify original names are unchanged after failed attempts
     assert mock_simulator.output_names == ["var1", "var2"]
     assert mock_simulator.out_dim == 2
+
+
+def test_sample():
+    param_bouns = {
+        "param1": (0.0, 1.0),
+        "param2": (10.0, 100.0),
+        "param3": (1000.0, 1000.0),
+    }
+    sim = MockSimulator(param_bouns, ["var1", "var2"])
+
+    n_samples = 1000
+    samples = sim.sample_inputs(n_samples)
+
+    assert isinstance(samples, TensorLike)
+    assert samples.shape[0] == n_samples
+    assert samples.shape[1] == 3
+    assert torch.all(samples[:, 0] >= 0.0)
+    assert torch.all(samples[:, 0] <= 1.0)
+    assert torch.all(samples[:, 1] >= 10.0)
+    assert torch.all(samples[:, 1] <= 100.0)
+    assert torch.all(samples[:, 1] <= 100.0)
