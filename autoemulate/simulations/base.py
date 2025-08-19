@@ -47,6 +47,11 @@ class Simulator(ABC, ValidationMixin):
         self._parameters_range = parameters_range
         self._param_names = list(parameters_range.keys())
         self._param_bounds = list(parameters_range.values())
+        # separate out param bounds to sample from and constants
+        self.sample_param_bounds = [b for b in self.param_bounds if b[0] != b[1]]
+        self.constant_params = {
+            idx: b[0] for idx, b in enumerate(self.param_bounds) if b[0] == b[1]
+        }
         self._output_names = output_names
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
@@ -159,9 +164,9 @@ class Simulator(ABC, ValidationMixin):
             set_random_seed(random_seed)  # type: ignore PGH003
 
         if method == "lhs":
-            sampler = qmc.LatinHypercube(d=self.in_dim)
+            sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
         elif method == "sobol":
-            sampler = qmc.Sobol(d=self.in_dim)
+            sampler = qmc.Sobol(d=len(self.sample_param_bounds))
         else:
             msg = (
                 f"Invalid sampling method: {method}. "
@@ -173,9 +178,12 @@ class Simulator(ABC, ValidationMixin):
         samples = sampler.random(n=n_samples)
         scaled_samples = qmc.scale(
             samples,
-            [b[0] for b in self.param_bounds],
-            [b[1] for b in self.param_bounds],
+            [b[0] for b in self.sample_param_bounds],
+            [b[1] for b in self.sample_param_bounds],
         )
+
+        # need to insert constant parameters
+
         return torch.tensor(scaled_samples)
 
     @abstractmethod
