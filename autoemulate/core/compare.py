@@ -24,7 +24,7 @@ from autoemulate.core.types import (
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
-from autoemulate.emulators.base import Emulator, ProbabilisticEmulator
+from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
@@ -631,8 +631,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Re-run prediction with just this model to get the predictions
         y_pred, y_variance = (
             model.predict_mean_and_variance(test_x)
-            if isinstance(model, ProbabilisticEmulator)
-            or (isinstance(model, TransformedEmulator) and model.model.supports_uq)
+            if model.supports_uq
             else (model.predict_mean(test_x), None)
         )
         r2_score = evaluate(y_pred, test_y, r2_metric())
