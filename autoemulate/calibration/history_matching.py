@@ -381,6 +381,27 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Sample from distribution until n valid samples within the bounds are obtained.
 
         Handles fixed parameters by inserting their values at the correct indices.
+
+        Parameters
+        ----------
+        dist: DistributionLike
+            A distribution to sample from, e.g., MultivariateNormal.
+        bounds: dict[str, tuple[float, float]]
+            A dictionary of [min, max] parameter bounds for each parameter.
+        n: int
+            The number of samples to generate.
+        fixed_indices: list[int] | None
+            Optional list of indices of fixed parameters (those with min == max).
+        fixed_values: list[float] | None
+            Optional list of fixed parameter values corresponding to `fixed_indices`.
+        total_dim: int | None
+            Optional total dimension of the parameter space, used to reconstruct full
+            samples when fixed parameters are present.
+
+        Returns
+        -------
+        list[TensorLike]
+            A list of valid samples that are within the bounds.
         """
         valid_samples = []
         while len(valid_samples) < n:
@@ -416,6 +437,19 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         Handles fixed parameters (min == max) by not sampling those and inserting
         their constant values.
+
+        Parameters
+        ----------
+        n: int
+            The number of samples to generate.
+        scaling_factor: float
+            The standard deviation of the Gaussian to sample from in cloud sampling is
+            set to: `parameter range * scaling_factor`.
+
+        Returns
+        -------
+        TensorLike
+            A tensor of sampled parameters of shape [n, in_dim].
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
