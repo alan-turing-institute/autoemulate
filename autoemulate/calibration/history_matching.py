@@ -5,8 +5,8 @@ import torch
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.core.results import Result
+from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import TransformedEmulator, get_emulator_class
 from autoemulate.simulations.base import Simulator
@@ -370,8 +370,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
     def _sample_within_bounds(
         self,
-        dist: 
-      ibutionLike,
+        dist: DistributionLike,
         bounds: dict[str, tuple[float, float]],
         n: int,
     ) -> list[TensorLike]:
