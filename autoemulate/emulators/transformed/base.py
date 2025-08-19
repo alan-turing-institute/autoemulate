@@ -429,39 +429,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         )
         raise ValueError(msg)
 
-    def predict_mean_and_variance(
-        self, x: TensorLike, with_grad: bool = False
-    ) -> tuple[TensorLike, TensorLike]:
-        """
-        Predict the mean and variance of the target variable for input `x`.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Input tensor of shape `(n_samples, n_features)` for which to predict
-            the mean and variance.
-        with_grad: bool
-            Whether to compute gradients with respect to the input. Defaults to False.
-
-        Returns
-        -------
-        tuple[TensorLike, TensorLike]
-            A tuple containing:
-            - Mean tensor of shape `(n_samples, n_targets)`.
-            - Variance tensor of shape `(n_samples, n_targets)`.
-        """
-        if not self.model.supports_uq:
-            msg = f"TransformedEmulator model ({self.model}) does not support UQ."
-            raise RuntimeError(msg)
-        y_pred = self._predict(x, with_grad)
-        assert isinstance(y_pred, DistributionLike)
-        samples = (
-            y_pred.rsample(torch.Size([self.n_samples]))
-            if with_grad
-            else y_pred.sample(torch.Size([self.n_samples]))
-        )
-        return samples.mean(dim=0), samples.var(dim=0)
-
     @staticmethod
     def is_multioutput() -> bool:
         """Not implemented for TransformedEmulator.
