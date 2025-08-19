@@ -419,9 +419,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 )
                 full[:, const_idx] = const_vals
             full[:, sample_params_idx] = samples
-            valid_samples.extend(
-                [s for s in samples if self._is_within_bounds(s, bounds)]
-            )
+            valid_samples.extend([s for s in full if self._is_within_bounds(s, bounds)])
         return valid_samples
 
     def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
