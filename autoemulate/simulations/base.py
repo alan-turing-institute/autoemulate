@@ -164,11 +164,9 @@ class Simulator(ABC, ValidationMixin):
             set_random_seed(random_seed)  # type: ignore PGH003
 
         if len(self.sample_param_bounds) == 0:
-            # All parameters are constant
-            full_samples = torch.empty((n_samples, self.in_dim), dtype=torch.float32)
-            for idx, val in self.constant_params.items():
-                full_samples[:, idx] = val
-            return full_samples
+            # All parameters are constant - broadcast to n_samples
+            const_vals = torch.tensor(list(self.constant_params.values()))
+            return const_vals.repeat(n_samples, 1)
 
         if method == "lhs":
             sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
@@ -181,14 +179,13 @@ class Simulator(ABC, ValidationMixin):
             )
             raise ValueError(msg)
 
-        # Samples are drawn from [0, 1]^d
+        # Samples are drawn from [0, 1]^d so need to scale them
         samples = sampler.random(n=n_samples)
         scaled_samples = qmc.scale(
             samples,
             [b[0] for b in self.sample_param_bounds],
             [b[1] for b in self.sample_param_bounds],
         )
-        # Convert scaled_samples to torch tensor for assignment
         scaled_samples = torch.tensor(scaled_samples, dtype=torch.float32)
 
         # Insert constant parameters at correct indices
