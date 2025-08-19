@@ -368,97 +368,111 @@ class HistoryMatchingWorkflow(HistoryMatching):
         )
         return bool(torch.all((sample >= lowers) & (sample <= uppers)).item())
 
-    def _sample_within_bounds(
+    def _sample_within_bounds(  # noqa: PLR0913
         self,
         dist: DistributionLike,
         bounds: dict[str, tuple[float, float]],
         n: int,
+        fixed_indices: list[int] | None = None,
+        fixed_values: list[float] | None = None,
+        total_dim: int | None = None,
     ) -> list[TensorLike]:
         """
         Sample from distribution until n valid samples within the bounds are obtained.
 
-        Parameters
-        ----------
-        dist: DistributionLike
-            A multivariate normal distribution to sample from.
-        bounds: dict[str, tuple[float, float]]
-            A dictionary of parameter bounds for each parameter.
-        n: int
-            The number of valid samples to obtain.
-
-        Returns
-        -------
-        list[TensorLike]
-            A list of valid samples that are within the specified bounds.
+        Handles fixed parameters by inserting their values at the correct indices.
         """
         valid_samples = []
         while len(valid_samples) < n:
             n_remaining = n - len(valid_samples)
             samples = dist.sample((n_remaining,))
-            valid = [s for s in samples if self._is_sample_within_bounds(s, bounds)]
-            valid_samples.extend(valid)
+            # Insert fixed values if needed
+            if (
+                fixed_indices is not None
+                and fixed_values is not None
+                and total_dim is not None
+            ):
+                # samples: [n_remaining, n_nonfixed]
+                for s in samples:
+                    full = []
+                    s_idx = 0
+                    for i in range(total_dim):
+                        if i in fixed_indices:
+                            full.append(fixed_values[fixed_indices.index(i)])
+                        else:
+                            full.append(s[s_idx].item())
+                            s_idx += 1
+                    full_tensor = torch.tensor(full, dtype=s.dtype, device=s.device)
+                    if self._is_sample_within_bounds(full_tensor, bounds):
+                        valid_samples.append(full_tensor)
+            else:
+                valid = [s for s in samples if self._is_sample_within_bounds(s, bounds)]
+                valid_samples.extend(valid)
         return valid_samples
 
     def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
         """
         Generate `n` additional parameter samples using cloud sampling.
 
-        From the availble NROY points, draw from Gaussians centered on those points.
-            - if n < number of NROY points, randomly select a subset to use
-            - otherwise, use each NROY point at least once
-        Discard any points outside the NROY bounds and redraw until `n` valid samples
-        are obtained.
-
-        Parameters
-        ----------
-        n: int
-            The number of additional parameter samples to generate.
-        scaling_factor: float
-            The standard deviation of the Gaussian to sample from is set to:
-            `parameter range * scaling_factor`.
-
-        Returns
-        -------
-        torch.Tensor
-            A tensor of shape [n, n_dim] containing the generated samples.
+        Handles fixed parameters (min == max) by not sampling those and inserting
+        their constant values.
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
-        # Ensure that we don't accept samples outside the NROY bounds
         bounds = self.generate_param_bounds(self.nroy_samples, buffer_ratio=0.0)
         assert bounds is not None
 
-        # Each NROY sample is a mean of a Gaussian that can generate candidates from
-        num_means = self.nroy_samples.shape[0]
+        # Identify fixed parameters
+        param_names = list(bounds.keys())
+        min_vals = torch.tensor(
+            [bounds[k][0] for k in param_names],
+            device=self.nroy_samples.device,
+        )
+        max_vals = torch.tensor(
+            [bounds[k][1] for k in param_names],
+            device=self.nroy_samples.device,
+        )
+        is_fixed = min_vals == max_vals
+        fixed_indices = [i for i, fixed in enumerate(is_fixed) if fixed]
+        fixed_values = [min_vals[i].item() for i in fixed_indices]
+        nonfixed_indices = [i for i, fixed in enumerate(is_fixed) if not fixed]
 
-        # Set stdev as scaled parameter range, create diagonal covariance matrix
+        # If all parameters are fixed, just return the constant sample n times
+        if len(nonfixed_indices) == 0:
+            return min_vals.unsqueeze(0).repeat(n, 1)
+
+        # Only use non-fixed parameters for means and covariance
+        nroy_nonfixed = self.nroy_samples[:, nonfixed_indices]
+        num_means = nroy_nonfixed.shape[0]
         stdev = (
-            self.nroy_samples.max(dim=0).values - self.nroy_samples.min(dim=0).values
+            nroy_nonfixed.max(dim=0).values - nroy_nonfixed.min(dim=0).values
         ) * scaling_factor
+        # Avoid zero stdev (if all nonfixed values are the same)
+        stdev = torch.where(stdev == 0, torch.full_like(stdev, 1e-8), stdev)
         covariance_matrix = torch.diag(stdev**2)
 
+        # Shuffle the order of nroy_nonfixed
+        perm = torch.randperm(num_means, device=nroy_nonfixed.device)
+        nroy_nonfixed_shuffled = nroy_nonfixed[perm]
+
         all_valid_samples = []
+        total_dim = len(param_names)
 
-        if num_means > n:
-            # Randomly select `n` NROY means and sample each once
-            selected_means = self.sample_tensor(n, self.nroy_samples)
-            for mean in selected_means:
-                mvn = MultivariateNormal(mean, covariance_matrix)
-                all_valid_samples.extend(self._sample_within_bounds(mvn, bounds, 1))
-
-        else:
-            # Determine the min number of samples to draw from each NROY centered
-            # Gaussian, account for remainder to return exactly `n` samples overall
-            min_samples_per_mean = n // num_means
-            remainder_to_sample = n % num_means
-
-            for i, mean in enumerate(self.nroy_samples):
-                # Number of samples to draw from this Gaussian, handle remainder here
-                n_samples = min_samples_per_mean + (1 if i < remainder_to_sample else 0)
-                mvn = MultivariateNormal(mean, covariance_matrix)
-                all_valid_samples.extend(
-                    self._sample_within_bounds(mvn, bounds, n_samples)
+        min_samples_per_mean = n // num_means
+        remainder_to_sample = n % num_means
+        for i, mean in enumerate(nroy_nonfixed_shuffled):
+            n_samples = min_samples_per_mean + (1 if i < remainder_to_sample else 0)
+            mvn = MultivariateNormal(mean, covariance_matrix)
+            all_valid_samples.extend(
+                self._sample_within_bounds(
+                    mvn,
+                    bounds,
+                    n_samples,
+                    fixed_indices=fixed_indices,
+                    fixed_values=fixed_values,
+                    total_dim=total_dim,
                 )
+            )
 
         return torch.stack(all_valid_samples, dim=0)
 
@@ -558,6 +572,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             **self.result.params,
         )
         # Fit the fresh model on the new data
+        logger.info("Refitting emulator.")
         self.emulator.fit(self.train_x, self.train_y)
 
     def run(
@@ -702,7 +717,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         wave_results = []
         for i in range(n_waves):
-            logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
+            logger.info("Running history matching wave %d/%d", i + 1, n_waves)
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
