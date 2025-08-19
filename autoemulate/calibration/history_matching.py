@@ -368,67 +368,59 @@ class HistoryMatchingWorkflow(HistoryMatching):
         )
         return bool(torch.all((sample >= lowers) & (sample <= uppers)).item())
 
-    def _sample_within_bounds(  # noqa: PLR0913
+    def _sample_within_bounds(
         self,
         dist: DistributionLike,
         bounds: dict[str, tuple[float, float]],
         n: int,
-        fixed_indices: list[int] | None = None,
-        fixed_values: list[float] | None = None,
-        total_dim: int | None = None,
+        constant_params: dict[int, float] | None = None,
+        sample_params_idx: list[int] | None = None,
     ) -> list[TensorLike]:
         """
         Sample from distribution until n valid samples within the bounds are obtained.
 
-        Handles fixed parameters by inserting their values at the correct indices.
+        Handles constant parameters by inserting their values at the correct indices.
 
         Parameters
         ----------
         dist: DistributionLike
             A distribution to sample from, e.g., MultivariateNormal.
         bounds: dict[str, tuple[float, float]]
-            A dictionary of [min, max] parameter bounds for each parameter.
+            A dictionary of [min, max] parameter bounds for each sampled parameter.
         n: int
             The number of samples to generate.
-        fixed_indices: list[int] | None
-            Optional list of indices of fixed parameters (those with min == max).
-        fixed_values: list[float] | None
-            Optional list of fixed parameter values corresponding to `fixed_indices`.
-        total_dim: int | None
-            Optional total dimension of the parameter space, used to reconstruct full
-            samples when fixed parameters are present.
+        constant_params: dict[int, float] | None
+            A dictionary of constant parameter indices and their values.
+        sample_params_idx: list[int] | None
+            Indices of parameters that are not constant. If None, all parameters are
+            considered non-constant.
 
         Returns
         -------
         list[TensorLike]
             A list of valid samples that are within the bounds.
         """
+        param_dim = len(bounds) + (len(constant_params) if constant_params else 0)
+
         valid_samples = []
         while len(valid_samples) < n:
             n_remaining = n - len(valid_samples)
             samples = dist.sample((n_remaining,))
-            # Insert fixed values if needed
-            if (
-                fixed_indices is not None
-                and fixed_values is not None
-                and total_dim is not None
-            ):
-                # samples: [n_remaining, n_nonfixed]
-                for s in samples:
-                    full = []
-                    s_idx = 0
-                    for i in range(total_dim):
-                        if i in fixed_indices:
-                            full.append(fixed_values[fixed_indices.index(i)])
-                        else:
-                            full.append(s[s_idx].item())
-                            s_idx += 1
-                    full_tensor = torch.tensor(full, dtype=s.dtype, device=s.device)
-                    if self._is_sample_within_bounds(full_tensor, bounds):
-                        valid_samples.append(full_tensor)
-            else:
-                valid = [s for s in samples if self._is_sample_within_bounds(s, bounds)]
-                valid_samples.extend(valid)
+            full = torch.empty(
+                (n_remaining, param_dim), dtype=samples.dtype, device=samples.device
+            )
+            if constant_params:
+                const_idx = list(constant_params.keys())
+                const_vals = torch.tensor(
+                    list(constant_params.values()),
+                    dtype=samples.dtype,
+                    device=samples.device,
+                )
+                full[:, const_idx] = const_vals
+            full[:, sample_params_idx] = samples
+            valid_samples.extend(
+                [s for s in samples if self._is_sample_within_bounds(s, bounds)]
+            )
         return valid_samples
 
     def cloud_sample(self, n: int, scaling_factor: float = 0.1) -> TensorLike:
@@ -456,55 +448,42 @@ class HistoryMatchingWorkflow(HistoryMatching):
         bounds = self.generate_param_bounds(self.nroy_samples, buffer_ratio=0.0)
         assert bounds is not None
 
-        # Identify fixed parameters
-        param_names = list(bounds.keys())
-        min_vals = torch.tensor(
-            [bounds[k][0] for k in param_names],
-            device=self.nroy_samples.device,
-        )
-        max_vals = torch.tensor(
-            [bounds[k][1] for k in param_names],
-            device=self.nroy_samples.device,
-        )
-        is_fixed = min_vals == max_vals
-        fixed_indices = [i for i, fixed in enumerate(is_fixed) if fixed]
-        fixed_values = [min_vals[i].item() for i in fixed_indices]
-        nonfixed_indices = [i for i, fixed in enumerate(is_fixed) if not fixed]
+        # Identify constant parameters
+        min_vals = torch.tensor([b[0] for b in bounds.values()], device=self.device)
+        max_vals = torch.tensor([b[1] for b in bounds.values()], device=self.device)
+        is_constant = min_vals == max_vals
+        constant_params = {
+            i: min_vals[i].item() for i, fixed in enumerate(is_constant) if fixed
+        }
+        sample_params_idx = [i for i, fixed in enumerate(is_constant) if not fixed]
 
-        # If all parameters are fixed, just return the constant sample n times
-        if len(nonfixed_indices) == 0:
+        # If all parameters are constant just return the constant sample n times
+        if len(sample_params_idx) == 0:
             return min_vals.unsqueeze(0).repeat(n, 1)
 
-        # Only use non-fixed parameters for means and covariance
-        nroy_nonfixed = self.nroy_samples[:, nonfixed_indices]
-        num_means = nroy_nonfixed.shape[0]
+        # Only use non-constant parameters for mean and covariance to sample from
+        nroy_params_to_sample = self.nroy_samples[:, sample_params_idx]
         stdev = (
-            nroy_nonfixed.max(dim=0).values - nroy_nonfixed.min(dim=0).values
+            nroy_params_to_sample.max(dim=0).values
+            - nroy_params_to_sample.min(dim=0).values
         ) * scaling_factor
-        # Avoid zero stdev (if all nonfixed values are the same)
-        stdev = torch.where(stdev == 0, torch.full_like(stdev, 1e-8), stdev)
         covariance_matrix = torch.diag(stdev**2)
 
-        # Shuffle the order of nroy_nonfixed
-        perm = torch.randperm(num_means, device=nroy_nonfixed.device)
-        nroy_nonfixed_shuffled = nroy_nonfixed[perm]
+        # Shuffle the order of means to sample from
+        num_means = nroy_params_to_sample.shape[0]
+        perm = torch.randperm(num_means, device=nroy_params_to_sample.device)
 
-        all_valid_samples = []
-        total_dim = len(param_names)
-
+        # Determine how many samples to draw for each mean, handle remainder
         min_samples_per_mean = n // num_means
         remainder_to_sample = n % num_means
-        for i, mean in enumerate(nroy_nonfixed_shuffled):
+
+        all_valid_samples = []
+        for i, mean in enumerate(nroy_params_to_sample[perm]):
             n_samples = min_samples_per_mean + (1 if i < remainder_to_sample else 0)
             mvn = MultivariateNormal(mean, covariance_matrix)
             all_valid_samples.extend(
                 self._sample_within_bounds(
-                    mvn,
-                    bounds,
-                    n_samples,
-                    fixed_indices=fixed_indices,
-                    fixed_values=fixed_values,
-                    total_dim=total_dim,
+                    mvn, bounds, n_samples, constant_params, sample_params_idx
                 )
             )
 
@@ -525,7 +504,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n: int
             The number of parameter samples to generate.
         scaling_factor: float
-            The standard deviation of the Gaussian to sample from in cloud sampling is
+            The standard deviation of the Gaussian used in cloud sampling is
             set to: `parameter range * scaling_factor`.
 
         Returns
