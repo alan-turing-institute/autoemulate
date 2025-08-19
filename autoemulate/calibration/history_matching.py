@@ -337,7 +337,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # This means `self.nroy_samples` gets overwritten each time `run()` is called
         self.nroy_samples = None
 
-    def _is_sample_within_bounds(
+    def _is_within_bounds(
         self, sample: TensorLike, bounds_dict: dict[str, tuple[float, float]]
     ) -> bool:
         """
@@ -419,7 +419,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 full[:, const_idx] = const_vals
             full[:, sample_params_idx] = samples
             valid_samples.extend(
-                [s for s in samples if self._is_sample_within_bounds(s, bounds)]
+                [s for s in samples if self._is_within_bounds(s, bounds)]
             )
         return valid_samples
 
