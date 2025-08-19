@@ -584,7 +584,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             **self.result.params,
         )
         # Fit the fresh model on the new data
-        logger.info("Refitting emulator.")
+        logger.info(" Refitting emulator.")
         self.emulator.fit(self.train_x, self.train_y)
 
     def run(
@@ -729,7 +729,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         wave_results = []
         for i in range(n_waves):
-            logger.info("Running history matching wave %d/%d", i + 1, n_waves)
+            logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
