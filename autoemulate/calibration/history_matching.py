@@ -341,7 +341,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self, sample: TensorLike, bounds_dict: dict[str, tuple[float, float]]
     ) -> bool:
         """
-        Check if sample is within the bounds defined in `bounds_dict`.
+        Check if `sample` is within the bounds defined in `bounds_dict`.
 
         Parameters
         ----------
@@ -377,7 +377,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         sample_params_idx: list[int] | None = None,
     ) -> list[TensorLike]:
         """
-        Sample from distribution until n valid samples within the bounds are obtained.
+        Sample from distribution until `n` valid samples within the bounds are obtained.
 
         Handles constant parameters by inserting their values at the correct indices.
 
@@ -391,9 +391,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The number of samples to generate.
         constant_params: dict[int, float] | None
             A dictionary of constant parameter indices and their values.
-        sample_params_idx: list[int] | None
-            Indices of parameters that are not constant. If None, all parameters are
-            considered non-constant.
+        sample_params_idx: list[int]
+            Indices of parameters that are not constant.
 
         Returns
         -------
@@ -401,6 +400,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A list of valid samples that are within the bounds.
         """
         param_dim = len(bounds) + (len(constant_params) if constant_params else 0)
+        if sample_params_idx is None:
+            sample_params_idx = list(range(len(bounds)))
 
         valid_samples = []
         while len(valid_samples) < n:
