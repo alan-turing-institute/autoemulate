@@ -336,6 +336,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # We only ever use the most recent NROY samples
         # This means `self.nroy_samples` gets overwritten each time `run()` is called
         self.nroy_samples = None
+        self.wave_results = []
 
     def _is_within_bounds(
         self, sample: TensorLike, bounds_dict: dict[str, tuple[float, float]]
@@ -727,7 +728,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         tuple[TensorLike, TensorLike]
             A tensor of tested input parameters and their implausibility scores.
         """
-        wave_results = []
+        self.wave_results = []
         for i in range(n_waves):
             logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
             test_x, impl_scores = self.run(
@@ -748,7 +749,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 logger.warning(msg)
                 break
 
-            wave_results.append((test_x, impl_scores))
+            self.wave_results.append((test_x, impl_scores))
 
             # Get NROY points from impl scores and check fraction
             nroy_x = self.get_nroy(impl_scores, test_x)
@@ -770,4 +771,4 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 )
                 break
 
-        return wave_results
+        return self.wave_results
