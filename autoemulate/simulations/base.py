@@ -2,12 +2,12 @@ import logging
 from abc import ABC, abstractmethod
 
 import torch
+from scipy.stats import qmc
 from tqdm import tqdm
 
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
-from autoemulate.simulations.experimental_design import LatinHypercube, Sobol
 
 logger = logging.getLogger("autoemulate")
 
@@ -135,7 +135,11 @@ class Simulator(ABC, ValidationMixin):
         self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
     ) -> TensorLike:
         """
-        Generate random samples using Latin Hypercube Sampling.
+        Generate random samples using Quasi-Monte Carlo methods.
+
+        Available methods are Sobol or Latin Hypercube Sampling. For overview, see
+        the scipy documentation:
+        https://docs.scipy.org/doc/scipy/reference/stats.qmc.html
 
         Parameters
         ----------
@@ -146,7 +150,6 @@ class Simulator(ABC, ValidationMixin):
         method: str
             Sampling method to use. One of ["lhs", "sobol"].
 
-
         Returns
         -------
         TensorLike
@@ -156,9 +159,9 @@ class Simulator(ABC, ValidationMixin):
             set_random_seed(random_seed)  # type: ignore PGH003
 
         if method == "lhs":
-            sampler = LatinHypercube(self.param_bounds)
+            sampler = qmc.LatinHypercube(d=self.in_dim)
         elif method == "sobol":
-            sampler = Sobol(self.param_bounds)
+            sampler = qmc.Sobol(d=self.in_dim)
         else:
             msg = (
                 f"Invalid sampling method: {method}. "
@@ -166,7 +169,14 @@ class Simulator(ABC, ValidationMixin):
             )
             raise ValueError(msg)
 
-        return sampler.sample(n_samples)
+        # samples are drawn from [0, 1]^d
+        samples = sampler.random(n=n_samples)
+        scaled_samples = qmc.scale(
+            samples,
+            [b[0] for b in self.param_bounds],
+            [b[1] for b in self.param_bounds],
+        )
+        return torch.tensor(scaled_samples)
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike | None:

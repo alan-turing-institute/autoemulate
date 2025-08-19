@@ -104,7 +104,12 @@ class LatinHypercube(ExperimentalDesign):
 
 
 class Sobol(ExperimentalDesign):
-    """Sobol experimental design class."""
+    """
+    Sobol experimental design class.
+
+    For more information, see the scipy documentation:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.qmc.Sobol.html#scipy.stats.qmc.Sobol
+    """
 
     def __init__(self, bounds_list: list[tuple[float, float]]):
         self.bounds_list = bounds_list
@@ -124,6 +129,7 @@ class Sobol(ExperimentalDesign):
         TensorLike
             A tensor of shape (n, dim) containing the sampled points.
         """
+        # samples are drawn from [0, 1]^d
         samples = self.sampler.random(n=n)
         scaled_samples = qmc.scale(
             samples,
