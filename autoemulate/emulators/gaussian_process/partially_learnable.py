@@ -1,5 +1,6 @@
 import torch
 import gpytorch
+from typing import Callable
 from gpytorch.means import LinearMean
 from autoemulate.core.types import TensorLike
 
@@ -28,7 +29,7 @@ class PartiallyLearnableMean(gpytorch.means.Mean):
     
     def __init__(
         self,
-        mean_func: callable,
+        mean_func: Callable,
         known_dim: int = 0,
         input_size: int = 1,
         batch_shape: torch.Size | None = None,
