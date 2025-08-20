@@ -1,3 +1,5 @@
+import sys
+
 import gpytorch
 import torch
 from gpytorch import ExactMarginalLogLikelihood
@@ -454,3 +456,115 @@ class GaussianProcessCorrelated(GaussianProcess):
         assert isinstance(mean_x, TensorLike)
         covar_x = self.covar_module(x)
         return GaussianProcessLike(mean_x, covar_x)
+
+
+# GP registry to raise exception if duplicate created
+GP_REGISTRY = {
+    "GaussianProcess": GaussianProcess,
+    "GaussianProcessCorrelated": GaussianProcessCorrelated,
+}
+
+
+def create_gp_subclass(
+    name: str, gp_base_class: type[GaussianProcess], **fixed_kwargs
+) -> type[GaussianProcess]:
+    """
+    Create a subclass of GaussianProcess with given fixed_kwargs.
+
+    This function creates a subclass of GaussianProcess where certain parameters
+    are fixed to specific values, reducing the parameter space for tuning.
+
+    Parameters
+    ----------
+    name : str
+        Name for the created subclass.
+    gp_base_class : type[GaussianProcess]
+        Base class to inherit from (typically GaussianProcess).
+    **fixed_kwargs
+        Keyword arguments to fix in the subclass. These parameters will be
+        set to the provided values and excluded from hyperparameter tuning.
+
+    Returns
+    -------
+    type[GaussianProcess]
+        A new subclass of GaussianProcess with the specified parameters fixed.
+        The returned class can be pickled and used like any other GP emulator.
+
+    Notes
+    -----
+    Fixed parameters are automatically excluded from `get_tune_params()` to
+    prevent them from being included in hyperparameter optimization.
+    """
+    if name in GP_REGISTRY:
+        raise ValueError(
+            f"A GP class named '{name}' already exists. "
+            f"Use a unique name or delete the existing class from GP_REGISTRY."
+        )
+
+    class GaussianProcessSubclass(gp_base_class):
+        def __init__(
+            self,
+            *args,
+            **kwargs,
+        ):
+            # Merge user kwargs with fixed kwargs, giving priority to fixed_kwargs
+            merged_kwargs = {**kwargs, **fixed_kwargs}
+            super().__init__(*args, **merged_kwargs)
+
+        @staticmethod
+        def get_tune_params():
+            """Get tunable parameters, excluding those that are fixed."""
+            tune_params = gp_base_class.get_tune_params()
+            # Remove fixed parameters from tuning
+            for key in fixed_kwargs:
+                tune_params.pop(key, None)
+            return tune_params
+
+    # Create a more descriptive docstring that includes fixed parameters
+    fixed_params_str = ", ".join(
+        f"{k}={v.__name__ if callable(v) else v}" for k, v in fixed_kwargs.items()
+    )
+
+    GaussianProcessSubclass.__doc__ = f"""
+    {gp_base_class.__doc__}
+
+    Notes
+    -----
+    {name} is a subclass of {gp_base_class.__name__} and has the following parameters
+    fixed: {fixed_params_str}
+
+    These parameters cannot be changed during initialization and are excluded
+    from hyperparameter tuning.
+    """
+
+    # Set the provided name for the class
+    GaussianProcessSubclass.__name__ = name
+    GaussianProcessSubclass.__qualname__ = name
+    GaussianProcessSubclass.__module__ = __name__
+
+    # Register class in the module's globals so can be pickled
+    setattr(sys.modules[__name__], name, GaussianProcessSubclass)
+    # Register subclass
+    GP_REGISTRY[name] = GaussianProcessSubclass
+
+    return GaussianProcessSubclass
+
+
+GaussianProcessRBF = create_gp_subclass(
+    "GaussianProcessRBF",
+    GaussianProcess,
+    covar_module_fn=rbf,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessMatern32 = create_gp_subclass(
+    "GaussianProcessMatern32",
+    GaussianProcess,
+    covar_module_fn=matern_3_2_kernel,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessMatern52 = create_gp_subclass(
+    "GaussianProcessMatern52",
+    GaussianProcess,
+    covar_module_fn=matern_5_2_kernel,
+    mean_module_fn=constant_mean,
+)

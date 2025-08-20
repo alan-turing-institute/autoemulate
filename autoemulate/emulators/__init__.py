@@ -1,6 +1,12 @@
 from .base import Emulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
-from .gaussian_process.exact import GaussianProcess, GaussianProcessCorrelated
+from .gaussian_process.exact import (
+    GaussianProcess,
+    GaussianProcessCorrelated,
+    GaussianProcessMatern32,
+    GaussianProcessMatern52,
+    GaussianProcessRBF,
+)
 from .lightgbm import LightGBM
 from .nn.mlp import MLP
 from .radial_basis_functions import RadialBasisFunctions
@@ -13,6 +19,9 @@ from .transformed.base import TransformedEmulator
 ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcess,
     GaussianProcessCorrelated,
+    GaussianProcessMatern32,
+    GaussianProcessMatern52,
+    GaussianProcessRBF,
     LightGBM,
     # CNPModule,
     SupportVectorMachine,
@@ -71,6 +80,9 @@ __all__ = [
     "EnsembleMLPDropout",
     "GaussianProcess",
     "GaussianProcessCorrelated",
+    "GaussianProcessMatern32",
+    "GaussianProcessMatern52",
+    "GaussianProcessRBF",
     "LightGBM",
     "RadialBasisFunctions",
     "RandomForest",
