@@ -522,6 +522,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Rule out implausible parameters from samples using an emulator
         mean, variance = self.emulator.predict_mean_and_variance(test_x)
+        assert variance is not None
         impl_scores = self.calculate_implausibility(mean, variance)
 
         return test_x, impl_scores
