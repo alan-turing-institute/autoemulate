@@ -137,7 +137,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         Parameters
         ----------
         x: TensorLike
-            Input tensor of shape `(n_samples, n_features)` for which to predict
+            Input tensor of shape `(n_batch, n_features)` for which to predict
             the mean.
         with_grad: bool
             Whether to compute gradients with respect to the input. Defaults to False.
@@ -148,7 +148,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         Returns
         -------
         TensorLike
-            Mean tensor of shape `(n_samples, n_targets)`.
+            Mean tensor of shape `(n_batch, n_targets)`.
         """
         y_pred = self._predict(x, with_grad)
         if isinstance(y_pred, TensorLike):
@@ -163,6 +163,45 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                 else y_pred.sample(torch.Size([n_samples]))
             )
             return samples.mean(dim=0)
+
+    def predict_mean_and_variance(
+        self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
+    ) -> tuple[TensorLike, TensorLike | None]:
+        """
+        Predict the mean and variance of the target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean and variance.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike | None]
+            A tuple containing:
+            - Mean tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
+              otherwise None.
+        """
+        if not self.supports_uq:
+            return (self.predict_mean(x, with_grad, n_samples), None)
+        y_pred = self._predict(x, with_grad)
+        assert isinstance(y_pred, DistributionLike)
+        try:
+            return (y_pred.mean, y_pred.variance)
+        except Exception:
+            samples = (
+                y_pred.rsample(torch.Size([n_samples]))
+                if with_grad
+                else y_pred.sample(torch.Size([n_samples]))
+            )
+            return samples.mean(dim=0), samples.var(dim=0)
 
     @staticmethod
     @abstractmethod
@@ -331,6 +370,34 @@ class DeterministicEmulator(Emulator):
         assert isinstance(pred, TensorLike)
         return pred
 
+    def predict_mean_and_variance(
+        self, x, with_grad=False, n_samples=100
+    ) -> tuple[TensorLike, None]:
+        """
+        Predict the mean and variance of the target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean and variance.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
+
+        Returns
+        -------
+        tuple[TensorLike, None]
+            A tuple containing:
+            - Mean tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor as `None` since the model does not support UQ.
+        """
+        mean, variance = super().predict_mean_and_variance(x, with_grad, n_samples)
+        assert variance is None
+        return mean, variance
+
 
 class ProbabilisticEmulator(Emulator):
     """A base class for probabilistic emulators."""
@@ -359,25 +426,32 @@ class ProbabilisticEmulator(Emulator):
         return pred
 
     def predict_mean_and_variance(
-        self, x: TensorLike, with_grad: bool = False
+        self, x, with_grad=False, n_samples=100
     ) -> tuple[TensorLike, TensorLike]:
         """
-        Predict mean and variance from the probabilistic output.
+        Predict the mean and variance of the target variable for input `x`.
 
         Parameters
         ----------
         x: TensorLike
-            Input tensor to make predictions for.
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean and variance.
         with_grad: bool
-            Whether to enable gradient calculation. Defaults to False.
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
 
         Returns
         -------
-        tuple[TensorLike, TensorLike]
-            The emulator predicted mean and variance for `x`.
+        tuple[TensorLike, None]
+            A tuple containing:
+            - Mean tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor of shape `(n_batch, n_targets)`.
         """
-        pred = self.predict(x, with_grad)
-        return pred.mean, pred.variance
+        mean, variance = super().predict_mean_and_variance(x, with_grad, n_samples)
+        assert variance is TensorLike
+        return mean, variance
 
 
 class GaussianEmulator(ProbabilisticEmulator):

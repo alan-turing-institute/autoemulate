@@ -18,7 +18,6 @@ from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
 from autoemulate.core.types import (
     DeviceLike,
-    DistributionLike,
     InputLike,
     ModelParams,
     TransformedEmulatorParams,
@@ -582,6 +581,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
+        input_ranges: dict | None = None,
+        output_ranges: dict | None = None,
         figsize=None,
         ncols: int = 3,
         fname: str | None = None,
@@ -598,6 +599,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The index of the input feature to plot against the output.
         output_index: int
             The index of the output feature to plot against the input.
+        input_ranges: dict | None
+            The ranges of the input features to consider for the plot. Ranges are
+            combined such that the final subset is the intersection data within
+            the specified ranges. Defaults to None.
+        output_ranges: dict | None
+            The ranges of the output features to consider for the plot. Ranges are
+            combined such that the final subset is the intersection data within
+            the specified ranges. Defaults to None.
         figsize: tuple[int, int] | None
             The size of the figure to create. If None, it is set based on the number
             of input and output features.
@@ -620,12 +629,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         test_x, test_y = self._convert_to_tensors(self.test)
 
         # Re-run prediction with just this model to get the predictions
-        y_pred = model.predict(test_x)
-        y_variance = None
-        if isinstance(y_pred, DistributionLike):
-            y_variance = y_pred.variance
-            y_pred = y_pred.mean
+        y_pred, y_variance = model.predict_mean_and_variance(test_x)
         r2_score = evaluate(y_pred, test_y, r2_metric())
+
+        # Handle ranges
+        input_ranges = input_ranges or {}
+        output_ranges = output_ranges or {}
 
         # Convert to numpy arrays for plotting and ensure correct shapes
         test_x, test_y = self._convert_to_numpy(test_x, test_y)
@@ -681,10 +690,50 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         for out_idx in output_index:
             for in_idx in input_index:
                 if plot_index < len(axs):
+
+                    def subset_data_by_ranges(x, y, y_p, ranges, data, data_name):  # noqa: PLR0913
+                        """Subsets data to joint specified ranges on a given array."""
+                        for idx, (lower, upper) in ranges.items():
+                            if idx < 0 or idx >= data.shape[1]:
+                                msg = (
+                                    f"Specified {data_name} range index ({idx}) is out "
+                                    f"of bounds for {data_name} data of shape "
+                                    f"({data.shape})."
+                                )
+                                raise ValueError(msg)
+                            if lower > upper:
+                                msg = (
+                                    f"Specified {data_name} range ({lower}, {upper}) "
+                                    "is invalid. Lower bound must be less than upper "
+                                    "bound."
+                                )
+                                raise ValueError(msg)
+                            idxs = (data[:, idx] >= lower) & (data[:, idx] < upper)
+                            x, y, y_p, data = x[idxs], y[idxs], y_p[idxs], data[idxs]
+                        return x, y, y_p
+
+                    def subset_inputs(x, y, y_p):
+                        """Subsets input data to intersection of specified ranges."""
+                        return subset_data_by_ranges(
+                            x, y, y_p, input_ranges, x, "input"
+                        )
+
+                    def subset_outputs(x, y, y_p):
+                        """Subsets output data to intersection of specified ranges."""
+                        return subset_data_by_ranges(
+                            x, y, y_p, output_ranges, y, "output"
+                        )
+
+                    # Subset the data to be plotted
+                    x, y, y_pred_subset = subset_outputs(
+                        *subset_inputs(test_x, test_y, y_pred)
+                    )
+
+                    # Generate subplot
                     plot_xy(
-                        test_x[:, in_idx],
-                        test_y[:, out_idx],
-                        y_pred[:, out_idx],
+                        x[:, in_idx],
+                        y[:, out_idx],
+                        y_pred_subset[:, out_idx],
                         y_variance[:, out_idx] if y_variance is not None else None,
                         ax=axs[plot_index],
                         title=f"$x_{in_idx}$ vs. $y_{out_idx}$",
