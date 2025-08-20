@@ -1,6 +1,5 @@
 import torch
 import gpytorch
-from typing import Callable
 from gpytorch.means import LinearMean
 from autoemulate.core.types import TensorLike
 

@@ -1,6 +1,6 @@
 import torch
 from gpytorch.means import ConstantMean, LinearMean, ZeroMean
-
+from typing import Callable
 from .poly_mean import PolyMean
 from .partially_learnable import PartiallyLearnableMean
 
@@ -97,7 +97,7 @@ def poly_mean(n_features: int, n_outputs: torch.Size | None) -> PolyMean:
 def partially_learnable_mean(
     n_features: int, 
     n_outputs: torch.Size | None, 
-    mean_func: callable = torch.sin,
+    mean_func: Callable = torch.sin,
     known_dim: int = 0
 ) -> PartiallyLearnableMean:
     """
