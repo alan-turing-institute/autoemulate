@@ -400,7 +400,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         list[TensorLike]
             A list of valid samples that are within the bounds.
         """
-        param_dim = len(bounds) + (len(constant_params) if constant_params else 0)
+        param_dim = len(bounds)
         if sample_params_idx is None:
             sample_params_idx = list(range(len(bounds)))
 
@@ -409,7 +409,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
             n_remaining = n - len(valid_samples)
             samples = dist.sample((n_remaining,))
             full = torch.empty(
-                (n_remaining, param_dim), dtype=samples.dtype, device=samples.device
+                (n_remaining, param_dim),
+                dtype=samples.dtype,
+                device=samples.device,
             )
             if constant_params:
                 const_idx = list(constant_params.keys())
