@@ -570,8 +570,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         y = y.to(self.device)
         x = x.to(self.device)
 
-        self.train_y = torch.cat([self.train_y, y], dim=0)
-        self.train_x = torch.cat([self.train_x, x], dim=0)
+        # self.train_y = torch.cat([self.train_y, y], dim=0)
+        # self.train_x = torch.cat([self.train_x, x], dim=0)
+
+        self.train_x = x
+        self.train_y = y
 
         return x, y
 
@@ -588,7 +591,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             **self.result.params,
         )
         # Fit the fresh model on the new data
-        logger.info(" Refitting emulator.")
+        logger.info("Refitting emulator")
         self.emulator.fit(self.train_x, self.train_y)
 
     def run(
@@ -628,12 +631,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters and their implausibility scores from
             which simulation samples were then selected.
         """
-        logger.debug(
-            " Running history matching workflow with"
-            " %d simulations and %d test samples.",
-            n_simulations,
-            n_test_samples,
+        msg = (
+            f"Running history matching wave with {n_simulations} simulations and "
+            f"{n_test_samples} test samples",
         )
+        logger.debug(msg)
 
         test_parameters_list, impl_scores_list, nroy_parameters_list = (
             [],
@@ -729,7 +731,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         self.wave_results = []
         for i in range(n_waves):
-            logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
+            logger.info("Running history matching wave %d/%d", i + 1, n_waves)
             refit_emulator = i != n_waves - 1 or refit_emulator_on_last
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
@@ -756,14 +758,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
             nroy_x = self.get_nroy(impl_scores, test_x)
             nroy_frac = nroy_x.shape[0] / test_x.shape[0]
             logger.info(
-                " Wave %d/%d: NROY fraction is %.2f%%",
+                "Wave %d/%d: NROY fraction is %.2f%%",
                 i + 1,
                 n_waves,
                 nroy_frac * 100,
             )
             if nroy_frac > frac_nroy_stop:
                 logger.info(
-                    " Stopping history matching workflow at wave %d/%d "
+                    "Stopping history matching workflow at wave %d/%d "
                     "with NROY fraction %.2f%% < %.2f%%",
                     i + 1,
                     n_waves,
