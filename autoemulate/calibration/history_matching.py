@@ -597,6 +597,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_test_samples: int = 10000,
         max_retries: int = 3,
         scaling_factor: float = 0.1,
+        refit_emulator: bool = True,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -618,6 +619,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         scaling_factor: float
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
+        refit_emulator: bool
+            Whether to refit the emulator after this run. Defaults to True.
 
         Returns
         -------
@@ -672,6 +675,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Make predictions using simulator (this updates self.x_train and self.y_train)
         _, _ = self.simulate(nroy_simulation_samples)
 
+        # Refit the emulator using all available data, including the new simulations
+        if refit_emulator:
+            self.refit_emulator()
+
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
 
@@ -683,6 +690,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_test_samples: int = 10000,
         max_retries: int = 3,
         scaling_factor: float = 0.1,
+        refit_emulator_on_last: bool = False,
     ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
@@ -711,6 +719,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         scaling_factor: float
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
+        refit_emulator_on_last: bool
+            Whether to refit the emulator after the last wave. Defaults to False.
 
         Returns
         -------
@@ -720,16 +730,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.wave_results = []
         for i in range(n_waves):
             logger.info(" Running history matching wave %d/%d", i + 1, n_waves)
+            refit_emulator = i != n_waves - 1 or refit_emulator_on_last
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
                 max_retries=max_retries,
                 scaling_factor=scaling_factor,
+                refit_emulator=refit_emulator,
             )
-
-            # Refit emulator using all available data
-            if i != n_waves - 1:
-                self.refit_emulator()
 
             print("Wave ", i, self.simulator.param_bounds)
 
