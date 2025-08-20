@@ -669,22 +669,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Make predictions using simulator (this updates self.x_train and self.y_train)
         _, _ = self.simulate(nroy_simulation_samples)
 
-        # Refit emulator using all available data
-        self.refit_emulator()
-
-        # prediction = self.emulator.predict(self.train_x)
-
-        # print("mean", ((prediction.mean - (self.train_y)) / self.train_y).mean())
-        # print("std", ((prediction.mean - self.train_y) / self.train_y).std())
-
-        # print("ratio", (prediction.variance / self.train_y).mean())
-        # print("ratio", (prediction.variance / self.train_y).std())
-
-        # print(
-        #     "pred variance mean", (prediction.variance / prediction.mean).mean()
-        # )
-        # print("pred variance std", (prediction.variance / prediction.mean).std())
-
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
 
@@ -699,6 +683,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
     ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
+
+        Refits the emulator after each wave (except the last), using all available data.
 
         Parameters
         ----------
@@ -737,6 +723,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 max_retries=max_retries,
                 scaling_factor=scaling_factor,
             )
+
+            # Refit emulator using all available data
+            if i != n_waves - 1:
+                self.refit_emulator()
 
             print("Wave ", i, self.simulator.param_bounds)
 
