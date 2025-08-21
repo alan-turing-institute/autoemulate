@@ -643,7 +643,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         msg = (
             f"Running history matching wave with {n_simulations} simulations and "
-            f"{n_test_samples} test samples",
+            f"{n_test_samples} test samples"
         )
         logger.debug(msg)
 
@@ -679,7 +679,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             msg = (
                 f"Generated {nroy_parameters.shape[0]} NROY samples on try "
                 f"{retries + 1}, have {torch.cat(nroy_parameters_list, 0).shape[0]} "
-                f"total NROY samples so far.",
+                f"total NROY samples so far."
             )
             logger.debug(msg)
 
@@ -772,9 +772,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
             if len(test_x) < n_simulations or len(impl_scores) < n_simulations:
                 msg = (
-                    f"Not enough parameters or impl scores generated in wave {i + 1}",
-                    f"/{n_waves}. Stopping history matching workflow. Results are ",
-                    f"stored until wave {i}/{n_waves}.",
+                    f"Not enough parameters or impl scores generated in wave {i + 1}"
+                    f"/{n_waves}. Stopping history matching workflow. Results are "
+                    f"stored until wave {i}/{n_waves}."
                 )
                 logger.warning(msg)
                 break
