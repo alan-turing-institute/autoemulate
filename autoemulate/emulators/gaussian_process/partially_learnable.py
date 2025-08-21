@@ -10,9 +10,6 @@ from autoemulate.core.types import TensorLike
 class PartiallyLearnableMean(gpytorch.means.Mean):
     """
     A mixed mean module that combines a known function with learnable components.
-    Specifically, it applies a known function to one dimension and uses a learnable
-    linear function for the remaining dimensions. This implements Universal Kriging
-    where part of the mean function is known and part is learned from data.
 
     Parameters
     ----------
