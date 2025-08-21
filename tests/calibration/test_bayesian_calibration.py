@@ -11,10 +11,19 @@ from autoemulate.simulations.projectile import (
 
 
 @pytest.mark.parametrize(
-    ("n_obs", "n_chains", "n_samples"),
-    [(1, 1, 10), (10, 1, 10), (1, 2, 10), (10, 2, 10)],
+    ("n_obs", "n_chains", "n_samples", "model_variance"),
+    [
+        (1, 1, 10, False),
+        (10, 1, 10, False),
+        (1, 2, 10, False),
+        (10, 2, 10, False),
+        (1, 1, 10, True),
+        (10, 1, 10, True),
+        (1, 2, 10, True),
+        (10, 2, 10, True),
+    ],
 )
-def test_hmc_single_output(n_obs, n_chains, n_samples):
+def test_hmc_single_output(n_obs, n_chains, n_samples, model_variance):
     """
     Test HMC with single output.
     """
@@ -27,7 +36,9 @@ def test_hmc_single_output(n_obs, n_chains, n_samples):
 
     # pick the first n_obs sim outputs as observations
     observations = {"distance": y[:n_obs, 0]}
-    bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
+    bc = BayesianCalibration(
+        gp, sim.parameters_range, observations, 1.0, model_variance=model_variance
+    )
     assert bc.observation_noise == {"distance": 1.0}
 
     # check samples are generated
@@ -51,10 +62,19 @@ def test_hmc_single_output(n_obs, n_chains, n_samples):
 
 
 @pytest.mark.parametrize(
-    ("n_obs", "n_chains", "n_samples"),
-    [(1, 1, 10), (10, 1, 10), (1, 2, 10), (10, 2, 10)],
+    ("n_obs", "n_chains", "n_samples", "model_variance"),
+    [
+        (1, 1, 10, False),
+        (10, 1, 10, False),
+        (1, 2, 10, False),
+        (10, 2, 10, False),
+        (1, 1, 10, True),
+        (10, 1, 10, True),
+        (1, 2, 10, True),
+        (10, 2, 10, True),
+    ],
 )
-def test_hmc_multiple_output(n_obs, n_chains, n_samples):
+def test_hmc_multiple_output(n_obs, n_chains, n_samples, model_variance):
     """
     Test HMC with multiple outputs.
     """
@@ -70,7 +90,9 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples):
         "distance": y[:n_obs, 0],
         "impact_velocity": y[:n_obs, 1],
     }
-    bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
+    bc = BayesianCalibration(
+        gp, sim.parameters_range, observations, 1.0, model_variance=model_variance
+    )
     assert bc.observation_noise == {"distance": 1.0, "impact_velocity": 1.0}
 
     # check samples are generated
