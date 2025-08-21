@@ -5,7 +5,7 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import MultitaskKernel, ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
-from torch import optim
+from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.callbacks.early_stopping import (
@@ -67,6 +67,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
+        fixed_mean_params: bool = False,
+        fixed_covar_params: bool = False,
         posterior_predictive: bool = False,
         epochs: int = 50,
         lr: float = 2e-1,
@@ -90,6 +92,12 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Function to create the mean module. Defaults to `constant_mean`.
         covar_module_fn: CovarModuleFn
             Function to create the covariance module. Defaults to `rbf`.
+        fixed_mean_params: bool
+            If True, the mean module parameters will not be updated during training.
+            Defaults to False.
+        fixed_covar_params: bool
+            If True, the covariance module parameters will not be updated during
+            training. Defaults to False.
         posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
@@ -148,6 +156,16 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
         self.to(self.device)
+
+        # Fix mean and kernel if required
+        self._fix_module_params(self.mean_module, fixed_mean_params)
+        self._fix_module_params(self.covar_module, fixed_covar_params)
+
+    @staticmethod
+    def _fix_module_params(module: nn.Module, fixed_params: bool):
+        if fixed_params:
+            for param in module.parameters():
+                param.requires_grad = False
 
     @staticmethod
     def is_multioutput():
@@ -325,6 +343,8 @@ class GaussianProcessCorrelated(GaussianProcess):
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
+        fixed_mean_params: bool = False,
+        fixed_covar_params: bool = False,
         posterior_predictive: bool = False,
         epochs: int = 50,
         lr: float = 2e-1,
@@ -349,6 +369,12 @@ class GaussianProcessCorrelated(GaussianProcess):
             Function to create the mean module. Defaults to `constant_mean`.
         covar_module_fn: CovarModuleFn
             Function to create the covariance module. Defaults to `rbf`.
+        fixed_mean_params: bool
+            If True, the mean module parameters will not be updated during training.
+            Defaults to False.
+        fixed_covar_params: bool
+            If True, the covariance module parameters will not be updated during
+            training. Defaults to False.
         posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
@@ -396,6 +422,10 @@ class GaussianProcessCorrelated(GaussianProcess):
         # Init likelihood
         likelihood = likelihood_cls(num_tasks=num_tasks)
         likelihood = likelihood.to(self.device)
+
+        # Fix mean and kernel if required
+        self._fix_module_params(mean_module, fixed_mean_params)
+        self._fix_module_params(covar_module, fixed_covar_params)
 
         # Init must be called with preprocessed data
         gpytorch.models.ExactGP.__init__(
