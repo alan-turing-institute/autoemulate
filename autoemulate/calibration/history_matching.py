@@ -676,13 +676,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
             test_parameters_list.append(test_parameters)
             impl_scores_list.append(impl_scores)
 
-            if retries > 0:
-                msg = (
-                    f"Generated {nroy_parameters.shape[0]} NROY samples on retry "
-                    f"{retries}, have {torch.cat(nroy_parameters_list, 0).shape[0]} "
-                    f"total NROY samples so far.",
-                )
-                logger.debug(msg)
+            msg = (
+                f"Generated {nroy_parameters.shape[0]} NROY samples on try "
+                f"{retries + 1}, have {torch.cat(nroy_parameters_list, 0).shape[0]} "
+                f"total NROY samples so far.",
+            )
+            logger.debug(msg)
 
             retries += 1
 
