@@ -570,37 +570,58 @@ class HistoryMatchingWorkflow(HistoryMatching):
         y = y.to(self.device)
         x = x.to(self.device)
 
-        # self.train_y = torch.cat([self.train_y, y], dim=0)
-        # self.train_x = torch.cat([self.train_x, x], dim=0)
-
-        self.train_x = x
-        self.train_y = y
+        self.train_y = torch.cat([self.train_y, y], dim=0)
+        self.train_x = torch.cat([self.train_x, x], dim=0)
 
         return x, y
 
-    def refit_emulator(self):
-        """Refit the emulator using all available training data."""
+    def refit_emulator(
+        self, x: TensorLike | None = None, y: TensorLike | None = None
+    ) -> None:
+        """
+        Refit the emulator.
+
+        If `x` and `y` are provided, refit the emulator on this new data.
+        If not, refit the emulator on all available data collected so far.
+
+        Parameters
+        ----------
+        x: TensorLike | None
+            Optional tensor of input data to refit the emulator on.
+        y: TensorLike | None
+            Optional tensor of output data to refit the emulator on.
+        """
+        # Determine which data to use for refitting
+        if x is not None and y is not None:
+            train_data_msg = "most recent simulation data"
+        else:
+            x = self.train_x
+            y = self.train_y
+            train_data_msg = "all available data"
+
         # Create a fresh model with the same configuration
         self.emulator = TransformedEmulator(
-            self.train_x,
-            self.train_y,
+            x.float(),
+            y.float(),
             model=get_emulator_class(self.result.model_name),
             x_transforms=self.result.x_transforms,
             y_transforms=self.result.y_transforms,
             device=self.device,
             **self.result.params,
         )
-        # Fit the fresh model on the new data
-        logger.info("Refitting emulator")
+
+        msg = f"Refitting emulator on {train_data_msg}"
+        logger.info(msg)
         self.emulator.fit(self.train_x, self.train_y)
 
-    def run(
+    def run(  # noqa: PLR0913
         self,
         n_simulations: int = 100,
         n_test_samples: int = 10000,
         max_retries: int = 3,
         scaling_factor: float = 0.1,
-        refit_emulator: bool = True,
+        refit_emulator: bool = False,
+        refit_on_all_data: bool = True,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -623,7 +644,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
         refit_emulator: bool
-            Whether to refit the emulator after this run. Defaults to True.
+            Whether to refit the emulator at the end of the run. Defaults to True.
+        refit_on_all_data: bool
+            Whether to refit the emulator on all available data or just the data
+            available from the most recent simulation run. Defaults to True.
 
         Returns
         -------
@@ -675,11 +699,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         nroy_simulation_samples = self.sample_tensor(n_simulations, self.nroy_samples)
 
         # Make predictions using simulator (this updates self.x_train and self.y_train)
-        _, _ = self.simulate(nroy_simulation_samples)
+        x, y = self.simulate(nroy_simulation_samples)
 
         # Refit the emulator using all available data, including the new simulations
         if refit_emulator:
-            self.refit_emulator()
+            if refit_on_all_data:
+                self.refit_emulator()
+            else:
+                self.refit_emulator(x, y)
 
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
@@ -692,7 +719,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_test_samples: int = 10000,
         max_retries: int = 3,
         scaling_factor: float = 0.1,
-        refit_emulator_on_last: bool = False,
+        refit_emulator_on_last_wave: bool = False,
+        refit_on_all_data: bool = False,
     ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
@@ -721,8 +749,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         scaling_factor: float
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
-        refit_emulator_on_last: bool
+        refit_emulator_on_last_wave: bool
             Whether to refit the emulator after the last wave. Defaults to False.
+        refit_on_all_data: bool
+            Whether to refit the emulator on all available data after each wave
+            or just the data from the most recent simulation run. Defaults to False.
 
         Returns
         -------
@@ -732,13 +763,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.wave_results = []
         for i in range(n_waves):
             logger.info("Running history matching wave %d/%d", i + 1, n_waves)
-            refit_emulator = i != n_waves - 1 or refit_emulator_on_last
+            refit_emulator = i != n_waves - 1 or refit_emulator_on_last_wave
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
                 n_test_samples=n_test_samples,
                 max_retries=max_retries,
                 scaling_factor=scaling_factor,
                 refit_emulator=refit_emulator,
+                refit_on_all_data=refit_on_all_data,
             )
 
             print("Wave ", i, self.simulator.param_bounds)
