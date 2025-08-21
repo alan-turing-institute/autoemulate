@@ -1,17 +1,18 @@
 from collections.abc import Callable
+
 import gpytorch
 import torch
 from gpytorch.means import LinearMean
+
 from autoemulate.core.types import TensorLike
 
 
 class PartiallyLearnableMean(gpytorch.means.Mean):
     """
-    A mixed mean module that combines a known function for one dimension
-    with a learnable linear function for the remaining dimensions.
-
-    This implements Universal Kriging where part of the mean function is known
-    and part is learned from data.
+    A mixed mean module that combines a known function with learnable components.
+    Specifically, it applies a known function to one dimension and uses a learnable
+    linear function for the remaining dimensions. This implements Universal Kriging
+    where part of the mean function is known and part is learned from data.
 
     Parameters
     ----------
@@ -58,7 +59,9 @@ class PartiallyLearnableMean(gpytorch.means.Mean):
         known_part = self.mean_func(x[..., self.known_dim])
 
         learnable_data = x[..., self.learnable_dims]
-        learnable_part = self.linear_mean(learnable_data)  # this part could be replaced with other function / NN
+        learnable_part = self.linear_mean(
+            learnable_data
+        )  # this part could be replaced with other function / NN
         return known_part + learnable_part
 
     def __repr__(self) -> str:
