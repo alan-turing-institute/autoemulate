@@ -323,8 +323,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.emulator = result.model
         self.emulator.device = self.device
 
-        # New data is generated in `run()` and appended here
-        # The emulator is then refit on all data collected so far
+        # New data is simulated in `run()` and appended here
+        # It can be used to refit the emulator
         if train_x is not None and train_y is not None:
             self.train_x = train_x.float().to(self.device)
             self.train_y = train_y.float().to(self.device)
@@ -429,8 +429,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         Generate `n` additional parameter samples using cloud sampling.
 
-        Handles fixed parameters (min == max) by not sampling those and inserting
-        their constant values.
+        Handles fixed parameters (min == max) by not sampling those. The constant
+        values are inserted at the correct indices in the sampled tensor.
 
         Parameters
         ----------
@@ -443,7 +443,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         Returns
         -------
         TensorLike
-            A tensor of sampled parameters of shape [n, in_dim].
+            A tensor of sampled (and potentially constant) parameters [n, in_dim].
         """
         assert isinstance(self.nroy_samples, TensorLike)
 
@@ -461,7 +461,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # If all parameters are constant just return the constant sample n times
         if len(sample_params_idx) == 0:
-            return min_vals.unsqueeze(0).repeat(n, 1)
+            msg = "All parameters are constant, cannot sample from them."
+            raise ValueError(msg)
 
         # Only use non-constant parameters for mean and covariance to sample from
         nroy_params_to_sample = self.nroy_samples[:, sample_params_idx]
@@ -575,30 +576,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         return x, y
 
-    def refit_emulator(
-        self, x: TensorLike | None = None, y: TensorLike | None = None
-    ) -> None:
+    def refit_emulator(self, x: TensorLike, y: TensorLike) -> None:
         """
-        Refit the emulator.
-
-        If `x` and `y` are provided, refit the emulator on this new data.
-        If not, refit the emulator on all available data collected so far.
+        Refit the emulator on the provided data.
 
         Parameters
         ----------
-        x: TensorLike | None
-            Optional tensor of input data to refit the emulator on.
-        y: TensorLike | None
-            Optional tensor of output data to refit the emulator on.
+        x: TensorLike
+            Tensor of input data to refit the emulator on.
+        y: TensorLike
+            Tensor of output data to refit the emulator on.
         """
-        # Determine which data to use for refitting
-        if x is not None and y is not None:
-            train_data_msg = "most recent simulation data"
-        else:
-            x = self.train_x
-            y = self.train_y
-            train_data_msg = "all available data"
-
         # Create a fresh model with the same configuration
         self.emulator = TransformedEmulator(
             x.float(),
@@ -610,8 +598,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
             **self.result.params,
         )
 
-        msg = f"Refitting emulator on {train_data_msg}"
-        logger.info(msg)
         self.emulator.fit(self.train_x, self.train_y)
 
     def run(  # noqa: PLR0913
@@ -621,7 +607,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         max_retries: int = 3,
         scaling_factor: float = 0.1,
         refit_emulator: bool = False,
-        refit_on_all_data: bool = True,
+        refit_on_all_data: bool = False,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -644,10 +630,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
         refit_emulator: bool
-            Whether to refit the emulator at the end of the run. Defaults to True.
+            Whether to refit the emulator at the end of the run. Defaults to False.
         refit_on_all_data: bool
             Whether to refit the emulator on all available data or just the data
-            available from the most recent simulation run. Defaults to True.
+            available from the most recent simulation run. Defaults to False.
 
         Returns
         -------
@@ -690,6 +676,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
             test_parameters_list.append(test_parameters)
             impl_scores_list.append(impl_scores)
 
+            if retries > 0:
+                msg = (
+                    f"Generated {nroy_parameters.shape[0]} NROY samples on retry "
+                    f"{retries}, have {torch.cat(nroy_parameters_list, 0).shape[0]} "
+                    f"total NROY samples so far.",
+                )
+                logger.debug(msg)
+
             retries += 1
 
         # Next time that call run(), will sample using these NROY points
@@ -701,10 +695,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Make predictions using simulator (this updates self.x_train and self.y_train)
         x, y = self.simulate(nroy_simulation_samples)
 
-        # Refit the emulator using all available data, including the new simulations
+        # Optionally refit the emulator using the most recent simulations or all data
         if refit_emulator:
+            msg = f"Refitting emulator on {
+                'all data' if refit_on_all_data else 'most recent data'
+            }."
+            logger.info(msg)
             if refit_on_all_data:
-                self.refit_emulator()
+                self.refit_emulator(self.train_x, self.train_y)
             else:
                 self.refit_emulator(x, y)
 
@@ -772,8 +770,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 refit_emulator=refit_emulator,
                 refit_on_all_data=refit_on_all_data,
             )
-
-            print("Wave ", i, self.simulator.param_bounds)
 
             if len(test_x) < n_simulations or len(impl_scores) < n_simulations:
                 msg = (
