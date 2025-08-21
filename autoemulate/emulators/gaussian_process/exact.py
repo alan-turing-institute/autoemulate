@@ -38,7 +38,13 @@ from .kernel import (
     rbf_times_linear,
     rq_kernel,
 )
-from .mean import constant_mean, linear_mean, poly_mean, zero_mean, partially_learnable_mean
+from .mean import (
+    constant_mean,
+    linear_mean,
+    partially_learnable_mean,
+    poly_mean,
+    zero_mean,
+)
 
 
 class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):

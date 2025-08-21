@@ -1,8 +1,11 @@
+from collections.abc import Callable
+
 import torch
 from gpytorch.means import ConstantMean, LinearMean, ZeroMean
-from typing import Callable
-from .poly_mean import PolyMean
+
 from .partially_learnable import PartiallyLearnableMean
+from .poly_mean import PolyMean
+
 
 def constant_mean(n_features: int | None, n_outputs: torch.Size | None) -> ConstantMean:
     """
@@ -94,11 +97,12 @@ def poly_mean(n_features: int, n_outputs: torch.Size | None) -> PolyMean:
         else PolyMean(degree=2, input_size=n_features)
     )
 
+
 def partially_learnable_mean(
-    n_features: int, 
-    n_outputs: torch.Size | None, 
+    n_features: int,
+    n_outputs: torch.Size | None,
     mean_func: Callable = torch.sin,
-    known_dim: int = 0
+    known_dim: int = 0,
 ) -> PartiallyLearnableMean:
     """
     PartiallyLearnableMean module with known function for one dimension.
@@ -114,7 +118,7 @@ def partially_learnable_mean(
         Function to apply to the known dimension. Defaults to torch.sin.
     known_dim: int
         Dimension index for the known function. Defaults to 0.
-        
+
     Returns
     -------
     PartiallyLearnableMean
@@ -125,12 +129,10 @@ def partially_learnable_mean(
             mean_func=mean_func,
             known_dim=known_dim,
             input_size=n_features,
-            batch_shape=n_outputs
+            batch_shape=n_outputs,
         )
         if n_outputs is not None
         else PartiallyLearnableMean(
-            mean_func=mean_func,
-            known_dim=known_dim,
-            input_size=n_features
+            mean_func=mean_func, known_dim=known_dim, input_size=n_features
         )
     )
