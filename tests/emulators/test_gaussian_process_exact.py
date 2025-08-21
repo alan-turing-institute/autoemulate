@@ -14,6 +14,8 @@ from autoemulate.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
 )
+from autoemulate.emulators.gaussian_process.kernel import rbf
+from autoemulate.emulators.gaussian_process.mean import constant_mean
 
 GPS = [GaussianProcess, GaussianProcessCorrelated]
 
@@ -32,6 +34,44 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d, emulator):
 
     y_pred_grad = gp.predict(x2, with_grad=True)
     assert y_pred_grad.mean.requires_grad
+
+
+@pytest.mark.parametrize("emulator", GPS)
+def test_fixed_gp_params(sample_data_y1d, emulator):
+    x, y = sample_data_y1d
+    for fixed in [True, False]:
+        gp = emulator(
+            x,
+            y,
+            fixed_mean_params=fixed,
+            fixed_covar_params=fixed,
+            mean_module_fn=constant_mean,
+            covar_module_fn=rbf,
+        )
+
+        # Test requires grad for params
+        for param in gp.mean_module.parameters():
+            assert param.requires_grad == (not fixed)
+        for param in gp.covar_module.parameters():
+            assert param.requires_grad == (not fixed)
+
+        # Get params before training
+        mean_params_before = [p.clone() for p in gp.mean_module.parameters()]
+        covar_params_before = [p.clone() for p in gp.covar_module.parameters()]
+
+        # Fit GP
+        gp.fit(x, y)
+
+        # Get params after training
+        mean_params_after = [p.clone() for p in gp.mean_module.parameters()]
+        covar_params_after = [p.clone() for p in gp.covar_module.parameters()]
+
+        # Compare params before and after
+        for p_b, p_a in zip(mean_params_before, mean_params_after, strict=False):
+            assert torch.allclose(p_b, p_a) == fixed
+
+        for p_b, p_a in zip(covar_params_before, covar_params_after, strict=False):
+            assert torch.allclose(p_b, p_a) == fixed
 
 
 @pytest.mark.parametrize("emulator", GPS)
