@@ -7,7 +7,7 @@ from pyro.infer.mcmc import RandomWalkKernel
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
+from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
 
@@ -25,6 +25,8 @@ class BayesianCalibration(TorchDeviceMixin):
         parameter_range: dict[str, tuple[float, float]],
         observations: dict[str, TensorLike],
         observation_noise: float | dict[str, float] = 0.1,
+        model_variance: bool = False,
+        model_discrepancy: float = 0.0,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         log_level: str = "progress_bar",
@@ -41,7 +43,15 @@ class BayesianCalibration(TorchDeviceMixin):
         observations: dict[str, TensorLike]
             A dictionary of observations for each output.
         observation_noise: float |  dict[str, float]
-            A single value or a dictionary of values (one per output). Defaults to 0.1.
+            A single value or a dictionary of values (one per output) of measurement
+            noise measured in terms of standard deviation. Defaults to 0.1.
+        model_uncertainty: bool
+            Whether to include the variance associated with model predictions when
+            calculating the likelihood. Defaults to False.
+        model_discrepancy:
+            Additional uncertainty to include in the likelihood, specified as a
+            variance. This is equivalent to the discrepancy term used in history
+            matching to represent uncertainty about model validity. Defaults to 0.0.
         calibration_params: list[str] | None
             Optional list of input parameters to calibrate. Any parameters that are not
             listed will be set to the midpoint value of their parameter range. If None,
@@ -121,6 +131,9 @@ class BayesianCalibration(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
+        self.model_variance = model_variance
+        self.model_discrepancy = model_discrepancy
+
     def _get_kernel(self, sampler: str, **sampler_kwargs):
         """Get the appropriate MCMC kernel based on sampler choice."""
         sampler = sampler.lower()
@@ -175,30 +188,46 @@ class BayesianCalibration(TorchDeviceMixin):
         full_params = torch.stack(param_list, dim=0).unsqueeze(0).float()
 
         # Get emulator prediction
-        output = self.emulator.predict(full_params, with_grad=True)
-        if isinstance(output, TensorLike):
-            pred_mean = output.to(self.device)
-        elif isinstance(output, DistributionLike):
-            pred_mean = output.mean.to(self.device)
-        else:
-            msg = "The emulator did not return a tensor or a distribution object."
-            self.logger.error(msg)
-            raise ValueError(msg)
+        mean, variance = self.emulator.predict_mean_and_variance(
+            full_params, with_grad=True
+        )
 
         # Likelihood
         for i, output in enumerate(self.output_names):
+            # Create combined scale (stddev) for Normal from:
+            # - observation noise (stddev)
+            # - add model_discrepancy (variance)
+            # - model variance (variance, if specified and provided by emulator)
+
+            # Get observation noise
+            obs_noise = self.observation_noise[output]
+            if isinstance(self.observation_noise[output], float):
+                obs_noise = torch.Tensor([[self.observation_noise[output]]])
+            assert isinstance(obs_noise, TensorLike)
+            obs_noise = obs_noise.to(self.device) ** 2
+
+            # Combine variances additively, then take sqrt for final stddev
+            total_variance = obs_noise**2
+            total_variance += torch.full_like(
+                total_variance, self.model_discrepancy, device=self.device
+            )
+            if self.model_variance and variance is not None:
+                total_variance += variance
+
+            scale = total_variance.sqrt()
+
             if not predict:
                 with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
                         output,
-                        dist.Normal(pred_mean[0, i], self.observation_noise[output]),
+                        dist.Normal(mean[0, i], scale[0, i]),
                         obs=self.observations[output],
                     )
             else:
                 with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
                         output,
-                        dist.Normal(pred_mean[0, i], self.observation_noise[output]),
+                        dist.Normal(mean[0, i], scale[0, i]),
                     )
 
     def run_mcmc(
