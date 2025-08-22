@@ -245,3 +245,4 @@ def test_sample():
     assert torch.all(samples[:, 1] >= 10.0)
     assert torch.all(samples[:, 1] <= 100.0)
     assert torch.all(samples[:, 1] <= 100.0)
+    assert torch.all(samples[:, 2] == 1000.0)
