@@ -13,11 +13,20 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
+    GaussianProcessMatern32,
+    GaussianProcessMatern52,
+    GaussianProcessRBF,
 )
 from autoemulate.emulators.gaussian_process.kernel import rbf
 from autoemulate.emulators.gaussian_process.mean import constant_mean
 
-GPS = [GaussianProcess, GaussianProcessCorrelated]
+GPS = [
+    GaussianProcess,
+    GaussianProcessCorrelated,
+    GaussianProcessMatern32,
+    GaussianProcessMatern52,
+    GaussianProcessRBF,
+]
 
 
 @pytest.mark.parametrize("emulator", GPS)
