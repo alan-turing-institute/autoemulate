@@ -199,49 +199,32 @@ class BayesianCalibration(TorchDeviceMixin):
             # - add model_discrepancy (variance)
             # - model variance (variance, if specified and provided by emulator)
 
-            # Get observation noise and ensure a 2D Tensor
-            obs_noise = self.observation_noise[output]
-            if isinstance(obs_noise, torch.Tensor) and obs_noise.ndim == 0:
-                obs_noise = obs_noise.reshape(1, 1).to(self.device)
-            elif isinstance(obs_noise, torch.Tensor) and obs_noise.ndim != 0:
-                msg = f"Observation noise tensor for output ({output}) must be scalar."
-                raise ValueError(msg)
-            elif isinstance(obs_noise, float):
-                obs_noise = torch.Tensor([[self.observation_noise[output]]])
-            else:
-                msg = "Observation noise must be a float or 0D tensor."
-                raise ValueError(msg)
-            assert isinstance(obs_noise, TensorLike)
-
-            # Construct variances, expand to model prediction shape, move to device
-            obs_noise_variance = obs_noise.pow(2).expand(*mean.shape).to(self.device)
-            model_discrepancy_variance = (
-                torch.full_like(obs_noise_variance, self.model_discrepancy)
-                .expand(*mean.shape)
-                .to(self.device)
-            )
+            # Get observation noise
+            obs_noise_variance = self.observation_noise[output] ** 2
 
             # Combine variances (add model variance if required and available)
-            variance = (
-                obs_noise_variance + model_discrepancy_variance + variance
+            total_variance = (
+                obs_noise_variance + self.model_discrepancy + variance[0, i]
                 if self.model_variance and variance is not None
-                else obs_noise_variance + model_discrepancy_variance
+                else torch.Tensor([obs_noise_variance + self.model_discrepancy])[0].to(
+                    self.device
+                )
             )
             # Take sqrt for final scale (stddev)
-            scale = variance.sqrt()
+            scale = total_variance.sqrt()
 
             if not predict:
                 with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
                         output,
-                        dist.Normal(mean[0, i], scale[0, i]),
+                        dist.Normal(mean[0, i], scale),
                         obs=self.observations[output],
                     )
             else:
                 with pyro.plate(f"data_{output}", self.n_observations):
                     pyro.sample(
                         output,
-                        dist.Normal(mean[0, i], scale[0, i]),
+                        dist.Normal(mean[0, i], scale),
                     )
 
     def run_mcmc(
