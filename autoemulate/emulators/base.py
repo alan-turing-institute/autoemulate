@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator
 from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
+from torch.utils.data import DataLoader
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
@@ -39,27 +40,33 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     supports_uq: bool = False
 
     @abstractmethod
-    def _fit(self, x: TensorLike, y: TensorLike): ...
+    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None): ...
 
-    def fit(self, x: TensorLike, y: TensorLike):
+    def fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None):
         """Fit the emulator to the provided data."""
-        self._check(x, y)
-        # Ensure x and y are tensors and 2D
-        x, y = self._convert_to_tensors(x, y)
+        if isinstance(x, TensorLike) and isinstance(y, TensorLike):
+            self._check(x, y)
+            # Ensure x and y are tensors and 2D
+            x, y = self._convert_to_tensors(x, y)
 
-        # Move to device
-        x, y = self._move_tensors_to_device(x, y)
+            # Move to device
+            x, y = self._move_tensors_to_device(x, y)
 
-        # Fit transforms
-        if self.x_transform is not None:
-            self.x_transform.fit(x)
-        if self.y_transform is not None:
-            self.y_transform.fit(y)
-        x = self.x_transform(x) if self.x_transform is not None else x
-        y = self.y_transform(y) if self.y_transform is not None else y
+            # Fit transforms
+            if self.x_transform is not None:
+                self.x_transform.fit(x)
+            if self.y_transform is not None:
+                self.y_transform.fit(y)
+            x = self.x_transform(x) if self.x_transform is not None else x
+            y = self.y_transform(y) if self.y_transform is not None else y
 
-        # Fit emulator
-        self._fit(x, y)
+            # Fit emulator
+            self._fit(x, y)
+        elif isinstance(x, DataLoader) and y is None:
+            self._fit(x, y)
+        else:
+            msg = "Invalid input types. Expected pair of TensorLike or DataLoader."
+            raise RuntimeError(msg)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -540,11 +547,7 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(
-        self,
-        x: TensorLike,
-        y: TensorLike,
-    ):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         """
         Train a PyTorchBackend model.
 
@@ -668,7 +671,7 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean
