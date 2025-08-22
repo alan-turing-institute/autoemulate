@@ -225,8 +225,8 @@ def test_update_output_names_wrong_dimension(mock_simulator):
     assert mock_simulator.output_names == ["var1", "var2"]
     assert mock_simulator.out_dim == 2
 
-
-def test_sample():
+@pytest.mark.parametrize("method", ["lhs", "sobol"])
+def test_sample(method):
     param_bouns = {
         "param1": (0.0, 1.0),
         "param2": (10.0, 100.0),
