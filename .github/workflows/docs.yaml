@@ -25,7 +25,7 @@ jobs:
             - name: "Install autoemulate"
               run: pip install git+https://github.com/alan-turing-institute/autoemulate.git
             - name: "Run jupyterbook"
-              run: jupyter-book build docs --all -W -n -v --keep-going
+              run: jupyter-book build docs --all -W -n --keep-going
             - name: "Deploy"
               uses: peaceiris/actions-gh-pages@v3
               if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/docs') }}
