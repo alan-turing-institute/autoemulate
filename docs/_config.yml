@@ -9,7 +9,7 @@ theme:
 # Do not force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: cache
+  execute_notebooks: auto
   allow_errors: false
   timeout: 3600  # Increase timeout to 1 hour
   exclude_patterns:
