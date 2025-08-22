@@ -394,7 +394,9 @@ class DeterministicEmulator(Emulator):
             - Mean tensor of shape `(n_batch, n_targets)`.
             - Variance tensor as `None` since the model does not support UQ.
         """
-        mean, variance = super().predict_mean_and_variance(x, with_grad, n_samples)
+        mean, variance = Emulator.predict_mean_and_variance(
+            self, x, with_grad, n_samples
+        )
         assert variance is None
         return mean, variance
 
@@ -449,8 +451,10 @@ class ProbabilisticEmulator(Emulator):
             - Mean tensor of shape `(n_batch, n_targets)`.
             - Variance tensor of shape `(n_batch, n_targets)`.
         """
-        mean, variance = super().predict_mean_and_variance(x, with_grad, n_samples)
-        assert variance is TensorLike
+        mean, variance = Emulator.predict_mean_and_variance(
+            self, x, with_grad, n_samples
+        )
+        assert isinstance(variance, TensorLike)
         return mean, variance
 
 
