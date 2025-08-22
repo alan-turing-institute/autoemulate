@@ -225,6 +225,7 @@ def test_update_output_names_wrong_dimension(mock_simulator):
     assert mock_simulator.output_names == ["var1", "var2"]
     assert mock_simulator.out_dim == 2
 
+
 @pytest.mark.parametrize("method", ["lhs", "sobol"])
 def test_sample(method):
     param_bouns = {
@@ -232,10 +233,10 @@ def test_sample(method):
         "param2": (10.0, 100.0),
         "param3": (1000.0, 1000.0),
     }
-    sim = MockSimulator(param_bouns, ["var1", "var2"], method)
+    sim = MockSimulator(param_bouns, ["var1", "var2"])
 
     n_samples = 1000
-    samples = sim.sample_inputs(n_samples)
+    samples = sim.sample_inputs(n_samples, method=method)
 
     assert isinstance(samples, TensorLike)
     assert samples.shape[0] == n_samples
