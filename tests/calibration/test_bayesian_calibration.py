@@ -11,7 +11,7 @@ from autoemulate.simulations.projectile import (
 
 
 @pytest.mark.parametrize(
-    ("n_obs", "n_chains", "n_samples", "model_variance"),
+    ("n_obs", "n_chains", "n_samples", "model_uncertainty"),
     [
         (1, 1, 10, False),
         (10, 1, 10, False),
@@ -23,7 +23,7 @@ from autoemulate.simulations.projectile import (
         (10, 2, 10, True),
     ],
 )
-def test_hmc_single_output(n_obs, n_chains, n_samples, model_variance):
+def test_hmc_single_output(n_obs, n_chains, n_samples, model_uncertainty):
     """
     Test HMC with single output.
     """
@@ -37,7 +37,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples, model_variance):
     # pick the first n_obs sim outputs as observations
     observations = {"distance": y[:n_obs, 0]}
     bc = BayesianCalibration(
-        gp, sim.parameters_range, observations, 1.0, model_variance=model_variance
+        gp, sim.parameters_range, observations, 1.0, model_uncertainty=model_uncertainty
     )
     assert bc.observation_noise == {"distance": 1.0}
 
@@ -62,7 +62,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples, model_variance):
 
 
 @pytest.mark.parametrize(
-    ("n_obs", "n_chains", "n_samples", "model_variance"),
+    ("n_obs", "n_chains", "n_samples", "model_uncertainty"),
     [
         (1, 1, 10, False),
         (10, 1, 10, False),
@@ -74,7 +74,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples, model_variance):
         (10, 2, 10, True),
     ],
 )
-def test_hmc_multiple_output(n_obs, n_chains, n_samples, model_variance):
+def test_hmc_multiple_output(n_obs, n_chains, n_samples, model_uncertainty):
     """
     Test HMC with multiple outputs.
     """
@@ -91,7 +91,7 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples, model_variance):
         "impact_velocity": y[:n_obs, 1],
     }
     bc = BayesianCalibration(
-        gp, sim.parameters_range, observations, 1.0, model_variance=model_variance
+        gp, sim.parameters_range, observations, 1.0, model_uncertainty=model_uncertainty
     )
     assert bc.observation_noise == {"distance": 1.0, "impact_velocity": 1.0}
 
