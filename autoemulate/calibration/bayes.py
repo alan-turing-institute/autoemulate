@@ -24,8 +24,8 @@ class BayesianCalibration(TorchDeviceMixin):
         emulator: Emulator,
         parameter_range: dict[str, tuple[float, float]],
         observations: dict[str, TensorLike],
-        observation_noise: float | dict[str, float] = 0.1,
-        model_variance: bool = False,
+        observation_noise: float | dict[str, float] = 0.01,
+        model_uncertainty: bool = False,
         model_discrepancy: float = 0.0,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
@@ -44,7 +44,7 @@ class BayesianCalibration(TorchDeviceMixin):
             A dictionary of observations for each output.
         observation_noise: float |  dict[str, float]
             A single value or a dictionary of values (one per output) of measurement
-            noise measured in terms of standard deviation. Defaults to 0.1.
+            noise measured in terms of variance. Defaults to 0.01.
         model_uncertainty: bool
             Whether to include the variance associated with model predictions when
             calculating the likelihood. Defaults to False.
@@ -122,16 +122,23 @@ class BayesianCalibration(TorchDeviceMixin):
                 self.output_names,
                 torch.tensor(observation_noise).to(self.device),
             )
-            self.logger.debug("Observation noise set as float: %s", observation_noise)
+            self.logger.debug(
+                "Observation noise (variance) set as float: %s", observation_noise
+            )
         elif isinstance(observation_noise, dict):
             self.observation_noise = observation_noise
-            self.logger.debug("Observation noise set as dict: %s", observation_noise)
+            self.logger.debug(
+                "Observation noise (variance) set as dict: %s", observation_noise
+            )
         else:
-            msg = "Noise must be either a float or a dictionary of floats."
+            msg = (
+                "Observation noise (variance) must be either a float or a dictionary "
+                "of floats."
+            )
             self.logger.error(msg)
             raise ValueError(msg)
 
-        self.model_variance = model_variance
+        self.model_uncertainty = model_uncertainty
         self.model_discrepancy = model_discrepancy
 
     def _get_kernel(self, sampler: str, **sampler_kwargs):
@@ -194,19 +201,19 @@ class BayesianCalibration(TorchDeviceMixin):
 
         # Likelihood
         for i, output in enumerate(self.output_names):
-            # Create combined scale (stddev) for Normal from:
-            # - observation noise (stddev)
-            # - add model_discrepancy (variance)
-            # - model variance (variance, if specified and provided by emulator)
+            # Create combined scale (stddev) for Normal from the following variances:
+            # - observation noise
+            # - model discrepancy
+            # - model uncertainty (if specified and provided by emulator)
 
             # Get observation noise
-            obs_noise_variance = self.observation_noise[output] ** 2
+            observation_variance = self.observation_noise[output]
 
-            # Combine variances (add model variance if required and available)
+            # Combine variances (add prediction variance if required and available)
             total_variance = (
-                obs_noise_variance + self.model_discrepancy + variance[0, i]
-                if self.model_variance and variance is not None
-                else torch.Tensor([obs_noise_variance + self.model_discrepancy])[0].to(
+                observation_variance + self.model_discrepancy + variance[0, i]
+                if self.model_uncertainty and variance is not None
+                else torch.tensor(observation_variance + self.model_discrepancy).to(
                     self.device
                 )
             )
