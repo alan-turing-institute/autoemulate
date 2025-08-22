@@ -696,9 +696,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Optionally refit the emulator using the most recent simulations or all data
         if refit_emulator:
-            msg = f"Refitting emulator on {
-                'all data' if refit_on_all_data else 'most recent data'
-            }."
+            data_msg = "all data" if refit_on_all_data else "most recent data"
+            msg = f"Refitting emulator on {data_msg}."
             logger.info(msg)
             if refit_on_all_data:
                 self.refit_emulator(self.train_x, self.train_y)
