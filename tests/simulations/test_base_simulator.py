@@ -232,7 +232,7 @@ def test_sample():
         "param2": (10.0, 100.0),
         "param3": (1000.0, 1000.0),
     }
-    sim = MockSimulator(param_bouns, ["var1", "var2"])
+    sim = MockSimulator(param_bouns, ["var1", "var2"], method)
 
     n_samples = 1000
     samples = sim.sample_inputs(n_samples)
