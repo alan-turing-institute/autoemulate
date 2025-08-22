@@ -531,10 +531,13 @@ def create_gp_subclass(
     Notes
     -----
     {name} is a subclass of {gp_base_class.__name__} and has the following parameters
-    fixed: {fixed_params_str}
+    set during initialization: {fixed_params_str}
 
-    These parameters cannot be changed during initialization and are excluded
-    from hyperparameter tuning.
+    For any parameters set with this approach, they are also excluded from the search
+    space when tuning. For example, if the `covar_module_fn` is set to `rbf`,
+    the RBF kernel will always be used as the `covar_module`. Note that in this case
+    the associated hyperparameters (such as lengthscale) will still be fitted during
+    model training and are not fixed.
     """
 
     # Set the provided name for the class
