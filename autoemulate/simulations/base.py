@@ -170,7 +170,7 @@ class Simulator(ABC, ValidationMixin):
 
         if method.lower() == "lhs":
             sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
-        elif method == "sobol":
+        elif method.lower() == "sobol":
             sampler = qmc.Sobol(d=len(self.sample_param_bounds))
         else:
             msg = (
