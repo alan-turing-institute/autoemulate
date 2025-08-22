@@ -168,7 +168,7 @@ class Simulator(ABC, ValidationMixin):
             const_vals = torch.tensor(list(self.constant_params.values()))
             return const_vals.repeat(n_samples, 1)
 
-        if method == "lhs":
+        if method.lower() == "lhs":
             sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
         elif method == "sobol":
             sampler = qmc.Sobol(d=len(self.sample_param_bounds))
