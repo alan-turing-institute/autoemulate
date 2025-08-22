@@ -65,7 +65,8 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         elif isinstance(x, DataLoader) and y is None:
             self._fit(x, y)
         else:
-            raise RuntimeError("...")
+            msg = "Invalid input types. Expected pair of TensorLike or DataLoader."
+            raise RuntimeError(msg)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -432,11 +433,7 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(
-        self,
-        x: TensorLike,
-        y: TensorLike,
-    ):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         """
         Train a PyTorchBackend model.
 
@@ -560,7 +557,7 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean

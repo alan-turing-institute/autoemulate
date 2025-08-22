@@ -367,7 +367,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         target_transforms = self._cast(self.y_transforms)
         return TransformedDistribution(y_t, [ComposeTransform(target_transforms).inv])
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         # Transform x and y
         x_t = self._transform_x(x)
         y_t = self._transform_y_tensor(y)
