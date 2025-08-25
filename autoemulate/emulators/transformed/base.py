@@ -13,6 +13,7 @@ from autoemulate.core.types import (
 )
 from autoemulate.data.utils import ValidationMixin
 from autoemulate.emulators.base import Emulator
+from autoemulate.emulators.transformed.delta_method import delta_method
 from autoemulate.transforms.base import (
     AutoEmulateTransform,
     _inverse_sample_gaussian_like,
@@ -75,7 +76,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         x_transforms: list[Transform] | None,
         y_transforms: list[Transform] | None,
         model: type[Emulator],
-        output_from_samples: bool = True,
+        output_from_samples: bool = False,
         n_samples: int = 100,
         full_covariance: bool = False,
         device: DeviceLike | None = None,
@@ -130,8 +131,10 @@ class TransformedEmulator(Emulator, ValidationMixin):
             self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
         )
         self.output_from_samples = output_from_samples
-        if not output_from_samples and not all(
-            isinstance(t, AutoEmulateTransform) for t in self.y_transforms
+        if (
+            not output_from_samples
+            and full_covariance
+            and not all(isinstance(t, AutoEmulateTransform) for t in self.y_transforms)
         ):
             msg = (
                 "y_transforms must be a list of AutoEmulateTransform instances to "
@@ -398,7 +401,28 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Output derived by analytical/approximate transformations
         if not self.output_from_samples:
             if isinstance(y_t_pred, GaussianLike):
-                return self._inv_transform_y_gaussian(y_t_pred)
+                # Full covariance calculation
+                if self.full_covariance:
+                    return self._inv_transform_y_gaussian(y_t_pred)
+                # Variance only
+                output = delta_method(
+                    ComposeTransform(self.y_transforms).inv,  # type: ignore  # noqa: PGH003
+                    y_t_pred.mean,
+                    y_t_pred.variance,
+                )
+                mean, var = output["mean_total"], output["variance_approx"]
+                if not with_grad:
+                    mean = mean.detach()
+                    var = var.detach()
+                # Add small jitter to variance to ensure it's positive for Normal dist
+                min_variance = 1e-6
+                var = torch.clamp(var, min=min_variance)
+                # Assume batch shape only dim
+                return torch.distributions.Independent(
+                    torch.distributions.Normal(mean, var.sqrt()),
+                    reinterpreted_batch_ndims=mean.ndim - 1,
+                )
+
             msg = (
                 f"Inverse transform without sampling for y_t_pred ({type(y_t_pred)}) "
                 "is not currently supported, expected GaussianLike."
