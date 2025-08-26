@@ -48,6 +48,8 @@ sphinx:
     - 'sphinx.ext.viewcode'
   config:
     add_module_names: False
+    # Make build fail on notebook execution errors
+    nb_execution_raise_on_error: true
     autodoc_typehints: none
     autodoc_member_order: 'bysource'
     autoclass_content: class
