@@ -4,17 +4,14 @@ import pytest
 import torch
 from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
 from autoemulate.emulators.random_forest import RandomForest
-from autoemulate.simulations.projectile import (
-    Projectile,
-    ProjectileMultioutput,
-)
+from autoemulate.simulations.projectile import Projectile, ProjectileMultioutput
 
 
 @pytest.fixture
 def xy_1d():
     sim = Projectile()
     x = sim.sample_inputs(100)
-    y = sim.forward_batch(x)
+    y = sim.forward_batch_strict(x)
     return x, y
 
 
@@ -22,7 +19,7 @@ def xy_1d():
 def xy_2d():
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)
-    y = sim.forward_batch(x)
+    y = sim.forward_batch_strict(x)
     return x, y
 
 

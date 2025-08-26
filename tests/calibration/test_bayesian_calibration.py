@@ -1,13 +1,8 @@
 import pytest
 from autoemulate.calibration.bayes import BayesianCalibration
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.gaussian_process.exact import (
-    GaussianProcess,
-)
-from autoemulate.simulations.projectile import (
-    Projectile,
-    ProjectileMultioutput,
-)
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
+from autoemulate.simulations.projectile import Projectile, ProjectileMultioutput
 
 
 @pytest.mark.parametrize(
@@ -29,7 +24,7 @@ def test_hmc_single_output(n_obs, n_chains, n_samples, model_uncertainty):
     """
     sim = Projectile()
     x = sim.sample_inputs(100)
-    y = sim.forward_batch(x)
+    y = sim.forward_batch_strict(x)
     assert isinstance(y, TensorLike)
     gp = GaussianProcess(x, y)
     gp.fit(x, y)
@@ -80,7 +75,7 @@ def test_hmc_multiple_output(n_obs, n_chains, n_samples, model_uncertainty):
     """
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)
-    y = sim.forward_batch(x)
+    y = sim.forward_batch_strict(x)
     assert isinstance(y, TensorLike)
     gp = GaussianProcess(x, y)
     gp.fit(x, y)

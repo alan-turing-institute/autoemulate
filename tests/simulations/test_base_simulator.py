@@ -104,7 +104,7 @@ def test_forward(mock_simulator):
     assert output[0, 1] == pytest.approx(expected_sum * 2)
 
 
-def test_forward_batch(mock_simulator):
+def test_forward_batch_strict(mock_simulator):
     """Test that forward_batch method processes multiple samples correctly"""
     # Create test batch
     n_samples = 3
@@ -113,7 +113,7 @@ def test_forward_batch(mock_simulator):
     )
 
     # Process batch
-    results = mock_simulator.forward_batch(batch)
+    results = mock_simulator.forward_batch_strict(batch)
 
     # Check shape
     assert results.shape == (n_samples, len(mock_simulator._output_names))
@@ -188,7 +188,7 @@ def test_handle_simulation_failure():
 
     # This should process all samples without errors
     # We're just verifying it doesn't crash
-    results, valid_x = simulator.forward_batch_skip_failures(batch)
+    results, valid_x = simulator.forward_batch(batch)
     assert isinstance(results, TensorLike)
 
     # Verify results shape

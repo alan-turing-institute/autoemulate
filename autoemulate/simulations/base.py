@@ -240,11 +240,12 @@ class Simulator(ABC, ValidationMixin):
             return y
         return None
 
-    def forward_batch(self, x: TensorLike) -> TensorLike:
+    def forward_batch_strict(self, x: TensorLike) -> TensorLike:
         """Run multiple simulations with different parameters.
 
         For infallible simulators that always succeed.
-        If your simulator might fail, use `forward_batch_skip_failures()` instead.
+        If your simulator might fail and you don't want that to raise an error,
+        use `forward_batch()` instead.
 
         Parameters
         ----------
@@ -260,23 +261,18 @@ class Simulator(ABC, ValidationMixin):
         ------
         RuntimeError
             If the number of simulations does not match the input.
-            Use `forward_batch_skip_failures()` to handle failures.
+            Use `forward_batch()` to handle failures.
         """
-        results, x_valid = self.forward_batch_skip_failures(x)
+        results, x_valid = self.forward_batch(x)
 
         # Raise an error if the number of simulations does not match the input
         if x.shape[0] != x_valid.shape[0]:
-            msg = (
-                "Some simulations failed. Use forward_batch_skip_failures() to handle "
-                "failures."
-            )
+            msg = "Some simulations failed. Use forward_batch() to handle failures."
             raise RuntimeError(msg)
 
         return results
 
-    def forward_batch_skip_failures(
-        self, x: TensorLike
-    ) -> tuple[TensorLike, TensorLike]:
+    def forward_batch(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Run multiple simulations, skipping any that fail.
 
         For simulators where for some inputs the simulation can fail.
