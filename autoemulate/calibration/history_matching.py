@@ -285,7 +285,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
         parameter_idx: list[int] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-
     ):
         """
         Initialize the history matching workflow object.
@@ -342,8 +341,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
         if parameter_idx is not None:
             self.parameter_idx = parameter_idx
         else:
-            self.parameter_idx = [i for i, (_, (val_min, val_max)) in enumerate(self.simulator.parameters_range.items()) if val_min != val_max]
-
+            self.parameter_idx = [
+                i
+                for i, (_, (val_min, val_max)) in enumerate(
+                    self.simulator.parameters_range.items()
+                )
+                if val_min != val_max
+            ]
 
     def _is_within_bounds(
         self, sample: TensorLike, bounds_dict: dict[str, tuple[float, float]]
@@ -528,8 +532,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
         else:
             test_x = self.cloud_sample(n, scaling_factor).to(self.device)
 
-        # Rule out implausible parameters from samples using an emulator, only use the parameters that change
-        mean, variance = self.emulator.predict_mean_and_variance(test_x[:, self.parameter_idx])
+        # Rule out implausible parameters from samples using an emulator,
+        # only use the parameters that change
+        mean, variance = self.emulator.predict_mean_and_variance(
+            test_x[:, self.parameter_idx]
+        )
         assert variance is not None
         impl_scores = self.calculate_implausibility(mean, variance)
 
@@ -707,9 +714,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
             msg = f"Refitting emulator on {data_msg}."
             logger.info(msg)
             if refit_on_all_data:
-                self.refit_emulator(self.train_x[:,self.parameter_idx], self.train_y)
+                self.refit_emulator(self.train_x[:, self.parameter_idx], self.train_y)
             else:
-                self.refit_emulator(x[:,self.parameter_idx], y)
+                self.refit_emulator(x[:, self.parameter_idx], y)
 
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
