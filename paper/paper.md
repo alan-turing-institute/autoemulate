@@ -107,17 +107,14 @@ The most general use case for AutoEmulate is emulator construction. AutoEmulate 
 from autoemulate import AutoEmulate
 
 ae = AutoEmulate(x, y)
-```
 
-Under the hood, the above runs a search over a number of emulator models, performs hyperparameter tuning, compares models using cross validation. One can then easily extract the best performing emulator:
-
-```python
-# the results object contains the trained model and performance metrics
 best = ae.best_result()
 emulator = best.model
 ```
 
-AutoEmulate can also search over different data pre-processing methods, such as normalization or dimensionality reduction techniques.  AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components:
+Under the hood, the above runs a search over a number of emulator models, performs hyperparameter tuning, compares models using cross validation. The user can extract the best performing model or any of the other trained models and the associated performance metrics stored in the `Results` object.
+
+AutoEmulate can additionally search over different data pre-processing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
 
 ```python
 from autoemulate.transforms import PCATransform
@@ -129,11 +126,11 @@ ae = AutoEmulate(
 )
 ```
 
-The Figure below shows an example result of fitting a Gaussian Process emulator in combination with PCA to a reaction-diffusion simulation (see the full [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/emulation/02_dim_reduction.html) for a detailed overview).
+The result in this case will return the best combination of model and output transformation. The Figure below shows an example result of fitting a Gaussian Process emulator in combination with PCA to a reaction-diffusion simulation (see the full [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/emulation/02_dim_reduction.html) for a detailed overview).
 
 ![GP with PCA emulator prediction for a reaction diffusion simulation compared to the ground truth.](reaction_diffusion_emulation.png)
 
-Once an emulator has been trained it can be used to generate fast predictions for new input values or to perform [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as sensitivity analysis or model calibration. For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a specified range, and two outputs `y1` and `y2`:
+Once an emulator has been trained it can be used to generate fast predictions for new input values or to perform [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as sensitivity analysis or model calibration. For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a specified range of values, and two outputs `y1` and `y2`:
 
 ```python
 from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
@@ -154,12 +151,12 @@ sa = SensitivityAnalysis(emulator, problem=problem)
 sobol_df = sa.run()
 ```
 
-As mentioned above, the PyTorch backend enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo with Pyro. AutoEmulate provides a simple interface for this given a trained emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
+As mentioned above, the PyTorch backend enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo with Pyro. AutoEmulate provides a simple interface for this given a trained PyTorch emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
 
 ```python
 from autoemulate.calibration.bayes import BayesianCalibration
 
-# the real-world observations to calibrate against
+# the real-world observation to calibrate against
 observations = {'output1': 0.5, 'output2': 7.2}
 
 bc = BayesianCalibration(
