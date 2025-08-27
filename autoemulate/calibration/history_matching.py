@@ -315,6 +315,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional tensor of output data the emulator was trained on.
         parameter_idx: list[int] | None
             Optional list of indices of parameters that are not constant (min != max).
+            If not provided, these indices are inferred from the simulator's
+            `parameters_range` attribute.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         random_seed: int | None
