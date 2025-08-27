@@ -9,7 +9,8 @@ theme:
 # Do not force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: 'cache'
+  execute_notebooks: cache
+  allow_errors: false
   timeout: 3600  # Increase timeout to 1 hour
   exclude_patterns:
     - "case_studies/*.ipynb"
@@ -47,6 +48,8 @@ sphinx:
     - 'sphinx.ext.viewcode'
   config:
     add_module_names: False
+    # Make build fail on notebook execution errors
+    nb_execution_raise_on_error: true
     autodoc_typehints: none
     autodoc_member_order: 'bysource'
     autoclass_content: class
