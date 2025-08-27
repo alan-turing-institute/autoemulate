@@ -97,10 +97,79 @@ AutoEmulate v1.0 has also been extended with easy to use interfaces for common e
 
 AutoEmulate fills a gap in the current landscape of emulation tools as it is both accessible to newcomers and powerful enough for advanced users. It also uniquely combines emulator training with support for a wide range of downstream tasks such as sensitivity analysis, model calibration adn active learning.
 
-# End-to-end example / case study
+# Example usage
 
-TODO
+The AutoEmulate documentation provides a comprehensive set of [tutorials](https://alan-turing-institute.github.io/autoemulate/tutorials/index.html) showcasing all functionality. We are also collecting case studies demonstrating how to use AutoEmulate for real-world problems and complex workflows, available [here](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies). Below we provide a brief overview of the main features.
 
-<!-- Naghavi case study here ? If not, maybe some simple illustration of the tool? -->
+The most general use case for AutoEmulate is emulator construction. AutoEmulate takes as input `x`, `y` simulated data where `x` is a 2D tensor containing simulation parameters in columns and their values in rows, and `y` is an array containing the corresponding simulation outputs. Given data, AutoEmulate constructs an emulator in just a few lines of code:
+
+```python
+from autoemulate import AutoEmulate
+
+ae = AutoEmulate(x, y)
+```
+
+Under the hood, the above runs a search over a number of emulator models, performs hyperparameter tuning, compares models using cross validation. One can then easily extract the best performing emulator:
+
+```python
+# the results object contains the trained model and performance metrics
+best = ae.best_result()
+emulator = best.model
+```
+
+AutoEmulate can also search over different data pre-processing methods, such as normalization or dimensionality reduction techniques.  AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components:
+
+```python
+from autoemulate.transforms import PCATransform
+
+ae = AutoEmulate(
+    x, 
+    y,
+    y_transforms_list=[[], [PCATransform(n_components=16)], [PCATransform(n_components=32)]],
+)
+```
+
+The Figure below shows an example result of fitting a Gaussian Process emulator in combination with PCA to a reaction-diffusion simulation (see the full [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/emulation/02_dim_reduction.html) for a detailed overview).
+
+![GP with PCA emulator prediction for a reaction diffusion simulation compared to the ground truth.](reaction_diffusion_emulation.png)
+
+Once an emulator has been trained it can be used to generate fast predictions for new input values or to perform [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as sensitivity analysis or model calibration. For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a specified range, and two outputs `y1` and `y2`:
+
+```python
+from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
+
+input_parameters_ranges = {
+    'param1': (0, 1),
+    'param2': (0, 10),
+}
+
+problem = {
+    'num_vars': 2,
+    'names': ["param1", "param2"],  
+    'bounds': input_parameters_ranges.values(),
+    'output_names': ["output1", "output2"],
+}
+
+sa = SensitivityAnalysis(emulator, problem=problem)
+sobol_df = sa.run()
+```
+
+As mentioned above, the PyTorch backend enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo with Pyro. AutoEmulate provides a simple interface for this given a trained emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
+
+```python
+from autoemulate.calibration.bayes import BayesianCalibration
+
+# the real-world observations to calibrate against
+observations = {'output1': 0.5, 'output2': 7.2}
+
+bc = BayesianCalibration(
+    emulator, 
+    input_parameters_ranges, 
+    observations, 
+)
+mcmc = bc.run()
+```
+
+Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing and run [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html). This is particularly useful when simulations are very costly to run and one wants to select the most informative simulations to improve emulator performance at minimal computational cost.
 
 # References
