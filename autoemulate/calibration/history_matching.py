@@ -313,8 +313,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional tensor of input data the emulator was trained on.
         train_y: TensorLike | None
             Optional tensor of output data the emulator was trained on.
+        parameter_idx: list[int] | None
+            Optional list of indices of parameters that are not constant (min != max).
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
+        random_seed: int | None
+            Optional random seed for reproducibility. If None, no seed is set.
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
