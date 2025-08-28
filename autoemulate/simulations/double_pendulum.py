@@ -49,7 +49,7 @@ class DoublePendulum(Simulator):
                 "l1": (0.5, 0.5),  # length of first pendulum (m)
                 "l2": (0.5, 0.5),  # length of second pendulum (m)
                 "theta1_0": (
-                    -30 * np.pi / 180,
+                    -20 * np.pi / 180,
                     0,
                 ),  # initial angle of first pendulum (rad)
                 "theta2_0": (0, 0),  # initial angle of second pendulum (rad)
