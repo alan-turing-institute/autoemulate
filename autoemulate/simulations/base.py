@@ -2,12 +2,12 @@ import logging
 from abc import ABC, abstractmethod
 
 import torch
+from scipy.stats import qmc
 from tqdm import tqdm
 
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
-from autoemulate.simulations.experimental_design import LatinHypercube
 
 logger = logging.getLogger("autoemulate")
 
@@ -47,6 +47,11 @@ class Simulator(ABC, ValidationMixin):
         self._parameters_range = parameters_range
         self._param_names = list(parameters_range.keys())
         self._param_bounds = list(parameters_range.values())
+        # separate out param bounds to sample from and constants
+        self.sample_param_bounds = [b for b in self.param_bounds if b[0] != b[1]]
+        self.constant_params = {
+            idx: b[0] for idx, b in enumerate(self.param_bounds) if b[0] == b[1]
+        }
         self._output_names = output_names
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
@@ -132,10 +137,14 @@ class Simulator(ABC, ValidationMixin):
         return self._out_dim
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None
+        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
     ) -> TensorLike:
         """
-        Generate random samples using Latin Hypercube Sampling.
+        Generate random samples using Quasi-Monte Carlo methods.
+
+        Available methods are Sobol or Latin Hypercube Sampling. For overview, see
+        the scipy documentation:
+        https://docs.scipy.org/doc/scipy/reference/stats.qmc.html
 
         Parameters
         ----------
@@ -143,6 +152,8 @@ class Simulator(ABC, ValidationMixin):
             Number of samples to generate.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set.
+        method: str
+            Sampling method to use. One of ["lhs", "sobol"].
 
         Returns
         -------
@@ -151,8 +162,43 @@ class Simulator(ABC, ValidationMixin):
         """
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
-        lhd = LatinHypercube(self.param_bounds)
-        return lhd.sample(n_samples)
+
+        if len(self.sample_param_bounds) == 0:
+            # All parameters are constant - broadcast to n_samples
+            const_vals = torch.tensor(list(self.constant_params.values()))
+            return const_vals.repeat(n_samples, 1)
+
+        if method.lower() == "lhs":
+            sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
+        elif method.lower() == "sobol":
+            sampler = qmc.Sobol(d=len(self.sample_param_bounds))
+        else:
+            msg = (
+                f"Invalid sampling method: {method}. "
+                "Supported methods are 'lhs' and 'sobol'."
+            )
+            raise ValueError(msg)
+
+        # Samples are drawn from [0, 1]^d so need to scale them
+        samples = sampler.random(n=n_samples)
+        scaled_samples = qmc.scale(
+            samples,
+            [b[0] for b in self.sample_param_bounds],
+            [b[1] for b in self.sample_param_bounds],
+        )
+        scaled_samples = torch.tensor(scaled_samples, dtype=torch.float32)
+
+        # Insert constant parameters at correct indices
+        full_samples = torch.empty((n_samples, self.in_dim), dtype=torch.float32)
+        sample_idx = 0
+        for idx in range(self.in_dim):
+            if idx in self.constant_params:
+                full_samples[:, idx] = self.constant_params[idx]
+            else:
+                full_samples[:, idx] = scaled_samples[:, sample_idx]
+                sample_idx += 1
+
+        return full_samples
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike | None:

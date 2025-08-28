@@ -45,8 +45,9 @@ class HistoryMatching(TorchDeviceMixin):
         Parameters
         ----------
         observations: dict[str, tuple[float, float] | dict[str, float]
-            For each output variable, specifies observed [value, noise]. In case
-            of no uncertainty in observations, provides just the observed value.
+            For each output variable, specifies observed [value, noise] (with noise
+            specified as variances). In case of no uncertainty in observations, provides
+            just the observed value.
         threshold: float
             Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
@@ -87,13 +88,15 @@ class HistoryMatching(TorchDeviceMixin):
         Parameters
         ----------
         observations: dict[str, tuple[float, float] | dict[str, float]
-            For each output variable, specifies observed [value, noise]. In case
-            of no uncertainty in observations, provides just the observed value.
+            For each output variable, specifies observed [value, noise] (with noise
+            specified as variances). In case of no uncertainty in observations, provides
+            just the observed value.
 
         Returns
         -------
         tuple[TensorLike, TensorLike]
-            Tensors of observations and the associated noise (which can be 0).
+            Tensors of observations and the associated noise (which can be 0) specified
+            as variances.
         """
         values = torch.tensor(list(observations.values()), device=self.device)
 
@@ -296,8 +299,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         result: Result
             A Result object containing the pre-trained emulator and its parameters.
         observations: dict[str, tuple[float, float] | dict[str, float]
-            For each output variable, specifies observed [value, noise]. In case
-            of no uncertainty in observations, provides just the observed value.
+            For each output variable, specifies observed [value, noise] (with noise
+            specified as variances). In case of no uncertainty in observations, provides
+            just the observed value.
         threshold: float
             Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
