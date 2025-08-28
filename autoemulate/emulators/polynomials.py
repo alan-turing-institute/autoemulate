@@ -17,7 +17,7 @@ class PolynomialRegression(PyTorchBackend):
     and quadratic terms.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,

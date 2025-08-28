@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 class AutoEmulateDataset(Dataset):
     """A class for spatio-temporal datasets."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         data_path: str,
         n_steps_input: int,

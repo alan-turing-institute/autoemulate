@@ -140,7 +140,7 @@ class EnsembleMLP(Ensemble):
 
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,
@@ -202,7 +202,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
     and epistemic covariance across them.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         model: DropoutTorchBackend,
         standardize_x: bool = True,
@@ -297,7 +297,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
 class EnsembleMLPDropout(DropoutEnsemble):
     """Ensemble of MLP emulators with dropout."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,
