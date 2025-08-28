@@ -16,7 +16,7 @@ class MLP(DropoutTorchBackend):
     provided by different weight initialization and dropout.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,

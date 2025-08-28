@@ -16,7 +16,7 @@ class LightGBM(DeterministicEmulator):
     for more details.
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         x: TensorLike | None = None,
         y: TensorLike | None = None,
