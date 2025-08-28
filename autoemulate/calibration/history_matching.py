@@ -270,8 +270,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
     Run history matching workflow:
     - sample parameter values to test from the current NROY parameter space
-    - use emulator to rule out implausible parameters and update NROY space
-    - make predictions for a subset the NROY parameters using the simulator
+    - use emulator to rule out implausible parameter samples
+    - run simulations for a subset of the NROY parameters
     - refit the emulator using the simulated data
     """
 
@@ -297,7 +297,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         simulator: Simulator
             A simulator.
         result: Result
-            A Result object containing the pre-trained emulator and its parameters.
+            A Result object containing the pre-trained emulator and its hyperparameters.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise] (with noise
             specified as variances). In case of no uncertainty in observations, provides
@@ -343,11 +343,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
             self.train_x = torch.empty((0, self.simulator.in_dim), device=self.device)
             self.train_y = torch.empty((0, self.simulator.out_dim), device=self.device)
 
-        # NROY samples are also generated in `run()` and used in `cloud_sample()`
+        # New NROY samples are generated in `run()` and used in `cloud_sample()`
         # We only ever use the most recent NROY samples
         # This means `self.nroy_samples` gets overwritten each time `run()` is called
         self.nroy_samples = None
+
+        # If use `run_waves()`, results are stored here
         self.wave_results = []
+
+        # Identify non-constant parameters if not provided
         if parameter_idx is not None:
             self.parameter_idx = parameter_idx
         else:
