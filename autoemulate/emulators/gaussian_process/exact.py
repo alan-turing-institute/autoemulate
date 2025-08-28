@@ -60,7 +60,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     lr: float = 2e-1
     scheduler_cls: type[LRScheduler] | None = None
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,
@@ -336,7 +336,7 @@ class GaussianProcessCorrelated(GaussianProcess):
     """
 
     # TODO: refactor the init as similar to exact GP base class
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,

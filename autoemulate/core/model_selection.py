@@ -76,7 +76,7 @@ def evaluate(
     return _metric.compute().item()
 
 
-def cross_validate(  # noqa: PLR0913
+def cross_validate(
     cv: BaseCrossValidator,
     dataset: Dataset,
     model: type[Emulator],
@@ -167,7 +167,7 @@ def cross_validate(  # noqa: PLR0913
     return cv_results
 
 
-def bootstrap(  # noqa: PLR0913
+def bootstrap(
     model: Emulator,
     x: TensorLike,
     y: TensorLike,
