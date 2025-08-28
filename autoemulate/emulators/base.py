@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator
 from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
+from torch.utils.data import DataLoader
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
@@ -39,27 +40,33 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     supports_uq: bool = False
 
     @abstractmethod
-    def _fit(self, x: TensorLike, y: TensorLike): ...
+    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None): ...
 
-    def fit(self, x: TensorLike, y: TensorLike):
+    def fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None):
         """Fit the emulator to the provided data."""
-        self._check(x, y)
-        # Ensure x and y are tensors and 2D
-        x, y = self._convert_to_tensors(x, y)
+        if isinstance(x, TensorLike) and isinstance(y, TensorLike):
+            self._check(x, y)
+            # Ensure x and y are tensors and 2D
+            x, y = self._convert_to_tensors(x, y)
 
-        # Move to device
-        x, y = self._move_tensors_to_device(x, y)
+            # Move to device
+            x, y = self._move_tensors_to_device(x, y)
 
-        # Fit transforms
-        if self.x_transform is not None:
-            self.x_transform.fit(x)
-        if self.y_transform is not None:
-            self.y_transform.fit(y)
-        x = self.x_transform(x) if self.x_transform is not None else x
-        y = self.y_transform(y) if self.y_transform is not None else y
+            # Fit transforms
+            if self.x_transform is not None:
+                self.x_transform.fit(x)
+            if self.y_transform is not None:
+                self.y_transform.fit(y)
+            x = self.x_transform(x) if self.x_transform is not None else x
+            y = self.y_transform(y) if self.y_transform is not None else y
 
-        # Fit emulator
-        self._fit(x, y)
+            # Fit emulator
+            self._fit(x, y)
+        elif isinstance(x, DataLoader) and y is None:
+            self._fit(x, y)
+        else:
+            msg = "Invalid input types. Expected pair of TensorLike or DataLoader."
+            raise RuntimeError(msg)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -137,7 +144,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         Parameters
         ----------
         x: TensorLike
-            Input tensor of shape `(n_samples, n_features)` for which to predict
+            Input tensor of shape `(n_batch, n_features)` for which to predict
             the mean.
         with_grad: bool
             Whether to compute gradients with respect to the input. Defaults to False.
@@ -148,7 +155,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         Returns
         -------
         TensorLike
-            Mean tensor of shape `(n_samples, n_targets)`.
+            Mean tensor of shape `(n_batch, n_targets)`.
         """
         y_pred = self._predict(x, with_grad)
         if isinstance(y_pred, TensorLike):
@@ -163,6 +170,45 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                 else y_pred.sample(torch.Size([n_samples]))
             )
             return samples.mean(dim=0)
+
+    def predict_mean_and_variance(
+        self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
+    ) -> tuple[TensorLike, TensorLike | None]:
+        """
+        Predict the mean and variance of the target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean and variance.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike | None]
+            A tuple containing:
+            - Mean tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
+            otherwise None.
+        """
+        if not self.supports_uq:
+            return (self.predict_mean(x, with_grad, n_samples), None)
+        y_pred = self._predict(x, with_grad)
+        assert isinstance(y_pred, DistributionLike)
+        try:
+            return (y_pred.mean, y_pred.variance)
+        except Exception:
+            samples = (
+                y_pred.rsample(torch.Size([n_samples]))
+                if with_grad
+                else y_pred.sample(torch.Size([n_samples]))
+            )
+            return samples.mean(dim=0), samples.var(dim=0)
 
     @staticmethod
     @abstractmethod
@@ -331,6 +377,36 @@ class DeterministicEmulator(Emulator):
         assert isinstance(pred, TensorLike)
         return pred
 
+    def predict_mean_and_variance(
+        self, x, with_grad=False, n_samples=100
+    ) -> tuple[TensorLike, None]:
+        """
+        Predict the mean and variance of the target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean and variance.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
+
+        Returns
+        -------
+        tuple[TensorLike, None]
+            A tuple containing:
+            - Mean tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor as `None` since the model does not support UQ.
+        """
+        mean, variance = Emulator.predict_mean_and_variance(
+            self, x, with_grad, n_samples
+        )
+        assert variance is None
+        return mean, variance
+
 
 class ProbabilisticEmulator(Emulator):
     """A base class for probabilistic emulators."""
@@ -359,25 +435,34 @@ class ProbabilisticEmulator(Emulator):
         return pred
 
     def predict_mean_and_variance(
-        self, x: TensorLike, with_grad: bool = False
+        self, x, with_grad=False, n_samples=100
     ) -> tuple[TensorLike, TensorLike]:
         """
-        Predict mean and variance from the probabilistic output.
+        Predict the mean and variance of the target variable for input `x`.
 
         Parameters
         ----------
         x: TensorLike
-            Input tensor to make predictions for.
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean and variance.
         with_grad: bool
-            Whether to enable gradient calculation. Defaults to False.
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
 
         Returns
         -------
-        tuple[TensorLike, TensorLike]
-            The emulator predicted mean and variance for `x`.
+        tuple[TensorLike, None]
+            A tuple containing:
+            - Mean tensor of shape `(n_batch, n_targets)`.
+            - Variance tensor of shape `(n_batch, n_targets)`.
         """
-        pred = self.predict(x, with_grad)
-        return pred.mean, pred.variance
+        mean, variance = Emulator.predict_mean_and_variance(
+            self, x, with_grad, n_samples
+        )
+        assert isinstance(variance, TensorLike)
+        return mean, variance
 
 
 class GaussianEmulator(ProbabilisticEmulator):
@@ -439,9 +524,9 @@ class PyTorchBackend(nn.Module, Emulator):
     The class provides the basic structure and methods for PyTorch-based emulators to
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
-      - `.__init__()`: the constructor for the model
-      - `.forward()`: the forward pass of the model
-      - `.get_tune_params()`: the hyperparameters to tune for the model
+    - `.__init__()`: the constructor for the model
+    - `.forward()`: the forward pass of the model
+    - `.get_tune_params()`: the hyperparameters to tune for the model
 
     """
 
@@ -462,11 +547,7 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(
-        self,
-        x: TensorLike,
-        y: TensorLike,
-    ):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         """
         Train a PyTorchBackend model.
 
@@ -577,8 +658,8 @@ class SklearnBackend(DeterministicEmulator):
     The class provides the basic structure and methods for sklearn-based emulators to
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
-      - `.__init__()`: the constructor for the model
-      - `.get_tune_params()`: the hyperparameters to tune for the model
+    - `.__init__()`: the constructor for the model
+    - `.get_tune_params()`: the hyperparameters to tune for the model
     """
 
     model: BaseEstimator
@@ -590,7 +671,7 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean

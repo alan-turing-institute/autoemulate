@@ -39,6 +39,8 @@ dependencies = [
     "corner>=2.2.3",
     "torchrbf>=0.0.1",
     "arviz>=0.21.0",
+    "the-well>=1.1.0",
+    "neuraloperator>=1.0.2",
 ]
 
 [project.urls]

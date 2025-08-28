@@ -1,3 +1,5 @@
+import sys
+
 import gpytorch
 import torch
 from gpytorch import ExactMarginalLogLikelihood
@@ -5,7 +7,7 @@ from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNorm
 from gpytorch.kernels import MultitaskKernel, ScaleKernel
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 from gpytorch.means import MultitaskMean
-from torch import optim
+from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.callbacks.early_stopping import (
@@ -67,6 +69,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
+        fixed_mean_params: bool = False,
+        fixed_covar_params: bool = False,
         posterior_predictive: bool = False,
         epochs: int = 50,
         lr: float = 2e-1,
@@ -90,6 +94,12 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Function to create the mean module. Defaults to `constant_mean`.
         covar_module_fn: CovarModuleFn
             Function to create the covariance module. Defaults to `rbf`.
+        fixed_mean_params: bool
+            If True, the mean module parameters will not be updated during training.
+            Defaults to False.
+        fixed_covar_params: bool
+            If True, the covariance module parameters will not be updated during
+            training. Defaults to False.
         posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
@@ -149,6 +159,16 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.num_tasks = num_tasks
         self.to(self.device)
 
+        # Fix mean and kernel if required
+        self._fix_module_params(self.mean_module, fixed_mean_params)
+        self._fix_module_params(self.covar_module, fixed_covar_params)
+
+    @staticmethod
+    def _fix_module_params(module: nn.Module, fixed_params: bool):
+        if fixed_params:
+            for param in module.parameters():
+                param.requires_grad = False
+
     @staticmethod
     def is_multioutput():
         """GaussianProcess supports multioutput."""
@@ -163,7 +183,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             MultivariateNormal(mean, covar)
         )
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
         self.train()
         self.likelihood.train()
 
@@ -325,6 +345,8 @@ class GaussianProcessCorrelated(GaussianProcess):
         likelihood_cls: type[MultitaskGaussianLikelihood] = MultitaskGaussianLikelihood,
         mean_module_fn: MeanModuleFn = constant_mean,
         covar_module_fn: CovarModuleFn = rbf_plus_constant,
+        fixed_mean_params: bool = False,
+        fixed_covar_params: bool = False,
         posterior_predictive: bool = False,
         epochs: int = 50,
         lr: float = 2e-1,
@@ -349,6 +371,12 @@ class GaussianProcessCorrelated(GaussianProcess):
             Function to create the mean module. Defaults to `constant_mean`.
         covar_module_fn: CovarModuleFn
             Function to create the covariance module. Defaults to `rbf`.
+        fixed_mean_params: bool
+            If True, the mean module parameters will not be updated during training.
+            Defaults to False.
+        fixed_covar_params: bool
+            If True, the covariance module parameters will not be updated during
+            training. Defaults to False.
         posterior_predictive: bool
             If True, the model will return the posterior predictive distribution that
             by default includes observation noise (both global and task-specific). If
@@ -397,6 +425,10 @@ class GaussianProcessCorrelated(GaussianProcess):
         likelihood = likelihood_cls(num_tasks=num_tasks)
         likelihood = likelihood.to(self.device)
 
+        # Fix mean and kernel if required
+        self._fix_module_params(mean_module, fixed_mean_params)
+        self._fix_module_params(covar_module, fixed_covar_params)
+
         # Init must be called with preprocessed data
         gpytorch.models.ExactGP.__init__(
             self,
@@ -424,3 +456,118 @@ class GaussianProcessCorrelated(GaussianProcess):
         assert isinstance(mean_x, TensorLike)
         covar_x = self.covar_module(x)
         return GaussianProcessLike(mean_x, covar_x)
+
+
+# GP registry to raise exception if duplicate created
+GP_REGISTRY = {
+    "GaussianProcess": GaussianProcess,
+    "GaussianProcessCorrelated": GaussianProcessCorrelated,
+}
+
+
+def create_gp_subclass(
+    name: str, gp_base_class: type[GaussianProcess], **fixed_kwargs
+) -> type[GaussianProcess]:
+    """
+    Create a subclass of GaussianProcess with given fixed_kwargs.
+
+    This function creates a subclass of GaussianProcess where certain parameters
+    are fixed to specific values, reducing the parameter space for tuning.
+
+    Parameters
+    ----------
+    name : str
+        Name for the created subclass.
+    gp_base_class : type[GaussianProcess]
+        Base class to inherit from (typically GaussianProcess).
+    **fixed_kwargs
+        Keyword arguments to fix in the subclass. These parameters will be
+        set to the provided values and excluded from hyperparameter tuning.
+
+    Returns
+    -------
+    type[GaussianProcess]
+        A new subclass of GaussianProcess with the specified parameters fixed.
+        The returned class can be pickled and used like any other GP emulator.
+
+    Notes
+    -----
+    Fixed parameters are automatically excluded from `get_tune_params()` to
+    prevent them from being included in hyperparameter optimization.
+    """
+    if name in GP_REGISTRY:
+        raise ValueError(
+            f"A GP class named '{name}' already exists. "
+            f"Use a unique name or delete the existing class from GP_REGISTRY."
+        )
+
+    class GaussianProcessSubclass(gp_base_class):
+        def __init__(
+            self,
+            *args,
+            **kwargs,
+        ):
+            # Merge user kwargs with fixed kwargs, giving priority to fixed_kwargs
+            merged_kwargs = {**kwargs, **fixed_kwargs}
+            super().__init__(*args, **merged_kwargs)
+
+        @staticmethod
+        def get_tune_params():
+            """Get tunable parameters, excluding those that are fixed."""
+            tune_params = gp_base_class.get_tune_params()
+            # Remove fixed parameters from tuning
+            for key in fixed_kwargs:
+                tune_params.pop(key, None)
+            return tune_params
+
+    # Create a more descriptive docstring that includes fixed parameters
+    fixed_params_str = ", ".join(
+        f"{k}={v.__name__ if callable(v) else v}" for k, v in fixed_kwargs.items()
+    )
+
+    GaussianProcessSubclass.__doc__ = f"""
+    {gp_base_class.__doc__}
+
+    Notes
+    -----
+    {name} is a subclass of {gp_base_class.__name__} and has the following parameters
+    set during initialization: {fixed_params_str}
+
+    For any parameters set with this approach, they are also excluded from the search
+    space when tuning. For example, if the `covar_module_fn` is set to `rbf`,
+    the RBF kernel will always be used as the `covar_module`. Note that in this case
+    the associated hyperparameters (such as lengthscale) will still be fitted during
+    model training and are not fixed.
+    """
+
+    # Set the provided name for the class
+    GaussianProcessSubclass.__name__ = name
+    GaussianProcessSubclass.__qualname__ = name
+    GaussianProcessSubclass.__module__ = __name__
+
+    # Register class in the module's globals so can be pickled
+    setattr(sys.modules[__name__], name, GaussianProcessSubclass)
+    # Register subclass
+    GP_REGISTRY[name] = GaussianProcessSubclass
+
+    return GaussianProcessSubclass
+
+
+GaussianProcessRBF = create_gp_subclass(
+    "GaussianProcessRBF",
+    GaussianProcess,
+    covar_module_fn=rbf,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessMatern32 = create_gp_subclass(
+    "GaussianProcessMatern32",
+    GaussianProcess,
+    covar_module_fn=matern_3_2_kernel,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessMatern52 = create_gp_subclass(
+    "GaussianProcessMatern52",
+    GaussianProcess,
+    covar_module_fn=matern_5_2_kernel,
+    mean_module_fn=constant_mean,
+)
