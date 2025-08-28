@@ -11,7 +11,7 @@ class DummyEmulator(TransformedEmulator):
         self.y_transforms = y_transforms
 
 
-def make_result(  # noqa: PLR0913
+def make_result(
     idx, r2, r2_std, r2_train, r2_train_std, rmse, rmse_std, rmse_train, rmse_train_std
 ):
     return Result(

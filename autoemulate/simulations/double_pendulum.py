@@ -107,7 +107,7 @@ class DoublePendulum(Simulator):
             return None
 
 
-def double_pendulum_equations(y, m1, m2, l1, l2, g):  # noqa: PLR0913
+def double_pendulum_equations(y, m1, m2, l1, l2, g):
     """
     Solve double pendulum equations of motion.
 

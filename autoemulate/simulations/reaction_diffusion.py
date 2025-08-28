@@ -15,7 +15,7 @@ integrator_keywords["atol"] = 1e-12
 class ReactionDiffusion(Simulator):
     """Simulate the reaction-diffusion PDE for a given set of parameters."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
@@ -81,7 +81,7 @@ class ReactionDiffusion(Simulator):
         return torch.tensor(concat_array, dtype=torch.float32).reshape(1, -1)
 
 
-def reaction_diffusion(  # noqa: PLR0913
+def reaction_diffusion(
     t: float,  # noqa: ARG001
     uvt: NumpyLike,
     K22: NumpyLike,
@@ -131,7 +131,7 @@ def reaction_diffusion(  # noqa: PLR0913
     )
 
 
-def simulate_reaction_diffusion(  # noqa: PLR0913
+def simulate_reaction_diffusion(
     x: NumpyLike,
     return_timeseries: bool = False,
     n: int = 32,
