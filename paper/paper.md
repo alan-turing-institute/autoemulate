@@ -130,7 +130,7 @@ The result in this case will return the best combination of model and output tra
 
 ![GP with PCA emulator prediction for a reaction diffusion simulation compared to the ground truth.](reaction_diffusion_emulation.png)
 
-Once an emulator has been trained it can be used to generate fast predictions for new input values or to perform [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as sensitivity analysis or model calibration. For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a specified range of values, and two outputs `output1` and `output2`:
+Once an emulator has been trained it can be used to generate fast predictions for new input values or to perform [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as sensitivity analysis or model calibration. For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a plausible range of values, and two outputs `output1` and `output2`:
 
 ```python
 from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
