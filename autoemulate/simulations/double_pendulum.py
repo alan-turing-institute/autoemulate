@@ -188,7 +188,7 @@ def simulate_double_pendulum(
 
     # Solve using your exact implementation (FIXED: removed 't' parameter)
     solution = solve_ivp(
-        fun=lambda y: double_pendulum_equations(y, m1, m2, l1, l2, g),
+        fun=lambda _t, y: double_pendulum_equations(y, m1, m2, l1, l2, g),
         t_span=t_span,
         y0=y0,
         t_eval=time_points,
