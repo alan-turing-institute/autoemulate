@@ -272,7 +272,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     - refit the emulator using the simulated data
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         simulator: Simulator,
         emulator: ProbabilisticEmulator,
