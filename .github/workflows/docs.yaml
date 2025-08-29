@@ -23,7 +23,7 @@ jobs:
             - name: "Install jupyterbook"
               run: pip install -r docs/requirements.txt
             - name: "Install autoemulate"
-              run: pip install git+https://github.com/alan-turing-institute/autoemulate.git
+              run: pip install -e .
             - name: "Run jupyterbook"
               run: jupyter-book build docs --all 
             - name: "Deploy"
