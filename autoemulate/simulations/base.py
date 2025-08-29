@@ -219,7 +219,7 @@ class Simulator(ABC, ValidationMixin):
         TensorLike | None
             Simulated output tensor. Shape = (1, self.out_dim).
             For example, if the simulator outputs two simulated variables,
-            then the shape would be (1, 2). None if the simulation fails.
+            then the shape would be (1, 2).
         """
 
     def forward(self, x: TensorLike, allow_failures: bool = True) -> TensorLike | None:
@@ -227,6 +227,8 @@ class Simulator(ABC, ValidationMixin):
         Generate samples from input data using the simulator.
 
         Combines the abstract method `_forward` with some validation checks.
+        If there is a failure during the forward pass of the simulation,
+        the error is logged and None is returned.
 
         Parameters
         ----------
