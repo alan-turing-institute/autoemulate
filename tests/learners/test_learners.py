@@ -20,7 +20,7 @@ def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
     x_train = simulator.sample_inputs(n_initial_samples)
-    y_train = simulator.forward_batch_strict(x_train)
+    y_train, _ = simulator.forward_batch(x_train)
     assert isinstance(y_train, TensorLike)
     yield stream.Random(
         simulator=simulator,

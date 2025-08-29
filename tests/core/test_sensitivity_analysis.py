@@ -11,7 +11,7 @@ from autoemulate.simulations.projectile import Projectile, ProjectileMultioutput
 def xy_1d():
     sim = Projectile()
     x = sim.sample_inputs(100)
-    y = sim.forward_batch_strict(x)
+    y, _ = sim.forward_batch(x)
     return x, y
 
 
@@ -19,7 +19,7 @@ def xy_1d():
 def xy_2d():
     sim = ProjectileMultioutput()
     x = sim.sample_inputs(100)
-    y = sim.forward_batch_strict(x)
+    y, _ = sim.forward_batch(x)
     return x, y
 
 

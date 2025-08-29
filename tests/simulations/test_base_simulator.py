@@ -104,27 +104,6 @@ def test_forward(mock_simulator):
     assert output[0, 1] == pytest.approx(expected_sum * 2)
 
 
-def test_forward_batch_strict(mock_simulator):
-    """Test that forward_batch method processes multiple samples correctly"""
-    # Create test batch
-    n_samples = 3
-    batch = torch.tensor(
-        [[0.5, 0.0, 7.5], [0.2, 0.3, 6.0], [0.8, -0.5, 9.0]], dtype=torch.float32
-    )
-
-    # Process batch
-    results = mock_simulator.forward_batch_strict(batch)
-
-    # Check shape
-    assert results.shape == (n_samples, len(mock_simulator._output_names))
-
-    # Check values for each sample
-    for i in range(n_samples):
-        expected_sum = sum(batch[i].tolist())
-        assert results[i, 0] == pytest.approx(expected_sum * 1)
-        assert results[i, 1] == pytest.approx(expected_sum * 2)
-
-
 def test_get_parameter_idx(mock_simulator):
     """Test that get_parameter_idx returns correct indices"""
     assert mock_simulator.get_parameter_idx("param1") == 0
