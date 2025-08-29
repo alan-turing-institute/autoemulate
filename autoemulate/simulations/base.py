@@ -218,7 +218,7 @@ class Simulator(ABC, ValidationMixin):
             then the shape would be (1, 2). None if the simulation fails.
         """
 
-    def forward(self, x: TensorLike) -> TensorLike | None:
+    def forward(self, x: TensorLike, allow_failures: bool = True) -> TensorLike | None:
         """
         Generate samples from input data using the simulator.
 
@@ -228,19 +228,30 @@ class Simulator(ABC, ValidationMixin):
         ----------
         x: TensorLike
             Input tensor of shape (n_samples, self.in_dim).
+        allow_failures: bool
+            Whether to allow failures during simulation.
+            Default is True. When true, failed simulations will return None instead
+            of raising an error. When False, error is raised.
 
         Returns
         -------
         TensorLike
             Simulated output tensor. None if the simulation failed.
         """
-        y = self._forward(self.check_tensor_is_2d(x))
-        if isinstance(y, TensorLike):
-            x, y = self.check_pair(x, y)
-            return y
+        try:
+            y = self._forward(self.check_tensor_is_2d(x))
+            if isinstance(y, TensorLike):
+                x, y = self.check_pair(x, y)
+                return y
+        except Exception as e:
+            if not allow_failures:
+                self.logger.error("Error occurred during simulation: %s", e)
+                raise
         return None
 
-    def forward_batch(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
+    def forward_batch(
+        self, x: TensorLike, allow_failures: bool = True
+    ) -> tuple[TensorLike, TensorLike]:
         """Run multiple simulations, skipping any that fail.
 
         Failed simulations are skipped, and only successful results are returned
@@ -250,6 +261,10 @@ class Simulator(ABC, ValidationMixin):
         ----------
         x: TensorLike
             Tensor of input parameters to make predictions for.
+        allow_failures: bool
+            Whether to allow failures during simulation.
+            Default is True. When true, failed simulations will return None instead
+            of raising an error. When False, error is raised.
 
         Returns
         -------
@@ -273,15 +288,18 @@ class Simulator(ABC, ValidationMixin):
             unit_scale=True,
         ):
             logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
-            result = self.forward(x[i : i + 1])
+            result = self.forward(x[i : i + 1], allow_failures=allow_failures)
             if result is not None:
                 results.append(result)
-                successful += 1
                 valid_idx.append(i)
+                successful += 1
                 logger.debug("Simulation %d/%d successful", i + 1, len(x))
             else:
                 logger.warning(
-                    "Simulation %d/%d failed. Result is None.", i + 1, len(x)
+                    "Simulation %d/%d failed. Result is None"
+                    "and is not appended to the results",
+                    i + 1,
+                    len(x),
                 )
 
         # Report results
