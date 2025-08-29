@@ -243,7 +243,6 @@ class Simulator(ABC, ValidationMixin):
     def forward_batch(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Run multiple simulations, skipping any that fail.
 
-        For simulators where for some inputs the simulation can fail.
         Failed simulations are skipped, and only successful results are returned
         along with their corresponding input parameters.
 
