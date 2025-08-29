@@ -272,7 +272,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     - refit the emulator using the simulated data
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         simulator: Simulator,
         emulator: ProbabilisticEmulator,
@@ -450,10 +450,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         max_retries: int
             Maximum number of times to try to generate `n_simulations` NROY parameters.
             That is the maximum number of times to repeat the following steps:
-                - draw `n_test_samples` parameters
-                - use emulator to make predictions for those parameters
-                - score implausability of parameters given predictions
-                - identify NROY parameters within this set
+            - draw `n_test_samples` parameters
+            - use emulator to make predictions for those parameters
+            - score implausability of parameters given predictions
+            - identify NROY parameters within this set
         buffer_ratio: float
             A scaling factor used to expand the bounds of the (NROY) parameter space.
             It is applied as a ratio of the range (max_val - min_val) of each input

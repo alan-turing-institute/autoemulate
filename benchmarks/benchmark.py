@@ -70,7 +70,7 @@ def run_benchmark(
     help="File name for output",
 )
 @click.option("--log_level", default="progress_bar", help="Logging level")
-def main(  # noqa: PLR0913
+def main(
     simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
 ):
     """Run the benchmark with the specified parameters."""

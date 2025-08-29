@@ -194,7 +194,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             A tuple containing:
             - Mean tensor of shape `(n_batch, n_targets)`.
             - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
-              otherwise None.
+            otherwise None.
         """
         if not self.supports_uq:
             return (self.predict_mean(x, with_grad, n_samples), None)
@@ -524,9 +524,9 @@ class PyTorchBackend(nn.Module, Emulator):
     The class provides the basic structure and methods for PyTorch-based emulators to
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
-      - `.__init__()`: the constructor for the model
-      - `.forward()`: the forward pass of the model
-      - `.get_tune_params()`: the hyperparameters to tune for the model
+    - `.__init__()`: the constructor for the model
+    - `.forward()`: the forward pass of the model
+    - `.get_tune_params()`: the hyperparameters to tune for the model
 
     """
 
@@ -658,8 +658,8 @@ class SklearnBackend(DeterministicEmulator):
     The class provides the basic structure and methods for sklearn-based emulators to
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
-      - `.__init__()`: the constructor for the model
-      - `.get_tune_params()`: the hyperparameters to tune for the model
+    - `.__init__()`: the constructor for the model
+    - `.get_tune_params()`: the hyperparameters to tune for the model
     """
 
     model: BaseEstimator

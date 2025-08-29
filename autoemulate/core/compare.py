@@ -40,7 +40,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: InputLike,
         y: InputLike,
@@ -301,7 +301,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 updated_models.append(model)
         return updated_models
 
-    def log_compare(  # noqa: PLR0913
+    def log_compare(
         self,
         best_model_name,
         x_transforms,
@@ -576,7 +576,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         return fresh_model
 
-    def plot(  # noqa: PLR0912, PLR0913, PLR0915
+    def plot(  # noqa: PLR0912, PLR0915
         self,
         model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
@@ -691,7 +691,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             for in_idx in input_index:
                 if plot_index < len(axs):
 
-                    def subset_data_by_ranges(x, y, y_p, ranges, data, data_name):  # noqa: PLR0913
+                    def subset_data_by_ranges(x, y, y_p, ranges, data, data_name):
                         """Subsets data to joint specified ranges on a given array."""
                         for idx, (lower, upper) in ranges.items():
                             if idx < 0 or idx >= data.shape[1]:
