@@ -361,7 +361,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 attempt + 1,
                                 self.max_retries,
                             )
-                            if self.model_tuning:
+                            if self.model_tuning and not self.model_params:
                                 self.logger.debug(
                                     'Running tuner for model "%s"',
                                     model_cls.__name__,
