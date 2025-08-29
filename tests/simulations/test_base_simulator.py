@@ -104,27 +104,6 @@ def test_forward(mock_simulator):
     assert output[0, 1] == pytest.approx(expected_sum * 2)
 
 
-def test_forward_batch(mock_simulator):
-    """Test that forward_batch method processes multiple samples correctly"""
-    # Create test batch
-    n_samples = 3
-    batch = torch.tensor(
-        [[0.5, 0.0, 7.5], [0.2, 0.3, 6.0], [0.8, -0.5, 9.0]], dtype=torch.float32
-    )
-
-    # Process batch
-    results = mock_simulator.forward_batch(batch)
-
-    # Check shape
-    assert results.shape == (n_samples, len(mock_simulator._output_names))
-
-    # Check values for each sample
-    for i in range(n_samples):
-        expected_sum = sum(batch[i].tolist())
-        assert results[i, 0] == pytest.approx(expected_sum * 1)
-        assert results[i, 1] == pytest.approx(expected_sum * 2)
-
-
 def test_get_parameter_idx(mock_simulator):
     """Test that get_parameter_idx returns correct indices"""
     assert mock_simulator.get_parameter_idx("param1") == 0
@@ -188,7 +167,7 @@ def test_handle_simulation_failure():
 
     # This should process all samples without errors
     # We're just verifying it doesn't crash
-    results, valid_x = simulator.forward_batch_skip_failures(batch)
+    results, valid_x = simulator.forward_batch(batch)
     assert isinstance(results, TensorLike)
 
     # Verify results shape
@@ -247,3 +226,101 @@ def test_sample(method):
     assert torch.all(samples[:, 1] <= 100.0)
     assert torch.all(samples[:, 1] <= 100.0)
     assert torch.all(samples[:, 2] == 1000.0)
+
+
+class FailingSimulator(Simulator):
+    """A simulator that fails on specific input values"""
+
+    def __init__(
+        self,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        failure_threshold: float = 0.5,
+    ):
+        super().__init__(parameters_range, output_names)
+        self.failure_threshold = failure_threshold
+
+    def _forward(self, x: TensorLike) -> TensorLike | None:
+        # Fail if first parameter exceeds the threshold
+        if x[0, 0] > self.failure_threshold:
+            raise RuntimeError(
+                f"Simulation failed: parameter {x[0, 0]} exceeds "
+                f"threshold {self.failure_threshold}"
+            )
+
+        # Create outputs (simple sum with multiplier for each output)
+        outputs = []
+        for i, _ in enumerate(self.output_names):
+            output = torch.sum(x, dim=1) * (i + 1)
+            outputs.append(output.view(-1, 1))
+
+        return torch.cat(outputs, dim=1)
+
+
+def test_forward_allow_failures():
+    """Test allow_failures parameter in forward method"""
+    # Create simulator
+    params = {"param1": (0.0, 1.0), "param2": (0.0, 1.0)}
+    simulator = FailingSimulator(params, ["var1"])
+
+    # Input that will succeed
+    success_input = torch.tensor([[0.4, 0.5]], dtype=torch.float32)
+
+    # Input that will fail (param1 > 0.5)
+    failure_input = torch.tensor([[0.7, 0.5]], dtype=torch.float32)
+
+    # With allow_failures=True (default), should return None on failure
+    assert simulator.forward(success_input) is not None
+    assert simulator.forward(failure_input) is None
+
+    # With allow_failures=False, should raise an exception on failure
+    assert simulator.forward(success_input, allow_failures=False) is not None
+    with pytest.raises(RuntimeError, match="Simulation failed"):
+        simulator.forward(failure_input, allow_failures=False)
+
+
+def test_forward_batch_allow_failures():
+    """
+    Test allow_failures parameter in forward_batch method
+    """
+    # Create simulator
+    params = {"param1": (0.0, 1.0), "param2": (0.0, 1.0)}
+    simulator = FailingSimulator(params, ["var1"])
+
+    # Create a batch with mix of inputs that will succeed and fail
+    mixed_batch = torch.tensor(
+        [
+            [0.3, 0.5],  # Will succeed
+            [0.6, 0.5],  # Will fail (param1 > 0.5)
+            [0.2, 0.5],  # Will succeed
+            [0.8, 0.5],  # Will fail (param1 > 0.5)
+        ],
+        dtype=torch.float32,
+    )
+
+    # With allow_failures=True (default),
+    # should skip failures and return only successful results
+    # and filter out failed simulations
+    results, valid_inputs = simulator.forward_batch(mixed_batch)
+    assert len(results) == 2  # Only 2 successful simulations
+    assert len(valid_inputs) == 2
+    # Check which indices were successful (should be indices 0 and 2)
+    assert torch.allclose(valid_inputs[0], mixed_batch[0])
+    assert torch.allclose(valid_inputs[1], mixed_batch[2])
+
+    # With allow_failures=False, should raise an exception on first failure
+    with pytest.raises(RuntimeError, match="Simulation failed"):
+        simulator.forward_batch(mixed_batch, allow_failures=False)
+
+    # Test with batch that has no failures
+    success_batch = torch.tensor(
+        [
+            [0.3, 0.5],  # Will succeed
+            [0.2, 0.5],  # Will succeed
+        ],
+        dtype=torch.float32,
+    )
+    results, valid_inputs = simulator.forward_batch(success_batch, allow_failures=False)
+    assert len(results) == 2  # All simulations successful
+    assert len(valid_inputs) == 2
+    assert torch.allclose(valid_inputs, success_batch)

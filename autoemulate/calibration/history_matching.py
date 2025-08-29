@@ -421,7 +421,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Tensors of succesfully simulated input parameters and predictions.
         """
         # if simulation fails, returned y and x have fewer rows than input x
-        y, x = self.simulator.forward_batch_skip_failures(x)
+        y, x = self.simulator.forward_batch(x)
         y = y.to(self.device)
         x = x.to(self.device)
 
