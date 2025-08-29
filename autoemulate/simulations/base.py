@@ -253,15 +253,18 @@ class Simulator(ABC, ValidationMixin):
             if not allow_failures:
                 self.logger.error("Error occurred during simulation: %s", e)
                 raise
+            self.logger.warning("Simulation failed with error %s. Returning None", e)
         return None
 
     def forward_batch(
         self, x: TensorLike, allow_failures: bool = True
     ) -> tuple[TensorLike, TensorLike]:
-        """Run multiple simulations, skipping any that fail.
+        """
+        Run multiple simulations.
 
-        Failed simulations are skipped, and only successful results are returned
-        along with their corresponding input parameters.
+        If allow_failures is False, failed simulations will raise an error.
+        Otherwise, failed simulations are skipped, and only successful results
+        are returned along with their corresponding input parameters.
 
         Parameters
         ----------
