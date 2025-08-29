@@ -169,6 +169,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.model_serialiser = ModelSerialiser(self.logger)
 
+        if self.model_tuning and self.model_params:
+            self.logger.debug("Not model tuning as model_params were provided.")
+
         # Run compare
         self.compare()
 
