@@ -83,6 +83,10 @@ class Simulator(ABC, ValidationMixin):
         self._param_names = list(parameters_range.keys())
         self._param_bounds = list(parameters_range.values())
         self._in_dim = len(self.param_names)
+        self.sample_param_bounds = [b for b in self.param_bounds if b[0] != b[1]]
+        self.constant_params = {
+            idx: b[0] for idx, b in enumerate(self.param_bounds) if b[0] == b[1]
+        }
 
     @property
     def param_names(self) -> list[str]:
