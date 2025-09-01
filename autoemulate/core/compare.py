@@ -170,7 +170,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.model_serialiser = ModelSerialiser(self.logger)
 
         if self.model_tuning and self.model_params:
-            self.logger.debug("Not model tuning as model_params were provided.")
+            self.logger.warning("Not model tuning as model_params were provided.")
 
         # Run compare
         self.compare()
