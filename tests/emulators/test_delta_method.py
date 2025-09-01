@@ -385,3 +385,118 @@ def test_single_input_dimension():
     # f'(2) = 3 * 4 = 12, so variance = 12² * 0.1 = 14.4
     assert torch.allclose(result["mean_first_order"], torch.tensor([10.0]))
     assert torch.allclose(result["variance_approx"], torch.tensor([14.4]))
+
+
+def test_linear_function_scalar_full_covariance():
+    """Scalar linear function with full covariance (off-diagonal tested)."""
+
+    def f(x):
+        return 2 * x[:, 0] + 3 * x[:, 1] + 1
+
+    x_mean = torch.tensor([[1.0, 2.0]])
+    # Full covariance with correlation term
+    # [[0.1, 0.05], [0.05, 0.2]]
+    x_cov = torch.tensor([[[0.1, 0.05], [0.05, 0.2]]])
+
+    result = delta_method(f, x_mean, x_cov)
+
+    # Mean is exact for linear
+    assert torch.allclose(result["mean_first_order"], torch.tensor([[9.0]]))
+    # Var = [2,3] Σ [2,3]^T = 4*0.1 + 2*2*3*0.05 + 9*0.2 = 2.8
+    assert torch.allclose(result["variance_approx"], torch.tensor([[2.8]]), atol=1e-6)
+    assert torch.allclose(result["mean_second_order"], torch.tensor([[0.0]]), atol=1e-6)
+
+
+def test_vector_output_function_full_covariance():
+    """Vector output with full covariance including correlation."""
+
+    def f(x):
+        return torch.stack([x[:, 0] ** 2, x[:, 1] * 2, x[:, 0] + x[:, 1]], dim=1)
+
+    x_mean = torch.tensor([[1.0, 2.0]])
+    # Σ with off-diagonal
+    x_cov = torch.tensor([[[0.1, 0.05], [0.05, 0.2]]])
+
+    result = delta_method(f, x_mean, x_cov)
+
+    # Means unchanged
+    expected_mean = torch.tensor([[1.0, 4.0, 3.0]])
+    assert torch.allclose(result["mean_first_order"], expected_mean)
+
+    # Vars are diag(J Σ J^T) at x=[1,2]:
+    # y0=x0^2 -> grad [2,0] => 4*0.1 = 0.4
+    # y1=2*x1  -> grad [0,2] => 4*0.2 = 0.8
+    # y2=x0+x1 -> grad [1,1] => 0.1 + 2*0.05 + 0.2 = 0.4
+    expected_var = torch.tensor([[0.4, 0.8, 0.4]])
+    assert torch.allclose(result["variance_approx"], expected_var, atol=1e-6)
+
+
+def test_2d_input_sum_function_full_diag_equivalence():
+    """Full diagonal covariance equals elementwise variance case."""
+
+    def f(x):
+        return torch.sum(x.view(x.shape[0], -1), dim=1, keepdim=True)
+
+    x_mean = torch.ones(2, 3, 3)
+    x_var = torch.ones(2, 3, 3) * 0.1
+
+    # Build full covariance as diagonal from variances
+    var_flat = x_var.view(x_var.shape[0], -1)
+    x_cov_full = torch.diag_embed(var_flat)
+
+    res_var = delta_method(f, x_mean, x_var)
+    res_cov = delta_method(f, x_mean, x_cov_full)
+
+    for key in (
+        "mean_first_order",
+        "variance_approx",
+        "mean_second_order",
+        "mean_total",
+    ):
+        assert torch.allclose(res_var[key], res_cov[key], atol=1e-6)
+
+
+def test_invalid_full_covariance_shape_error():
+    """Error when a 3D tensor is provided but not (batch, D, D)."""
+
+    def f(x):
+        return x[:, 0]
+
+    x_mean = torch.tensor([[1.0, 2.0]])
+    # Wrong shape: element count does not match diag (B*D) or full (B*D*D)
+    # Here with B=1, D=2 => diag=2, full=4; choose 6 elements to force error
+    x_cov_wrong = torch.zeros((1, 2, 3))
+
+    with pytest.raises(ValueError, match="either diagonal variances|full covariances"):
+        delta_method(f, x_mean, x_cov_wrong)
+
+
+def test_variance_diff_between_diag_and_full_covariance():
+    """Variance should differ when off-diagonal correlations are present."""
+
+    def f(x):
+        # Scalar output without keepdim
+        return x[:, 0] + x[:, 1]
+
+    x_mean = torch.tensor([[1.0, 2.0]])
+    # Diagonal variances
+    x_var = torch.tensor([[0.1, 0.2]])
+    # Full covariance with positive correlation
+    x_cov = torch.tensor([[[0.1, 0.05], [0.05, 0.2]]])
+
+    res_var = delta_method(f, x_mean, x_var)
+    res_cov = delta_method(f, x_mean, x_cov)
+
+    # Means equal for linear function
+    assert torch.allclose(
+        res_var["mean_first_order"], res_cov["mean_first_order"]
+    )
+
+    # Variance differs due to off-diagonal:
+    #   diag -> 0.1 + 0.2 = 0.3
+    #   full -> 0.1 + 0.2 + 2*0.05 = 0.4
+    assert torch.allclose(res_var["variance_approx"], torch.tensor([0.3]), atol=1e-6)
+    assert torch.allclose(res_cov["variance_approx"], torch.tensor([0.4]), atol=1e-6)
+    assert not torch.allclose(
+        res_var["variance_approx"], res_cov["variance_approx"]
+    )
