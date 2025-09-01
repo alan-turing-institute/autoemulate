@@ -1,7 +1,11 @@
+# inference
+# plotting
 import arviz as az
+import numpy as np
 import pyro
 import pyro.distributions as dist
 import torch
+from getdist import MCSamples
 from pyro.infer import HMC, MCMC, NUTS, Predictive
 from pyro.infer.mcmc import RandomWalkKernel
 
@@ -366,3 +370,27 @@ class BayesianCalibration(TorchDeviceMixin):
 
         self.logger.info("Arviz InferenceData conversion complete.")
         return az_data
+
+    @staticmethod
+    def to_getdist(mcmc: MCMC, label: str):
+        """
+        Convert Pyro MCMC object to GetDist MCSamples object for plotting.
+
+        Parameters
+        ----------
+        mcmc: MCMC
+            The Pyro MCMC object.
+        label: str
+            Label for the MCSamples object.
+
+        Returns
+        -------
+        MCSamples
+            The GetDist MCSamples object.
+        """
+        samples = mcmc.get_samples()
+        return MCSamples(
+            samples=np.array(list(samples.values())).T,
+            names=list(samples.keys()),
+            label=label,
+        )
