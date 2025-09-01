@@ -23,7 +23,13 @@ def run_test(train_data, test_data, model, x_transforms, y_transforms):
     x, y = train_data
     x2, _ = test_data
     em = TransformedEmulator(
-        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=model
+        x,
+        y,
+        x_transforms=x_transforms,
+        y_transforms=y_transforms,
+        model=model,
+        output_from_samples=False,
+        full_covariance=False,
     )
     em.fit(x, y)
     y_pred = em.predict(x2)

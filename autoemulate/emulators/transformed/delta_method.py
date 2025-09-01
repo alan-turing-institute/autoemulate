@@ -12,42 +12,51 @@ def delta_method(
     x_variance: TensorLike,
     include_second_order: bool = True,
 ) -> dict[str, TensorLike]:
-    """
-    Delta method for uncertainty propagation through nonlinear functions.
+    """Delta method for uncertainty propagation through nonlinear functions.
 
-    Supports multidimensional input and output tensors by flattening and unflattening.
+    Supports multidimensional input and output tensors by flattening and
+    unflattening, and accepts either elementwise variances (diagonal
+    covariance) or full covariance matrices per batch element.
 
-    Computes mean and variance of f(X) where X ~ N(μ, Σ) using Taylor expansion:
-    - E[f(X)] ≈ f(μ) + (1/2) * tr(H_f(μ) * Σ)  [second-order mean]
-    - Var[f(X)] ≈ ∇f(μ)^T * Σ * ∇f(μ)         [first-order variance]
+    Computes mean and variance of f(X) where X ~ N(μ, Σ) using a Taylor
+    expansion around μ:
+    - E[f(X)] ≈ f(μ) + (1/2) · tr(H_f(μ) · Σ)        [second-order mean]
+    - Var[f(X)] ≈ ∇f(μ)^T · Σ · ∇f(μ)                [first-order variance]
 
     Parameters
     ----------
     forward_fn: Callable[[TensorLike], TensorLike]
         Function to transform. Can accept multidimensional tensors.
-        Expected input shape: (batch_size, *input_shape)
-        Expected output shape: (batch_size, *output_shape)
+        Expected input shape: `(batch_size, *input_shape)`.
+        Expected output shape: `(batch_size, *output_shape)`.
     x_mean: TensorLike
-        Input means, shape (batch_size, *input_shape)
+        Input means, shape `(batch_size, *input_shape)`.
     x_variance: TensorLike
-        Input variances (diagonal covariance), shape (batch_size, *input_shape)
+        Either elementwise variances (interpreted as diagonal covariance) with
+        the same shape as `x_mean`; or full covariance matrices with shape
+        `(batch_size, input_dim, input_dim)`, where `input_dim` is the
+        product of `*input_shape`.
     include_second_order: bool
-        Whether to include second-order mean correction
+        Whether to include the second-order mean correction.
 
     Returns
     -------
     dict[str, TensorLike]
-        - 'mean_first_order': f(μ) with original output shape
-        - 'mean_second_order': Second-order correction with original output shape
-        - 'mean_total': Total mean approximation with original output shape
-        - 'variance_approx': Variance approximation with original output shape
+        - `mean_first_order`: f(μ) with original output shape.
+        - `mean_second_order`: Second-order correction with original output
+          shape (zeros if `include_second_order=False`).
+        - `mean_total`: Total mean approximation with original output shape.
+        - `variance_approx`: Variance approximation with original output
+          shape, propagated using either diagonal variances or full covariances
+          as provided.
     """
-    if x_mean.shape != x_variance.shape:
-        msg = "x_mean and x_variance must have same shape"
-        raise ValueError(msg)
-
     if x_mean.dim() < 1:
         msg = f"Expected at least 1D tensors, got {x_mean.dim()}D"
+        raise ValueError(msg)
+
+    # Ensure shape of mean and variance are the same when equal dimensionality
+    if x_variance.dim() == x_mean.dim() and x_variance.shape != x_mean.shape:
+        msg = "x_mean and x_variance must have same shape"
         raise ValueError(msg)
 
     # Store original shapes
@@ -68,89 +77,108 @@ def delta_method(
 def _delta_method_core(  # noqa: PLR0915
     forward_fn: Callable,
     x_mean: TensorLike,
-    x_variance: TensorLike,
+    x_uncertainty: TensorLike,  # can be diag variances or full covariance
     original_input_shape: torch.Size,
     include_second_order: bool,
 ) -> dict[str, TensorLike]:
-    """Core delta method computation with flattening support."""
+    """Core delta method with support for diagonal or full covariance.
+
+    Parameters
+    ----------
+    forward_fn:
+        See `delta_method`.
+    x_mean:
+        See `delta_method`.
+    x_uncertainty:
+        Either elementwise variances in any shape matching the number of
+        elements in `x_mean` (interpreted as diagonal covariance), or full
+        covariances with shape `(batch_size, input_dim, input_dim)`.
+    original_input_shape:
+        Original input shape before flattening, including batch dimension.
+    include_second_order:
+        Whether to include the second-order mean correction.
+
+    Returns
+    -------
+    dict[str, TensorLike]
+        Same keys and shapes as returned by `delta_method`.
+    """
     batch_size = original_input_shape[0]
 
     # Flatten inputs to 2D: (batch_size, input_dim)
     x_mean_flat = x_mean.reshape(batch_size, -1)
-    x_variance_flat = x_variance.reshape(batch_size, -1)
     input_dim = x_mean_flat.shape[1]
+
+    # Detect whether x_uncertainty is variances (diag) or covariances (full)
+    total_elems = x_uncertainty.numel()
+    diag_elems = batch_size * input_dim
+    full_elems = batch_size * input_dim * input_dim
+
+    if total_elems == diag_elems:
+        cov_type = "diag"
+        x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim)
+    elif total_elems == full_elems and x_uncertainty.dim() >= 3:
+        cov_type = "full"
+        x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim, input_dim)
+    else:
+        msg = (
+            "x_uncertainty must represent either diagonal variances (same number of"
+            " elements as x_mean) or full covariances with shape (batch, input_dim,"
+            " input_dim)."
+        )
+        raise ValueError(msg)
 
     # Create wrapper function that handles reshape for forward_fn
     def forward_fn_flat(x_flat: TensorLike) -> TensorLike:
-        """Reshape flat input to original shape, call forward_fn, flatten output."""
-        # Reshape from flat to original input shape
         batch_size_inner = x_flat.shape[0]
         original_shape_batch = (batch_size_inner,) + original_input_shape[1:]
         x_reshaped = x_flat.reshape(original_shape_batch)
-
-        # Call original function and flatten output
         return forward_fn(x_reshaped).reshape(batch_size_inner, -1)
 
-    # First-order mean: f(μ) using flattened wrapper
+    # First-order mean: f(μ)
     mean_first_order_flat = forward_fn_flat(x_mean_flat)
-
-    if mean_first_order_flat.dim() == 1:
-        mean_first_order_flat = mean_first_order_flat.unsqueeze(-1)
-
     output_dim = mean_first_order_flat.shape[-1]
+    original_output_shape = forward_fn(x_mean[:1]).shape
 
-    # Get original output shape by calling forward_fn once
-    sample_output = forward_fn(x_mean[:1])  # Single sample to get shape
-    original_output_shape = sample_output.shape
+    def compute_delta_terms_single(x_single: TensorLike, unc_single: TensorLike):
+        # Define a single-sample function to obtain (output_dim, input_dim) Jacobian
+        # application of vmap computes without batch but forward_fn_flat expects batch
+        def single_output_fn(x: TensorLike) -> TensorLike:
+            return forward_fn_flat(x.unsqueeze(0)).squeeze(0)
 
-    # Compute jacobians and hessians using vmap for efficiency
-    def compute_delta_terms_single(
-        x_single: TensorLike, x_var_single: TensorLike
-    ) -> tuple[TensorLike, TensorLike]:
-        """Compute variance and second-order mean for single sample."""
-        # Jacobian computation
-        jacobian_fn = jacrev(forward_fn_flat)
-        jac = jacobian_fn(x_single.unsqueeze(0))
-        if isinstance(jac, tuple):
-            jac = jac[0]
-        jac = jac.squeeze(0)
-        if jac.dim() == 1:
-            jac = jac.unsqueeze(0)
+        jacobian_fn = jacrev(single_output_fn)
 
-        # Variance: sum over input dimensions of (∂f/∂xi)² * Var(Xi)
-        variance = torch.sum(jac.pow(2) * x_var_single.unsqueeze(0), dim=-1)
+        # (output_dim, input_dim) for vector output; (input_dim,) for scalar
+        jac = jacobian_fn(x_single)
+        jac = jac[0] if isinstance(jac, tuple) else jac  # handle tuple return
+        assert jac.numel() == output_dim * input_dim, "Size mismatch"
+        # Ensure correct shape for scalar/vector output
+        jac = jac.reshape(output_dim, input_dim)
+
+        # Variance / covariance propagation
+        if cov_type == "diag":
+            variance = torch.sum(jac.pow(2) * unc_single.unsqueeze(0), dim=-1)
+        else:  # full covariance
+            cov_out = jac @ unc_single @ jac.T  # (output_dim, output_dim)
+            variance = torch.diagonal(cov_out, dim1=-2, dim2=-1)
 
         # Second-order mean correction
         if include_second_order:
-
-            def single_output_fn(x: TensorLike) -> TensorLike:
-                return forward_fn_flat(x.unsqueeze(0)).squeeze(0)
-
             hessian_fn = hessian(single_output_fn)
-            hess = hessian_fn(x_single)
+            hess = hessian_fn(x_single)  # (output_dim, input_dim, input_dim)
+            hess = hess[0] if isinstance(hess, tuple) else hess  # handle tuple return
+            # Ensure correct shape for scalar/vector output
+            assert hess.numel() == output_dim * input_dim * input_dim, "Size mismatch"
+            hess = hess.reshape(output_dim, input_dim, input_dim)
 
-            if isinstance(hess, tuple):
-                hess = hess[0]
-
-            if hess.dim() == 2:  # Single output case
-                hess = hess.unsqueeze(0)
-
-            # Extract diagonal elements for each output
-            diag_elements = []
-            for i in range(min(output_dim, hess.shape[0])):
-                diag_elements.append(torch.diag(hess[i]))
-
-            if diag_elements:
-                hess_diag = torch.stack(diag_elements)
-            else:
-                hess_diag = torch.zeros(
-                    output_dim, input_dim, dtype=x_single.dtype, device=x_single.device
+            if cov_type == "diag":
+                second_order = 0.5 * torch.sum(
+                    torch.diagonal(hess, dim1=-2, dim2=-1) * unc_single.unsqueeze(0),
+                    dim=-1,
                 )
-
-            # Second-order: (1/2) * Σi Hii * Var(Xi)
-            second_order = 0.5 * torch.sum(
-                hess_diag * x_var_single.unsqueeze(0), dim=-1
-            )
+            else:
+                # full covariance: 0.5 * E((x - μ)^T @ H @ (x - μ)) = 0.5 * trace(H @ Σ)
+                second_order = 0.5 * torch.einsum("oij,ji->o", hess, unc_single)
         else:
             second_order = torch.zeros(
                 output_dim, dtype=x_single.dtype, device=x_single.device
@@ -158,26 +186,14 @@ def _delta_method_core(  # noqa: PLR0915
 
         return variance, second_order
 
-    # Vectorize over batch dimension
     batched_delta_fn = vmap(compute_delta_terms_single)
     variances_flat, second_order_corrections_flat = batched_delta_fn(
-        x_mean_flat, x_variance_flat
+        x_mean_flat, x_uncertainty_flat
     )
 
-    # Reshape to match mean shape
-    if variances_flat.dim() > 2:
-        variances_flat = variances_flat.squeeze(-1)
-    if second_order_corrections_flat.dim() > 2:
-        second_order_corrections_flat = second_order_corrections_flat.squeeze(-1)
-
-    # Combine results
     mean_total_flat = mean_first_order_flat + second_order_corrections_flat
-
-    # Calculate the correct output shape for the full batch
-    # original_output_shape is for 1 sample, we need to expand for full batch
     full_batch_output_shape = (batch_size,) + original_output_shape[1:]
 
-    # Reshape results back to original output shape
     mean_first_order = mean_first_order_flat.reshape(full_batch_output_shape)
     mean_second_order = second_order_corrections_flat.reshape(full_batch_output_shape)
     mean_total = mean_total_flat.reshape(full_batch_output_shape)

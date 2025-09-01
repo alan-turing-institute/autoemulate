@@ -408,7 +408,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 output = delta_method(
                     ComposeTransform(self.y_transforms).inv,  # type: ignore  # noqa: PGH003
                     y_t_pred.mean,
-                    y_t_pred.variance,
+                    y_t_pred.covariance_matrix,
                 )
                 mean, var = output["mean_total"], output["variance_approx"]
                 if not with_grad:
