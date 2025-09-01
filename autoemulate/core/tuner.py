@@ -64,7 +64,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         if random_seed is not None:
             set_random_seed(seed=random_seed)
 
-    def run(  # noqa: PLR0913
+    def run(
         self,
         model_class: type[Emulator],
         x_transforms: list[Transform] | None = None,

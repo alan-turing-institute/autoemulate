@@ -70,7 +70,7 @@ def run_benchmark(
     help="File name for output",
 )
 @click.option("--log_level", default="progress_bar", help="Logging level")
-def main(  # noqa: PLR0913
+def main(
     simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
 ):
     """Run the benchmark with the specified parameters."""
@@ -89,7 +89,8 @@ def main(  # noqa: PLR0913
         simulator: Simulator = SIMULATOR_REGISTRY[simulator_str]()
         max_samples = max(n_samples_list)
         x_all = simulator.sample_inputs(max_samples, random_seed=seed).to(torch.float32)
-        y_all = simulator.forward_batch(x_all).to(torch.float32)
+        y_all, _ = simulator.forward_batch(x_all)
+        y_all = y_all.to(torch.float32)
 
         params = list(itertools.product(n_samples_list, n_iter_list, n_splits_list))
         np.random.seed(seed)

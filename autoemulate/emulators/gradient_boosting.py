@@ -17,7 +17,7 @@ class GradientBoosting(SklearnBackend):
     Wraps Gradient Boosting regression from scikit-learn.
     """
 
-    def __init__(  # noqa: PLR0913 allow too many arguments since all currently required
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,

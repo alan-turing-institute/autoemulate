@@ -19,7 +19,7 @@ class BayesianCalibration(TorchDeviceMixin):
     given observed data, providing uncertainty estimates.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         emulator: Emulator,
         parameter_range: dict[str, tuple[float, float]],
