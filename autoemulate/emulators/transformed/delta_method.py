@@ -142,8 +142,8 @@ def _delta_method_core(  # noqa: PLR0915
 
     def compute_delta_terms_single(x_single: TensorLike, unc_single: TensorLike):
         # Define a single-sample function to obtain (output_dim, input_dim) Jacobian
-        # application of vmap computes without batch but forward_fn_flat expects batch
         def single_output_fn(x: TensorLike) -> TensorLike:
+            # Using vmap computes without batch but forward_fn_flat expects batch
             return forward_fn_flat(x.unsqueeze(0)).squeeze(0)
 
         jacobian_fn = jacrev(single_output_fn)
