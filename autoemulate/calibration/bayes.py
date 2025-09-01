@@ -1,5 +1,3 @@
-# inference
-# plotting
 import arviz as az
 import numpy as np
 import pyro
