@@ -216,9 +216,7 @@ class NaghaviSimulator(Simulator):
             print(f"Simulation error: {e}")
             return None
 
-    def forward_batch_skip_failures(
-        self, x: TensorLike
-    ) -> tuple[TensorLike, TensorLike]:
+    def forward_batch(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Run multiple simulations in parallel, skipping any that fail."""
         self.logger.info("Running batch simulation for %d samples", len(x))
 
