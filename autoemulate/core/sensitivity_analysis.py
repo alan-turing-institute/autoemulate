@@ -349,7 +349,7 @@ class SensitivityAnalysis(ConversionMixin):
         assert isinstance(top_n, list)
         return top_n
 
-    def plot_sa_heatmap(  # noqa: PLR0913
+    def plot_sa_heatmap(
         self,
         results: pd.DataFrame,
         index: str = "ST",
@@ -821,7 +821,7 @@ def _create_morris_plot(
     ax.grid(True, alpha=0.3)
 
 
-def _plot_sa_heatmap(  # noqa: PLR0913
+def _plot_sa_heatmap(
     si_df, index, parameters, cmap="coolwarm", normalize=True, fig_size=None
 ) -> matplotlib.figure.Figure:
     """

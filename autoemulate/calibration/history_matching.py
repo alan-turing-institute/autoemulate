@@ -628,7 +628,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         self.emulator.fit(x, y)
 
-    def run(  # noqa: PLR0913
+    def run(
         self,
         n_simulations: int = 100,
         n_test_samples: int = 10000,
@@ -735,7 +735,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Return test parameters and impl scores for this run/wave
         return torch.cat(test_parameters_list, 0), torch.cat(impl_scores_list, 0)
 
-    def run_waves(  # noqa: PLR0913
+    def run_waves(
         self,
         n_waves: int = 5,
         frac_nroy_stop: float = 0.9,
