@@ -121,7 +121,7 @@ class FNOEmulator(PyTorchBackend):
         # Set up optimizer (required by PyTorchBackend)
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
 
-    def _fit(self, x: DataLoader):  # type: ignore # noqa: PGH003
+    def _fit(self, x: DataLoader, y: DataLoader | None = None):  # type: ignore # noqa: PGH003, ARG002
         """Fit the model to the training data."""
         for idx, batch in enumerate(x):
             # For full time series prediction, use with_time=True
