@@ -3,9 +3,7 @@ from collections.abc import Iterable
 import numpy as np
 import torch
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.gaussian_process.exact import (
-    GaussianProcess,
-)
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.learners import stream
 from autoemulate.simulations.base import Simulator
 from autoemulate.simulations.projectile import ProjectileMultioutput
@@ -22,7 +20,7 @@ def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
     x_train = simulator.sample_inputs(n_initial_samples)
-    y_train = simulator.forward_batch(x_train)
+    y_train, _ = simulator.forward_batch(x_train)
     assert isinstance(y_train, TensorLike)
     yield stream.Random(
         simulator=simulator,

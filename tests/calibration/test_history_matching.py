@@ -99,7 +99,7 @@ def test_run(device):
 
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
-    y = simulator.forward_batch(x)
+    y, _ = simulator.forward_batch(x)
     assert isinstance(y, TensorLike)
 
     # Run history matching
@@ -138,7 +138,7 @@ def test_run_max_tries():
     """Run history matching with observations that return no NROY params."""
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
-    y = simulator.forward_batch(x)
+    y, _ = simulator.forward_batch(x)
     assert isinstance(y, TensorLike)
 
     # Run history matching
