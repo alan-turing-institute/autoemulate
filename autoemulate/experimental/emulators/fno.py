@@ -15,7 +15,6 @@ def prepare_batch(sample, channels=(0,), with_constants=False, with_time=True):
     y = sample["output_fields"][
         :, :, :, :, channels
     ]  # [batch, time, height, width, len(channels)]
-    print("prepare batch", x.shape, y.shape)
     # Permute both x and y
     x = x.permute(0, 4, 1, 2, 3)  # [batch, len(channels), time, height, width]
     y = y.permute(0, 4, 1, 2, 3)  # [batch, len(channels), time, height, width]
@@ -125,8 +124,7 @@ class FNOEmulator(PyTorchBackend):
         """Fit the model to the training data."""
         for idx, batch in enumerate(x):
             # For full time series prediction, use with_time=True
-            print(batch["input_fields"].shape)
-            print(batch["output_fields"].shape)
+
             x_batch, y_batch = prepare_batch(
                 batch,
                 channels=self.channels,
@@ -136,7 +134,6 @@ class FNOEmulator(PyTorchBackend):
             # x_batch = x_batch.permute(0, 4, 1, 2, 3)  # [1, 1, 10, 64, 64]
             # y_batch = y_batch.permute(0, 4, 1, 2, 3)  # [1, 1, 58, 64, 64]
 
-            print(x_batch.shape, y_batch.shape)
             # Move to device if available
             if hasattr(self, "device"):
                 x_batch = x_batch.to(self.device)
@@ -144,9 +141,6 @@ class FNOEmulator(PyTorchBackend):
 
             # Predictions - now predicts full sequences
             y_pred = self.forward(x_batch)
-            # In your _fit method, add this:
-            print(f"y_pred shape: {y_pred.shape}")  # This will show what FNO outputs
-            print(f"y_batch shape: {y_batch.shape}")  # This shows your target
             # Get loss - compare full predicted sequence with full target sequence
             loss = self.loss_fn(y_pred, y_batch)
             loss.backward()
