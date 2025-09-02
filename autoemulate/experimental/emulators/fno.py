@@ -44,9 +44,15 @@ def prepare_batch(sample, channels=(0,), with_constants=True, with_time=False):
 class FNOEmulator(PyTorchBackend):
     """An FNO emulator."""
 
-    def __init__(self, x, y, *args, **kwargs):
-        _, _ = x, y
+    def __init__(self, x=None, y=None, *args, **kwargs):
+        # Ensure parent initialisers run before creating nn.Module attributes
+        super().__init__()
         self.model = FNO(**kwargs)
+        self.optimizer = torch.optim.Adam(self.model.parameters())
+
+    @staticmethod
+    def is_multioutput() -> bool:  # noqa: D102
+        return True
 
     def _fit(self, x: DataLoader, y: DataLoader | None):  # type: ignore  # noqa: PGH003
         channels = (0,)  # Which channel to use
@@ -73,5 +79,6 @@ class FNOEmulator(PyTorchBackend):
         """Forward pass."""
         return self.model(x)
 
+    # TODO: update predict
     def _predict(self, x, with_grad):
         return super()._predict(x, with_grad)
