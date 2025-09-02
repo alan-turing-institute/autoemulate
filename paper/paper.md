@@ -123,7 +123,11 @@ from autoemulate.transforms import PCATransform
 ae = AutoEmulate(
     x, 
     y,
-    y_transforms_list=[[], [PCATransform(n_components=16)], [PCATransform(n_components=32)]],
+    y_transforms_list=[
+      [],
+      [PCATransform(n_components=16)],
+      [PCATransform(n_components=32)]
+    ],
 )
 ```
 
