@@ -47,8 +47,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[Transform | dict]] | None = None,
         y_transforms_list: list[list[Transform | dict]] | None = None,
-        model_tuning: bool = True,
-        model_params: None | ModelParams = None,
+        model_params: None | ModelParams | dict = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
         only_pytorch: bool = False,
         only_probabilistic: bool = False,
@@ -79,13 +78,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
-        model_tuning: bool
-            Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_params provided. Defaults to True.
         model_params: ModelParams | None
-            Dictionary of model-specific parameters to use when fitting the models.
-            If None, the default parameters for each model are used.
-            This is only used if model_tuning is False. Defaults to None.
+            If None, default behaviour, the model hyperparameters are tuned using
+            cross-validation. If provided, the model hyperparameters are set to the
+            provided values and no tuning is performed. If an empty dictionary {} is
+            provided the default parameters for each model are used without tuning.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
         only_pytorch: bool
@@ -161,16 +158,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
-        self.model_tuning = model_tuning
         self.model_params = model_params or {}
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.model_serialiser = ModelSerialiser(self.logger)
-
-        if self.model_tuning and self.model_params:
-            self.logger.warning("Not model tuning as model_params were provided.")
 
         # Run compare
         self.compare()
@@ -364,7 +357,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 attempt + 1,
                                 self.max_retries,
                             )
-                            if self.model_tuning and not self.model_params:
+                            if not self.model_params:
                                 self.logger.debug(
                                     'Running tuner for model "%s"',
                                     model_cls.__name__,

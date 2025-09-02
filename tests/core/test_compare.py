@@ -64,13 +64,11 @@ def test_get_model_subset():
     pytorch_subset = set(PYTORCH_EMULATORS)
     probabilistic_subset = {e for e in ALL_EMULATORS if e.supports_uq}
 
-    ae = AutoEmulate(x, y, only_pytorch=True, model_tuning=False)
+    ae = AutoEmulate(x, y, only_pytorch=True, model_params={})
     assert set(ae.models) == pytorch_subset
 
-    ae = AutoEmulate(x, y, only_probabilistic=True, model_tuning=False)
+    ae = AutoEmulate(x, y, only_probabilistic=True, model_params={})
     assert set(ae.models) == probabilistic_subset
 
-    ae = AutoEmulate(
-        x, y, only_pytorch=True, only_probabilistic=True, model_tuning=False
-    )
+    ae = AutoEmulate(x, y, only_pytorch=True, only_probabilistic=True, model_params={})
     assert set(ae.models) == pytorch_subset.intersection(probabilistic_subset)
