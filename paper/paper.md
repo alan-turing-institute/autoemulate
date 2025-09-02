@@ -108,8 +108,9 @@ from autoemulate import AutoEmulate
 
 ae = AutoEmulate(x, y)
 
-best = ae.best_result()
-emulator = best.model
+result = ae.best_result()
+
+emulator = result.model
 ```
 
 Under the hood, the above runs a search over a number of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with hyperparameter values and performance metrics in a `Results` object. The user can then easily extract the best performing emulator.
