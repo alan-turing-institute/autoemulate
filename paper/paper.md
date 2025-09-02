@@ -171,6 +171,6 @@ bc = BayesianCalibration(
 mcmc = bc.run()
 ```
 
-Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing and run [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html). This is particularly useful when simulations are very costly to run and one wants to select the most informative simulations to improve emulator performance at minimal computational cost.
+Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. Integrating custom simulators enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
 
 # References
