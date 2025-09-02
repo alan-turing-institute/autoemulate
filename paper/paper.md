@@ -115,7 +115,7 @@ emulator = result.model
 
 Under the hood, the above runs a search over a number of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with hyperparameter values and performance metrics in a `Results` object. The user can then easily extract the best performing emulator.
 
-AutoEmulate can additionally search over different data pre-processing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
+AutoEmulate can additionally search over different data preprocessing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
 
 ```python
 from autoemulate.transforms import PCATransform
