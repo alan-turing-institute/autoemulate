@@ -159,6 +159,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
         self.model_params = model_params or {}
+        self.model_tuning = model_params is None
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
@@ -357,7 +358,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 attempt + 1,
                                 self.max_retries,
                             )
-                            if not self.model_params:
+                            if self.model_tuning:
                                 self.logger.debug(
                                     'Running tuner for model "%s"',
                                     model_cls.__name__,
