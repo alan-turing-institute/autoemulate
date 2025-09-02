@@ -101,7 +101,7 @@ AutoEmulate fills a gap in the current landscape of emulation tools as it is bot
 
 The AutoEmulate documentation provides a comprehensive set of [tutorials](https://alan-turing-institute.github.io/autoemulate/tutorials/index.html) showcasing all functionality. We are also collecting [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies) demonstrating how to use AutoEmulate for real-world problems and complex workflows. Below we provide a brief overview of the main features.
 
-The most general use case for AutoEmulate is emulator construction. AutoEmulate takes as input `x`, `y` simulated data where `x` is a 2D tensor containing simulation parameters in columns and their values in rows, and `y` is an array containing the corresponding simulation outputs. Given data, AutoEmulate constructs an emulator in just a few lines of code:
+The most general use case for AutoEmulate is emulator construction. AutoEmulate takes as input `x`, `y` simulated data where `x` is a 2D array with simulation parameters as columns and each row representing a set of parameter values, and `y` is an array containing the corresponding simulation outputs. From this data, AutoEmulate constructs an emulator in just a few lines of code:
 
 ```python
 from autoemulate import AutoEmulate
