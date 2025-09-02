@@ -13,7 +13,10 @@ from autoemulate.core.types import (
 )
 from autoemulate.data.utils import ValidationMixin
 from autoemulate.emulators.base import Emulator
-from autoemulate.emulators.transformed.delta_method import delta_method
+from autoemulate.emulators.transformed.delta_method import (
+    delta_method,
+    delta_method_mean_only,
+)
 from autoemulate.transforms.base import (
     AutoEmulateTransform,
     _inverse_sample_gaussian_like,
@@ -384,6 +387,41 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
+
+    def predict_mean(
+        self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
+    ) -> TensorLike:
+        """Predict the mean of the target variable for input `x`."""
+        _ = n_samples  # unused since this is provided as a class parameter
+        y_t_pred = self.model.predict(self._transform_x(x), with_grad)
+
+        if isinstance(y_t_pred, TensorLike):
+            return self._inv_transform_y_tensor(y_t_pred)
+
+        if not self.output_from_samples:
+            # TODO: fix placeholder
+            self.linear_y_transforms = True
+            # Output with inverting mean
+            if self.linear_y_transforms:
+                return self._inv_transform_y_tensor(y_t_pred.mean)
+
+            # Output with delta method (mean only)
+            inverse_y = ComposeTransform(self.y_transforms).inv
+            out = delta_method_mean_only(
+                inverse_y,
+                y_t_pred.mean,
+                y_t_pred.covariance_matrix
+                if isinstance(y_t_pred, GaussianLike)
+                else y_t_pred.variance,
+                True,
+            )
+            return out["mean_total"].detach() if not with_grad else out["mean_total"]
+
+        # Output from samples
+        y_pred = self._inv_transform_y_distribution(y_t_pred)
+        samples = y_pred.rsample(torch.Size([self.n_samples]))
+        mean = samples.mean(dim=0)
+        return mean.detach() if not with_grad else mean
 
     def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         if with_grad and not self.supports_grad:
