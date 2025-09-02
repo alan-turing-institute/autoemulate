@@ -108,7 +108,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             (n_targets > max_targets). Defaults to False.
         n_samples: int
             Number of samples to draw when using sampling-based predictions.
-            Only used when output_from_samples=True. Defauls to 100.
+            Only used when output_from_samples=True. Defaults to 100.
         full_covariance: bool
             Whether to use full covariance matrix for predictions. If False,
             uses diagonal covariance. Automatically set to False for
@@ -121,10 +121,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         Notes
         -----
-        - Transforms are fitted on the provided training data during initialization
-        - The underlying emulator is trained on the transformed data
-        - For targets with dimensionality > max_targets, the emulator automatically
-          switches to sampling-based predictions with diagonal covariance for efficiency
+        - Transforms are fitted on the provided training data during initialization.
+        - The underlying emulator is trained on the transformed data.
+        - An empirical check tests whether all y_transforms behave approximately affine.
+          If so, the mean is inverted directly; otherwise a mean-only delta method
+          correction is used. This is enabled by default and is lightweight.
         """
         self.x_transforms = x_transforms or []
         self.y_transforms = y_transforms or []
@@ -171,12 +172,48 @@ class TransformedEmulator(Emulator, ValidationMixin):
             current_x = transform(current_x)
             assert isinstance(current_x, TensorLike)
         # Fit target transforms
+        self._y_transforms_affine: list[bool] = []
         current_y = y
         for transform in self.y_transforms:
             if isinstance(transform, AutoEmulateTransform):
                 transform.fit(current_y)
             current_y = transform(current_y)
             assert isinstance(current_y, TensorLike)
+            # Empirical affine check per-transform (always on, lightweight)
+            AFFINE_TOL = 1e-5
+            AFFINE_TRIALS = 3
+
+            def _measure_affine_err(
+                f,
+                shape_like: TensorLike,
+                a: float = 0.37,
+            ) -> float:
+                with torch.no_grad():
+                    x_probe = torch.randn_like(shape_like)
+                    y_probe = torch.randn_like(shape_like)
+                    zero = torch.zeros_like(shape_like)
+                    fx, fy, fz = f(x_probe), f(y_probe), f(zero)
+                    fxy, fax = f(x_probe + y_probe), f(a * x_probe)
+                    denom = 1e-8 + (
+                        fx.abs().mean()
+                        + fy.abs().mean()
+                        + fz.abs().mean()
+                        + fxy.abs().mean()
+                        + fax.abs().mean()
+                    )
+                    add_err = (fxy - (fx + fy - fz)).abs().mean() / denom
+                    hom_err = (fax - (a * fx - (a - 1.0) * fz)).abs().mean() / denom
+                    return float(torch.max(add_err, hom_err))
+
+            errs = []
+            for _ in range(AFFINE_TRIALS):
+                errs.append(_measure_affine_err(transform, current_y))
+            is_affine = (sum(errs) / len(errs)) < AFFINE_TOL
+            self._y_transforms_affine.append(is_affine)
+        # Cache whether all y transforms are affine
+        self.linear_y_transforms: bool = (
+            all(self._y_transforms_affine) if self._y_transforms_affine else False
+        )
 
     def refit(self, x: TensorLike, y: TensorLike, retrain_transforms: bool = False):
         """
@@ -399,8 +436,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
             return self._inv_transform_y_tensor(y_t_pred)
 
         if not self.output_from_samples:
-            # TODO: fix placeholder
-            self.linear_y_transforms = True
             # Output with inverting mean
             if self.linear_y_transforms:
                 return self._inv_transform_y_tensor(y_t_pred.mean)
