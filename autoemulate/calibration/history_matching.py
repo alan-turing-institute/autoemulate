@@ -291,7 +291,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         rank: int = 1,
         train_x: TensorLike | None = None,
         train_y: TensorLike | None = None,
-        parameter_idx: list[int] | None = None,
+        calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
     ):
@@ -323,10 +323,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional tensor of input data the emulator was trained on.
         train_y: TensorLike | None
             Optional tensor of output data the emulator was trained on.
-        parameter_idx: list[int] | None
-            Optional list of indices of parameters that are not constant (min != max).
-            If not provided, these indices are inferred from the simulator's
-            `parameters_range` attribute.
+        calibration_params: list[str] | None
+            Optional subset of parameters to calibrate. These have to correspond to the
+            parameters that the emulator was trained on. If None, calibrate all
+            simulator parameters.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         random_seed: int | None
@@ -357,17 +357,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # If use `run_waves()`, results are stored here
         self.wave_results = []
 
-        # Identify non-constant parameters if not provided
-        if parameter_idx is not None:
-            self.parameter_idx = parameter_idx
-        else:
-            self.parameter_idx = [
-                i
-                for i, (_, (val_min, val_max)) in enumerate(
-                    self.simulator.parameters_range.items()
-                )
-                if val_min != val_max
-            ]
+        # Save names and indices of parameters to calibrate
+        self.calibration_params = calibration_params or list(
+            simulator.parameters_range.keys()
+        )
+        self.parameter_idx = [
+            self.simulator.get_parameter_idx(param) for param in self.calibration_params
+        ]
 
     def _is_within_bounds(
         self, sample: TensorLike, bounds_dict: dict[str, tuple[float, float]]
@@ -553,7 +549,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             test_x = self.cloud_sample(n, scaling_factor).to(self.device)
 
         # Rule out implausible parameters from samples using an emulator,
-        # only use the parameters that change
+        # only use calibration parameter subset
         mean, variance = self.emulator.predict_mean_and_variance(
             test_x[:, self.parameter_idx]
         )
@@ -869,17 +865,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
         test_parameters_plausible = self.get_nroy(impl_scores, test_parameters)
         impl_scores_plausible = self.get_nroy(impl_scores, impl_scores)
 
-        param_names = [
-            param
-            for i, param in enumerate(list(self.simulator.parameters_range.keys()))
-            if i in self.parameter_idx
-        ]
         df = pd.DataFrame(
             test_parameters_plausible[:, self.parameter_idx],
-            columns=param_names,  # pyright: ignore[reportArgumentType]
+            columns=self.calibration_params,  # pyright: ignore[reportArgumentType]
         )
         df["Implausibility"] = impl_scores_plausible.cpu().numpy().mean(axis=1)
-        g = sns.PairGrid(df, vars=param_names, corner=True)
+        g = sns.PairGrid(df, vars=self.calibration_params, corner=True)
 
         norm = Normalize(
             vmin=df["Implausibility"].min(),  # pyright: ignore[reportArgumentType]
@@ -904,8 +895,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Add reference points
         if ref_val is not None:
-            for i in range(len(param_names)):
-                for j in range(len(param_names)):
+            for i in range(len(self.calibration_params)):
+                for j in range(len(self.calibration_params)):
                     if j < i:  # lower triangle only
                         ax = g.axes[i, j]
                         ax.scatter(
@@ -918,7 +909,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                             zorder=5,
                             label=(
                                 "True value"
-                                if (i == len(param_names) - 1 and j == 0)
+                                if (i == len(self.calibration_params) - 1 and j == 0)
                                 else None
                             ),
                         )
