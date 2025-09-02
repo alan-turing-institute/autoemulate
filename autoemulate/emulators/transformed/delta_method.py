@@ -70,16 +70,87 @@ def delta_method(
 
     # Use helper function for the core computation
     return _delta_method_core(
-        forward_fn, x_mean, x_variance, original_input_shape, include_second_order
+        forward_fn,
+        x_mean,
+        x_variance,
+        original_input_shape,
+        include_second_order,
+        compute_variance=True,
     )
 
 
-def _delta_method_core(  # noqa: PLR0915
+def delta_method_mean_only(
     forward_fn: Callable,
     x_mean: TensorLike,
-    x_uncertainty: TensorLike,  # can be diag variances or full covariance
+    x_variance: TensorLike | None = None,
+    include_second_order: bool = True,
+) -> dict[str, TensorLike]:
+    """Compute only the mean (with optional second-order correction).
+
+    This avoids all Jacobian-based variance propagation. It supports
+    multidimensional inputs/outputs by flattening/unflattening like
+    `delta_method`.
+
+    Parameters
+    ----------
+    forward_fn: Callable[[TensorLike], TensorLike]
+        Function to transform. Can accept multidimensional tensors.
+        Expected input shape: `(batch_size, *input_shape)`.
+        Expected output shape: `(batch_size, *output_shape)`.
+    x_mean: TensorLike
+        Input means, shape `(batch_size, *input_shape)`.
+    x_variance: TensorLike | None
+        Optional elementwise variances or full covariances. Required if
+        `include_second_order=True` to apply the second-order correction;
+        if omitted, a zero correction is applied.
+    include_second_order: bool
+        Whether to include the second-order mean correction.
+
+    Returns
+    -------
+    dict[str, TensorLike]
+        - `mean_first_order`: f(μ) with original output shape.
+        - `mean_second_order`: second-order correction (zeros if
+          `include_second_order=False`).
+        - `mean_total`: total mean approximation.
+    """
+    if x_mean.dim() < 1:
+        msg = f"Expected at least 1D tensors, got {x_mean.dim()}D"
+        raise ValueError(msg)
+
+    original_input_shape = x_mean.shape
+
+    # Handle 1D case by adding batch dimension
+    if x_mean.dim() == 1:
+        x_mean = x_mean.unsqueeze(0)
+        if x_variance is not None:
+            x_variance = x_variance.unsqueeze(0)
+        original_input_shape = x_mean.shape
+
+    out = _delta_method_core(
+        forward_fn,
+        x_mean,
+        x_uncertainty=x_variance,
+        original_input_shape=original_input_shape,
+        include_second_order=include_second_order,
+        compute_variance=False,
+    )
+
+    # Return only means (omit variance_approx)
+    return {
+        "mean_first_order": out["mean_first_order"],
+        "mean_second_order": out["mean_second_order"],
+        "mean_total": out["mean_total"],
+    }
+
+
+def _delta_method_core(  # noqa: PLR0915, PLR0913
+    forward_fn: Callable,
+    x_mean: TensorLike,
+    x_uncertainty: TensorLike | None,
     original_input_shape: torch.Size,
     include_second_order: bool,
+    compute_variance: bool,
 ) -> dict[str, TensorLike]:
     """Core delta method with support for diagonal or full covariance.
 
@@ -110,23 +181,49 @@ def _delta_method_core(  # noqa: PLR0915
     input_dim = x_mean_flat.shape[1]
 
     # Detect whether x_uncertainty is variances (diag) or covariances (full)
-    total_elems = x_uncertainty.numel()
-    diag_elems = batch_size * input_dim
-    full_elems = batch_size * input_dim * input_dim
+    if compute_variance:
+        if x_uncertainty is None:
+            msg = "x_variance/x_covariance is required when compute_variance=True"
+            raise ValueError(msg)
+        total_elems = x_uncertainty.numel()
+        diag_elems = batch_size * input_dim
+        full_elems = batch_size * input_dim * input_dim
 
-    if total_elems == diag_elems:
+        if total_elems == diag_elems:
+            cov_type = "diag"
+            x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim)
+        elif total_elems == full_elems and x_uncertainty.dim() >= 3:
+            cov_type = "full"
+            x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim, input_dim)
+        else:
+            msg = (
+                "x_uncertainty must be diag variances (same #elements as x_mean) or "
+                "full covariances with shape (batch, input_dim, input_dim)."
+            )
+            raise ValueError(msg)
+    elif x_uncertainty is None:
+        # When skipping variance and no uncertainty provided, use zeros (diag)
         cov_type = "diag"
-        x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim)
-    elif total_elems == full_elems and x_uncertainty.dim() >= 3:
-        cov_type = "full"
-        x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim, input_dim)
-    else:
-        msg = (
-            "x_uncertainty must represent either diagonal variances (same number of"
-            " elements as x_mean) or full covariances with shape (batch, input_dim,"
-            " input_dim)."
+        x_uncertainty_flat = torch.zeros(
+            batch_size, input_dim, dtype=x_mean.dtype, device=x_mean.device
         )
-        raise ValueError(msg)
+    else:
+        # When skipping variance but uncertainty is provided, detect its type
+        total_elems = x_uncertainty.numel()
+        diag_elems = batch_size * input_dim
+        full_elems = batch_size * input_dim * input_dim
+        if total_elems == diag_elems:
+            cov_type = "diag"
+            x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim)
+        elif total_elems == full_elems and x_uncertainty.dim() >= 3:
+            cov_type = "full"
+            x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim, input_dim)
+        else:
+            msg = (
+                "x_uncertainty must be diag variances or full covariances when "
+                "provided."
+            )
+            raise ValueError(msg)
 
     # Create wrapper function that handles reshape for forward_fn
     def forward_fn_flat(x_flat: TensorLike) -> TensorLike:
@@ -140,29 +237,44 @@ def _delta_method_core(  # noqa: PLR0915
     output_dim = mean_first_order_flat.shape[-1]
     original_output_shape = forward_fn(x_mean[:1]).shape
 
-    def compute_delta_terms_single(x_single: TensorLike, unc_single: TensorLike):
+    def compute_delta_terms_single(x_single: TensorLike, unc_single: TensorLike | None):
         # Define a single-sample function to obtain (output_dim, input_dim) Jacobian
         def single_output_fn(x: TensorLike) -> TensorLike:
             # Using vmap computes without batch but forward_fn_flat expects batch
             return forward_fn_flat(x.unsqueeze(0)).squeeze(0)
 
-        jacobian_fn = jacrev(single_output_fn)
+        if compute_variance:
+            jacobian_fn = jacrev(single_output_fn)
 
-        # (output_dim, input_dim) for vector output; (input_dim,) for scalar
-        jac = jacobian_fn(x_single)
-        jac = jac[0] if isinstance(jac, tuple) else jac  # handle tuple return
-        assert jac.numel() == output_dim * input_dim, "Size mismatch"
-        # Ensure correct shape for scalar/vector output
-        jac = jac.reshape(output_dim, input_dim)
+            # (output_dim, input_dim) for vector output; (input_dim,) for scalar
+            jac = jacobian_fn(x_single)
+            jac = jac[0] if isinstance(jac, tuple) else jac  # handle tuple return
+            assert jac.numel() == output_dim * input_dim, "Size mismatch"
+            # Ensure correct shape for scalar/vector output
+            jac = jac.reshape(output_dim, input_dim)
 
-        # Variance / covariance propagation
-        if cov_type == "diag":
-            variance = torch.sum(jac.pow(2) * unc_single.unsqueeze(0), dim=-1)
-        else:  # full covariance
-            cov_out = jac @ unc_single @ jac.T  # (output_dim, output_dim)
-            variance = torch.diagonal(cov_out, dim1=-2, dim2=-1)
+            # Variance / covariance propagation
+            if cov_type == "diag":
+                assert unc_single is not None
+                variance = torch.sum(jac.pow(2) * unc_single.unsqueeze(0), dim=-1)
+            elif cov_type == "full":  # full covariance
+                assert unc_single is not None
+                cov_out = jac @ unc_single @ jac.T  # (output_dim, output_dim)
+                variance = torch.diagonal(cov_out, dim1=-2, dim2=-1)
+            else:  # should not happen
+                variance = torch.zeros(
+                    output_dim, dtype=x_single.dtype, device=x_single.device
+                )
+        else:
+            # Skipping variance entirely
+            variance = torch.zeros(
+                output_dim, dtype=x_single.dtype, device=x_single.device
+            )
 
         # Second-order mean correction
+        second_order = torch.zeros(
+            output_dim, dtype=x_single.dtype, device=x_single.device
+        )
         if include_second_order:
             hessian_fn = hessian(single_output_fn)
             hess = hessian_fn(x_single)  # (output_dim, input_dim, input_dim)
@@ -172,17 +284,17 @@ def _delta_method_core(  # noqa: PLR0915
             hess = hess.reshape(output_dim, input_dim, input_dim)
 
             if cov_type == "diag":
-                second_order = 0.5 * torch.sum(
-                    torch.diagonal(hess, dim1=-2, dim2=-1) * unc_single.unsqueeze(0),
-                    dim=-1,
-                )
-            else:
+                # if unc_single is None (shouldn't be here due to earlier handling),
+                # treat as zeros so correction is zero
+                if unc_single is not None:
+                    second_order = 0.5 * torch.sum(
+                        torch.diagonal(hess, dim1=-2, dim2=-1)
+                        * unc_single.unsqueeze(0),
+                        dim=-1,
+                    )
+            elif cov_type == "full" and unc_single is not None:
                 # full covariance: 0.5 * E((x - μ)^T @ H @ (x - μ)) = 0.5 * trace(H @ Σ)
                 second_order = 0.5 * torch.einsum("oij,ji->o", hess, unc_single)
-        else:
-            second_order = torch.zeros(
-                output_dim, dtype=x_single.dtype, device=x_single.device
-            )
 
         return variance, second_order
 
