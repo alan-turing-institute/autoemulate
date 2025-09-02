@@ -80,6 +80,12 @@ class ReactionDiffusion(Simulator):
         # return tensor shape (1, 2*self.t*self.n*self.n)
         return torch.tensor(concat_array, dtype=torch.float32).reshape(1, -1)
 
+    def to_spatiotemporal(self, y: TensorLike) -> TensorLike:
+        """Reshape to spatiotemporal format."""
+        return y.reshape(y.shape[0], 2, int(self.T / self.dt), self.n, self.n).permute(
+            0, 2, 3, 4, 1
+        )
+
 
 def reaction_diffusion(
     t: float,  # noqa: ARG001
