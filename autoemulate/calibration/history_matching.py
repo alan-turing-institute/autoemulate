@@ -1,10 +1,16 @@
 import logging
 import warnings
 
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 import torch
+from matplotlib.colors import Normalize
+from matplotlib.figure import Figure
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.plotting import display_figure
 from autoemulate.core.results import Result
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
@@ -635,7 +641,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         max_retries: int = 3,
         scaling_factor: float = 0.1,
         refit_emulator: bool = False,
-        refit_on_all_data: bool = False,
+        refit_on_all_data: bool = True,
     ) -> tuple[TensorLike, TensorLike]:
         """
         Run a wave of the history matching workflow.
@@ -661,7 +667,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Whether to refit the emulator at the end of the run. Defaults to False.
         refit_on_all_data: bool
             Whether to refit the emulator on all available data or just the data
-            available from the most recent simulation run. Defaults to False.
+            available from the most recent simulation run. Defaults to True.
 
         Returns
         -------
@@ -743,8 +749,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_test_samples: int = 10000,
         max_retries: int = 3,
         scaling_factor: float = 0.1,
-        refit_emulator_on_last_wave: bool = False,
-        refit_on_all_data: bool = False,
+        refit_emulator_on_last_wave: bool = True,
+        refit_on_all_data: bool = True,
     ) -> list[tuple[TensorLike, TensorLike]]:
         """
         Run multiple waves of the history matching workflow.
@@ -774,10 +780,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
         refit_emulator_on_last_wave: bool
-            Whether to refit the emulator after the last wave. Defaults to False.
+            Whether to refit the emulator after the last wave. Defaults to True.
         refit_on_all_data: bool
             Whether to refit the emulator on all available data after each wave
-            or just the data from the most recent simulation run. Defaults to False.
+            or just the data from the most recent simulation run. Defaults to True.
 
         Returns
         -------
@@ -829,3 +835,134 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 break
 
         return self.wave_results
+
+    def plot_run(
+        self,
+        test_parameters: TensorLike,
+        impl_scores: TensorLike,
+        ref_val: list[float] | None = None,
+        title: str = "History Matching Results",
+        fname: str | None = None,
+    ) -> None | Figure:
+        """
+        Plot results of a single history matching run.
+
+        Parameters
+        ----------
+        test_parameters: TensorLike
+            A tensor of tested input parameters [n_samples, n_inputs].
+        impl_scores: TensorLike
+            A tensor of implausibility scores for the tested input parameters.
+        ref_val: list[float] | None
+            Optional list of true parameter values to mark on the plots.
+        title: str
+            Title for the plot.
+        fname: str | None
+            Optional filename to save the plot to. If None, the plot is displayed.
+
+        Returns
+        -------
+        None | Figure
+            If `fname` is provided, saves the plot to the file and returns None.
+            If `fname` is None, displays the plot and returns the plot figure.
+        """
+        test_parameters_plausible = self.get_nroy(impl_scores, test_parameters)
+        impl_scores_plausible = self.get_nroy(impl_scores, impl_scores)
+
+        param_names = [
+            param
+            for i, param in enumerate(list(self.simulator.parameters_range.keys()))
+            if i in self.parameter_idx
+        ]
+        df = pd.DataFrame(
+            test_parameters_plausible[:, self.parameter_idx],
+            columns=param_names,  # pyright: ignore[reportArgumentType]
+        )
+        df["Implausibility"] = impl_scores_plausible.cpu().numpy().mean(axis=1)
+        g = sns.PairGrid(df, vars=param_names, corner=True)
+
+        norm = Normalize(
+            vmin=df["Implausibility"].min(),  # pyright: ignore[reportArgumentType]
+            vmax=df["Implausibility"].max(),  # pyright: ignore[reportArgumentType]
+        )
+        cmap = plt.cm.get_cmap("viridis")
+
+        def scatter_continuous(x, y, **kwargs):
+            ax = plt.gca()
+            return ax.scatter(
+                x,
+                y,
+                c=df.loc[x.index, "Implausibility"],
+                cmap=cmap,
+                norm=norm,
+                s=15,
+                alpha=0.7,
+            )
+
+        g.map_lower(scatter_continuous)
+        g.map_diag(sns.histplot, kde=False, color="gray")
+
+        # Add reference points
+        if ref_val is not None:
+            for i in range(len(param_names)):
+                for j in range(len(param_names)):
+                    if j < i:  # lower triangle only
+                        ax = g.axes[i, j]
+                        ax.scatter(
+                            ref_val[j],
+                            ref_val[i],
+                            color="white",
+                            s=60,
+                            edgecolor="black",
+                            marker="X",
+                            zorder=5,
+                            label=(
+                                "True value"
+                                if (i == len(param_names) - 1 and j == 0)
+                                else None
+                            ),
+                        )
+
+        # Colorbar
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+        plt.colorbar(sm, ax=plt.gcf().axes, shrink=0.7, label="Implausibility")
+
+        # Global legend (handles all subplots)
+        handles, labels = g.axes[-1, 0].get_legend_handles_labels()
+        g.fig.legend(handles, labels, loc="upper right", frameon=True)
+        g.fig.suptitle(title, fontsize=16)
+
+        if fname is None:
+            return display_figure(g.fig)
+        g.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_wave(
+        self, wave: int, ref_val: list[float] | None = None, fname: str | None = None
+    ) -> None | Figure:
+        """
+        Plot results for a specific wave.
+
+        Parameters
+        ----------
+        wave: int
+            The wave number to plot (0-indexed).
+        ref_val: list[float] | None
+            Optional list of true parameter values to mark on the plots.
+        fname: str | None
+            Optional filename to save the plot to. If None, the plot is displayed.
+
+        Returns
+        -------
+        None | Figure
+            If `fname` is provided, saves the plot to the file and returns None.
+            If `fname` is None, displays the plot and returns the plot figure.
+        """
+        assert self.wave_results, "No wave results to plot, run `run_waves()` first."
+        assert 0 <= wave < len(self.wave_results), f"Wave {wave} not available."
+
+        test_parameters, impl_scores = self.wave_results[wave]
+        return self.plot_run(
+            test_parameters, impl_scores, ref_val, f"Results for Wave {wave}", fname
+        )

@@ -192,7 +192,6 @@ class BayesianCalibration(TorchDeviceMixin):
                 min_val, max_val = self.parameter_range[param]
                 midpoint_val = (min_val + max_val) / 2
                 param_list.append(torch.tensor(midpoint_val, device=self.device))
-
         full_params = torch.stack(param_list, dim=0).unsqueeze(0).float()
 
         # Get emulator prediction
