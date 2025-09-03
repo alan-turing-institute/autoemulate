@@ -636,7 +636,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         n_test_samples: int = 10000,
         max_retries: int = 3,
         scaling_factor: float = 0.1,
-        refit_emulator: bool = False,
+        refit_emulator: bool = True,
         refit_on_all_data: bool = True,
     ) -> tuple[TensorLike, TensorLike]:
         """
@@ -660,7 +660,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The standard deviation of the Gaussian to sample from in cloud sampling is
             set to: `parameter range * scaling_factor`.
         refit_emulator: bool
-            Whether to refit the emulator at the end of the run. Defaults to False.
+            Whether to refit the emulator at the end of the run. Defaults to True.
         refit_on_all_data: bool
             Whether to refit the emulator on all available data or just the data
             available from the most recent simulation run. Defaults to True.
