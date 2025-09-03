@@ -171,6 +171,7 @@ bc = BayesianCalibration(
 )
 mcmc = bc.run()
 ```
+A more complete application of Bayesian calibration to an epidemic simulation is demonstrated [here](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/03_bayes_calibration.html).
 
 Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. Integrating custom simulators enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
 
