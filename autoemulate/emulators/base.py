@@ -91,15 +91,17 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return "".join([c for c in cls.__name__ if c.isupper()]).lower()
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+    def _predict(self, x: TensorLike | DataLoader, with_grad: bool) -> OutputLike:
         pass
 
-    def predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
+    def predict(
+        self, x: TensorLike | DataLoader, with_grad: bool = False
+    ) -> OutputLike:
         """Predict the output for the given input.
 
         Parameters
         ----------
-        x: TensorLike
+        x: TensorLike | DataLoader
             Input tensor to make predictions for.
         with_grad: bool
             Whether to enable gradient calculation. Defaults to False.
@@ -109,6 +111,9 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         OutputLike
             The predicted output.
         """
+        if isinstance(x, DataLoader):
+            return self._predict(x, with_grad)
+
         if not self.is_fitted_:
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
