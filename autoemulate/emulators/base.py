@@ -362,8 +362,8 @@ class DeterministicEmulator(Emulator):
     supports_uq: bool = False
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...
-    def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...  # type: ignore  # noqa: PGH003
+    def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:  # type: ignore  # noqa: PGH003
         """Predict the output for the given input.
 
         Parameters
@@ -419,8 +419,8 @@ class ProbabilisticEmulator(Emulator):
     supports_uq: bool = True
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
-    def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...  # type: ignore  # noqa: PGH003
+    def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:  # type: ignore  # noqa: PGH003
         """Predict the output distribution for the given input.
 
         Parameters
@@ -650,7 +650,7 @@ class PyTorchBackend(nn.Module, Emulator):
                 if module.bias is not None and bias_init == "zeros":
                     nn.init.zeros_(module.bias)
 
-    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:  # type: ignore  # noqa: PGH003
         self.eval()
         with torch.set_grad_enabled(with_grad):
             return self(x)

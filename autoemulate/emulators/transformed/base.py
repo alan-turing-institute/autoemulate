@@ -382,7 +382,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
 
-    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:  # type: ignore  # noqa: PGH003
         if with_grad and not self.supports_grad:
             msg = "Gradient calculation is not supported."
             raise ValueError(msg)

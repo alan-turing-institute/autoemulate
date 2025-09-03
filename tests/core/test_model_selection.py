@@ -22,7 +22,7 @@ def test_cross_validate():
         def _fit(self, x, y):
             pass
 
-        def _predict(self, x, with_grad=False):
+        def _predict(self, x, with_grad=False):  # type: ignore  # noqa: PGH003
             """
             Dummy predict that always returns
             a 2D tensor.
