@@ -155,7 +155,7 @@ problem = {
 sa = SensitivityAnalysis(emulator, problem=problem)
 sobol_df = sa.run()
 ```
-
+A more complete application of sensitivity analysis to a cardiovascular simulator is demonstrated [here](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/01_emulation_sensitivity.html).
 The PyTorch backend enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo with Pyro. AutoEmulate provides a simple interface for this given a trained PyTorch emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
 
 ```python
