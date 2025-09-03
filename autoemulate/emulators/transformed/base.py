@@ -437,7 +437,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.model.fit(x_t, y_t)
 
     def predict_mean(
-        self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
+        self, x: TensorLike, with_grad: bool = False, n_samples: int | None = None
     ) -> TensorLike:
         """
         Predict the mean of the target variable for input `x`.
@@ -449,16 +449,16 @@ class TransformedEmulator(Emulator, ValidationMixin):
             the mean.
         with_grad: bool
             Whether to compute gradients with respect to the input. Defaults to False.
-        n_samples: int
-            Number of samples to draw when using sampling-based predictions.
-            Defaults to 100.
+        n_samples: int | None
+            Number of samples to draw when using sampling-based predictions. If
+            specified, overrides `n_samples` specified at initialization.
+            Defaults to None.
 
         Returns
         -------
         TensorLike
             Mean tensor of shape `(n_batch, n_targets)`.
         """
-        _ = n_samples  # unused since this is provided as a class parameter
         y_t_pred = self.model.predict(self._transform_x(x), with_grad)
 
         if isinstance(y_t_pred, TensorLike):
@@ -483,7 +483,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         # Output from samples
         y_pred = self._inv_transform_y_distribution(y_t_pred)
-        samples = y_pred.rsample(torch.Size([self.n_samples]))
+        samples = y_pred.rsample(
+            torch.Size([self.n_samples if n_samples is None else n_samples])
+        )
         mean = samples.mean(dim=0)
         return mean.detach() if not with_grad else mean
 
