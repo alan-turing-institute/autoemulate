@@ -80,6 +80,21 @@ class FNOEmulator(PyTorchBackend):
         """Forward pass."""
         return self.model(x)
 
-    # TODO: update predict
-    def _predict(self, x, with_grad):
-        return super()._predict(x, with_grad)
+    def _predict(self, x: DataLoader, with_grad):  # type: ignore  # noqa: PGH003
+        with torch.set_grad_enabled(with_grad):
+            channels = (0,)  # Which channel to use
+            if isinstance(x, TensorLike):
+                msg = "Input must be a DataLoader for FNOEmulator."
+                raise ValueError(msg)
+            all_preds = []
+            for _, batch in enumerate(x):
+                # Prepare input with constants
+                x, y = prepare_batch(
+                    batch, channels=channels, with_constants=True, with_time=True
+                )  # type: ignore  # noqa: PGH003
+                # print(x)
+                # print(x.shape)
+                out = self(x)
+                # print(out)
+                all_preds.append(out)
+            return torch.cat(all_preds)
