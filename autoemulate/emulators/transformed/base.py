@@ -439,7 +439,25 @@ class TransformedEmulator(Emulator, ValidationMixin):
     def predict_mean(
         self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
     ) -> TensorLike:
-        """Predict the mean of the target variable for input `x`."""
+        """
+        Predict the mean of the target variable for input `x`.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor of shape `(n_batch, n_features)` for which to predict
+            the mean.
+        with_grad: bool
+            Whether to compute gradients with respect to the input. Defaults to False.
+        n_samples: int
+            Number of samples to draw when using sampling-based predictions.
+            Defaults to 100.
+
+        Returns
+        -------
+        TensorLike
+            Mean tensor of shape `(n_batch, n_targets)`.
+        """
         _ = n_samples  # unused since this is provided as a class parameter
         y_t_pred = self.model.predict(self._transform_x(x), with_grad)
 
