@@ -14,6 +14,7 @@ The workflow includes the following steps:
 5. **Uncertainty Quantification**: The posterior distributions of the parameters are used to quantify uncertainties.
 
 This case study provides a practical example of how `AutoEmulate` can be applied to complex physiological models, enabling robust parameter estimation and model validation.
+
 ## How to Run the Case Study
 
 Follow the steps below to run the case study:
@@ -22,7 +23,7 @@ Follow the steps below to run the case study:
 
     ```bash
     git clone https://github.com/alan-turing-institute/autoemulate.git
-    cd case_studies/blood_pressure
+    cd case_studies/patient_calibration
     ```
 
 2. Install dependencies:
@@ -45,7 +46,7 @@ Follow the steps below to run the case study:
 
 ## Files in This Case Study
 
-- **`blood_pressure_case_study.ipynb`**: A Jupyter Notebook that provides an interactive walkthrough of the case study.
+- **`patient_calibration_case_study.ipynb`**: A Jupyter Notebook that provides an interactive walkthrough of the case study.
 - **`patient_calibration_workflow.py`**: A Python script containing the same workflow as the notebook, for users who prefer running the case study programmatically.
 - **`README.md`**: This file, which provides an overview of the case study and instructions for running it.
 
