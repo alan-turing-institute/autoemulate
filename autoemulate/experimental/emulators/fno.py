@@ -45,6 +45,7 @@ class FNOEmulator(PyTorchBackend):
     """An FNO emulator."""
 
     def __init__(self, x=None, y=None, *args, **kwargs):
+        _, _ = x, y  # Unused
         # Ensure parent initialisers run before creating nn.Module attributes
         super().__init__()
         self.model = FNO(**kwargs)
@@ -79,6 +80,6 @@ class FNOEmulator(PyTorchBackend):
         """Forward pass."""
         return self.model(x)
 
-    # TODO: update predict
+    # TODO: update predict
     def _predict(self, x, with_grad):
         return super()._predict(x, with_grad)

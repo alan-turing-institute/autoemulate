@@ -163,6 +163,7 @@ class ReactionDiffusionDataset(AutoEmulateDataset):
             output_channel_idxs=output_channel_idxs,
         )
 
+
 class MHDDataset(AutoEmulateDataset):
     """PyTorch Dataset for MHD data."""
 
