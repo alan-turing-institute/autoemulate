@@ -950,10 +950,26 @@ class HistoryMatchingWorkflow(HistoryMatching):
             If `fname` is provided, saves the plot to the file and returns None.
             If `fname` is None, displays the plot and returns the plot figure.
         """
-        assert self.wave_results, "No wave results to plot, run `run_waves()` first."
-        assert 0 <= wave < len(self.wave_results), f"Wave {wave} not available."
-
-        test_parameters, impl_scores = self.wave_results[wave]
+        test_parameters, impl_scores = self.get_wave_results(wave)
         return self.plot_run(
             test_parameters, impl_scores, ref_val, f"Results for Wave {wave}", fname
         )
+
+    def get_wave_results(self, wave: int) -> tuple[TensorLike, TensorLike]:
+        """
+        Get results for a specific wave.
+
+        Parameters
+        ----------
+        wave: int
+            The wave number to get results for (0-indexed).
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            A tensor of tested input parameters and their implausibility scores.
+        """
+        assert self.wave_results, "No wave results, run `run_waves()` first."
+        assert 0 <= wave < len(self.wave_results), f"Wave {wave} not available."
+
+        return self.wave_results[wave]
