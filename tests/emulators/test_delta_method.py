@@ -245,7 +245,7 @@ def test_shape_mismatch_error():
     x_mean = torch.tensor([[1.0, 2.0]])
     x_var = torch.tensor([[0.1]])  # Wrong shape
 
-    with pytest.raises(ValueError, match="same shape"):
+    with pytest.raises(ValueError, match="x_uncertainty must be diag variances"):
         delta_method(f, x_mean, x_var)
 
 
@@ -443,7 +443,7 @@ def test_2d_input_sum_function_full_diag_equivalence():
     # Build full covariance as diagonal from variances
     var_flat = x_var.view(x_var.shape[0], -1)
     x_cov_full = torch.diag_embed(var_flat)
-
+    print(x_mean.shape, x_cov_full.shape, var_flat.shape)
     res_var = delta_method(f, x_mean, x_var)
     res_cov = delta_method(f, x_mean, x_cov_full)
 
@@ -488,15 +488,11 @@ def test_variance_diff_between_diag_and_full_covariance():
     res_cov = delta_method(f, x_mean, x_cov)
 
     # Means equal for linear function
-    assert torch.allclose(
-        res_var["mean_first_order"], res_cov["mean_first_order"]
-    )
+    assert torch.allclose(res_var["mean_first_order"], res_cov["mean_first_order"])
 
     # Variance differs due to off-diagonal:
     #   diag -> 0.1 + 0.2 = 0.3
     #   full -> 0.1 + 0.2 + 2*0.05 = 0.4
     assert torch.allclose(res_var["variance_approx"], torch.tensor([0.3]), atol=1e-6)
     assert torch.allclose(res_cov["variance_approx"], torch.tensor([0.4]), atol=1e-6)
-    assert not torch.allclose(
-        res_var["variance_approx"], res_cov["variance_approx"]
-    )
+    assert not torch.allclose(res_var["variance_approx"], res_cov["variance_approx"])

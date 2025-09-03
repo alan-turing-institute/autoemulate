@@ -53,13 +53,6 @@ def delta_method(
     if x_mean.dim() < 1:
         msg = f"Expected at least 1D tensors, got {x_mean.dim()}D"
         raise ValueError(msg)
-
-    # Ensure shape of mean and variance are the same when equal dimensionality
-    if x_variance.dim() == x_mean.dim() and x_variance.shape != x_mean.shape:
-        msg = "x_mean and x_variance must have same shape"
-        raise ValueError(msg)
-
-    # Store original shapes
     original_input_shape = x_mean.shape
 
     # Handle 1D case by adding batch dimension
@@ -197,8 +190,8 @@ def _delta_method_core(  # noqa: PLR0915, PLR0913
             x_uncertainty_flat = x_uncertainty.reshape(batch_size, input_dim, input_dim)
         else:
             msg = (
-                "x_uncertainty must be diag variances (same #elements as x_mean) or "
-                "full covariances with shape (batch, input_dim, input_dim)."
+                "x_uncertainty must be diag variances (same number of elements as "
+                "x_mean) or full covariances with shape (batch, input_dim, input_dim)."
             )
             raise ValueError(msg)
     elif x_uncertainty is None:
