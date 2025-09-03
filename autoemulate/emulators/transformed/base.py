@@ -453,9 +453,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 return mean.detach() if not with_grad else mean
 
             # Output with delta method (mean only)
-            inverse_y = ComposeTransform(self.y_transforms).inv
             out = delta_method_mean_only(
-                inverse_y,
+                ComposeTransform(self.y_transforms).inv,
                 y_t_pred.mean,
                 y_t_pred.covariance_matrix
                 if isinstance(y_t_pred, GaussianLike)
