@@ -177,8 +177,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
         for transform in self.y_transforms:
             if isinstance(transform, AutoEmulateTransform):
                 transform.fit(current_y)
-            current_y = transform(current_y)
-            assert isinstance(current_y, TensorLike)
             # Empirical affine check per-transform (always on, lightweight)
             AFFINE_TOL = 1e-5
             AFFINE_TRIALS = 3
@@ -205,11 +203,24 @@ class TransformedEmulator(Emulator, ValidationMixin):
                     hom_err = (fax - (a * fx - (a - 1.0) * fz)).abs().mean() / denom
                     return float(torch.max(add_err, hom_err))
 
+            # Use the input shape before applying this transform; keep batch dim
+            input_shape = (
+                current_y.shape[1:] if len(current_y.shape) > 1 else current_y.shape
+            )
+            test_input = torch.zeros(
+                (1, *input_shape), dtype=current_y.dtype, device=current_y.device
+            )
+
             errs = []
             for _ in range(AFFINE_TRIALS):
-                errs.append(_measure_affine_err(transform, current_y))
+                errs.append(_measure_affine_err(transform, test_input))
             is_affine = (sum(errs) / len(errs)) < AFFINE_TOL
+
             self._y_transforms_affine.append(is_affine)
+
+            # Now update the running transformed target
+            current_y = transform(current_y)
+            assert isinstance(current_y, TensorLike)
         # Cache whether all y transforms are affine
         self.linear_y_transforms: bool = (
             all(self._y_transforms_affine) if self._y_transforms_affine else False
@@ -438,7 +449,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         if not self.output_from_samples:
             # Output with inverting mean
             if self.linear_y_transforms:
-                return self._inv_transform_y_tensor(y_t_pred.mean)
+                mean = self._inv_transform_y_tensor(y_t_pred.mean)
+                return mean.detach() if not with_grad else mean
 
             # Output with delta method (mean only)
             inverse_y = ComposeTransform(self.y_transforms).inv
