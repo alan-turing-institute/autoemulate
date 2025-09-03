@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
     # In[7]:
 
-    ae = AutoEmulate(x, y, models=[MLP], model_tuning=False)
+    ae = AutoEmulate(x, y, models=[MLP], model_params={})
 
     # Extract the best performing emulator.
 
@@ -278,7 +278,6 @@ if __name__ == "__main__":
         x[:, sa_parameter_idx],
         y,
         models=["GaussianProcess"],
-        model_tuning=False,
         model_params={
             "covar_module": matern_3_2_kernel,
             "standardize_x": True,

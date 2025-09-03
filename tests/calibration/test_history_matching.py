@@ -104,7 +104,7 @@ def test_run(device):
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_tuning=False)
+    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_params={})
     res = ae.best_result()
 
     observations = {"infection_rate": (0.3, 0.05)}
@@ -157,7 +157,7 @@ def test_run_max_tries():
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_tuning=False)
+    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_params={})
     res = ae.best_result()
 
     # Extreme values outside the range of what the simulator returns
