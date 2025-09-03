@@ -7,13 +7,14 @@ The Naghavi Model is a modular cardiovascular simulator that provides a detailed
 ## Workflow Overview
 
 The workflow includes the following steps:
-1. **Model Integration**: The Naghavi Model is integrated into the `AutoEmulate` framework.
-2. **Sensitivity Analysis**: Sensitivity analysis is performed to identify the most influential parameters affecting the model outputs.
-3. **History Matching**: History matching is conducted to rule out implausible regions of the parameter space given clinical patient data.
-4. **Bayesian Calibration**: Bayesian calibration is performed using Markov Chain Monte Carlo (MCMC) methods to estimate the model parameters.
-5. **Uncertainty Quantification**: The posterior distributions of the parameters are used to quantify uncertainties.
+1. **Sensitivity Analysis**: Sensitivity analysis is performed to identify the most influential parameters affecting the model outputs.
+2. **History Matching**: History matching is conducted to rule out implausible regions of the parameter space given clinical patient data.
+3. **Bayesian Calibration**: Bayesian calibration is performed within the bounds of the not ruled out yet region of the parameter space to estimate the model parameters which generated the observed patient data.
+4. **Uncertainty Quantification**: The posterior distributions of the parameters are used to quantify uncertainties.
 
 This case study provides a practical example of how `AutoEmulate` can be applied to complex physiological models, enabling robust parameter estimation and model validation.
+
+The Naghavi Model has been wrapped in an `AutoEmulate` `Simulator` class to enable the above workflow (this can be seen in [cardiac_simulator.py](cardiac_simulator.py)). The `AutoEmulate` documentation page contains a [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) on how to wrap custom simulators for use with `AutoEmulate`.
 
 ## How to Run the Case Study
 
@@ -47,7 +48,8 @@ Follow the steps below to run the case study:
 ## Files in This Case Study
 
 - **`patient_calibration_case_study.ipynb`**: A Jupyter Notebook that provides an interactive walkthrough of the case study.
-- **`patient_calibration_workflow.py`**: A Python script containing the same workflow as the notebook, for users who prefer running the case study programmatically.
+- **`cardiac_simulator.py`**: Contains the `NaghaviSimulator` class that wraps the Naghavi Model for use with `AutoEmulate`.
+- **`naghavi_model_parameters.json`**: A JSON file containing the default parameters range for the Naghavi Model.
 - **`README.md`**: This file, which provides an overview of the case study and instructions for running it.
 
 ## Dependencies
@@ -64,4 +66,4 @@ Ensure all dependencies are installed by running the command in Step 2 above.
 
 For more details about the `AutoEmulate` framework and its capabilities, visit the [official repository](https://github.com/alan-turing-institute/autoemulate).
 
-For more information about the Naghavi Model and the `ModularCirc` package, visit the [ModularCirc repository](https://github.com/alan-turing-institute/ModularCirc).
+For more information about the Naghavi Model and the `ModularCirc` package, visit the [ModularCirc repository](https://github.com/alan-turing-institute/ModularCirc).s
