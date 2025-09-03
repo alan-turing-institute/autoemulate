@@ -836,7 +836,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self,
         test_parameters: TensorLike,
         impl_scores: TensorLike,
-        ref_val: list[float] | None = None,
+        ref_val: dict[str, float] | None = None,
         title: str = "History Matching Results",
         fname: str | None = None,
     ) -> None | Figure:
@@ -849,8 +849,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters [n_samples, n_inputs].
         impl_scores: TensorLike
             A tensor of implausibility scores for the tested input parameters.
-        ref_val: list[float] | None
-            Optional list of true parameter values to mark on the plots.
+        ref_val:dict[str, float] | None
+            Optional dictionary of true parameter values to mark on the plots.
         title: str
             Title for the plot.
         fname: str | None
@@ -895,13 +895,13 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         # Add reference points
         if ref_val is not None:
-            for i in range(len(self.calibration_params)):
-                for j in range(len(self.calibration_params)):
+            for i, parami in enumerate(self.calibration_params):
+                for j, paramj in enumerate(self.calibration_params):
                     if j < i:  # lower triangle only
                         ax = g.axes[i, j]
                         ax.scatter(
-                            ref_val[j],
-                            ref_val[i],
+                            ref_val[paramj],
+                            ref_val[parami],
                             color="white",
                             s=60,
                             edgecolor="black",
@@ -930,7 +930,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
         return None
 
     def plot_wave(
-        self, wave: int, ref_val: list[float] | None = None, fname: str | None = None
+        self,
+        wave: int,
+        ref_val: dict[str, float] | None = None,
+        fname: str | None = None,
     ) -> None | Figure:
         """
         Plot results for a specific wave.
@@ -939,8 +942,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         wave: int
             The wave number to plot (0-indexed).
-        ref_val: list[float] | None
-            Optional list of true parameter values to mark on the plots.
+        ref_val: dict[str, float] | None
+            Optional dictionary of true parameter values to mark on the plots.
         fname: str | None
             Optional filename to save the plot to. If None, the plot is displayed.
 
@@ -973,3 +976,68 @@ class HistoryMatchingWorkflow(HistoryMatching):
         assert 0 <= wave < len(self.wave_results), f"Wave {wave} not available."
 
         return self.wave_results[wave]
+
+    def plot_wave_evolution(
+        self, param, ref_val: dict[str, float] | None = None, fname: str | None = None
+    ) -> None | Figure:
+        """
+        Plot evolution of parameter distributions across all waves.
+
+        Parameters
+        ----------
+        param: str
+            The parameter to plot the evolution for.
+        ref_val: dict[str, float] | None
+            Optional dictionary of true parameter values to mark on the plots.
+        fname: str | None
+            Optional filename to save the plot to. If None, the plot is displayed.
+
+        Returns
+        -------
+        None | Figure
+            If `fname` is provided, saves the plot to the file and returns None.
+            If `fname` is None, displays the plot and returns the plot figure.
+        """
+        all_df = []
+        for wave_idx, (test_parameters, impl_scores) in enumerate(self.wave_results):
+            test_parameters_plausible = self.get_nroy(impl_scores, test_parameters)
+            impl_scores_plausible = self.get_nroy(impl_scores, impl_scores)
+
+            # Create DataFrame
+            df = pd.DataFrame(
+                test_parameters_plausible[:, self.parameter_idx],
+                columns=self.calibration_params,  # pyright: ignore[reportArgumentType]
+            )
+            df["Implausibility"] = impl_scores_plausible.mean(axis=1)  # pyright: ignore[reportCallIssue]
+            df["Wave"] = wave_idx
+
+            all_df.append(df)
+
+        # Concatenate all waves into a single DataFrame
+        result_df = pd.concat(all_df, ignore_index=True)
+
+        fig = plt.figure(figsize=(8, 5))
+        sns.boxplot(data=result_df, x="Wave", y=param)
+
+        # Add horizontal line at true value
+        if ref_val is not None:
+            plt.axhline(
+                ref_val[param],
+                color="red",
+                linestyle="--",
+                linewidth=2,
+                label="True value",
+            )
+
+        plt.title(f"Distribution of {param} by Wave")
+        plt.xlabel("Wave")
+        plt.ylabel(param)
+        plt.tight_layout()
+
+        # Add global legend only once (first plot)
+        plt.legend(loc="upper right", frameon=True)
+
+        if fname is None:
+            return display_figure(fig)
+        plt.savefig(f"{param}_wave_evolution.png", dpi=300, bbox_inches="tight")
+        return None
