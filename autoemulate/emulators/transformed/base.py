@@ -493,6 +493,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
                     ComposeTransform(self.y_transforms).inv,  # type: ignore  # noqa: PGH003
                     y_t_pred.mean,
                     y_t_pred.covariance_matrix,
+                    # If all affine, mean transformation is exact
+                    include_second_order=not self.all_y_transforms_affine,
                 )
                 mean, var = output["mean_total"], output["variance_approx"]
                 if not with_grad:
