@@ -836,6 +836,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self,
         test_parameters: TensorLike,
         impl_scores: TensorLike,
+        set_simulator_axis_limits: bool = True,
         ref_val: dict[str, float] | None = None,
         title: str = "History Matching Results",
         fname: str | None = None,
@@ -849,6 +850,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             A tensor of tested input parameters [n_samples, n_inputs].
         impl_scores: TensorLike
             A tensor of implausibility scores for the tested input parameters.
+        set_simulator_axis_limits: bool
+            Whether to keep the simulator parameter ranges as axis limits.
         ref_val:dict[str, float] | None
             Optional dictionary of true parameter values to mark on the plots.
         title: str
@@ -880,7 +883,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         def scatter_continuous(x, y, **kwargs):
             ax = plt.gca()
-            return ax.scatter(
+            sc = ax.scatter(
                 x,
                 y,
                 c=df.loc[x.index, "Implausibility"],
@@ -889,9 +892,21 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 s=15,
                 alpha=0.7,
             )
+            # Set axis limits if available
+            if set_simulator_axis_limits:
+                ax.set_xlim(self.simulator.parameters_range[x.name])
+                ax.set_ylim(self.simulator.parameters_range[y.name])
+            return sc
+
+        def diag_hist(x, **kwargs):
+            ax = plt.gca()
+            sns.histplot(x, kde=False, color="gray", ax=ax)
+            # Set axis limits if available
+            if set_simulator_axis_limits:
+                ax.set_xlim(self.simulator.parameters_range[x.name])
 
         g.map_lower(scatter_continuous)
-        g.map_diag(sns.histplot, kde=False, color="gray")
+        g.map_diag(diag_hist)
 
         # Add reference points
         if ref_val is not None:
@@ -932,6 +947,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def plot_wave(
         self,
         wave: int,
+        set_simulator_axis_limits: bool = True,
         ref_val: dict[str, float] | None = None,
         fname: str | None = None,
     ) -> None | Figure:
@@ -942,6 +958,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         wave: int
             The wave number to plot (0-indexed).
+        set_simulator_axis_limits: bool
+            Whether to keep the simulator parameter ranges as axis limits.
         ref_val: dict[str, float] | None
             Optional dictionary of true parameter values to mark on the plots.
         fname: str | None
@@ -955,7 +973,12 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         test_parameters, impl_scores = self.get_wave_results(wave)
         return self.plot_run(
-            test_parameters, impl_scores, ref_val, f"Results for Wave {wave}", fname
+            test_parameters,
+            impl_scores,
+            set_simulator_axis_limits,
+            ref_val,
+            f"Results for Wave {wave}",
+            fname,
         )
 
     def get_wave_results(self, wave: int) -> tuple[TensorLike, TensorLike]:
