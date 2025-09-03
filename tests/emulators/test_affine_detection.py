@@ -29,7 +29,7 @@ def test_affine_detection_flags_linear_transforms():
     )
 
     # Internal flag should mark all y transforms as affine
-    assert em.linear_y_transforms is True
+    assert em.all_y_transforms_affine is True
 
 
 def test_predict_mean_uses_fast_linear_path(monkeypatch):
@@ -103,7 +103,7 @@ def test_vae_marked_nonlinear_and_mean_uses_delta(monkeypatch):
     )
 
     # VAE is nonlinear, so affine flag should be False
-    assert em.linear_y_transforms is False
+    assert em.all_y_transforms_affine is False
 
     em.fit(X, Y)
     _ = em.predict_mean(X[:5])

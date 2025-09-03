@@ -222,7 +222,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             current_y = transform(current_y)
             assert isinstance(current_y, TensorLike)
         # Cache whether all y transforms are affine
-        self.linear_y_transforms: bool = (
+        self.all_y_transforms_affine: bool = (
             all(self._y_transforms_affine) if self._y_transforms_affine else False
         )
 
@@ -448,7 +448,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         if not self.output_from_samples:
             # Output with inverting mean
-            if self.linear_y_transforms:
+            if self.all_y_transforms_affine:
                 mean = self._inv_transform_y_tensor(y_t_pred.mean)
                 return mean.detach() if not with_grad else mean
 
