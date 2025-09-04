@@ -1,6 +1,6 @@
 import torch
 from autoemulate.core.types import OutputLike, TensorLike
-from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalBackend
+from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalEmulator
 from neuralop.models import FNO
 from torch.utils.data import DataLoader
 
@@ -41,7 +41,7 @@ def prepare_batch(sample, channels=(0,), with_constants=True, with_time=False):
     return x, y
 
 
-class FNOEmulator(SpatioTemporalBackend):
+class FNOEmulator(SpatioTemporalEmulator):
     """An FNO emulator."""
 
     def __init__(self, x=None, y=None, *args, **kwargs):

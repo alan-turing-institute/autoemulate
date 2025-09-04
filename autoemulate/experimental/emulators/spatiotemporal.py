@@ -5,7 +5,7 @@ from autoemulate.emulators.base import PyTorchBackend
 from torch.utils.data import DataLoader
 
 
-class SpatioTemporalBackend(PyTorchBackend):
+class SpatioTemporalEmulator(PyTorchBackend):
     """A spatio-temporal backend for emulators."""
 
     def fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
