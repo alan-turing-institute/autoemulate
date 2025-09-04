@@ -11,6 +11,7 @@ def delta_method(
     x_mean: TensorLike,
     x_variance: TensorLike,
     include_second_order: bool = True,
+    fixed_jacobian: TensorLike | None = None,
 ) -> dict[str, TensorLike]:
     """Delta method for uncertainty propagation through nonlinear functions.
 
@@ -38,6 +39,13 @@ def delta_method(
         product of `*input_shape`.
     include_second_order: bool
         Whether to include the second-order mean correction.
+    fixed_jacobian: TensorLike | None
+        Optional constant Jacobian to use for variance propagation.
+        Should have shape `(output_dim, input_dim)`, where `output_dim` is the
+        product of `*output_shape`. If provided, this Jacobian is used for all
+        batch elements instead of computing Jacobians via autodiff. This can
+        be useful if the Jacobian is known analytically or to speed up
+        computation when the Jacobian is constant.
 
     Returns
     -------
@@ -69,6 +77,7 @@ def delta_method(
         original_input_shape,
         include_second_order,
         compute_variance=True,
+        fixed_jac=fixed_jacobian,
     )
 
 
@@ -127,6 +136,7 @@ def delta_method_mean_only(
         original_input_shape=original_input_shape,
         include_second_order=include_second_order,
         compute_variance=False,
+        fixed_jac=None,
     )
 
     # Return only means (omit variance_approx)
@@ -144,23 +154,31 @@ def _delta_method_core(  # noqa: PLR0915
     original_input_shape: torch.Size,
     include_second_order: bool,
     compute_variance: bool,
+    fixed_jac: TensorLike | None,
 ) -> dict[str, TensorLike]:
     """Core delta method with support for diagonal or full covariance.
 
     Parameters
     ----------
-    forward_fn:
+    forward_fn: Callable
         See `delta_method`.
-    x_mean:
+    x_mean: TensorLike
         See `delta_method`.
-    x_uncertainty:
+    x_uncertainty: TensorLike | None
         Either elementwise variances in any shape matching the number of
         elements in `x_mean` (interpreted as diagonal covariance), or full
         covariances with shape `(batch_size, input_dim, input_dim)`.
-    original_input_shape:
+    original_input_shape: torch.Size
         Original input shape before flattening, including batch dimension.
-    include_second_order:
+    include_second_order: bool
         Whether to include the second-order mean correction.
+    compute_variance: bool
+        Whether to compute the variance approximation. If False, skips all
+        Jacobian-based variance propagation and returns zeros for variance.
+        If True, requires `x_uncertainty` to be provided.
+    fixed_jac: TensorLike | None
+        Optional constant Jacobian to use for variance propagation.
+        Should have shape `(output_dim, input_dim)`.
 
     Returns
     -------
@@ -230,6 +248,37 @@ def _delta_method_core(  # noqa: PLR0915
     output_dim = mean_first_order_flat.shape[-1]
     original_output_shape = forward_fn(x_mean[:1]).shape
 
+    # Internal: normalize/validate an optional fixed jacobian to (O, I) on the
+    # same device/dtype as x_mean, or return None when not provided.
+    def _normalize_fixed_jacobian(
+        jac_in: TensorLike | None,
+        out_dim: int,
+        in_dim: int,
+        ref: TensorLike,
+    ) -> TensorLike | None:
+        if jac_in is None:
+            return None
+        jac = jac_in
+        # Allow either 2D (O, I) or 3D (B, O, I); for 3D use first batch.
+        if jac.dim() == 3:
+            jac = jac[0]
+        if jac.dim() != 2:
+            msg = (
+                "fixed_jacobian must be 2D (output_dim, input_dim) or 3D "
+                "(batch, output_dim, input_dim)."
+            )
+            raise ValueError(msg)
+        if jac.shape != (out_dim, in_dim):
+            msg = f"fixed_jacobian has shape {jac.shape}, expected {(out_dim, in_dim)}."
+            raise ValueError(msg)
+        # Match device/dtype
+        if (jac.dtype != ref.dtype) or (jac.device != ref.device):
+            jac = jac.to(dtype=ref.dtype, device=ref.device)
+        return jac
+
+    # If a fixed Jacobian is provided, normalize and cache it
+    fixed_jac = _normalize_fixed_jacobian(fixed_jac, output_dim, input_dim, x_mean)
+
     def compute_delta_terms_single(x_single: TensorLike, unc_single: TensorLike | None):
         # Define a single-sample function to obtain (output_dim, input_dim) Jacobian
         def single_output_fn(x: TensorLike) -> TensorLike:
@@ -237,14 +286,19 @@ def _delta_method_core(  # noqa: PLR0915
             return forward_fn_flat(x.unsqueeze(0)).squeeze(0)
 
         if compute_variance:
-            jacobian_fn = jacrev(single_output_fn)
+            if fixed_jac is None:
+                jacobian_fn = jacrev(single_output_fn)
 
-            # (output_dim, input_dim) for vector output; (input_dim,) for scalar
-            jac = jacobian_fn(x_single)
-            jac = jac[0] if isinstance(jac, tuple) else jac  # handle tuple return
-            assert jac.numel() == output_dim * input_dim, "Size mismatch"
-            # Ensure correct shape for scalar/vector output
-            jac = jac.reshape(output_dim, input_dim)
+                # (output_dim, input_dim) for vector output; (input_dim,) for scalar
+                jac = jacobian_fn(x_single)
+                jac = jac[0] if isinstance(jac, tuple) else jac  # handle tuple return
+                assert jac.numel() == output_dim * input_dim, "Size mismatch"
+                # Ensure correct shape for scalar/vector output
+                jac = jac.reshape(output_dim, input_dim)
+            else:
+                # Use provided constant Jacobian
+                assert fixed_jac is not None
+                jac = fixed_jac
 
             # Variance / covariance propagation
             if cov_type == "diag":

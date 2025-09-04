@@ -1,6 +1,7 @@
 import torch
 from linear_operator.operators import DiagLinearOperator
 from torch.distributions import ComposeTransform, Transform, TransformedDistribution
+from torch.func import jacrev
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
@@ -134,6 +135,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.model = model(
             self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
         )
+        # Cache for constant Jacobian of inverse y-transform when affine
+        self._fixed_jacobian_y_inv = None
         self.output_from_samples = output_from_samples
         if (
             not output_from_samples
@@ -152,6 +155,13 @@ class TransformedEmulator(Emulator, ValidationMixin):
             t.bijective for t in self.x_transforms
         )
         self.supports_uq = self.model.supports_uq
+
+        # Precompute and cache the Jacobian of the inverse y-transform if affine
+        if not self.output_from_samples and self.all_y_transforms_affine:
+            try:
+                self._compute_and_cache_inv_y_jacobian(y)
+            except Exception:
+                self._fixed_jacobian_y_inv = None
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):
         """
@@ -250,6 +260,13 @@ class TransformedEmulator(Emulator, ValidationMixin):
         """
         if retrain_transforms:
             self._fit_transforms(x, y)
+            # Invalidate and recompute cached Jacobian if transforms changed
+            self._fixed_jacobian_y_inv = None
+            if not self.output_from_samples and self.all_y_transforms_affine:
+                try:
+                    self._compute_and_cache_inv_y_jacobian(y)
+                except Exception:
+                    self._fixed_jacobian_y_inv = None
         self.fit(x, y)
 
     def _transform_x(self, x: TensorLike) -> TensorLike:
@@ -517,6 +534,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
                     y_t_pred.covariance_matrix,
                     # If all affine, mean transformation is exact
                     include_second_order=not self.all_y_transforms_affine,
+                    fixed_jacobian=self._fixed_jacobian_y_inv,
                 )
                 mean, var = output["mean_total"], output["variance_approx"]
                 if not with_grad:
@@ -573,6 +591,36 @@ class TransformedEmulator(Emulator, ValidationMixin):
             "since it depends on the emulator instance."
         )
         raise NotImplementedError(msg)
+
+    def _compute_and_cache_inv_y_jacobian(self, y: TensorLike) -> None:
+        """Compute and cache a constant Jacobian for inverse y-transform.
+
+        The Jacobian J = d(inv_y_transform)/dy_t is constant when all y-transforms
+        are affine, so we precompute it once at an arbitrary point and reuse it.
+        """
+        # Build a small representative input with batch=1 in transformed space
+        y_t_example = self._transform_y_tensor(y[:1])
+        # Flatten everything except batch
+        batch_size = y_t_example.shape[0]
+        assert batch_size == 1
+        input_dim = y_t_example[0].numel()
+        x0 = torch.zeros(
+            (input_dim,), dtype=y_t_example.dtype, device=y_t_example.device
+        )
+
+        def forward_fn_flat(z_flat: TensorLike) -> TensorLike:
+            # z_flat: (input_dim,)
+            z = z_flat.view(y_t_example.shape)
+            out = ComposeTransform(self.y_transforms).inv(z)
+            assert isinstance(out, TensorLike)
+            return out.reshape(-1)  # (output_dim,)
+
+        # Jacobian of shape (output_dim, input_dim)
+        jac = jacrev(forward_fn_flat)(x0)
+        jac = jac[0] if isinstance(jac, tuple) else jac  # In case of tuple outputs
+
+        # Cache
+        self._fixed_jacobian_y_inv = jac.detach()
 
 
 # TODO: implement TransformedModuleEmulator with learnable parameters
