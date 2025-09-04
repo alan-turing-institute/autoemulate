@@ -1,6 +1,6 @@
 [project]
 name = "autoemulate"
-version = "1.0.1"
+version = "1.1.0"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = [{ name = "AutoEmulate contributors (see our GitHub page)" }]
