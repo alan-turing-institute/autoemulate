@@ -40,9 +40,9 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     supports_uq: bool = False
 
     @abstractmethod
-    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None): ...
+    def _fit(self, x: TensorLike, y: TensorLike): ...
 
-    def fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None):
+    def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
         if isinstance(x, TensorLike) and isinstance(y, TensorLike):
             self._check(x, y)
@@ -62,11 +62,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
             # Fit emulator
             self._fit(x, y)
-        elif isinstance(x, DataLoader) and y is None:
-            self._fit(x, y)
-        else:
-            msg = "Invalid input types. Expected pair of TensorLike or DataLoader."
-            raise RuntimeError(msg)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -91,17 +86,15 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         return "".join([c for c in cls.__name__ if c.isupper()]).lower()
 
     @abstractmethod
-    def _predict(self, x: TensorLike | DataLoader, with_grad: bool) -> OutputLike:
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         pass
 
-    def predict(
-        self, x: TensorLike | DataLoader, with_grad: bool = False
-    ) -> OutputLike:
+    def predict(self, x: TensorLike, with_grad: bool = False) -> OutputLike:
         """Predict the output for the given input.
 
         Parameters
         ----------
-        x: TensorLike | DataLoader
+        x: TensorLike
             Input tensor to make predictions for.
         with_grad: bool
             Whether to enable gradient calculation. Defaults to False.
@@ -362,8 +355,8 @@ class DeterministicEmulator(Emulator):
     supports_uq: bool = False
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...  # type: ignore  # noqa: PGH003
-    def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:  # type: ignore  # noqa: PGH003
+    def _predict(self, x: TensorLike, with_grad: bool) -> TensorLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> TensorLike:
         """Predict the output for the given input.
 
         Parameters
@@ -419,8 +412,8 @@ class ProbabilisticEmulator(Emulator):
     supports_uq: bool = True
 
     @abstractmethod
-    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...  # type: ignore  # noqa: PGH003
-    def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:  # type: ignore  # noqa: PGH003
+    def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike: ...
+    def predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
         """Predict the output distribution for the given input.
 
         Parameters
@@ -552,7 +545,7 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Train a PyTorchBackend model.
 
@@ -650,7 +643,7 @@ class PyTorchBackend(nn.Module, Emulator):
                 if module.bias is not None and bias_init == "zeros":
                     nn.init.zeros_(module.bias)
 
-    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:  # type: ignore  # noqa: PGH003
+    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
         self.eval()
         with torch.set_grad_enabled(with_grad):
             return self(x)
@@ -676,7 +669,7 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
+    def _fit(self, x: TensorLike, y: TensorLike):
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean

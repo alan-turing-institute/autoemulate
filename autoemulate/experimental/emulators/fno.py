@@ -1,6 +1,6 @@
 import torch
-from autoemulate.core.types import TensorLike
-from autoemulate.emulators.base import PyTorchBackend
+from autoemulate.core.types import OutputLike, TensorLike
+from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalBackend
 from neuralop.models import FNO
 from torch.utils.data import DataLoader
 
@@ -41,7 +41,7 @@ def prepare_batch(sample, channels=(0,), with_constants=True, with_time=False):
     return x, y
 
 
-class FNOEmulator(PyTorchBackend):
+class FNOEmulator(SpatioTemporalBackend):
     """An FNO emulator."""
 
     def __init__(self, x=None, y=None, *args, **kwargs):
@@ -55,7 +55,9 @@ class FNOEmulator(PyTorchBackend):
     def is_multioutput() -> bool:  # noqa: D102
         return True
 
-    def _fit(self, x: DataLoader, y: DataLoader | None):  # type: ignore  # noqa: PGH003
+    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
+        assert isinstance(x, DataLoader), "x currently must be a DataLoader"
+        assert y is None, "y currently must be None"
         channels = (0,)  # Which channel to use
         for idx, batch in enumerate(x):
             # Prepare input with constants
@@ -80,12 +82,10 @@ class FNOEmulator(PyTorchBackend):
         """Forward pass."""
         return self.model(x)
 
-    def _predict(self, x: DataLoader, with_grad):  # type: ignore  # noqa: PGH003
+    def _predict(self, x: TensorLike | DataLoader, with_grad: bool) -> OutputLike:
+        assert isinstance(x, DataLoader), "x currently must be a DataLoader"
         with torch.set_grad_enabled(with_grad):
             channels = (0,)  # Which channel to use
-            if isinstance(x, TensorLike):
-                msg = "Input must be a DataLoader for FNOEmulator."
-                raise ValueError(msg)
             all_preds = []
             for _, batch in enumerate(x):
                 # Prepare input with constants
