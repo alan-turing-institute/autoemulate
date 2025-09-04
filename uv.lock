@@ -123,7 +123,6 @@ dependencies = [
     { name = "lightgbm" },
     { name = "matplotlib" },
     { name = "mogp-emulator" },
-    { name = "neuraloperator" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandas" },
@@ -134,7 +133,6 @@ dependencies = [
     { name = "scipy", version = "1.16.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "seaborn" },
     { name = "skorch" },
-    { name = "the-well" },
     { name = "torch" },
     { name = "torcheval" },
     { name = "torchmetrics" },
@@ -164,6 +162,10 @@ docs = [
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-copybutton" },
 ]
+spatiotemporal = [
+    { name = "neuraloperator" },
+    { name = "the-well" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -185,7 +187,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.7.2" },
     { name = "mogp-emulator", specifier = ">=0.7.2" },
     { name = "myst-parser", marker = "extra == 'dev'", specifier = ">=2.0.0" },
-    { name = "neuraloperator", specifier = ">=1.0.2" },
+    { name = "neuraloperator", marker = "extra == 'spatiotemporal'", specifier = ">=1.0.2" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.1" },
     { name = "plotnine", marker = "extra == 'dev'", specifier = ">=0.13.6" },
@@ -204,14 +206,14 @@ requires-dist = [
     { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = ">=1.24.0" },
     { name = "sphinx-copybutton", marker = "extra == 'dev'", specifier = ">=0.5.2" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = ">=0.5.2" },
-    { name = "the-well", specifier = ">=1.1.0" },
+    { name = "the-well", marker = "extra == 'spatiotemporal'", specifier = ">=1.1.0" },
     { name = "torch", specifier = ">=2.1.0" },
     { name = "torcheval", specifier = ">=0.0.7" },
     { name = "torchmetrics", specifier = ">=1.7.1" },
     { name = "torchrbf", specifier = ">=0.0.1" },
     { name = "tqdm", specifier = ">=4.66.2" },
 ]
-provides-extras = ["docs", "dev"]
+provides-extras = ["docs", "dev", "spatiotemporal"]
 
 [[package]]
 name = "babel"

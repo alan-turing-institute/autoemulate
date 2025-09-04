@@ -39,8 +39,6 @@ dependencies = [
     "corner>=2.2.3",
     "torchrbf>=0.0.1",
     "arviz>=0.21.0",
-    "the-well>=1.1.0",
-    "neuraloperator>=1.0.2",
     "getdist>=1.7.2",
 ]
 
@@ -72,6 +70,7 @@ dev = [
     "plotnine>=0.13.6",
     "pyright>=1.1.398",
 ]
+spatiotemporal = ["the-well>=1.1.0", "neuraloperator>=1.0.2"]
 
 [tool.setuptools]
 zip-safe = false
@@ -143,8 +142,8 @@ ignore = [
     "EM102",   # Exception must not use an f-string literal, assign to variable first
     "ISC001",  # Conflicts with formatter
     # "D417",    # Missing trailing new line in docstring
-    "D100", # Missing docstring in public module
-    "D104", # Missing docstring in public package
+    "D100",    # Missing docstring in public module
+    "D104",    # Missing docstring in public package
     "PLR0913", # too many arguments
 ]
 
