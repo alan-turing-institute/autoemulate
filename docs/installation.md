@@ -6,7 +6,7 @@ For new users, we recommend installing the package from PyPI.
 For users who want to contribute to the package, we recommend installing the package from source code.
 
 ```{warning}
-Although AutoEmulate is currently on version 1.x, we not following semantic versioning at the moment. Expect breaking changes between minor versions. We plan to implement true semantic versioning in v2. We recommend pinning the version of AutoEmulate if using downstream and carefully reading release notes.
+Although AutoEmulate is currently on version 1.x, we are not following semantic versioning at the moment. The convention for V1 is breaking and major changes will be made between minor version (1.1 -> 1.2). Bug fixes will be made in path versions (1.1.1 -> 1.1.2). We plan to implement true semantic versioning in v2 or the package.  We recommend pinning the minor version of AutoEmulate if using downstream and carefully reading release notes.
 ```
 
 ## Prerequisites
