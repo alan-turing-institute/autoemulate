@@ -89,12 +89,9 @@ class FNOEmulator(SpatioTemporalBackend):
             all_preds = []
             for _, batch in enumerate(x):
                 # Prepare input with constants
-                x, y = prepare_batch(
+                x, _ = prepare_batch(
                     batch, channels=channels, with_constants=True, with_time=True
-                )  # type: ignore  # noqa: PGH003
-                # print(x)
-                # print(x.shape)
+                )
                 out = self(x)
-                # print(out)
                 all_preds.append(out)
             return torch.cat(all_preds)
