@@ -313,13 +313,44 @@ def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
     assert isinstance(y_pred_cov, TensorLike)
     assert isinstance(y_pred2_cov, TensorLike)
     diff = y_pred2_cov - y_pred_cov
-    print(diff)
     assert isinstance(diff, TensorLike)
     diff_abs = (diff / y_pred_cov).abs()
 
     print("Max diff", diff_abs.abs().max())
-    print((y_pred2_cov - y_pred_cov).abs().max())
-    print(((y_pred2_cov - y_pred_cov).abs() / y_pred_cov.abs()).max())
+    print("Abs diff", (y_pred2_cov - y_pred_cov).abs().max())
+    print("Relative diff", ((y_pred2_cov - y_pred_cov).abs() / y_pred_cov.abs()).max())
 
-    # Assert with around 40% error to account for the stochastic nature of VAE sampling
-    assert torch.allclose(y_pred2_cov, y_pred_cov, rtol=0.4)
+    # Robust relative-matrix checks
+    eps = 1e-12
+
+    # Relative Frobenius error of covariance matrices
+    frob_num = torch.linalg.norm(y_pred2_cov - y_pred_cov, dim=(-2, -1))
+    frob_den = torch.linalg.norm(y_pred_cov, dim=(-2, -1)).clamp_min(eps)
+    rel_frob = (frob_num / frob_den).amax()
+
+    # Relative error on correlation matrices to discount scale
+    def corr_from_cov(C: TensorLike) -> TensorLike:
+        d = torch.diagonal(C, dim1=-2, dim2=-1).clamp_min(eps).sqrt()
+        scale = d.unsqueeze(-1) * d.unsqueeze(-2)
+        return C / scale
+
+    corr1 = corr_from_cov(y_pred_cov)
+    corr2 = corr_from_cov(y_pred2_cov)
+    corr_num = torch.linalg.norm(corr2 - corr1, dim=(-2, -1))
+    corr_den = torch.linalg.norm(corr1, dim=(-2, -1)).clamp_min(eps)
+    rel_corr = (corr_num / corr_den).amax()
+
+    # Diagonal variance ratios should be within a reasonable factor
+    var1 = torch.diagonal(y_pred_cov, dim1=-2, dim2=-1).clamp_min(eps)
+    var2 = torch.diagonal(y_pred2_cov, dim1=-2, dim2=-1).clamp_min(eps)
+    ratio = var2 / var1
+    median_ratio = ratio.median()
+
+    print("Relative Frobenius norm:", rel_frob)
+    print("Relative correlation norm:", rel_corr)
+    print("Median variance ratio:", median_ratio)
+
+    # Checks are relatively loose due to stochasticity of VAE sampling
+    assert rel_frob.item() < 0.50
+    assert rel_corr.item() < 0.05
+    assert 0.95 < median_ratio.item() < 1.05
