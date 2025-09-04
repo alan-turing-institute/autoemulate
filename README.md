@@ -9,6 +9,8 @@
 <!-- SPHINX-START -->
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines and  Gaussian Processes to find the best emulator for a simulation. 
 
+>[!WARNING]
+>Although AutoEmulate is currently on version 1.x, we not following semantic versioning at the moment. Expect breaking changes between minor versions. We plan to implement true semantic versioning in v2. We recommend pinning the version of AutoEmulate if using downstream and carefully reading release notes.**
 
 ## Documentation
 
