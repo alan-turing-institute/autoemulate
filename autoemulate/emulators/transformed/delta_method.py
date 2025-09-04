@@ -137,7 +137,7 @@ def delta_method_mean_only(
     }
 
 
-def _delta_method_core(  # noqa: PLR0915, PLR0913
+def _delta_method_core(  # noqa: PLR0915
     forward_fn: Callable,
     x_mean: TensorLike,
     x_uncertainty: TensorLike | None,
@@ -221,7 +221,7 @@ def _delta_method_core(  # noqa: PLR0915, PLR0913
     # Create wrapper function that handles reshape for forward_fn
     def forward_fn_flat(x_flat: TensorLike) -> TensorLike:
         batch_size_inner = x_flat.shape[0]
-        original_shape_batch = (batch_size_inner,) + original_input_shape[1:]
+        original_shape_batch = (batch_size_inner, *original_input_shape[1:])
         x_reshaped = x_flat.reshape(original_shape_batch)
         return forward_fn(x_reshaped).reshape(batch_size_inner, -1)
 
@@ -297,7 +297,7 @@ def _delta_method_core(  # noqa: PLR0915, PLR0913
     )
 
     mean_total_flat = mean_first_order_flat + second_order_corrections_flat
-    full_batch_output_shape = (batch_size,) + original_output_shape[1:]
+    full_batch_output_shape = (batch_size, *original_output_shape[1:])
 
     mean_first_order = mean_first_order_flat.reshape(full_batch_output_shape)
     mean_second_order = second_order_corrections_flat.reshape(full_batch_output_shape)

@@ -38,7 +38,7 @@ def test_predict_mean_uses_fast_linear_path(monkeypatch):
     calls = {"delta_mean_only": 0}
 
     # Wrap the exact symbol imported in TransformedEmulator to count calls
-    import autoemulate.emulators.transformed.base as te_base
+    import autoemulate.emulators.transformed.base as te_base  # noqa: PLC0415
 
     orig = te_base.delta_method_mean_only
 
@@ -71,7 +71,7 @@ def test_vae_marked_nonlinear_and_mean_uses_delta(monkeypatch):
     calls = {"delta_mean_only": 0}
 
     # Wrap the exact symbol imported in TransformedEmulator to count calls
-    import autoemulate.emulators.transformed.base as te_base
+    import autoemulate.emulators.transformed.base as te_base  # noqa: PLC0415
 
     orig = te_base.delta_method_mean_only
 

@@ -109,7 +109,7 @@ wheels = [
 
 [[package]]
 name = "autoemulate"
-version = "1.0.0"
+version = "1.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "anytree" },
@@ -153,6 +153,7 @@ dev = [
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "ruff" },
     { name = "sphinx" },
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-copybutton" },
@@ -196,6 +197,7 @@ requires-dist = [
     { name = "pyro-ppl", specifier = ">=1.9.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12" },
     { name = "salib", specifier = ">=1.5.1" },
     { name = "scikit-learn", specifier = ">=1.3.0,<1.6.0" },
     { name = "scipy", specifier = ">=1.11.3" },
@@ -2802,6 +2804,14 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/db/5d/36619b61ffa2429eeaefaab4f3374666adf36ad8ac6330d855848d7d36fd/ruamel.yaml.clib-0.2.12-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:b82a7c94a498853aa0b272fd5bc67f29008da798d4f93a2f9f289feb8426a58d", size = 715692, upload-time = "2024-12-11T19:58:17.252Z" },
     { url = "https://files.pythonhosted.org/packages/b1/82/85cb92f15a4231c89b95dfe08b09eb6adca929ef7df7e17ab59902b6f589/ruamel.yaml.clib-0.2.12-cp312-cp312-win32.whl", hash = "sha256:e8c4ebfcfd57177b572e2040777b8abc537cdef58a2120e830124946aa9b42c5", size = 98777, upload-time = "2024-10-20T10:13:01.395Z" },
     { url = "https://files.pythonhosted.org/packages/d7/8f/c3654f6f1ddb75daf3922c3d8fc6005b1ab56671ad56ffb874d908bfa668/ruamel.yaml.clib-0.2.12-cp312-cp312-win_amd64.whl", hash = "sha256:0467c5965282c62203273b838ae77c0d29d7638c8a4e3a1c8bdd3602c10904e4", size = 115523, upload-time = "2024-10-20T10:13:02.768Z" },
+]
+
+[[package]]
+name = "ruff"
+version = "0.12.12"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/09/79/8d3d687224d88367b51c7974cec1040c4b015772bfbeffac95face14c04a/ruff-0.12.12-py3-none-linux_armv6l.whl", hash = "sha256:de1c4b916d98ab289818e55ce481e2cacfaad7710b01d1f990c497edf217dafc", size = 12116602, upload-time = "2025-09-04T16:49:18.892Z" },
 ]
 
 [[package]]
