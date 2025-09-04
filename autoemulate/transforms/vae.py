@@ -104,7 +104,7 @@ class VAETransform(AutoEmulateTransform):
     bijective = False
     vae: VAE | None = None
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         latent_dim: int = 3,
         hidden_layers: list[int] | None = None,

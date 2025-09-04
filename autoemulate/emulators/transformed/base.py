@@ -72,7 +72,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
     model: Emulator
     y_transforms: list[Transform]
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,

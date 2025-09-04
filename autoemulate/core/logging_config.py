@@ -14,7 +14,7 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
         If True, logs will be written to a file.
         If a string, logs will be written to the specified file.
     verbose: str, optional
-        The verbosity level. Can be "error", "warning",
+        The verbosity level. Can be "critical", "error", "warning",
           "info", or "debug". Defaults to "info".
     """
     logger = logging.getLogger("autoemulate")
@@ -32,8 +32,10 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
             console_log_level = logging.INFO
         case "debug":
             console_log_level = logging.DEBUG
+        case "critical":
+            console_log_level = logging.CRITICAL
         case _:
-            msg = 'verbose must be "error", "warning", "info", or "debug"'
+            msg = 'verbose must be "critical", "error", "warning", "info", or "debug"'
             raise ValueError(msg)
 
     # Create console handler with a higher log level
