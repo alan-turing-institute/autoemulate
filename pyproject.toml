@@ -39,6 +39,7 @@ dependencies = [
     "corner>=2.2.3",
     "torchrbf>=0.0.1",
     "arviz>=0.21.0",
+    "getdist>=1.7.2",
 ]
 
 [project.urls]
