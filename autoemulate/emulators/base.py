@@ -8,7 +8,6 @@ from sklearn.base import BaseEstimator
 from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
-from torch.utils.data import DataLoader
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
@@ -104,9 +103,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         OutputLike
             The predicted output.
         """
-        if isinstance(x, DataLoader):
-            return self._predict(x, with_grad)
-
         if not self.is_fitted_:
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
