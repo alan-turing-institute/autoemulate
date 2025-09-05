@@ -42,7 +42,13 @@ NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
 PYTORCH_EMULATORS: list[type[Emulator]] = [
     emulator for emulator in ALL_EMULATORS if emulator not in NON_PYTORCH_EMULATORS
 ]
-
+GAUSSIAN_PROCESS_EMULATORS: list[type[Emulator]] = [
+    GaussianProcess,
+    GaussianProcessCorrelated,
+    GaussianProcessRBF,
+    GaussianProcessMatern32,
+    GaussianProcessMatern52,
+]
 
 EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
 EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
