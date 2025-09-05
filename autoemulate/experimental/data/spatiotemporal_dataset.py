@@ -139,30 +139,6 @@ class AutoEmulateDataset(Dataset):
         }
 
 
-class ReactionDiffusionDataset(AutoEmulateDataset):
-    """PyTorch Dataset for Reaction-Diffusion data."""
-
-    def __init__(
-        self,
-        data_path: str | None,
-        data: dict | None = None,
-        n_steps_input: int = 1,
-        n_steps_output: int = 1,
-        stride: int = 1,
-        input_channel_idxs: tuple[int, ...] | None = None,
-        output_channel_idxs: tuple[int, ...] | None = None,
-    ):
-        super().__init__(
-            data_path,
-            data=data,
-            n_steps_input=n_steps_input,
-            n_steps_output=n_steps_output,
-            stride=stride,
-            input_channel_idxs=input_channel_idxs,
-            output_channel_idxs=output_channel_idxs,
-        )
-
-
 class MHDDataset(AutoEmulateDataset):
     """PyTorch Dataset for MHD data."""
 
