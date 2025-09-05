@@ -5,7 +5,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![All Contributors](https://img.shields.io/github/all-contributors/alan-turing-institute/autoemulate?color=ee8449&style=flat-square)](#contributors)
 [![Documentation](https://img.shields.io/badge/documentation-blue)](https://alan-turing-institute.github.io/autoemulate/)
-[![Github Stats]()](https://github.com/alan-turing-institute/autoemulate/blob/github-repo-stats/alan-turing-institute/autoemulate/latest-report/report.pdf)
+[![Github Stats](https://img.shields.io/badge/repostats-orange)](https://github.com/alan-turing-institute/autoemulate/blob/github-repo-stats/alan-turing-institute/autoemulate/latest-report/report.pdf)
 
 
 <!-- SPHINX-START -->
