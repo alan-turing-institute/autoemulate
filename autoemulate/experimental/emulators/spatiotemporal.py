@@ -37,7 +37,7 @@ class SpatioTemporalEmulator(PyTorchBackend):
         Parameters
         ----------
         x: TensorLike | DataLoader
-            Input `TensorLike` to make predictions for or `DataLoader`.
+            Input `TensorLike` or `DataLoader` to make predictions for.
         with_grad: bool
             Whether to enable gradient calculation. Defaults to False.
 
