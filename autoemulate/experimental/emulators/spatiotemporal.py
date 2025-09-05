@@ -52,3 +52,26 @@ class SpatioTemporalEmulator(PyTorchBackend):
 
     @abstractmethod
     def _predict(self, x: TensorLike | DataLoader, with_grad: bool) -> OutputLike: ...
+
+    # TODO: add method for rollout predictions
+    # def predict_rollout(self, x: DataLoader, timesteps: int = 1) -> OutputLike:
+    #     """
+    #     Predict the output for the given input, rolling out for a number of timesteps.
+
+    #     Parameters
+    #     ----------
+    #     x: DataLoader
+    #         Input `DataLoader` to make predictions for.
+    #     timesteps: int
+    #         Number of timesteps to rollout for. Defaults to 1.
+
+    #     Returns
+    #     -------
+    #     OutputLike
+    #         The emulator predicted spatiotemporal output.
+    #     """
+
+    #     # Start at t=0 x_0
+    #     # model predicts x_1 given x_0
+    #     # then model predicts x_2 given model's predicted x_1
+    #     # then model predicts x_3 given model's predicted x_2
