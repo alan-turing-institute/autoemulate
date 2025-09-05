@@ -149,7 +149,6 @@ class ReactionDiffusionDataset(AutoEmulateDataset):
         n_steps_input: int = 1,
         n_steps_output: int = 1,
         stride: int = 1,
-        # TODO: support for passing data from dict
         input_channel_idxs: tuple[int, ...] | None = None,
         output_channel_idxs: tuple[int, ...] | None = None,
     ):
