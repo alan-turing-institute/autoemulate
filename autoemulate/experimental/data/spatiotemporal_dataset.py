@@ -9,12 +9,12 @@ class AutoEmulateDataset(Dataset):
 
     def __init__(
         self,
-        data_path: str,
-        n_steps_input: int,
-        n_steps_output: int,
+        data_path: str | None,
+        data: dict | None = None,
+        n_steps_input: int = 1,
+        n_steps_output: int = 1,
         stride: int = 1,
         # TODO: support for passing data from dict
-        # data: dict | None = None,
         input_channel_idxs: tuple[int, ...] | None = None,
         output_channel_idxs: tuple[int, ...] | None = None,
     ):
@@ -45,20 +45,8 @@ class AutoEmulateDataset(Dataset):
         self.input_channel_idxs = input_channel_idxs
         self.output_channel_idxs = output_channel_idxs
 
-        # TODO: support passing as dict
-        # Load data
-        with h5py.File(data_path, "r") as f:
-            assert "data" in f, "HDF5 file must contain 'data' dataset"
-            self.data: TensorLike = torch.Tensor(f["data"][:])  # type: ignore # [N, T, W, H, C]  # noqa: PGH003
-            print(f"Loaded data shape: {self.data.shape}")
-            # TODO: add the constant scalars
-            self.constant_scalars = (
-                torch.Tensor(f["constant_scalars"][:])  # type: ignore  # noqa: PGH003
-                if "constant_scalars" in f
-                else None
-            )  # [N, C]
-            # TODO: add the constant fields
-            # self.constant_fields = torch.Tensor(f['data'][:])  # [N, W, H, C]
+        # Read or parse data
+        self.read_data(data_path) if data_path is not None else self.parse_data(data)
 
         # Destructured here
         (
@@ -107,6 +95,37 @@ class AutoEmulateDataset(Dataset):
         print(f"Each input sample shape: {self.all_input_fields[0].shape}")
         print(f"Each output sample shape: {self.all_output_fields[0].shape}")
 
+    def read_data(self, data_path: str):
+        """Read data.
+
+        By default assumes HDF5 format in `data_path` with correct shape and fields.
+        """
+        # TODO: support passing as dict
+        # Load data
+        self.data_path = data_path
+        with h5py.File(self.data_path, "r") as f:
+            assert "data" in f, "HDF5 file must contain 'data' dataset"
+            self.data: TensorLike = torch.Tensor(f["data"][:])  # type: ignore # [N, T, W, H, C]  # noqa: PGH003
+        print(f"Loaded data shape: {self.data.shape}")
+        # TODO: add the constant scalars
+        self.constant_scalars = (
+            torch.Tensor(f["constant_scalars"][:])  # type: ignore  # noqa: PGH003
+            if "constant_scalars" in f
+            else None
+        )  # [N, C]
+        # TODO: add the constant fields
+        # self.constant_fields = torch.Tensor(f['data'][:])  # [N, W, H, C]
+
+    def parse_data(self, data: dict | None):
+        """Parse data from a dictionary."""
+        if data is not None:
+            self.data = data["data"]
+            self.constant_scalars = data.get("constant_scalars", None)
+            self.constant_fields = data.get("constant_fields", None)
+            return
+        msg = "No data provided to parse."
+        raise ValueError(msg)
+
     def __len__(self):  # noqa: D105
         return len(self.all_input_fields)
 
@@ -114,7 +133,7 @@ class AutoEmulateDataset(Dataset):
         return {
             "input_fields": self.all_input_fields[idx],
             "output_fields": self.all_output_fields[idx],
-            # "constant_scalars": self.all_constant_scalars[idx],
+            "constant_scalars": self.all_constant_scalars[idx],
             # TODO: add this
             # "constant_fields": self.all_constant_fields[idx],
         }
