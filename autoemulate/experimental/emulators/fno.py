@@ -44,11 +44,14 @@ def prepare_batch(sample, channels=(0,), with_constants=True, with_time=False):
 class FNOEmulator(SpatioTemporalEmulator):
     """An FNO emulator."""
 
-    def __init__(self, x=None, y=None, *args, **kwargs):
+    def __init__(
+        self, x=None, y=None, channels: tuple[int, ...] = (0,), *args, **kwargs
+    ):
         _, _ = x, y  # Unused
         # Ensure parent initialisers run before creating nn.Module attributes
         super().__init__()
         self.model = FNO(**kwargs)
+        self.channels = channels
         self.optimizer = torch.optim.Adam(self.model.parameters())
 
     @staticmethod
@@ -58,11 +61,11 @@ class FNOEmulator(SpatioTemporalEmulator):
     def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
         assert isinstance(x, DataLoader), "x currently must be a DataLoader"
         assert y is None, "y currently must be None"
-        channels = (0,)  # Which channel to use
+
         for idx, batch in enumerate(x):
             # Prepare input with constants
             x, y = prepare_batch(
-                batch, channels=channels, with_constants=True, with_time=True
+                batch, channels=self.channels, with_constants=True, with_time=True
             )  # type: ignore  # noqa: PGH003
 
             # Predictions
