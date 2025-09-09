@@ -21,7 +21,7 @@ from autoemulate.transforms.vae import VAETransform
         [
             None,
             [StandardizeTransform(), PCATransform(n_components=3)],
-            # [StandardizeTransform(), VAETransform(latent_dim=3)],
+            [StandardizeTransform(), VAETransform(latent_dim=3)],
         ],
         [
             None,
@@ -34,10 +34,6 @@ from autoemulate.transforms.vae import VAETransform
 def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms):
     if emulator == RadialBasisFunctions:
         pytest.xfail("RadialBasisFunctions do not appear to support gradients")
-
-    # Check for PCA transforms in x_transforms that break gradient support
-    if x_transforms and any(isinstance(t, PCATransform) for t in x_transforms):
-        pytest.xfail("PCATransform in x_transforms breaks gradient calculation support")
 
     # Test gradient computation for the given emulator
     x, y = sample_data_y2d
@@ -96,16 +92,6 @@ def test_grads_func(
         pytest.xfail(
             "GaussianProcess emulators do not support torch.func API for grads"
         )
-    # Check for problematic transform combinations
-    if x_transforms is not None and any(
-        isinstance(t, PCATransform) for t in x_transforms
-    ):
-        pytest.xfail("PCA x_transforms break gradient calculation")
-    if x_transforms is not None and any(
-        isinstance(t, VAETransform) for t in x_transforms
-    ):
-        pytest.xfail("VAE x_transforms break gradient calculation")
-
     # Check for ensemble emulator issues with functorch
     if emulator.__name__.startswith("Ensemble"):
         pytest.xfail("Ensemble emulators have functorch compatibility issues")

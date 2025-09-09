@@ -141,9 +141,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.n_samples = n_samples
         self.full_covariance = full_covariance
         TorchDeviceMixin.__init__(self, device=device)
-        self.supports_grad = self.model.supports_grad and all(
-            t.bijective for t in self.x_transforms
-        )
+        # TODO: add API to indicate that pdf not valid when not all transforms bijective
+        self.supports_grad = self.model.supports_grad
         self.supports_uq = self.model.supports_uq
 
     def _fit_transforms(self, x: TensorLike, y: TensorLike):

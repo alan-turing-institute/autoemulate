@@ -221,16 +221,13 @@ class VAETransform(AutoEmulateTransform):
         self._check_is_fitted()
         assert self.vae is not None
         self.vae.eval()
-        # During forward transform, do not build a graph through VAE parameters
-        with torch.no_grad():
-            mu, _ = self.vae.encode(x)
+        mu, _ = self.vae.encode(x)
         return mu
 
     def _inverse(self, y):
         self._check_is_fitted()
         assert self.vae is not None
         self.vae.eval()
-        # Keep decode differentiable w.r.t. input y for downstream gradients
         return self.vae.decode(y)
 
     def log_abs_det_jacobian(self, x, y):
