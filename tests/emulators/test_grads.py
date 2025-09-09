@@ -100,7 +100,6 @@ def test_grads_func(
     x2, _ = new_data_y2d
 
     # Fit emulator
-    # em: Emulator = emulator(x, y)
     em = TransformedEmulator(
         x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=emulator
     )
