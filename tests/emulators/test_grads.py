@@ -9,12 +9,10 @@ from autoemulate.emulators import (
 from autoemulate.emulators.base import Emulator
 
 
-@pytest.mark.parametrize(
-    "emulator",
-    # RadialBasisFunctions do not appear to support gradients
-    [emulator for emulator in PYTORCH_EMULATORS if emulator != RadialBasisFunctions],
-)
+@pytest.mark.parametrize("emulator", PYTORCH_EMULATORS)
 def test_grads(sample_data_y1d, new_data_y1d, emulator):
+    if emulator == RadialBasisFunctions:
+        pytest.xfail("RadialBasisFunctions do not appear to support gradients")
     # Test gradient computation for the given emulator
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
@@ -44,18 +42,14 @@ def test_grads(sample_data_y1d, new_data_y1d, emulator):
         assert not torch.allclose(grads, torch.zeros_like(grads))
 
 
-@pytest.mark.parametrize(
-    "emulator",
-    [
-        emulator
-        for emulator in PYTORCH_EMULATORS
-        # RadialBasisFunctions do not appear to support gradients
-        if emulator != RadialBasisFunctions
-        # GaussianProcess emulators do not appear to support torch.func API for grads
-        and emulator not in GAUSSIAN_PROCESS_EMULATORS
-    ],
-)
+@pytest.mark.parametrize("emulator", PYTORCH_EMULATORS)
 def test_grads_func(sample_data_y1d, new_data_y1d, emulator):
+    if emulator == RadialBasisFunctions:
+        pytest.xfail("RadialBasisFunctions do not appear to support gradients")
+    if emulator in GAUSSIAN_PROCESS_EMULATORS:
+        pytest.xfail(
+            "GaussianProcess emulators do not support torch.func API for grads"
+        )
     # Test gradient computation for the given emulator
     x, y = sample_data_y1d
     x2, _ = new_data_y1d
