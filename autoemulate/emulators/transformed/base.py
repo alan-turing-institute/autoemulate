@@ -379,6 +379,14 @@ class TransformedEmulator(Emulator, ValidationMixin):
         x_t = self._transform_x(x)
         y_t = self._transform_y_tensor(y)
 
+        # Detach transformed tensors to avoid retaining graphs from transforms
+        # during training of the underlying model. Transforms are treated as fixed
+        # feature engineering at fit time; gradients are only required at predict.
+        if isinstance(x_t, torch.Tensor):
+            x_t = x_t.detach()
+        if isinstance(y_t, torch.Tensor):
+            y_t = y_t.detach()
+
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
 
