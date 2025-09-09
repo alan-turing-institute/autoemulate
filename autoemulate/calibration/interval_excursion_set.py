@@ -511,16 +511,40 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         def rejuvenate_rw(
             z: torch.Tensor, ll: torch.Tensor, beta: float
         ) -> tuple[torch.Tensor, torch.Tensor]:
-            # Vectorized RW-MH in z-space with tempered target: prior + beta * ll
+            """Vectorized RW-MH with tempered target.
+
+            - If uniform_prior: proposals outside [domain_min, domain_max] are rejected
+              and prior term cancels (constant inside domain).
+            - Else (whitened Gaussian): include standard normal prior term in MH ratio.
+            """
             for _ in range(move_steps):
                 z_prop = z + rw_step * torch.randn_like(z)
-                ll_prop = compute_ll(z_prop)
-                dprior = -0.5 * (z_prop.pow(2).sum(dim=1) - z.pow(2).sum(dim=1))
-                dlike = beta * (ll_prop - ll)
-                log_alpha = dprior + dlike
-                accept = torch.log(
-                    torch.rand(z.shape[0], device=z.device, dtype=z.dtype)
-                ).le(log_alpha)
+
+                if uniform_prior:
+                    # Reject out-of-bounds proposals under uniform prior
+                    inside = (
+                        (z_prop >= self.domain_min) & (z_prop <= self.domain_max)
+                    ).all(dim=1)
+
+                    # Evaluate ll_prop for all (keeps vectorization); masked later
+                    ll_prop = compute_ll(z_prop)
+                    dprior = torch.zeros_like(ll)
+                    dlike = beta * (ll_prop - ll)
+                    log_alpha = dprior + dlike
+                    ulog = torch.log(
+                        torch.rand(z.shape[0], device=z.device, dtype=z.dtype)
+                    )
+                    accept = (ulog <= log_alpha) & inside
+                else:
+                    ll_prop = compute_ll(z_prop)
+                    dprior = -0.5 * (z_prop.pow(2).sum(dim=1) - z.pow(2).sum(dim=1))
+                    dlike = beta * (ll_prop - ll)
+                    log_alpha = dprior + dlike
+                    ulog = torch.log(
+                        torch.rand(z.shape[0], device=z.device, dtype=z.dtype)
+                    )
+                    accept = ulog <= log_alpha
+
                 if accept.any():
                     z = torch.where(accept.unsqueeze(1), z_prop, z)
                     ll = torch.where(accept, ll_prop, ll)
