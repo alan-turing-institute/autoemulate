@@ -119,19 +119,15 @@ def test_transformed_emulator_grad(
 @pytest.mark.parametrize(
     ("model", "x_transforms"),
     itertools.product(
-        [
-            emulator
-            for emulator in ALL_EMULATORS
-            if emulator.supports_grad and emulator.supports_grad
-        ],
+        [emulator for emulator in ALL_EMULATORS if not emulator.supports_grad],
         [[PCATransform(n_components=3)], [VAETransform(latent_dim=3)]],
     ),
 )
 def test_transformed_emulator_no_grad(
-    sample_data_y2d, new_data_y2d, model, x_transforms
+    sample_data_y1d, new_data_y1d, model, x_transforms
 ):
-    x, y = sample_data_y2d
-    x2, _ = new_data_y2d
+    x, y = sample_data_y1d
+    x2, _ = new_data_y1d
     em = TransformedEmulator(
         x, y, x_transforms=x_transforms, y_transforms=None, model=model
     )
