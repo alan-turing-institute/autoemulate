@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.results import Result
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
@@ -17,7 +18,6 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import TransformedEmulator, get_emulator_class
 from autoemulate.simulations.base import Simulator
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("autoemulate")
 
 
@@ -294,6 +294,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        log_level: str = "progress_bar",
     ):
         """
         Initialize the history matching workflow object.
@@ -331,11 +332,16 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The device to use. If None, the default torch device is returned.
         random_seed: int | None
             Optional random seed for reproducibility. If None, no seed is set.
+        log_level: str
+            The logging level to use. One of: "debug", "info", "warning", "error",
+            "critical", "progress_bar" (default).
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed)
+        self.logger, self.progress_bar = get_configured_logger(log_level)
+
         self.result = result
         self.emulator = result.model
         self.emulator.device = self.device
