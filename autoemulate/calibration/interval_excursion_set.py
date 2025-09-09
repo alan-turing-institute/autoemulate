@@ -24,6 +24,57 @@ from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
 
+class IntervalBandModel:
+    """Top-level, pickleable Pyro model for interval excursion set calibration.
+
+    This wraps the emulator and band settings so the model can be pickled and sent to
+    subprocesses when running multiple MCMC chains in parallel.
+    """
+
+    def __init__(
+        self,
+        emulator: Emulator,
+        domain_min: torch.Tensor,
+        domain_max: torch.Tensor,
+        y_band_low: torch.Tensor,
+        y_band_high: torch.Tensor,
+        d: int,
+        *,
+        temp: float = 1.0,
+        softness: float | None = None,
+        mix: float = 1.0,
+    ) -> None:
+        self.emulator = emulator
+        self.domain_min = domain_min
+        self.domain_max = domain_max
+        self.y_band_low = y_band_low
+        self.y_band_high = y_band_high
+        self.d = d
+        self.temp = temp
+        self.softness = softness
+        self.mix = mix
+
+    def __call__(self):  # Pyro model
+        """Pyro model: sample x_star in bounded domain and add band log-prob factor."""
+        base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
+        transform = BoundedDomainTransform(self.domain_min, self.domain_max)
+        x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
+        mu, var = self.emulator.predict_mean_and_variance(x_star)
+        assert isinstance(var, TensorLike)
+        pyro.factor(
+            "band_logp",
+            IntervalExcursionSetCalibration.band_logprob(
+                mu,
+                var,
+                self.y_band_low,
+                self.y_band_high,
+                temp=self.temp,
+                softness=self.softness,
+                mix=self.mix,
+            ),
+        )
+
+
 class BoundedDomainTransform(Transform):
     """Transform to map from unbounded domain to bounded domain."""
 
@@ -104,8 +155,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         self.parameter_range = parameter_range
 
         # Set domain lower and upper bounds as tensors
-        self.domain_min = torch.tensor([b[0] for b in self.parameter_range])
-        self.domain_max = torch.tensor([b[1] for b in self.parameter_range])
+        self.domain_min = torch.tensor([b[0] for b in self.parameter_range.values()])
+        self.domain_max = torch.tensor([b[1] for b in self.parameter_range.values()])
 
         self._y_lower = y_lower
         self._y_upper = y_upper
@@ -116,7 +167,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         self.output_names = y_labels or [f"y{i}" for i in range(len(y_lower))]
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info(
-            "Initializing BayesianCalibration with parameters: %s",
+            "Initializing IntervalExcursionSetCalibration with parameters: %s",
             self.calibration_params,
         )
 
@@ -133,9 +184,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         """Return upper bounds as a tensor."""
         return self._y_upper
 
-    @torch.no_grad()
+    @staticmethod
     def band_prob_from_mu_sigma(
-        self,
         mu: torch.Tensor,
         var_or_cov: torch.Tensor,
         y1: torch.Tensor,
@@ -167,14 +217,14 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         # Derive per-task std devs from variance / covariance
         if var_or_cov.dim() == 3:
             var_diag = torch.diagonal(var_or_cov, dim1=-2, dim2=-1).clamp_min(
-                self.MIN_VAR
+                IntervalExcursionSetCalibration.MIN_VAR
             )
             sigma = var_diag.sqrt()
         else:
             # (N, T) variance or (T,) variance for single sample
             if var_or_cov.dim() == 1:
                 var_or_cov = var_or_cov.unsqueeze(0)
-            sigma = var_or_cov.clamp_min(self.MIN_VAR).sqrt()
+            sigma = var_or_cov.clamp_min(IntervalExcursionSetCalibration.MIN_VAR).sqrt()
 
         # Broadcast bounds to (N, T)
         y1v = y1.view(1, -1)
@@ -195,8 +245,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         msg = "aggregate must be one of {'geomean', 'sumlog', 'none'}"
         raise ValueError(msg)
 
+    @staticmethod
     def band_logprob(
-        self,
         mu: TensorLike,
         var: TensorLike,
         y1: TensorLike,
@@ -236,7 +286,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
 
         # Exact likelihood across tasks via shared helper (sum of log-probs), with
         # temperature
-        log_p_exact = temp * self.band_prob_from_mu_sigma(
+        log_p_exact = temp * IntervalExcursionSetCalibration.band_prob_from_mu_sigma(
             mu, var, y1, y2, aggregate="sumlog"
         )
 
@@ -246,12 +296,14 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
 
         # For the soft surrogate we need per-task std; reuse helper path to std
         if var.dim() == 3:
-            var_diag = torch.diagonal(var, dim1=-2, dim2=-1).clamp_min(self.MIN_VAR)
+            var_diag = torch.diagonal(var, dim1=-2, dim2=-1).clamp_min(
+                IntervalExcursionSetCalibration.MIN_VAR
+            )
             sigma = var_diag.sqrt()
         else:
             if var.dim() == 1:
                 var = var.unsqueeze(0)
-            sigma = var.clamp_min(self.MIN_VAR).sqrt()
+            sigma = var.clamp_min(IntervalExcursionSetCalibration.MIN_VAR).sqrt()
 
         # Soft surrogate per task
         lo = torch.sigmoid((mu - y1v) / (softness * sigma))
@@ -267,7 +319,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         )
         return log_p_mix.sum()
 
-    def make_interval_band_model(
+    def model(
         self,
         y_band_low: TensorLike,
         y_band_high: TensorLike,
@@ -275,28 +327,18 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         softness=None,
         mix=1.0,
     ):
-        """Make a Pyro model for interval excursion set calibration."""
-
-        def model():
-            base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
-            transform = BoundedDomainTransform(self.domain_min, self.domain_max)
-            x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
-            mu, var = self.emulator.predict_mean_and_variance(x_star)
-            assert isinstance(var, TensorLike)
-            pyro.factor(
-                "band_logp",
-                self.band_logprob(
-                    mu,
-                    var,
-                    y_band_low,
-                    y_band_high,
-                    temp=temp,
-                    softness=softness,
-                    mix=mix,
-                ),
-            )
-
-        return model
+        """Return a pickleable Pyro model for interval excursion set calibration."""
+        return IntervalBandModel(
+            emulator=self.emulator,
+            domain_min=self.domain_min,
+            domain_max=self.domain_max,
+            y_band_low=y_band_low,
+            y_band_high=y_band_high,
+            d=self.d,
+            temp=float(temp),
+            softness=softness,
+            mix=float(mix),
+        )
 
     def plot_samples(self, samples, num_samples):
         """Plot samples with band probabilities and GP mean."""
@@ -320,10 +362,13 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
             cmap="viridis",
             s=6,
             alpha=0.7,
+            lw=0,
         )
         ax1.set_title("Band Probability (agg across tasks)")
         ax1.set_xlabel("x1")
         ax1.set_ylabel("x2")
+        ax1.set_xlim(self.domain_min[0].item(), self.domain_max[0].item())
+        ax1.set_ylim(self.domain_min[1].item(), self.domain_max[1].item())
         plt.colorbar(sc1, ax=ax1, label="P[y in band]")
 
         # Predicted mean
@@ -335,10 +380,13 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
             cmap="viridis",
             s=6,
             alpha=0.7,
+            lw=0,
         )
         ax2.set_title("GP Mean (avg across tasks)")
         ax2.set_xlabel("x1")
         ax2.set_ylabel("x2")
+        ax2.set_xlim(self.domain_min[0].item(), self.domain_max[0].item())
+        ax2.set_ylim(self.domain_min[1].item(), self.domain_max[1].item())
         plt.colorbar(sc2, ax=ax2, label="GP Mean")
 
         plt.tight_layout()
@@ -354,9 +402,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         if sampler == "nuts":
             self.logger.debug("Using NUTS kernel.")
             return NUTS(
-                self.make_interval_band_model(
-                    self.y_band_low, self.y_band_high, **model_kwargs or {}
-                ),
+                self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
                 **sampler_kwargs,
             )
         if sampler == "hmc":
@@ -368,9 +414,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
                 trajectory_length,
             )
             return HMC(
-                self.make_interval_band_model(
-                    self.y_band_low, self.y_band_high, **model_kwargs or {}
-                ),
+                self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
                 step_size=step_size,
                 trajectory_length=trajectory_length,
                 **sampler_kwargs,
@@ -378,9 +422,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         if sampler == "metropolis":
             self.logger.debug("Using Metropolis (RandomWalkKernel).")
             return RandomWalkKernel(
-                self.make_interval_band_model(
-                    self.y_band_low, self.y_band_high, **model_kwargs or {}
-                ),
+                self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
                 **sampler_kwargs,
             )
         self.logger.error("Unknown sampler: %s", sampler)
@@ -469,9 +511,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         """
         posterior_samples = mcmc.get_samples()
         posterior_predictive = Predictive(
-            self.make_interval_band_model(
-                self.y_band_low, self.y_band_high, **model_kwargs or {}
-            ),
+            self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
             posterior_samples,
         )
         samples = posterior_predictive(predict=True)
@@ -487,7 +527,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
         move_steps=2,
         rw_step=0.3,
         seed=0,
-    ):
+    ) -> tuple[TensorLike, TensorLike, TensorLike, TensorLike, int]:
         """SMC with adaptive tempering for band posterior.
 
         Includes vectorized random-walk Metropolis rejuvenation in the whitened space.
@@ -610,6 +650,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
                 break
 
         x_final = transform(z)
+        assert isinstance(x_final, TensorLike)
         lw_norm = logw - logw.logsumexp(0)
         w_final = lw_norm.exp()
         unique_count = torch.unique(x_final, dim=0).shape[0]
