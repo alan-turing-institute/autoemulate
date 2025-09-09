@@ -1,9 +1,6 @@
-import arviz as az
 import matplotlib.pyplot as plt
-import numpy as np
 import pyro
 import torch
-from getdist import MCSamples
 from pyro.distributions import (
     Normal,
     TransformedDistribution,  # type: ignore since this is a valid import
@@ -14,65 +11,64 @@ from pyro.distributions.transforms import (
     SigmoidTransform,
     Transform,
 )
-from pyro.infer import HMC, MCMC, NUTS, Predictive
-from pyro.infer.mcmc import RandomWalkKernel
 from torch.special import ndtr
 
+from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
+# TODO: remove as not needed if model is a method of the calibration class
+# class IntervalBandModel:
+#     """Top-level, pickleable Pyro model for interval excursion set calibration.
 
-class IntervalBandModel:
-    """Top-level, pickleable Pyro model for interval excursion set calibration.
+#     This wraps the emulator and band settings so the model can be pickled and sent to
+#     subprocesses when running multiple MCMC chains in parallel.
+#     """
 
-    This wraps the emulator and band settings so the model can be pickled and sent to
-    subprocesses when running multiple MCMC chains in parallel.
-    """
+#     def __init__(
+#         self,
+#         emulator: Emulator,
+#         domain_min: torch.Tensor,
+#         domain_max: torch.Tensor,
+#         y_band_low: torch.Tensor,
+#         y_band_high: torch.Tensor,
+#         d: int,
+#         *,
+#         temp: float = 1.0,
+#         softness: float | None = None,
+#         mix: float = 1.0,
+#     ) -> None:
+#         self.emulator = emulator
+#         self.domain_min = domain_min
+#         self.domain_max = domain_max
+#         self.y_band_low = y_band_low
+#         self.y_band_high = y_band_high
+#         self.d = d
+#         self.temp = temp
+#         self.softness = softness
+#         self.mix = mix
 
-    def __init__(
-        self,
-        emulator: Emulator,
-        domain_min: torch.Tensor,
-        domain_max: torch.Tensor,
-        y_band_low: torch.Tensor,
-        y_band_high: torch.Tensor,
-        d: int,
-        *,
-        temp: float = 1.0,
-        softness: float | None = None,
-        mix: float = 1.0,
-    ) -> None:
-        self.emulator = emulator
-        self.domain_min = domain_min
-        self.domain_max = domain_max
-        self.y_band_low = y_band_low
-        self.y_band_high = y_band_high
-        self.d = d
-        self.temp = temp
-        self.softness = softness
-        self.mix = mix
-
-    def __call__(self):  # Pyro model
-        """Pyro model: sample x_star in bounded domain and add band log-prob factor."""
-        base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
-        transform = BoundedDomainTransform(self.domain_min, self.domain_max)
-        x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
-        mu, var = self.emulator.predict_mean_and_variance(x_star)
-        assert isinstance(var, TensorLike)
-        pyro.factor(
-            "band_logp",
-            IntervalExcursionSetCalibration.band_logprob(
-                mu,
-                var,
-                self.y_band_low,
-                self.y_band_high,
-                temp=self.temp,
-                softness=self.softness,
-                mix=self.mix,
-            ),
-        )
+#     def __call__(self):  # Pyro model
+#         """Pyro model: sample x_star in bounded domain and add band log-prob factor."""  # noqa: E501
+#         base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
+#         transform = BoundedDomainTransform(self.domain_min, self.domain_max)
+#         x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
+#         mu, var = self.emulator.predict_mean_and_variance(x_star)
+#         assert isinstance(var, TensorLike)
+#         pyro.factor(
+#             "band_logp",
+#             IntervalExcursionSetCalibration.band_logprob(
+#                 mu,
+#                 var,
+#                 self.y_band_low,
+#                 self.y_band_high,
+#                 temp=self.temp,
+#                 softness=self.softness,
+#                 mix=self.mix,
+#             ),
+#         )
 
 
 class BoundedDomainTransform(Transform):
@@ -107,7 +103,7 @@ class BoundedDomainTransform(Transform):
         ) + self._affine.log_abs_det_jacobian(u, y)
 
 
-class IntervalExcursionSetCalibration(TorchDeviceMixin):
+class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     """
     Interval excursion set calibration using MC methods.
 
@@ -321,23 +317,27 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
 
     def model(
         self,
-        y_band_low: TensorLike,
-        y_band_high: TensorLike,
         temp=1.0,
         softness=None,
         mix=1.0,
     ):
-        """Return a pickleable Pyro model for interval excursion set calibration."""
-        return IntervalBandModel(
-            emulator=self.emulator,
-            domain_min=self.domain_min,
-            domain_max=self.domain_max,
-            y_band_low=y_band_low,
-            y_band_high=y_band_high,
-            d=self.d,
-            temp=float(temp),
-            softness=softness,
-            mix=float(mix),
+        """Pyro model for interval excursion set calibration."""
+        base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
+        transform = BoundedDomainTransform(self.domain_min, self.domain_max)
+        x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
+        mu, var = self.emulator.predict_mean_and_variance(x_star)
+        assert isinstance(var, TensorLike)
+        pyro.factor(
+            "band_logp",
+            IntervalExcursionSetCalibration.band_logprob(
+                mu,
+                var,
+                self.y_band_low,
+                self.y_band_high,
+                temp=temp,
+                softness=softness,
+                mix=mix,
+            ),
         )
 
     def plot_samples(self, samples, num_samples):
@@ -391,132 +391,6 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
 
         plt.tight_layout()
         plt.show()
-
-    # TODO: refactor to base class since duplicated in BayesianCalibration
-    def _get_kernel(
-        self, sampler: str, model_kwargs: dict | None = None, **sampler_kwargs
-    ):
-        """Get the appropriate MCMC kernel based on sampler choice."""
-        sampler = sampler.lower()
-
-        if sampler == "nuts":
-            self.logger.debug("Using NUTS kernel.")
-            return NUTS(
-                self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
-                **sampler_kwargs,
-            )
-        if sampler == "hmc":
-            step_size = sampler_kwargs.pop("step_size", 0.01)
-            trajectory_length = sampler_kwargs.pop("trajectory_length", 1.0)
-            self.logger.debug(
-                "Using HMC kernel with step_size=%s, trajectory_length=%s",
-                step_size,
-                trajectory_length,
-            )
-            return HMC(
-                self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
-                step_size=step_size,
-                trajectory_length=trajectory_length,
-                **sampler_kwargs,
-            )
-        if sampler == "metropolis":
-            self.logger.debug("Using Metropolis (RandomWalkKernel).")
-            return RandomWalkKernel(
-                self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
-                **sampler_kwargs,
-            )
-        self.logger.error("Unknown sampler: %s", sampler)
-        raise ValueError(f"Unknown sampler: {sampler}")
-
-    # TODO: refactor to base class since duplicated in BayesianCalibration
-    def run_mcmc(
-        self,
-        warmup_steps: int = 500,
-        num_samples: int = 1000,
-        num_chains: int = 1,
-        initial_params: dict[str, TensorLike] | None = None,
-        sampler: str = "metropolis",
-        **sampler_kwargs,
-    ) -> MCMC:
-        """
-        Run Markov Chain Monte Carlo (MCMC). Defaults to using the NUTS sampler.
-
-        Parameters
-        ----------
-        warmup_steps: int
-            Number of warm up steps to run per chain (i.e., burn-in). These samples are
-            discarded. Defaults to 500.
-        num_samples: int
-            Number of samples to draw after warm up. Defaults to 1000.
-        num_chains: int
-            Number of parallel chains to run. Defaults to 1.
-        initial_params: dict[str, TensorLike] | None
-            Optional dictionary specifiying initial values for each calibration
-            parameter per chain. The tensors must be of length `num_chains`.
-        sampler: str
-            The MCMC kernel to use, one of "hmc", "nuts" or "metropolis".
-
-        Returns
-        -------
-        MCMC
-            The Pyro MCMC object. Methods include `summary()` and `get_samples()`.
-        """
-        # Check initial param values match number of chains
-        if initial_params is not None:
-            for param, init_vals in initial_params.items():
-                if init_vals.shape[0] != num_chains:
-                    msg = (
-                        "An initial value must be provided for each chain, parameter "
-                        f"{param} tensor only has {init_vals.shape[0]} values."
-                    )
-                    self.logger.error(msg)
-                    raise ValueError(msg)
-            self.logger.debug(
-                "Initial parameters provided for MCMC: %s", initial_params
-            )
-
-        # Run NUTS
-        kernel = self._get_kernel(sampler, **sampler_kwargs)
-        mcmc = MCMC(
-            kernel,
-            warmup_steps=warmup_steps,
-            num_samples=num_samples,
-            num_chains=num_chains,
-            # If None, init values are sampled from the prior.
-            initial_params=initial_params,
-            # Multiprocessing
-            mp_context="spawn" if num_chains > 1 else None,
-        )
-        self.logger.info("Starting MCMC run.")
-        mcmc.run()
-        self.logger.info("MCMC run completed.")
-        return mcmc
-
-    # TODO: refactor to base class since duplicated in BayesianCalibration
-    def posterior_predictive(
-        self, mcmc: MCMC, model_kwargs: dict | None = None
-    ) -> TensorLike:
-        """
-        Return posterior predictive samples.
-
-        Parameters
-        ----------
-        mcmc: MCMC
-            The MCMC object.
-
-        Returns
-        -------
-        TensorLike
-            Tensor of posterior predictive samples [n_mcmc_samples, n_obs, n_outputs].
-        """
-        posterior_samples = mcmc.get_samples()
-        posterior_predictive = Predictive(
-            self.model(self.y_band_low, self.y_band_high, **model_kwargs or {}),
-            posterior_samples,
-        )
-        samples = posterior_predictive(predict=True)
-        self.logger.debug("Posterior predictive samples generated.")
-        return samples
 
     @torch.no_grad()
     def run_smc(  # noqa: PLR0915
@@ -661,68 +535,4 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin):
             torch.tensor(betas),
             torch.tensor(ess_hist),
             int(unique_count),
-        )
-
-    # TODO: refactor to base class since duplicated in BayesianCalibration
-    def to_arviz(
-        self, mcmc: MCMC, posterior_predictive: bool = False
-    ) -> az.InferenceData:
-        """
-        Convert MCMC object to Arviz InferenceData object for plotting.
-
-        Parameters
-        ----------
-        mcmc: MCMC
-            The MCMC object.
-        posterior_predictive: bool
-            Whether to include posterior predictive samples. Defaults to False.
-
-        Returns
-        -------
-        az.InferenceData
-        """
-        pp_samples = None
-        if posterior_predictive:
-            self.logger.info("Including posterior predictive samples in Arviz output.")
-            pp_samples = self.posterior_predictive(mcmc)
-
-        # Need to create dataset manually for Metropolis Hastings
-        # This is because az.from_pyro expects kernel with `divergences`
-        if isinstance(mcmc.kernel, RandomWalkKernel):
-            self.logger.debug(
-                "Using manual conversion for Metropolis (RandomWalkKernel) kernel."
-            )
-            az_data = az.InferenceData(
-                posterior=az.convert_to_dataset(mcmc.get_samples(group_by_chain=True)),
-            )
-        else:
-            self.logger.debug("Using az.from_pyro for conversion.")
-            az_data = az.from_pyro(mcmc, posterior_predictive=pp_samples)
-
-        self.logger.info("Arviz InferenceData conversion complete.")
-        return az_data
-
-    # TODO: refactor to base class since duplicated in BayesianCalibration
-    @staticmethod
-    def to_getdist(mcmc: MCMC, label: str):
-        """
-        Convert Pyro MCMC object to GetDist MCSamples object for plotting.
-
-        Parameters
-        ----------
-        mcmc: MCMC
-            The Pyro MCMC object.
-        label: str
-            Label for the MCSamples object.
-
-        Returns
-        -------
-        MCSamples
-            The GetDist MCSamples object.
-        """
-        samples = mcmc.get_samples()
-        return MCSamples(
-            samples=np.array(list(samples.values())).T,
-            names=list(samples.keys()),
-            label=label,
         )

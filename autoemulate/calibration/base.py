@@ -17,10 +17,16 @@ class BayesianMixin:
     model: Callable
     observations: dict[str, TensorLike] | None
 
-    def _get_kernel(self, sampler: str, **sampler_kwargs):
+    def _get_kernel(
+        self,
+        sampler: str,
+        model_kwargs: dict[str, TensorLike] | None = None,
+        **sampler_kwargs,
+    ):
         """Get the appropriate MCMC kernel based on sampler choice."""
+        # TODO: consider how to pass model args, functools.partial?
+        model_kwargs = model_kwargs or {}
         sampler = sampler.lower()
-
         if sampler == "nuts":
             self.logger.debug("Using NUTS kernel.")
             return NUTS(self.model, **sampler_kwargs)
