@@ -371,7 +371,9 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             ),
         )
 
-    def plot_samples(self, data: MCMC | az.InferenceData | TensorLike):
+    def plot_samples(
+        self, data: MCMC | az.InferenceData | TensorLike, x_idx=0, y_idx=1
+    ):
         """Plot samples with band probabilities and GP mean."""
         if isinstance(data, az.InferenceData):
             samples = data.posterior.to_dataframe()[  # type: ignore  # noqa: PGH003
@@ -398,8 +400,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         # Probability in band
         sc1 = ax1.scatter(
-            samples[:, 0].cpu(),
-            samples[:, 1].cpu(),
+            samples[:, x_idx].cpu(),
+            samples[:, y_idx].cpu(),
             c=p_band.cpu(),
             cmap="viridis",
             s=6,
@@ -407,17 +409,17 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             lw=0,
         )
         ax1.set_title("Band Probability (agg across tasks)")
-        ax1.set_xlabel("x1")
-        ax1.set_ylabel("x2")
-        ax1.set_xlim(self.domain_min[0].item(), self.domain_max[0].item())
-        ax1.set_ylim(self.domain_min[1].item(), self.domain_max[1].item())
+        ax1.set_xlabel(self.calibration_params[x_idx])
+        ax1.set_ylabel(self.calibration_params[y_idx])
+        ax1.set_xlim(self.domain_min[x_idx].item(), self.domain_max[x_idx].item())
+        ax1.set_ylim(self.domain_min[y_idx].item(), self.domain_max[y_idx].item())
         plt.colorbar(sc1, ax=ax1, label="P[y in band]")
 
         # Predicted mean
         mu_color = mu_s.mean(dim=-1) if mu_s.dim() > 1 else mu_s
         sc2 = ax2.scatter(
-            samples[:, 0].cpu(),
-            samples[:, 1].cpu(),
+            samples[:, x_idx].cpu(),
+            samples[:, y_idx].cpu(),
             c=mu_color.cpu(),
             cmap="viridis",
             s=6,
@@ -425,10 +427,10 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             lw=0,
         )
         ax2.set_title("GP Mean (avg across tasks)")
-        ax2.set_xlabel("x1")
-        ax2.set_ylabel("x2")
-        ax2.set_xlim(self.domain_min[0].item(), self.domain_max[0].item())
-        ax2.set_ylim(self.domain_min[1].item(), self.domain_max[1].item())
+        ax2.set_xlabel(self.calibration_params[x_idx])
+        ax2.set_ylabel(self.calibration_params[y_idx])
+        ax2.set_xlim(self.domain_min[x_idx].item(), self.domain_max[x_idx].item())
+        ax2.set_ylim(self.domain_min[y_idx].item(), self.domain_max[y_idx].item())
         plt.colorbar(sc2, ax=ax2, label="GP Mean")
 
         plt.tight_layout()
