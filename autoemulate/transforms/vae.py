@@ -3,7 +3,7 @@ import logging
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.distributions import Transform, constraints
+from torch.distributions import Normal, Transform, constraints
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
@@ -71,8 +71,8 @@ class VAE(nn.Module, TorchDeviceMixin):
     def reparameterize(self, mu, log_var):
         """Sample from latent distribution using reparameterization trick."""
         std = torch.exp(0.5 * log_var)
-        eps = torch.randn_like(std)
-        return mu + eps * std
+        dist = Normal(mu, std)
+        return dist.rsample()
 
     def decode(self, z):
         """Decode latent representation back to original space."""
