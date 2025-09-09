@@ -339,7 +339,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     ):
         """Pyro model for interval excursion set calibration."""
         if not uniform_prior:
-            base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
+            base = Normal(0.0, 1.0).expand([1, self.d]).to_event(self.d)
             transform = BoundedDomainTransform(self.domain_min, self.domain_max)
             # TODO: needs to be deconstructed to separate variables for plotting
             x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
