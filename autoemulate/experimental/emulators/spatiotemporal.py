@@ -61,7 +61,7 @@ class SpatioTemporalEmulator(PyTorchBackend):
     # TODO: update to handle DataLoader input as part of #814 and #815
     def predict_autoregressive(self, initial_sample: dict, n_steps: int) -> TensorLike:
         """Perform autoregressive prediction."""
-        from autoemulate.experimental.emulators.fno import (
+        from autoemulate.experimental.emulators.fno import (  # noqa: PLC0415 to avoid circular import
             prepare_batch,
         )
 
