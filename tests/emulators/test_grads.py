@@ -39,10 +39,6 @@ def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transfor
     if x_transforms and any(isinstance(t, PCATransform) for t in x_transforms):
         pytest.xfail("PCATransform in x_transforms breaks gradient calculation support")
 
-    # Check for VAE transforms that break gradient flow
-    if y_transforms and any(isinstance(t, VAETransform) for t in y_transforms):
-        pytest.xfail("VAETransform in y_transforms breaks requires_grad property")
-
     # Test gradient computation for the given emulator
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
@@ -109,10 +105,7 @@ def test_grads_func(
         isinstance(t, VAETransform) for t in x_transforms
     ):
         pytest.xfail("VAE x_transforms break gradient calculation")
-    if y_transforms is not None and any(
-        isinstance(t, VAETransform) for t in y_transforms
-    ):
-        pytest.xfail("VAE y_transforms have requires_grad=False issue")
+
     # Check for ensemble emulator issues with functorch
     if emulator.__name__.startswith("Ensemble"):
         pytest.xfail("Ensemble emulators have functorch compatibility issues")
