@@ -56,12 +56,12 @@ class BoundedDomainTransform(Transform):
         ) + self._affine.log_abs_det_jacobian(u, y)
 
 
-class ExcursionSetCalibration(TorchDeviceMixin):
+class IntervalExcursionSetCalibration(TorchDeviceMixin):
     """
-    Excursion set calibration using MC methods.
+    Interval excursion set calibration using MC methods.
 
-    Excursion set calibration identifies the set of input parameters that lead to
-    model outputs that are within specified bands of observed data.
+    Interval excursion set calibration identifies the set of input parameters that lead
+    to model outputs that are within specified bands of observed data.
     """
 
     MIN_VAR = 1e-12
@@ -275,7 +275,7 @@ class ExcursionSetCalibration(TorchDeviceMixin):
         softness=None,
         mix=1.0,
     ):
-        """Make a Pyro model for excursion set calibration."""
+        """Make a Pyro model for interval excursion set calibration."""
 
         def model():
             base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
