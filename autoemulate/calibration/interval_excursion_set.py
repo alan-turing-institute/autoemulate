@@ -193,7 +193,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         Parameters
         ----------
-        mu : (N, T) or (T,)
+        mu : Mean per task (N, T) or (T,)
         var_or_cov : (N, T) variance per task OR (N, T, T) covariance across tasks
         y1, y2 : (T,) lower/upper bounds per task
         aggregate : 'geomean' | 'sumlog' | 'none'
@@ -347,7 +347,6 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         with torch.no_grad():
             mu_s, var_s = self.emulator.predict_mean_and_variance(samples)
             assert isinstance(var_s, TensorLike)
-            # Use shared helper for band probability aggregation, passing var directly
             p_band = self.band_prob_from_mu_sigma(
                 mu_s, var_s, self.y_band_low, self.y_band_high, aggregate="geomean"
             )
