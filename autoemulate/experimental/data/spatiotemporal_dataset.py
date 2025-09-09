@@ -17,6 +17,7 @@ class AutoEmulateDataset(Dataset):
         # TODO: support for passing data from dict
         input_channel_idxs: tuple[int, ...] | None = None,
         output_channel_idxs: tuple[int, ...] | None = None,
+        dtype: torch.dtype = torch.float32,
     ):
         """
         Initialize the dataset.
@@ -37,8 +38,10 @@ class AutoEmulateDataset(Dataset):
             Indices of input channels to use. Defaults to None.
         output_channel_idxs: tuple[int, ...] | None
             Indices of output channels to use. Defaults to None.
-
+        dtype: torch.dtype
+            Data type for tensors. Defaults to torch.float32.
         """
+        self.dtype = dtype
         self.n_steps_input = n_steps_input
         self.n_steps_output = n_steps_output
         self.stride = stride
@@ -80,20 +83,25 @@ class AutoEmulateDataset(Dataset):
 
             # Store each subtrajectory separately
             for sub_idx in range(input_fields.shape[0]):
-                self.all_input_fields.append(input_fields[sub_idx])  # [T_in, W, H, C]
+                self.all_input_fields.append(
+                    input_fields[sub_idx].to(self.dtype)
+                )  # [T_in, W, H, C]
                 self.all_output_fields.append(
-                    output_fields[sub_idx]
+                    output_fields[sub_idx].to(self.dtype)
                 )  # [T_out, W, H, C]
 
                 # Handle constant scalars
                 if self.constant_scalars is not None:
-                    self.all_constant_scalars.append(self.constant_scalars[traj_idx])
+                    self.all_constant_scalars.append(
+                        self.constant_scalars[traj_idx].to(self.dtype)
+                    )
                 else:
                     self.all_constant_scalars.append(torch.tensor([]))
 
         print(f"Created {len(self.all_input_fields)} subtrajectory samples")
         print(f"Each input sample shape: {self.all_input_fields[0].shape}")
         print(f"Each output sample shape: {self.all_output_fields[0].shape}")
+        print(f"Data type: {self.all_input_fields[0].dtype}")
 
     def read_data(self, data_path: str):
         """Read data.
@@ -105,11 +113,11 @@ class AutoEmulateDataset(Dataset):
         self.data_path = data_path
         with h5py.File(self.data_path, "r") as f:
             assert "data" in f, "HDF5 file must contain 'data' dataset"
-            self.data: TensorLike = torch.Tensor(f["data"][:])  # type: ignore # [N, T, W, H, C]  # noqa: PGH003
+            self.data: TensorLike = torch.Tensor(f["data"][:]).to(self.dtype)  # type: ignore # [N, T, W, H, C]  # noqa: PGH003
         print(f"Loaded data shape: {self.data.shape}")
         # TODO: add the constant scalars
         self.constant_scalars = (
-            torch.Tensor(f["constant_scalars"][:])  # type: ignore  # noqa: PGH003
+            torch.Tensor(f["constant_scalars"][:]).to(self.dtype)  # type: ignore  # noqa: PGH003
             if "constant_scalars" in f
             else None
         )  # [N, C]
@@ -119,7 +127,11 @@ class AutoEmulateDataset(Dataset):
     def parse_data(self, data: dict | None):
         """Parse data from a dictionary."""
         if data is not None:
-            self.data = data["data"]
+            self.data = (
+                data["data"].to(self.dtype)
+                if torch.is_tensor(data["data"])
+                else torch.tensor(data["data"], dtype=self.dtype)
+            )
             self.constant_scalars = data.get("constant_scalars", None)
             self.constant_fields = data.get("constant_fields", None)
             return
