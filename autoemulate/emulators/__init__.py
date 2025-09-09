@@ -1,4 +1,4 @@
-from .base import Emulator
+from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
     GaussianProcess,
@@ -43,11 +43,9 @@ PYTORCH_EMULATORS: list[type[Emulator]] = [
     emulator for emulator in ALL_EMULATORS if emulator not in NON_PYTORCH_EMULATORS
 ]
 GAUSSIAN_PROCESS_EMULATORS: list[type[Emulator]] = [
-    GaussianProcess,
-    GaussianProcessCorrelated,
-    GaussianProcessRBF,
-    GaussianProcessMatern32,
-    GaussianProcessMatern52,
+    emulator
+    for emulator in ALL_EMULATORS
+    if issubclass(emulator, GaussianProcessEmulator)
 ]
 
 EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
