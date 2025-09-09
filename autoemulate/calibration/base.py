@@ -56,6 +56,7 @@ class BayesianMixin:
         num_samples: int = 1000,
         num_chains: int = 1,
         initial_params: dict[str, TensorLike] | None = None,
+        model_kwargs: dict | None = None,
         sampler: str = "nuts",
         **sampler_kwargs,
     ) -> MCMC:
@@ -74,8 +75,12 @@ class BayesianMixin:
         initial_params: dict[str, TensorLike] | None
             Optional dictionary specifiying initial values for each calibration
             parameter per chain. The tensors must be of length `num_chains`.
+        model_kwargs: dict | None
+            Optional dictionary of keyword arguments to pass to the model.
         sampler: str
             The MCMC kernel to use, one of "hmc", "nuts" or "metropolis".
+        **sampler_kwargs
+            Additional keyword arguments to pass to the MCMC kernel.
 
         Returns
         -------
@@ -98,7 +103,7 @@ class BayesianMixin:
             )
 
         # Run NUTS
-        kernel = self._get_kernel(sampler, **sampler_kwargs)
+        kernel = self._get_kernel(sampler, model_kwargs=model_kwargs, **sampler_kwargs)
         mcmc = MCMC(
             kernel,
             warmup_steps=warmup_steps,
