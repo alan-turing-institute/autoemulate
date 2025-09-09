@@ -1,16 +1,21 @@
+import arviz as az
 import matplotlib.pyplot as plt
+import numpy as np
 import pyro
 import torch
 from pyro.distributions import (
     Normal,
     TransformedDistribution,  # type: ignore since this is a valid import
+    Uniform,
     constraints,
 )
 from pyro.distributions.transforms import (
     AffineTransform,
+    ComposeTransform,
     SigmoidTransform,
     Transform,
 )
+from pyro.infer import MCMC
 from torch.special import ndtr
 
 from autoemulate.calibration.base import BayesianMixin
@@ -116,7 +121,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     def __init__(
         self,
         emulator: Emulator,
-        parameter_range: dict[str, tuple[float, float]],
+        parameters_range: dict[str, tuple[float, float]],
         y_lower: TensorLike,
         y_upper: TensorLike,
         y_labels: list[str] | None = None,
@@ -148,16 +153,16 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             - "critical": shows critical messages
         """
         TorchDeviceMixin.__init__(self, device=device)
-        self.parameter_range = parameter_range
+        self.parameters_range = parameters_range
 
         # Set domain lower and upper bounds as tensors
-        self.domain_min = torch.tensor([b[0] for b in self.parameter_range.values()])
-        self.domain_max = torch.tensor([b[1] for b in self.parameter_range.values()])
+        self.domain_min = torch.tensor([b[0] for b in self.parameters_range.values()])
+        self.domain_max = torch.tensor([b[1] for b in self.parameters_range.values()])
 
         self._y_lower = y_lower
         self._y_upper = y_upper
-        self.calibration_params = list(parameter_range.keys())
-        self.d = len(self.parameter_range)
+        self.calibration_params = list(parameters_range.keys())
+        self.d = len(self.parameters_range)
         self.emulator = emulator
         self.emulator.device = self.device
         self.output_names = y_labels or [f"y{i}" for i in range(len(y_lower))]
@@ -315,17 +320,32 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         )
         return log_p_mix.sum()
 
+    def _get_x_star(self):
+        param_list = []
+        for param in self.parameters_range:
+            if param in self.calibration_params:
+                # Sample from uniform prior
+                min_val, max_val = self.parameters_range[param]
+                sampled_val = pyro.sample(param, Uniform(min_val, max_val))
+                param_list.append(sampled_val.to(self.device))
+        return torch.stack(param_list, dim=0).unsqueeze(0).float()
+
     def model(
         self,
         temp=1.0,
         softness=None,
         mix=1.0,
+        uniform_prior=True,
     ):
         """Pyro model for interval excursion set calibration."""
-        base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
-        transform = BoundedDomainTransform(self.domain_min, self.domain_max)
-        x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
-        mu, var = self.emulator.predict_mean_and_variance(x_star)
+        if not uniform_prior:
+            base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
+            transform = BoundedDomainTransform(self.domain_min, self.domain_max)
+            # TODO: needs to be deconstructed to separate variables for plotting
+            x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
+        else:
+            x_star = self._get_x_star()
+        mu, var = self.emulator.predict_mean_and_variance(x_star, with_grad=True)
         assert isinstance(var, TensorLike)
         pyro.factor(
             "band_logp",
@@ -340,10 +360,22 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             ),
         )
 
-    def plot_samples(self, samples, num_samples):
+    def plot_samples(self, data: MCMC | az.InferenceData | TensorLike):
         """Plot samples with band probabilities and GP mean."""
-        # Ensure correct shape
-        samples = samples.reshape(num_samples, -1)
+        if isinstance(data, az.InferenceData):
+            samples = data.posterior.to_dataframe()[  # type: ignore  # noqa: PGH003
+                self.parameters_range.keys()
+            ].to_numpy()
+        elif isinstance(data, MCMC):
+            samples = torch.stack(list(data.get_samples().values()), dim=-1)
+            samples = samples.reshape(data.num_chains * data.num_samples, -1)
+        elif isinstance(data, TensorLike):
+            samples = data.reshape(data.shape[0], -1)
+        else:
+            msg = "data must be MCMC, InferenceData, or TensorLike"
+            raise ValueError(msg)
+
+        samples = torch.tensor(samples)
         with torch.no_grad():
             mu_s, var_s = self.emulator.predict_mean_and_variance(samples)
             assert isinstance(var_s, TensorLike)
@@ -400,7 +432,10 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         move_steps=2,
         rw_step=0.3,
         seed=0,
-    ) -> tuple[TensorLike, TensorLike, TensorLike, TensorLike, int]:
+        uniform_prior=True,
+        plot_diagnostics=True,
+        return_az_data: bool = False,
+    ) -> tuple[TensorLike, TensorLike, TensorLike, TensorLike, int] | az.InferenceData:
         """SMC with adaptive tempering for band posterior.
 
         Includes vectorized random-walk Metropolis rejuvenation in the whitened space.
@@ -428,12 +463,20 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             x_final, weights, beta_schedule, ess_history, unique_count
         """
         torch.manual_seed(seed)
-        transform = BoundedDomainTransform(self.domain_min, self.domain_max)
+        transform = (
+            BoundedDomainTransform(self.domain_min, self.domain_max)
+            if not uniform_prior
+            else ComposeTransform([])
+        )
         device = self.domain_min.device
         dtype = self.domain_min.dtype
 
         # Work in whitened space z ~ N(0, I_d)
-        z = torch.randn(n_particles, self.d, device=device, dtype=dtype)
+        z = (
+            torch.randn(n_particles, self.d, device=device, dtype=dtype)
+            if not uniform_prior
+            else Uniform(self.domain_min, self.domain_max).sample((n_particles,))
+        )
 
         def compute_ll(z_batch: torch.Tensor) -> torch.Tensor:
             x = transform(z_batch)  # (N, d)
@@ -528,6 +571,74 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         w_final = lw_norm.exp()
         unique_count = torch.unique(x_final, dim=0).shape[0]
 
+        if plot_diagnostics:
+            # Diagnostic plots
+            plt.figure(figsize=(5, 4))
+            plt.scatter(
+                x_final[:, 0].cpu(), x_final[:, 1].cpu(), s=4, alpha=0.4, c="tab:orange"
+            )
+            plt.title(
+                f"SMC particles (final), unique={unique_count}/{x_final.shape[0]}"
+            )
+            plt.xlabel("x1")
+            plt.ylabel("x2")
+            plt.tight_layout()
+
+            plt.figure(figsize=(6, 3))
+            plt.plot(betas, "-o", ms=3)
+            plt.ylabel("beta")
+            plt.xlabel("step")
+            plt.title("Temperatures")
+            plt.tight_layout()
+
+            plt.figure(figsize=(6, 3))
+            plt.plot(ess_hist, "-o", ms=3)
+            plt.ylabel("ESS")
+            plt.xlabel("step")
+            plt.title("ESS over steps")
+            plt.tight_layout()
+
+        if return_az_data:
+            # Convert to SMC-specific ArviZ InferenceData
+            x_np = x_final.detach().cpu().numpy()
+            w_np = w_final.detach().cpu().numpy()
+            lw_np = lw_norm.detach().cpu().numpy()
+
+            # Posterior: store each calibrated parameter as its own variable
+            posterior = {
+                name: x_np[None, :, i]  # shape (chain=1, draw=N)
+                for i, name in enumerate(self.calibration_params)
+            }
+
+            # Sample stats: normalized weights and log-weights per draw
+            sample_stats = {
+                "smc_weight": w_np[None, :],  # (chain=1, draw=N)
+                "smc_log_weight": lw_np[None, :],
+            }
+
+            # Constant data: beta schedule, ESS history, and unique_count
+            constant_data = {
+                "beta_schedule": np.asarray(betas, dtype=float),
+                "ess_history": np.asarray(ess_hist, dtype=float),
+                "unique_count": np.array(int(unique_count), dtype=int),
+            }
+
+            return az.from_dict(
+                posterior=posterior,
+                sample_stats=sample_stats,
+                constant_data=constant_data,
+                coords={
+                    "tempering_step": np.arange(len(betas)),
+                    "tempering_step_ess": np.arange(len(ess_hist)),
+                },
+                dims={
+                    # beta schedule has one entry per tempering step
+                    "beta_schedule": ["tempering_step"],
+                    # ess history typically logged after each step
+                    "ess_history": ["tempering_step_ess"],
+                    # per-parameter posterior vars are scalars per draw (no extra dims)
+                },
+            )
         return (
             x_final,
             w_final,
