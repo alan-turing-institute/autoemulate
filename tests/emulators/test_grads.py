@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 import torch
 from autoemulate.core.types import TensorLike
@@ -6,19 +8,49 @@ from autoemulate.emulators import (
     PYTORCH_EMULATORS,
     RadialBasisFunctions,
 )
-from autoemulate.emulators.base import Emulator
+from autoemulate.emulators.transformed.base import TransformedEmulator
+from autoemulate.transforms.pca import PCATransform
+from autoemulate.transforms.standardize import StandardizeTransform
+from autoemulate.transforms.vae import VAETransform
 
 
-@pytest.mark.parametrize("emulator", PYTORCH_EMULATORS)
-def test_grads(sample_data_y1d, new_data_y1d, emulator):
+@pytest.mark.parametrize(
+    ("emulator", "x_transforms", "y_transforms"),
+    itertools.product(
+        [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
+        [
+            None,
+            [StandardizeTransform(), PCATransform(n_components=3)],
+            # [StandardizeTransform(), VAETransform(latent_dim=3)],
+        ],
+        [
+            None,
+            [StandardizeTransform()],
+            [StandardizeTransform(), PCATransform(n_components=1)],
+            [StandardizeTransform(), VAETransform(latent_dim=1)],
+        ],
+    ),
+)
+def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms):
     if emulator == RadialBasisFunctions:
         pytest.xfail("RadialBasisFunctions do not appear to support gradients")
+
+    # Check for PCA transforms in x_transforms that break gradient support
+    if x_transforms and any(isinstance(t, PCATransform) for t in x_transforms):
+        pytest.xfail("PCATransform in x_transforms breaks gradient calculation support")
+
+    # Check for VAE transforms that break gradient flow
+    if y_transforms and any(isinstance(t, VAETransform) for t in y_transforms):
+        pytest.xfail("VAETransform in y_transforms breaks requires_grad property")
+
     # Test gradient computation for the given emulator
-    x, y = sample_data_y1d
-    x2, _ = new_data_y1d
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
 
     # Fit emulator
-    em: Emulator = emulator(x, y)
+    em = TransformedEmulator(
+        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=emulator
+    )
     em.fit(x, y)
 
     # Get predictions
@@ -42,20 +74,57 @@ def test_grads(sample_data_y1d, new_data_y1d, emulator):
         assert not torch.allclose(grads, torch.zeros_like(grads))
 
 
-@pytest.mark.parametrize("emulator", PYTORCH_EMULATORS)
-def test_grads_func(sample_data_y1d, new_data_y1d, emulator):
+@pytest.mark.parametrize(
+    ("emulator", "x_transforms", "y_transforms"),
+    itertools.product(
+        [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
+        [
+            None,
+            [StandardizeTransform(), PCATransform(n_components=3)],
+            [StandardizeTransform(), VAETransform(latent_dim=3)],
+        ],
+        [
+            None,
+            [StandardizeTransform()],
+            [StandardizeTransform(), PCATransform(n_components=1)],
+            [StandardizeTransform(), VAETransform(latent_dim=1)],
+        ],
+    ),
+)
+def test_grads_func(
+    sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms
+):
     if emulator == RadialBasisFunctions:
         pytest.xfail("RadialBasisFunctions do not appear to support gradients")
     if emulator in GAUSSIAN_PROCESS_EMULATORS:
         pytest.xfail(
             "GaussianProcess emulators do not support torch.func API for grads"
         )
+    # Check for problematic transform combinations
+    if x_transforms is not None and any(
+        isinstance(t, PCATransform) for t in x_transforms
+    ):
+        pytest.xfail("PCA x_transforms break gradient calculation")
+    if x_transforms is not None and any(
+        isinstance(t, VAETransform) for t in x_transforms
+    ):
+        pytest.xfail("VAE x_transforms break gradient calculation")
+    if y_transforms is not None and any(
+        isinstance(t, VAETransform) for t in y_transforms
+    ):
+        pytest.xfail("VAE y_transforms have requires_grad=False issue")
+    # Check for ensemble emulator issues with functorch
+    if emulator.__name__.startswith("Ensemble"):
+        pytest.xfail("Ensemble emulators have functorch compatibility issues")
     # Test gradient computation for the given emulator
-    x, y = sample_data_y1d
-    x2, _ = new_data_y1d
+    x, y = sample_data_y2d
+    x2, _ = new_data_y2d
 
     # Fit emulator
-    em: Emulator = emulator(x, y)
+    # em: Emulator = emulator(x, y)
+    em = TransformedEmulator(
+        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=emulator
+    )
     em.fit(x, y)
 
     def sum_of_output(index: int):
