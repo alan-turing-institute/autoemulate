@@ -88,7 +88,8 @@ class SpatioTemporalEmulator(PyTorchBackend):
                     with_time=True,
                 )
                 # Forward pass
-                pred = self(x)  # [batch, channels, time, height, width]
+                res = self(x)  # [batch, channels, time, height, width]
+                pred = res + x[:, :1, ...]  # add last time step input
                 assert isinstance(pred, TensorLike)
                 predictions.append(pred)
                 # Update input for next iteration

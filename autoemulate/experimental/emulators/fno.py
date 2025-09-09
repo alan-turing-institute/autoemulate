@@ -62,18 +62,19 @@ class FNOEmulator(SpatioTemporalEmulator):
         assert isinstance(x, DataLoader), "x currently must be a DataLoader"
         assert y is None, "y currently must be None"
 
-        for idx, batch in enumerate(x):
+        for idx, batch in enumerate(x):  # type: ignore[reportIndexIssue]
             # Prepare input with constants
             x, y = prepare_batch(
                 batch, channels=self.channels, with_constants=True, with_time=True
             )  # type: ignore  # noqa: PGH003
 
-            # Predictions
-            y_pred = self.model(x)
+            res_pred = self.model(x)
 
-            # Get loss
-            # Take the first time idx as the next time step prediction
-            loss = self.loss_fn(y_pred[:, :, :1, ...], y)
+            # TODO: currently predicting only one output field; want all
+            y_pred = x[:, :1, :1, ...] + res_pred[:, :, :1, ...]
+
+            # Loss
+            loss = self.loss_fn(y_pred, y)
 
             loss.backward()
             self.optimizer.step()
@@ -95,6 +96,7 @@ class FNOEmulator(SpatioTemporalEmulator):
                 x, _ = prepare_batch(
                     batch, channels=channels, with_constants=True, with_time=True
                 )
-                out = self(x)
+                res = self(x)
+                out = x[:, :1, ...] + res
                 all_preds.append(out)
             return torch.cat(all_preds)
