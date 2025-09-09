@@ -90,11 +90,14 @@ def test_grads_func(
         pytest.xfail("RadialBasisFunctions do not appear to support gradients")
     if emulator in GAUSSIAN_PROCESS_EMULATORS:
         pytest.xfail(
-            "GaussianProcess emulators do not support torch.func API for grads"
+            "GaussianProcess emulators do not support torch.func API for gradients as "
+            "LinearOperator does not support gradients with torch.func API."
         )
-    # Check for ensemble emulator issues with functorch
     if emulator.__name__.startswith("Ensemble"):
-        pytest.xfail("Ensemble emulators have functorch compatibility issues")
+        pytest.xfail(
+            "Ensemble emulators do not support torch.func API for gradients as "
+            "LinearOperator does not support gradients with torch.func API."
+        )
     # Test gradient computation for the given emulator
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
