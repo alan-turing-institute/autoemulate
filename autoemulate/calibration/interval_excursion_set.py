@@ -22,6 +22,7 @@ from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike, TensorLike
+from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import Emulator
 
 # TODO: remove as not needed if model is a method of the calibration class
@@ -439,19 +440,17 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     @torch.no_grad()
     def run_smc(  # noqa: PLR0915
         self,
-        n_particles=4000,
-        ess_target_frac=0.7,
-        max_steps=60,
-        move_steps=2,
-        rw_step=0.3,
-        seed=0,
-        uniform_prior=True,
-        plot_diagnostics=True,
-        return_az_data: bool = False,
+        n_particles: int = 4000,
+        ess_target_frac: float = 0.7,
+        max_steps: int = 60,
+        move_steps: int = 2,
+        rw_step: float = 0.3,
+        seed: int | None = None,
+        uniform_prior: bool = True,
+        plot_diagnostics: bool = True,
+        return_az_data: bool = True,
     ) -> tuple[TensorLike, TensorLike, TensorLike, TensorLike, int] | az.InferenceData:
         """SMC with adaptive tempering for band posterior.
-
-        Includes vectorized random-walk Metropolis rejuvenation in the whitened space.
 
         Parameters
         ----------
@@ -467,15 +466,31 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         rw_step: float
             Standard deviation of the random-walk proposal in whitened space.
             Defaults to 0.
-        seed: int
-            Random seed for reproducibility. Defaults to 0.
+        seed: int | None
+            Random seed for reproducibility. Defaults to None.
+        uniform_prior: bool
+            If True, use uniform prior over the bounded domain. If False, use standard
+            normal prior in the whitened space (z ~ N(0, I_d)). Defaults to True.
+        plot_diagnostics: bool
+            Whether to plot diagnostic plots of the final particles, temperature
+            schedule, and ESS history. Defaults to True.
+        return_az_data: bool
+            Whether to return ArviZ InferenceData object. Defaults to True.
 
         Returns
         -------
-        Tuple[TensorLike, TensorLike, TensorLike, TensorLike, int]
-            x_final, weights, beta_schedule, ess_history, unique_count
+        Tuple[TensorLike, TensorLike, TensorLike, TensorLike, int] | az.InferenceData
+            A tuple of x_final, weights, beta_schedule, ess_history, unique_count or
+            an ArviZ InferenceData object if return_az_data is True.
+
+        References
+        ----------
+        - See Del Moral et al. (2006) <https://doi.org/10.1111/j.1467-9868.2006.00553.x>
+        "Sequential Monte Carlo samplers" for details on the SMC algorithm.
+
         """
-        torch.manual_seed(seed)
+        if seed is not None:
+            set_random_seed(seed)
         transform = (
             BoundedDomainTransform(self.domain_min, self.domain_max)
             if not uniform_prior
@@ -484,7 +499,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         device = self.domain_min.device
         dtype = self.domain_min.dtype
 
-        # Work in whitened space z ~ N(0, I_d)
+        # Sample from whitened space z ~ N(0, I_d) or original space if uniform prior
         z = (
             torch.randn(n_particles, self.d, device=device, dtype=dtype)
             if not uniform_prior
@@ -496,6 +511,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             assert isinstance(x, TensorLike)
             mu, var = self.emulator.predict_mean_and_variance(x)
             assert isinstance(var, TensorLike)
+            # Sum of log-probs across tasks
             return self.band_prob_from_mu_sigma(
                 mu, var, self.y_band_low, self.y_band_high, aggregate="sumlog"
             )  # (N,)
@@ -503,7 +519,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         # Initial log-likelihoods
         ll = compute_ll(z)
 
-        # Initialize weights at beta=0
+        # Initialize weights at beta=0 (prior)
         logw = torch.zeros(n_particles, device=device, dtype=dtype)
         beta = 0.0
         betas: list[float] = [beta]
@@ -531,6 +547,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             - Else (whitened Gaussian): include standard normal prior term in MH ratio.
             """
             for _ in range(move_steps):
+                # Create Gaussian random-walk proposals
                 z_prop = z + rw_step * torch.randn_like(z)
 
                 if uniform_prior:
@@ -563,10 +580,12 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
                     ll = torch.where(accept, ll_prop, ll)
             return z, ll
 
-        # Adaptive tempering loop
+        # Adaptive tempering loop from prior (beta=0) to posterior (beta=1)
         for _ in range(max_steps):
+            # Target ESS as number of particles
             target_ess = ess_target_frac * n_particles
-            # Find delta via binary search
+
+            # Find largest delta via binary search that gives ess >= target_ess
             low, high = 0.0, float(1.0 - beta)
             for _ in range(25):
                 if high <= 1e-6:
@@ -591,6 +610,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             betas.append(beta)
             ess_hist.append(ess)
 
+            # Resample and rejuvenate if ESS below target or at final beta=1 so that
+            # the final output is unweighted and represents the posterior
             need_resample = (ess < target_ess) or (beta >= 1.0 - 1e-6)
             if need_resample:
                 idx = systematic_resample(w)
@@ -599,6 +620,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
                 logw.zero_()
                 z, ll = rejuvenate_rw(z, ll, beta)
 
+            # Break if reached beta=1, i.e. full posterior
             if beta >= 1.0 - 1e-6:
                 break
 
