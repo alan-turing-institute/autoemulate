@@ -196,25 +196,61 @@ class BayesianMixin:
         return az_data
 
     @staticmethod
-    def to_getdist(mcmc: MCMC, label: str):
-        """
-        Convert Pyro MCMC object to GetDist MCSamples object for plotting.
+    def to_getdist(
+        data: MCMC | az.InferenceData,
+        label: str,
+        use_weights: bool = True,
+        weight_name: str = "weight",
+    ) -> MCSamples:
+        """Convert Pyro MCMC or ArviZ InferenceData to GetDist MCSamples.
+
+        This lightweight helper extends the original implementation to also accept
+        SMC / other results already converted to ArviZ InferenceData. If a weight
+        variable (default: smc_weight) is present in sample_stats it will be
+        used as importance weights.
 
         Parameters
         ----------
-        mcmc: MCMC
-            The Pyro MCMC object.
+        data: MCMC | az.InferenceData
+            The Pyro MCMC object or an ArviZ InferenceData object containing posterior
+            samples.
         label: str
             Label for the MCSamples object.
+        use_weights: bool
+            If True and `data` is an `InferenceData` with `weight_name` in
+            `sample_stats` then those weights are applied. Defaults to True.
+        weight_name: str
+            Name of the weight variable inside `sample_stats` to look up.
 
         Returns
         -------
         MCSamples
             The GetDist MCSamples object.
         """
-        samples = mcmc.get_samples()
-        return MCSamples(
-            samples=np.array(list(samples.values())).T,
-            names=list(samples.keys()),
-            label=label,
-        )
+        if isinstance(data, MCMC):
+            samples_dict = data.get_samples()
+            arr = np.array(list(samples_dict.values())).T
+            names = list(samples_dict.keys())
+            weights = None
+        else:
+            posterior = data.posterior  # type: ignore[attr-defined]
+            names = list(posterior.data_vars)
+            cols = []
+            for name in names:
+                vals = np.asarray(posterior[name].values)
+                # Expect shape (chain, draw) for scalar parameters
+                if vals.ndim != 2:
+                    msg = (
+                        f"Posterior variable '{name}' has shape {vals.shape}; "
+                        "only scalar parameter sites (chain, draw) supported here."
+                    )
+                    raise ValueError(msg)
+                cols.append(vals.reshape(-1))
+            arr = np.vstack(cols).T  # (n_total_draws, n_params)
+            weights = None
+            sample_stats = getattr(data, "sample_stats", None)  # type: ignore[attr-defined]
+            if use_weights and sample_stats is not None and weight_name in sample_stats:
+                w = np.asarray(sample_stats[weight_name].values)
+                if w.ndim == 2:  # (chain, draw)
+                    weights = w.reshape(-1)
+        return MCSamples(samples=arr, names=names, label=label, weights=weights)
