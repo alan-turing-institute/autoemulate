@@ -59,11 +59,15 @@ class BoundedDomainTransform(Transform):
 
 
 class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
-    """
-    Interval excursion set calibration using MC methods.
+    """Interval excursion set calibration using MC methods.
 
     Interval excursion set calibration identifies the set of input parameters that lead
     to model outputs that are within specified bands of observed data.
+
+    Attributes
+    ----------
+    MIN_VAR : float
+        Minimum variance to avoid numerical issues.
     """
 
     MIN_VAR = 1e-12
@@ -74,7 +78,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         parameters_range: dict[str, tuple[float, float]],
         y_lower: TensorLike,
         y_upper: TensorLike,
-        y_labels: list[str] | None = None,
+        output_names: list[str] | None = None,
         device: DeviceLike | None = None,
         log_level: str = "progress_bar",
     ):
@@ -115,7 +119,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.d = len(self.parameters_range)
         self.emulator = emulator
         self.emulator.device = self.device
-        self.output_names = y_labels or [f"y{i}" for i in range(len(y_lower))]
+        self.output_names = output_names or [f"y{i}" for i in range(len(y_lower))]
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info(
             "Initializing IntervalExcursionSetCalibration with parameters: %s",
@@ -126,17 +130,17 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.logger.info("Processed observations for outputs: %s", self.output_names)
 
     @property
-    def y_band_low(self) -> TensorLike:
+    def y_lower(self) -> TensorLike:
         """Return lower bounds as a tensor."""
         return self._y_lower
 
     @property
-    def y_band_high(self) -> TensorLike:
+    def y_upper(self) -> TensorLike:
         """Return upper bounds as a tensor."""
         return self._y_upper
 
     @staticmethod
-    def band_prob_from_mu_sigma(
+    def interval_prob_from_mu_sigma(
         mu: torch.Tensor,
         var_or_cov: torch.Tensor,
         y1: torch.Tensor,
@@ -144,23 +148,18 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         aggregate: str = "geomean",
     ):
         """
-        Per-sample band probability across tasks given GP mean and variance/covariance.
+        Interval probability across tasks given GP mean and variance/covariance.
 
         Parameters
         ----------
-        mu : Mean per task (N, T) or (T,)
-        var_or_cov : (N, T) variance per task OR (N, T, T) covariance across tasks
+        mu: Mean per task (N, T) or (T,)
+        var_or_cov: (N, T) variance per task OR (N, T, T) covariance across tasks
         y1, y2 : (T,) lower/upper bounds per task
         aggregate : 'geomean' | 'sumlog' | 'none'
             - 'geomean': returns geometric mean across tasks (shape N,)
             - 'sumlog': returns sum of log-probs across tasks (shape N,)
             - 'none': returns per-task probabilities (shape N, T)
 
-        Notes
-        -----
-        - This helper derives per-task standard deviations as sqrt(diag(cov)) when a
-        full covariance is provided, or sqrt(variance) when per-task variances are
-        provided.
         """
         if mu.dim() == 1:
             mu = mu.unsqueeze(0)
@@ -197,7 +196,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         raise ValueError(msg)
 
     @staticmethod
-    def band_logprob(
+    def interval_logprob(
         mu: TensorLike,
         var: TensorLike,
         y1: TensorLike,
@@ -207,7 +206,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         mix=1.0,
     ):
         """
-        Multi-task band log-probability with optional soft surrogate and mixing.
+        Multi-task interval log-probability with optional soft surrogate and mixing.
 
         Parameters
         ----------
@@ -237,8 +236,11 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         # Exact likelihood across tasks via shared helper (sum of log-probs), with
         # temperature
-        log_p_exact = temp * IntervalExcursionSetCalibration.band_prob_from_mu_sigma(
-            mu, var, y1, y2, aggregate="sumlog"
+        log_p_exact = (
+            temp
+            * IntervalExcursionSetCalibration.interval_prob_from_mu_sigma(
+                mu, var, y1, y2, aggregate="sumlog"
+            )
         )
 
         if softness is None:
@@ -270,16 +272,6 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         )
         return log_p_mix.sum()
 
-    def _get_x_star(self):
-        param_list = []
-        for param in self.parameters_range:
-            if param in self.calibration_params:
-                # Sample from uniform prior
-                min_val, max_val = self.parameters_range[param]
-                sampled_val = pyro.sample(param, Uniform(min_val, max_val))
-                param_list.append(sampled_val.to(self.device))
-        return torch.stack(param_list, dim=0).unsqueeze(0).float()
-
     def model(
         self,
         temp=1.0,
@@ -301,20 +293,30 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
                 )
                 xi = pyro.sample(name, td)
                 xs.append(xi)
-            x_star = (
-                torch.stack(xs, dim=0).unsqueeze(0).to(self.device).to(torch.float32)
-            )
+            x = torch.stack(xs, dim=0).unsqueeze(0).to(self.device).to(torch.float32)
         else:
-            x_star = self._get_x_star()
-        mu, var = self.emulator.predict_mean_and_variance(x_star, with_grad=True)
+            # Sample each parameter uniformly within its bounds
+            param_list = []
+            for param in self.parameters_range:
+                if param in self.calibration_params:
+                    # Sample from uniform prior
+                    min_val, max_val = self.parameters_range[param]
+                    sampled_val = pyro.sample(param, Uniform(min_val, max_val))
+                    param_list.append(sampled_val.to(self.device))
+            x = torch.stack(param_list, dim=0).unsqueeze(0).float()
+
+        # Calculate mean and variance at x with grad for HMC/NUTS
+        mu, var = self.emulator.predict_mean_and_variance(x, with_grad=True)
         assert isinstance(var, TensorLike)
+
+        # Add log-prob factor for posterior calculation
         pyro.factor(
             "band_logp",
-            IntervalExcursionSetCalibration.band_logprob(
+            IntervalExcursionSetCalibration.interval_logprob(
                 mu,
                 var,
-                self.y_band_low,
-                self.y_band_high,
+                self.y_lower,
+                self.y_upper,
                 temp=temp,
                 softness=softness,
                 mix=mix,
@@ -342,8 +344,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         with torch.no_grad():
             mu_s, var_s = self.emulator.predict_mean_and_variance(samples)
             assert isinstance(var_s, TensorLike)
-            p_band = self.band_prob_from_mu_sigma(
-                mu_s, var_s, self.y_band_low, self.y_band_high, aggregate="geomean"
+            p_band = self.interval_prob_from_mu_sigma(
+                mu_s, var_s, self.y_lower, self.y_upper, aggregate="geomean"
             )
 
         _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
@@ -461,8 +463,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             mu, var = self.emulator.predict_mean_and_variance(x)
             assert isinstance(var, TensorLike)
             # Sum of log-probs across tasks
-            return self.band_prob_from_mu_sigma(
-                mu, var, self.y_band_low, self.y_band_high, aggregate="sumlog"
+            return self.interval_prob_from_mu_sigma(
+                mu, var, self.y_lower, self.y_upper, aggregate="sumlog"
             )  # (N,)
 
         # Initial log-likelihoods
