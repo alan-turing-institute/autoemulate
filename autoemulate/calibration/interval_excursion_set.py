@@ -289,7 +289,17 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
                 self.parameters_range.keys()
             ].to_numpy()
         elif isinstance(data, MCMC):
-            samples = torch.stack(list(data.get_samples().values()), dim=-1)
+            try:
+                samples = torch.stack(
+                    [data.get_samples()[key] for key in self.calibration_params], dim=-1
+                )
+            except Exception:
+                msg = (
+                    "Parameter keys do not match calibration_params, stacking all "
+                    "samples"
+                )
+                self.logger.warning(msg)
+                samples = torch.stack(list(data.get_samples().values()), dim=-1)
             samples = samples.reshape(data.num_chains * data.num_samples, -1)
         elif isinstance(data, TensorLike):
             samples = data.reshape(data.shape[0], -1)
