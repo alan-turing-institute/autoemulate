@@ -30,7 +30,7 @@ def test_single_output(n_chains, interval):
     gp = GaussianProcess(x, y)
     gp.fit(x, y)
 
-    bc = IntervalExcursionSetCalibration(
+    iesc = IntervalExcursionSetCalibration(
         gp,
         sim.parameters_range,
         y_lower=torch.tensor([interval[0]]),
@@ -38,7 +38,7 @@ def test_single_output(n_chains, interval):
     )
 
     # check samples are generated
-    mcmc = bc.run_mcmc(
+    mcmc = iesc.run_mcmc(
         warmup_steps=N_SAMPLES, num_samples=N_SAMPLES, num_chains=n_chains
     )
     samples = mcmc.get_samples(group_by_chain=True)
@@ -49,7 +49,12 @@ def test_single_output(n_chains, interval):
     assert samples["v0"].shape[0] == n_chains
     assert samples["v0"].shape[1] == N_SAMPLES
 
-    # TODO: add run_smc test
+    # Test SMC
+    az_data = iesc.run_smc(n_particles=N_SAMPLES, return_az_data=True)
+    post = az_data.posterior.to_dataframe()  # type: ignore  # noqa: PGH003
+    assert post.shape == (N_SAMPLES, 2)
+    assert "c" in post.columns
+    assert "v0" in post.columns
 
 
 @pytest.mark.parametrize(
@@ -70,7 +75,7 @@ def test_multi_output(n_chains, interval):
     gp = GaussianProcess(x, y)
     gp.fit(x, y)
 
-    bc = IntervalExcursionSetCalibration(
+    iesc = IntervalExcursionSetCalibration(
         gp,
         sim.parameters_range,
         y_lower=torch.tensor([interval[0][0], interval[1][0]]),
@@ -78,7 +83,7 @@ def test_multi_output(n_chains, interval):
     )
 
     # check samples are generated
-    mcmc = bc.run_mcmc(
+    mcmc = iesc.run_mcmc(
         warmup_steps=N_SAMPLES, num_samples=N_SAMPLES, num_chains=n_chains
     )
     samples = mcmc.get_samples(group_by_chain=True)
@@ -89,4 +94,9 @@ def test_multi_output(n_chains, interval):
     assert samples["v0"].shape[0] == n_chains
     assert samples["v0"].shape[1] == N_SAMPLES
 
-    # TODO: add run_smc test
+    # Test SMC
+    az_data = iesc.run_smc(n_particles=N_SAMPLES, return_az_data=True)
+    post = az_data.posterior.to_dataframe()  # type: ignore  # noqa: PGH003
+    assert post.shape == (N_SAMPLES, 2)
+    assert "c" in post.columns
+    assert "v0" in post.columns
