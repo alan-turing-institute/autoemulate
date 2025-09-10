@@ -622,8 +622,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
             # Sample stats: normalized weights and log-weights per draw
             sample_stats = {
-                "smc_weight": w_np[None, :],  # (chain=1, draw=N)
-                "smc_log_weight": lw_np[None, :],
+                "weight": w_np[None, :],  # (chain=1, draw=N)
+                "log_weight": lw_np[None, :],
             }
 
             # Constant data: beta schedule, ESS history, and unique_count
