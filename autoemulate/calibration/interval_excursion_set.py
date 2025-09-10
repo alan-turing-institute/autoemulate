@@ -25,57 +25,6 @@ from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import Emulator
 
-# TODO: remove as not needed if model is a method of the calibration class
-# class IntervalBandModel:
-#     """Top-level, pickleable Pyro model for interval excursion set calibration.
-
-#     This wraps the emulator and band settings so the model can be pickled and sent to
-#     subprocesses when running multiple MCMC chains in parallel.
-#     """
-
-#     def __init__(
-#         self,
-#         emulator: Emulator,
-#         domain_min: torch.Tensor,
-#         domain_max: torch.Tensor,
-#         y_band_low: torch.Tensor,
-#         y_band_high: torch.Tensor,
-#         d: int,
-#         *,
-#         temp: float = 1.0,
-#         softness: float | None = None,
-#         mix: float = 1.0,
-#     ) -> None:
-#         self.emulator = emulator
-#         self.domain_min = domain_min
-#         self.domain_max = domain_max
-#         self.y_band_low = y_band_low
-#         self.y_band_high = y_band_high
-#         self.d = d
-#         self.temp = temp
-#         self.softness = softness
-#         self.mix = mix
-
-#     def __call__(self):  # Pyro model
-#         """Pyro model: sample x_star in bounded domain and add band log-prob factor."""  # noqa: E501
-#         base = Normal(0.0, 1.0).expand([1, self.d]).to_event(2)
-#         transform = BoundedDomainTransform(self.domain_min, self.domain_max)
-#         x_star = pyro.sample("x_star", TransformedDistribution(base, [transform]))
-#         mu, var = self.emulator.predict_mean_and_variance(x_star)
-#         assert isinstance(var, TensorLike)
-#         pyro.factor(
-#             "band_logp",
-#             IntervalExcursionSetCalibration.band_logprob(
-#                 mu,
-#                 var,
-#                 self.y_band_low,
-#                 self.y_band_high,
-#                 temp=self.temp,
-#                 softness=self.softness,
-#                 mix=self.mix,
-#             ),
-#         )
-
 
 class BoundedDomainTransform(Transform):
     """Transform to map from unbounded domain to bounded domain."""
