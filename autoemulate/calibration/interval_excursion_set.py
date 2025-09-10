@@ -201,12 +201,10 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         var: TensorLike,
         y1: TensorLike,
         y2: TensorLike,
-        temp=1.0,
-        softness: float | None = None,
-        mix=1.0,
+        temperature: float = 1.0,
     ):
         """
-        Multi-task interval log-probability with optional soft surrogate and mixing.
+        Multi-task interval log-probability (sum of log-probs across tasks).
 
         Parameters
         ----------
@@ -218,6 +216,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             lower bounds (T,)
         y2: TensorLike
             upper bounds (T,)
+        temperature: float
+            Optional temperature scaling. Defaults to 1.0.
 
         Returns
         -------
@@ -230,55 +230,18 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         if mu.dim() == 1:
             mu = mu.unsqueeze(0)
 
-        # Broadcast bounds to (N, T) for the soft surrogate below
-        y1v = y1.view(1, -1)
-        y2v = y2.view(1, -1)
-
-        # Exact likelihood across tasks via shared helper (sum of log-probs), with
-        # temperature
+        # Exact likelihood across tasks is sum log-probs with temperature
         log_p_exact = (
-            temp
+            temperature
             * IntervalExcursionSetCalibration.interval_prob_from_mu_sigma(
                 mu, var, y1, y2, aggregate="sumlog"
             )
         )
 
-        if softness is None:
-            # Return per-sample log-prob; callers can sum if needed
-            return log_p_exact.sum()
+        # Return total log-prob summed over the batch (sum over samples).
+        return log_p_exact.sum()
 
-        # For the soft surrogate we need per-task std; reuse helper path to std
-        if var.dim() == 3:
-            var_diag = torch.diagonal(var, dim1=-2, dim2=-1).clamp_min(
-                IntervalExcursionSetCalibration.MIN_VAR
-            )
-            sigma = var_diag.sqrt()
-        else:
-            if var.dim() == 1:
-                var = var.unsqueeze(0)
-            sigma = var.clamp_min(IntervalExcursionSetCalibration.MIN_VAR).sqrt()
-
-        # Soft surrogate per task
-        lo = torch.sigmoid((mu - y1v) / (softness * sigma))
-        hi = torch.sigmoid((y2v - mu) / (softness * sigma))
-        p_soft = (lo * hi).clamp_min(1e-12)
-        log_p_soft = p_soft.log().sum(dim=-1)
-
-        # Mixture in log-space per sample
-        mix_t = torch.tensor(mix, dtype=mu.dtype, device=mu.device)
-        log_p_mix = torch.logaddexp(
-            torch.log1p(-mix_t) + log_p_soft,
-            torch.log(mix_t) + log_p_exact,
-        )
-        return log_p_mix.sum()
-
-    def model(
-        self,
-        temp=1.0,
-        softness=None,
-        mix=1.0,
-        uniform_prior=True,
-    ):
+    def model(self, temperature=1.0, uniform_prior=True):
         """Pyro model for interval excursion set calibration."""
         if not uniform_prior:
             # Sample each parameter as its own transformed site so names are preserved
@@ -313,13 +276,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         pyro.factor(
             "band_logp",
             IntervalExcursionSetCalibration.interval_logprob(
-                mu,
-                var,
-                self.y_lower,
-                self.y_upper,
-                temp=temp,
-                softness=softness,
-                mix=mix,
+                mu, var, self.y_lower, self.y_upper, temperature=temperature
             ),
         )
 
