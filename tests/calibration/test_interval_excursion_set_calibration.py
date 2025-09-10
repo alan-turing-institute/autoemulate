@@ -35,6 +35,7 @@ def test_single_output(n_chains, interval):
         sim.parameters_range,
         y_lower=torch.tensor([interval[0]]),
         y_upper=torch.tensor([interval[1]]),
+        output_names=sim.output_names,
     )
 
     # check samples are generated
@@ -48,6 +49,11 @@ def test_single_output(n_chains, interval):
     assert samples["c"].shape[1] == N_SAMPLES
     assert samples["v0"].shape[0] == n_chains
     assert samples["v0"].shape[1] == N_SAMPLES
+
+    # posterior predictive
+    pp = iesc.posterior_predictive(mcmc)
+    assert "distance" in pp
+    assert pp["distance"].shape[0] == N_SAMPLES * n_chains
 
     # Test SMC
     az_data = iesc.run_smc(n_particles=N_SAMPLES, return_az_data=True)
@@ -80,6 +86,7 @@ def test_multi_output(n_chains, interval):
         sim.parameters_range,
         y_lower=torch.tensor([interval[0][0], interval[1][0]]),
         y_upper=torch.tensor([interval[0][1], interval[1][1]]),
+        output_names=sim.output_names,
     )
 
     # check samples are generated
@@ -93,6 +100,13 @@ def test_multi_output(n_chains, interval):
     assert samples["c"].shape[1] == N_SAMPLES
     assert samples["v0"].shape[0] == n_chains
     assert samples["v0"].shape[1] == N_SAMPLES
+
+    # posterior predictive
+    pp = iesc.posterior_predictive(mcmc)
+    assert "distance" in pp
+    assert "impact_velocity" in pp
+    assert pp["distance"].shape[0] == N_SAMPLES * n_chains
+    assert pp["impact_velocity"].shape[0] == N_SAMPLES * n_chains
 
     # Test SMC
     az_data = iesc.run_smc(n_particles=N_SAMPLES, return_az_data=True)

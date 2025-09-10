@@ -4,6 +4,7 @@ import numpy as np
 import pyro
 import torch
 from pyro.distributions import (
+    Bernoulli,  # type: ignore since this is a valid import
     Normal,
     TransformedDistribution,  # type: ignore since this is a valid import
     Uniform,
@@ -241,7 +242,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         # Return total log-prob summed over the batch (sum over samples).
         return log_p_exact.sum()
 
-    def model(self, temperature=1.0, uniform_prior=True):
+    def model(self, temperature=1.0, uniform_prior: bool = True, predict: bool = False):
         """Pyro model for interval excursion set calibration."""
         if not uniform_prior:
             # Sample each parameter as its own transformed site so names are preserved
@@ -272,13 +273,19 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         mu, var = self.emulator.predict_mean_and_variance(x, with_grad=True)
         assert isinstance(var, TensorLike)
 
-        # Add log-prob factor for posterior calculation
-        pyro.factor(
-            "band_logp",
-            IntervalExcursionSetCalibration.interval_logprob(
+        if not predict:
+            # Add log-prob factor for posterior calculation
+            log_prob = IntervalExcursionSetCalibration.interval_logprob(
                 mu, var, self.y_lower, self.y_upper, temperature=temperature
-            ),
-        )
+            )
+            pyro.factor("band_logp", log_prob)
+        else:
+            # Treat predictive distribution as Bernoulli with prob of being in interval
+            log_probs_per_task = self.interval_prob_from_mu_sigma(
+                mu, var, self.y_lower, self.y_upper, aggregate="none"
+            )
+            for i, output in enumerate(self.output_names):
+                pyro.sample(output, Bernoulli(log_probs_per_task[0, i]))
 
     def plot_samples(
         self, data: MCMC | az.InferenceData | TensorLike, x_idx=0, y_idx=1

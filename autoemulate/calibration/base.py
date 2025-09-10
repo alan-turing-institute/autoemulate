@@ -119,7 +119,7 @@ class BayesianMixin:
         self.logger.info("MCMC run completed.")
         return mcmc
 
-    def posterior_predictive(self, mcmc: MCMC) -> TensorLike:
+    def posterior_predictive(self, mcmc: MCMC) -> dict[str, TensorLike]:
         """
         Return posterior predictive samples.
 
