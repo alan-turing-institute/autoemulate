@@ -77,9 +77,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self,
         emulator: Emulator,
         parameters_range: dict[str, tuple[float, float]],
-        y_lower: TensorLike,
-        y_upper: TensorLike,
-        output_names: list[str] | None = None,
+        output_bounds: dict[str, tuple[float, float]],
+        output_names: list[str],
         device: DeviceLike | None = None,
         log_level: str = "progress_bar",
     ):
@@ -114,13 +113,25 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.domain_min = torch.tensor([b[0] for b in self.parameters_range.values()])
         self.domain_max = torch.tensor([b[1] for b in self.parameters_range.values()])
 
+        # Process output bounds into tensors, ensuring order matches output_names so
+        # that we can subset emulator outputs with idxs in the same order
+        y_lower = torch.tensor(
+            [output_bounds[name][0] for name in output_names if name in output_bounds]
+        ).to(self.device)
+        y_upper = torch.tensor(
+            [output_bounds[name][1] for name in output_names if name in output_bounds]
+        ).to(self.device)
+        self.y_idxs = torch.tensor(
+            [idx for idx, name in enumerate(output_names) if name in output_bounds]
+        ).to(torch.int32)
         self._y_lower = y_lower
         self._y_upper = y_upper
         self.calibration_params = list(parameters_range.keys())
         self.d = len(self.parameters_range)
         self.emulator = emulator
         self.emulator.device = self.device
-        self.output_names = output_names or [f"y{i}" for i in range(len(y_lower))]
+        # TODO: we might want to check that the len equals the number of tasks returned
+        self.output_names = output_names
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info(
             "Initializing IntervalExcursionSetCalibration with parameters: %s",
@@ -140,8 +151,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         """Return upper bounds as a tensor."""
         return self._y_upper
 
-    @staticmethod
     def interval_prob_from_mu_sigma(
+        self,
         mu: torch.Tensor,
         var_or_cov: torch.Tensor,
         y1: torch.Tensor,
@@ -181,6 +192,10 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         y1v = y1.view(1, -1)
         y2v = y2.view(1, -1)
 
+        # Subset mu and sigma to only the outputs being calibrated
+        mu = mu[:, self.y_idxs]
+        sigma = sigma[:, self.y_idxs]
+
         # Stable CDF differences
         a = ((y1v - mu) / sigma).clamp(-30.0, 30.0)
         b = ((y2v - mu) / sigma).clamp(-30.0, 30.0)
@@ -196,8 +211,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         msg = "aggregate must be one of {'geomean', 'sumlog', 'none'}"
         raise ValueError(msg)
 
-    @staticmethod
     def interval_logprob(
+        self,
         mu: TensorLike,
         var: TensorLike,
         y1: TensorLike,
@@ -232,11 +247,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             mu = mu.unsqueeze(0)
 
         # Exact likelihood across tasks is sum log-probs with temperature
-        log_p_exact = (
-            temperature
-            * IntervalExcursionSetCalibration.interval_prob_from_mu_sigma(
-                mu, var, y1, y2, aggregate="sumlog"
-            )
+        log_p_exact = temperature * self.interval_prob_from_mu_sigma(
+            mu, var, y1, y2, aggregate="sumlog"
         )
 
         # Return total log-prob summed over the batch (sum over samples).
@@ -275,7 +287,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         if not predict:
             # Add log-prob factor for posterior calculation
-            log_prob = IntervalExcursionSetCalibration.interval_logprob(
+            log_prob = self.interval_logprob(
                 mu, var, self.y_lower, self.y_upper, temperature=temperature
             )
             pyro.factor("band_logp", log_prob)

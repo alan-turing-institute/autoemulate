@@ -1,5 +1,4 @@
 import pytest
-import torch
 from autoemulate.calibration.interval_excursion_set import (
     IntervalExcursionSetCalibration,
 )
@@ -7,19 +6,19 @@ from autoemulate.core.types import TensorLike
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.simulations.projectile import Projectile, ProjectileMultioutput
 
-TEST_BOUNDS_1D = (30_000, 40_000)
-TEST_BOUNDS_2D = [(30_000, 40_000), (400, 600)]
+TEST_BOUNDS_1D = {"distance": (30_000, 40_000)}
+TEST_BOUNDS_2D = {"distance": (30_000, 40_000), "impact_velocity": (400, 600)}
 N_SAMPLES = 10
 
 
 @pytest.mark.parametrize(
-    ("n_chains", "interval"),
+    ("n_chains", "output_bounds"),
     [
         (1, TEST_BOUNDS_1D),
         (2, TEST_BOUNDS_1D),
     ],
 )
-def test_single_output(n_chains, interval):
+def test_single_output(n_chains, output_bounds):
     """
     Test HMC with single output.
     """
@@ -33,8 +32,7 @@ def test_single_output(n_chains, interval):
     iesc = IntervalExcursionSetCalibration(
         gp,
         sim.parameters_range,
-        y_lower=torch.tensor([interval[0]]),
-        y_upper=torch.tensor([interval[1]]),
+        output_bounds=output_bounds,
         output_names=sim.output_names,
     )
 
@@ -64,13 +62,13 @@ def test_single_output(n_chains, interval):
 
 
 @pytest.mark.parametrize(
-    ("n_chains", "interval"),
+    ("n_chains", "output_bounds"),
     [
         (1, TEST_BOUNDS_2D),
         (2, TEST_BOUNDS_2D),
     ],
 )
-def test_multi_output(n_chains, interval):
+def test_multi_output(n_chains, output_bounds):
     """
     Test HMC with multiple output.
     """
@@ -84,8 +82,7 @@ def test_multi_output(n_chains, interval):
     iesc = IntervalExcursionSetCalibration(
         gp,
         sim.parameters_range,
-        y_lower=torch.tensor([interval[0][0], interval[1][0]]),
-        y_upper=torch.tensor([interval[0][1], interval[1][1]]),
+        output_bounds=output_bounds,
         output_names=sim.output_names,
     )
 
