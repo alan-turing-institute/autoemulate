@@ -3,11 +3,7 @@ import itertools
 import pytest
 import torch
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators import (
-    GAUSSIAN_PROCESS_EMULATORS,
-    PYTORCH_EMULATORS,
-    RadialBasisFunctions,
-)
+from autoemulate.emulators import GAUSSIAN_PROCESS_EMULATORS, PYTORCH_EMULATORS
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
@@ -32,9 +28,6 @@ from autoemulate.transforms.vae import VAETransform
     ),
 )
 def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms):
-    if emulator == RadialBasisFunctions:
-        pytest.xfail("RadialBasisFunctions do not appear to support gradients")
-
     # Test gradient computation for the given emulator
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
@@ -86,8 +79,6 @@ def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transfor
 def test_grads_func(
     sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms
 ):
-    if emulator == RadialBasisFunctions:
-        pytest.xfail("RadialBasisFunctions do not appear to support gradients")
     if emulator in GAUSSIAN_PROCESS_EMULATORS:
         pytest.xfail(
             "GaussianProcess emulators do not support torch.func API for gradients as "
