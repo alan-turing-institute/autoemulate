@@ -34,7 +34,9 @@ class StandardizeTransform(AutoEmulateTransform):
         with torch.no_grad():
             mean = x.mean(0, keepdim=True)
             std = x.std(0, keepdim=True)
-            # Ensure std is not zero to avoid division by zero errors
+            # Ensure std not zero to avoid division by zero errors since after
+            # subtracting the mean the transform would be ~ 0 / 0 which is NaN.
+            # See: https://github.com/scikit-learn/scikit-learn/blob/b24c328a304a46369e45de052e7fa695fb072efc/sklearn/preprocessing/_data.py#L92-L124
             eps = 10 * torch.finfo(std.dtype).eps
             std = torch.where(std < eps, torch.ones_like(std), std)
         # Treat stats as constants for downstream autograd
