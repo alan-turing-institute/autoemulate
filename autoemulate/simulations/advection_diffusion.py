@@ -51,8 +51,8 @@ class AdvectionDiffusion(Simulator):
         """
         if parameters_range is None:
             parameters_range = {
-                "nu": (0.0001, 0.01),  # viscosity
-                "mu": (0.5, 2.0),  # advection strength
+                "nu": (0.001, 0.002),  # (0.0001, 0.01),  # viscosity
+                "mu": (1.0, 1.1),  # (0.5, 2.0),  # advection strength
             }
         if output_names is None:
             output_names = ["solution"]
