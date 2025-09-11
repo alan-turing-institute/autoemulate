@@ -394,6 +394,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
             msg = "Gradient calculation is not supported."
             raise ValueError(msg)
 
+        # Ensure x has requires_grad if with_grad is True
+        x = self._ensure_with_grad(x, with_grad)
+
         # Transform and invert transform for prediction in original data space
         x_t = self._transform_x(x)
         y_t_pred = self.model.predict(x_t, with_grad)

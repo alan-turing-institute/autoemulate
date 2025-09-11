@@ -39,8 +39,6 @@ def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transfor
     em.fit(x, y)
 
     # Get predictions
-    # Set x2 as requires grad here so gradient can be taken
-    x2.requires_grad = True
     mean, variance = em.predict_mean_and_variance(x2, with_grad=True)
 
     # Check that mean requires gradients
