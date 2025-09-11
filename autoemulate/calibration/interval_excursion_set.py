@@ -4,7 +4,7 @@ import numpy as np
 import pyro
 import torch
 from pyro.distributions import (
-    Bernoulli,  # type: ignore since this is a valid import
+    MultivariateNormal,
     Normal,
     TransformedDistribution,  # type: ignore since this is a valid import
     Uniform,
@@ -280,12 +280,18 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             )
             pyro.factor("band_logp", log_prob)
         else:
-            # Treat predictive distribution as Bernoulli with prob of being in interval
-            log_probs_per_task = self.interval_prob_from_mu_sigma(
-                mu, var, self.y_lower, self.y_upper, aggregate="none"
+            # Predictive sampling: draws from the multivariate normal predictive
+            # distribution, y_pred ~ p(y | x_post)
+            y_pred = pyro.sample(
+                "y_pred",
+                MultivariateNormal(
+                    # mu and var are both (1, T)
+                    mu,
+                    covariance_matrix=torch.diag_embed(var),
+                ).to_event(1),
             )
-            for i, output in enumerate(self.output_names):
-                pyro.sample(output, Bernoulli(log_probs_per_task[0, i]))
+            for i, name in enumerate(self.output_names):
+                pyro.deterministic(name, y_pred[..., i])
 
     def plot_samples(
         self, data: MCMC | az.InferenceData | TensorLike, x_idx=0, y_idx=1
