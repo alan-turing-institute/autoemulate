@@ -162,7 +162,8 @@ class AutoEmulateTransform(
         type[AutoEmulateTransform] | None
             The transform class if found, None otherwise
         """
-        from . import TRANSFORM_REGISTRY  # Lazy import to avoid circular dependency
+        # Lazy import to avoid circular dependency
+        from . import TRANSFORM_REGISTRY  # noqa: PLC0415
 
         return TRANSFORM_REGISTRY.get(transform_name)
 
@@ -176,7 +177,8 @@ class AutoEmulateTransform(
         list[str]
             List of available transform names
         """
-        from . import TRANSFORM_REGISTRY  # Lazy import to avoid circular dependency
+        # Lazy import to avoid circular dependency
+        from . import TRANSFORM_REGISTRY  # noqa: PLC0415
 
         return list(TRANSFORM_REGISTRY.keys())
 
