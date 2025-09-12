@@ -151,9 +151,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
         self.n_samples = n_samples
         self.full_covariance = full_covariance
         TorchDeviceMixin.__init__(self, device=device)
-        self.supports_grad = self.model.supports_grad and all(
-            t.bijective for t in self.x_transforms
-        )
+        # TODO: add API to indicate that pdf not valid when not all transforms bijective
+        self.supports_grad = self.model.supports_grad
         self.supports_uq = self.model.supports_uq
 
         # Precompute and cache the Jacobian of the inverse y-transform if affine
@@ -452,6 +451,14 @@ class TransformedEmulator(Emulator, ValidationMixin):
         x_t = self._transform_x(x)
         y_t = self._transform_y_tensor(y)
 
+        # Detach transformed tensors to avoid retaining graphs from transforms
+        # during training of the underlying model. Transforms are treated as fixed
+        # feature engineering at fit time; gradients are only required at predict.
+        if isinstance(x_t, torch.Tensor):
+            x_t = x_t.detach()
+        if isinstance(y_t, torch.Tensor):
+            y_t = y_t.detach()
+
         # Fit on transformed variables
         self.model.fit(x_t, y_t)
 
@@ -512,6 +519,9 @@ class TransformedEmulator(Emulator, ValidationMixin):
         if with_grad and not self.supports_grad:
             msg = "Gradient calculation is not supported."
             raise ValueError(msg)
+
+        # Ensure x has requires_grad if with_grad is True
+        x = self._ensure_with_grad(x, with_grad)
 
         # Transform and invert transform for prediction in original data space
         x_t = self._transform_x(x)
