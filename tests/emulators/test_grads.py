@@ -10,31 +10,74 @@ from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.vae import VAETransform
 
 
+def get_pytest_param_yof(model, x_t, y_t, o, f):
+    return (
+        pytest.param(
+            model,
+            x_t,
+            y_t,
+            o,
+            f,
+            marks=pytest.mark.xfail(
+                raises=NotImplementedError,
+                reason="Full covariance sampling not implemented",
+            ),
+        )
+        if (o and f and model.supports_uq)
+        else (model, x_t, y_t, o, f)
+    )
+
+
 @pytest.mark.parametrize(
-    ("emulator", "x_transforms", "y_transforms"),
-    itertools.product(
-        [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
-        [
-            None,
-            [StandardizeTransform(), PCATransform(n_components=3)],
-            [StandardizeTransform(), VAETransform(latent_dim=3)],
-        ],
-        [
-            None,
-            [StandardizeTransform()],
-            [StandardizeTransform(), PCATransform(n_components=1)],
-            [StandardizeTransform(), VAETransform(latent_dim=1)],
-        ],
+    (
+        "emulator",
+        "x_transforms",
+        "y_transforms",
+        "output_from_samples",
+        "full_covariance",
     ),
+    [
+        get_pytest_param_yof(model, x_t, y_t, o, f)
+        for model, x_t, y_t, o, f in itertools.product(
+            [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
+            [
+                None,
+                [StandardizeTransform(), PCATransform(n_components=3)],
+                [StandardizeTransform(), VAETransform(latent_dim=3)],
+            ],
+            [
+                None,
+                [StandardizeTransform()],
+                [StandardizeTransform(), PCATransform(n_components=1)],
+                [StandardizeTransform(), VAETransform(latent_dim=1)],
+            ],
+            [False, True],
+            [False, True],
+        )
+    ],
 )
-def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms):
+def test_grads(
+    sample_data_y2d,
+    new_data_y2d,
+    emulator,
+    x_transforms,
+    y_transforms,
+    output_from_samples,
+    full_covariance,
+):
     # Test gradient computation for the given emulator
     x, y = sample_data_y2d
     x2, _ = new_data_y2d
 
     # Fit emulator
     em = TransformedEmulator(
-        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=emulator
+        x,
+        y,
+        x_transforms=x_transforms,
+        y_transforms=y_transforms,
+        model=emulator,
+        output_from_samples=output_from_samples,
+        full_covariance=full_covariance,
     )
     em.fit(x, y)
 
@@ -58,24 +101,41 @@ def test_grads(sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transfor
 
 
 @pytest.mark.parametrize(
-    ("emulator", "x_transforms", "y_transforms"),
-    itertools.product(
-        [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
-        [
-            None,
-            [StandardizeTransform(), PCATransform(n_components=3)],
-            [StandardizeTransform(), VAETransform(latent_dim=3)],
-        ],
-        [
-            None,
-            [StandardizeTransform()],
-            [StandardizeTransform(), PCATransform(n_components=1)],
-            [StandardizeTransform(), VAETransform(latent_dim=1)],
-        ],
+    (
+        "emulator",
+        "x_transforms",
+        "y_transforms",
+        "output_from_samples",
+        "full_covariance",
     ),
+    [
+        get_pytest_param_yof(model, x_t, y_t, o, f)
+        for model, x_t, y_t, o, f in itertools.product(
+            [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
+            [
+                None,
+                [StandardizeTransform(), PCATransform(n_components=3)],
+                [StandardizeTransform(), VAETransform(latent_dim=3)],
+            ],
+            [
+                None,
+                [StandardizeTransform()],
+                [StandardizeTransform(), PCATransform(n_components=1)],
+                [StandardizeTransform(), VAETransform(latent_dim=1)],
+            ],
+            [False, True],
+            [False, True],
+        )
+    ],
 )
 def test_grads_func(
-    sample_data_y2d, new_data_y2d, emulator, x_transforms, y_transforms
+    sample_data_y2d,
+    new_data_y2d,
+    emulator,
+    x_transforms,
+    y_transforms,
+    output_from_samples,
+    full_covariance,
 ):
     if emulator in GAUSSIAN_PROCESS_EMULATORS:
         pytest.xfail(
@@ -93,7 +153,13 @@ def test_grads_func(
 
     # Fit emulator
     em = TransformedEmulator(
-        x, y, x_transforms=x_transforms, y_transforms=y_transforms, model=emulator
+        x,
+        y,
+        x_transforms=x_transforms,
+        y_transforms=y_transforms,
+        model=emulator,
+        output_from_samples=output_from_samples,
+        full_covariance=full_covariance,
     )
     em.fit(x, y)
 
