@@ -22,6 +22,7 @@ from autoemulate.transforms.base import (
     AutoEmulateTransform,
     _inverse_sample_gaussian_like,
     _inverse_sample_gaussian_process_like,
+    is_affine,
 )
 
 
@@ -180,61 +181,23 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 transform.fit(current_x)
             current_x = transform(current_x)
             assert isinstance(current_x, TensorLike)
+
         # Fit target transforms
-        self._y_transforms_affine: list[bool] = []
+        self._y_transforms_affine = []
         current_y = y
         for transform in self.y_transforms:
             if isinstance(transform, AutoEmulateTransform):
                 transform.fit(current_y)
-            # Empirical affine check per-transform (always on, lightweight)
-            AFFINE_TOL = 1e-5
-            AFFINE_TRIALS = 3
 
-            def _measure_affine_err(
-                f,
-                shape_like: TensorLike,
-                a: float = 0.37,
-            ) -> float:
-                device = shape_like.device
-                with torch.no_grad():
-                    # Create a new generator for each trial separate to global RNG state
-                    g = torch.Generator(device=device)
-                    x_probe = torch.randn(shape_like.shape, generator=g, device=device)
-                    y_probe = torch.randn(shape_like.shape, generator=g, device=device)
-                    zero = torch.zeros_like(shape_like, device=device)
-                    fx, fy, fz = f(x_probe), f(y_probe), f(zero)
-                    fxy, fax = f(x_probe + y_probe), f(a * x_probe)
-                    denom = 1e-8 + (
-                        fx.abs().mean()
-                        + fy.abs().mean()
-                        + fz.abs().mean()
-                        + fxy.abs().mean()
-                        + fax.abs().mean()
-                    )
-                    add_err = (fxy - (fx + fy - fz)).abs().mean() / denom
-                    hom_err = (fax - (a * fx - (a - 1.0) * fz)).abs().mean() / denom
-                    return float(torch.max(add_err, hom_err))
-
-            # Use the input shape before applying this transform; keep batch dim
-            input_shape = (
-                current_y.shape[1:] if len(current_y.shape) > 1 else current_y.shape
-            )
-            test_input = torch.zeros(
-                (1, *input_shape), dtype=current_y.dtype, device=current_y.device
-            )
-
-            errs = []
-            for _ in range(AFFINE_TRIALS):
-                errs.append(_measure_affine_err(transform, test_input))
-            is_affine = (sum(errs) / len(errs)) < AFFINE_TOL
-
-            self._y_transforms_affine.append(is_affine)
+            # Check if transform is affine for later use in prediction
+            self._y_transforms_affine.append(is_affine(transform, current_y))
 
             # Now update the running transformed target
             current_y = transform(current_y)
             assert isinstance(current_y, TensorLike)
+
         # Cache whether all y transforms are affine
-        self.all_y_transforms_affine: bool = (
+        self.all_y_transforms_affine = (
             all(self._y_transforms_affine) if self._y_transforms_affine else False
         )
 

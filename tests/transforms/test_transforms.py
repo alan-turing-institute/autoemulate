@@ -8,8 +8,14 @@ from autoemulate.transforms import (
     StandardizeTransform,
     VAETransform,
 )
-from autoemulate.transforms.base import _inverse_sample_gaussian_like
+from autoemulate.transforms.base import (
+    AutoEmulateTransform,
+    _inverse_sample_gaussian_like,
+    _is_affine_empirical,
+    is_affine,
+)
 from sklearn.decomposition import PCA as SklearnPCA
+from torch.distributions.transforms import ReshapeTransform
 
 
 @pytest.mark.parametrize(
@@ -26,6 +32,25 @@ def test_transform_shapes(sample_data_y2d, transform, expected_shape):
     z = transform(x)
     assert z.shape == expected_shape
     assert transform.inv(z).shape == (20, 5)
+
+
+@pytest.mark.parametrize(
+    ("transform", "affine"),
+    [
+        (PCATransform(n_components=2), True),
+        (VAETransform(latent_dim=2), False),
+        (StandardizeTransform(), True),
+        # Only reshape event dims (exclude batch): 5 -> (5, 1)
+        (ReshapeTransform((5,), (5, 1)), True),
+    ],
+)
+def test_is_transform_affine(sample_data_y2d, transform, affine):
+    x, _ = sample_data_y2d
+    if isinstance(transform, AutoEmulateTransform):
+        transform.fit(x)
+        assert transform.affine == affine
+        assert is_affine(transform, x) == transform.affine
+    assert _is_affine_empirical(transform, x) == affine
 
 
 @pytest.mark.parametrize(

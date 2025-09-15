@@ -28,9 +28,18 @@ class AutoEmulateTransform(
     additional functionality for fitting transforms to data and transforming
     Gaussian distributions between the codomain and domain of the transform.
 
+
+    Attributes
+    ----------
+    _is_fitted: bool
+        Indicates whether the transform has been fitted to data. Defaults to False.
+    affine: bool
+        Indicates whether the transform is affine. Defaults to False.
+
     """
 
     _is_fitted: bool = False
+    affine: bool = False
 
     # TODO: consider if the override also needs to consider DistributionLike case
     def __call__(self, x: TensorLike) -> TensorLike:
@@ -549,6 +558,61 @@ def _inverse_sample_gaussian_process_like(
         else DiagLinearOperator(samples.reshape(n_samples, -1).var(dim=0))
     )
     return GaussianProcessLike(mean, cov)
+
+
+def is_affine(transform: Transform, x: TensorLike) -> bool:
+    """Check whether a given transform is affine.
+
+    transform: torch.distributions.Transform
+        The transform to check.
+    x: TensorLike
+        Example input from which the shape is derived. If dimensionality is greater than
+        1, the first dimension is treated as the batch dimension.
+
+    """
+    if isinstance(transform, AutoEmulateTransform):
+        return transform.affine
+    return _is_affine_empirical(transform, x)
+
+
+def _is_affine_empirical(transform: Transform, x: TensorLike) -> bool:
+    """Perform empricial check for whether a given transform is affine."""
+    AFFINE_TOL = 1e-5
+    AFFINE_TRIALS = 3
+
+    def _measure_affine_err(
+        f: Callable[[TensorLike], TensorLike],
+        shape_like: TensorLike,
+        a: float = 0.37,
+    ) -> float:
+        device = shape_like.device
+        with torch.no_grad():
+            # Create a new generator for each trial separate to global RNG state
+            g = torch.Generator(device=device)
+            x_probe = torch.randn(shape_like.shape, generator=g, device=device)
+            y_probe = torch.randn(shape_like.shape, generator=g, device=device)
+            zero = torch.zeros_like(shape_like, device=device)
+            fx, fy, fz = f(x_probe), f(y_probe), f(zero)
+            fxy, fax = f(x_probe + y_probe), f(a * x_probe)
+            denom = 1e-8 + (
+                fx.abs().mean()
+                + fy.abs().mean()
+                + fz.abs().mean()
+                + fxy.abs().mean()
+                + fax.abs().mean()
+            )
+            add_err = (fxy - (fx + fy - fz)).abs().mean() / denom
+            hom_err = (fax - (a * fx - (a - 1.0) * fz)).abs().mean() / denom
+            return float(torch.max(add_err, hom_err))
+
+    # Use the input shape before applying this transform; keep batch dim
+    input_shape = x.shape[1:] if len(x.shape) > 1 else x.shape
+    test_input = torch.zeros((1, *input_shape), dtype=x.dtype, device=x.device)
+
+    errs = []
+    for _ in range(AFFINE_TRIALS):
+        errs.append(_measure_affine_err(transform, test_input))  # type: ignore as Tensor input will transform to Tensor output
+    return (sum(errs) / len(errs)) < AFFINE_TOL
 
 
 # TODO (#536): complete implementation

@@ -28,6 +28,8 @@ class VAE(nn.Module, TorchDeviceMixin):
         GPU). Defaults to None.
     """
 
+    affine = False
+
     def __init__(
         self,
         input_dim: int,
