@@ -68,9 +68,14 @@ def run_test(
     full_covariance,
     test_grads=True,
 ):
-    if y_transforms is None and not model.is_multioutput():
-        pytest.skip("Single-output models require y_transforms")
-
+    if not model.is_multioutput() and (
+        y_transforms is None
+        or (
+            y_transforms is not None
+            and not isinstance(y_transforms[-1], PCATransform | VAETransform)
+        )
+    ):
+        pytest.skip("Only multioutput models supported for this test case.")
     x, y = train_data
     x2, _ = test_data
     em = TransformedEmulator(
