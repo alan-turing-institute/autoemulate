@@ -4,6 +4,7 @@ import pytest
 import torch
 from autoemulate.core.types import TensorLike
 from autoemulate.emulators import GAUSSIAN_PROCESS_EMULATORS, PYTORCH_EMULATORS
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
@@ -34,6 +35,35 @@ def get_pytest_param_yof(model, x_t, y_t, o, f):
     )
 
 
+def get_parametrize_cases():
+    base_cases = [
+        get_pytest_param_yof(model, x_t, y_t, o, f)
+        for model, x_t, y_t, o, f in itertools.product(
+            [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
+            X_TRANSFORMS,
+            Y_TRANSFORMS,
+            [False],
+            [False],
+        )
+    ]
+
+    # Add cases for all combinations of output_from_samples and full_covariance with
+    # just a single emulator to limit the number of test cases
+    output_from_samples_and_full_covariance_cases_cases = [
+        get_pytest_param_yof(model, x_t, y_t, o, f)
+        for model, x_t, y_t, o, f in itertools.product(
+            [GaussianProcess],
+            X_TRANSFORMS,
+            Y_TRANSFORMS,
+            [False, True],
+            [False, True],
+        )
+        if not (o is False and f is False)
+    ]
+
+    return base_cases + output_from_samples_and_full_covariance_cases_cases
+
+
 @pytest.mark.parametrize(
     (
         "emulator",
@@ -42,16 +72,7 @@ def get_pytest_param_yof(model, x_t, y_t, o, f):
         "output_from_samples",
         "full_covariance",
     ),
-    [
-        get_pytest_param_yof(model, x_t, y_t, o, f)
-        for model, x_t, y_t, o, f in itertools.product(
-            [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
-            X_TRANSFORMS,
-            Y_TRANSFORMS,
-            [False, True],
-            [False, True],
-        )
-    ],
+    get_parametrize_cases(),
 )
 def test_grads(
     sample_data_y2d,
@@ -105,16 +126,7 @@ def test_grads(
         "output_from_samples",
         "full_covariance",
     ),
-    [
-        get_pytest_param_yof(model, x_t, y_t, o, f)
-        for model, x_t, y_t, o, f in itertools.product(
-            [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
-            X_TRANSFORMS,
-            Y_TRANSFORMS,
-            [False, True],
-            [False, True],
-        )
-    ],
+    get_parametrize_cases(),
 )
 def test_grads_func(
     sample_data_y2d,
