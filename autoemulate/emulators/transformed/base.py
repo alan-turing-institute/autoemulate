@@ -449,6 +449,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         TensorLike
             Mean tensor of shape `(n_batch, n_targets)`.
         """
+        x = self._ensure_with_grad(x, with_grad)
         y_t_pred = self.model.predict(self._transform_x(x), with_grad)
 
         if isinstance(y_t_pred, TensorLike):
