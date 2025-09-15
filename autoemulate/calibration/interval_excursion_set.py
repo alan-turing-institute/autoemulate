@@ -91,10 +91,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             Fitted Emulator object.
         parameters_range : dict[str, tuple[float, float]]
             A dictionary mapping input parameter names to their (min, max) ranges.
-        y_lower: TensorLike
-            A tensor of lower bounds for each output.
-        y_upper: TensorLike
-            A tensor of upper bounds for each output.
+        output_bounds: dict[str, tuple[float, float]],
+            A dictionary of lower and upper bounds for each output.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         log_level: str
