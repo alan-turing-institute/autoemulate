@@ -20,6 +20,7 @@ class StandardizeTransform(AutoEmulateTransform):
     domain = constraints.real
     codomain = constraints.real
     bijective = True
+    affine = True
 
     def __init__(self):
         # Cache not used as not expected to be beneficial for standardization

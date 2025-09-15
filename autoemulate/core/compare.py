@@ -536,8 +536,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         neural networks.
 
         """
-        from autoemulate.emulators import get_emulator_class
-
         transformed_emulator_params = (
             transformed_emulator_params or self.transformed_emulator_params
         )
