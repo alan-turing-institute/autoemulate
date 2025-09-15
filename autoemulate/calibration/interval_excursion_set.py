@@ -64,7 +64,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     """Interval excursion set calibration using MC methods.
 
     Interval excursion set calibration identifies the set of input parameters that lead
-    to model outputs that are within specified bands of observed data.
+    to model outputs that are within specified intervals of observed data.
 
     Attributes
     ----------
@@ -299,7 +299,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             log_prob = self.interval_logprob(
                 mu, var, self.y_lower, self.y_upper, temperature=temperature
             )
-            pyro.factor("band_logp", log_prob)
+            pyro.factor("interval_logp", log_prob)
         else:
             # Predictive sampling: draws from the multivariate normal predictive
             # distribution, y_pred ~ p(y | x_post)
@@ -317,7 +317,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     def plot_samples(
         self, data: MCMC | az.InferenceData | TensorLike, x_idx=0, y_idx=1
     ):
-        """Plot samples with band probabilities and GP mean."""
+        """Plot samples with interval probabilities and GP mean."""
         if isinstance(data, az.InferenceData):
             samples = data.posterior.to_dataframe()[  # type: ignore  # noqa: PGH003
                 self.parameters_range.keys()
@@ -345,17 +345,17 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         with torch.no_grad():
             mu_s, var_s = self.emulator.predict_mean_and_variance(samples)
             assert isinstance(var_s, TensorLike)
-            p_band = self.interval_prob_from_mu_sigma(
+            p_interval = self.interval_prob_from_mu_sigma(
                 mu_s, var_s, self.y_lower, self.y_upper, aggregate="geomean"
             )
 
         _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 
-        # Probability in band
+        # Probability in interval
         sc1 = ax1.scatter(
             samples[:, x_idx].cpu(),
             samples[:, y_idx].cpu(),
-            c=p_band.cpu(),
+            c=p_interval.cpu(),
             cmap="viridis",
             s=6,
             alpha=0.7,
@@ -366,7 +366,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         ax1.set_ylabel(self.calibration_params[y_idx])
         ax1.set_xlim(self.domain_min[x_idx].item(), self.domain_max[x_idx].item())
         ax1.set_ylim(self.domain_min[y_idx].item(), self.domain_max[y_idx].item())
-        plt.colorbar(sc1, ax=ax1, label="P[y in band]")
+        plt.colorbar(sc1, ax=ax1, label="P[y in interval]")
 
         # Predicted mean
         mu_color = mu_s.mean(dim=-1) if mu_s.dim() > 1 else mu_s
@@ -402,7 +402,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         plot_diagnostics: bool = True,
         return_az_data: bool = True,
     ) -> tuple[TensorLike, TensorLike, TensorLike, TensorLike, int] | az.InferenceData:
-        """SMC with adaptive tempering for band posterior.
+        """SMC with adaptive tempering for interval posterior.
 
         Parameters
         ----------
