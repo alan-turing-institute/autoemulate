@@ -166,8 +166,10 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         full_params = torch.stack(param_list, dim=0).unsqueeze(0).float()
 
         # Get emulator prediction
-        mean, variance = self.emulator.predict_mean_and_variance(
-            full_params, with_grad=True
+        mean, variance = (
+            self.emulator.predict_mean_and_variance(full_params, with_grad=True)
+            if self.model_uncertainty
+            else (self.emulator.predict_mean(full_params, with_grad=True), None)
         )
 
         # Likelihood

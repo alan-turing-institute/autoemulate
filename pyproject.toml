@@ -68,7 +68,8 @@ dev = [
     "pytest-cov>=4.1.0",
     "coverage>=7.6.4",
     "plotnine>=0.13.6",
-    "pyright>=1.1.398",
+    "pyright==1.1.405",
+    "ruff==0.12.11",
 ]
 spatiotemporal = ["the-well>=1.1.0", "neuraloperator>=1.0.2"]
 

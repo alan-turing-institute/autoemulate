@@ -107,6 +107,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
+        x = self._ensure_with_grad(x, with_grad)
         (x,) = self._move_tensors_to_device(x)
         x = self.x_transform(x) if self.x_transform is not None else x
         output = self._predict(x, with_grad)
@@ -151,6 +152,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         TensorLike
             Mean tensor of shape `(n_batch, n_targets)`.
         """
+        x = self._ensure_with_grad(x, with_grad)
         y_pred = self._predict(x, with_grad)
         if isinstance(y_pred, TensorLike):
             return y_pred
@@ -190,6 +192,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
             otherwise None.
         """
+        x = self._ensure_with_grad(x, with_grad)
         if not self.supports_uq:
             return (self.predict_mean(x, with_grad, n_samples), None)
         y_pred = self._predict(x, with_grad)
@@ -203,6 +206,34 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                 else y_pred.sample(torch.Size([n_samples]))
             )
             return samples.mean(dim=0), samples.var(dim=0)
+
+    @staticmethod
+    def _ensure_with_grad(x: TensorLike, with_grad: bool) -> TensorLike:
+        """Ensure that the tensor x has requires_grad=True if with_grad is True.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor.
+        with_grad: bool
+            Whether to enable gradient calculation.
+
+        Returns
+        -------
+        TensorLike
+            The input tensor with requires_grad set to True if with_grad is True.
+
+        """
+        if with_grad and isinstance(x, torch.Tensor) and not x.requires_grad:
+            # Prefer enabling grad in-place on leaf tensors so callers can request
+            # gradients w.r.t. their original input tensor.
+            if x.is_leaf:
+                x.requires_grad_(True)
+            else:
+                # Fall back to a detached leaf clone when we cannot mutate flags on
+                # non-leaf tensors.
+                x = x.clone().detach().requires_grad_(True)
+        return x
 
     @staticmethod
     @abstractmethod

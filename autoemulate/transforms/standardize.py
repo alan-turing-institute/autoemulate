@@ -20,6 +20,7 @@ class StandardizeTransform(AutoEmulateTransform):
     domain = constraints.real
     codomain = constraints.real
     bijective = True
+    affine = True
 
     def __init__(self):
         # Cache not used as not expected to be beneficial for standardization
@@ -30,10 +31,17 @@ class StandardizeTransform(AutoEmulateTransform):
         TorchDeviceMixin.__init__(self, device=x.device)
 
         self.check_tensor_is_2d(x)
-        self.mean = x.mean(0, keepdim=True)
-        std = x.std(0, keepdim=True)
-        # Ensure std is not zero to avoid division by zero errors
-        std[std < 10 * torch.finfo(std.dtype).eps] = 1.0
+        # Compute statistics without tracking gradients and avoid in-place edits
+        with torch.no_grad():
+            mean = x.mean(0, keepdim=True)
+            std = x.std(0, keepdim=True)
+            # Ensure std not zero to avoid division by zero errors since after
+            # subtracting the mean the transform would be ~ 0 / 0 which is NaN.
+            # See: https://github.com/scikit-learn/scikit-learn/blob/b24c328a304a46369e45de052e7fa695fb072efc/sklearn/preprocessing/_data.py#L92-L124
+            eps = 10 * torch.finfo(std.dtype).eps
+            std = torch.where(std < eps, torch.ones_like(std), std)
+        # Treat stats as constants for downstream autograd
+        self.mean = mean
         self.std = std
         self._is_fitted = True
 

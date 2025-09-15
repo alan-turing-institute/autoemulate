@@ -12,6 +12,7 @@ class PCATransform(AutoEmulateTransform):
     domain = constraints.real
     codomain = constraints.real
     bijective = False
+    affine = True
 
     def __init__(self, n_components: int, niter: int = 1000, cache_size: int = 0):
         """
