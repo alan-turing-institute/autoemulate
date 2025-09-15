@@ -55,12 +55,7 @@ def get_pytest_param_of(model, x_t, o, f):
 
 
 def get_pytest_param_yo(model, x_t, y_t, o):
-    return pytest.param(
-        model,
-        x_t,
-        y_t,
-        o,
-    )
+    return pytest.param(model, x_t, y_t, o)
 
 
 def run_test(
@@ -71,7 +66,11 @@ def run_test(
     y_transforms,
     output_from_samples,
     full_covariance,
+    test_grads=True,
 ):
+    if y_transforms is None and not model.is_multioutput():
+        pytest.skip("Single-output models require y_transforms")
+
     x, y = train_data
     x2, _ = test_data
     em = TransformedEmulator(
@@ -101,13 +100,40 @@ def run_test(
         assert y_pred.shape == (x2.shape[0], y.shape[1])
         assert not y_pred.requires_grad
 
+    if not test_grads:
+        return
+
+    # Test gradient support only for few targets case
+    if em.supports_grad:
+        y_pred_grad = em.predict(x2, with_grad=True)
+        if issubclass(model, ProbabilisticEmulator):
+            assert isinstance(y_pred_grad, DistributionLike)
+            y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
+            assert y_pred_grad_mean.requires_grad
+            y_pred_grad_mean, y_pred_grad_var = em.predict_mean_and_variance(
+                x2, with_grad=True
+            )
+            assert isinstance(y_pred_grad_var, TensorLike)
+            assert y_pred_grad_mean.requires_grad
+            assert y_pred_grad_var.requires_grad
+        else:
+            assert isinstance(y_pred_grad, TensorLike)
+            assert y_pred_grad.requires_grad
+            y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
+            assert y_pred_grad_mean.requires_grad
+        return
+
+    # Test that gradients raise error when not supported
+    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
+        em.predict(x2, with_grad=True)
+
 
 @pytest.mark.parametrize(
     ("model", "x_transforms", "y_transforms", "output_from_samples", "full_covariance"),
     [
         get_pytest_param_yof(model, x_t, y_t, o, f)
         for model, x_t, y_t, o, f in itertools.product(
-            [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
+            ALL_EMULATORS,
             [
                 None,
                 [StandardizeTransform(), PCATransform(n_components=3)],
@@ -141,117 +167,8 @@ def test_transformed_emulator(
         y_transforms,
         output_from_samples,
         full_covariance,
+        test_grads=True,
     )
-
-
-@pytest.mark.parametrize(
-    ("model", "x_transforms", "y_transforms", "output_from_samples", "full_covariance"),
-    [
-        get_pytest_param_yof(model, x_t, y_t, o, f)
-        for model, x_t, y_t, o, f in itertools.product(
-            [emulator for emulator in ALL_EMULATORS if emulator.supports_grad],
-            [
-                None,
-                [StandardizeTransform()],
-            ],
-            [
-                None,
-                [StandardizeTransform()],
-            ],
-            [False, True],
-            [False, True],
-        )
-    ],
-)
-def test_transformed_emulator_grad(
-    sample_data_y2d,
-    new_data_y2d,
-    model,
-    x_transforms,
-    y_transforms,
-    output_from_samples,
-    full_covariance,
-):
-    x, y = sample_data_y2d
-    x2, _ = new_data_y2d
-    em = TransformedEmulator(
-        x,
-        y,
-        x_transforms=x_transforms,
-        y_transforms=y_transforms,
-        model=model,
-        output_from_samples=output_from_samples,
-        full_covariance=full_covariance,
-    )
-    em.fit(x, y)
-    y_pred = em.predict(x2)
-    if issubclass(model, ProbabilisticEmulator):
-        assert isinstance(y_pred, DistributionLike)
-        assert not y_pred.mean.requires_grad
-    else:
-        assert isinstance(y_pred, TensorLike)
-        assert not y_pred.requires_grad
-
-    y_pred_grad = em.predict(x2, with_grad=True)
-    if issubclass(model, ProbabilisticEmulator):
-        assert isinstance(y_pred_grad, DistributionLike)
-        y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
-        assert y_pred_grad_mean.requires_grad
-        y_pred_grad_mean, y_pred_grad_var = em.predict_mean_and_variance(
-            x2, with_grad=True
-        )
-        assert isinstance(y_pred_grad_var, TensorLike)
-        assert y_pred_grad_mean.requires_grad
-        assert y_pred_grad_var.requires_grad
-    else:
-        assert isinstance(y_pred_grad, TensorLike)
-        assert y_pred_grad.requires_grad
-        y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
-        assert y_pred_grad_mean.requires_grad
-
-
-@pytest.mark.parametrize(
-    ("model", "x_transforms", "output_from_samples", "full_covariance"),
-    [
-        get_pytest_param_of(model, x_t, o, f)
-        for model, x_t, o, f in itertools.product(
-            [emulator for emulator in ALL_EMULATORS if not emulator.supports_grad],
-            [[PCATransform(n_components=3)], [VAETransform(latent_dim=3)]],
-            [False, True],
-            [False, True],
-        )
-    ],
-)
-def test_transformed_emulator_no_grad(
-    sample_data_y1d,
-    new_data_y1d,
-    model,
-    x_transforms,
-    output_from_samples,
-    full_covariance,
-):
-    x, y = sample_data_y1d
-    x2, _ = new_data_y1d
-    em = TransformedEmulator(
-        x,
-        y,
-        x_transforms=x_transforms,
-        y_transforms=None,
-        model=model,
-        output_from_samples=output_from_samples,
-        full_covariance=full_covariance,
-    )
-    em.fit(x, y)
-    y_pred = em.predict(x2)
-    if issubclass(model, ProbabilisticEmulator):
-        assert isinstance(y_pred, DistributionLike)
-        assert not y_pred.mean.requires_grad
-    else:
-        assert isinstance(y_pred, TensorLike)
-        assert not y_pred.requires_grad
-
-    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
-        em.predict(x2, with_grad=True)
 
 
 @pytest.mark.parametrize(
@@ -298,6 +215,7 @@ def test_transformed_emulator_100_targets(
         y_transforms,
         output_from_samples,
         full_covariance=False,
+        test_grads=False,
     )
 
 
@@ -344,6 +262,7 @@ def test_transformed_emulator_1000_targets(
         y_transforms,
         output_from_samples,
         full_covariance=False,
+        test_grads=False,
     )
 
 
