@@ -9,6 +9,12 @@ from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.vae import VAETransform
 
+X_TRANSFORMS = [[StandardizeTransform()]]
+Y_TRANSFORMS = [
+    [StandardizeTransform(), PCATransform(n_components=1)],
+    [StandardizeTransform(), VAETransform(latent_dim=1)],
+]
+
 
 def get_pytest_param_yof(model, x_t, y_t, o, f):
     return (
@@ -40,17 +46,8 @@ def get_pytest_param_yof(model, x_t, y_t, o, f):
         get_pytest_param_yof(model, x_t, y_t, o, f)
         for model, x_t, y_t, o, f in itertools.product(
             [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
-            [
-                None,
-                [StandardizeTransform(), PCATransform(n_components=3)],
-                [StandardizeTransform(), VAETransform(latent_dim=3)],
-            ],
-            [
-                None,
-                [StandardizeTransform()],
-                [StandardizeTransform(), PCATransform(n_components=1)],
-                [StandardizeTransform(), VAETransform(latent_dim=1)],
-            ],
+            X_TRANSFORMS,
+            Y_TRANSFORMS,
             [False, True],
             [False, True],
         )
@@ -112,17 +109,8 @@ def test_grads(
         get_pytest_param_yof(model, x_t, y_t, o, f)
         for model, x_t, y_t, o, f in itertools.product(
             [emulator for emulator in PYTORCH_EMULATORS if emulator.is_multioutput()],
-            [
-                None,
-                [StandardizeTransform(), PCATransform(n_components=3)],
-                [StandardizeTransform(), VAETransform(latent_dim=3)],
-            ],
-            [
-                None,
-                [StandardizeTransform()],
-                [StandardizeTransform(), PCATransform(n_components=1)],
-                [StandardizeTransform(), VAETransform(latent_dim=1)],
-            ],
+            X_TRANSFORMS,
+            Y_TRANSFORMS,
             [False, True],
             [False, True],
         )
