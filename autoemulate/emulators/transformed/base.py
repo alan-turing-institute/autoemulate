@@ -195,12 +195,13 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 shape_like: TensorLike,
                 a: float = 0.37,
             ) -> float:
+                device = shape_like.device
                 with torch.no_grad():
                     # Create a new generator for each trial separate to global RNG state
-                    g = torch.Generator(device=shape_like.device)
-                    x_probe = torch.randn(shape_like.shape, generator=g)
-                    y_probe = torch.randn(shape_like.shape, generator=g)
-                    zero = torch.zeros_like(shape_like)
+                    g = torch.Generator(device=device)
+                    x_probe = torch.randn(shape_like.shape, generator=g, device=device)
+                    y_probe = torch.randn(shape_like.shape, generator=g, device=device)
+                    zero = torch.zeros_like(shape_like, device=device)
                     fx, fy, fz = f(x_probe), f(y_probe), f(zero)
                     fxy, fax = f(x_probe + y_probe), f(a * x_probe)
                     denom = 1e-8 + (
