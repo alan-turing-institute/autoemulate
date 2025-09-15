@@ -151,7 +151,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
     def interval_prob_from_mu_sigma(
         self,
-        mu: torch.Tensor,
+        mu: TensorLike,
         var_or_cov: torch.Tensor,
         y1: torch.Tensor,
         y2: torch.Tensor,
