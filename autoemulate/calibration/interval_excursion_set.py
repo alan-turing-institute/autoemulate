@@ -25,6 +25,7 @@ from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
+from autoemulate.emulators.transformed.base import TransformedEmulator
 
 
 class BoundedDomainTransform(Transform):
@@ -75,7 +76,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
     def __init__(
         self,
-        emulator: ProbabilisticEmulator,
+        emulator: ProbabilisticEmulator | TransformedEmulator,
         parameters_range: dict[str, tuple[float, float]],
         output_bounds: dict[str, tuple[float, float]],
         output_names: list[str],
@@ -104,6 +105,12 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             - "error": shows error messages
             - "critical": shows critical messages
         """
+        if not emulator.supports_uq:
+            raise ValueError(
+                f"Emulator {emulator} does not support UQ. "
+                f"IntervalExcursionSetCalibration only supports emulators that support "
+                f"UQ since the likelihood requires variance/covariance specification."
+            )
         TorchDeviceMixin.__init__(self, device=device)
         self.parameters_range = parameters_range
 
