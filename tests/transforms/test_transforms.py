@@ -41,7 +41,7 @@ def test_transform_shapes(sample_data_y2d, transform, expected_shape):
         (VAETransform(latent_dim=2), False),
         (StandardizeTransform(), True),
         # Only reshape event dims (exclude batch): 5 -> (5, 1)
-        (ReshapeTransform((5,), (5, 1)), True),
+        (ReshapeTransform(torch.Size([5]), torch.Size([5, 1])), True),
     ],
 )
 def test_is_transform_affine(sample_data_y2d, transform, affine):

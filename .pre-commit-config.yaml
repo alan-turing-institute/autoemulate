@@ -13,7 +13,7 @@ repos:
     types_or: [ python, pyi ]
     files: ^autoemulate/|^tests/|^benchmarks/
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.398
+  rev: v1.1.405
   hooks:
   - id: pyright
     files: ^autoemulate/|^tests/|^benchmarks/
