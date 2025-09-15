@@ -162,13 +162,17 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         Parameters
         ----------
-        mu: Mean per task (N, T) or (T,)
-        var_or_cov: (N, T) variance per task OR (N, T, T) covariance across tasks
-        y1, y2 : (T,) lower/upper bounds per task
-        aggregate : 'geomean' | 'sumlog' | 'none'
-            - 'geomean': returns geometric mean across tasks (shape N,)
-            - 'sumlog': returns sum of log-probs across tasks (shape N,)
-            - 'none': returns per-task probabilities (shape N, T)
+        mu: TensorLike
+            Mean per task (N, T) or (T,)
+        var_or_cov: TensorLike
+            (N, T) variance per task OR (N, T, T) covariance across tasks
+        y1, y2 : TensorLike
+            (T,) lower/upper bounds per task
+        aggregate : str
+            'geomean' | 'sumlog' | 'none'
+                - 'geomean': returns geometric mean across tasks (shape N,)
+                - 'sumlog': returns sum of log-probs across tasks (shape N,)
+                - 'none': returns per-task probabilities (shape N, T)
 
         """
         if mu.dim() == 1:
