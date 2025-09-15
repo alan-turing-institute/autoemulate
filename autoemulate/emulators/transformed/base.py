@@ -8,7 +8,6 @@ from autoemulate.core.types import (
     DeviceLike,
     DistributionLike,
     GaussianLike,
-    GaussianProcessLike,
     OutputLike,
     TensorLike,
 )
@@ -20,8 +19,6 @@ from autoemulate.emulators.transformed.delta_method import (
 )
 from autoemulate.transforms.base import (
     AutoEmulateTransform,
-    _inverse_sample_gaussian_like,
-    _inverse_sample_gaussian_process_like,
     is_affine,
 )
 
@@ -318,62 +315,6 @@ class TransformedEmulator(Emulator, ValidationMixin):
                 raise TypeError(msg)
             y_t = transform._inverse_gaussian(y_t)
         return y_t
-
-    def _inv_transform_y_gaussian_sample(
-        self, y_t: DistributionLike
-    ) -> GaussianLike | GaussianProcessLike:
-        """
-        Invert the transformed distribution `y_t` by sampling.
-
-        Invert the transformed distribution `y_t` by sampling and calculating
-        empirical mean and covariance from the samples in the original space to
-        parameterize a `GaussianLike` distribution.
-
-        This method accepts any `DistributionLike` input but returns `GaussianLike` or
-        `GaussianProcessLike` distributions.
-
-        This method uses the number of samples specified in the initialization
-        (`n_samples`) to draw samples from the transformed distribution `y_t` and
-        returns a full covariance `GaussianLike` if specified (`full_covariance=True`
-        in the initialization and fewer than `max_targets`) or a diagonal covariance
-        `GaussianLike` otherwise for computational feasibility.
-
-        Parameters
-        ----------
-        y_t: DistributionLike
-            Transformed target distribution to be inverted by sampling.
-
-        Returns
-        -------
-        GaussianLike | GaussianProcessLike
-            A `GaussianProcessLike` distribution if the input was `GaussianProcessLike`,
-            or a `GaussianLike` distribution if the input was any other
-            `DistributionLike`. The distribution is parameterized by the empirical mean
-            and covariance of the samples drawn from the transformed distribution in the
-            original data space after applying all inverse `y_transforms`.
-
-        Raises
-        ------
-        RuntimeError
-            If the empirical covariance cannot be made positive definite.
-
-        Notes
-        -----
-        This method can be used when the emulator's predictive distribution is not
-        `GaussianLike` or when analytical or alternative approximate inversion is not
-        possible.
-        """
-        # Handle GaussianProcessLike distinctly
-        if isinstance(y_t, GaussianProcessLike):
-            return _inverse_sample_gaussian_process_like(
-                self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
-            )
-
-        # If `y_t` is not a `GaussianProcessLike`, sample from it and return a
-        # `GaussianLike`
-        return _inverse_sample_gaussian_like(
-            self._inv_transform_y_tensor, y_t, self.n_samples, self.full_covariance
-        )
 
     def _inv_transform_y_distribution(self, y_t: DistributionLike) -> DistributionLike:
         """
