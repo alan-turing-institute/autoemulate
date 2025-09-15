@@ -415,9 +415,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
         # Output from samples
         y_pred = self._inv_transform_y_distribution(y_t_pred)
-        samples = y_pred.rsample(
-            torch.Size([self.n_samples if n_samples is None else n_samples])
-        )
+        n_samples_ = torch.Size([self.n_samples if n_samples is None else n_samples])
+        samples = y_pred.rsample(n_samples_) if with_grad else y_pred.sample(n_samples_)
         mean = samples.mean(dim=0)
         return mean.detach() if not with_grad else mean
 
@@ -474,7 +473,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Output derived by sampling and inverting to original space
         if isinstance(y_t_pred, DistributionLike):
             y_pred = self._inv_transform_y_distribution(y_t_pred)
-            samples = y_pred.rsample(torch.Size([self.n_samples]))
+            n_samples = torch.Size([self.n_samples])
+            samples = (
+                y_pred.rsample(n_samples) if with_grad else y_pred.sample(n_samples)
+            )
+            # Return mean and variance
             if not self.full_covariance:
                 return GaussianLike(
                     samples.mean(dim=0),
