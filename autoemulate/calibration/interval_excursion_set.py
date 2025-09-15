@@ -24,7 +24,7 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators.base import Emulator
+from autoemulate.emulators.base import ProbabilisticEmulator
 
 
 class BoundedDomainTransform(Transform):
@@ -75,7 +75,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
     def __init__(
         self,
-        emulator: Emulator,
+        emulator: ProbabilisticEmulator,
         parameters_range: dict[str, tuple[float, float]],
         output_bounds: dict[str, tuple[float, float]],
         output_names: list[str],
