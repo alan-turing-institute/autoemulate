@@ -372,12 +372,12 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             alpha=0.7,
             lw=0,
         )
-        ax2.set_title("GP Mean (avg across tasks)")
+        ax2.set_title("Emulator Mean (avg across tasks)")
         ax2.set_xlabel(self.calibration_params[x_idx])
         ax2.set_ylabel(self.calibration_params[y_idx])
         ax2.set_xlim(self.domain_min[x_idx].item(), self.domain_max[x_idx].item())
         ax2.set_ylim(self.domain_min[y_idx].item(), self.domain_max[y_idx].item())
-        plt.colorbar(sc2, ax=ax2, label="GP Mean")
+        plt.colorbar(sc2, ax=ax2, label="Emulator Mean")
 
         plt.tight_layout()
         plt.show()
