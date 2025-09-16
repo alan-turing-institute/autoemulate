@@ -106,7 +106,14 @@ include = ["autoemulate/*", "tests/*", "benchmarks/*"]
 [tool.ruff]
 src = ["autoemulate/"]
 line-length = 88
-include = ["autoemulate/**/*.py", "tests/**/*.py", "benchmarks/**/*.py"]
+include = [
+    "autoemulate/**/*.py",
+    "tests/**/*.py",
+    "benchmarks/**/*.py",
+    "docs/**/*.py",
+    "docs/**/*.ipynb",
+    "**/*.ipynb",
+]
 target-version = "py310"
 
 [tool.ruff.format]
