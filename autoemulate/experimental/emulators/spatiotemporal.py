@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Literal
 
 import torch
 from autoemulate.core.types import OutputLike, TensorLike
@@ -31,6 +32,55 @@ class SpatioTemporalEmulator(PyTorchBackend):
 
     @abstractmethod
     def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None): ...
+
+    def fit_autoregressive(
+        self,
+        x: DataLoader,
+        n_steps: int,
+        training_mode: list[str] | None = None,
+        t_in: int = 5,
+        t_out: int = 10,
+        step_size: int = 1,
+        teacher_forcing_ratio: float = 0.5,
+        loss_weighting: Literal[
+            "uniform", "exponential", "final_only", "linear_decay", "learnable"
+        ] = "uniform",
+        loss_weights: list[float] | None = None,
+        epochs: int = 100,
+        **kwargs,
+    ) -> None:
+        """Train using autoregressive approach.
+
+        Parameters
+        ----------
+        x : DataLoader
+            Input data loader containing spatiotemporal sequences
+        n_steps : int
+            Number of autoregressive steps to train for
+        training_mode : List[str]
+            List of training features to activate. Options:
+            - "rollout_prediction": Core autoregressive rollout
+            - "teacher_forcing": Use true targets sometimes during training
+            - "temporal_encoder": Use multiple input timesteps with encoding
+            - "learnable_temporal_weights": Use learnable weights for
+            historical timesteps
+            - "multi_step": Predict multiple timesteps per forward pass
+            - "loss_weighting": Apply weighted loss across timesteps
+        t_in : int
+            Number of input timesteps (for temporal_encoder mode)
+        t_out : int
+            Number of output timesteps to predict
+        step_size : int
+            Number of timesteps to predict per forward pass (for multi_step mode)
+        teacher_forcing_ratio : float
+            Ratio of teacher forcing (0.0 = never, 1.0 = always)
+        loss_weighting : str
+            How to weight losses across timesteps
+        loss_weights : Optional[List[float]]
+            Custom loss weights for each timestep
+        epochs : int
+            Number of training epochs
+        """
 
     def predict(
         self,
