@@ -3,6 +3,7 @@ from typing import ClassVar
 
 import torch
 import torchinfo
+from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, ModelParams, TensorLike
 from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalEmulator
 from the_well.benchmark import models
@@ -28,18 +29,24 @@ class TheWellEmulator(SpatioTemporalEmulator):
         *args,
         **kwargs,
     ):
+        TorchDeviceMixin.__init__(self, device=device)
         super().__init__(*args, **kwargs)
 
         # TODO: update path handling
         output_path = Path(output_path) if output_path else Path("./")
         checkpoint_path = output_path / "checkpoints"
         artifact_path = output_path / "artifacts"
+        self.datamodule = datamodule
 
         if isinstance(datamodule, WellDataModule):
             # Load metadata from train_dataset
             metadata = datamodule.train_dataset.metadata
             n_steps_input = datamodule.train_dataset.n_steps_input
             n_steps_output = datamodule.train_dataset.n_steps_output
+            self.n_input_fields = (
+                n_steps_input * metadata.n_fields + metadata.n_constant_fields
+            )
+            self.n_output_fields = metadata.n_fields
             self.model = self.model_cls(
                 **self.model_parameters,
                 # TODO: check if general beyond FNO
@@ -48,16 +55,11 @@ class TheWellEmulator(SpatioTemporalEmulator):
                 n_spatial_dims=metadata.n_spatial_dims,
                 spatial_resolution=metadata.spatial_resolution,
             )
-            self.n_input_fields = (
-                n_steps_input * metadata.n_fields + metadata.n_constant_fields
-            )
-            self.n_output_fields = metadata.n_fields
             print(torchinfo.summary(self.model, depth=5))
         else:
             msg = "Alternative datamodules not yet supported"
             raise NotImplementedError(msg)
 
-        device = torch.device("cpu")
         optimizer: torch.optim.Optimizer = torch.optim.Adam(
             self.model.parameters(), lr=1e-3
         )
@@ -82,14 +84,14 @@ class TheWellEmulator(SpatioTemporalEmulator):
             make_rollout_videos=False,
             num_time_intervals=n_steps_output,
             lr_scheduler=lr_scheduler,
-            device=device,
+            device=self.device,
             is_distributed=False,
             enable_amp=False,
             amp_type="float16",  # bfloat not supported in FFT
             checkpoint_path="",  # Path to a checkpoint to resume from, if any
         )
 
-    def fit(
+    def _fit(
         self,
         x: TensorLike | DataLoader | None = None,  # noqa: ARG002
         y: TensorLike | None = None,  # noqa: ARG002
@@ -106,7 +108,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
         """
         self.trainer.train()
 
-    def predict(self, x: TensorLike | DataLoader | None, with_grad=False):
+    def _predict(self, x: TensorLike | DataLoader | None, with_grad=False):
         """Predict using the spatio-temporal emulator."""
         self.eval()
         with torch.set_grad_enabled(with_grad):
@@ -127,7 +129,12 @@ class TheWellEmulator(SpatioTemporalEmulator):
     def predict_autoregressive(  # noqa: D102 # type: ignore [override] # (n_steps not used) and initial state derived from dataloader
         self, x: TensorLike | DataLoader | None, with_grad=False
     ):
-        return self.predict(x, with_grad)
+        return self._predict(x, with_grad)
+
+    @staticmethod
+    def is_multioutput() -> bool:
+        """Check if the model is multi-output."""
+        return True
 
 
 class TheWellFNO(TheWellEmulator):
