@@ -40,9 +40,11 @@ chapters:
   sections:
   - file: reference/calibration/index
     sections:
+    - file: reference/calibration/base
     - file: reference/calibration/bayes
     - file: reference/calibration/history_matching
     - file: reference/calibration/history_matching_dashboard
+    - file: reference/calibration/interval_excursion_set
   - file: reference/core/index
     sections:
     - file: reference/core/compare

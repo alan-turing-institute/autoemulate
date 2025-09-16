@@ -66,13 +66,10 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
     Interval excursion set calibration identifies the set of input parameters that lead
     to model outputs that are within specified intervals of observed data.
 
-    Attributes
-    ----------
-    MIN_VAR : float
-        Minimum variance to avoid numerical issues.
     """
 
-    MIN_VAR = 1e-12
+    MIN_VAR: float = 1e-12
+    """Minimum variance to avoid numerical issues."""
 
     def __init__(
         self,
@@ -437,7 +434,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         References
         ----------
-        - See Del Moral et al. (2006) <https://doi.org/10.1111/j.1467-9868.2006.00553.x>
+        See Del Moral et al. (2006) <https://doi.org/10.1111/j.1467-9868.2006.00553.x>
         "Sequential Monte Carlo samplers" for details on the SMC algorithm.
 
         """
