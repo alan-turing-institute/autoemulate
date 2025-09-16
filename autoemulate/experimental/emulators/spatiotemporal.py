@@ -4,6 +4,7 @@ from typing import Literal
 import torch
 from autoemulate.core.types import OutputLike, TensorLike
 from autoemulate.emulators.base import PyTorchBackend
+from torch import nn
 from torch.utils.data import DataLoader
 
 
@@ -42,9 +43,7 @@ class SpatioTemporalEmulator(PyTorchBackend):
         t_out: int = 10,
         step_size: int = 1,
         teacher_forcing_ratio: float = 0.5,
-        loss_weighting: Literal[
-            "uniform", "exponential", "final_only", "linear_decay", "learnable"
-        ] = "uniform",
+        loss_weighting: list[str] | None = None,
         loss_weights: list[float] | None = None,
         epochs: int = 100,
         **kwargs,
@@ -81,6 +80,48 @@ class SpatioTemporalEmulator(PyTorchBackend):
         epochs : int
             Number of training epochs
         """
+        # Store configuration for prediction consistency
+        self._autoregressive_config = {
+            "training_mode": training_mode,
+            "t_in": t_in,
+            "t_out": t_out,
+            "step_size": step_size,
+            "teacher_forcing_ratio": teacher_forcing_ratio,
+        }
+
+        if "temporal_encoder" in training_mode and t_in > 1:
+            if self.temporal_encoder is None:
+                n_var = 1
+                self.temporal_encoder = torch.nn.Conv3d(
+                    n_var, n_var, kernel_size=(t_in, 1, 1), padding=(0, 0, 0)
+                )
+                self.temporal_encoder = self.temporal_encoder.to(self.device)
+
+            else:
+                self.temporal_encoder = self.temporal_encoder.to(self.device)
+
+        # Learnable temporal weights
+        if "learnable_temporal_weights" in training_mode and t_in > 1:
+            if self.temporal_weights is None:
+                # Initialise learnable weights lamda_i for each historical timestep
+                self.temporal_weights = nn.Parameter(
+                    torch.ones(t_in) / t_in
+                )  # one weight per input timestep
+
+                # We could potentially add a projection layer after weighted combination
+                # this needs to be benchmarked
+                n_vars = 1
+                self.temporal_projection = nn.Conv2d(n_vars, n_vars, kernel_size=1)
+
+            self.temporal_weights = self.temporal_weights.to(self.device)
+            if self.temporal_projection is not None:
+                self.temporal_projection = self.temporal_projection.to(self.device)
+
+        # Setup learnable loss weights
+        if loss_weighting == "learnable":
+            if self.loss_weights_params is None:
+                self.loss_weights_params = nn.Parameter(torch.ones(n_steps))
+            self.loss_weights_params = self.loss_weights_params.to(self.device)
 
     def predict(
         self,
