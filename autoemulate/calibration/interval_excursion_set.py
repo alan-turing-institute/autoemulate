@@ -361,7 +361,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             alpha=0.7,
             lw=0,
         )
-        ax1.set_title("Band Probability (agg across tasks)")
+        ax1.set_title("Interval Probability (agg across tasks)")
         ax1.set_xlabel(self.calibration_params[x_idx])
         ax1.set_ylabel(self.calibration_params[y_idx])
         ax1.set_xlim(self.domain_min[x_idx].item(), self.domain_max[x_idx].item())
