@@ -3,7 +3,8 @@ from pathlib import Path
 import h5py
 import torch
 from autoemulate.core.types import TensorLike
-from the_well.data.datamodule import AbstractDataModule
+from the_well.data.datamodule import AbstractDataModule, WellDataModule  # noqa: F401
+from the_well.data.datasets import WellMetadata
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -47,17 +48,18 @@ class AutoEmulateDataset(Dataset):
         dtype: torch.dtype
             Data type for tensors. Defaults to torch.float32.
         """
+        self.dtype = dtype
+
         # Read or parse data
         self.read_data(data_path) if data_path is not None else self.parse_data(data)
 
-        self.dtype = dtype
         self.full_trajectory_mode = full_trajectory_mode
         self.n_steps_input = n_steps_input
         self.n_steps_output = (
             n_steps_output
             if not self.full_trajectory_mode
             # TODO: make more robust and flexible for different trajectory lengths
-            else self.data.shape[1] - self.n_steps_input + 1
+            else self.data.shape[1] - self.n_steps_input
         )
         self.stride = stride
         self.input_channel_idxs = input_channel_idxs
@@ -172,13 +174,39 @@ class MHDDataset(AutoEmulateDataset):
         )
 
 
-class AutoEmulateDataModule(AbstractDataModule):
+class ReactionDiffusionDataset(AutoEmulateDataset):
+    """Reaction-Diffusion dataset."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metadata = WellMetadata(
+            dataset_name="ReactionDiffusion",
+            n_spatial_dims=2,
+            spatial_resolution=(32, 32),
+            # TODO: placeholder names/values for now below, fix with correct values
+            scalar_names=["u", "v"],
+            constant_scalar_names=["Du", "Dv", "F", "k"],
+            field_names={0: ["u", "v"]},
+            constant_field_names={},
+            boundary_condition_types=["periodic", "periodic"],
+            n_files=0,
+            n_trajectories_per_file=[0],
+            n_steps_per_trajectory=[50],
+            grid_type="cartesian",
+        )
+        self.use_normalization = False
+        self.norm = None
+
+
+# class AutoEmulateDataModule(AbstractDataModule):
+class AutoEmulateDataModule(WellDataModule):
     """A class for spatio-temporal data modules."""
 
     def __init__(
         self,
         data_path: str | None,
         data: dict[str, dict] | None = None,
+        dataset_cls: type[AutoEmulateDataset] = AutoEmulateDataset,
         n_steps_input: int = 1,
         n_steps_output: int = 1,
         stride: int = 1,
@@ -188,13 +216,11 @@ class AutoEmulateDataModule(AbstractDataModule):
         batch_size: int = 4,
         dtype: torch.dtype = torch.float32,
     ):
-        super().__init__()
-
         base_path = Path(data_path) if data_path is not None else None
         train_path = base_path / "train" if base_path is not None else None
         valid_path = base_path / "valid" if base_path is not None else None
         test_path = base_path / "test" if base_path is not None else None
-        self.train_dataset = AutoEmulateDataset(
+        self.train_dataset = dataset_cls(
             data_path=str(train_path) if train_path is not None else None,
             data=data["train"] if data is not None else None,
             n_steps_input=n_steps_input,
@@ -204,7 +230,7 @@ class AutoEmulateDataModule(AbstractDataModule):
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
         )
-        self.valid_dataset = AutoEmulateDataset(
+        self.valid_dataset = dataset_cls(
             data_path=str(valid_path) if valid_path is not None else None,
             data=data["valid"] if data is not None else None,
             n_steps_input=n_steps_input,
@@ -214,7 +240,7 @@ class AutoEmulateDataModule(AbstractDataModule):
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
         )
-        self.test_dataset = AutoEmulateDataset(
+        self.test_dataset = dataset_cls(
             data_path=str(test_path) if test_path is not None else None,
             data=data["test"] if data is not None else None,
             n_steps_input=n_steps_input,
@@ -224,7 +250,7 @@ class AutoEmulateDataModule(AbstractDataModule):
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
         )
-        self.rollout_val_dataset = AutoEmulateDataset(
+        self.rollout_val_dataset = dataset_cls(
             data_path=str(train_path) if train_path is not None else None,
             data=data["train"] if data is not None else None,
             n_steps_input=n_steps_input,
@@ -235,7 +261,7 @@ class AutoEmulateDataModule(AbstractDataModule):
             full_trajectory_mode=True,
             dtype=dtype,
         )
-        self.rollout_test_dataset = AutoEmulateDataset(
+        self.rollout_test_dataset = dataset_cls(
             data_path=str(test_path) if test_path is not None else None,
             data=data["test"] if data is not None else None,
             n_steps_input=n_steps_input,
