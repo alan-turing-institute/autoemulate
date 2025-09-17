@@ -34,7 +34,7 @@ authors:
       orcid: 
       affiliation: 1
     - name: Paolo Conti
-      orcid: 
+      orcid: 0000-0003-4062-2560
       affiliation: 1
     - name: Camila Rangel Smith
       orcid: 
@@ -63,7 +63,7 @@ authors:
     - name: Andrew B. Duncan
       orcid: 0000-0001-5762-164X
       affiliation: 3
-    - name: Jason McEwen
+    - name: Jason D. McEwen
       orcid:
       affiliation: 1, 4
 affiliations:
