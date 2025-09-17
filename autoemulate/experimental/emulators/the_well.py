@@ -1,8 +1,10 @@
+import os
 from pathlib import Path
 from typing import ClassVar
 
 import torch
 import torchinfo
+import wandb
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, ModelParams, TensorLike
 from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalEmulator
@@ -36,6 +38,13 @@ class TheWellEmulator(SpatioTemporalEmulator):
         output_path = Path(output_path) if output_path else Path("./")
         checkpoint_path = output_path / "checkpoints"
         artifact_path = output_path / "artifacts"
+        viz_path = artifact_path / "viz"
+
+        # Make paths
+        os.makedirs(output_path, exist_ok=True)
+        os.makedirs(checkpoint_path, exist_ok=True)
+        os.makedirs(artifact_path, exist_ok=True)
+        os.makedirs(viz_path, exist_ok=True)
         self.datamodule = datamodule
 
         if isinstance(datamodule, WellDataModule):
@@ -43,10 +52,23 @@ class TheWellEmulator(SpatioTemporalEmulator):
             metadata = datamodule.train_dataset.metadata
             n_steps_input = datamodule.train_dataset.n_steps_input
             n_steps_output = datamodule.train_dataset.n_steps_output
+            # TODO: aim to be more flexible (such as time as an input channel)
             self.n_input_fields = (
                 n_steps_input * metadata.n_fields + metadata.n_constant_fields
             )
             self.n_output_fields = metadata.n_fields
+            self.model = self.model_cls(
+                **self.model_parameters,
+                # TODO: check if general beyond FNO
+                dim_in=self.n_input_fields,
+                dim_out=self.n_output_fields,
+                n_spatial_dims=metadata.n_spatial_dims,
+                spatial_resolution=metadata.spatial_resolution,
+            )
+            metadata = datamodule.train_dataset.metadata
+            n_steps_input = datamodule.train_dataset.n_steps_input
+            n_steps_output = datamodule.train_dataset.n_steps_output
+
             self.model = self.model_cls(
                 **self.model_parameters,
                 # TODO: check if general beyond FNO
@@ -68,7 +90,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
         self.trainer = Trainer(
             checkpoint_folder=str(checkpoint_path),
             artifact_folder=str(artifact_path),
-            viz_folder=str(artifact_path / "viz"),
+            viz_folder=str(viz_path),
             # TODO: make the below configurable
             formatter="channels_first_default",  # "channels_last_default" for others
             model=self.model,
@@ -106,6 +128,8 @@ class TheWellEmulator(SpatioTemporalEmulator):
         y: OutputLike | None
             Target values (not needed if x is a DataLoader).
         """
+        # TODO: placeholder to disable wandb for now, make configurable later
+        wandb.init(mode="disabled")
         self.trainer.train()
 
     def _predict(self, x: TensorLike | DataLoader | None, with_grad=False):
