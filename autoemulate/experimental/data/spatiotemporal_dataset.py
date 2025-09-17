@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import h5py
 import torch
 from autoemulate.core.types import TensorLike
-from torch.utils.data import Dataset
+from the_well.data.datamodule import AbstractDataModule
+from torch.utils.data import DataLoader, Dataset
 
 
 class AutoEmulateDataset(Dataset):
@@ -17,6 +20,7 @@ class AutoEmulateDataset(Dataset):
         # TODO: support for passing data from dict
         input_channel_idxs: tuple[int, ...] | None = None,
         output_channel_idxs: tuple[int, ...] | None = None,
+        full_trajectory_mode: bool = False,
         dtype: torch.dtype = torch.float32,
     ):
         """
@@ -38,18 +42,26 @@ class AutoEmulateDataset(Dataset):
             Indices of input channels to use. Defaults to None.
         output_channel_idxs: tuple[int, ...] | None
             Indices of output channels to use. Defaults to None.
+        full_trajectory_mode: bool
+            If True, use full trajectories without creating subtrajectories.
         dtype: torch.dtype
             Data type for tensors. Defaults to torch.float32.
         """
+        # Read or parse data
+        self.read_data(data_path) if data_path is not None else self.parse_data(data)
+
         self.dtype = dtype
+        self.full_trajectory_mode = full_trajectory_mode
         self.n_steps_input = n_steps_input
-        self.n_steps_output = n_steps_output
+        self.n_steps_output = (
+            n_steps_output
+            if not self.full_trajectory_mode
+            # TODO: make more robust and flexible for different trajectory lengths
+            else self.data.shape[1] - self.n_steps_input + 1
+        )
         self.stride = stride
         self.input_channel_idxs = input_channel_idxs
         self.output_channel_idxs = output_channel_idxs
-
-        # Read or parse data
-        self.read_data(data_path) if data_path is not None else self.parse_data(data)
 
         # Destructured here
         (
@@ -157,4 +169,117 @@ class MHDDataset(AutoEmulateDataset):
     def __init__(self, data_path: str, t_in: int = 5, t_out: int = 10, stride: int = 1):
         super().__init__(
             data_path, n_steps_input=t_in, n_steps_output=t_out, stride=stride
+        )
+
+
+class AutoEmulateDataModule(AbstractDataModule):
+    """A class for spatio-temporal data modules."""
+
+    def __init__(
+        self,
+        data_path: str | None,
+        data: dict[str, dict] | None = None,
+        n_steps_input: int = 1,
+        n_steps_output: int = 1,
+        stride: int = 1,
+        # TODO: support for passing data from dict
+        input_channel_idxs: tuple[int, ...] | None = None,
+        output_channel_idxs: tuple[int, ...] | None = None,
+        batch_size: int = 4,
+        dtype: torch.dtype = torch.float32,
+    ):
+        super().__init__()
+
+        base_path = Path(data_path) if data_path is not None else None
+        train_path = base_path / "train" if base_path is not None else None
+        valid_path = base_path / "valid" if base_path is not None else None
+        test_path = base_path / "test" if base_path is not None else None
+        self.train_dataset = AutoEmulateDataset(
+            data_path=str(train_path) if train_path is not None else None,
+            data=data["train"] if data is not None else None,
+            n_steps_input=n_steps_input,
+            n_steps_output=n_steps_output,
+            stride=stride,
+            input_channel_idxs=input_channel_idxs,
+            output_channel_idxs=output_channel_idxs,
+            dtype=dtype,
+        )
+        self.valid_dataset = AutoEmulateDataset(
+            data_path=str(valid_path) if valid_path is not None else None,
+            data=data["valid"] if data is not None else None,
+            n_steps_input=n_steps_input,
+            n_steps_output=n_steps_output,
+            stride=stride,
+            input_channel_idxs=input_channel_idxs,
+            output_channel_idxs=output_channel_idxs,
+            dtype=dtype,
+        )
+        self.test_dataset = AutoEmulateDataset(
+            data_path=str(test_path) if test_path is not None else None,
+            data=data["test"] if data is not None else None,
+            n_steps_input=n_steps_input,
+            n_steps_output=n_steps_output,
+            stride=stride,
+            input_channel_idxs=input_channel_idxs,
+            output_channel_idxs=output_channel_idxs,
+            dtype=dtype,
+        )
+        self.rollout_val_dataset = AutoEmulateDataset(
+            data_path=str(train_path) if train_path is not None else None,
+            data=data["train"] if data is not None else None,
+            n_steps_input=n_steps_input,
+            n_steps_output=n_steps_output,
+            stride=stride,
+            input_channel_idxs=input_channel_idxs,
+            output_channel_idxs=output_channel_idxs,
+            full_trajectory_mode=True,
+            dtype=dtype,
+        )
+        self.rollout_test_dataset = AutoEmulateDataset(
+            data_path=str(test_path) if test_path is not None else None,
+            data=data["test"] if data is not None else None,
+            n_steps_input=n_steps_input,
+            n_steps_output=n_steps_output,
+            stride=stride,
+            input_channel_idxs=input_channel_idxs,
+            output_channel_idxs=output_channel_idxs,
+            full_trajectory_mode=True,
+            dtype=dtype,
+        )
+        self.batch_size = batch_size
+
+    def train_dataloader(self) -> DataLoader:
+        """DataLoader for training."""
+        return DataLoader(
+            self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=1
+        )
+
+    def val_dataloader(self) -> DataLoader:
+        """DataLoader for standard validation (not full trajectory rollouts)."""
+        return DataLoader(
+            self.valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=1
+        )
+
+    def rollout_val_dataloader(self) -> DataLoader:
+        """DataLoader for full trajectory rollouts on validation data."""
+        return DataLoader(
+            self.rollout_val_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=1,
+        )
+
+    def test_dataloader(self) -> DataLoader:
+        """DataLoader for testing."""
+        return DataLoader(
+            self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=1
+        )
+
+    def rollout_test_dataloader(self) -> DataLoader:
+        """DataLoader for full trajectory rollouts on test data."""
+        return DataLoader(
+            self.rollout_test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=1,
         )
