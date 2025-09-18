@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
@@ -16,6 +17,26 @@ from the_well.data.datamodule import AbstractDataModule
 from torch.utils.data import DataLoader
 
 
+@dataclass
+class TrainerParams:
+    """Parameters for the Trainer."""
+
+    # TODO: make the below configurable
+    loss_fn_cls: type[torch.nn.Module] = VRMSE
+    epochs: int = 10
+    checkpoint_frequency: int = 5
+    val_frequency: int = 1
+    rollout_val_frequency: int = 1
+    max_rollout_steps: int = 10
+    short_validation_length: int = 20
+    make_rollout_videos: bool = True
+    lr_scheduler: type[torch.optim.lr_scheduler._LRScheduler] | None = None
+    amp_type: str = "float16"  # bfloat not supported in FFT
+    enable_amp: bool = False
+    is_distributed: bool = False
+    checkpoint_path: str = ""  # Path to a checkpoint to resume from, if any
+
+
 class TheWellEmulator(SpatioTemporalEmulator):
     """Base class for The Well emulators."""
 
@@ -28,6 +49,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
         datamodule: AbstractDataModule | WellDataModule,
         output_path: str | Path | None,
         device: DeviceLike = "cpu",
+        trainer_params: TrainerParams | None = None,
         *args,
         **kwargs,
     ):
@@ -39,6 +61,9 @@ class TheWellEmulator(SpatioTemporalEmulator):
         checkpoint_path = output_path / "checkpoints"
         artifact_path = output_path / "artifacts"
         viz_path = artifact_path / "viz"
+
+        # Parameters for the Trainer
+        self.trainer_params = trainer_params or TrainerParams()
 
         # Make paths
         os.makedirs(output_path, exist_ok=True)
@@ -82,35 +107,41 @@ class TheWellEmulator(SpatioTemporalEmulator):
             msg = "Alternative datamodules not yet supported"
             raise NotImplementedError(msg)
 
-        optimizer: torch.optim.Optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=1e-3
-        )
-        lr_scheduler = None
+        # init optimizer
+        optimizer: torch.optim.Optimizer = kwargs.get(
+            "optimizer_cls", torch.optim.Adam
+        )(self.model.parameters(), lr=kwargs.get("lr", 0.001))
 
+        # init scheduler
+        lr_scheduler = (
+            self.trainer_params.lr_scheduler(optimizer)
+            if self.trainer_params.lr_scheduler is not None
+            else None
+        )
         self.trainer = Trainer(
             checkpoint_folder=str(checkpoint_path),
             artifact_folder=str(artifact_path),
             viz_folder=str(viz_path),
-            # TODO: make the below configurable
             formatter="channels_first_default",  # "channels_last_default" for others
             model=self.model,
             datamodule=datamodule,
             optimizer=optimizer,
-            loss_fn=VRMSE(),
-            epochs=10,
-            checkpoint_frequency=5,
-            val_frequency=1,
-            rollout_val_frequency=5,
-            max_rollout_steps=10,
-            short_validation_length=20,
-            make_rollout_videos=False,
+            # TODO: make the below configurable
+            loss_fn=self.trainer_params.loss_fn_cls(),
+            epochs=self.trainer_params.epochs,
+            checkpoint_frequency=self.trainer_params.checkpoint_frequency,
+            val_frequency=self.trainer_params.val_frequency,
+            rollout_val_frequency=self.trainer_params.rollout_val_frequency,
+            max_rollout_steps=self.trainer_params.max_rollout_steps,
+            short_validation_length=self.trainer_params.short_validation_length,
+            make_rollout_videos=self.trainer_params.make_rollout_videos,
             num_time_intervals=n_steps_output,
             lr_scheduler=lr_scheduler,
             device=self.device,
-            is_distributed=False,
-            enable_amp=False,
-            amp_type="float16",  # bfloat not supported in FFT
-            checkpoint_path="",  # Path to a checkpoint to resume from, if any
+            is_distributed=self.trainer_params.is_distributed,
+            enable_amp=self.trainer_params.enable_amp,
+            amp_type=self.trainer_params.amp_type,  # bfloat not supported in FFT
+            checkpoint_path=self.trainer_params.checkpoint_path,
         )
 
     def _fit(
@@ -141,14 +172,16 @@ class TheWellEmulator(SpatioTemporalEmulator):
             else:
                 msg = "x must be a DataLoader"
                 raise ValueError(msg)
-            preds = []
+            preds, refs = [], []
             for batch in dataloader:
-                preds.append(
-                    self.trainer.rollout_model(
-                        self.model, batch, self.trainer.formatter, train=False
-                    )
+                pred = self.trainer.rollout_model(
+                    self.model, batch, self.trainer.formatter, train=False
                 )
-            return torch.cat(preds, 0)
+                preds.append(pred[0])
+                refs.append(pred[1])
+            # Just return preds for now but could also retiurn refs if needed
+            return torch.cat(preds)
+            # return torch.cat(preds), torch.cat(refs)
 
     def predict_autoregressive(  # noqa: D102 # type: ignore [override] # (n_steps not used) and initial state derived from dataloader
         self, x: TensorLike | DataLoader | None, with_grad=False
