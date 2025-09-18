@@ -23,6 +23,7 @@ class AutoEmulateDataset(Dataset):
         output_channel_idxs: tuple[int, ...] | None = None,
         full_trajectory_mode: bool = False,
         dtype: torch.dtype = torch.float32,
+        verbose: bool = False,
     ):
         """
         Initialize the dataset.
@@ -47,8 +48,11 @@ class AutoEmulateDataset(Dataset):
             If True, use full trajectories without creating subtrajectories.
         dtype: torch.dtype
             Data type for tensors. Defaults to torch.float32.
+        verbose: bool
+            If True, print dataset information.
         """
         self.dtype = dtype
+        self.verbose = verbose
 
         # Read or parse data
         self.read_data(data_path) if data_path is not None else self.parse_data(data)
@@ -110,21 +114,18 @@ class AutoEmulateDataset(Dataset):
                     self.all_constant_scalars.append(
                         self.constant_scalars[traj_idx].to(self.dtype)
                     )
-                else:
-                    self.all_constant_scalars.append(torch.tensor([]))
 
                 # Handle constant fields
                 if self.constant_fields is not None:
                     self.all_constant_fields.append(
                         self.constant_fields[traj_idx].to(self.dtype)
                     )
-                else:
-                    self.all_constant_fields.append(torch.tensor([]))
 
-        print(f"Created {len(self.all_input_fields)} subtrajectory samples")
-        print(f"Each input sample shape: {self.all_input_fields[0].shape}")
-        print(f"Each output sample shape: {self.all_output_fields[0].shape}")
-        print(f"Data type: {self.all_input_fields[0].dtype}")
+        if self.verbose:
+            print(f"Created {len(self.all_input_fields)} subtrajectory samples")
+            print(f"Each input sample shape: {self.all_input_fields[0].shape}")
+            print(f"Each output sample shape: {self.all_output_fields[0].shape}")
+            print(f"Data type: {self.all_input_fields[0].dtype}")
 
     def read_data(self, data_path: str):
         """Read data.
@@ -172,12 +173,16 @@ class AutoEmulateDataset(Dataset):
         return len(self.all_input_fields)
 
     def __getitem__(self, idx):  # noqa: D105
-        return {
+        item = {
             "input_fields": self.all_input_fields[idx],
             "output_fields": self.all_output_fields[idx],
-            "constant_scalars": self.all_constant_scalars[idx],
-            "constant_fields": self.all_constant_fields[idx],
         }
+        if len(self.all_constant_scalars) > 0:
+            item["constant_scalars"] = self.all_constant_scalars[idx]
+        if len(self.all_constant_fields) > 0:
+            item["constant_fields"] = self.all_constant_fields[idx]
+
+        return item
 
 
 class MHDDataset(AutoEmulateDataset):
@@ -192,21 +197,24 @@ class MHDDataset(AutoEmulateDataset):
 class ReactionDiffusionDataset(AutoEmulateDataset):
     """Reaction-Diffusion dataset."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.metadata = WellMetadata(
             dataset_name="ReactionDiffusion",
             n_spatial_dims=2,
-            spatial_resolution=(32, 32),
-            # TODO: placeholder names/values for now below, fix with correct values
-            scalar_names=["u", "v"],
-            constant_scalar_names=["Du", "Dv", "F", "k"],
-            field_names={0: ["u", "v"]},
+            spatial_resolution=self.data.shape[-3:-1],
+            scalar_names=[],
+            constant_scalar_names=["beta", "d"],
+            field_names={0: ["U", "V"]},
             constant_field_names={},
             boundary_condition_types=["periodic", "periodic"],
             n_files=0,
-            n_trajectories_per_file=[0],
-            n_steps_per_trajectory=[50],
+            n_trajectories_per_file=[],
+            n_steps_per_trajectory=[self.data.shape[1]] * self.data.shape[0],
             grid_type="cartesian",
         )
         self.use_normalization = False
@@ -230,7 +238,9 @@ class AutoEmulateDataModule(WellDataModule):
         output_channel_idxs: tuple[int, ...] | None = None,
         batch_size: int = 4,
         dtype: torch.dtype = torch.float32,
+        verbose: bool = False,
     ):
+        self.verbose = verbose
         base_path = Path(data_path) if data_path is not None else None
         train_path = base_path / "train" if base_path is not None else None
         valid_path = base_path / "valid" if base_path is not None else None
@@ -244,6 +254,7 @@ class AutoEmulateDataModule(WellDataModule):
             input_channel_idxs=input_channel_idxs,
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
+            verbose=self.verbose,
         )
         self.valid_dataset = dataset_cls(
             data_path=str(valid_path) if valid_path is not None else None,
@@ -254,6 +265,7 @@ class AutoEmulateDataModule(WellDataModule):
             input_channel_idxs=input_channel_idxs,
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
+            verbose=self.verbose,
         )
         self.test_dataset = dataset_cls(
             data_path=str(test_path) if test_path is not None else None,
@@ -264,6 +276,7 @@ class AutoEmulateDataModule(WellDataModule):
             input_channel_idxs=input_channel_idxs,
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
+            verbose=self.verbose,
         )
         self.rollout_val_dataset = dataset_cls(
             data_path=str(train_path) if train_path is not None else None,
@@ -275,6 +288,7 @@ class AutoEmulateDataModule(WellDataModule):
             output_channel_idxs=output_channel_idxs,
             full_trajectory_mode=True,
             dtype=dtype,
+            verbose=self.verbose,
         )
         self.rollout_test_dataset = dataset_cls(
             data_path=str(test_path) if test_path is not None else None,
@@ -286,6 +300,7 @@ class AutoEmulateDataModule(WellDataModule):
             output_channel_idxs=output_channel_idxs,
             full_trajectory_mode=True,
             dtype=dtype,
+            verbose=self.verbose,
         )
         self.batch_size = batch_size
 
