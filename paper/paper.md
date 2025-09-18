@@ -31,7 +31,7 @@ authors:
       orcid: 
       affiliation: 1
     - name: Chris Sprague
-      orcid: 
+      orcid: 0000-0003-4943-2501
       affiliation: 1
     - name: Paolo Conti
       orcid: 0000-0003-4062-2560
@@ -91,7 +91,7 @@ Complex physical systems are often modelled using computer simulations. Dependin
 
 Emulation requires significant expertise in machine learning as well as familiarity with a broad and evolving ecosystem of tools for model training and downstream tasks. This creates a barrier to entry for domain researchers whose focus is on the underlying scientific problem. AutoEmulate [@autoemulate] lowers the barrier to entry by automating the entire emulator construction process (training, evaluation, model selection, and hyperparameter tuning). This makes emulation accessible to non-specialists while also offering a reference set of cutting-edge emulators, from classical approaches (e.g. Gaussian Processes) to modern deep learning methods, enabling benchmarking for experienced users.
 
-AutoEmulate v1.0 introduces easy-to-use interfaces for common emulation tasks. By providing these tasks within a single package it enables users to construct sequential workflows. For instance, sensitivity analysis can be applied in order to narrow down the parameter space to the key variables. This allows the user to calibrate the much smaller reduced set to match the output of the model to real-world observations.  AutoEmulate also supports direct integration of custom simulators and active learning, in which the tool adaptively selects informative simulations to run to improve emulator performance at minimal computational cost.
+AutoEmulate v1.0 introduces easy-to-use interfaces for common emulation tasks. By providing these tasks within a single package it enables users to construct sequential workflows. For instance, sensitivity analysis can be applied in order to narrow down the parameter space to the key variables. This allows the user to calibrate the much smaller reduced set to match the output of the model to real-world observations. AutoEmulate also supports direct integration of custom simulators and active learning, in which the tool adaptively selects informative simulations to run to improve emulator performance at minimal computational cost.
 
 AutoEmulate was originally built on scikit-learn, which is well suited for traditional machine learning but less flexible for complex workflows. Version 1.0 introduces a PyTorch [@pytorch] backend that provides GPU acceleration for faster training and inference and automatic differentiation via PyTorch’s autograd system. It also makes AutoEmulate easy to integrate with other PyTorch-based tools. For example, the PyTorch refactor enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo exposed through Pyro [@pyro].
 
@@ -155,6 +155,7 @@ problem = {
 sa = SensitivityAnalysis(emulator, problem=problem)
 sobol_df = sa.run()
 ```
+
 A more complete application of sensitivity analysis to a cardiovascular simulator is demonstrated [here](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/01_emulation_sensitivity.html).
 
 The PyTorch backend enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo with Pyro. AutoEmulate provides a simple interface for this given a trained PyTorch emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
@@ -171,6 +172,7 @@ bc = BayesianCalibration(
 )
 mcmc = bc.run()
 ```
+
 A more complete application of Bayesian calibration to an epidemic simulation is demonstrated [here](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/03_bayes_calibration.html).
 
 Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. Integrating custom simulators enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
