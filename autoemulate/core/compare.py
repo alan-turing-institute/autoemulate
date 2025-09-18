@@ -1,3 +1,4 @@
+import inspect
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -389,7 +390,16 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                best_params_for_this_model = self.model_params
+                                # extract default parameters from the model's __init__
+                                init_params = {}
+                                init_signature = inspect.signature(model_cls.__init__)
+                                for (
+                                    param_name,
+                                    param,
+                                ) in init_signature.parameters.items():
+                                    if param.default is not inspect.Parameter.empty:
+                                        init_params[param_name] = param.default
+                                best_params_for_this_model = init_params
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
