@@ -127,18 +127,11 @@ class AutoEmulateDataset(Dataset):
             print(f"Each output sample shape: {self.all_output_fields[0].shape}")
             print(f"Data type: {self.all_input_fields[0].dtype}")
 
-    def read_data(self, data_path: str):
-        """Read data.
-
-        By default assumes HDF5 format in `data_path` with correct shape and fields.
-        """
-        # TODO: support passing as dict
-        # Load data
-        self.data_path = data_path
-        with h5py.File(self.data_path, "r") as f:
-            assert "data" in f, "HDF5 file must contain 'data' dataset"
-            self.data: TensorLike = torch.Tensor(f["data"][:]).to(self.dtype)  # type: ignore # [N, T, W, H, C]  # noqa: PGH003
-        print(f"Loaded data shape: {self.data.shape}")
+    def _from_f(self, f):
+        assert "data" in f, "HDF5 file must contain 'data' dataset"
+        self.data: TensorLike = torch.Tensor(f["data"][:]).to(self.dtype)  # type: ignore # [N, T, W, H, C]  # noqa: PGH003
+        if self.verbose:
+            print(f"Loaded data shape: {self.data.shape}")
         # TODO: add the constant scalars
         self.constant_scalars = (
             torch.Tensor(f["constant_scalars"][:]).to(self.dtype)  # type: ignore  # noqa: PGH003
@@ -154,6 +147,18 @@ class AutoEmulateDataset(Dataset):
             if "constant_fields" in f
             else None
         )
+
+    def read_data(self, data_path: str):
+        """Read data.
+
+        By default assumes HDF5 format in `data_path` with correct shape and fields.
+        """
+        self.data_path = data_path
+        if self.data_path.endswith(".h5") or self.data_path.endswith(".hdf5"):
+            with h5py.File(self.data_path, "r") as f:
+                self._from_f(f)
+        if self.data_path.endswith(".pt"):
+            self._from_f(torch.load(self.data_path))
 
     def parse_data(self, data: dict | None):
         """Parse data from a dictionary."""
@@ -221,6 +226,63 @@ class ReactionDiffusionDataset(AutoEmulateDataset):
         self.norm = None
 
 
+class AdvectionDiffusionDataset(AutoEmulateDataset):
+    """Advection-Diffusion dataset."""
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.metadata = WellMetadata(
+            dataset_name="AdvectionDiffusion",
+            n_spatial_dims=2,
+            spatial_resolution=self.data.shape[-3:-1],
+            scalar_names=[],
+            constant_scalar_names=["nu", "mu"],
+            field_names={0: ["vorticity"]},
+            constant_field_names={},
+            boundary_condition_types=["periodic", "periodic"],
+            n_files=0,
+            n_trajectories_per_file=[],
+            n_steps_per_trajectory=[self.data.shape[1]] * self.data.shape[0],
+            grid_type="cartesian",
+        )
+        self.use_normalization = False
+        self.norm = None
+
+
+class BOUTDataset(AutoEmulateDataset):
+    """BOUT++ dataset."""
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.metadata = WellMetadata(
+            dataset_name="BOUT++",
+            n_spatial_dims=2,
+            spatial_resolution=self.data.shape[-3:-1],
+            scalar_names=[],
+            constant_scalar_names=[
+                f"const{i}"
+                for i in range(self.constant_scalars.shape[-1])  # type: ignore  # noqa: PGH003
+            ],
+            field_names={0: ["vorticity"]},
+            constant_field_names={},
+            boundary_condition_types=["periodic", "periodic"],
+            n_files=0,
+            n_trajectories_per_file=[],
+            n_steps_per_trajectory=[self.data.shape[1]] * self.data.shape[0],
+            grid_type="cartesian",
+        )
+        self.use_normalization = False
+        self.norm = None
+
+
 # class AutoEmulateDataModule(AbstractDataModule):
 class AutoEmulateDataModule(WellDataModule):
     """A class for spatio-temporal data modules."""
@@ -238,13 +300,16 @@ class AutoEmulateDataModule(WellDataModule):
         output_channel_idxs: tuple[int, ...] | None = None,
         batch_size: int = 4,
         dtype: torch.dtype = torch.float32,
+        ftype: str = "torch",
         verbose: bool = False,
     ):
         self.verbose = verbose
         base_path = Path(data_path) if data_path is not None else None
-        train_path = base_path / "train" if base_path is not None else None
-        valid_path = base_path / "valid" if base_path is not None else None
-        test_path = base_path / "test" if base_path is not None else None
+        suffix = ".pt" if ftype == "torch" else ".h5"
+        fname = f"data.{suffix}"
+        train_path = base_path / "train" / fname if base_path is not None else None
+        valid_path = base_path / "valid" / fname if base_path is not None else None
+        test_path = base_path / "test" / fname if base_path is not None else None
         self.train_dataset = dataset_cls(
             data_path=str(train_path) if train_path is not None else None,
             data=data["train"] if data is not None else None,
