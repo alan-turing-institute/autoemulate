@@ -207,13 +207,14 @@ class TheWellFNO(TheWellEmulator):
         super().__init__(*args, **kwargs)
 
 
+# TODO: fix this as not initializing correctly at the moment
 class TheWellAFNO(TheWellEmulator):
     """The Well AFNO emulator."""
 
     model_cls: type[torch.nn.Module] = models.AFNO
     model_parameters: ClassVar[ModelParams] = {
         "hidden_dim": 64,
-        "num_blocks": 14,
+        "n_blocks": 14,
     }
 
     def __init__(self, *args, **kwargs):
