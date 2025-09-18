@@ -205,3 +205,39 @@ class TheWellFNO(TheWellEmulator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class TheWellAFNO(TheWellEmulator):
+    """The Well AFNO emulator."""
+
+    model_cls: type[torch.nn.Module] = models.AFNO
+    model_parameters: ClassVar[ModelParams] = {
+        "hidden_dim": 64,
+        "num_blocks": 14,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class TheWellUNetClassic(TheWellEmulator):
+    """The Well UNet Classic emulator."""
+
+    model_cls: type[torch.nn.Module] = models.UNetClassic
+    model_parameters: ClassVar[ModelParams] = {"init_features": 48}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class TheWellUNetConvNext(TheWellEmulator):
+    """The Well UNet ConvNext emulator."""
+
+    model_cls: type[torch.nn.Module] = models.UNetConvNext
+    model_parameters: ClassVar[ModelParams] = {
+        "init_features": 48,
+        "blocks_per_stage": 2,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
