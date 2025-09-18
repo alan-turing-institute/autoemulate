@@ -306,7 +306,7 @@ class AutoEmulateDataModule(WellDataModule):
         self.verbose = verbose
         base_path = Path(data_path) if data_path is not None else None
         suffix = ".pt" if ftype == "torch" else ".h5"
-        fname = f"data.{suffix}"
+        fname = f"data{suffix}"
         train_path = base_path / "train" / fname if base_path is not None else None
         valid_path = base_path / "valid" / fname if base_path is not None else None
         test_path = base_path / "test" / fname if base_path is not None else None
