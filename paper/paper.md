@@ -37,7 +37,7 @@ authors:
       orcid: 0000-0003-4062-2560
       affiliation: 1
     - name: Camila Rangel Smith
-      orcid: 
+      orcid: 0000-0002-0227-836X
       affiliation: 1
     - name: Martin A. Stoffel
       orcid: 0000-0003-4030-3543
@@ -87,7 +87,7 @@ Computational simulations lie at the heart of modern science and engineering, bu
 
 # Statement of need
 
-Complex physical systems are often modelled using computer simulations. Depending on the complexity of the system, these simulation can be computationally expensive and time-consuming. This bottleneck can be resolved by approximating simulations with emulators, which can be orders of magnitudes faster [@kennedy_ohagan_2000]. Emulators are key to enabling any computationally expensive downstream tasks that require generating predictions for a large number of inputs. These tasks include sensitivity analysis to quantify the impact of each input parameter on the output as well as model calibration to identify input values most likely to have generated real-world observations.
+Complex physical systems are often modelled using computer simulations. Depending on the complexity of the system, these simulations can be computationally expensive and time-consuming. This bottleneck can be resolved by approximating simulations with emulators, which can be orders of magnitudes faster [@kennedy_ohagan_2000]. Emulators are key to enabling any computationally expensive downstream tasks that require generating predictions for a large number of inputs. These tasks include sensitivity analysis to quantify the impact of each input parameter on the output as well as model calibration to identify input values most likely to have generated real-world observations.
 
 Emulation requires significant expertise in machine learning as well as familiarity with a broad and evolving ecosystem of tools for model training and downstream tasks. This creates a barrier to entry for domain researchers whose focus is on the underlying scientific problem. AutoEmulate [@autoemulate] lowers the barrier to entry by automating the entire emulator construction process (training, evaluation, model selection, and hyperparameter tuning). This makes emulation accessible to non-specialists while also offering a reference set of cutting-edge emulators, from classical approaches (e.g. Gaussian Processes) to modern deep learning methods, enabling benchmarking for experienced users.
 
