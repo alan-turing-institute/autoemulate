@@ -11,7 +11,9 @@ class SpatioTemporalEmulator(PyTorchBackend):
 
     channels: tuple[int, ...]
 
-    def fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
+    def fit(
+        self, x: TensorLike | DataLoader | None = None, y: TensorLike | None = None
+    ):
         """Train a spatio-temporal emulator.
 
         Parameters
@@ -24,13 +26,15 @@ class SpatioTemporalEmulator(PyTorchBackend):
         """
         if isinstance(x, TensorLike) and isinstance(y, TensorLike):
             return super().fit(x, y)
-        if isinstance(x, DataLoader) and y is None:
+        if (isinstance(x, DataLoader) and y is None) or (x is None and y is None):
             return self._fit(x, y)
         msg = "Invalid input types. Expected pair of TensorLike or DataLoader only."
         raise RuntimeError(msg)
 
     @abstractmethod
-    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None): ...
+    def _fit(
+        self, x: TensorLike | DataLoader | None = None, y: TensorLike | None = None
+    ): ...
 
     def predict(
         self,
