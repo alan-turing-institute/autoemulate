@@ -144,7 +144,7 @@ class AutoEmulateDataset(Dataset):
             torch.Tensor(f["constant_fields"][:]).to(  # type: ignore # noqa: PGH003
                 self.dtype
             )  # [N, W, H, C]
-            if "constant_fields" in f
+            if "constant_fields" in f and f["constant_fields"] != {}
             else None
         )
 
