@@ -95,6 +95,8 @@ AutoEmulate v1.0 introduces easy-to-use interfaces for common emulation tasks. B
 
 AutoEmulate was originally built on scikit-learn, which is well suited for traditional machine learning but less flexible for complex workflows. Version 1.0 introduces a PyTorch [@pytorch] backend that provides GPU acceleration for faster training and inference and automatic differentiation via PyTorch’s autograd system. It also makes AutoEmulate easy to integrate with other PyTorch-based tools. For example, the PyTorch refactor enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo exposed through Pyro [@pyro].
 
+Lastly, AutoEmulate v1.0 expands the set of implemented emulators, focusing particularly on predictive uncertainty quantification through adding ensemble methods, and improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
+
 AutoEmulate fills a gap in the current landscape of emulation tools as it is both accessible to newcomers while offering flexibility and advanced features for experienced users. It also uniquely combines emulator training with support for a wide range of downstream tasks such as sensitivity analysis, model calibration and active learning.
 
 # Example usage
