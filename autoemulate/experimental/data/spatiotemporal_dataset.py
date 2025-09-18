@@ -78,6 +78,7 @@ class AutoEmulateDataset(Dataset):
         self.all_input_fields = []
         self.all_output_fields = []
         self.all_constant_scalars = []
+        self.all_constant_fields = []
 
         for traj_idx in range(self.n_trajectories):
             # Create subtrajectories for this trajectory
@@ -112,6 +113,14 @@ class AutoEmulateDataset(Dataset):
                 else:
                     self.all_constant_scalars.append(torch.tensor([]))
 
+                # Handle constant fields
+                if self.constant_fields is not None:
+                    self.all_constant_fields.append(
+                        self.constant_fields[traj_idx].to(self.dtype)
+                    )
+                else:
+                    self.all_constant_fields.append(torch.tensor([]))
+
         print(f"Created {len(self.all_input_fields)} subtrajectory samples")
         print(f"Each input sample shape: {self.all_input_fields[0].shape}")
         print(f"Each output sample shape: {self.all_output_fields[0].shape}")
@@ -135,8 +144,15 @@ class AutoEmulateDataset(Dataset):
             if "constant_scalars" in f
             else None
         )  # [N, C]
-        # TODO: add the constant fields
-        # self.constant_fields = torch.Tensor(f['data'][:])  # [N, W, H, C]
+
+        # Constant fields
+        self.constant_fields = (
+            torch.Tensor(f["constant_fields"][:]).to(  # type: ignore # noqa: PGH003
+                self.dtype
+            )  # [N, W, H, C]
+            if "constant_fields" in f
+            else None
+        )
 
     def parse_data(self, data: dict | None):
         """Parse data from a dictionary."""
@@ -160,8 +176,7 @@ class AutoEmulateDataset(Dataset):
             "input_fields": self.all_input_fields[idx],
             "output_fields": self.all_output_fields[idx],
             "constant_scalars": self.all_constant_scalars[idx],
-            # TODO: add this
-            # "constant_fields": self.all_constant_fields[idx],
+            "constant_fields": self.all_constant_fields[idx],
         }
 
 
