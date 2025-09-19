@@ -1,4 +1,3 @@
-import inspect
 import random
 from abc import ABC, abstractmethod
 from typing import ClassVar
@@ -375,22 +374,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             self.scheduler = None
         else:
             self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
-
-    def get_init_params(self) -> dict:
-        """
-        Get the initialization parameters of the emulator instance.
-
-        Returns
-        -------
-        dict
-            A dictionary containing the initialization parameters.
-        """
-        init_signature = inspect.signature(self.__init__)
-        return {
-            param_name: getattr(self, param_name)
-            for param_name, _ in init_signature.parameters.items()
-            if param_name != "self" and hasattr(self, param_name)
-        }
 
 
 class DeterministicEmulator(Emulator):
