@@ -143,6 +143,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
             amp_type=self.trainer_params.amp_type,  # bfloat not supported in FFT
             checkpoint_path=self.trainer_params.checkpoint_path,
         )
+        self.to(self.device)
 
     def _fit(
         self,
