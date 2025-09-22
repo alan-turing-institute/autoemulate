@@ -91,11 +91,15 @@ class AutoEmulateTrainer(Trainer):
 
         # Device setup
         self.device = get_torch_device(trainer_params.device)
+
+        # Assign model, datamodule, optimizer
         self.model = model
         self.datamodule = datamodule
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.loss_fn = loss_fn
+
+        # Remaining trainer params
         self.is_delta = isinstance(datamodule.train_dataset, DeltaWellDataset)
         self.validation_suite = [*validation_metric_suite, self.loss_fn]
         self.max_epoch = trainer_params.epochs
