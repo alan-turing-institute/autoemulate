@@ -117,7 +117,7 @@ emulator = result.model
 
 This simple script runs a search over a library of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with hyperparameter values and performance metrics in a `Results` object. The user can then easily extract the best performing emulator.
 
-AutoEmulate can additionally search over different data preprocessing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
+AutoEmulate can additionally search over different data preprocessing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. Any `Transform` from PyTorch distributions can also be used. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
 
 ```python
 from autoemulate.transforms import PCATransform
@@ -130,7 +130,7 @@ ae = AutoEmulate(
       [PCATransform(n_components=16)],
       [PCATransform(n_components=32)]
     ],
-)
+) 
 ```
 
 The result in this case will return the best combination of model and output transformation. The transforms are passed as a list to permit the user to define a sequence of transforms to apply to the data. The returned emulator and transforms are wrapped together in a `TransformedEmulator` class, which outputs predictions in the original data space. The figure below shows an example result of fitting a Gaussian Process emulator in combination with PCA to a reaction-diffusion simulation (see the full [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/emulation/02_dim_reduction.html) for a detailed overview).
