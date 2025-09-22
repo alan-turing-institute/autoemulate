@@ -103,7 +103,7 @@ AutoEmulate fills a gap in the current landscape of emulation tools as it is bot
 
 The AutoEmulate documentation provides a comprehensive set of [tutorials](https://alan-turing-institute.github.io/autoemulate/tutorials/index.html) showcasing all functionality. We are also collecting [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies) demonstrating how to use AutoEmulate for real-world problems and complex workflows. Below we provide a brief overview of the main features.
 
-The most general use case for AutoEmulate is emulator construction. AutoEmulate takes as input `x`, `y` simulated data where `x` is a 2D array with simulation parameters as columns and each row representing a set of parameter values, and `y` is an array containing the corresponding simulation outputs. From this data, AutoEmulate constructs an emulator in just a few lines of code:
+The core use case for AutoEmulate is emulator construction. AutoEmulate takes as input variables `x`, `y`. The variable `x` is a 2D array with columns corresponding to simulation parameters and rows corresponding to parameter sets. The variable `y` is an array of one or more simulation outputs corresponding to each set of parameters. From this data, AutoEmulate constructs an emulator in just a few lines of code:
 
 ```python
 from autoemulate import AutoEmulate
@@ -115,7 +115,7 @@ result = ae.best_result()
 emulator = result.model
 ```
 
-Under the hood, the above runs a search over a number of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with hyperparameter values and performance metrics in a `Results` object. The user can then easily extract the best performing emulator.
+This simple script runs a search over a library of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with hyperparameter values and performance metrics in a `Results` object. The user can then easily extract the best performing emulator.
 
 AutoEmulate can additionally search over different data preprocessing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. For example, the following code compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
 
@@ -133,7 +133,7 @@ ae = AutoEmulate(
 )
 ```
 
-The result in this case will return the best combination of model and output transformation. The figure below shows an example result of fitting a Gaussian Process emulator in combination with PCA to a reaction-diffusion simulation (see the full [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/emulation/02_dim_reduction.html) for a detailed overview).
+The result in this case will return the best combination of model and output transformation. The transforms are passed as a list to permit the user to define a sequence of transforms to apply to the data. The returned emulator and transforms are wrapped together in a `TransformedEmulator` class, which outputs predictions in the original data space. The figure below shows an example result of fitting a Gaussian Process emulator in combination with PCA to a reaction-diffusion simulation (see the full [tutorial](https://alan-turing-institute.github.io/autoemulate/tutorials/emulation/02_dim_reduction.html) for a detailed overview).
 
 ![GP with PCA emulator prediction for a reaction diffusion simulation compared to the ground truth.](reaction_diffusion_emulation.png)
 
