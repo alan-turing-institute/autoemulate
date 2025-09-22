@@ -1,19 +1,23 @@
 import os
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import ClassVar
 
 import torch
 import torchinfo
 import wandb
-from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.device import TorchDeviceMixin, get_torch_device
 from autoemulate.core.types import DeviceLike, ModelParams, TensorLike
 from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalEmulator
 from the_well.benchmark import models
-from the_well.benchmark.metrics import VRMSE
+from the_well.benchmark.metrics import validation_metric_suite
 from the_well.benchmark.trainer import Trainer
-from the_well.data import WellDataModule
+from the_well.data import DeltaWellDataset, WellDataModule
+from the_well.data.data_formatter import AbstractDataFormatter
 from the_well.data.datamodule import AbstractDataModule
+from torch import nn
+from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 
 
@@ -21,8 +25,8 @@ from torch.utils.data import DataLoader
 class TrainerParams:
     """Parameters for the Trainer."""
 
-    # TODO: make the below configurable
-    loss_fn_cls: type[torch.nn.Module] = VRMSE
+    optimizer_cls: type[torch.optim.Optimizer] = torch.optim.Adam
+    optimizer_params: dict = field(default_factory=lambda: {"lr": 1e-3})
     epochs: int = 10
     checkpoint_frequency: int = 5
     val_frequency: int = 1
@@ -32,9 +36,92 @@ class TrainerParams:
     make_rollout_videos: bool = True
     lr_scheduler: type[torch.optim.lr_scheduler._LRScheduler] | None = None
     amp_type: str = "float16"  # bfloat not supported in FFT
+    num_time_intervals: int = 5
     enable_amp: bool = False
     is_distributed: bool = False
     checkpoint_path: str = ""  # Path to a checkpoint to resume from, if any
+    device: DeviceLike = "cpu"
+    output_path: str = "./"
+
+
+class AutoEmulateTrainer(Trainer):
+    """AutoEmulate trainer."""
+
+    def __init__(
+        self,
+        output_path: Path | str,
+        formatter_cls: type[AbstractDataFormatter],
+        model: nn.Module,
+        loss_fn: Callable,
+        datamodule: WellDataModule,
+        optimizer: torch.optim.Optimizer,
+        lr_scheduler: _LRScheduler | None,
+        trainer_params: TrainerParams,
+    ):
+        """Subclass to integrate with AutoEmulate framework and extend functionality.
+
+        Parameters
+        ----------
+        output_path: Path | str
+            Base path to be used for outputs.
+        formatter: AbstractDataFormatter
+            A data formatter that handles the formatting of the data for the model.
+        model: nn.Module
+            A PyTorch model to train
+        datamodule:
+            A datamodule that provides dataloaders for each split (train, valid, and
+            test).
+        loss_fn: Callable
+            A loss function to use for training and validation. This can also be a
+            trainable nn.Module providing that it is included in the model parameters.
+        trainer_params: TrainerParams
+            Parameters for the trainer.
+        """
+        self.starting_epoch = 1  # Gets overridden on resume
+
+        # Paths
+        output_path = Path(output_path) if isinstance(output_path, str) else output_path
+        self.checkpoint_folder = str(output_path / "checkpoints")
+        artifact_path = output_path / "artifacts"
+        self.artifact_folder = str(artifact_path)
+        self.viz_folder = str(artifact_path / "viz")
+        os.makedirs(self.checkpoint_folder, exist_ok=True)
+        os.makedirs(self.artifact_folder, exist_ok=True)
+        os.makedirs(self.viz_folder, exist_ok=True)
+
+        # Device setup
+        self.device = get_torch_device(trainer_params.device)
+        self.model = model
+        self.datamodule = datamodule
+        self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler
+        self.loss_fn = loss_fn
+        self.is_delta = isinstance(datamodule.train_dataset, DeltaWellDataset)
+        self.validation_suite = [*validation_metric_suite, self.loss_fn]
+        self.max_epoch = trainer_params.epochs
+        self.checkpoint_frequency = trainer_params.checkpoint_frequency
+        self.val_frequency = trainer_params.val_frequency
+        self.rollout_val_frequency = trainer_params.rollout_val_frequency
+        self.max_rollout_steps = trainer_params.max_rollout_steps
+        self.short_validation_length = trainer_params.short_validation_length
+        self.make_rollout_videos = trainer_params.make_rollout_videos
+        self.num_time_intervals = trainer_params.num_time_intervals
+        self.enable_amp = trainer_params.enable_amp
+        self.amp_type = (
+            torch.bfloat16 if trainer_params.amp_type == "bfloat16" else torch.float16
+        )
+        self.grad_scaler = torch.GradScaler(
+            self.device.type, enabled=self.enable_amp and self.amp_type != "bfloat16"
+        )
+        self.is_distributed = trainer_params.is_distributed
+        self.best_val_loss = None
+        self.starting_val_loss = float("inf")
+        self.dset_metadata = self.datamodule.train_dataset.metadata
+        if self.datamodule.train_dataset.use_normalization:
+            self.dset_norm = self.datamodule.train_dataset.norm
+        self.formatter = formatter_cls(self.dset_metadata)
+        if len(trainer_params.checkpoint_path) > 0:
+            self.load_checkpoint(trainer_params.checkpoint_path)
 
 
 class TheWellEmulator(SpatioTemporalEmulator):
@@ -46,40 +133,36 @@ class TheWellEmulator(SpatioTemporalEmulator):
 
     def __init__(
         self,
+        loss_fn: Callable,
         datamodule: AbstractDataModule | WellDataModule,
-        output_path: str | Path | None,
-        device: DeviceLike = "cpu",
+        formatter_cls: type[AbstractDataFormatter],
         trainer_params: TrainerParams | None = None,
         *args,
         **kwargs,
     ):
-        TorchDeviceMixin.__init__(self, device=device)
-        super().__init__(*args, **kwargs)
-
-        # TODO: update path handling
-        output_path = Path(output_path) if output_path else Path("./")
-        checkpoint_path = output_path / "checkpoints"
-        artifact_path = output_path / "artifacts"
-        viz_path = artifact_path / "viz"
-
         # Parameters for the Trainer
         self.trainer_params = trainer_params or TrainerParams()
 
-        # Make paths
-        os.makedirs(output_path, exist_ok=True)
-        os.makedirs(checkpoint_path, exist_ok=True)
-        os.makedirs(artifact_path, exist_ok=True)
-        os.makedirs(viz_path, exist_ok=True)
+        # Device setup and backend init
+        TorchDeviceMixin.__init__(
+            self, device=get_torch_device(self.trainer_params.device)
+        )
+        super().__init__(*args, **kwargs)
+
+        # Set output path
+        output_path = Path(self.trainer_params.output_path)
+
+        # Set datamodule
         self.datamodule = datamodule
 
         if isinstance(datamodule, WellDataModule):
             # Load metadata from train_dataset
             metadata = datamodule.train_dataset.metadata
-            n_steps_input = datamodule.train_dataset.n_steps_input
-            n_steps_output = datamodule.train_dataset.n_steps_output
+            self.n_steps_input = datamodule.train_dataset.n_steps_input
+            self.n_steps_output = datamodule.train_dataset.n_steps_output
             # TODO: aim to be more flexible (such as time as an input channel)
             self.n_input_fields = (
-                n_steps_input * metadata.n_fields + metadata.n_constant_fields
+                self.n_steps_input * metadata.n_fields + metadata.n_constant_fields
             )
             self.n_output_fields = metadata.n_fields
             self.model = self.model_cls(
@@ -90,59 +173,38 @@ class TheWellEmulator(SpatioTemporalEmulator):
                 n_spatial_dims=metadata.n_spatial_dims,
                 spatial_resolution=metadata.spatial_resolution,
             )
-            metadata = datamodule.train_dataset.metadata
-            n_steps_input = datamodule.train_dataset.n_steps_input
-            n_steps_output = datamodule.train_dataset.n_steps_output
-
-            self.model = self.model_cls(
-                **self.model_parameters,
-                # TODO: check if general beyond FNO
-                dim_in=self.n_input_fields,
-                dim_out=self.n_output_fields,
-                n_spatial_dims=metadata.n_spatial_dims,
-                spatial_resolution=metadata.spatial_resolution,
-            )
+            # TODO: update with logging
             print(torchinfo.summary(self.model, depth=5))
         else:
             msg = "Alternative datamodules not yet supported"
             raise NotImplementedError(msg)
 
-        # init optimizer
-        optimizer: torch.optim.Optimizer = kwargs.get(
-            "optimizer_cls", torch.optim.Adam
-        )(self.model.parameters(), lr=kwargs.get("lr", 0.001))
+        # Init optimizer
+        optimizer = self.trainer_params.optimizer_cls(
+            self.model.parameters(), **self.trainer_params.optimizer_params
+        )
 
-        # init scheduler
+        # Init scheduler
         lr_scheduler = (
             self.trainer_params.lr_scheduler(optimizer)
             if self.trainer_params.lr_scheduler is not None
             else None
         )
-        self.trainer = Trainer(
-            checkpoint_folder=str(checkpoint_path),
-            artifact_folder=str(artifact_path),
-            viz_folder=str(viz_path),
-            formatter="channels_first_default",  # "channels_last_default" for others
+
+        # Init trainer
+        self.trainer = AutoEmulateTrainer(
+            loss_fn=loss_fn,
+            output_path=output_path,
+            formatter_cls=formatter_cls,
             model=self.model,
             datamodule=datamodule,
             optimizer=optimizer,
-            # TODO: make the below configurable
-            loss_fn=self.trainer_params.loss_fn_cls(),
-            epochs=self.trainer_params.epochs,
-            checkpoint_frequency=self.trainer_params.checkpoint_frequency,
-            val_frequency=self.trainer_params.val_frequency,
-            rollout_val_frequency=self.trainer_params.rollout_val_frequency,
-            max_rollout_steps=self.trainer_params.max_rollout_steps,
-            short_validation_length=self.trainer_params.short_validation_length,
-            make_rollout_videos=self.trainer_params.make_rollout_videos,
-            num_time_intervals=n_steps_output,
             lr_scheduler=lr_scheduler,
-            device=self.device,
-            is_distributed=self.trainer_params.is_distributed,
-            enable_amp=self.trainer_params.enable_amp,
-            amp_type=self.trainer_params.amp_type,  # bfloat not supported in FFT
-            checkpoint_path=self.trainer_params.checkpoint_path,
+            trainer_params=self.trainer_params,
         )
+
+        # Move to device
+        # TODO: check if this needs updating for distributed handling
         self.to(self.device)
 
     def _fit(
