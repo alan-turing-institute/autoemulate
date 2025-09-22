@@ -10,10 +10,7 @@ from gpytorch.means import MultitaskMean
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
-from autoemulate.callbacks.early_stopping import (
-    EarlyStopping,
-    EarlyStoppingException,
-)
+from autoemulate.callbacks.early_stopping import EarlyStopping, EarlyStoppingException
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
     DeviceLike,
@@ -23,10 +20,7 @@ from autoemulate.core.types import (
 )
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import GaussianProcessEmulator
-from autoemulate.emulators.gaussian_process import (
-    CovarModuleFn,
-    MeanModuleFn,
-)
+from autoemulate.emulators.gaussian_process import CovarModuleFn, MeanModuleFn
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.utils import make_positive_definite
 
@@ -306,9 +300,6 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 poly_mean,
             ],
             "covar_module_fn": [
-                rbf,
-                matern_5_2_kernel,
-                matern_3_2_kernel,
                 rq_kernel,
                 rbf_plus_constant,
                 rbf_plus_linear,
@@ -456,6 +447,34 @@ class GaussianProcessCorrelated(GaussianProcess):
         assert isinstance(mean_x, TensorLike)
         covar_x = self.covar_module(x)
         return GaussianProcessLike(mean_x, covar_x)
+
+    @staticmethod
+    def get_tune_params():
+        """Return the hyperparameters to tune for the Gaussian Process model."""
+        scheduler_params = GaussianProcess.scheduler_params()
+        return {
+            "mean_module_fn": [
+                constant_mean,
+                zero_mean,
+                linear_mean,
+                poly_mean,
+            ],
+            "covar_module_fn": [
+                rbf,
+                matern_5_2_kernel,
+                matern_3_2_kernel,
+                rq_kernel,
+                rbf_plus_constant,
+                rbf_plus_linear,
+                matern_5_2_plus_rq,
+                rbf_times_linear,
+            ],
+            "epochs": [50, 100, 200],
+            "lr": [5e-1, 1e-1, 5e-2, 1e-2],
+            "likelihood_cls": [MultitaskGaussianLikelihood],
+            "scheduler_cls": scheduler_params["scheduler_cls"],
+            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
+        }
 
 
 # GP registry to raise exception if duplicate created
