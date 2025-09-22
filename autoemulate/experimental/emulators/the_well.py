@@ -133,11 +133,10 @@ class TheWellEmulator(SpatioTemporalEmulator):
 
     def __init__(
         self,
-        loss_fn: Callable,
         datamodule: AbstractDataModule | WellDataModule,
         formatter_cls: type[AbstractDataFormatter],
+        loss_fn: Callable,
         trainer_params: TrainerParams | None = None,
-        *args,
         **kwargs,
     ):
         # Parameters for the Trainer
@@ -147,7 +146,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
         TorchDeviceMixin.__init__(
             self, device=get_torch_device(self.trainer_params.device)
         )
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         # Set output path
         output_path = Path(self.trainer_params.output_path)
@@ -280,8 +279,21 @@ class TheWellAFNO(TheWellEmulator):
         "n_blocks": 14,
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        datamodule: AbstractDataModule | WellDataModule,
+        formatter_cls: type[AbstractDataFormatter],
+        loss_fn: Callable,
+        trainer_params: TrainerParams | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            loss_fn=loss_fn,
+            datamodule=datamodule,
+            formatter_cls=formatter_cls,
+            trainer_params=trainer_params,
+            **kwargs,
+        )
 
 
 class TheWellUNetClassic(TheWellEmulator):
@@ -290,8 +302,21 @@ class TheWellUNetClassic(TheWellEmulator):
     model_cls: type[torch.nn.Module] = models.UNetClassic
     model_parameters: ClassVar[ModelParams] = {"init_features": 48}
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        datamodule: AbstractDataModule | WellDataModule,
+        formatter_cls: type[AbstractDataFormatter],
+        loss_fn: Callable,
+        trainer_params: TrainerParams | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            loss_fn=loss_fn,
+            datamodule=datamodule,
+            formatter_cls=formatter_cls,
+            trainer_params=trainer_params,
+            **kwargs,
+        )
 
 
 class TheWellUNetConvNext(TheWellEmulator):
@@ -303,5 +328,18 @@ class TheWellUNetConvNext(TheWellEmulator):
         "blocks_per_stage": 2,
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        datamodule: AbstractDataModule | WellDataModule,
+        formatter_cls: type[AbstractDataFormatter],
+        loss_fn: Callable,
+        trainer_params: TrainerParams | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            loss_fn=loss_fn,
+            datamodule=datamodule,
+            formatter_cls=formatter_cls,
+            trainer_params=trainer_params,
+            **kwargs,
+        )
