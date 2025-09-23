@@ -1,9 +1,6 @@
 import pytest
 import torch
-from autoemulate.core.device import (
-    SUPPORTED_DEVICES,
-    check_torch_device_is_available,
-)
+from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
 from autoemulate.core.tuner import Tuner
 from autoemulate.core.types import TensorLike
 from autoemulate.emulators.polynomials import PolynomialRegression
@@ -18,10 +15,9 @@ def test_predict_pr(sample_data_y1d, new_data_y1d):
     assert isinstance(y_pred, TensorLike)
     assert not y_pred.requires_grad
 
-    # TODO (#832): uncomment and update once fixed in #832
-    # y_pred_grad = pr.predict(x2, with_grad=True)
-    # assert isinstance(y_pred_grad, TensorLike)
-    # assert y_pred_grad.requires_grad
+    y_pred_grad = pr.predict(x2, with_grad=True)
+    assert isinstance(y_pred_grad, TensorLike)
+    assert y_pred_grad.requires_grad
 
 
 def test_predict_pr_2d(sample_data_y2d, new_data_y2d):
