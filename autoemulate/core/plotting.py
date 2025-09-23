@@ -201,7 +201,7 @@ def calculate_subplot_layout(n_plots, n_cols=3):
     return n_rows, n_cols
 
 
-def posterior_mean_and_var_surface(
+def mean_and_var_surface(
     model: Emulator,
     simulator: Simulator,
     variables: list[str],
@@ -209,7 +209,7 @@ def posterior_mean_and_var_surface(
     quantile: float = 0.5,
     n_points: int = 30,
 ) -> tuple[TensorLike, TensorLike | None, tuple[TensorLike, ...]]:
-    """Create posterior mean and variance on a specified grid for variable subset.
+    """Create predicted mean and variance on a specified grid for variable subset.
 
     Create a grid of points varying specified parameters over a specified range,
     while fixing other parameters at a given quantile along their simulation range.
@@ -233,9 +233,9 @@ def posterior_mean_and_var_surface(
     Returns
     -------
     mean: TensorLike
-        The posterior mean on the grid.
+        The predicted mean on the grid.
     var: TensorLike
-        The posterior variance on the grid.
+        The predicted variance on the grid.
     grid: list[TensorLike]
         The grid of parameter values used for predictions.
 
@@ -316,7 +316,7 @@ def _plot_2d_slice_with_fixed_params(
         vmin=lower,
         vmax=upper,
     )
-    ax.set_title("Posterior Mean")
+    ax.set_title("predicted Mean")
     ax.set_xlabel(param_names[0])
     ax.set_ylabel(param_names[1])
     fig.colorbar(im0, ax=ax)
@@ -331,7 +331,7 @@ def _plot_2d_slice_with_fixed_params(
             extent=[x_min, x_max, y_min, y_max],
             cmap="magma",
         )
-        ax.set_title("Posterior Variance")
+        ax.set_title("predicted Variance")
         ax.set_xlabel(param_names[0])
         ax.set_ylabel(param_names[1])
         fig.colorbar(im1, ax=ax)
@@ -378,9 +378,9 @@ def create_and_plot_slice(
     Returns
     -------
     mean: TensorLike
-        The posterior mean on the grid.
+        The predicted mean on the grid.
     var: TensorLike
-        The posterior variance on the grid.
+        The predicted variance on the grid.
     grid: list[TensorLike]
         The grid points for the two varying parameters.
     """
@@ -389,8 +389,8 @@ def create_and_plot_slice(
         simulator.param_names[param_pair[1]],
     ]
 
-    # Get the posterior mean and var across a grid for non-fixed params
-    mean, var, grid = posterior_mean_and_var_surface(
+    # Get the predicted mean and var across a grid for non-fixed params
+    mean, var, grid = mean_and_var_surface(
         model,
         simulator,
         variables=param_pair_names,
