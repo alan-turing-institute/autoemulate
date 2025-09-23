@@ -73,7 +73,9 @@ class PolynomialRegression(PyTorchBackend):
         self.n_outputs = y.shape[1] if y.ndim > 1 else 1
 
         # includes bias term by default
-        self.poly = PolynomialFeatures(self.n_features, degree=self.degree)
+        self.poly = PolynomialFeatures(
+            self.n_features, degree=self.degree, device=self.device
+        )
         self.linear = nn.Linear(
             self.poly.n_output_features, self.n_outputs, bias=False
         ).to(self.device)

@@ -2,7 +2,7 @@ import itertools
 
 import torch
 
-from autoemulate.core.types import TensorLike
+from autoemulate.core.types import DeviceLike, TensorLike
 
 
 class PolynomialFeatures:
@@ -15,7 +15,13 @@ class PolynomialFeatures:
     [a, b], the degree-2 polynomial features are [1, a, b, a^2, ab, b^2].
     """
 
-    def __init__(self, n_features: int, degree: int = 2, include_bias: bool = True):
+    def __init__(
+        self,
+        n_features: int,
+        degree: int = 2,
+        include_bias: bool = True,
+        device: DeviceLike | None = None,
+    ):
         """
         Initialize polynomial feature generator.
 
@@ -27,10 +33,14 @@ class PolynomialFeatures:
             The maximum degree of the generated polynomial features. Defaults to 2.
         include_bias: bool
             If true (default), include a bias column (i.e., a column of ones).
+        device: DeviceLike | None
+            Device to generate the features on. If None, uses the default device.
+            Defaults to None.
         """
         self.n_features = n_features
         self.degree = degree
         self.include_bias = include_bias
+        self.device = device
         self._powers = self._compute_powers(n_features)
         self.n_output_features = len(self._powers) + (1 if include_bias else 0)
 
@@ -48,24 +58,18 @@ class PolynomialFeatures:
         TensorLike
             Features generated from the inputs.
         """
-        # start with the bias term if needed
-        x_expanded = (
-            [torch.ones(x.shape[0], device=x.device, dtype=x.dtype)]
-            if self.include_bias
-            else []
-        )
+        x_ = x.unsqueeze(1)  # (n_samples, 1, n_features)
 
         # each term in _powers corresponds to one output feature (e.g., x1^2*x2)
-        for powers in self._powers:
-            term = torch.ones(x.shape[0], device=x.device, dtype=x.dtype)
-            for i, p in enumerate(powers):
-                if p != 0:
-                    term = term * x[:, i] ** p
-            x_expanded.append(term)
+        terms = torch.prod(x_**self._powers, dim=2)  # (n_samples, n_terms)
 
-        return torch.stack(x_expanded, dim=1)
+        if self.include_bias:
+            bias = torch.ones(x.shape[0], 1, device=x.device, dtype=x.dtype)
+            terms = torch.cat([bias, terms], dim=1)
 
-    def _compute_powers(self, n_features: int) -> list[tuple[int, ...]]:
+        return terms
+
+    def _compute_powers(self, n_features: int) -> TensorLike:
         """
         Compute the powers for each polynomial feature.
 
@@ -84,15 +88,15 @@ class PolynomialFeatures:
 
         Returns
         -------
-        list[tuple[int, ...]]
-            A list of tuples representing the powers for each polynomial feature.
+        TensorLike
+            Tensor representing the powers for each polynomial feature.
         """
         combs = []
         start = 0 if self.include_bias else 1
         for d in range(start, self.degree + 1):
             for comb in self._combinations(n_features, d):
                 combs.append(comb)
-        return combs
+        return torch.tensor(combs, device=self.device)
 
     def _combinations(self, n_features: int, degree: int) -> list[tuple[int, ...]]:
         """
