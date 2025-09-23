@@ -319,6 +319,10 @@ class Simulator(ABC, ValidationMixin):
             (successful / len(x) * 100 if len(x) > 0 else 0.0),
         )
 
+        # handle no simulation results
+        if results == []:
+            return torch.empty((0, self.out_dim)), torch.empty((0, self.in_dim))
+
         # stack results into a 2D array on first dim using torch
         self.results_tensor = torch.cat(results, dim=0)
 
