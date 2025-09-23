@@ -17,6 +17,7 @@ from the_well.data import DeltaWellDataset, WellDataModule
 from the_well.data.data_formatter import AbstractDataFormatter
 from the_well.data.datamodule import AbstractDataModule
 from torch import nn
+from torch.nn import functional as F
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 
@@ -271,6 +272,113 @@ class TheWellFNO(TheWellEmulator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class TheWellFNOWithLearnableWeights(TheWellEmulator):
+    """The Well FNO emulator with learnable weights."""
+
+    model_cls: type[torch.nn.Module] = models.FNO
+    model_parameters: ClassVar[ModelParams] = {
+        "modes1": 16,
+        "modes2": 16,
+    }
+
+    def __init__(
+        self,
+        datamodule: AbstractDataModule | WellDataModule,
+        formatter_cls: type[AbstractDataFormatter],
+        loss_fn: Callable,
+        trainer_params: TrainerParams | None = None,
+        **kwargs,
+    ):
+        # Parameters for the Trainer
+        self.trainer_params = trainer_params or TrainerParams()
+
+        # Device setup and backend init
+        TorchDeviceMixin.__init__(
+            self, device=get_torch_device(self.trainer_params.device)
+        )
+        super().__init__(**kwargs)
+
+        # Set output path
+        output_path = Path(self.trainer_params.output_path)
+
+        # Set datamodule
+        self.datamodule = datamodule
+
+        if isinstance(datamodule, WellDataModule):
+            # Load metadata from train_dataset
+            metadata = datamodule.train_dataset.metadata
+            self.n_steps_input = datamodule.train_dataset.n_steps_input
+            self.n_steps_output = datamodule.train_dataset.n_steps_output
+            # TODO: aim to be more flexible (such as time as an input channel)
+            self.n_input_fields = (
+                self.n_steps_input * metadata.n_fields + metadata.n_constant_fields
+            )
+            self.n_output_fields = metadata.n_fields
+            self.model = self.model_cls(
+                **self.model_parameters,
+                # TODO: check if general beyond FNO
+                dim_in=self.n_input_fields,
+                dim_out=self.n_output_fields,
+                n_spatial_dims=metadata.n_spatial_dims,
+                spatial_resolution=metadata.spatial_resolution,
+            )
+            # TODO: update with logging
+            print(torchinfo.summary(self.model, depth=5))
+        else:
+            msg = "Alternative datamodules not yet supported"
+            raise NotImplementedError(msg)
+
+        # Init optimizer
+        optimizer = self.trainer_params.optimizer_cls(
+            self.model.parameters(), **self.trainer_params.optimizer_params
+        )
+
+        # Init scheduler
+        lr_scheduler = (
+            self.trainer_params.lr_scheduler(optimizer)
+            if self.trainer_params.lr_scheduler is not None
+            else None
+        )
+
+        # Learnable weights for loss function
+        self.weights = nn.Parameter(
+            torch.ones(self.n_steps_output, device=self.device), requires_grad=True
+        )
+
+        # Assign given metric as base loss function
+        self.loss_func = loss_fn
+
+        # Init trainer
+        self.trainer = AutoEmulateTrainer(
+            loss_fn=self.custom_loss_fn,  # use custom loss fn as callable in trainer
+            output_path=output_path,
+            formatter_cls=formatter_cls,
+            model=self.model,
+            datamodule=datamodule,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            trainer_params=self.trainer_params,
+        )
+
+        # Move to device
+        # TODO: check if this needs updating for distributed handling
+        self.to(self.device)
+
+    def custom_loss_fn(self, y_pred, y_target):
+        """Loss function that uses parameters constructed at init."""
+        # Make positive
+        w = F.softplus(self.weights)
+
+        # Normalize so mean(w) == 1
+        w = w / (w.mean() + 1e-12)
+
+        # Reshape to (1, n_steps, 1) for broadcasting
+        w = w.view(1, -1, 1)
+
+        # Return a weighted loss
+        return w * self.loss_func(y_pred, y_target)
 
 
 # TODO: fix this as not initializing correctly at the moment
