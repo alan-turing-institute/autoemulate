@@ -74,12 +74,9 @@ class PolynomialRegression(PyTorchBackend):
 
         # includes bias term by default
         self.poly = PolynomialFeatures(self.n_features, degree=self.degree)
-        self.n_poly_features = (
-            len(self.poly._compute_powers(self.n_features)) + 1  # +1 for bias
-        )
-        self.linear = nn.Linear(self.n_poly_features, self.n_outputs_, bias=False).to(
-            self.device
-        )
+        self.linear = nn.Linear(
+            self.poly.n_output_features, self.n_outputs_, bias=False
+        ).to(self.device)
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
 

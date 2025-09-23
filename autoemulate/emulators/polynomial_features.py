@@ -32,6 +32,7 @@ class PolynomialFeatures:
         self.degree = degree
         self.include_bias = include_bias
         self._powers = self._compute_powers(n_features)
+        self.n_output_features = len(self._powers) + (1 if include_bias else 0)
 
     def transform(self, x: TensorLike) -> TensorLike:
         """
