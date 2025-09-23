@@ -30,11 +30,24 @@ def test_plot_xy():
     X = np.linspace(0, 5, 10).reshape(-1, 1)
     y = X.flatten()
     y_pred = y * 1.1
+    y_variance = np.abs(y * 0.1)
+
+    # plot without error bars
     fig, ax = plt.subplots()
     plotting.plot_xy(
         X, y, y_pred, None, ax=ax, input_index=1, output_index=2, r2_score=0.5
     )
-    assert len(ax.lines) > 0
+    # test for error bars
+    assert len(ax.containers) == 0
+    # test for scatter points
+    assert len(ax.collections) > 0
+
+    # plot with error bars
+    fig, ax = plt.subplots()
+    plotting.plot_xy(
+        X, y, y_pred, y_variance, ax=ax, input_index=1, output_index=2, r2_score=0.5
+    )
+    assert len(ax.containers) > 0
     assert len(ax.collections) > 0
 
 

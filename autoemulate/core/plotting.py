@@ -87,27 +87,33 @@ def plot_xy(
 
     org_points_color = "Goldenrod"
     pred_points_color = "#6A5ACD"
-    pred_line_color = "#6A5ACD"
-    ci_color = "lightblue"
 
     assert ax is not None, "ax must be provided"
+    # Scatter plot with error bars for predictions
     if y_std is not None:
-        ax.fill_between(
+        ax.errorbar(
             x_sorted,
-            y_pred_sorted - 2 * y_std,
-            y_pred_sorted + 2 * y_std,
-            color=ci_color,
-            alpha=0.25,
-            label="95% Confidence Interval",
+            y_pred_sorted,
+            yerr=2 * y_std,
+            fmt="o",
+            color=pred_points_color,
+            elinewidth=2,
+            capsize=3,
+            alpha=0.5,
+            # use unicode for sigma
+            label="pred. (±2\u03c3)",
         )
-    ax.plot(
-        x_sorted,
-        y_pred_sorted,
-        color=pred_line_color,
-        label="pred.",
-        alpha=0.8,
-        linewidth=1,
-    )  # , linestyle='--'
+    else:
+        ax.scatter(
+            x_sorted,
+            y_pred_sorted,
+            color=pred_points_color,
+            edgecolor="black",
+            linewidth=0.5,
+            alpha=0.5,
+            label="pred.",
+        )
+    # Scatter plot for observed data
     ax.scatter(
         x_sorted,
         y_sorted,
@@ -116,15 +122,6 @@ def plot_xy(
         edgecolor="black",
         linewidth=0.5,
         label="data",
-    )
-    ax.scatter(
-        x_sorted,
-        y_pred_sorted,
-        color=pred_points_color,
-        edgecolor="black",
-        linewidth=0.5,
-        alpha=0.7,
-        label="pred.",
     )
 
     ax.set_xlabel(f"$x_{input_index}$", fontsize=13)
@@ -136,7 +133,7 @@ def plot_xy(
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    lbl = "pred." if y_variance is None else "pred. (±2σ)"  # noqa: RUF001
+    lbl = "pred." if y_variance is None else "pred. (±2\u03c3)"
     legend = ax.legend(
         handles[-2:],
         ["data", lbl],
