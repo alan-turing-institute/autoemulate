@@ -284,7 +284,7 @@ def _plot_2d_slice_with_fixed_params(
     lower: float | None,
     upper: float | None,
     fixed_params_info=None,
-):
+) -> tuple[Figure, np.ndarray]:
     """Plot 2D slices when other parameters are held constant.
 
     This works when you have a 2D grid with other parameters fixed.
@@ -341,7 +341,7 @@ def _plot_2d_slice_with_fixed_params(
         fig.suptitle(f"Fixed parameters: {fixed_params_info}", y=1.02)
 
     plt.tight_layout()
-    plt.show()
+    return fig, axs
 
 
 def create_and_plot_slice(
@@ -353,7 +353,7 @@ def create_and_plot_slice(
     vmax: float | None = None,
     quantile: float = 0.5,
     n_points: int = 50,
-) -> tuple[TensorLike, TensorLike | None, tuple[TensorLike, ...]]:
+) -> tuple[Figure, np.ndarray]:
     """Create a 2D slice for any pair of parameters.
 
     Parameters
@@ -403,7 +403,7 @@ def create_and_plot_slice(
     all_params = list(simulator.parameters_range.keys())
     fixed_params = [p for p in all_params if p not in param_pair_names]
 
-    _plot_2d_slice_with_fixed_params(
+    fig, ax = _plot_2d_slice_with_fixed_params(
         mean,
         var,
         grid,
@@ -412,5 +412,4 @@ def create_and_plot_slice(
         vmax,
         fixed_params_info=f"{', '.join(fixed_params)} at {quantile:.1f} quantile",
     )
-
-    return mean, var, grid
+    return fig, ax

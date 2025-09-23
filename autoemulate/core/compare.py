@@ -13,7 +13,12 @@ from torch.distributions import Transform
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
-from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
+from autoemulate.core.plotting import (
+    calculate_subplot_layout,
+    create_and_plot_slice,
+    display_figure,
+    plot_xy,
+)
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
@@ -27,6 +32,7 @@ from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
+from autoemulate.simulations.base import Simulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
 
@@ -751,6 +757,32 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_surface(
+        self,
+        model: Emulator,
+        simulator: Simulator,
+        input_index_pair: tuple[int, int] | None = None,
+        output_index: int | None = None,
+        # TODO: add support for ranges
+        _input_ranges: dict | None = None,
+        _output_ranges: dict | None = None,
+        figsize=None,
+        fname: str | None = None,
+    ):
+        """Plot the emulator mean and variance over a grid for a pair of parameters."""
+        fig, axs = create_and_plot_slice(
+            model,
+            simulator,
+            input_index_pair if input_index_pair is not None else (0, 1),
+            output_idx=output_index if output_index is not None else 0,
+        )
+        if figsize is not None:
+            fig.set_size_inches(figsize)
         if fname is None:
             return display_figure(fig)
         fig.savefig(fname, bbox_inches="tight")
