@@ -70,12 +70,12 @@ class PolynomialRegression(PyTorchBackend):
         self.epochs = epochs
         self.batch_size = batch_size
         self.n_features = x.shape[1]
-        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
+        self.n_outputs = y.shape[1] if y.ndim > 1 else 1
 
         # includes bias term by default
         self.poly = PolynomialFeatures(self.n_features, degree=self.degree)
         self.linear = nn.Linear(
-            self.poly.n_output_features, self.n_outputs_, bias=False
+            self.poly.n_output_features, self.n_outputs, bias=False
         ).to(self.device)
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
