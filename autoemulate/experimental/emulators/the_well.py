@@ -16,6 +16,7 @@ from the_well.benchmark.trainer import Trainer
 from the_well.data import DeltaWellDataset, WellDataModule
 from the_well.data.data_formatter import AbstractDataFormatter
 from the_well.data.datamodule import AbstractDataModule
+from the_well.data.datasets import WellMetadata
 from torch import nn
 from torch.nn import functional as F
 from torch.optim.lr_scheduler import _LRScheduler
@@ -422,7 +423,7 @@ class TheWellFNOWithLearnableWeights(TheWellEmulator):
         # TODO: check if this needs updating for distributed handling
         self.to(self.device)
 
-    def custom_loss_fn(self, y_pred, y_target):
+    def custom_loss_fn(self, y_pred, y_target, meta: WellMetadata):
         """Loss function that uses parameters constructed at init."""
         # Make positive
         w = F.softplus(self.weights)
