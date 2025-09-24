@@ -2,21 +2,37 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.core.types import (
-    DistributionLike,
-    GaussianLike,
-    TensorLike,
-)
+from autoemulate.core.types import DistributionLike, GaussianLike, TensorLike
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators import ALL_EMULATORS, GaussianProcess
+from autoemulate.emulators import (
+    MLP,
+    EnsembleMLP,
+    EnsembleMLPDropout,
+    GaussianProcess,
+    GaussianProcessCorrelated,
+    GaussianProcessRBFandConstant,
+    LightGBM,
+    RadialBasisFunctions,
+    RandomForest,
+    SupportVectorMachine,
+)
 from autoemulate.emulators.base import ProbabilisticEmulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
-from autoemulate.transforms import (
-    PCATransform,
-    StandardizeTransform,
-    VAETransform,
-)
+from autoemulate.transforms import PCATransform, StandardizeTransform, VAETransform
 from autoemulate.transforms.base import AutoEmulateTransform
+
+TEST_EMULATORS = [
+    GaussianProcess,
+    GaussianProcessRBFandConstant,
+    GaussianProcessCorrelated,
+    LightGBM,
+    SupportVectorMachine,
+    RadialBasisFunctions,
+    RandomForest,
+    MLP,
+    EnsembleMLP,
+    EnsembleMLPDropout,
+]
 
 
 def get_pytest_param_yof(model, x_t, y_t, o, f):
@@ -138,7 +154,7 @@ def run_test(
     [
         get_pytest_param_yof(model, x_t, y_t, o, f)
         for model, x_t, y_t, o, f in itertools.product(
-            ALL_EMULATORS,
+            TEST_EMULATORS,
             [
                 None,
                 [StandardizeTransform(), PCATransform(n_components=3)],
@@ -181,7 +197,7 @@ def test_transformed_emulator(
     [
         get_pytest_param_yo(model, x_t, y_t, o)
         for model, x_t, y_t, o in itertools.product(
-            [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
+            [emulator for emulator in TEST_EMULATORS if emulator.is_multioutput()],
             [
                 None,
                 [StandardizeTransform()],
@@ -229,7 +245,7 @@ def test_transformed_emulator_100_targets(
     [
         get_pytest_param_yo(model, x_t, y_t, o)
         for model, x_t, y_t, o in itertools.product(
-            [emulator for emulator in ALL_EMULATORS if emulator.is_multioutput()],
+            [emulator for emulator in TEST_EMULATORS if emulator.is_multioutput()],
             [
                 None,
                 [StandardizeTransform()],
