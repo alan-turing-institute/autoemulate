@@ -128,6 +128,62 @@ class AutoEmulateTrainer(Trainer):
         if len(trainer_params.checkpoint_path) > 0:
             self.load_checkpoint(trainer_params.checkpoint_path)
 
+    def rollout_model(self, model, batch, formatter, train=True, teacher_forcing=False):
+        """Rollout the model for as many steps as we have data for.
+
+        This method is overridden to optionally enable teacher forcing during training.
+        """
+        inputs, y_ref = formatter.process_input(batch)
+        rollout_steps = min(
+            y_ref.shape[1], self.max_rollout_steps
+        )  # Number of timesteps in target
+        y_ref = y_ref[:, :rollout_steps]
+        # Create a moving batch of one step at a time
+        moving_batch = batch
+        moving_batch["input_fields"] = moving_batch["input_fields"].to(self.device)
+        if "constant_fields" in moving_batch:
+            moving_batch["constant_fields"] = moving_batch["constant_fields"].to(
+                self.device
+            )
+        y_preds = []
+        for i in range(rollout_steps):
+            if not train:
+                moving_batch = self.normalize(moving_batch)
+
+            inputs, _ = formatter.process_input(moving_batch)
+            inputs = [x.to(self.device) for x in inputs]
+            y_pred = model(*inputs)
+
+            y_pred = formatter.process_output_channel_last(y_pred)
+
+            if not train:
+                moving_batch, y_pred = self.denormalize(moving_batch, y_pred)
+
+            if (not train) and self.is_delta:
+                assert {
+                    moving_batch["input_fields"][:, -1, ...].shape == y_pred.shape
+                }, (
+                    f"Mismatching shapes between last input timestep "
+                    f"{moving_batch[:, -1, ...].shape} and prediction {y_pred.shape}"
+                )
+                y_pred = moving_batch["input_fields"][:, -1, ...] + y_pred
+            y_pred = formatter.process_output_expand_time(y_pred)
+            # If not last step, update moving batch
+            if i != rollout_steps - 1:
+                next_moving_batch_tail = moving_batch["input_fields"][:, 1:]
+                next_moving_batch = (
+                    # If free running, use prediction as next input
+                    torch.cat([next_moving_batch_tail, y_pred], dim=1)
+                    if not teacher_forcing
+                    # If teacher forcing, use ground truth as next input
+                    else torch.cat([next_moving_batch_tail, y_ref[:, i : i + 1]], dim=1)
+                )
+                moving_batch["input_fields"] = next_moving_batch
+            y_preds.append(y_pred)
+        y_pred_out = torch.cat(y_preds, dim=1)
+        y_ref = y_ref.to(self.device)
+        return y_pred_out, y_ref
+
 
 class TheWellEmulator(SpatioTemporalEmulator):
     """Base class for The Well emulators."""
