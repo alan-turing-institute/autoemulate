@@ -3,8 +3,14 @@ import itertools
 import pytest
 import torch
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators import GAUSSIAN_PROCESS_EMULATORS, PYTORCH_EMULATORS
-from autoemulate.emulators.gaussian_process.exact import GaussianProcess
+from autoemulate.emulators import (
+    MLP,
+    EnsembleMLP,
+    EnsembleMLPDropout,
+    GaussianProcess,
+    GaussianProcessCorrelated,
+    RadialBasisFunctions,
+)
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
@@ -14,6 +20,15 @@ X_TRANSFORMS = [[StandardizeTransform()]]
 Y_TRANSFORMS = [
     [StandardizeTransform(), PCATransform(n_components=1)],
     [StandardizeTransform(), VAETransform(latent_dim=1)],
+]
+
+GAUSSIAN_PROCESS_EMULATORS = [GaussianProcessCorrelated, GaussianProcess]
+PYTORCH_EMULATORS = [
+    *GAUSSIAN_PROCESS_EMULATORS,
+    MLP,
+    EnsembleMLP,
+    EnsembleMLPDropout,
+    RadialBasisFunctions,
 ]
 
 
