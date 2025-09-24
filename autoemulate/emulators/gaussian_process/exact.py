@@ -572,6 +572,13 @@ GaussianProcessRQ = create_gp_subclass(
     mean_module_fn=constant_mean,
 )
 
+GaussianProcessRBFandConstant = create_gp_subclass(
+    "GaussianProcessRBFandConstant",
+    GaussianProcess,
+    covar_module_fn=rbf_plus_constant,
+    mean_module_fn=constant_mean,
+)
+
 # correlated GP kernels
 GaussianProcessCorrelatedRBF = create_gp_subclass(
     "GaussianProcessCorrelatedRBF",
@@ -595,5 +602,11 @@ GaussianProcessCorrelatedRQ = create_gp_subclass(
     "GaussianProcessCorrelatedRQ",
     GaussianProcessCorrelated,
     covar_module_fn=rq_kernel,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessCorrelatedRBFandConstant = create_gp_subclass(
+    "GaussianProcessCorrelatedRBFandConstant",
+    GaussianProcessCorrelated,
+    covar_module_fn=rbf_plus_constant,
     mean_module_fn=constant_mean,
 )
