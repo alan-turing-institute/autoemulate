@@ -28,7 +28,7 @@ from .kernel import (
     matern_3_2_kernel,
     matern_5_2_kernel,
     matern_5_2_plus_rq,
-    rbf,
+    rbf_kernel,
     rbf_plus_constant,
     rbf_plus_linear,
     rbf_times_linear,
@@ -300,7 +300,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 poly_mean,
             ],
             "covar_module_fn": [
-                rbf,
+                rbf_kernel,
                 matern_5_2_kernel,
                 matern_3_2_kernel,
                 rq_kernel,
@@ -550,7 +550,7 @@ def create_gp_subclass(
 GaussianProcessRBF = create_gp_subclass(
     "GaussianProcessRBF",
     GaussianProcess,
-    covar_module_fn=rbf,
+    covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
 )
 GaussianProcessMatern32 = create_gp_subclass(
@@ -576,7 +576,7 @@ GaussianProcessRQ = create_gp_subclass(
 GaussianProcessCorrelatedRBF = create_gp_subclass(
     "GaussianProcessCorrelatedRBF",
     GaussianProcessCorrelated,
-    covar_module_fn=rbf,
+    covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
 )
 GaussianProcessCorrelatedMatern32 = create_gp_subclass(
