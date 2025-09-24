@@ -5,6 +5,7 @@ from .gaussian_process.exact import (
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
     GaussianProcessMatern52,
+    GaussianProcessRationalQuadratic,
     GaussianProcessRBF,
 )
 from .lightgbm import LightGBM
@@ -17,11 +18,11 @@ from .transformed.base import TransformedEmulator
 # from .neural_processes.conditional_neural_process import CNPModule
 
 ALL_EMULATORS: list[type[Emulator]] = [
-    GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
     GaussianProcessMatern52,
     GaussianProcessRBF,
+    GaussianProcessRationalQuadratic,
     LightGBM,
     # CNPModule,
     SupportVectorMachine,
