@@ -132,6 +132,30 @@ def rq_kernel(n_features: int | None, n_outputs: torch.Size | None) -> RQKernel:
     )
 
 
+def linear_kernel(n_features: int | None, n_outputs: torch.Size | None) -> LinearKernel:
+    """
+    Linear kernel.
+
+    Parameters
+    ----------
+    n_features: int | None
+        Number of input features. If None, the kernel is not initialized with a
+        lengthscale.
+    n_outputs: torch.Size | None
+        Batch shape of the kernel. If None, the kernel is not initialized with a
+        batch shape.
+
+    Returns
+    -------
+    LinearKernel
+        The initialized Linear kernel.
+    """
+    return LinearKernel(
+        ard_num_dims=n_features,
+        batch_shape=n_outputs,
+    )
+
+
 def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
     """
     Radial Basis Function (RBF) kernel plus a constant kernel.
