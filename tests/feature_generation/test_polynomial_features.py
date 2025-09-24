@@ -1,5 +1,5 @@
 import torch
-from autoemulate.emulators.polynomial_features import PolynomialFeatures
+from autoemulate.feature_generation.polynomial_features import PolynomialFeatures
 
 
 def test_polynomial_features():

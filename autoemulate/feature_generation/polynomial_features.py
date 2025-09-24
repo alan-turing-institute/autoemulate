@@ -1,7 +1,6 @@
 import itertools
 
 import torch
-
 from autoemulate.core.types import DeviceLike, TensorLike
 
 

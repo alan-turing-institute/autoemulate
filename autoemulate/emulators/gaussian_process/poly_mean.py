@@ -2,7 +2,7 @@ import gpytorch
 import torch
 
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.polynomial_features import PolynomialFeatures
+from autoemulate.feature_generation.polynomial_features import PolynomialFeatures
 
 
 class PolyMean(gpytorch.means.Mean):

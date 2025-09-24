@@ -5,7 +5,7 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import PyTorchBackend
-from autoemulate.emulators.polynomial_features import PolynomialFeatures
+from autoemulate.feature_generation.polynomial_features import PolynomialFeatures
 from autoemulate.transforms.standardize import StandardizeTransform
 
 
