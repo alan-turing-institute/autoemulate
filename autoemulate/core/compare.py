@@ -189,14 +189,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def list_emulators() -> pd.DataFrame:
         """Return a dataframe with info on all available emulators.
 
-        The dataframe includes the model name and whether it has a PyTorch backend,
-        supports multioutput data and provides uncertainty quantification.
+        The dataframe includes the model name and whether it has a PyTorch backend (and
+        autodiff), supports multioutput data and provides uncertainty quantification.
 
         Returns
         -------
         pd.DataFrame
             DataFrame with columns:
-                ['Emulator', 'PyTorch', 'Multioutput', 'Uncertainty_Quantification'].
+                - 'Emulator',
+                - 'PyTorch',
+                - 'Multioutput',
+                - 'Uncertainty_Quantification',
+                - 'Automatic_Differentiation`
         """
         return pd.DataFrame(
             {
@@ -215,7 +219,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     emulator in AutoEmulate.probablistic_emulators()
                     for emulator in AutoEmulate.all_emulators()
                 ],
-                # TODO (#743): Add "Differentiable" feature for emulators
+                "Automatic_Differentiation": [
+                    emulator in AutoEmulate.pytorch_emulators()
+                    for emulator in AutoEmulate.all_emulators()
+                ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
