@@ -44,6 +44,19 @@ class TrainerParams:
     checkpoint_path: str = ""  # Path to a checkpoint to resume from, if any
     device: DeviceLike = "cpu"
     output_path: str = "./"
+    # Enable scheduled teacher forcing in training
+    enable_tf_schedule: bool = False
+    #  start, end, schedule_epochs, schedule_type, mode, min_prob
+    tf_params: dict = field(
+        default_factory=lambda: {
+            "start": 1.0,
+            "end": 0.0,
+            "schedule_epochs": None,  # fallback to total epochs
+            "schedule_type": "linear",  # linear | exponential | step
+            "mode": "mix",  # mix (tempering) | prob (stochastic)
+            "min_prob": 1e-6,
+        }
+    )
 
 
 class AutoEmulateTrainer(Trainer):
@@ -101,6 +114,9 @@ class AutoEmulateTrainer(Trainer):
         self.lr_scheduler = lr_scheduler
         self.loss_fn = loss_fn
 
+        # Flag controlling whether TF schedule is active
+        self.enable_tf_schedule = trainer_params.enable_tf_schedule
+
         # Remaining trainer params
         self.is_delta = isinstance(datamodule.train_dataset, DeltaWellDataset)
         self.validation_suite = [*validation_metric_suite, self.loss_fn]
@@ -129,10 +145,111 @@ class AutoEmulateTrainer(Trainer):
         if len(trainer_params.checkpoint_path) > 0:
             self.load_checkpoint(trainer_params.checkpoint_path)
 
-    def rollout_model(self, model, batch, formatter, train=True, teacher_forcing=False):
-        """Rollout the model for as many steps as we have data for.
+        # Teacher Forcing scheduler setup
+        tf_params = trainer_params.tf_params
+        self.tf_start = float(tf_params.get("start", 1.0))
+        self.tf_end = float(tf_params.get("end", 0.0))
+        self.tf_mode = tf_params.get("mode", "mix")
+        self.tf_type = tf_params.get("schedule_type", "linear")
+        self.tf_epochs = tf_params.get("schedule_epochs") or self.max_epoch
+        self.tf_min_prob = float(tf_params.get("min_prob", 1e-6))
 
-        This method is overridden to optionally enable teacher forcing during training.
+        # Initialize current_epoch so scheduling logic has a defined value pre-training
+        self.current_epoch = self.starting_epoch
+
+    def train_one_epoch(self, epoch: int, dataloader) -> float:
+        """Override to expose the current epoch to scheduling utilities.
+
+        Sets `self.current_epoch` before delegating to the base implementation so
+        `_teacher_forcing_ratio` can derive a reliable epoch index without
+        re-implementing the full training loop from the upstream Trainer.
+        """
+        self.current_epoch = epoch
+
+        # Defer to base trainer to perform training and collect logs
+        result = super().train_one_epoch(epoch, dataloader)
+        if isinstance(result, tuple) and len(result) == 2:
+            epoch_loss, train_logs = result
+        else:  # Upstream type hint mismatch safeguard
+            epoch_loss, train_logs = result, {}
+
+        # Augment logs with scheduled TF ratio (0 if disabled)
+        try:
+            train_logs["tf/ratio_scheduled"] = float(self._teacher_forcing_ratio())
+        # pragma: no cover - defensive
+        except Exception:
+            train_logs["tf/ratio_scheduled"] = float("nan")
+
+        return epoch_loss, train_logs  # type: ignore as this is the upstream signature
+
+    def _teacher_forcing_ratio(self) -> float:
+        """Compute the scheduled teacher forcing ratio for the current epoch.
+
+        Returns 0.0 immediately if scheduling is disabled.
+        """
+        if not self.enable_tf_schedule:
+            return 0.0
+        e = max(int(self.current_epoch) - 1, 0)
+        total = max(self.tf_epochs - 1, 1)
+        progress = min(e / total, 1.0)
+        # Base linear interpolation used as default
+        linear_val = self.tf_start + (self.tf_end - self.tf_start) * progress
+
+        if self.tf_type == "exponential":
+            # Solve start * gamma^e = end at e=total => gamma = (end/start)^(1/total)
+            if self.tf_start > 0 and self.tf_end > 0:
+                gamma = (self.tf_end / self.tf_start) ** (1 / total)
+                r = self.tf_start * (gamma**e)
+            else:  # fall back to linear if invalid bounds
+                r = linear_val
+        elif self.tf_type == "step":
+            r = self.tf_start if e < total else self.tf_end
+        else:  # linear or unknown -> use linear interpolation
+            r = linear_val
+        # Clamp to [0.0, 1.0] numerical floor
+        return float(max(min(r, 1.0), 0.0))
+
+    def rollout_model(
+        self,
+        model,
+        batch,
+        formatter,
+        train: bool = True,
+        teacher_forcing: bool = False,
+        tf_ratio: float | None = None,
+    ):
+        """Roll out the model.
+
+        Parameters
+        ----------
+        model: nn.Module
+            The model to evaluate.
+        batch: dict
+            Batch produced by the dataloader (contains `input_fields` and optional
+            `constant_fields` plus targets).
+        formatter: AbstractDataFormatter
+            Formatter that converts batch tensors to model inputs / outputs.
+        train: bool
+            If True, uses the scheduled teacher forcing ratio (unless `tf_ratio` is
+            explicitly provided). If False, no schedule is applied. Defaults to True.
+        teacher_forcing: bool
+            Backwards-compatible flag. When evaluating (`train=False`) and `tf_ratio` is
+            not provided, `teacher_forcing=True` implies full teacher forcing
+            (ratio = 1.0). During training this flag is ignored because scheduled
+            teacher forcing is always active. Defaults to False.
+        tf_ratio: float | None
+            Explicit teacher forcing ratio override in `[0, 1]`. Highest precedence: if
+            provided it is used directly (clamped) regardless of mode (train/eval) or
+            schedule. This allows ad-hoc evaluation at a fixed ratio or reproducing the
+            original full teacher forcing rollout with `tf_ratio=1.0`. Defaults to None.
+
+        Notes
+        -----
+        Precedence:
+        1. `tf_ratio` argument (if not None)
+        2. Training schedule (`train=True`)
+        3. Full TF on eval if `teacher_forcing=True`
+        4. No teacher forcing
         """
         inputs, y_ref = formatter.process_input(batch)
         rollout_steps = min(
@@ -147,6 +264,21 @@ class AutoEmulateTrainer(Trainer):
                 self.device
             )
         y_preds = []
+
+        # Calculate the tf_ratio using precedence rules
+        def _resolve_tf_ratio():
+            if tf_ratio is not None:
+                return float(max(min(tf_ratio, 1.0), 0.0))
+            if train and self.enable_tf_schedule:
+                return self._teacher_forcing_ratio()
+            if teacher_forcing:
+                return 1.0
+            return 0.0
+
+        effective_tf_ratio = _resolve_tf_ratio()
+
+        use_tf = effective_tf_ratio > 0.0
+
         for i in range(rollout_steps):
             if not train:
                 moving_batch = self.normalize(moving_batch)
@@ -172,13 +304,35 @@ class AutoEmulateTrainer(Trainer):
             # If not last step, update moving batch
             if i != rollout_steps - 1:
                 next_moving_batch_tail = moving_batch["input_fields"][:, 1:]
-                next_moving_batch = (
-                    # If free running, use prediction as next input
-                    torch.cat([next_moving_batch_tail, y_pred], dim=1)
-                    if not teacher_forcing
-                    # If teacher forcing, use ground truth as next input
-                    else torch.cat([next_moving_batch_tail, y_ref[:, i : i + 1]], dim=1)
-                )
+                if use_tf:
+                    if self.tf_mode == "prob":
+                        # Sample Bernoulli per batch element deciding to use GT vs pred
+                        mask = (
+                            torch.rand(
+                                y_pred.shape[0],  # generate a mask per batch
+                                1,
+                                *([1] * (y_pred.dim() - 2)),
+                                device=y_pred.device,
+                            )
+                            < effective_tf_ratio
+                        ).to(y_pred.dtype)
+                        mixed = mask * y_ref[:, i : i + 1] + (1 - mask) * y_pred
+                        next_moving_batch = torch.cat(
+                            [next_moving_batch_tail, mixed], dim=1
+                        )
+                    else:  # mix/tempering
+                        mixed = (
+                            effective_tf_ratio * y_ref[:, i : i + 1]
+                            + (1 - effective_tf_ratio) * y_pred
+                        )
+                        next_moving_batch = torch.cat(
+                            [next_moving_batch_tail, mixed], dim=1
+                        )
+                else:
+                    # Fully free running
+                    next_moving_batch = torch.cat(
+                        [next_moving_batch_tail, y_pred], dim=1
+                    )
                 moving_batch["input_fields"] = next_moving_batch
             y_preds.append(y_pred)
         y_pred_out = torch.cat(y_preds, dim=1)
