@@ -355,7 +355,8 @@ class TheWellFNOWithLearnableWeights(TheWellEmulator):
         TorchDeviceMixin.__init__(
             self, device=get_torch_device(self.trainer_params.device)
         )
-        super().__init__(**kwargs)
+        # Skip TheWellEmulator init as overriden here
+        SpatioTemporalEmulator.__init__(self, **kwargs)
 
         # Set output path
         output_path = Path(self.trainer_params.output_path)
