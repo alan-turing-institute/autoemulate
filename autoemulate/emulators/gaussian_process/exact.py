@@ -300,6 +300,9 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 poly_mean,
             ],
             "covar_module_fn": [
+                rbf,
+                matern_5_2_kernel,
+                matern_3_2_kernel,
                 rq_kernel,
                 rbf_plus_constant,
                 rbf_plus_linear,
@@ -448,34 +451,6 @@ class GaussianProcessCorrelated(GaussianProcess):
         covar_x = self.covar_module(x)
         return GaussianProcessLike(mean_x, covar_x)
 
-    @staticmethod
-    def get_tune_params():
-        """Return the hyperparameters to tune for the Gaussian Process model."""
-        scheduler_params = GaussianProcess.scheduler_params()
-        return {
-            "mean_module_fn": [
-                constant_mean,
-                zero_mean,
-                linear_mean,
-                poly_mean,
-            ],
-            "covar_module_fn": [
-                rbf,
-                matern_5_2_kernel,
-                matern_3_2_kernel,
-                rq_kernel,
-                rbf_plus_constant,
-                rbf_plus_linear,
-                matern_5_2_plus_rq,
-                rbf_times_linear,
-            ],
-            "epochs": [50, 100, 200],
-            "lr": [5e-1, 1e-1, 5e-2, 1e-2],
-            "likelihood_cls": [MultitaskGaussianLikelihood],
-            "scheduler_cls": scheduler_params["scheduler_cls"],
-            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
-        }
-
 
 # GP registry to raise exception if duplicate created
 GP_REGISTRY = {
@@ -593,6 +568,32 @@ GaussianProcessMatern52 = create_gp_subclass(
 GaussianProcessRQ = create_gp_subclass(
     "GaussianProcessRQ",
     GaussianProcess,
+    covar_module_fn=rq_kernel,
+    mean_module_fn=constant_mean,
+)
+
+# correlated GP kernels
+GaussianProcessCorrelatedRBF = create_gp_subclass(
+    "GaussianProcessCorrelatedRBF",
+    GaussianProcessCorrelated,
+    covar_module_fn=rbf,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessCorrelatedMatern32 = create_gp_subclass(
+    "GaussianProcessCorrelatedMatern32",
+    GaussianProcessCorrelated,
+    covar_module_fn=matern_3_2_kernel,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessCorrelatedMatern52 = create_gp_subclass(
+    "GaussianProcessCorrelatedMatern52",
+    GaussianProcessCorrelated,
+    covar_module_fn=matern_5_2_kernel,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessCorrelatedRQ = create_gp_subclass(
+    "GaussianProcessCorrelatedRQ",
+    GaussianProcessCorrelated,
     covar_module_fn=rq_kernel,
     mean_module_fn=constant_mean,
 )

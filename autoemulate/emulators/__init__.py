@@ -3,6 +3,10 @@ from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedMatern52,
+    GaussianProcessCorrelatedRBF,
+    GaussianProcessCorrelatedRQ,
     GaussianProcessMatern32,
     GaussianProcessMatern52,
     GaussianProcessRBF,
@@ -18,11 +22,14 @@ from .transformed.base import TransformedEmulator
 # from .neural_processes.conditional_neural_process import CNPModule
 
 ALL_EMULATORS: list[type[Emulator]] = [
-    GaussianProcessCorrelated,
     GaussianProcessMatern32,
     GaussianProcessMatern52,
     GaussianProcessRBF,
     GaussianProcessRQ,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedMatern52,
+    GaussianProcessCorrelatedRBF,
+    GaussianProcessCorrelatedRQ,
     LightGBM,
     # CNPModule,
     SupportVectorMachine,
@@ -85,6 +92,10 @@ __all__ = [
     "EnsembleMLPDropout",
     "GaussianProcess",
     "GaussianProcessCorrelated",
+    "GaussianProcessCorrelatedMatern32",
+    "GaussianProcessCorrelatedMatern52",
+    "GaussianProcessCorrelatedRBF",
+    "GaussianProcessCorrelatedRQ",
     "GaussianProcessMatern32",
     "GaussianProcessMatern52",
     "GaussianProcessRBF",
