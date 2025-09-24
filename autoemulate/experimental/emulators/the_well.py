@@ -405,7 +405,7 @@ class TheWellFNOWithLearnableWeights(TheWellEmulator):
         )
 
         # Assign given metric as base loss function
-        self.loss_func = loss_fn
+        self.base_loss_func = loss_fn
 
         # Init trainer
         self.trainer = AutoEmulateTrainer(
@@ -431,11 +431,18 @@ class TheWellFNOWithLearnableWeights(TheWellEmulator):
         # Normalize so mean(w) == 1
         w = w / (w.mean() + 1e-12)
 
-        # Reshape to (1, n_steps, 1) for broadcasting
-        w = w.view(1, -1, 1)
+        # Reshape to (1, n_steps, spatial_dims, channels) for broadcasting
+        w = w.view(1, -1, *([1] * meta.n_spatial_dims), 1)
+
+        # Pad with 1s along the time dimension if needed to match y_pred shape
+        if w.shape[1] != y_pred.shape[1]:
+            extra = y_pred.shape[1] - w.shape[1]
+            pad_shape = (1, extra, *([1] * meta.n_spatial_dims), 1)
+            ones = torch.ones(pad_shape, device=w.device, dtype=w.dtype)
+            w = torch.cat([w, ones], dim=1)
 
         # Return a weighted loss
-        return w * self.loss_func(y_pred, y_target)
+        return self.base_loss_func(w * y_pred, w * y_target, meta)
 
 
 # TODO: fix this as not initializing correctly at the moment
