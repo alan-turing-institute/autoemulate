@@ -12,6 +12,7 @@ chapters:
     sections:
     - file: tutorials/emulation/01_quickstart
     - file: tutorials/emulation/02_dim_reduction
+    - file: tutorials/emulation/03_add_emulators
   - file: tutorials/tasks/index
     sections:
     - file: tutorials/tasks/01_emulation_sensitivity
