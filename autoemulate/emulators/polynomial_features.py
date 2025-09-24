@@ -61,13 +61,7 @@ class PolynomialFeatures:
         x_ = x.unsqueeze(1)  # (n_samples, 1, n_features)
 
         # each term in _powers corresponds to one output feature (e.g., x1^2*x2)
-        terms = torch.prod(x_**self._powers, dim=2)  # (n_samples, n_terms)
-
-        if self.include_bias:
-            bias = torch.ones(x.shape[0], 1, device=x.device, dtype=x.dtype)
-            terms = torch.cat([bias, terms], dim=1)
-
-        return terms
+        return torch.prod(x_**self._powers, dim=2)  # (n_samples, n_terms)
 
     def _compute_powers(self, n_features: int) -> TensorLike:
         """
