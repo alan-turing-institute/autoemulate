@@ -42,7 +42,7 @@ class PolynomialFeatures:
         self.include_bias = include_bias
         self.device = device
         self._powers = self._compute_powers(n_features)
-        self.n_output_features = len(self._powers) + (1 if include_bias else 0)
+        self.n_output_features = len(self._powers)
 
     def transform(self, x: TensorLike) -> TensorLike:
         """
