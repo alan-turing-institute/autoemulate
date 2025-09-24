@@ -24,8 +24,6 @@ from .transformed.base import TransformedEmulator
 # from .neural_processes.conditional_neural_process import CNPModule
 
 ALL_EMULATORS: list[type[Emulator]] = [
-    GaussianProcess,
-    GaussianProcessCorrelated,
     GaussianProcessMatern32,
     GaussianProcessMatern52,
     GaussianProcessRBF,
@@ -62,8 +60,17 @@ GAUSSIAN_PROCESS_EMULATORS: list[type[Emulator]] = [
     if issubclass(emulator, GaussianProcessEmulator)
 ]
 
-EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
-EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
+# We are adding the generic GaussianProcess and GaussianProcessCorrelated here so they
+# are accesible to users but they are not included in the default set which prioritises
+# concrete implementations of GPs with specific kernels.
+EMULATOR_REGISTRY = {
+    em_cls.model_name().lower(): em_cls
+    for em_cls in [*ALL_EMULATORS, GaussianProcess, GaussianProcessCorrelated]
+}
+EMULATOR_REGISTRY_SHORT_NAME = {
+    em_cls.short_name(): em_cls
+    for em_cls in [*ALL_EMULATORS, GaussianProcess, GaussianProcessCorrelated]
+}
 
 
 def get_emulator_class(name: str) -> type[Emulator]:
