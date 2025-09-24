@@ -43,7 +43,7 @@ class PolynomialFeatures:
         self._powers = self._compute_powers(n_features)
         self.n_output_features = len(self._powers)
 
-    def transform(self, x: TensorLike) -> TensorLike:
+    def __call__(self, x: TensorLike) -> TensorLike:
         """
         Generate polynomial and interaction features.
 

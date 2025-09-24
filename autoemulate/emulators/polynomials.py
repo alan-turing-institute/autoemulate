@@ -85,7 +85,7 @@ class PolynomialRegression(PyTorchBackend):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through for polynomial regression."""
         # Transform input using the fitted PolynomialFeatures
-        x_poly = self.poly.transform(x)
+        x_poly = self.poly(x)
         return self.linear(x_poly)
 
     @staticmethod

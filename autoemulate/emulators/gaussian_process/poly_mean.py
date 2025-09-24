@@ -53,7 +53,7 @@ class PolyMean(gpytorch.means.Mean):
 
     def forward(self, x: TensorLike):
         """Forward pass through the polynomial mean module."""
-        x_ = self.poly.transform(x)
+        x_ = self.poly(x)
         assert isinstance(self.weights, TensorLike)
         res = x_.matmul(self.weights).squeeze(-1)
         if self.bias is not None:

@@ -5,7 +5,7 @@ from autoemulate.feature_generation.polynomial_features import PolynomialFeature
 def test_polynomial_features():
     poly = PolynomialFeatures(n_features=2, degree=2, include_bias=True)
     x = torch.tensor([[0, 1], [2, 3], [4, 5]])
-    x_poly = poly.transform(x)
+    x_poly = poly(x)
 
     # terms = bias, x1, x2, x1^2, x1*x2, x2^2
     expected_output = torch.tensor(
@@ -14,14 +14,14 @@ def test_polynomial_features():
     assert torch.allclose(x_poly, expected_output)
 
     poly_no_bias = PolynomialFeatures(n_features=2, degree=2, include_bias=False)
-    x_poly_no_bias = poly_no_bias.transform(x)
+    x_poly_no_bias = poly_no_bias(x)
     expected_output_no_bias = torch.tensor(
         [[0, 1, 0, 0, 1], [2, 3, 4, 6, 9], [4, 5, 16, 20, 25]]
     )
     assert torch.allclose(x_poly_no_bias, expected_output_no_bias)
 
     poly_degree_3 = PolynomialFeatures(n_features=2, degree=3, include_bias=True)
-    x_poly_degree_3 = poly_degree_3.transform(x)
+    x_poly_degree_3 = poly_degree_3(x)
 
     # terms = bias, x1, x2, x1^2, x1*x2, x2^2, x1^3, x1^2*x2, x1*x2^2, x2^3
     expected_output_degree_3 = torch.tensor(
@@ -35,7 +35,7 @@ def test_polynomial_features():
 
     poly_n_features_3 = PolynomialFeatures(n_features=3, degree=2, include_bias=True)
     x3 = torch.tensor([[1, 2, 3], [4, 5, 6]])
-    x_poly_n_features_3 = poly_n_features_3.transform(x3)
+    x_poly_n_features_3 = poly_n_features_3(x3)
 
     # terms = bias, x1, x2, x3, x1^2, x1*x2, x1*x3, x2^2, x2*x3, x3^2
     expected_output_n_features_3 = torch.tensor(
