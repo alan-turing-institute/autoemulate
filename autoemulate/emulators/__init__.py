@@ -5,8 +5,8 @@ from .gaussian_process.exact import (
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
     GaussianProcessMatern52,
-    GaussianProcessRationalQuadratic,
     GaussianProcessRBF,
+    GaussianProcessRQ,
 )
 from .lightgbm import LightGBM
 from .nn.mlp import MLP
@@ -22,7 +22,7 @@ ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcessMatern32,
     GaussianProcessMatern52,
     GaussianProcessRBF,
-    GaussianProcessRationalQuadratic,
+    GaussianProcessRQ,
     LightGBM,
     # CNPModule,
     SupportVectorMachine,
@@ -88,6 +88,7 @@ __all__ = [
     "GaussianProcessMatern32",
     "GaussianProcessMatern52",
     "GaussianProcessRBF",
+    "GaussianProcessRQ",
     "LightGBM",
     "RadialBasisFunctions",
     "RandomForest",

@@ -590,8 +590,8 @@ GaussianProcessMatern52 = create_gp_subclass(
     covar_module_fn=matern_5_2_kernel,
     mean_module_fn=constant_mean,
 )
-GaussianProcessRationalQuadratic = create_gp_subclass(
-    "GaussianProcessRationalQuadratic",
+GaussianProcessRQ = create_gp_subclass(
+    "GaussianProcessRQ",
     GaussianProcess,
     covar_module_fn=rq_kernel,
     mean_module_fn=constant_mean,
