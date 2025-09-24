@@ -137,7 +137,7 @@ class AutoEmulateTrainer(Trainer):
         rollout_steps = min(
             y_ref.shape[1], self.max_rollout_steps
         )  # Number of timesteps in target
-        y_ref = y_ref[:, :rollout_steps]
+        y_ref = y_ref[:, :rollout_steps].to(self.device)
         # Create a moving batch of one step at a time
         moving_batch = batch
         moving_batch["input_fields"] = moving_batch["input_fields"].to(self.device)
