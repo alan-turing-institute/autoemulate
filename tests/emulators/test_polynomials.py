@@ -1,9 +1,6 @@
 import pytest
 import torch
-from autoemulate.core.device import (
-    SUPPORTED_DEVICES,
-    check_torch_device_is_available,
-)
+from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
 from autoemulate.core.tuner import Tuner
 from autoemulate.core.types import TensorLike
 from autoemulate.emulators.polynomials import PolynomialRegression

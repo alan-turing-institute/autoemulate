@@ -1,6 +1,6 @@
 import torch
-from autoemulate.core.types import TensorLike
-from autoemulate.emulators.base import PyTorchBackend
+from autoemulate.core.types import OutputLike, TensorLike
+from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalEmulator
 from neuralop.models import FNO
 from torch.utils.data import DataLoader
 
@@ -41,19 +41,31 @@ def prepare_batch(sample, channels=(0,), with_constants=True, with_time=False):
     return x, y
 
 
-class FNOEmulator(PyTorchBackend):
+class FNOEmulator(SpatioTemporalEmulator):
     """An FNO emulator."""
 
-    def __init__(self, x, y, *args, **kwargs):
-        _, _ = x, y
+    def __init__(
+        self, x=None, y=None, channels: tuple[int, ...] = (0,), *args, **kwargs
+    ):
+        _, _ = x, y  # Unused
+        # Ensure parent initialisers run before creating nn.Module attributes
+        super().__init__()
         self.model = FNO(**kwargs)
+        self.channels = channels
+        self.optimizer = torch.optim.Adam(self.model.parameters())
 
-    def _fit(self, x: DataLoader, y: DataLoader | None):  # type: ignore  # noqa: PGH003
-        channels = (0,)  # Which channel to use
+    @staticmethod
+    def is_multioutput() -> bool:  # noqa: D102
+        return True
+
+    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
+        assert isinstance(x, DataLoader), "x currently must be a DataLoader"
+        assert y is None, "y currently must be None"
+
         for idx, batch in enumerate(x):
             # Prepare input with constants
             x, y = prepare_batch(
-                batch, channels=channels, with_constants=True, with_time=True
+                batch, channels=self.channels, with_constants=True, with_time=True
             )  # type: ignore  # noqa: PGH003
 
             # Predictions
@@ -73,5 +85,16 @@ class FNOEmulator(PyTorchBackend):
         """Forward pass."""
         return self.model(x)
 
-    def _predict(self, x, with_grad):
-        return super()._predict(x, with_grad)
+    def _predict(self, x: TensorLike | DataLoader, with_grad: bool) -> OutputLike:
+        assert isinstance(x, DataLoader), "x currently must be a DataLoader"
+        with torch.set_grad_enabled(with_grad):
+            channels = (0,)  # Which channel to use
+            all_preds = []
+            for _, batch in enumerate(x):
+                # Prepare input with constants
+                x, _ = prepare_batch(
+                    batch, channels=channels, with_constants=True, with_time=True
+                )
+                out = self(x)
+                all_preds.append(out)
+            return torch.cat(all_preds)

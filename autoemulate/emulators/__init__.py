@@ -1,4 +1,4 @@
-from .base import Emulator
+from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
     GaussianProcess,
@@ -9,12 +9,11 @@ from .gaussian_process.exact import (
 )
 from .lightgbm import LightGBM
 from .nn.mlp import MLP
+from .polynomials import PolynomialRegression
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
 from .svm import SupportVectorMachine
 from .transformed.base import TransformedEmulator
-
-# from .neural_processes.conditional_neural_process import CNPModule
 
 ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcess,
@@ -23,10 +22,10 @@ ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcessMatern52,
     GaussianProcessRBF,
     LightGBM,
-    # CNPModule,
     SupportVectorMachine,
     RadialBasisFunctions,
     RandomForest,
+    PolynomialRegression,
     MLP,
     EnsembleMLP,
     EnsembleMLPDropout,
@@ -42,7 +41,11 @@ NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
 PYTORCH_EMULATORS: list[type[Emulator]] = [
     emulator for emulator in ALL_EMULATORS if emulator not in NON_PYTORCH_EMULATORS
 ]
-
+GAUSSIAN_PROCESS_EMULATORS: list[type[Emulator]] = [
+    emulator
+    for emulator in ALL_EMULATORS
+    if issubclass(emulator, GaussianProcessEmulator)
+]
 
 EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
 EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
@@ -84,6 +87,7 @@ __all__ = [
     "GaussianProcessMatern52",
     "GaussianProcessRBF",
     "LightGBM",
+    "PolynomialRegression",
     "RadialBasisFunctions",
     "RandomForest",
     "SupportVectorMachine",

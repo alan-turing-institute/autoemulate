@@ -219,78 +219,61 @@ class Simulator(ABC, ValidationMixin):
         TensorLike | None
             Simulated output tensor. Shape = (1, self.out_dim).
             For example, if the simulator outputs two simulated variables,
-            then the shape would be (1, 2). None if the simulation fails.
+            then the shape would be (1, 2).
         """
 
-    def forward(self, x: TensorLike) -> TensorLike | None:
+    def forward(self, x: TensorLike, allow_failures: bool = True) -> TensorLike | None:
         """
         Generate samples from input data using the simulator.
 
         Combines the abstract method `_forward` with some validation checks.
+        If there is a failure during the forward pass of the simulation,
+        the error is logged and None is returned.
 
         Parameters
         ----------
         x: TensorLike
             Input tensor of shape (n_samples, self.in_dim).
+        allow_failures: bool
+            Whether to allow failures during simulation.
+            Default is True. When true, failed simulations will return None instead
+            of raising an error. When False, error is raised.
 
         Returns
         -------
         TensorLike
             Simulated output tensor. None if the simulation failed.
         """
-        y = self._forward(self.check_tensor_is_2d(x))
-        if isinstance(y, TensorLike):
-            x, y = self.check_pair(x, y)
-            return y
+        try:
+            y = self._forward(self.check_tensor_is_2d(x))
+            if isinstance(y, TensorLike):
+                x, y = self.check_pair(x, y)
+                return y
+        except Exception as e:
+            if not allow_failures:
+                self.logger.error("Error occurred during simulation: %s", e)
+                raise
+            self.logger.warning("Simulation failed with error %s. Returning None", e)
         return None
 
-    def forward_batch(self, x: TensorLike) -> TensorLike:
-        """Run multiple simulations with different parameters.
-
-        For infallible simulators that always succeed.
-        If your simulator might fail, use `forward_batch_skip_failures()` instead.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Tensor of input parameters to make predictions for.
-
-        Returns
-        -------
-        TensorLike
-            Tensor of simulation results of shape (n_batch, self.out_dim).
-
-        Raises
-        ------
-        RuntimeError
-            If the number of simulations does not match the input.
-            Use `forward_batch_skip_failures()` to handle failures.
-        """
-        results, x_valid = self.forward_batch_skip_failures(x)
-
-        # Raise an error if the number of simulations does not match the input
-        if x.shape[0] != x_valid.shape[0]:
-            msg = (
-                "Some simulations failed. Use forward_batch_skip_failures() to handle "
-                "failures."
-            )
-            raise RuntimeError(msg)
-
-        return results
-
-    def forward_batch_skip_failures(
-        self, x: TensorLike
+    def forward_batch(
+        self, x: TensorLike, allow_failures: bool = True
     ) -> tuple[TensorLike, TensorLike]:
-        """Run multiple simulations, skipping any that fail.
+        """
+        Run multiple simulations.
 
-        For simulators where for some inputs the simulation can fail.
-        Failed simulations are skipped, and only successful results are returned
-        along with their corresponding input parameters.
+        If allow_failures is False, failed simulations will raise an error.
+        Otherwise, failed simulations are skipped, and only successful results
+        are returned along with their corresponding input parameters.
 
         Parameters
         ----------
         x: TensorLike
             Tensor of input parameters to make predictions for.
+        allow_failures: bool
+            Whether to allow failures during simulation.
+            Default is True. When true, failed simulations will return None instead
+            of raising an error. When False, error is raised.
 
         Returns
         -------
@@ -314,15 +297,18 @@ class Simulator(ABC, ValidationMixin):
             unit_scale=True,
         ):
             logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
-            result = self.forward(x[i : i + 1])
+            result = self.forward(x[i : i + 1], allow_failures=allow_failures)
             if result is not None:
                 results.append(result)
-                successful += 1
                 valid_idx.append(i)
+                successful += 1
                 logger.debug("Simulation %d/%d successful", i + 1, len(x))
             else:
                 logger.warning(
-                    "Simulation %d/%d failed. Result is None.", i + 1, len(x)
+                    "Simulation %d/%d failed. Result is None"
+                    "and is not appended to the results",
+                    i + 1,
+                    len(x),
                 )
 
         # Report results
@@ -332,6 +318,10 @@ class Simulator(ABC, ValidationMixin):
             len(x),
             (successful / len(x) * 100 if len(x) > 0 else 0.0),
         )
+
+        # handle no simulation results
+        if results == []:
+            return torch.empty((0, self.out_dim)), torch.empty((0, self.in_dim))
 
         # stack results into a 2D array on first dim using torch
         self.results_tensor = torch.cat(results, dim=0)

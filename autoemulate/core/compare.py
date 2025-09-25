@@ -1,3 +1,4 @@
+import inspect
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -47,8 +48,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[Transform | dict]] | None = None,
         y_transforms_list: list[list[Transform | dict]] | None = None,
-        model_tuning: bool = True,
-        model_params: None | ModelParams = None,
+        model_params: None | ModelParams | dict = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
         only_pytorch: bool = False,
         only_probabilistic: bool = False,
@@ -79,13 +79,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
-        model_tuning: bool
-            Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_params provided. Defaults to True.
         model_params: ModelParams | None
-            Dictionary of model-specific parameters to use when fitting the models.
-            If None, the default parameters for each model are used.
-            This is only used if model_tuning is False. Defaults to None.
+            If None, default behaviour, the model hyperparameters are tuned using
+            cross-validation. If provided, the model hyperparameters are set to the
+            provided values and no tuning is performed. If an empty dictionary {} is
+            provided the default parameters for each model are used without tuning.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
         only_pytorch: bool
@@ -161,8 +159,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
-        self.model_tuning = model_tuning
         self.model_params = model_params or {}
+        self.model_tuning = model_params is None
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
@@ -191,14 +189,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def list_emulators() -> pd.DataFrame:
         """Return a dataframe with info on all available emulators.
 
-        The dataframe includes the model name and whether it has a PyTorch backend,
-        supports multioutput data and provides uncertainty quantification.
+        The dataframe includes the model name and whether it has a PyTorch backend (and
+        autodiff), supports multioutput data and provides uncertainty quantification.
 
         Returns
         -------
         pd.DataFrame
             DataFrame with columns:
-                ['Emulator', 'PyTorch', 'Multioutput', 'Uncertainty_Quantification'].
+                - 'Emulator',
+                - 'PyTorch',
+                - 'Multioutput',
+                - 'Uncertainty_Quantification',
+                - 'Automatic_Differentiation`
         """
         return pd.DataFrame(
             {
@@ -217,7 +219,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     emulator in AutoEmulate.probablistic_emulators()
                     for emulator in AutoEmulate.all_emulators()
                 ],
-                # TODO (#743): Add "Differentiable" feature for emulators
+                "Automatic_Differentiation": [
+                    emulator in AutoEmulate.pytorch_emulators()
+                    for emulator in AutoEmulate.all_emulators()
+                ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
@@ -392,7 +397,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                best_params_for_this_model = self.model_params
+                                # extract default parameters from the model's __init__
+                                init_sig = inspect.signature(model_cls.__init__)
+                                init_params = {
+                                    param_name: param.default
+                                    for param_name, param in init_sig.parameters.items()
+                                    if param_name in model_cls.get_tune_params()
+                                }
+                                best_params_for_this_model = init_params
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
@@ -539,8 +551,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         neural networks.
 
         """
-        from autoemulate.emulators import get_emulator_class
-
         transformed_emulator_params = (
             transformed_emulator_params or self.transformed_emulator_params
         )

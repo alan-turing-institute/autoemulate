@@ -51,10 +51,57 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
 
     # Check that the models were properly converted from strings
     result_model_names = [result.model_name for result in ae.results]
-    print(ae.results)
+
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
     assert "GaussianProcess" in result_model_names
+
+
+def test_ae_no_tuning(sample_data_for_ae_compare):
+    """Test AutoEmulate with model tuning disabled."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
+
+    ae = AutoEmulate(x, y, models=models, model_params={})
+
+    assert len(ae.results) > 0
+
+    # Check that the models were properly converted from strings
+    result_model_names = [result.model_name for result in ae.results]
+
+    assert "MLP" in result_model_names
+    assert "RandomForest" in result_model_names
+    assert "GaussianProcess" in result_model_names
+
+    mlp_params = ae.get_result(0).params
+    assert mlp_params != {}
+    assert "epochs" in mlp_params
+    assert "layer_dims" in mlp_params
+    assert "lr" in mlp_params
+    assert "batch_size" in mlp_params
+    assert "weight_init" in mlp_params
+    assert "scale" in mlp_params
+    assert "bias_init" in mlp_params
+    assert "dropout_prob" in mlp_params
+
+    rf_params = ae.get_result(1).params
+    assert rf_params != {}
+    assert "n_estimators" in rf_params
+    assert "min_samples_split" in rf_params
+    assert "min_samples_leaf" in rf_params
+    assert "max_features" in rf_params
+    assert "bootstrap" in rf_params
+    assert "oob_score" in rf_params
+    assert "max_depth" in rf_params
+    assert "max_samples" in rf_params
+
+    gp_params = ae.get_result(2).params
+    assert gp_params != {}
+    assert "mean_module_fn" in gp_params
+    assert "covar_module_fn" in gp_params
+    assert "epochs" in gp_params
+    assert "lr" in gp_params
+    assert "likelihood_cls" in gp_params
 
 
 def test_get_model_subset():
@@ -64,13 +111,11 @@ def test_get_model_subset():
     pytorch_subset = set(PYTORCH_EMULATORS)
     probabilistic_subset = {e for e in ALL_EMULATORS if e.supports_uq}
 
-    ae = AutoEmulate(x, y, only_pytorch=True, model_tuning=False)
+    ae = AutoEmulate(x, y, only_pytorch=True, model_params={})
     assert set(ae.models) == pytorch_subset
 
-    ae = AutoEmulate(x, y, only_probabilistic=True, model_tuning=False)
+    ae = AutoEmulate(x, y, only_probabilistic=True, model_params={})
     assert set(ae.models) == probabilistic_subset
 
-    ae = AutoEmulate(
-        x, y, only_pytorch=True, only_probabilistic=True, model_tuning=False
-    )
+    ae = AutoEmulate(x, y, only_pytorch=True, only_probabilistic=True, model_params={})
     assert set(ae.models) == pytorch_subset.intersection(probabilistic_subset)

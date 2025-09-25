@@ -8,7 +8,6 @@ from sklearn.base import BaseEstimator
 from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
-from torch.utils.data import DataLoader
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
@@ -40,9 +39,9 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     supports_uq: bool = False
 
     @abstractmethod
-    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None): ...
+    def _fit(self, x: TensorLike, y: TensorLike): ...
 
-    def fit(self, x: TensorLike | DataLoader, y: TensorLike | DataLoader | None):
+    def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
         if isinstance(x, TensorLike) and isinstance(y, TensorLike):
             self._check(x, y)
@@ -62,11 +61,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
             # Fit emulator
             self._fit(x, y)
-        elif isinstance(x, DataLoader) and y is None:
-            self._fit(x, y)
-        else:
-            msg = "Invalid input types. Expected pair of TensorLike or DataLoader."
-            raise RuntimeError(msg)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -113,6 +107,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
+        x = self._ensure_with_grad(x, with_grad)
         (x,) = self._move_tensors_to_device(x)
         x = self.x_transform(x) if self.x_transform is not None else x
         output = self._predict(x, with_grad)
@@ -157,6 +152,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         TensorLike
             Mean tensor of shape `(n_batch, n_targets)`.
         """
+        x = self._ensure_with_grad(x, with_grad)
         y_pred = self._predict(x, with_grad)
         if isinstance(y_pred, TensorLike):
             return y_pred
@@ -196,6 +192,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
             otherwise None.
         """
+        x = self._ensure_with_grad(x, with_grad)
         if not self.supports_uq:
             return (self.predict_mean(x, with_grad, n_samples), None)
         y_pred = self._predict(x, with_grad)
@@ -209,6 +206,34 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                 else y_pred.sample(torch.Size([n_samples]))
             )
             return samples.mean(dim=0), samples.var(dim=0)
+
+    @staticmethod
+    def _ensure_with_grad(x: TensorLike, with_grad: bool) -> TensorLike:
+        """Ensure that the tensor x has requires_grad=True if with_grad is True.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor.
+        with_grad: bool
+            Whether to enable gradient calculation.
+
+        Returns
+        -------
+        TensorLike
+            The input tensor with requires_grad set to True if with_grad is True.
+
+        """
+        if with_grad and isinstance(x, torch.Tensor) and not x.requires_grad:
+            # Prefer enabling grad in-place on leaf tensors so callers can request
+            # gradients w.r.t. their original input tensor.
+            if x.is_leaf:
+                x.requires_grad_(True)
+            else:
+                # Fall back to a detached leaf clone when we cannot mutate flags on
+                # non-leaf tensors.
+                x = x.clone().detach().requires_grad_(True)
+        return x
 
     @staticmethod
     @abstractmethod
@@ -547,7 +572,7 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Train a PyTorchBackend model.
 
@@ -671,7 +696,7 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
+    def _fit(self, x: TensorLike, y: TensorLike):
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean

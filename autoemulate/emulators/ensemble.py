@@ -67,7 +67,7 @@ class Ensemble(GaussianEmulator):
         """Return a dictionary of hyperparameters to tune."""
         return {}
 
-    def _fit(self, x: TensorLike, y: TensorLike) -> None:  # type: ignore since this is valid subclass of types
+    def _fit(self, x: TensorLike, y: TensorLike) -> None:
         for e in self.emulators:
             e.fit(x, y)
         self.is_fitted_ = True
@@ -248,7 +248,7 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
             "n_samples": [10, 20, 50, 100],
         }
 
-    def _fit(self, x: TensorLike, y: TensorLike) -> None:  # type: ignore since this is valid subclass of types
+    def _fit(self, x: TensorLike, y: TensorLike) -> None:
         # Delegate training to the wrapped model
         self.model.fit(x, y)
         self.is_fitted_ = True

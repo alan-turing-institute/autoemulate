@@ -4,9 +4,10 @@ from autoemulate.calibration.history_matching import (
     HistoryMatching,
     HistoryMatchingWorkflow,
 )
+from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
 from autoemulate.core.types import TensorLike
-from autoemulate.emulators.gaussian_process.exact import GaussianProcess
+from autoemulate.emulators import TransformedEmulator
 from autoemulate.simulations.epidemic import Epidemic
 from tests.simulations.test_base_simulator import MockSimulator
 
@@ -99,18 +100,18 @@ def test_run(device):
 
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
-    y = simulator.forward_batch(x)
+    y, _ = simulator.forward_batch(x)
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    gp = GaussianProcess(x, y, device=device)
-    gp.fit(x, y)
+    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_params={})
+    res = ae.best_result()
 
     observations = {"infection_rate": (0.3, 0.05)}
 
     hm = HistoryMatchingWorkflow(
         simulator=simulator,
-        emulator=gp,
+        result=res,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
@@ -118,14 +119,28 @@ def test_run(device):
         device=device,
     )
 
+    # no NROY samples are stored before run() is called
+    assert hm.nroy_samples is None
+
     # call run first time
-    hm.run(n_simulations=5)
+    hm.run(n_simulations=5, n_test_samples=1000)
 
     # Check basic structure of results
     assert isinstance(hm.train_x, TensorLike)
-    assert isinstance(hm.emulator, GaussianProcess)
+    assert isinstance(hm.emulator, TransformedEmulator)
 
     assert len(hm.train_x) == 5
+
+    # should have access to NROY samples now that can sample from
+    # n can be less or more than number of NROY samples
+    assert hm.nroy_samples is not None
+    assert hm.nroy_samples.shape[0] == 1000
+
+    new_samples = hm.cloud_sample(482)
+    assert new_samples.shape[0] == 482
+
+    new_samples = hm.cloud_sample(10053)
+    assert new_samples.shape[0] == 10053
 
     # can run again
     hm.run(n_simulations=5)
@@ -135,27 +150,27 @@ def test_run(device):
 
 
 def test_run_max_tries():
-    """Run history matching with observations that return no NROY params."""
+    """Run HM with observations that return no NROY params to trigger warning."""
     simulator = Epidemic()
     x = simulator.sample_inputs(10)
-    y = simulator.forward_batch(x)
+    y, _ = simulator.forward_batch(x)
     assert isinstance(y, TensorLike)
 
     # Run history matching
-    gp = GaussianProcess(x, y)
-    gp.fit(x, y)
+    ae = AutoEmulate(x, y, models=["GaussianProcess"], model_params={})
+    res = ae.best_result()
 
     # Extreme values outside the range of what the simulator returns
     observations = {"infection_rate": (100.0, 1.0)}
 
     hm = HistoryMatchingWorkflow(
         simulator=simulator,
-        emulator=gp,
+        result=res,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
         rank=1,
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(Warning):
         hm.run(n_simulations=5)

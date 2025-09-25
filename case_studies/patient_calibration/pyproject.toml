@@ -1,10 +1,10 @@
 [project]
-name = "blood_pressure"
+name = "patient_calibration"
 version = "0.1.0"
-description = "Blood pressure AutoEmulate case study with ModularCirc"
+description = "Patient-specific calibration in cardiovascular modeling with AutoEmulate"
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "autoemulate",
+    "autoemulate==1.1",
     "jupyterlab",
     "ModularCirc @ git+https://github.com/alan-turing-institute/ModularCirc.git@dev",
 ]

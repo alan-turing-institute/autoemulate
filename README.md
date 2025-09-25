@@ -5,10 +5,14 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![All Contributors](https://img.shields.io/github/all-contributors/alan-turing-institute/autoemulate?color=ee8449&style=flat-square)](#contributors)
 [![Documentation](https://img.shields.io/badge/documentation-blue)](https://alan-turing-institute.github.io/autoemulate/)
+[![Github Stats](https://img.shields.io/badge/repostats-orange)](https://github.com/alan-turing-institute/autoemulate/blob/github-repo-stats/alan-turing-institute/autoemulate/latest-report/report.pdf)
+
 
 <!-- SPHINX-START -->
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines and  Gaussian Processes to find the best emulator for a simulation. 
 
+>[!WARNING]
+>Although AutoEmulate is currently on version 1.x, we are not following semantic versioning at the moment. The convention for V1 is that breaking and major changes will be made between minor version (1.1 -> 1.2). Bug fixes will be made in patch versions (1.1.1 -> 1.1.2). We plan to implement true semantic versioning in v2 of the package. We recommend pinning the minor version of AutoEmulate if using downstream and carefully reading release notes.
 
 ## Documentation
 
@@ -63,6 +67,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://jvwilliams23.github.io"><img src="https://avatars.githubusercontent.com/u/48445365?v=4?s=100" width="100px;" alt="Josh Williams"/><br /><sub><b>Josh Williams</b></sub></a><br /><a href="#bug-jvwilliams23" title="Bug reports">🐛</a> <a href="#ideas-jvwilliams23" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/LevanBokeria"><img src="https://avatars.githubusercontent.com/u/7816766?v=4?s=100" width="100px;" alt="Levan Bokeria"/><br /><sub><b>Levan Bokeria</b></sub></a><br /><a href="#bug-LevanBokeria" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ritkaarsingh30"><img src="https://avatars.githubusercontent.com/u/85431642?v=4?s=100" width="100px;" alt="Ritkaar Singh"/><br /><sub><b>Ritkaar Singh</b></sub></a><br /><a href="#doc-ritkaarsingh30" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
