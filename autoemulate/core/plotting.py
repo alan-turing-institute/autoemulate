@@ -291,7 +291,12 @@ def _plot_2d_slice_with_fixed_params(
     """
     ncols = 2 if var is not None else 1
     fig, axs = plt.subplots(
-        1, ncols, figsize=(10, 4), sharex=True, sharey=True, squeeze=False
+        1,
+        ncols,
+        figsize=(10, 4) if var is not None else (5, 4),
+        sharex=True,
+        sharey=True,
+        squeeze=False,
     )
 
     # Get grid dimensions
