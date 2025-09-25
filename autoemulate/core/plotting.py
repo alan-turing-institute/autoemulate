@@ -316,7 +316,7 @@ def _plot_2d_slice_with_fixed_params(
         vmin=lower,
         vmax=upper,
     )
-    ax.set_title("predicted Mean")
+    ax.set_title("predicted mean")
     ax.set_xlabel(param_names[0])
     ax.set_ylabel(param_names[1])
     fig.colorbar(im0, ax=ax)
@@ -331,7 +331,7 @@ def _plot_2d_slice_with_fixed_params(
             extent=[x_min, x_max, y_min, y_max],
             cmap="magma",
         )
-        ax.set_title("predicted Variance")
+        ax.set_title("predicted variance")
         ax.set_xlabel(param_names[0])
         ax.set_ylabel(param_names[1])
         fig.colorbar(im1, ax=ax)
