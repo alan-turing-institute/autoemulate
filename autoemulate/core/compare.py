@@ -771,6 +771,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         output_index: int | None = None,
         input_ranges: dict[int, tuple[float, float]] | None = None,
         output_range: tuple[float, float] | None = None,
+        quantile: float = 0.5,
         figsize=None,
         fname: str | None = None,
     ):
@@ -799,6 +800,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         output_range: tuple[float, float] | None
             A tuple specifying the (min, max) range for the output to consider. If None,
             the full range from the simulator is used. Defaults to None.
+        quantile: float
+            The quantile of the other input parameters to fix when plotting the 2D
+            slice. Must be between 0 and 1. Defaults to 0.5.
         figsize: tuple[int, int] | None
             The size of the figure to create. If None, a default size is used.
             Defaults to None.
@@ -823,6 +827,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             output_idx=output_index if output_index is not None else 0,
             vmin=None if output_range is None else output_range[0],
             vmax=None if output_range is None else output_range[1],
+            quantile=quantile,
         )
         if figsize is not None:
             fig.set_size_inches(figsize)
