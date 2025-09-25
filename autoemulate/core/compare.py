@@ -1,3 +1,4 @@
+import copy
 import inspect
 import warnings
 from datetime import datetime
@@ -13,7 +14,12 @@ from torch.distributions import Transform
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
-from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
+from autoemulate.core.plotting import (
+    calculate_subplot_layout,
+    create_and_plot_slice,
+    display_figure,
+    plot_xy,
+)
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
@@ -27,6 +33,7 @@ from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
+from autoemulate.simulations.base import Simulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
 
@@ -758,6 +765,79 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_surface(
+        self,
+        model: Emulator,
+        simulator: Simulator,
+        input_index_pair: tuple[int, int] | None = None,
+        output_index: int | None = None,
+        input_ranges: dict[int, tuple[float, float]] | None = None,
+        output_range: tuple[float, float] | None = None,
+        quantile: float = 0.5,
+        figsize=None,
+        fname: str | None = None,
+    ):
+        """Plot the emulator mean and variance over a grid for a pair of parameters.
+
+        This is useful for visualizing the emulator's behavior in 2D slices of the input
+        space while keeping other parameters fixed at a specific quantile (default is
+        median).
+
+        Parameters
+        ----------
+        model: Emulator
+            The emulator model to plot.
+        simulator: Simulator
+            The simulator associated with the emulator.
+        input_index_pair: tuple[int, int] | None
+            A tuple of two integers specifying the indices of the input parameters to
+            plot. If None, the first two parameters (0, 1) are used. Defaults to None.
+        output_index: int | None
+            The index of the output to plot. If None, the first output (0) is used.
+            Defaults to None.
+        input_ranges: dict[int, tuple[float, float]] | None
+            A dictionary specifying the ranges for input parameters to consider.
+            Keys are parameter indices and values are tuples of (min, max). If None,
+            the full range from the simulator is used. Defaults to None.
+        output_range: tuple[float, float] | None
+            A tuple specifying the (min, max) range for the output to consider. If None,
+            the full range from the simulator is used. Defaults to None.
+        quantile: float
+            The quantile of the other input parameters to fix when plotting the 2D
+            slice. Must be between 0 and 1. Defaults to 0.5.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, a default size is used.
+            Defaults to None.
+        fname: str | None
+            If provided, the figure will be saved to this file path. If None, the figure
+            will be displayed. Defaults to None.
+        """
+        # Update parameter ranges if provided
+        if input_ranges is not None:
+            # Deep copy to avoid modifying the original simulator
+            simulator = copy.deepcopy(simulator)
+            parameters_range = simulator.parameters_range
+            parameters_range.update(
+                {simulator.param_names[k]: input_ranges[k] for k in input_ranges}
+            )
+            simulator.parameters_range = parameters_range
+
+        fig, _ = create_and_plot_slice(
+            model,
+            simulator,
+            input_index_pair if input_index_pair is not None else (0, 1),
+            output_idx=output_index if output_index is not None else 0,
+            vmin=None if output_range is None else output_range[0],
+            vmax=None if output_range is None else output_range[1],
+            quantile=quantile,
+        )
+        if figsize is not None:
+            fig.set_size_inches(figsize)
         if fname is None:
             return display_figure(fig)
         fig.savefig(fname, bbox_inches="tight")
