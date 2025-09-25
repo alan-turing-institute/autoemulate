@@ -14,9 +14,7 @@ from .random_forest import RandomForest
 from .svm import SupportVectorMachine
 from .transformed.base import TransformedEmulator
 
-ALL_EMULATORS: list[type[Emulator]] = [
-    GaussianProcessCorrelatedMatern32,
-    GaussianProcessCorrelatedRBF,
+DEFAULT_EMULATORS: list[type[Emulator]] = [
     GaussianProcessMatern32,
     GaussianProcessRBF,
     LightGBM,
@@ -26,6 +24,12 @@ ALL_EMULATORS: list[type[Emulator]] = [
     PolynomialRegression,
     MLP,
     EnsembleMLP,
+]
+
+ALL_EMULATORS: list[type[Emulator]] = [
+    *DEFAULT_EMULATORS,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedRBF,
     EnsembleMLPDropout,
 ]
 
