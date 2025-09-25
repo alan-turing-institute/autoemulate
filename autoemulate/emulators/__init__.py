@@ -1,8 +1,6 @@
 from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
-    GaussianProcess,
-    GaussianProcessCorrelated,
     GaussianProcessCorrelatedMatern32,
     GaussianProcessCorrelatedRBF,
     GaussianProcessCorrelatedRBFandConstant,
@@ -19,8 +17,6 @@ from .svm import SupportVectorMachine
 from .transformed.base import TransformedEmulator
 
 ALL_EMULATORS: list[type[Emulator]] = [
-    GaussianProcess,
-    GaussianProcessCorrelated,
     GaussianProcessCorrelatedMatern32,
     GaussianProcessCorrelatedRBF,
     GaussianProcessCorrelatedRBFandConstant,
@@ -87,8 +83,6 @@ __all__ = [
     "MLP",
     "EnsembleMLP",
     "EnsembleMLPDropout",
-    "GaussianProcess",
-    "GaussianProcessCorrelated",
     "GaussianProcessCorrelatedMatern32",
     "GaussianProcessCorrelatedRBF",
     "GaussianProcessCorrelatedRBFandConstant",
