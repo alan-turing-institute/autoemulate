@@ -31,7 +31,7 @@ def test_ae(sample_data_for_ae_compare, device):
 def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     """Test AutoEmulate with models passed as strings and transforms as dictionaries."""
     x, y = sample_data_for_ae_compare
-    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "GaussianProcessRBF"]
     x_transforms_list: list[list[Transform | dict]] = [
         [{"standardize": {}}],
         [{"pca": {"n_components": 3}}],
@@ -54,13 +54,13 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
 
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
-    assert "GaussianProcess" in result_model_names
+    assert "GaussianProcessRBF" in result_model_names
 
 
 def test_ae_no_tuning(sample_data_for_ae_compare):
     """Test AutoEmulate with model tuning disabled."""
     x, y = sample_data_for_ae_compare
-    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "GaussianProcessRBF"]
 
     ae = AutoEmulate(x, y, models=models, model_params={})
 
@@ -71,7 +71,7 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
 
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
-    assert "GaussianProcess" in result_model_names
+    assert "GaussianProcessRBF" in result_model_names
 
     mlp_params = ae.get_result(0).params
     assert mlp_params != {}

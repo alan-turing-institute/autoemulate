@@ -14,7 +14,6 @@ from autoemulate.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
 )
 from autoemulate.emulators.gaussian_process.kernel import rbf_kernel
@@ -24,7 +23,6 @@ GPS = [
     GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
 ]
 

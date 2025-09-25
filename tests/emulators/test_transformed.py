@@ -2,20 +2,13 @@ import itertools
 
 import pytest
 import torch
-from autoemulate.core.types import (
-    DistributionLike,
-    GaussianLike,
-    TensorLike,
-)
+from autoemulate.core.types import DistributionLike, GaussianLike, TensorLike
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators import ALL_EMULATORS, GaussianProcess
+from autoemulate.emulators import ALL_EMULATORS
 from autoemulate.emulators.base import ProbabilisticEmulator
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.emulators.transformed.base import TransformedEmulator
-from autoemulate.transforms import (
-    PCATransform,
-    StandardizeTransform,
-    VAETransform,
-)
+from autoemulate.transforms import PCATransform, StandardizeTransform, VAETransform
 from autoemulate.transforms.base import AutoEmulateTransform
 
 
