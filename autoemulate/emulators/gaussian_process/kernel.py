@@ -158,7 +158,7 @@ def linear_kernel(n_features: int | None, n_outputs: torch.Size | None) -> Linea
 
 def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
     """
-    Radial Basis Function (rbf_kernel) kernel plus a constant kernel.
+    Radial Basis Function (RBF) kernel plus a constant kernel.
 
     Parameters
     ----------
@@ -172,7 +172,7 @@ def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> K
     Returns
     -------
     Kernel
-        The initialized rbf_kernel kernel plus a constant kernel.
+        The initialized RBF kernel plus a constant kernel.
     """
     return rbf_kernel(n_features, n_outputs) + ConstantKernel()
 
@@ -180,7 +180,7 @@ def rbf_plus_constant(n_features: int | None, n_outputs: torch.Size | None) -> K
 # combinations
 def rbf_plus_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
     """
-    Radial Basis Function (rbf_kernel) kernel plus a linear kernel.
+    Radial Basis Function (RBF) kernel plus a linear kernel.
 
     Parameters
     ----------
@@ -194,7 +194,7 @@ def rbf_plus_linear(n_features: int | None, n_outputs: torch.Size | None) -> Ker
     Returns
     -------
     Kernel
-        The initialized rbf_kernel kernel plus a linear kernel.
+        The initialized RBF kernel plus a linear kernel.
     """
     return rbf_kernel(n_features, n_outputs) + linear_kernel(n_features, n_outputs)
 
@@ -221,7 +221,7 @@ def matern_5_2_plus_rq(n_features: int | None, n_outputs: torch.Size | None) -> 
 
 
 def rbf_times_linear(n_features: int | None, n_outputs: torch.Size | None) -> Kernel:
-    """Radial Basis Function (rbf_kernel) kernel multiplied by a linear kernel.
+    """Radial Basis Function (RBF) kernel multiplied by a linear kernel.
 
     Parameters
     ----------
@@ -235,6 +235,6 @@ def rbf_times_linear(n_features: int | None, n_outputs: torch.Size | None) -> Ke
     Returns
     -------
     Kernel
-        The initialized rbf_kernel kernel multiplied by a linear kernel.
+        The initialized RBF kernel multiplied by a linear kernel.
     """
     return rbf_kernel(n_features, n_outputs) * linear_kernel(n_features, n_outputs)
