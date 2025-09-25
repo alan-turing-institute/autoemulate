@@ -16,7 +16,9 @@ from the_well.benchmark.trainer import Trainer
 from the_well.data import DeltaWellDataset, WellDataModule
 from the_well.data.data_formatter import AbstractDataFormatter
 from the_well.data.datamodule import AbstractDataModule
+from the_well.data.datasets import WellMetadata
 from torch import nn
+from torch.nn import functional as F
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 
@@ -42,6 +44,19 @@ class TrainerParams:
     checkpoint_path: str = ""  # Path to a checkpoint to resume from, if any
     device: DeviceLike = "cpu"
     output_path: str = "./"
+    # Enable scheduled teacher forcing in training
+    enable_tf_schedule: bool = False
+    #  start, end, schedule_epochs, schedule_type, mode, min_prob
+    tf_params: dict = field(
+        default_factory=lambda: {
+            "start": 1.0,
+            "end": 0.0,
+            "schedule_epochs": None,  # fallback to total epochs
+            "schedule_type": "linear",  # linear | exponential | step
+            "mode": "mix",  # mix (tempering) | prob (stochastic)
+            "min_prob": 1e-6,
+        }
+    )
 
 
 class AutoEmulateTrainer(Trainer):
@@ -99,6 +114,9 @@ class AutoEmulateTrainer(Trainer):
         self.lr_scheduler = lr_scheduler
         self.loss_fn = loss_fn
 
+        # Flag controlling whether TF schedule is active
+        self.enable_tf_schedule = trainer_params.enable_tf_schedule
+
         # Remaining trainer params
         self.is_delta = isinstance(datamodule.train_dataset, DeltaWellDataset)
         self.validation_suite = [*validation_metric_suite, self.loss_fn]
@@ -126,6 +144,200 @@ class AutoEmulateTrainer(Trainer):
         self.formatter = formatter_cls(self.dset_metadata)
         if len(trainer_params.checkpoint_path) > 0:
             self.load_checkpoint(trainer_params.checkpoint_path)
+
+        # Teacher Forcing scheduler setup
+        tf_params = trainer_params.tf_params
+        self.tf_start = float(tf_params.get("start", 1.0))
+        self.tf_end = float(tf_params.get("end", 0.0))
+        self.tf_mode = tf_params.get("mode", "mix")
+        self.tf_type = tf_params.get("schedule_type", "linear")
+        self.tf_epochs = tf_params.get("schedule_epochs") or self.max_epoch
+        self.tf_min_prob = float(tf_params.get("min_prob", 1e-6))
+
+        # Initialize current_epoch so scheduling logic has a defined value pre-training
+        self.current_epoch = self.starting_epoch
+
+    def train_one_epoch(self, epoch: int, dataloader) -> float:
+        """Override to expose the current epoch to scheduling utilities.
+
+        Sets `self.current_epoch` before delegating to the base implementation so
+        `_teacher_forcing_ratio` can derive a reliable epoch index without
+        re-implementing the full training loop from the upstream Trainer.
+        """
+        self.current_epoch = epoch
+
+        # Defer to base trainer to perform training and collect logs
+        result = super().train_one_epoch(epoch, dataloader)
+        if isinstance(result, tuple) and len(result) == 2:
+            epoch_loss, train_logs = result
+        else:  # Upstream type hint mismatch safeguard
+            epoch_loss, train_logs = result, {}
+
+        # Augment logs with scheduled TF ratio (0 if disabled)
+        try:
+            train_logs["tf/ratio_scheduled"] = float(self._teacher_forcing_ratio())
+        # pragma: no cover - defensive
+        except Exception:
+            train_logs["tf/ratio_scheduled"] = float("nan")
+
+        return epoch_loss, train_logs  # type: ignore as this is the upstream signature
+
+    def _teacher_forcing_ratio(self) -> float:
+        """Compute the scheduled teacher forcing ratio for the current epoch.
+
+        Returns 0.0 immediately if scheduling is disabled.
+        """
+        if not self.enable_tf_schedule:
+            return 0.0
+        e = max(int(self.current_epoch) - 1, 0)
+        total = max(self.tf_epochs - 1, 1)
+        progress = min(e / total, 1.0)
+        # Base linear interpolation used as default
+        linear_val = self.tf_start + (self.tf_end - self.tf_start) * progress
+
+        if self.tf_type == "exponential":
+            # Solve start * gamma^e = end at e=total => gamma = (end/start)^(1/total)
+            if self.tf_start > 0 and self.tf_end > 0:
+                gamma = (self.tf_end / self.tf_start) ** (1 / total)
+                r = self.tf_start * (gamma**e)
+            else:  # fall back to linear if invalid bounds
+                r = linear_val
+        elif self.tf_type == "step":
+            r = self.tf_start if e < total else self.tf_end
+        else:  # linear or unknown -> use linear interpolation
+            r = linear_val
+        # Clamp to [0.0, 1.0] numerical floor
+        return float(max(min(r, 1.0), 0.0))
+
+    def rollout_model(
+        self,
+        model,
+        batch,
+        formatter,
+        train: bool = True,
+        teacher_forcing: bool = False,
+        tf_ratio: float | None = None,
+    ):
+        """Roll out the model.
+
+        Parameters
+        ----------
+        model: nn.Module
+            The model to evaluate.
+        batch: dict
+            Batch produced by the dataloader (contains `input_fields` and optional
+            `constant_fields` plus targets).
+        formatter: AbstractDataFormatter
+            Formatter that converts batch tensors to model inputs / outputs.
+        train: bool
+            If True, uses the scheduled teacher forcing ratio (unless `tf_ratio` is
+            explicitly provided). If False, no schedule is applied. Defaults to True.
+        teacher_forcing: bool
+            Backwards-compatible flag. When evaluating (`train=False`) and `tf_ratio` is
+            not provided, `teacher_forcing=True` implies full teacher forcing
+            (ratio = 1.0). During training this flag is ignored because scheduled
+            teacher forcing is always active. Defaults to False.
+        tf_ratio: float | None
+            Explicit teacher forcing ratio override in `[0, 1]`. Highest precedence: if
+            provided it is used directly (clamped) regardless of mode (train/eval) or
+            schedule. This allows ad-hoc evaluation at a fixed ratio or reproducing the
+            original full teacher forcing rollout with `tf_ratio=1.0`. Defaults to None.
+
+        Notes
+        -----
+        Precedence:
+        1. `tf_ratio` argument (if not None)
+        2. Training schedule (`train=True`)
+        3. Full TF on eval if `teacher_forcing=True`
+        4. No teacher forcing
+        """
+        inputs, y_ref = formatter.process_input(batch)
+        rollout_steps = min(
+            y_ref.shape[1], self.max_rollout_steps
+        )  # Number of timesteps in target
+        y_ref = y_ref[:, :rollout_steps].to(self.device)
+        # Create a moving batch of one step at a time
+        moving_batch = batch
+        moving_batch["input_fields"] = moving_batch["input_fields"].to(self.device)
+        if "constant_fields" in moving_batch:
+            moving_batch["constant_fields"] = moving_batch["constant_fields"].to(
+                self.device
+            )
+        y_preds = []
+
+        # Calculate the tf_ratio using precedence rules
+        def _resolve_tf_ratio():
+            if tf_ratio is not None:
+                return float(max(min(tf_ratio, 1.0), 0.0))
+            if train and self.enable_tf_schedule:
+                return self._teacher_forcing_ratio()
+            if teacher_forcing:
+                return 1.0
+            return 0.0
+
+        effective_tf_ratio = _resolve_tf_ratio()
+
+        use_tf = effective_tf_ratio > 0.0
+
+        for i in range(rollout_steps):
+            if not train:
+                moving_batch = self.normalize(moving_batch)
+
+            inputs, _ = formatter.process_input(moving_batch)
+            inputs = [x.to(self.device) for x in inputs]
+            y_pred = model(*inputs)
+
+            y_pred = formatter.process_output_channel_last(y_pred)
+
+            if not train:
+                moving_batch, y_pred = self.denormalize(moving_batch, y_pred)
+
+            if (not train) and self.is_delta:
+                assert {
+                    moving_batch["input_fields"][:, -1, ...].shape == y_pred.shape
+                }, (
+                    f"Mismatching shapes between last input timestep "
+                    f"{moving_batch[:, -1, ...].shape} and prediction {y_pred.shape}"
+                )
+                y_pred = moving_batch["input_fields"][:, -1, ...] + y_pred
+            y_pred = formatter.process_output_expand_time(y_pred)
+            # If not last step, update moving batch
+            if i != rollout_steps - 1:
+                next_moving_batch_tail = moving_batch["input_fields"][:, 1:]
+                if use_tf:
+                    if self.tf_mode == "prob":
+                        # Sample Bernoulli per batch element deciding to use GT vs pred
+                        mask = (
+                            torch.rand(
+                                y_pred.shape[0],  # generate a mask per batch
+                                1,
+                                *([1] * (y_pred.dim() - 2)),
+                                device=y_pred.device,
+                            )
+                            < effective_tf_ratio
+                        ).to(y_pred.dtype)
+                        mixed = mask * y_ref[:, i : i + 1] + (1 - mask) * y_pred
+                        next_moving_batch = torch.cat(
+                            [next_moving_batch_tail, mixed], dim=1
+                        )
+                    else:  # mix/tempering
+                        mixed = (
+                            effective_tf_ratio * y_ref[:, i : i + 1]
+                            + (1 - effective_tf_ratio) * y_pred
+                        )
+                        next_moving_batch = torch.cat(
+                            [next_moving_batch_tail, mixed], dim=1
+                        )
+                else:
+                    # Fully free running
+                    next_moving_batch = torch.cat(
+                        [next_moving_batch_tail, y_pred], dim=1
+                    )
+                moving_batch["input_fields"] = next_moving_batch
+            y_preds.append(y_pred)
+        y_pred_out = torch.cat(y_preds, dim=1)
+        y_ref = y_ref.to(self.device)
+        return y_pred_out, y_ref
 
 
 class TheWellEmulator(SpatioTemporalEmulator):
@@ -271,6 +483,121 @@ class TheWellFNO(TheWellEmulator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class TheWellFNOWithLearnableWeights(TheWellEmulator):
+    """The Well FNO emulator with learnable weights."""
+
+    model_cls: type[torch.nn.Module] = models.FNO
+    model_parameters: ClassVar[ModelParams] = {
+        "modes1": 16,
+        "modes2": 16,
+    }
+
+    def __init__(
+        self,
+        datamodule: AbstractDataModule | WellDataModule,
+        formatter_cls: type[AbstractDataFormatter],
+        loss_fn: Callable,
+        trainer_params: TrainerParams | None = None,
+        **kwargs,
+    ):
+        # Parameters for the Trainer
+        self.trainer_params = trainer_params or TrainerParams()
+
+        # Device setup and backend init
+        TorchDeviceMixin.__init__(
+            self, device=get_torch_device(self.trainer_params.device)
+        )
+        # Skip TheWellEmulator init as overriden here
+        SpatioTemporalEmulator.__init__(self, **kwargs)
+
+        # Set output path
+        output_path = Path(self.trainer_params.output_path)
+
+        # Set datamodule
+        self.datamodule = datamodule
+
+        if isinstance(datamodule, WellDataModule):
+            # Load metadata from train_dataset
+            metadata = datamodule.train_dataset.metadata
+            self.n_steps_input = datamodule.train_dataset.n_steps_input
+            self.n_steps_output = datamodule.train_dataset.n_steps_output
+            # TODO: aim to be more flexible (such as time as an input channel)
+            self.n_input_fields = (
+                self.n_steps_input * metadata.n_fields + metadata.n_constant_fields
+            )
+            self.n_output_fields = metadata.n_fields
+            self.model = self.model_cls(
+                **self.model_parameters,
+                # TODO: check if general beyond FNO
+                dim_in=self.n_input_fields,
+                dim_out=self.n_output_fields,
+                n_spatial_dims=metadata.n_spatial_dims,
+                spatial_resolution=metadata.spatial_resolution,
+            )
+            # TODO: update with logging
+            print(torchinfo.summary(self.model, depth=5))
+        else:
+            msg = "Alternative datamodules not yet supported"
+            raise NotImplementedError(msg)
+
+        # Init optimizer
+        optimizer = self.trainer_params.optimizer_cls(
+            self.model.parameters(), **self.trainer_params.optimizer_params
+        )
+
+        # Init scheduler
+        lr_scheduler = (
+            self.trainer_params.lr_scheduler(optimizer)
+            if self.trainer_params.lr_scheduler is not None
+            else None
+        )
+
+        # Learnable weights for loss function
+        self.weights = nn.Parameter(
+            torch.ones(self.n_steps_output, device=self.device), requires_grad=True
+        )
+
+        # Assign given metric as base loss function
+        self.base_loss_func = loss_fn
+
+        # Init trainer
+        self.trainer = AutoEmulateTrainer(
+            loss_fn=self.custom_loss_fn,  # use custom loss fn as callable in trainer
+            output_path=output_path,
+            formatter_cls=formatter_cls,
+            model=self.model,
+            datamodule=datamodule,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            trainer_params=self.trainer_params,
+        )
+
+        # Move to device
+        # TODO: check if this needs updating for distributed handling
+        self.to(self.device)
+
+    def custom_loss_fn(self, y_pred, y_target, meta: WellMetadata):
+        """Loss function that uses parameters constructed at init."""
+        # Make positive
+        w = F.softplus(self.weights)
+
+        # Normalize so mean(w) == 1
+        w = w / (w.mean() + 1e-12)
+
+        # Reshape to (1, n_steps, spatial_dims, channels) for broadcasting
+        w = w.view(1, -1, *([1] * meta.n_spatial_dims), 1)
+
+        # Pad with 1s along the time dimension if needed to match y_pred shape
+        if w.shape[1] != y_pred.shape[1]:
+            extra = y_pred.shape[1] - w.shape[1]
+            pad_shape = (1, extra, *([1] * meta.n_spatial_dims), 1)
+            ones = torch.ones(pad_shape, device=w.device, dtype=w.dtype)
+            w = torch.cat([w, ones], dim=1)
+
+        # Return a weighted loss
+        return self.base_loss_func(w * y_pred, w * y_target, meta)
 
 
 # TODO: fix this as not initializing correctly at the moment
