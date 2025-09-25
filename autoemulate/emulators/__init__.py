@@ -3,9 +3,12 @@ from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedRBF,
+    GaussianProcessCorrelatedRBFandConstant,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
+    GaussianProcessRBFandConstant,
 )
 from .lightgbm import LightGBM
 from .nn.mlp import MLP
@@ -18,9 +21,12 @@ from .transformed.base import TransformedEmulator
 ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcess,
     GaussianProcessCorrelated,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedRBF,
+    GaussianProcessCorrelatedRBFandConstant,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
+    GaussianProcessRBFandConstant,
     LightGBM,
     SupportVectorMachine,
     RadialBasisFunctions,
@@ -83,9 +89,12 @@ __all__ = [
     "EnsembleMLPDropout",
     "GaussianProcess",
     "GaussianProcessCorrelated",
+    "GaussianProcessCorrelatedMatern32",
+    "GaussianProcessCorrelatedRBF",
+    "GaussianProcessCorrelatedRBFandConstant",
     "GaussianProcessMatern32",
-    "GaussianProcessMatern52",
     "GaussianProcessRBF",
+    "GaussianProcessRBFandConstant",
     "LightGBM",
     "PolynomialRegression",
     "RadialBasisFunctions",
