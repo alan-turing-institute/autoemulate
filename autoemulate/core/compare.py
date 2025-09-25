@@ -24,7 +24,12 @@ from autoemulate.core.types import (
     TransformedEmulatorParams,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
-from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
+from autoemulate.emulators import (
+    ALL_EMULATORS,
+    DEFAULT_EMULATORS,
+    PYTORCH_EMULATORS,
+    get_emulator_class,
+)
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
@@ -176,6 +181,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return ALL_EMULATORS
 
     @staticmethod
+    def default_emulators() -> list[type[Emulator]]:
+        """Return a list of default emulators used by AutoEmulate."""
+        return DEFAULT_EMULATORS
+
+    @staticmethod
     def pytorch_emulators() -> list[type[Emulator]]:
         """Return a list of all available PyTorch emulators."""
         return PYTORCH_EMULATORS
@@ -186,11 +196,17 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return [emulator for emulator in ALL_EMULATORS if emulator.supports_uq]
 
     @staticmethod
-    def list_emulators() -> pd.DataFrame:
+    def list_emulators(subset: str = "default") -> pd.DataFrame:
         """Return a dataframe with info on all available emulators.
 
         The dataframe includes the model name and whether it has a PyTorch backend (and
         autodiff), supports multioutput data and provides uncertainty quantification.
+
+        Parameters
+        ----------
+        subset: str
+        Subset of emulators to include. Can be 'all' or 'default'.
+
 
         Returns
         -------
@@ -202,26 +218,22 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 - 'Uncertainty_Quantification',
                 - 'Automatic_Differentiation`
         """
+        emulator_set = ALL_EMULATORS if subset == "all" else DEFAULT_EMULATORS
         return pd.DataFrame(
             {
-                "Emulator": [
-                    emulator.model_name() for emulator in AutoEmulate.all_emulators()
-                ],
+                "Emulator": [emulator.model_name() for emulator in emulator_set],
                 "PyTorch": [
                     emulator in AutoEmulate.pytorch_emulators()
-                    for emulator in AutoEmulate.all_emulators()
+                    for emulator in emulator_set
                 ],
-                "Multioutput": [
-                    emulator.is_multioutput()
-                    for emulator in AutoEmulate.all_emulators()
-                ],
+                "Multioutput": [emulator.is_multioutput() for emulator in emulator_set],
                 "Uncertainty_Quantification": [
                     emulator in AutoEmulate.probablistic_emulators()
-                    for emulator in AutoEmulate.all_emulators()
+                    for emulator in emulator_set
                 ],
                 "Automatic_Differentiation": [
                     emulator in AutoEmulate.pytorch_emulators()
-                    for emulator in AutoEmulate.all_emulators()
+                    for emulator in emulator_set
                 ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
