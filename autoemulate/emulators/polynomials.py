@@ -1,11 +1,11 @@
 import torch
-from sklearn.preprocessing import PolynomialFeatures
 from torch import nn
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import PyTorchBackend
+from autoemulate.feature_generation.polynomial_features import PolynomialFeatures
 from autoemulate.transforms.standardize import StandardizeTransform
 
 
@@ -69,25 +69,24 @@ class PolynomialRegression(PyTorchBackend):
         self.lr = lr
         self.epochs = epochs
         self.batch_size = batch_size
+        self.n_features = x.shape[1]
+        self.n_outputs = y.shape[1] if y.ndim > 1 else 1
 
-        # Fit the polynomial feature transformer on the input data
-        self.poly = PolynomialFeatures(degree=self.degree)
-        x_np, _ = self._convert_to_numpy(x)
-        x_poly = self.poly.fit_transform(x_np)
-        self.n_outputs_ = y.shape[1] if y.ndim > 1 else 1
-        self.linear = nn.Linear(x_poly.shape[1], self.n_outputs_, bias=False).to(
-            self.device
+        # includes bias term by default
+        self.poly = PolynomialFeatures(
+            self.n_features, degree=self.degree, device=self.device
         )
+        self.linear = nn.Linear(
+            self.poly.n_output_features, self.n_outputs, bias=False
+        ).to(self.device)
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through for polynomial regression."""
         # Transform input using the fitted PolynomialFeatures
-        x_np, _ = self._convert_to_numpy(x)
-        x_poly = self.poly.transform(x_np)
-        x_poly_tensor = torch.tensor(x_poly, dtype=torch.float32, device=self.device)
-        return self.linear(x_poly_tensor)
+        x_poly = self.poly(x)
+        return self.linear(x_poly)
 
     @staticmethod
     def is_multioutput() -> bool:
