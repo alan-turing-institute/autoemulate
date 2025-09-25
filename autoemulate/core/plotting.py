@@ -291,7 +291,7 @@ def _plot_2d_slice_with_fixed_params(
     """
     ncols = 2 if var is not None else 1
     fig, axs = plt.subplots(
-        1, ncols, figsize=(14, 6), sharex=True, sharey=True, squeeze=False
+        1, ncols, figsize=(10, 4), sharex=True, sharey=True, squeeze=False
     )
 
     # Get grid dimensions
@@ -410,6 +410,8 @@ def create_and_plot_slice(
         param_pair_names,
         vmin,
         vmax,
-        fixed_params_info=f"{', '.join(fixed_params)} at {quantile:.1f} quantile",
+        fixed_params_info=f"{', '.join(fixed_params)} at {quantile:.1f} quantile"
+        if len(fixed_params) > 0
+        else "None",
     )
     return fig, ax
