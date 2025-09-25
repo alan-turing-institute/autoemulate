@@ -50,7 +50,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[Transform | dict]] | None = None,
         model_params: None | ModelParams | dict = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
-        only_pytorch: bool = False,
+        only_pytorch: bool = True,
         only_probabilistic: bool = False,
         n_iter: int = 10,
         n_splits: int = 5,
