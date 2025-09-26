@@ -55,7 +55,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[Transform | dict]] | None = None,
         model_params: None | ModelParams | dict = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
-        only_pytorch: bool = True,
         only_probabilistic: bool = False,
         n_iter: int = 10,
         n_splits: int = 5,
@@ -91,8 +90,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             provided the default parameters for each model are used without tuning.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
-        only_pytorch: bool
-            If True, only PyTorch emulators are used. Defaults to False.
         only_probabilistic: bool
             If True, only probabilistic emulators are used. Defaults to False.
         n_iter: int
@@ -135,9 +132,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ]
 
         # Set default models if None
-        updated_models = self.get_models(
-            models, only_probabilistic=only_probabilistic, only_pytorch=only_pytorch
-        )
+        updated_models = self.get_models(models, only_probabilistic=only_probabilistic)
 
         # Filter models to only be those that can handle multioutput data
         if y.shape[1] > 1:
@@ -243,7 +238,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def get_models(
         self,
         models: list[type[Emulator] | str] | None = None,
-        only_pytorch: bool = False,
         only_probabilistic: bool = False,
     ) -> list[type[Emulator]]:
         """
@@ -260,25 +254,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             If True, only probabilistic emulators are returned. Defaults to False.
         """
         if models is None:
-            if only_probabilistic and only_pytorch:
-                return [
-                    emulator
-                    for emulator in self.default_emulators()
-                    if emulator in self.pytorch_emulators()
-                    and emulator in self.probablistic_emulators()
-                ]
-
             if only_probabilistic:
                 return [
                     emulator
                     for emulator in self.default_emulators()
                     if emulator in self.probablistic_emulators()
-                ]
-            if only_pytorch:
-                return [
-                    emulator
-                    for emulator in self.default_emulators()
-                    if emulator in self.pytorch_emulators()
                 ]
             return self.default_emulators()
 
