@@ -1,5 +1,5 @@
 import torch
-from autoemulate.emulators import GaussianProcess
+from autoemulate.emulators import GaussianProcessRBF
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms import PCATransform, StandardizeTransform, VAETransform
 
@@ -23,7 +23,7 @@ def test_affine_detection_flags_linear_transforms():
         y,
         x_transforms=[StandardizeTransform()],
         y_transforms=y_transforms,
-        model=GaussianProcess,
+        model=GaussianProcessRBF,
         output_from_samples=False,
         full_covariance=False,
     )
@@ -53,7 +53,7 @@ def test_predict_mean_uses_fast_linear_path(monkeypatch):
         y,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), PCATransform(n_components=2)],
-        model=GaussianProcess,
+        model=GaussianProcessRBF,
         output_from_samples=False,
         full_covariance=False,
     )
@@ -97,7 +97,7 @@ def test_vae_marked_nonlinear_and_mean_uses_delta(monkeypatch):
         y,
         x_transforms=[StandardizeTransform()],
         y_transforms=[StandardizeTransform(), vae],
-        model=GaussianProcess,
+        model=GaussianProcessRBF,
         output_from_samples=False,
         full_covariance=False,
     )

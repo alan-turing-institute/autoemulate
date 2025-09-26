@@ -1,35 +1,36 @@
 from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
-    GaussianProcess,
-    GaussianProcessCorrelated,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedRBF,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
 )
 from .lightgbm import LightGBM
 from .nn.mlp import MLP
+from .polynomials import PolynomialRegression
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
 from .svm import SupportVectorMachine
 from .transformed.base import TransformedEmulator
 
-# from .neural_processes.conditional_neural_process import CNPModule
-
-ALL_EMULATORS: list[type[Emulator]] = [
-    GaussianProcess,
-    GaussianProcessCorrelated,
+DEFAULT_EMULATORS: list[type[Emulator]] = [
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
-    LightGBM,
-    # CNPModule,
-    SupportVectorMachine,
     RadialBasisFunctions,
-    RandomForest,
+    PolynomialRegression,
     MLP,
     EnsembleMLP,
+]
+
+ALL_EMULATORS: list[type[Emulator]] = [
+    *DEFAULT_EMULATORS,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedRBF,
     EnsembleMLPDropout,
+    LightGBM,
+    SupportVectorMachine,
+    RandomForest,
 ]
 
 # listing non pytorch emulators as we do not expect this list to grow
@@ -82,12 +83,12 @@ __all__ = [
     "MLP",
     "EnsembleMLP",
     "EnsembleMLPDropout",
-    "GaussianProcess",
-    "GaussianProcessCorrelated",
+    "GaussianProcessCorrelatedMatern32",
+    "GaussianProcessCorrelatedRBF",
     "GaussianProcessMatern32",
-    "GaussianProcessMatern52",
     "GaussianProcessRBF",
     "LightGBM",
+    "PolynomialRegression",
     "RadialBasisFunctions",
     "RandomForest",
     "SupportVectorMachine",

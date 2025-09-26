@@ -2,12 +2,8 @@ import numpy as np
 import pytest
 import torch
 from autoemulate.core.types import GaussianLike, TensorLike
-from autoemulate.emulators import GaussianProcess
-from autoemulate.transforms import (
-    PCATransform,
-    StandardizeTransform,
-    VAETransform,
-)
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
+from autoemulate.transforms import PCATransform, StandardizeTransform, VAETransform
 from autoemulate.transforms.base import (
     AutoEmulateTransform,
     _inverse_sample_gaussian_like,

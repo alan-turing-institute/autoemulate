@@ -118,7 +118,7 @@ class MLP(DropoutTorchBackend):
         self.batch_size = batch_size
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_setup(scheduler_kwargs)
-        self.to(device)
+        self.to(self.device)
 
     def forward(self, x):
         """Forward pass for the MLP."""
