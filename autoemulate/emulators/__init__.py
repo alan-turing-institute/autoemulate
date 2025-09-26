@@ -17,10 +17,7 @@ from .transformed.base import TransformedEmulator
 DEFAULT_EMULATORS: list[type[Emulator]] = [
     GaussianProcessMatern32,
     GaussianProcessRBF,
-    LightGBM,
-    SupportVectorMachine,
     RadialBasisFunctions,
-    RandomForest,
     PolynomialRegression,
     MLP,
     EnsembleMLP,
@@ -31,6 +28,9 @@ ALL_EMULATORS: list[type[Emulator]] = [
     GaussianProcessCorrelatedMatern32,
     GaussianProcessCorrelatedRBF,
     EnsembleMLPDropout,
+    LightGBM,
+    SupportVectorMachine,
+    RandomForest,
 ]
 
 # listing non pytorch emulators as we do not expect this list to grow
