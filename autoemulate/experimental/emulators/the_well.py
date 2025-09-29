@@ -10,8 +10,10 @@ import wandb
 from autoemulate.core.device import TorchDeviceMixin, get_torch_device
 from autoemulate.core.types import DeviceLike, ModelParams, TensorLike
 from autoemulate.experimental.emulators.spatiotemporal import SpatioTemporalEmulator
+from einops import rearrange
 from the_well.benchmark import models
 from the_well.benchmark.metrics import validation_metric_suite
+from the_well.benchmark.models.common import BaseModel
 from the_well.benchmark.trainer import Trainer
 from the_well.data import DeltaWellDataset, WellDataModule
 from the_well.data.data_formatter import AbstractDataFormatter
@@ -472,6 +474,50 @@ class TheWellEmulator(SpatioTemporalEmulator):
         return True
 
 
+class FNOWithTime(BaseModel):
+    """FNO with time."""
+
+    def __init__(
+        self,
+        dim_in: int,
+        dim_out: int,
+        n_spatial_dims: int,
+        spatial_resolution: tuple[int, ...],
+        modes1: int,
+        modes2: int,
+        modes3: int = 16,
+        hidden_channels: int = 64,
+        gradient_checkpointing: bool = False,
+    ):
+        super().__init__(n_spatial_dims, spatial_resolution)
+        self.dim_in = dim_in
+        self.dim_out = dim_out
+        self.modes1 = modes1
+        self.modes2 = modes2
+        self.modes3 = modes3
+        self.hidden_channels = hidden_channels
+        self.model = None
+        self.initialized = False
+        self.gradient_checkpointing = gradient_checkpointing
+
+        if self.n_spatial_dims == 2:
+            # TODO: update the time
+            self.n_modes = (1, self.modes1, self.modes2)
+        elif self.n_spatial_dims == 3:
+            self.n_modes = (1, self.modes1, self.modes2, self.modes3)
+
+        self.model = models.fno.NeuralOpsCheckpointWrapper(
+            n_modes=self.n_modes,
+            in_channels=self.dim_in,
+            out_channels=self.dim_out,
+            hidden_channels=self.hidden_channels,
+            gradient_checkpointing=gradient_checkpointing,
+        )
+
+    def forward(self, input) -> torch.Tensor:  # noqa: D102
+        return self.model(input)  # type: ignore  # noqa: PGH003
+
+
 class TheWellFNO(TheWellEmulator):
     """The Well FNO emulator."""
 
@@ -483,6 +529,52 @@ class TheWellFNO(TheWellEmulator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class TheWellFNOWithTime(TheWellEmulator):
+    """The Well FNO emulator."""
+
+    model_cls: type[torch.nn.Module] = FNOWithTime
+    model_parameters: ClassVar[ModelParams] = {
+        "modes1": 16,
+        "modes2": 16,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class DefaultChannelsFirstFormatterWithTime(AbstractDataFormatter):
+    """
+    Default preprocessor for data in channels first format.
+
+    Stacks time as individual channel.
+    """
+
+    def process_input(self, data: dict) -> tuple:  # noqa: D102
+        x = data["input_fields"]
+        # x = rearrange(x, "b t ... c -> b (t c) ...")
+        x = rearrange(x, "b ... c -> b c ...")
+        if "constant_fields" in data:
+            flat_constants = rearrange(data["constant_fields"], "b ... c -> b c 1 ...")
+            x = torch.cat(
+                [
+                    x,
+                    flat_constants,
+                ],
+                dim=1,
+            )
+        y = data["output_fields"]
+        # TODO - Add warning to output if nan has to be replaced
+        # in some cases (staircase), its ok. In others, it's not.
+        return (torch.nan_to_num(x),), torch.nan_to_num(y)
+
+    def process_output_channel_last(self, output: torch.Tensor) -> torch.Tensor:  # noqa: D102
+        return rearrange(output, "b c ... -> b ... c")
+
+    def process_output_expand_time(self, output: torch.Tensor) -> torch.Tensor:  # noqa: D102
+        # return rearrange(output, "b ... c -> b 1 ... c")
+        return rearrange(output, "b ... c -> b ... c")
 
 
 class TheWellFNOWithLearnableWeights(TheWellEmulator):
