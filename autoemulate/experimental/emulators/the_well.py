@@ -1,3 +1,4 @@
+import inspect
 import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -295,6 +296,7 @@ class AutoEmulateTrainer(Trainer):
                 moving_batch, y_pred = self.denormalize(moving_batch, y_pred)
 
             if (not train) and self.is_delta:
+                # TODO: update to handle case when more than single time step
                 assert {
                     moving_batch["input_fields"][:, -1, ...].shape == y_pred.shape
                 }, (
@@ -348,6 +350,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
     model: torch.nn.Module
     model_cls: type[torch.nn.Module]
     model_parameters: ClassVar[ModelParams]
+    with_time: bool = False
 
     def __init__(
         self,
@@ -364,7 +367,28 @@ class TheWellEmulator(SpatioTemporalEmulator):
         TorchDeviceMixin.__init__(
             self, device=get_torch_device(self.trainer_params.device)
         )
-        super().__init__(**kwargs)
+        # Init base without nn.Module kwargs
+        super().__init__()
+
+        # Split incoming kwargs into those intended for the model class vs others.
+        # Anything matching the model's __init__ signature (excluding self) is
+        # treated as a model override and merged with class-level model_parameters.
+        model_sig = inspect.signature(self.model_cls.__init__).parameters
+        allowed_model_keys = {
+            name
+            for name, p in model_sig.items()
+            if name != "self"
+            and p.kind
+            in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            )
+        }
+        provided_model_kwargs = {
+            k: kwargs.pop(k) for k in list(kwargs.keys()) if k in allowed_model_keys
+        }
+        # Combine defaults with provided overrides
+        self._model_kwargs = {**self.model_parameters, **provided_model_kwargs}
 
         # Set output path
         output_path = Path(self.trainer_params.output_path)
@@ -377,13 +401,18 @@ class TheWellEmulator(SpatioTemporalEmulator):
             metadata = datamodule.train_dataset.metadata
             self.n_steps_input = datamodule.train_dataset.n_steps_input
             self.n_steps_output = datamodule.train_dataset.n_steps_output
-            # TODO: aim to be more flexible (such as time as an input channel)
-            self.n_input_fields = (
-                self.n_steps_input * metadata.n_fields + metadata.n_constant_fields
-            )
+
+            # Determine whether the model expects time as an explicit dimension
+            # For such models, channels should repr fields(+constants), not time*fields
+            if self.with_time:
+                self.n_input_fields = metadata.n_fields + metadata.n_constant_fields
+            else:
+                self.n_input_fields = (
+                    self.n_steps_input * metadata.n_fields + metadata.n_constant_fields
+                )
             self.n_output_fields = metadata.n_fields
             self.model = self.model_cls(
-                **self.model_parameters,
+                **self._model_kwargs,
                 # TODO: check if general beyond FNO
                 dim_in=self.n_input_fields,
                 dim_out=self.n_output_fields,
@@ -483,6 +512,7 @@ class FNOWithTime(BaseModel):
         dim_out: int,
         n_spatial_dims: int,
         spatial_resolution: tuple[int, ...],
+        modes_time: int,
         modes1: int,
         modes2: int,
         modes3: int = 16,
@@ -492,6 +522,7 @@ class FNOWithTime(BaseModel):
         super().__init__(n_spatial_dims, spatial_resolution)
         self.dim_in = dim_in
         self.dim_out = dim_out
+        self.modes_time = modes_time
         self.modes1 = modes1
         self.modes2 = modes2
         self.modes3 = modes3
@@ -501,10 +532,9 @@ class FNOWithTime(BaseModel):
         self.gradient_checkpointing = gradient_checkpointing
 
         if self.n_spatial_dims == 2:
-            # TODO: update the time
-            self.n_modes = (1, self.modes1, self.modes2)
+            self.n_modes = (self.modes_time, self.modes1, self.modes2)
         elif self.n_spatial_dims == 3:
-            self.n_modes = (1, self.modes1, self.modes2, self.modes3)
+            self.n_modes = (self.modes_time, self.modes1, self.modes2, self.modes3)
 
         self.model = models.fno.NeuralOpsCheckpointWrapper(
             n_modes=self.n_modes,
@@ -534,8 +564,10 @@ class TheWellFNO(TheWellEmulator):
 class TheWellFNOWithTime(TheWellEmulator):
     """The Well FNO emulator."""
 
+    with_time: bool = True
     model_cls: type[torch.nn.Module] = FNOWithTime
     model_parameters: ClassVar[ModelParams] = {
+        "modes_time": 3,
         "modes1": 16,
         "modes2": 16,
     }
@@ -553,8 +585,7 @@ class DefaultChannelsFirstFormatterWithTime(AbstractDataFormatter):
 
     def process_input(self, data: dict) -> tuple:  # noqa: D102
         x = data["input_fields"]
-        # x = rearrange(x, "b t ... c -> b (t c) ...")
-        x = rearrange(x, "b ... c -> b c ...")
+        x = rearrange(x, "b ... c -> b c ...")  # Move channels to before batch
         if "constant_fields" in data:
             flat_constants = rearrange(data["constant_fields"], "b ... c -> b c 1 ...")
             x = torch.cat(
@@ -573,8 +604,11 @@ class DefaultChannelsFirstFormatterWithTime(AbstractDataFormatter):
         return rearrange(output, "b c ... -> b ... c")
 
     def process_output_expand_time(self, output: torch.Tensor) -> torch.Tensor:  # noqa: D102
-        # return rearrange(output, "b ... c -> b 1 ... c")
-        return rearrange(output, "b ... c -> b ... c")
+        # Time does not need to be expanded as it is already included
+        output = rearrange(output, "b ... c -> b ... c")
+        # Only take the first temporal slice at the moment since predictions are only
+        # for one step ahead
+        return output[:, :1, ...]
 
 
 class TheWellFNOWithLearnableWeights(TheWellEmulator):
