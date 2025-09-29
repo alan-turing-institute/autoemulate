@@ -5,7 +5,7 @@ import pytest
 import torch
 from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
-from autoemulate.emulators import DEFAULT_EMULATORS, PYTORCH_EMULATORS
+from autoemulate.emulators import DEFAULT_EMULATORS
 from autoemulate.emulators.base import Emulator
 from torch.distributions import Transform
 
@@ -96,26 +96,14 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
     assert "max_samples" in rf_params
 
     gp_params = ae.get_result(2).params
-    assert gp_params != {}
-    assert "mean_module_fn" in gp_params
-    assert "covar_module_fn" in gp_params
-    assert "epochs" in gp_params
-    assert "lr" in gp_params
-    assert "likelihood_cls" in gp_params
+    assert gp_params == {}
 
 
 def test_get_model_subset():
     """Test getting a subset of models based on pytroch and probabilistic flags."""
 
     x, y = torch.rand(10, 2), torch.rand(10)
-    pytorch_subset = set(PYTORCH_EMULATORS).intersection(DEFAULT_EMULATORS)
     probabilistic_subset = {e for e in DEFAULT_EMULATORS if e.supports_uq}
-
-    ae = AutoEmulate(x, y, only_pytorch=True, model_params={})
-    assert set(ae.models) == pytorch_subset
 
     ae = AutoEmulate(x, y, only_probabilistic=True, model_params={})
     assert set(ae.models) == probabilistic_subset
-
-    ae = AutoEmulate(x, y, only_pytorch=True, only_probabilistic=True, model_params={})
-    assert set(ae.models) == pytorch_subset.intersection(probabilistic_subset)
