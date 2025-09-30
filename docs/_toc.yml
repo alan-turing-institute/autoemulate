@@ -23,7 +23,9 @@ chapters:
     - file: tutorials/simulator/01_custom_simulations
     - file: tutorials/simulator/02_active_learning
     - file: tutorials/simulator/03_history_matching
-
+  - file: tutorials/advanced/index
+    sections:
+    - file: tutorials/advanced/01_add_emulators
 
 - file: community/index
   sections:
