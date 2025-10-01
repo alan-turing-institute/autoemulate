@@ -191,7 +191,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return [emulator for emulator in ALL_EMULATORS if emulator.supports_uq]
 
     @staticmethod
-    def list_emulators(subset: str = "default") -> pd.DataFrame:
+    def list_emulators(subset: Literal["all", "default"] = "default") -> pd.DataFrame:
         """Return a dataframe with info on all available emulators.
 
         The dataframe includes the model name and whether it has a PyTorch backend (and
