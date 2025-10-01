@@ -200,7 +200,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         Parameters
         ----------
         subset: str
-        Subset of emulators to include. Can be 'all' or 'default'.
+            Subset of emulators to include. Can be 'all' or 'default'.
 
 
         Returns
