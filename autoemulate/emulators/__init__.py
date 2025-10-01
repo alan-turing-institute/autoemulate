@@ -23,21 +23,19 @@ DEFAULT_EMULATORS: list[type[Emulator]] = [
     EnsembleMLP,
 ]
 
-ALL_EMULATORS: list[type[Emulator]] = [
-    *DEFAULT_EMULATORS,
-    GaussianProcessCorrelatedMatern32,
-    GaussianProcessCorrelatedRBF,
-    EnsembleMLPDropout,
-    LightGBM,
-    SupportVectorMachine,
-    RandomForest,
-]
-
 # listing non pytorch emulators as we do not expect this list to grow
 NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
     LightGBM,
     SupportVectorMachine,
     RandomForest,
+]
+
+ALL_EMULATORS: list[type[Emulator]] = [
+    *DEFAULT_EMULATORS,
+    *NON_PYTORCH_EMULATORS,
+    GaussianProcessCorrelatedMatern32,
+    GaussianProcessCorrelatedRBF,
+    EnsembleMLPDropout,
 ]
 
 PYTORCH_EMULATORS: list[type[Emulator]] = [
