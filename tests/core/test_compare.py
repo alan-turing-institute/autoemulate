@@ -97,6 +97,13 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
 
     gp_params = ae.get_result(2).params
     assert gp_params == {}
+    # TODO: update test as part of #867
+    # assert gp_params != {}
+    # assert "mean_module_fn" in gp_params
+    # assert "covar_module_fn" in gp_params
+    # assert "epochs" in gp_params
+    # assert "lr" in gp_params
+    # assert "likelihood_cls" in gp_params
 
 
 def test_get_model_subset():
