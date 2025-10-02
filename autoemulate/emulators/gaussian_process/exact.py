@@ -347,7 +347,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
         device: DeviceLike | None = None,
-        **kwargs,
+        **scheduler_kwargs,
     ):
         """
         Initialize the GaussianProcessCorrelated emulator.
@@ -389,6 +389,8 @@ class GaussianProcessCorrelated(GaussianProcess):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
+        scheduler_kwargs: dict
+            Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -438,7 +440,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(kwargs)
+        self.scheduler_setup(scheduler_kwargs)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
