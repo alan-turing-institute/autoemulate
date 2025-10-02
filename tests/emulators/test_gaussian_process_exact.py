@@ -14,17 +14,15 @@ from autoemulate.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
 )
-from autoemulate.emulators.gaussian_process.kernel import rbf
+from autoemulate.emulators.gaussian_process.kernel import rbf_kernel
 from autoemulate.emulators.gaussian_process.mean import constant_mean
 
 GPS = [
     GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
 ]
 
@@ -55,7 +53,7 @@ def test_fixed_gp_params(sample_data_y1d, emulator):
             fixed_mean_params=fixed,
             fixed_covar_params=fixed,
             mean_module_fn=constant_mean,
-            covar_module_fn=rbf,
+            covar_module_fn=rbf_kernel,
         )
 
         # Test requires grad for params

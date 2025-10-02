@@ -137,7 +137,9 @@ def test_grads_func(
     output_from_samples,
     full_covariance,
 ):
-    if emulator in GAUSSIAN_PROCESS_EMULATORS:
+    if emulator in GAUSSIAN_PROCESS_EMULATORS or emulator.__name__.startswith(
+        "GaussianProcess"
+    ):
         pytest.xfail(
             "GaussianProcess emulators do not support torch.func API for gradients as "
             "LinearOperator does not support gradients with torch.func API."

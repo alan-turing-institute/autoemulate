@@ -10,10 +10,7 @@ from gpytorch.means import MultitaskMean
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
-from autoemulate.callbacks.early_stopping import (
-    EarlyStopping,
-    EarlyStoppingException,
-)
+from autoemulate.callbacks.early_stopping import EarlyStopping, EarlyStoppingException
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
     DeviceLike,
@@ -23,10 +20,7 @@ from autoemulate.core.types import (
 )
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import GaussianProcessEmulator
-from autoemulate.emulators.gaussian_process import (
-    CovarModuleFn,
-    MeanModuleFn,
-)
+from autoemulate.emulators.gaussian_process import CovarModuleFn, MeanModuleFn
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.utils import make_positive_definite
 
@@ -34,7 +28,7 @@ from .kernel import (
     matern_3_2_kernel,
     matern_5_2_kernel,
     matern_5_2_plus_rq,
-    rbf,
+    rbf_kernel,
     rbf_plus_constant,
     rbf_plus_linear,
     rbf_times_linear,
@@ -306,7 +300,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
                 poly_mean,
             ],
             "covar_module_fn": [
-                rbf,
+                rbf_kernel,
                 matern_5_2_kernel,
                 matern_3_2_kernel,
                 rq_kernel,
@@ -556,7 +550,7 @@ def create_gp_subclass(
 GaussianProcessRBF = create_gp_subclass(
     "GaussianProcessRBF",
     GaussianProcess,
-    covar_module_fn=rbf,
+    covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
 )
 GaussianProcessMatern32 = create_gp_subclass(
@@ -565,9 +559,17 @@ GaussianProcessMatern32 = create_gp_subclass(
     covar_module_fn=matern_3_2_kernel,
     mean_module_fn=constant_mean,
 )
-GaussianProcessMatern52 = create_gp_subclass(
-    "GaussianProcessMatern52",
-    GaussianProcess,
-    covar_module_fn=matern_5_2_kernel,
+
+# correlated GP kernels
+GaussianProcessCorrelatedRBF = create_gp_subclass(
+    "GaussianProcessCorrelatedRBF",
+    GaussianProcessCorrelated,
+    covar_module_fn=rbf_kernel,
+    mean_module_fn=constant_mean,
+)
+GaussianProcessCorrelatedMatern32 = create_gp_subclass(
+    "GaussianProcessCorrelatedMatern32",
+    GaussianProcessCorrelated,
+    covar_module_fn=matern_3_2_kernel,
     mean_module_fn=constant_mean,
 )
