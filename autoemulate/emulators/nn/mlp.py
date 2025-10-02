@@ -261,6 +261,8 @@ class ZOIBMLP(MLP):
     provided by different weight initialization and dropout.
     """
 
+    supports_uq: bool = True
+
     def __init__(
         self,
         x: TensorLike,
@@ -282,10 +284,7 @@ class ZOIBMLP(MLP):
         **scheduler_kwargs,
     ):
         """
-        Beta distribution Multi-Layer Perceptron (MLP) emulator.
-
-        MLP provides a simple deterministic emulator with optional model stochasticity
-        provided by different weight initialization and dropout.
+        Zero-One Inflated Beta Distribution Multi-Layer Perceptron (MLP) emulator.
 
         Parameters
         ----------
