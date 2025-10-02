@@ -1,4 +1,3 @@
-import copy
 import inspect
 import warnings
 from datetime import datetime
@@ -33,7 +32,6 @@ from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
-from autoemulate.simulations.base import Simulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
 
@@ -766,7 +764,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def plot_surface(
         self,
         model: Emulator,
-        simulator: Simulator,
+        parameters_range: dict[str, tuple[float, float]],
         input_index_pair: tuple[int, int] | None = None,
         output_index: int | None = None,
         input_ranges: dict[int, tuple[float, float]] | None = None,
@@ -785,8 +783,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ----------
         model: Emulator
             The emulator model to plot.
-        simulator: Simulator
-            The simulator associated with the emulator.
+        parameters_range: dict[str, tuple[float, float]]
+            A dictionary specifying the ranges for all input parameters. Keys are
+            parameter names and values are tuples of (min, max). The dictionary should
+            be ordered equivalently to the order of parameters used to train the model.
         input_index_pair: tuple[int, int] | None
             A tuple of two integers specifying the indices of the input parameters to
             plot. If None, the first two parameters (0, 1) are used. Defaults to None.
@@ -812,17 +812,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         # Update parameter ranges if provided
         if input_ranges is not None:
-            # Deep copy to avoid modifying the original simulator
-            simulator = copy.deepcopy(simulator)
-            parameters_range = simulator.parameters_range
+            # Copy to avoid modifying the parameters_range passed
+            parameters_range = parameters_range.copy()
             parameters_range.update(
-                {simulator.param_names[k]: input_ranges[k] for k in input_ranges}
+                {
+                    list(parameters_range.keys())[k]: input_ranges[k]
+                    for k in input_ranges
+                }
             )
-            simulator.parameters_range = parameters_range
 
         fig, _ = create_and_plot_slice(
             model,
-            simulator,
+            parameters_range,
             input_index_pair if input_index_pair is not None else (0, 1),
             output_idx=output_index if output_index is not None else 0,
             vmin=None if output_range is None else output_range[0],

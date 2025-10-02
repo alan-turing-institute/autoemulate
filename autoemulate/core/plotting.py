@@ -7,7 +7,6 @@ from matplotlib.figure import Figure
 
 from autoemulate.core.types import NumpyLike, TensorLike
 from autoemulate.emulators.base import Emulator
-from autoemulate.simulations.base import Simulator
 
 
 def display_figure(fig: Figure):
@@ -203,7 +202,7 @@ def calculate_subplot_layout(n_plots, n_cols=3):
 
 def mean_and_var_surface(
     model: Emulator,
-    simulator: Simulator,
+    parameters_range: dict[str, tuple[float, float]],
     variables: list[str],
     output_idx: int = 0,
     quantile: float = 0.5,
@@ -216,10 +215,12 @@ def mean_and_var_surface(
 
     Parameters
     ----------
-    emu: Emulator
+    model: Emulator
         A trained emulator.
-    sim: Simulator
-        The simulator used to define parameter ranges.
+    parameters_range: dict[str, tuple[float, float]]
+        A dictionary specifying the ranges for all input parameters. Keys are parameter
+        names and values are tuples of (min, max). The dictionary should be ordered
+        equivalently to the order of parameters used to train the model.
     variables: list[str]
         A list of parameter names to vary.
     output_idx: int,
@@ -243,7 +244,7 @@ def mean_and_var_surface(
     # Determine which parameters to vary and which to fix
     grid_params = {}
     fixed_params = {}
-    for idx, (param_name, param_range) in enumerate(simulator.parameters_range.items()):
+    for idx, (param_name, param_range) in enumerate(parameters_range.items()):
         if param_name in variables:
             grid_params[idx] = torch.linspace(param_range[0], param_range[1], n_points)
         else:
@@ -351,7 +352,7 @@ def _plot_2d_slice_with_fixed_params(
 
 def create_and_plot_slice(
     model: Emulator,
-    simulator: Simulator,
+    parameters_range: dict[str, tuple[float, float]],
     param_pair: tuple[int, int],
     output_idx: int = 0,
     vmin: float | None = None,
@@ -365,8 +366,10 @@ def create_and_plot_slice(
     ----------
     model: Emulator
         A trained emulator.
-    simulator: Simulator
-        The simulator used to define parameter ranges.
+    parameters_range: dict[str, tuple[float, float]]
+        A dictionary specifying the ranges for all input parameters. Keys are parameter
+        names and values are tuples of (min, max). The dictionary should be ordered
+        equivalently to the order of parameters used to train the model.
     param_pair: tuple[int, int]
         A list of two parameter indices.
     output_idx: int
@@ -389,15 +392,13 @@ def create_and_plot_slice(
     grid: list[TensorLike]
         The grid points for the two varying parameters.
     """
-    param_pair_names = [
-        simulator.param_names[param_pair[0]],
-        simulator.param_names[param_pair[1]],
-    ]
+    param_names = list(parameters_range.keys())
+    param_pair_names = [param_names[param_pair[0]], param_names[param_pair[1]]]
 
     # Get the predicted mean and var across a grid for non-fixed params
     mean, var, grid = mean_and_var_surface(
         model,
-        simulator,
+        parameters_range,
         variables=param_pair_names,
         output_idx=output_idx,
         quantile=quantile,
@@ -405,8 +406,7 @@ def create_and_plot_slice(
     )
 
     # Get the names of other fixed parameters
-    all_params = list(simulator.parameters_range.keys())
-    fixed_params = [p for p in all_params if p not in param_pair_names]
+    fixed_params = [p for p in param_names if p not in param_pair_names]
 
     fig, ax = _plot_2d_slice_with_fixed_params(
         mean,
