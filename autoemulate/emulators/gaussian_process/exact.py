@@ -561,6 +561,8 @@ def create_gp_subclass(
             """Get tunable parameters, excluding those that are fixed."""
             tune_params = gp_base_class.get_tune_params()
             # Remove fixed parameters from tuning
+            tune_params.pop("mean_module_fn", None)
+            tune_params.pop("covar_module_fn", None)
             for key in fixed_kwargs:
                 tune_params.pop(key, None)
             return tune_params
