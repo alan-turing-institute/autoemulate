@@ -467,7 +467,7 @@ def create_gp_subclass(
     name: str,
     gp_base_class: type[GaussianProcess],
     covar_module_fn: CovarModuleFn,
-    mean_module_fn: MeanModuleFn,
+    mean_module_fn: MeanModuleFn = constant_mean,
     **fixed_kwargs,
 ) -> type[GaussianProcess]:
     """
@@ -485,7 +485,7 @@ def create_gp_subclass(
     covar_module_fn : CovarModuleFn
         Covariance module function to use in the subclass.
     mean_module_fn : MeanModuleFn
-        Mean module function to use in the subclass.
+        Mean module function to use in the subclass. Defaults to `constant_mean`.
     **fixed_kwargs
         Keyword arguments to fix in the subclass. These parameters will be
         set to the provided values and excluded from hyperparameter tuning.
