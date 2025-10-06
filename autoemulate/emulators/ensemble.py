@@ -4,17 +4,8 @@ import torch
 from torch import Tensor
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.types import (
-    DeviceLike,
-    GaussianLike,
-    TensorLike,
-    TuneParams,
-)
-from autoemulate.emulators.base import (
-    DropoutTorchBackend,
-    Emulator,
-    GaussianEmulator,
-)
+from autoemulate.core.types import DeviceLike, GaussianLike, TensorLike, TuneParams
+from autoemulate.emulators.base import DropoutTorchBackend, Emulator, GaussianEmulator
 from autoemulate.emulators.nn.mlp import MLP
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.utils import make_positive_definite
@@ -170,6 +161,7 @@ class EnsembleMLP(Ensemble):
         **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
         """
+        self.mlp_kwargs = mlp_kwargs
         emulators = [
             MLP(
                 x,
@@ -327,6 +319,7 @@ class EnsembleMLPDropout(DropoutEnsemble):
         **mlp_kwargs: dict
             Additional keyword arguments for the MLP constructor.
         """
+        self.mlp_kwargs = mlp_kwargs
         super().__init__(
             MLP(
                 x,
