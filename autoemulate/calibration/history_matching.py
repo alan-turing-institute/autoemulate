@@ -292,6 +292,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         rank: int = 1,
         train_x: TensorLike | None = None,
         train_y: TensorLike | None = None,
+        transformed_emulator_params: dict | None = None,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
@@ -326,6 +327,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional tensor of input data the emulator was trained on.
         train_y: TensorLike | None
             Optional tensor of output data the emulator was trained on.
+        transformed_emulator_params: dict | None
+            Optional dictionary of parameters for TransformedEmulator. These are
+            already contained in a Result object, so only needed if a
+            TransformedEmulator instance with non-default params is provided.
         calibration_params: list[str] | None
             Optional subset of parameters to calibrate. These have to correspond to the
             parameters that the emulator was trained on. If None, calibrate all
@@ -379,6 +384,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 if hasattr(emulator, param_name):
                     self.emulator_params[param_name] = getattr(emulator, param_name)
 
+        self.transformed_emulator_params = transformed_emulator_params or {}
         self.emulator.device = self.device
 
         # New data is simulated in `run()` and appended here
