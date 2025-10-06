@@ -70,7 +70,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
-        **kwargs,
+        **scheduler_kwargs,
     ):
         """
         Initialize the GaussianProcess emulator.
@@ -108,6 +108,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
+        scheduler_kwargs: dict
+            Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -147,7 +149,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(kwargs)
+        self.scheduler_setup(scheduler_kwargs)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
@@ -347,7 +349,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
         device: DeviceLike | None = None,
-        **kwargs,
+        **scheduler_kwargs,
     ):
         """
         Initialize the GaussianProcessCorrelated emulator.
@@ -389,6 +391,8 @@ class GaussianProcessCorrelated(GaussianProcess):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
+        scheduler_kwargs: dict
+            Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
@@ -438,7 +442,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(kwargs)
+        self.scheduler_setup(scheduler_kwargs)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
@@ -460,7 +464,11 @@ GP_REGISTRY = {
 
 
 def create_gp_subclass(
-    name: str, gp_base_class: type[GaussianProcess], **fixed_kwargs
+    name: str,
+    gp_base_class: type[GaussianProcess],
+    covar_module_fn: CovarModuleFn,
+    mean_module_fn: MeanModuleFn = constant_mean,
+    **fixed_kwargs,
 ) -> type[GaussianProcess]:
     """
     Create a subclass of GaussianProcess with given fixed_kwargs.
@@ -474,6 +482,10 @@ def create_gp_subclass(
         Name for the created subclass.
     gp_base_class : type[GaussianProcess]
         Base class to inherit from (typically GaussianProcess).
+    covar_module_fn : CovarModuleFn
+        Covariance module function to use in the subclass.
+    mean_module_fn : MeanModuleFn
+        Mean module function to use in the subclass. Defaults to `constant_mean`.
     **fixed_kwargs
         Keyword arguments to fix in the subclass. These parameters will be
         set to the provided values and excluded from hyperparameter tuning.
@@ -495,28 +507,75 @@ def create_gp_subclass(
             f"Use a unique name or delete the existing class from GP_REGISTRY."
         )
 
+    standardize_x = fixed_kwargs.get("standardize_x", False)
+    standardize_y = fixed_kwargs.get("standardize_y", True)
+    fixed_mean_params = fixed_kwargs.get("fixed_mean_params", False)
+    fixed_covar_params = fixed_kwargs.get("fixed_covar_params", False)
+    posterior_predictive = fixed_kwargs.get("posterior_predictive", False)
+    epochs = fixed_kwargs.get("epochs", 50)
+    lr = fixed_kwargs.get("lr", 2e-1)
+    early_stopping = fixed_kwargs.get("early_stopping")
+    device = fixed_kwargs.get("device")
+
     class GaussianProcessSubclass(gp_base_class):
         def __init__(
             self,
-            *args,
-            **kwargs,
+            x: TensorLike,
+            y: TensorLike,
+            standardize_x: bool = standardize_x,
+            standardize_y: bool = standardize_y,
+            likelihood_cls: type[
+                MultitaskGaussianLikelihood
+            ] = MultitaskGaussianLikelihood,
+            mean_module_fn: MeanModuleFn = mean_module_fn,
+            covar_module_fn: CovarModuleFn = covar_module_fn,
+            fixed_mean_params: bool = fixed_mean_params,
+            fixed_covar_params: bool = fixed_covar_params,
+            posterior_predictive: bool = posterior_predictive,
+            epochs: int = epochs,
+            lr: float = lr,
+            early_stopping: EarlyStopping | None = early_stopping,
+            device: DeviceLike | None = device,
+            **scheduler_kwargs,
         ):
-            # Merge user kwargs with fixed kwargs, giving priority to fixed_kwargs
-            merged_kwargs = {**kwargs, **fixed_kwargs}
-            super().__init__(*args, **merged_kwargs)
+            super().__init__(
+                x,
+                y,
+                standardize_x,
+                standardize_y,
+                likelihood_cls,
+                mean_module_fn,
+                covar_module_fn,
+                fixed_mean_params,
+                fixed_covar_params,
+                posterior_predictive,
+                epochs,
+                lr,
+                early_stopping,
+                device,
+                **scheduler_kwargs,
+            )
 
         @staticmethod
         def get_tune_params():
             """Get tunable parameters, excluding those that are fixed."""
             tune_params = gp_base_class.get_tune_params()
             # Remove fixed parameters from tuning
+            tune_params.pop("mean_module_fn", None)
+            tune_params.pop("covar_module_fn", None)
             for key in fixed_kwargs:
                 tune_params.pop(key, None)
             return tune_params
 
     # Create a more descriptive docstring that includes fixed parameters
-    fixed_params_str = ", ".join(
-        f"{k}={v.__name__ if callable(v) else v}" for k, v in fixed_kwargs.items()
+    mean_covar_and_fixed_kwargs = {
+        "mean_module_fn": mean_module_fn,
+        "covar_module_fn": covar_module_fn,
+        **fixed_kwargs,
+    }
+    fixed_params_str = "\n    ".join(
+        f"- {k} = {v.__name__ if callable(v) else v}"
+        for k, v in mean_covar_and_fixed_kwargs.items()
     )
 
     GaussianProcessSubclass.__doc__ = f"""
@@ -525,10 +584,11 @@ def create_gp_subclass(
     Notes
     -----
     {name} is a subclass of {gp_base_class.__name__} and has the following parameters
-    set during initialization: {fixed_params_str}
+    set during initialization:
+    {fixed_params_str}
 
     For any parameters set with this approach, they are also excluded from the search
-    space when tuning. For example, if the `covar_module_fn` is set to `rbf`,
+    space when tuning. For example, if the `covar_module_fn` is set to `rbf_kernel`,
     the RBF kernel will always be used as the `covar_module`. Note that in this case
     the associated hyperparameters (such as lengthscale) will still be fitted during
     model training and are not fixed.
