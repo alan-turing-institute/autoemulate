@@ -70,6 +70,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
+        scheduler_cls: type[LRScheduler] | None = None,
         scheduler_kwargs: dict | None = None,
     ):
         """
@@ -108,6 +109,9 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
         scheduler_kwargs: dict | None
             Additional keyword arguments for the learning rate scheduler.
         """
@@ -152,6 +156,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.scheduler_cls = scheduler_cls
         self.scheduler_kwargs = scheduler_kwargs or {}
         self.scheduler_setup(self.scheduler_kwargs)
         self.early_stopping = early_stopping

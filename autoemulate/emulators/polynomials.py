@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
@@ -29,6 +30,7 @@ class PolynomialRegression(PyTorchBackend):
         batch_size: int = 16,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
+        scheduler_cls: type[LRScheduler] | None = None,
         scheduler_kwargs: dict | None = None,
     ):
         """Initialize a PolynomialRegression emulator.
@@ -56,6 +58,9 @@ class PolynomialRegression(PyTorchBackend):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device. Defaults to
             None.
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
         scheduler_kwargs: dict | None
             Additional keyword arguments related to the scheduler.
         """
@@ -80,6 +85,7 @@ class PolynomialRegression(PyTorchBackend):
             self.poly.n_output_features, self.n_outputs, bias=False
         ).to(self.device)
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
+        self.scheduler_cls = scheduler_cls
         self.scheduler_kwargs = scheduler_kwargs or {}
         self.scheduler_setup(self.scheduler_kwargs)
 
