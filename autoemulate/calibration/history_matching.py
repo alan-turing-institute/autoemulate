@@ -1,3 +1,4 @@
+import inspect
 import logging
 import warnings
 
@@ -15,7 +16,7 @@ from autoemulate.core.plotting import display_figure
 from autoemulate.core.results import Result
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators import TransformedEmulator, get_emulator_class
+from autoemulate.emulators import Emulator, TransformedEmulator, get_emulator_class
 from autoemulate.simulations.base import Simulator
 
 logger = logging.getLogger("autoemulate")
@@ -284,7 +285,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def __init__(
         self,
         simulator: Simulator,
-        result: Result,
+        emulator: Result | Emulator,
         observations: dict[str, tuple[float, float]] | dict[str, float],
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
@@ -303,8 +304,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         simulator: Simulator
             A simulator.
-        result: Result
+        emulator: Result | Emulator
             A Result object containing the pre-trained emulator and its hyperparameters.
+            Otherwise, an Emulator object containing the pre-trained emulator.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise] (with noise
             specified as variances). In case of no uncertainty in observations, provides
@@ -342,8 +344,41 @@ class HistoryMatchingWorkflow(HistoryMatching):
             set_random_seed(seed=random_seed)
         self.logger, self.progress_bar = get_configured_logger(log_level)
 
-        self.result = result
-        self.emulator = result.model
+        # Extract emulator and its parameters from Result or Emulator instance
+        if isinstance(emulator, Result):
+            self.emulator = emulator.model
+            self.emulator_name = emulator.model_name
+            self.emulator_params = emulator.params
+            self.x_transforms = emulator.x_transforms
+            self.y_transforms = emulator.y_transforms
+        elif isinstance(emulator, Emulator):
+            if isinstance(emulator, TransformedEmulator):
+                self.emulator = emulator.model
+                self.emulator_name = emulator.untransformed_model_name
+                self.x_transforms = emulator.x_transforms
+                self.y_transforms = emulator.y_transforms
+            else:
+                self.emulator = emulator
+                self.emulator_name = emulator.model_name()
+                self.x_transforms = None
+                self.y_transforms = None
+
+            # Extract parameters from the provided emulator instance
+            model_cls = (get_emulator_class(self.emulator_name),)
+            init_sig = inspect.signature(model_cls.__init__)
+            self.emulator_params = {}
+            for param_name in init_sig.parameters:
+                if param_name in ["self", "x", "y", "device"]:
+                    continue
+                # NOTE: some emulators have standardize_x/y params option
+                # this is different to TransformedEmulator transforms
+                if param_name == "standardize_x":
+                    self.emulator_params["standardize_x"] = bool(self.x_transforms)
+                if param_name == "standardize_y":
+                    self.emulator_params["standardize_y"] = bool(self.y_transforms)
+                if hasattr(emulator, param_name):
+                    self.emulator_params[param_name] = getattr(emulator, param_name)
+
         self.emulator.device = self.device
 
         # New data is simulated in `run()` and appended here
@@ -624,14 +659,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Tensor of output data to refit the emulator on.
         """
         # Create a fresh model with the same configuration
+
         self.emulator = TransformedEmulator(
             x.float(),
             y.float(),
-            model=get_emulator_class(self.result.model_name),
-            x_transforms=self.result.x_transforms,
-            y_transforms=self.result.y_transforms,
+            model=get_emulator_class(self.emulator_name),
+            x_transforms=self.x_transforms,
+            y_transforms=self.y_transforms,
             device=self.device,
-            **self.result.params,
+            **self.emulator_params,
         )
 
         self.emulator.fit(x, y)

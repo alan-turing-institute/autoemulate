@@ -111,7 +111,7 @@ def test_run(device):
 
     hm = HistoryMatchingWorkflow(
         simulator=simulator,
-        result=res,
+        emulator=res,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
@@ -165,7 +165,7 @@ def test_run_max_tries():
 
     hm = HistoryMatchingWorkflow(
         simulator=simulator,
-        result=res,
+        emulator=res,
         observations=observations,
         threshold=3.0,
         model_discrepancy=0.1,
