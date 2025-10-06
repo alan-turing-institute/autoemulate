@@ -34,7 +34,7 @@ class MLP(DropoutTorchBackend):
         lr: float = 1e-2,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **scheduler_kwargs,
+        scheduler_kwargs: dict | None = None,
     ):
         """
         Multi-Layer Perceptron (MLP) emulator.
@@ -77,7 +77,7 @@ class MLP(DropoutTorchBackend):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
-        **scheduler_kwargs: dict
+        scheduler_kwargs: dict | None
             Additional keyword arguments related to the scheduler.
 
         Raises
@@ -126,7 +126,7 @@ class MLP(DropoutTorchBackend):
         self.lr = lr
         self.batch_size = batch_size
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_kwargs = scheduler_kwargs
+        self.scheduler_kwargs = scheduler_kwargs or {}
         self.scheduler_setup(self.scheduler_kwargs)
         self.to(self.device)
 

@@ -29,7 +29,7 @@ class PolynomialRegression(PyTorchBackend):
         batch_size: int = 16,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **kwargs,
+        scheduler_kwargs: dict | None = None,
     ):
         """Initialize a PolynomialRegression emulator.
 
@@ -56,8 +56,8 @@ class PolynomialRegression(PyTorchBackend):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device. Defaults to
             None.
-        **kwargs: dict
-            Additional keyword arguments.
+        scheduler_kwargs: dict | None
+            Additional keyword arguments related to the scheduler.
         """
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
@@ -80,7 +80,8 @@ class PolynomialRegression(PyTorchBackend):
             self.poly.n_output_features, self.n_outputs, bias=False
         ).to(self.device)
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(kwargs)
+        self.scheduler_kwargs = scheduler_kwargs or {}
+        self.scheduler_setup(self.scheduler_kwargs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through for polynomial regression."""
