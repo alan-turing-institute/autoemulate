@@ -139,7 +139,7 @@ class EnsembleMLP(Ensemble):
         standardize_y: bool = True,
         n_emulators: int = 4,
         device: DeviceLike | None = None,
-        **mlp_kwargs,
+        mlp_kwargs: dict | None = None,
     ):
         """
         Initialize an ensemble of MLPs.
@@ -158,10 +158,10 @@ class EnsembleMLP(Ensemble):
             Number of MLP emulators to create in the ensemble. Defaults to 4.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
-        **mlp_kwargs: dict
+        mlp_kwargs: dict | None
             Additional keyword arguments for the MLP constructor.
         """
-        self.mlp_kwargs = mlp_kwargs
+        self.mlp_kwargs = mlp_kwargs or {}
         emulators = [
             MLP(
                 x,
@@ -169,7 +169,7 @@ class EnsembleMLP(Ensemble):
                 standardize_x=standardize_x,
                 standardize_y=standardize_y,
                 device=device,
-                **mlp_kwargs,
+                **self.mlp_kwargs,
             )
             for i in range(n_emulators)
         ]
@@ -297,7 +297,7 @@ class EnsembleMLPDropout(DropoutEnsemble):
         standardize_y: bool = True,
         dropout_prob: float = 0.2,
         device: DeviceLike | None = None,
-        **mlp_kwargs,
+        mlp_kwargs: dict | None = None,
     ):
         """
         Initialize an ensemble of MLPs with dropout.
@@ -316,10 +316,10 @@ class EnsembleMLPDropout(DropoutEnsemble):
             Dropout probability to use in the MLP layers. Defaults to 0.2.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
-        **mlp_kwargs: dict
+        mlp_kwargs: dict | None
             Additional keyword arguments for the MLP constructor.
         """
-        self.mlp_kwargs = mlp_kwargs
+        self.mlp_kwargs = mlp_kwargs or {}
         super().__init__(
             MLP(
                 x,
@@ -328,7 +328,7 @@ class EnsembleMLPDropout(DropoutEnsemble):
                 standardize_y=standardize_y,
                 dropout_prob=dropout_prob,
                 device=device,
-                **mlp_kwargs,
+                **self.mlp_kwargs,
             ),
             device=device,
         )
