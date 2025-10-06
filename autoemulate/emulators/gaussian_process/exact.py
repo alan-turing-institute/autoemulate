@@ -574,8 +574,14 @@ def create_gp_subclass(
             return tune_params
 
     # Create a more descriptive docstring that includes fixed parameters
-    fixed_params_str = ", ".join(
-        f"{k}={v.__name__ if callable(v) else v}" for k, v in fixed_kwargs.items()
+    mean_covar_and_fixed_kwargs = {
+        "mean_module_fn": mean_module_fn,
+        "covar_module_fn": covar_module_fn,
+        **fixed_kwargs,
+    }
+    fixed_params_str = "\n    ".join(
+        f"- {k} = {v.__name__ if callable(v) else v}"
+        for k, v in mean_covar_and_fixed_kwargs.items()
     )
 
     GaussianProcessSubclass.__doc__ = f"""
@@ -584,10 +590,11 @@ def create_gp_subclass(
     Notes
     -----
     {name} is a subclass of {gp_base_class.__name__} and has the following parameters
-    set during initialization: {fixed_params_str}
+    set during initialization:
+    {fixed_params_str}
 
     For any parameters set with this approach, they are also excluded from the search
-    space when tuning. For example, if the `covar_module_fn` is set to `rbf`,
+    space when tuning. For example, if the `covar_module_fn` is set to `rbf_kernel`,
     the RBF kernel will always be used as the `covar_module`. Note that in this case
     the associated hyperparameters (such as lengthscale) will still be fitted during
     model training and are not fixed.
