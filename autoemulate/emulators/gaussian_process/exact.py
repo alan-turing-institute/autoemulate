@@ -123,8 +123,10 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         num_tasks_torch = torch.Size([num_tasks])
 
         # Initialize the mean and covariance modules
-        mean_module = mean_module_fn(n_features, num_tasks_torch)
-        covar_module = covar_module_fn(n_features, num_tasks_torch)
+        self.mean_module_fn = mean_module_fn
+        self.covar_module_fn = covar_module_fn
+        mean_module = self.mean_module_fn(n_features, num_tasks_torch)
+        covar_module = self.covar_module_fn(n_features, num_tasks_torch)
 
         # If the combined kernel is not a ScaleKernel, wrap it in one
         covar_module = (
@@ -134,7 +136,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         )
 
         # Init likelihood
-        likelihood = likelihood_cls(num_tasks=num_tasks)
+        self.likelihood_cls = likelihood_cls
+        likelihood = self.likelihood_cls(num_tasks=num_tasks)
         likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
@@ -149,15 +152,18 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(scheduler_kwargs)
+        self.scheduler_kwargs = scheduler_kwargs
+        self.scheduler_setup(self.scheduler_kwargs)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
         self.to(self.device)
 
         # Fix mean and kernel if required
-        self._fix_module_params(self.mean_module, fixed_mean_params)
-        self._fix_module_params(self.covar_module, fixed_covar_params)
+        self.fixed_mean_params = fixed_mean_params
+        self.fixed_covar_params = fixed_covar_params
+        self._fix_module_params(self.mean_module, self.fixed_mean_params)
+        self._fix_module_params(self.covar_module, self.fixed_covar_params)
 
     @staticmethod
     def _fix_module_params(module: nn.Module, fixed_params: bool):

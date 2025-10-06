@@ -95,29 +95,39 @@ class MLP(DropoutTorchBackend):
         x, y = self._convert_to_tensors(x, y)
 
         # Construct the MLP layers
-        layer_dims = [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
+        self.layer_dims = (
+            [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
+        )
+        self.dropout_prob = dropout_prob
+        self.activation_cls = activation_cls
+
         layers = []
-        for idx, dim in enumerate(layer_dims[1:]):
-            layers.append(nn.Linear(layer_dims[idx], dim, device=self.device))
-            layers.append(activation_cls())
-            if dropout_prob is not None:
-                layers.append(nn.Dropout(p=dropout_prob))
+        for idx, dim in enumerate(self.layer_dims[1:]):
+            layers.append(nn.Linear(self.layer_dims[idx], dim, device=self.device))
+            layers.append(self.activation_cls())
+            if self.dropout_prob is not None:
+                layers.append(nn.Dropout(p=self.dropout_prob))
 
         # Add final layer without activation
         num_tasks = y.shape[1]
-        layers.append(nn.Linear(layer_dims[-1], num_tasks, device=self.device))
+        layers.append(nn.Linear(self.layer_dims[-1], num_tasks, device=self.device))
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization
-        self._initialize_weights(weight_init, scale, bias_init)
+        self.weight_init = weight_init
+        self.scale = scale
+        self.bias_init = bias_init
+        self._initialize_weights(self.weight_init, self.scale, self.bias_init)
         self.x_transform = StandardizeTransform() if standardize_x else None
         self.y_transform = StandardizeTransform() if standardize_y else None
         self.epochs = epochs
+        self.loss_fn_cls = loss_fn_cls
         self.loss_fn = loss_fn_cls()
         self.lr = lr
         self.batch_size = batch_size
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(scheduler_kwargs)
+        self.scheduler_kwargs = scheduler_kwargs
+        self.scheduler_setup(self.scheduler_kwargs)
         self.to(self.device)
 
     def forward(self, x):
