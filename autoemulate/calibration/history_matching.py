@@ -378,9 +378,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 # NOTE: some emulators have standardize_x/y params option
                 # this is different to TransformedEmulator transforms
                 if param_name == "standardize_x":
-                    self.emulator_params["standardize_x"] = bool(self.x_transforms)
+                    assert hasattr(self.emulator, "x_transforms")
+                    self.emulator_params["standardize_x"] = bool(
+                        self.emulator.x_transforms  # type: ignore[reportAttributeAccessIssue]
+                    )
                 if param_name == "standardize_y":
-                    self.emulator_params["standardize_y"] = bool(self.y_transforms)
+                    assert hasattr(self.emulator, "y_transforms")
+                    self.emulator_params["standardize_y"] = bool(
+                        self.emulator.y_transforms  # type: ignore[reportAttributeAccessIssue]
+                    )
                 if hasattr(emulator, param_name):
                     self.emulator_params[param_name] = getattr(emulator, param_name)
 
