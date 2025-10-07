@@ -10,6 +10,7 @@ on:
 
 jobs:
   tests:
+    if: github.event.pull_request.draft == false || github.event_name == 'push'
     name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
