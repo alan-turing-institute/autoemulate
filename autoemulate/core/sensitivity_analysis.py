@@ -1,4 +1,5 @@
 import logging
+from typing import Literal
 
 import matplotlib.figure
 import matplotlib.pyplot as plt
@@ -11,6 +12,7 @@ from SALib.analyze.sobol import analyze as sobol_analyze
 from SALib.sample.morris import sample as morris_sample
 from SALib.sample.sobol import sample as sobol_sample
 from SALib.util import ResultDict
+from scipy import stats
 
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.types import NumpyLike, TensorLike
@@ -67,6 +69,32 @@ class SensitivityAnalysis(ConversionMixin):
         self.problem = problem
 
     @staticmethod
+    def _validate_method(method: str) -> Literal["sobol", "morris"]:
+        """
+        Validate and normalize sensitivity analysis method name.
+
+        Parameters
+        ----------
+        method: str
+            Method name (case-insensitive).
+
+        Returns
+        -------
+        Literal["sobol", "morris"]
+            Normalized lowercase method name.
+
+        Raises
+        ------
+        ValueError
+            If method is not 'sobol' or 'morris' (case-insensitive).
+        """
+        method_lower = method.lower()
+        if method_lower not in ["sobol", "morris"]:
+            msg = f"Unknown method: '{method}'. Must be 'sobol' or 'morris'."
+            raise ValueError(msg)
+        return method_lower  # type: ignore[return-value]
+
+    @staticmethod
     def _check_problem(problem: dict) -> dict:
         """Check that the problem definition is valid."""
         if not isinstance(problem, dict):
@@ -119,7 +147,8 @@ class SensitivityAnalysis(ConversionMixin):
             ],
         }
 
-    def _sample(self, method: str, N: int) -> NumpyLike:
+    def _sample(self, method: Literal["sobol", "morris"], N: int) -> NumpyLike:
+        method = self._validate_method(method)
         if method == "sobol":
             # Saltelli sampling
             return sobol_sample(self.problem, N)
@@ -129,7 +158,9 @@ class SensitivityAnalysis(ConversionMixin):
         msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
         raise ValueError(msg)
 
-    def _predict(self, param_samples: NumpyLike) -> NumpyLike:
+    def _predict(
+        self, param_samples: NumpyLike, return_variance: bool = False
+    ) -> NumpyLike | tuple[NumpyLike, NumpyLike | None]:
         """
         Make predictions with emulator for parameter samples.
 
@@ -137,14 +168,28 @@ class SensitivityAnalysis(ConversionMixin):
         ----------
         param_samples: NumpyLike
             Array of parameter samples.
+        return_variance: bool
+            Whether to also return prediction variance. Defaults to False.
 
         Returns
         -------
-        NumpyLike
-            Array of emulator predictions.
+        NumpyLike | tuple[NumpyLike, NumpyLike | None]
+            If return_variance is False: Array of emulator predictions.
+            If return_variance is True: Tuple of (predictions, variances).
+            Variances are None if emulator doesn't support UQ.
         """
         param_tensor = self._convert_to_tensors(param_samples)
         assert isinstance(param_tensor, TensorLike)
+
+        if return_variance:
+            y_pred, y_var = self.emulator.predict_mean_and_variance(param_tensor)
+            y_pred_np, _ = self._convert_to_numpy(y_pred)
+            if y_var is not None:
+                y_var_np, _ = self._convert_to_numpy(y_var)
+            else:
+                y_var_np = None
+            return y_pred_np, y_var_np
+
         y_pred = self.emulator.predict_mean(param_tensor)
         y_pred_np, _ = self._convert_to_numpy(y_pred)
         return y_pred_np
@@ -162,25 +207,266 @@ class SensitivityAnalysis(ConversionMixin):
 
         return output_names
 
+    def _get_sa_method_config(self, method: Literal["sobol", "morris"]) -> dict:
+        """Get method-specific configuration for sensitivity analysis."""
+        method = self._validate_method(method)
+        if method == "sobol":
+            return {
+                "analyze_fn": sobol_analyze,
+                "metrics": ["S1", "ST", "S2"],
+                "to_df_fn": _sobol_results_to_df,
+                "bootstrap_to_df_fn": _bootstrap_sobol_results_to_df,
+                "needs_param_samples": False,
+            }
+        # morris
+        return {
+            "analyze_fn": morris_analyze,
+            "metrics": ["mu", "mu_star", "sigma"],
+            "to_df_fn": lambda r: _morris_results_to_df(r, self.problem),
+            "bootstrap_to_df_fn": lambda r: _bootstrap_morris_results_to_df(
+                r, self.problem
+            ),
+            "needs_param_samples": True,
+        }
+
+    def _compute_baseline_sa(
+        self,
+        method: Literal["sobol", "morris"],
+        param_samples: NumpyLike,
+        y_mean: NumpyLike,
+        output_names: list[str],
+        conf_level: float,
+    ) -> dict:
+        """Compute baseline sensitivity analysis on mean predictions."""
+        config = self._get_sa_method_config(method)
+        results_baseline = {}
+
+        for i, name in enumerate(output_names):
+            if config["needs_param_samples"]:
+                Si = config["analyze_fn"](
+                    self.problem, param_samples, y_mean[:, i], conf_level=conf_level
+                )
+            else:
+                Si = config["analyze_fn"](
+                    self.problem, y_mean[:, i], conf_level=conf_level
+                )
+            results_baseline[name] = Si
+
+        return results_baseline
+
+    def _bootstrap_sa_indices(
+        self,
+        method: Literal["sobol", "morris"],
+        param_samples: NumpyLike,
+        y_mean: NumpyLike,
+        y_var: NumpyLike,
+        output_names: list[str],
+        conf_level: float,
+        n_bootstrap: int,
+    ) -> dict:
+        """Bootstrap sensitivity indices from prediction distributions."""
+        config = self._get_sa_method_config(method)
+        metrics = config["metrics"]
+
+        bootstrap_results: dict[str, dict[str, list]] = {
+            name: {metric: [] for metric in metrics} for name in output_names
+        }
+
+        for _ in range(n_bootstrap):
+            y_sampled = np.random.normal(
+                loc=y_mean,
+                scale=np.sqrt(np.maximum(y_var, 1e-10)),
+            )
+
+            for i, name in enumerate(output_names):
+                if config["needs_param_samples"]:
+                    Si = config["analyze_fn"](
+                        self.problem,
+                        param_samples,
+                        y_sampled[:, i],
+                        conf_level=conf_level,
+                    )
+                else:
+                    Si = config["analyze_fn"](
+                        self.problem, y_sampled[:, i], conf_level=conf_level
+                    )
+                for metric in metrics:
+                    bootstrap_results[name][metric].append(Si[metric])
+
+        return bootstrap_results
+
+    def _combine_uncertainties_sobol(
+        self,
+        results_baseline: dict,
+        bootstrap_results: dict,
+        output_names: list[str],
+        z_score: float,
+    ) -> dict:
+        """Combine baseline and bootstrap uncertainties for Sobol."""
+        results = {}
+        for name in output_names:
+            baseline = results_baseline[name]
+            s1_std = np.array(bootstrap_results[name]["S1"]).std(axis=0)
+            st_std = np.array(bootstrap_results[name]["ST"]).std(axis=0)
+            s2_std = np.array(bootstrap_results[name]["S2"]).std(axis=0)
+
+            results[name] = {
+                "S1": baseline["S1"],
+                "S1_conf": np.sqrt(baseline["S1_conf"] ** 2 + (z_score * s1_std) ** 2),
+                "ST": baseline["ST"],
+                "ST_conf": np.sqrt(baseline["ST_conf"] ** 2 + (z_score * st_std) ** 2),
+                "S2": baseline["S2"],
+                "S2_conf": np.sqrt(baseline["S2_conf"] ** 2 + (z_score * s2_std) ** 2),
+            }
+        return results
+
+    def _combine_uncertainties_morris(
+        self,
+        results_baseline: dict,
+        bootstrap_results: dict,
+        output_names: list[str],
+        z_score: float,
+    ) -> dict:
+        """Combine baseline and bootstrap uncertainties for Morris."""
+        results = {}
+        for name in output_names:
+            baseline = results_baseline[name]
+            mu_star_std = np.array(bootstrap_results[name]["mu_star"]).std(axis=0)
+
+            results[name] = {
+                "mu": baseline["mu"],
+                "mu_star": baseline["mu_star"],
+                "sigma": baseline["sigma"],
+                "mu_star_conf": np.sqrt(
+                    baseline["mu_star_conf"] ** 2 + (z_score * mu_star_std) ** 2
+                ),
+            }
+        return results
+
+    def _run_sa_with_prediction_variance(
+        self,
+        method: Literal["sobol", "morris"],
+        param_samples: NumpyLike,
+        conf_level: float,
+        n_bootstrap: int,
+    ) -> pd.DataFrame:
+        """
+        Run sensitivity analysis incorporating prediction variance.
+
+        Generic implementation that works for both Sobol and Morris methods. Combines
+        SALib's standard confidence intervals with prediction variance by:
+        1. Computing standard analysis on mean predictions (gives CI from sampling)
+        2. For each bootstrap iteration, sampling predictions from N(mean, variance)
+        3. Computing indices for each bootstrap sample
+        4. Combining both sources of uncertainty:
+           CI_total = sqrt(CI_sampling^2 + CI_prediction^2)
+
+        Parameters
+        ----------
+        method: str
+            Either "sobol" or "morris"
+        param_samples: NumpyLike
+            Parameter samples from sampling scheme
+        conf_level: float
+            Confidence level for intervals
+        n_bootstrap: int
+            Number of bootstrap samples for prediction variance estimation
+
+        Returns
+        -------
+        pd.DataFrame
+            Results with combined confidence intervals
+
+        References
+        ----------
+        Oakley, J.E. and O'Hagan, A. (2004). Probabilistic sensitivity analysis of
+        complex models: a Bayesian approach. Journal of the Royal Statistical Society:
+        Series B, 66(3), 751-769.
+
+        Notes
+        -----
+        Monte Carlo approximation to Bayesian probabilistic SA (Oakley & O'Hagan): each
+        bootstrap replicate is one draw from the emulator's predictive distribution;
+        indices recomputed to propagate emulator uncertainty.
+
+        Assumptions:
+        - Predictive marginals are treated as Gaussian. We draw independent
+        Normal(mean=y_mean, var=y_var) samples at each design point.
+        - Sampling (design) and predictive uncertainties are assumed approximately
+        independent
+        - Large-sample normality of index estimators (Sobol / Morris) is assumed so
+        variances add on the original scale.
+
+        """
+        logger.debug(
+            "Running %s analysis with prediction variance, n_bootstrap=%d",
+            method,
+            n_bootstrap,
+        )
+
+        # Get predictions with variance
+        y_mean, y_var = self._predict(param_samples, return_variance=True)
+        assert isinstance(y_mean, NumpyLike)
+        output_names = self._get_output_names(y_mean.shape[1])
+
+        # Compute baseline analysis
+        results_baseline = self._compute_baseline_sa(
+            method, param_samples, y_mean, output_names, conf_level
+        )
+
+        # Return standard results if no variance available
+        if y_var is None:
+            logger.debug("No prediction variance available, returning standard results")
+            config = self._get_sa_method_config(method)
+            return config["to_df_fn"](results_baseline)
+
+        # Bootstrap to estimate additional uncertainty
+        bootstrap_results = self._bootstrap_sa_indices(
+            method, param_samples, y_mean, y_var, output_names, conf_level, n_bootstrap
+        )
+
+        # Combine uncertainties
+        z_score = stats.norm.ppf((1 + conf_level) / 2).item()
+        if method == "sobol":
+            results = self._combine_uncertainties_sobol(
+                results_baseline, bootstrap_results, output_names, z_score
+            )
+            return _bootstrap_sobol_results_to_df(results, self.problem)
+
+        results = self._combine_uncertainties_morris(
+            results_baseline, bootstrap_results, output_names, z_score
+        )
+        return _bootstrap_morris_results_to_df(results, self.problem)
+
     def run(
         self,
-        method: str = "sobol",
+        method: Literal["sobol", "morris"] = "sobol",
         n_samples: int = 1024,
         conf_level: float = 0.95,
+        include_prediction_variance: bool = False,
+        n_bootstrap: int = 100,
     ) -> pd.DataFrame:
         """
         Perform global sensitivity analysis on a fitted emulator.
 
         Parameters
         ----------
-        method: str
-            The sensitivity analysis method to perform, one of ["sobol", "morris"].
+        method: Literal["sobol", "morris"]
+            The sensitivity analysis method to perform. Case-insensitive.
         n_samples: int
             Number of samples to generate for the analysis. Higher values give more
-            accurate results but increase computation time. Default is 1024.
+            accurate results but increase computation time. Defaults to 1024.
         conf_level: float
             Confidence level (between 0 and 1) for calculating confidence intervals
-            of the Sobol sensitivity indices. Default is 0.95 (95% confidence).
+            of the Sobol sensitivity indices. Defaults to 0.95 (95% confidence).
+        include_prediction_variance: bool
+            Whether to incorporate emulator prediction variance into sensitivity
+            index uncertainty estimates using bootstrap sampling. Applicable for
+            both "sobol" and "morris" methods when emulator supports UQ.
+            Defaults to False.
+        n_bootstrap: int
+            Number of bootstrap samples to use when include_prediction_variance=True.
+            Defaults to 100.
 
         Returns
         -------
@@ -203,7 +489,27 @@ class SensitivityAnalysis(ConversionMixin):
         The Sobol method requires N * (2D + 2) model evaluations, where D is the number
         of input parameters. For example, with N=1024 and 5 parameters, this requires
         12,288 evaluations. The Morris method requires far fewer computations.
+
+        When include_prediction_variance=True, the emulator's prediction uncertainty is
+        incorporated by sampling from Gaussian distributions with predicted means and
+        variances, then computing sensitivity indices for each bootstrap sample.
+
+        Specifically, the approach is:
+        1. Compute baseline indices on the predictive mean outputs.
+        2. Draw n_bootstrap replicated output sets from Normal(mean, var) per design
+        point (independent marginals assumed).
+        3. Recompute indices for each replicate.
+        4. Estimate predictive SD of each index and combine with SALib's sampling
+        with root-sum-of-squares.
+
+        Key Assumptions: independent predictive marginals, approximate independence of
+        sampling and predictive uncertainties, and near-normal index estimator
+        distribution. See private method docstring _run_sa_with_prediction_variance for
+        detailed discussion.
         """
+        # Validate and normalize method name (case-insensitive)
+        method = self._validate_method(method)
+
         logger.debug(
             "Running sensitivity analysis with method=%s, n_samples=%d, conf_level=%s",
             method,
@@ -211,21 +517,25 @@ class SensitivityAnalysis(ConversionMixin):
             conf_level,
         )
 
-        if method not in ["sobol", "morris"]:
-            msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
-            raise ValueError(msg)
-
         param_samples = self._sample(method, n_samples)
-        y = self._predict(param_samples)
-        output_names = self._get_output_names(y.shape[1])
+
+        if include_prediction_variance and self.emulator.supports_uq:
+            return self._run_sa_with_prediction_variance(
+                method, param_samples, conf_level, n_bootstrap
+            )
+
+        # Standard analysis without prediction variance
+        y_pred = self._predict(param_samples)
+        assert isinstance(y_pred, NumpyLike)
+        output_names = self._get_output_names(y_pred.shape[1])
 
         results = {}
         for i, name in enumerate(output_names):
             if method == "sobol":
-                Si = sobol_analyze(self.problem, y[:, i], conf_level=conf_level)
+                Si = sobol_analyze(self.problem, y_pred[:, i], conf_level=conf_level)
             elif method == "morris":
                 Si = morris_analyze(
-                    self.problem, param_samples, y[:, i], conf_level=conf_level
+                    self.problem, param_samples, y_pred[:, i], conf_level=conf_level
                 )
             else:
                 msg = f"Unknown method: {method}. Must be 'sobol' or 'morris'."
@@ -449,6 +759,110 @@ def _sobol_results_to_df(results: dict[str, ResultDict]) -> pd.DataFrame:
         rows.append(df[["output", "parameter", "index", "value", "confidence"]])
 
     return pd.concat(rows)
+
+
+def _bootstrap_sobol_results_to_df(
+    results: dict[str, dict[str, NumpyLike]], problem: dict
+) -> pd.DataFrame:
+    """
+    Convert bootstrap-aggregated Sobol results to a (long-format) pandas DataFrame.
+
+    Parameters
+    ----------
+    results: dict
+        Dictionary mapping output names to dictionaries containing S1, S1_conf, ST,
+        ST_conf, S2, S2_conf arrays.
+    problem: dict
+        Problem definition with 'names' field.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with columns: 'output', 'parameter', 'index', 'value', 'confidence'.
+    """
+    param_names = problem["names"]
+    rows = []
+
+    for output, result in results.items():
+        # Process S1 indices
+        for i, param in enumerate(param_names):
+            rows.append(
+                {
+                    "output": output,
+                    "parameter": param,
+                    "index": "S1",
+                    "value": float(result["S1"][i]),
+                    "confidence": float(result["S1_conf"][i]),
+                }
+            )
+
+        # Process ST indices
+        for i, param in enumerate(param_names):
+            rows.append(
+                {
+                    "output": output,
+                    "parameter": param,
+                    "index": "ST",
+                    "value": float(result["ST"][i]),
+                    "confidence": float(result["ST_conf"][i]),
+                }
+            )
+
+        # Process S2 indices (interactions)
+        n_params = len(param_names)
+        for i in range(n_params):
+            for j in range(i + 1, n_params):
+                param_pair = f"[{param_names[i]}, {param_names[j]}]"
+                rows.append(
+                    {
+                        "output": output,
+                        "parameter": param_pair,
+                        "index": "S2",
+                        "value": float(result["S2"][i, j]),
+                        "confidence": float(result["S2_conf"][i, j]),
+                    }
+                )
+
+    return pd.DataFrame(rows)
+
+
+def _bootstrap_morris_results_to_df(
+    results: dict[str, dict[str, NumpyLike]], problem: dict
+) -> pd.DataFrame:
+    """
+    Convert bootstrap-aggregated Morris results to a (long-format) pandas DataFrame.
+
+    Parameters
+    ----------
+    results: dict
+        Dictionary mapping output names to dictionaries containing mu, mu_star, sigma,
+        and mu_star_conf arrays.
+    problem: dict
+        Problem definition with 'names' field.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with columns: 'output', 'parameter', 'mu', 'mu_star', 'sigma',
+        'mu_star_conf'.
+    """
+    param_names = problem["names"]
+    rows = []
+
+    for output, result in results.items():
+        for i, param in enumerate(param_names):
+            rows.append(
+                {
+                    "output": output,
+                    "parameter": param,
+                    "mu": float(result["mu"][i]),
+                    "mu_star": float(result["mu_star"][i]),
+                    "sigma": float(result["sigma"][i]),
+                    "mu_star_conf": float(result["mu_star_conf"][i]),
+                }
+            )
+
+    return pd.DataFrame(rows)
 
 
 def _validate_input(results: pd.DataFrame, index: str):
