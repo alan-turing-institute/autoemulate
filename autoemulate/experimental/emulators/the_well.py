@@ -136,7 +136,8 @@ class AutoEmulateTrainer(Trainer):
             torch.bfloat16 if trainer_params.amp_type == "bfloat16" else torch.float16
         )
         self.grad_scaler = torch.GradScaler(
-            self.device.type, enabled=self.enable_amp and self.amp_type != "bfloat16"
+            self.device.type,
+            enabled=self.enable_amp and trainer_params.amp_type != "bfloat16",
         )
         self.is_distributed = trainer_params.is_distributed
         self.best_val_loss = None
@@ -145,7 +146,10 @@ class AutoEmulateTrainer(Trainer):
         if self.datamodule.train_dataset.use_normalization:
             self.dset_norm = self.datamodule.train_dataset.norm
         self.formatter = formatter_cls(self.dset_metadata)
-        if len(trainer_params.checkpoint_path) > 0:
+        if (
+            trainer_params.checkpoint_path is not None
+            and len(trainer_params.checkpoint_path) > 0
+        ):
             self.load_checkpoint(trainer_params.checkpoint_path)
 
         # Teacher Forcing scheduler setup

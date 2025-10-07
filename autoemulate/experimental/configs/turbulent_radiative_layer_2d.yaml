@@ -1,0 +1,78 @@
+# Configuration for turbulent_radiative_layer_2D using The Well's native dataset
+# This uses the unified run_the_well_experiment.py script
+
+# Basic experiment information
+experiment_name: "turbulent_radiative_layer_2d"
+description: "FNO emulator for turbulent radiative layer 2D using native Well dataset"
+
+# Emulator configuration
+emulator_type: "the_well_fno"
+
+# Data formatter
+formatter_type: "default_channels_first"
+
+# Model architecture parameters
+model_params:
+  modes1: 16
+  modes2: 16
+  width: 20
+  n_blocks: 4
+
+# Data configuration - The Well native dataset
+# Setting well_dataset_name automatically uses WELL_NATIVE source type
+data:
+  well_dataset_name: "turbulent_radiative_layer_2D"  # This triggers native Well dataset loading
+  data_path: "./autoemulate/experimental/exploratory/data/the_well/datasets"  # Optional: base path to Well datasets
+  n_steps_input: 4
+  n_steps_output: 1
+  batch_size: 4
+
+# No simulator section needed for native Well datasets!
+
+# Trainer configuration
+trainer:
+  epochs: 100
+  device: "mps"
+  
+  optimizer_type: "adam"
+  optimizer_params:
+    lr: 0.001
+    weight_decay: 0.0
+  
+  lr_scheduler_type: "step_lr"
+  lr_scheduler_params:
+    step_size: 30
+    gamma: 0.5
+  
+  loss_fn: "vrmse"
+  
+  val_frequency: 5
+  checkpoint_frequency: 10
+  rollout_val_frequency: 10
+  max_rollout_steps: 100
+  short_validation_length: 10
+  make_rollout_videos: false
+  
+  enable_tf_schedule: true
+  tf_params:
+    start: 1.0
+    end: 0.0
+    schedule_epochs: 50
+    schedule_type: "linear"
+    mode: "mix"
+    min_prob: 0.0
+  
+  enable_amp: false
+  amp_type: null
+  is_distributed: false
+  checkpoint_path: null
+  num_time_intervals: 1
+
+# Paths
+paths:
+  output_dir: "./outputs/turbulent_radiative_layer_2d"
+  model_save_path: "./outputs/turbulent_radiative_layer_2d/artifacts/final_model.pt"
+
+# Logging
+log_level: "INFO"
+verbose: true

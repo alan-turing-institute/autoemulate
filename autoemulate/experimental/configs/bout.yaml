@@ -1,0 +1,93 @@
+# Configuration for BOUT++ dataset using file-based data loading
+# This uses the unified run_the_well_experiment.py script
+
+# Basic experiment information
+experiment_name: "bout_fno"
+description: "FNO emulator for BOUT++ plasma simulation data"
+
+# Emulator configuration
+emulator_type: "the_well_fno"
+
+# Data formatter
+formatter_type: "default_channels_first"
+
+# Model architecture parameters
+model_params:
+  modes1: 12              # Fourier modes in first dimension
+  modes2: 12              # Fourier modes in second dimension
+  width: 32               # Width of the FNO layers
+  n_blocks: 4             # Number of FNO blocks
+
+# Data configuration - File-based loading
+# Setting data_path without well_dataset_name triggers FILE source type
+data:
+  data_path: "./autoemulate/experimental/exploratory/data/bout"  # Path to BOUT++ data directory with train/valid/test subdirs
+  # Structure expected:
+  #   ./data/bout/train/data.pt
+  #   ./data/bout/valid/data.pt
+  #   ./data/bout/test/data.pt
+  
+  dataset_type: "bout"    # Use BOUT dataset class
+  n_steps_input: 5        # Number of input timesteps
+  n_steps_output: 5       # Number of output timesteps (rollout length)
+  batch_size: 4           # Batch size for training
+  stride: 1               # Stride for sampling
+
+# No simulator section needed for file-based data!
+# No well_dataset_name needed - this triggers file loading
+
+# Trainer configuration
+trainer:
+  epochs: 100
+  # device: "cuda"          
+  device: "mps"          # Use "cuda" for GPU, "mps" for Apple Silicon, "cpu" for CPU
+  
+  optimizer_type: "adam"
+  optimizer_params:
+    lr: 0.0001            # Lower learning rate (1e-4) as used in the notebook
+    weight_decay: 0.0
+  
+  lr_scheduler_type: "step_lr"
+  lr_scheduler_params:
+    step_size: 30
+    gamma: 0.5
+  
+  loss_fn: "vrmse"        # Or "rmse" or "mse"
+  
+  val_frequency: 5
+  checkpoint_frequency: 10
+  rollout_val_frequency: 10
+  max_rollout_steps: 100
+  short_validation_length: 10
+  make_rollout_videos: true
+  
+  # Teacher forcing schedule
+  enable_tf_schedule: true
+  tf_params:
+    start: 1.0            # Full teacher forcing at start
+    end: 0.0              # No teacher forcing at end
+    schedule_epochs: 50   # Decay over first 50 epochs
+    schedule_type: "linear"
+    mode: "mix"
+    min_prob: 0.0
+  
+  # AMP settings (optional - enable for faster training on CUDA)
+  enable_amp: false
+  amp_type: null
+  
+  # Distributed training
+  is_distributed: false
+  checkpoint_path: null
+  num_time_intervals: 1
+
+# Paths
+paths:
+  output_dir: "./outputs/bout_fno"
+  model_save_path: "./outputs/bout_fno/artifacts/final_model.pt"
+  # Optionally save data in different formats
+  # data_save_path: "./outputs/bout_fno/data"
+  # save_format: "h5"
+
+# Logging
+log_level: "INFO"
+verbose: true

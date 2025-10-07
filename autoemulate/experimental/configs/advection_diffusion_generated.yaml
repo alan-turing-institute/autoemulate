@@ -1,0 +1,106 @@
+# Configuration for Advection-Diffusion dataset with data generation
+# This uses the unified run_the_well_experiment.py script with GENERATED data source
+
+# Basic experiment information
+experiment_name: "advection_diffusion_generated"
+description: "FNO emulator for advection-diffusion dynamics with data generation"
+
+# Emulator configuration
+emulator_type: "the_well_fno"
+
+# Data formatter
+formatter_type: "default_channels_first"
+
+# Model architecture parameters
+model_params:
+  modes1: 12              # Fourier modes in first dimension
+  modes2: 12              # Fourier modes in second dimension
+  width: 32               # Width of the FNO layers
+  n_blocks: 4             # Number of FNO blocks
+
+# Simulator configuration for advection-diffusion
+# This triggers GENERATED data source type
+simulator:
+  type: "advection_diffusion"
+  n: 64                   # Spatial resolution (64x64 grid)
+  T: 10.0                 # Total simulation time
+  dt: 0.1                 # Time step size
+  L: 10.0                 # Domain size
+  parameters_range:
+    nu: [0.0001, 0.01]    # Diffusion coefficient (viscosity)
+    mu: [0.5, 2.0]        # Advection strength
+  output_names: ["solution"]
+  return_timeseries: true
+
+# Data configuration - Generated from simulator
+data:
+  # No well_dataset_name - not a Well native dataset
+  # No data_path - triggers GENERATED source type
+  
+  # Data generation
+  n_train_samples: 200
+  n_valid_samples: 20
+  n_test_samples: 20
+  random_seed: 42
+  
+  # Dataset configuration
+  dataset_type: "advection_diffusion"
+  n_steps_input: 4        # Number of input timesteps
+  n_steps_output: 10      # Number of output timesteps (rollout length)
+  batch_size: 4           # Batch size for training
+  stride: 1               # Stride for sampling
+
+# Trainer configuration
+trainer:
+  epochs: 100
+  device: "mps"           # Use "cuda" for NVIDIA GPU, "mps" for Apple Silicon, "cpu" for CPU
+  
+  optimizer_type: "adam"
+  optimizer_params:
+    lr: 0.001             # Learning rate
+    weight_decay: 0.0
+  
+  lr_scheduler_type: "step_lr"
+  lr_scheduler_params:
+    step_size: 30
+    gamma: 0.5
+  
+  loss_fn: "vrmse"
+  
+  val_frequency: 5
+  checkpoint_frequency: 10
+  rollout_val_frequency: 10
+  max_rollout_steps: 100
+  short_validation_length: 10
+  make_rollout_videos: true
+  
+  # Teacher forcing schedule
+  enable_tf_schedule: true
+  tf_params:
+    start: 1.0
+    end: 0.0
+    schedule_epochs: 50
+    schedule_type: "linear"
+    mode: "mix"
+    min_prob: 0.0
+  
+  # AMP settings
+  enable_amp: false
+  amp_type: null
+  
+  # Distributed training
+  is_distributed: false
+  checkpoint_path: null
+  num_time_intervals: 1
+
+# Paths
+paths:
+  output_dir: "./outputs/advection_diffusion_generated"
+  model_save_path: "./outputs/advection_diffusion_generated/artifacts/final_model.pt"
+  # Optionally save generated data for reuse
+  data_save_path: "./data/advection_diffusion_generated"
+  save_format: "h5"
+
+# Logging
+log_level: "INFO"
+verbose: true
