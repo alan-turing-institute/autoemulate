@@ -42,7 +42,8 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest --cov=autoemulate --cov-report=xml --cov-report=html 
+          # stop pytest after 3 failures to save CI time
+          pytest --maxfail=3 --cov=autoemulate --cov-report=xml --cov-report=html 
       
       - name: Upload Coverage
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
