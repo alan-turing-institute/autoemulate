@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ${{ github.event_name == 'push' && fromJSON('["3.10", "3.11", "3.12"]') || fromJSON('["3.11"]') }}
     env:
       TURN_OFF_MPS_IF_RUNNING_CI: 1
       MPLBACKEND: Agg
