@@ -22,7 +22,7 @@ model_params:
 # Setting well_dataset_name automatically uses WELL_NATIVE source type
 data:
   well_dataset_name: "turbulent_radiative_layer_2D"  # This triggers native Well dataset loading
-  data_path: "./autoemulate/experimental/exploratory/data/the_well/datasets"  # Optional: base path to Well datasets
+  data_path: "./exploratory/data/the_well/datasets"  # Optional: base path to Well datasets
   n_steps_input: 4
   n_steps_output: 1
   batch_size: 4

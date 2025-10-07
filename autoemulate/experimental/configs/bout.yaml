@@ -21,7 +21,7 @@ model_params:
 # Data configuration - File-based loading
 # Setting data_path without well_dataset_name triggers FILE source type
 data:
-  data_path: "./autoemulate/experimental/exploratory/data/bout"  # Path to BOUT++ data directory with train/valid/test subdirs
+  data_path: "./exploratory/data/bout"  # Path to BOUT++ data directory with train/valid/test subdirs
   # Structure expected:
   #   ./data/bout/train/data.pt
   #   ./data/bout/valid/data.pt
@@ -30,7 +30,7 @@ data:
   dataset_type: "bout"    # Use BOUT dataset class
   n_steps_input: 5        # Number of input timesteps
   n_steps_output: 5       # Number of output timesteps (rollout length)
-  batch_size: 4           # Batch size for training
+  batch_size: 1           # Batch size for training
   stride: 1               # Stride for sampling
 
 # No simulator section needed for file-based data!
