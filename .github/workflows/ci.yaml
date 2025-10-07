@@ -44,12 +44,12 @@ jobs:
         run: |
           pytest --cov=autoemulate --cov-report=xml --cov-report=html 
       
-      - name: Determine Coverage
-        run: |
-          coverage xml 
-
       - name: Upload Coverage
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
 
       #   # Clean python cache files
       # - name: Clean cache files
