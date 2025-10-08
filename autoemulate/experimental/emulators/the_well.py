@@ -3,7 +3,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import torch
 import torchinfo
@@ -22,7 +22,7 @@ from the_well.data.datamodule import AbstractDataModule
 from the_well.data.datasets import WellMetadata
 from torch import nn
 from torch.nn import functional as F
-from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.lr_scheduler import LRScheduler, _LRScheduler
 from torch.utils.data import DataLoader
 
 
@@ -39,7 +39,11 @@ class TrainerParams:
     max_rollout_steps: int = 10
     short_validation_length: int = 20
     make_rollout_videos: bool = True
-    lr_scheduler: type[torch.optim.lr_scheduler._LRScheduler] | None = None
+    lr_scheduler: (
+        type[torch.optim.lr_scheduler._LRScheduler]
+        | Callable[[Any], torch.optim.lr_scheduler.LRScheduler]
+        | None
+    ) = None
     amp_type: str = "float16"  # bfloat not supported in FFT
     num_time_intervals: int = 5
     enable_amp: bool = False
@@ -73,7 +77,7 @@ class AutoEmulateTrainer(Trainer):
         loss_fn: Callable,
         datamodule: WellDataModule,
         optimizer: torch.optim.Optimizer,
-        lr_scheduler: _LRScheduler | None,
+        lr_scheduler: _LRScheduler | LRScheduler | None,
         trainer_params: TrainerParams,
     ):
         """Subclass to integrate with AutoEmulate framework and extend functionality.
@@ -355,6 +359,7 @@ class TheWellEmulator(SpatioTemporalEmulator):
     model_cls: type[torch.nn.Module]
     model_parameters: ClassVar[ModelParams]
     with_time: bool = False
+    trainer: AutoEmulateTrainer
 
     def __init__(
         self,

@@ -17,21 +17,15 @@ Example usage:
 import argparse
 import logging
 import sys
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import h5py
 import torch
-from the_well.benchmark.metrics import VRMSE
-from the_well.data import WellDataModule, WellDataset
-from the_well.data.data_formatter import DefaultChannelsFirstFormatter
-
-# Add project root to path if needed
-project_root = Path(__file__).parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
 from autoemulate.experimental.config_models import (
+    DataConfig,
     DatasetType,
     DataSourceType,
     EmulatorType,
@@ -39,7 +33,11 @@ from autoemulate.experimental.config_models import (
     FormatterType,
     LossFunctionType,
     LRSchedulerType,
+    ModelParamsConfig,
     OptimizerType,
+    PathsConfig,
+    SimulatorConfig,
+    TrainerConfig,
 )
 from autoemulate.experimental.data.spatiotemporal_dataset import (
     AdvectionDiffusionDataset,
@@ -50,6 +48,7 @@ from autoemulate.experimental.data.spatiotemporal_dataset import (
 from autoemulate.experimental.emulators.the_well import (
     DefaultChannelsFirstFormatterWithTime,
     TheWellAFNO,
+    TheWellEmulator,
     TheWellFNO,
     TheWellFNOWithLearnableWeights,
     TheWellFNOWithTime,
@@ -59,6 +58,15 @@ from autoemulate.experimental.emulators.the_well import (
 )
 from autoemulate.simulations.advection_diffusion import AdvectionDiffusion
 from autoemulate.simulations.reaction_diffusion import ReactionDiffusion
+from the_well.benchmark.metrics import VRMSE
+from the_well.data import WellDataModule, WellDataset
+from the_well.data.data_formatter import DefaultChannelsFirstFormatter
+
+# Add project root to path if needed
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -115,7 +123,8 @@ def setup_logging(output_dir: Path, log_level: str = "INFO", verbose: bool = Fal
     console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)
 
-    logger.info(f"Logging initialized. Log file: {log_file}")
+    msg = f"Logging initialized. Log file: {log_file}"
+    logger.info(msg)
 
     return log_file
 
@@ -138,7 +147,7 @@ def create_simulator(config: ExperimentConfig):
             T=sim_cfg.T,
             dt=sim_cfg.dt,
         )
-    elif sim_cfg.type.value == "reaction_diffusion":
+    if sim_cfg.type.value == "reaction_diffusion":
         return ReactionDiffusion(
             parameters_range=sim_cfg.parameters_range,
             output_names=sim_cfg.output_names,
@@ -169,7 +178,9 @@ def get_dataset_class(dataset_type: DatasetType):
     return dataset_classes[dataset_type]
 
 
-def generate_or_load_data(config: ExperimentConfig, simulator=None):
+def generate_or_load_data(
+    config: ExperimentConfig, simulator=None
+) -> WellDataModule | AutoEmulateDataModule:
     """Generate or load data and create data module.
 
     Supports three data source types:
@@ -200,8 +211,6 @@ def generate_or_load_data(config: ExperimentConfig, simulator=None):
             data_cfg.n_steps_input,
             data_cfg.n_steps_output,
         )
-
-        from the_well.data import WellDataModule, WellDataset
 
         datamodule = WellDataModule(
             well_base_path=data_cfg.data_path or "../data/the_well/datasets",
@@ -347,7 +356,9 @@ def get_loss_function(loss_type: LossFunctionType):
     raise ValueError(msg)
 
 
-def create_lr_scheduler(config: ExperimentConfig):
+def create_lr_scheduler(
+    config: ExperimentConfig,
+) -> Callable[[Any], torch.optim.lr_scheduler.LRScheduler] | None:
     """Create learning rate scheduler factory."""
     if config.trainer.lr_scheduler_type is None:
         return None
@@ -410,11 +421,11 @@ def create_trainer_params(config: ExperimentConfig) -> TrainerParams:
         short_validation_length=trainer_cfg.short_validation_length,
         make_rollout_videos=trainer_cfg.make_rollout_videos,
         lr_scheduler=create_lr_scheduler(config),
-        amp_type=trainer_cfg.amp_type,
+        amp_type=trainer_cfg.amp_type,  # type: ignore TODO fix the types here
         num_time_intervals=trainer_cfg.num_time_intervals,
         enable_amp=trainer_cfg.enable_amp,
         is_distributed=trainer_cfg.is_distributed,
-        checkpoint_path=trainer_cfg.checkpoint_path,
+        checkpoint_path=trainer_cfg.checkpoint_path,  # type: ignore TODO fix the types here
         device=trainer_cfg.device,
         output_path=str(config.paths.output_dir),
         enable_tf_schedule=trainer_cfg.enable_tf_schedule,
@@ -429,7 +440,7 @@ def create_trainer_params(config: ExperimentConfig) -> TrainerParams:
     )
 
 
-def create_emulator(config: ExperimentConfig, datamodule):
+def create_emulator(config: ExperimentConfig, datamodule) -> TheWellEmulator:
     """Create emulator from configuration."""
     emulator_type = config.emulator_type
     formatter_cls = get_formatter_class(config.formatter_type)
@@ -470,7 +481,7 @@ def create_emulator(config: ExperimentConfig, datamodule):
     )
 
 
-def run_experiment(config_path: str, output_dir: str | None = None):
+def run_experiment(config_path: str, output_dir: str | None = None):  # noqa: PLR0915 ignoring as mainly logging statements
     """Run a complete experiment from config file."""
     # Load configuration
     logger.info("Loading configuration from %s", config_path)
@@ -524,11 +535,7 @@ def run_experiment(config_path: str, output_dir: str | None = None):
     logger.info("Training dataset size: %d samples", len(datamodule.train_dataset))
 
     # WellDataModule uses 'val_dataset', AutoEmulateDataModule uses 'valid_dataset'
-    if hasattr(datamodule, "valid_dataset"):
-        logger.info(
-            "Validation dataset size: %d samples", len(datamodule.valid_dataset)
-        )
-    elif hasattr(datamodule, "val_dataset"):
+    if hasattr(datamodule, "valid_dataset") or hasattr(datamodule, "val_dataset"):
         logger.info("Validation dataset size: %d samples", len(datamodule.val_dataset))
 
     logger.info("Test dataset size: %d samples", len(datamodule.test_dataset))
@@ -569,14 +576,14 @@ def run_experiment(config_path: str, output_dir: str | None = None):
     logger.info("EVALUATION")
     logger.info("=" * 60)
     logger.info("Evaluating on validation set...")
-    valid_results = emulator.trainer.validation_loop(
+    _, valid_results = emulator.trainer.validation_loop(
         datamodule.rollout_val_dataloader(), valid_or_test="rollout_valid", full=True
-    )
+    )  # type: ignore  # noqa: PGH003
 
     logger.info("Evaluating on test set...")
-    test_results = emulator.trainer.validation_loop(
+    _, test_results = emulator.trainer.validation_loop(
         datamodule.rollout_test_dataloader(), valid_or_test="rollout_test", full=True
-    )
+    )  # type: ignore  # noqa: PGH003
 
     # Save model if path is provided
     if config.paths.model_save_path:
@@ -612,17 +619,6 @@ def run_experiment(config_path: str, output_dir: str | None = None):
 
 def create_example_config(output_path: str = "example_config.yaml"):
     """Create an example configuration file."""
-    from autoemulate.experimental.config_models import (
-        DataConfig,
-        EmulatorType,
-        ExperimentConfig,
-        FormatterType,
-        ModelParamsConfig,
-        PathsConfig,
-        SimulatorConfig,
-        TrainerConfig,
-    )
-
     config = ExperimentConfig(
         experiment_name="advection_diffusion_the_well_example",
         description="Example configuration for advection-diffusion with The Well FNO",
