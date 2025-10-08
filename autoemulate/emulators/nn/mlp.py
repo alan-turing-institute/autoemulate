@@ -133,7 +133,7 @@ class MLP(DropoutTorchBackend):
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_cls = scheduler_cls
         self.scheduler_kwargs = scheduler_kwargs or {}
-        self.scheduler_setup(**self.scheduler_kwargs)
+        self.scheduler_setup(self.scheduler_kwargs)
         self.to(self.device)
 
     def forward(self, x):

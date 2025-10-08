@@ -340,34 +340,22 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         # Randomly select one of the parameter sets
         return random.choice(all_params)
 
-    def scheduler_setup(self, kwargs: dict | None = None):
+    def scheduler_setup(self, scheduler_kwargs: dict | None = None):
         """
         Set up the learning rate scheduler for the emulator.
 
         Parameters
         ----------
-        kwargs : dict | None
-            Keyword arguments for the model. This should include scheduler_kwargs.
+        scheduler_kwargs : dict | None
+            Keyword arguments for the scheduler.
         """
-        if kwargs is None:
-            msg = (
-                "Provide a kwargs dictionary including "
-                "scheduler_kwargs to set up the scheduler."
-            )
+        if scheduler_kwargs is None:
+            msg = "Provide a scheduler_kwargs to set up the scheduler."
             raise ValueError(msg)
 
         if not hasattr(self, "optimizer"):
             msg = "Optimizer must be set before setting up the scheduler."
             raise RuntimeError(msg)
-
-        # Extract scheduler-specific kwargs if present
-        try:
-            assert type(kwargs) is dict
-            scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
-        except AttributeError:
-            # If kwargs does not contain scheduler_kwargs, throw an error
-            msg = "No kwargs for scheduler setup detected."
-            raise ValueError(msg) from None
 
         # Set up the scheduler if a scheduler class is defined
         if self.scheduler_cls is None:
