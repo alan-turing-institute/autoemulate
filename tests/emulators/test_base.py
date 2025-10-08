@@ -152,16 +152,16 @@ class TestPyTorchBackend:
 
     def test_scheduler_setup(self):
         # Should raise ValueError if kwargs is None
-        with pytest.raises(ValueError, match="Provide a kwargs dictionary including"):
+        with pytest.raises(
+            ValueError, match="Provide scheduler_kwargs to set up the scheduler."
+        ):
             self.model.scheduler_setup(None)
 
         # Should raise RuntimeError if optimizer is missing
         model_no_opt = self.DummyModel()
         delattr(model_no_opt, "optimizer")
         with pytest.raises(RuntimeError, match="Optimizer must be set before"):
-            model_no_opt.scheduler_setup(
-                {"scheduler_cls": ExponentialLR, "scheduler_kwargs": {"gamma": 0.9}}
-            )
+            model_no_opt.scheduler_setup({"gamma": 0.9})
 
         # Should set scheduler to None if scheduler_cls is None
         model_none_sched = self.DummyModel()
@@ -170,7 +170,7 @@ class TestPyTorchBackend:
             model_none_sched.parameters(),
             lr=model_none_sched.lr,  # type: ignore[call-arg]
         )
-        model_none_sched.scheduler_setup({"scheduler_kwargs": {}})
+        model_none_sched.scheduler_setup({})
         assert model_none_sched.scheduler is None
 
         # Should set scheduler if scheduler_cls is valid
@@ -180,5 +180,5 @@ class TestPyTorchBackend:
             model_valid_sched.parameters(),
             lr=model_valid_sched.lr,  # type: ignore[call-arg]
         )
-        model_valid_sched.scheduler_setup({"scheduler_kwargs": {"gamma": 0.9}})
+        model_valid_sched.scheduler_setup({"gamma": 0.9})
         assert isinstance(model_valid_sched.scheduler, ExponentialLR)

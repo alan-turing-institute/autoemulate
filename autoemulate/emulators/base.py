@@ -350,7 +350,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             Keyword arguments for the scheduler.
         """
         if scheduler_kwargs is None:
-            msg = "Provide a scheduler_kwargs to set up the scheduler."
+            msg = "Provide scheduler_kwargs to set up the scheduler."
             raise ValueError(msg)
 
         if not hasattr(self, "optimizer"):
