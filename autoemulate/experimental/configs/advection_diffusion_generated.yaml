@@ -13,8 +13,8 @@ formatter_type: "default_channels_first"
 
 # Model architecture parameters
 model_params:
-  modes1: 12              # Fourier modes in first dimension
-  modes2: 12              # Fourier modes in second dimension
+  modes1: 16              # Fourier modes in first dimension
+  modes2: 16              # Fourier modes in second dimension
   width: 32               # Width of the FNO layers
   n_blocks: 4             # Number of FNO blocks
 
@@ -57,7 +57,7 @@ trainer:
   
   optimizer_type: "adam"
   optimizer_params:
-    lr: 0.001             # Learning rate
+    lr: 0.0001             # Learning rate
     weight_decay: 0.0
   
   lr_scheduler_type: "step_lr"
