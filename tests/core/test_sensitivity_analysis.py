@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 import torch
 from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
+from autoemulate.core.types import DistributionLike
 from autoemulate.emulators import GaussianProcessRBF as GaussianProcess
 from autoemulate.emulators.random_forest import RandomForest
 from autoemulate.simulations.projectile import Projectile, ProjectileMultioutput
@@ -180,12 +181,9 @@ def test_predict_with_variance(xy_1d):
     assert y_pred.shape == (100, 1)
 
     # Test with return_variance=True
-    y_pred, y_var = sa._predict(x.numpy(), return_variance=True)
-    assert isinstance(y_pred, np.ndarray)
-    assert isinstance(y_var, np.ndarray)
-    assert y_pred.shape == (100, 1)
-    assert y_var.shape == (100, 1)
-    assert np.all(y_var >= 0)  # Variance should be non-negative
+    y_dist = sa._predict(x.numpy(), return_variance=True)
+    assert isinstance(y_dist, DistributionLike)
+    assert y_dist.sample(torch.Size([10])).shape == torch.Size([10, 100, 1])
 
 
 def test_predict_with_variance_no_uq(xy_1d):
@@ -202,9 +200,9 @@ def test_predict_with_variance_no_uq(xy_1d):
     sa = SensitivityAnalysis(rf, problem=problem)
 
     # Test with return_variance=True
-    y_pred, y_var = sa._predict(x.numpy(), return_variance=True)
-    assert isinstance(y_pred, np.ndarray)
-    assert y_var is None
+    msg = "Emulator does not support uncertainty quantification."
+    with pytest.raises(ValueError, match=msg):
+        sa._predict(x.numpy(), return_variance=True)
 
 
 # test sensitivity analysis with prediction variance ----------------------------

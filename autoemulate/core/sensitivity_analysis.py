@@ -5,6 +5,7 @@ import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import torch
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from SALib.analyze.morris import analyze as morris_analyze
@@ -15,7 +16,7 @@ from SALib.util import ResultDict
 from scipy import stats
 
 from autoemulate.core.plotting import display_figure
-from autoemulate.core.types import NumpyLike, TensorLike
+from autoemulate.core.types import DistributionLike, NumpyLike, TensorLike
 from autoemulate.data.utils import ConversionMixin
 from autoemulate.emulators.base import Emulator
 
@@ -160,7 +161,7 @@ class SensitivityAnalysis(ConversionMixin):
 
     def _predict(
         self, param_samples: NumpyLike, return_variance: bool = False
-    ) -> NumpyLike | tuple[NumpyLike, NumpyLike | None]:
+    ) -> NumpyLike | DistributionLike:
         """
         Make predictions with emulator for parameter samples.
 
@@ -182,13 +183,12 @@ class SensitivityAnalysis(ConversionMixin):
         assert isinstance(param_tensor, TensorLike)
 
         if return_variance:
-            y_pred, y_var = self.emulator.predict_mean_and_variance(param_tensor)
-            y_pred_np, _ = self._convert_to_numpy(y_pred)
-            if y_var is not None:
-                y_var_np, _ = self._convert_to_numpy(y_var)
-            else:
-                y_var_np = None
-            return y_pred_np, y_var_np
+            if not self.emulator.supports_uq:
+                msg = "Emulator does not support uncertainty quantification."
+                raise ValueError(msg)
+            y_pred = self.emulator.predict(param_tensor)
+            assert isinstance(y_pred, DistributionLike), "Expected DistributionLike"
+            return y_pred
 
         y_pred = self.emulator.predict_mean(param_tensor)
         y_pred_np, _ = self._convert_to_numpy(y_pred)
@@ -258,8 +258,7 @@ class SensitivityAnalysis(ConversionMixin):
         self,
         method: Literal["sobol", "morris"],
         param_samples: NumpyLike,
-        y_mean: NumpyLike,
-        y_var: NumpyLike,
+        y_dist: DistributionLike,
         output_names: list[str],
         conf_level: float,
         n_bootstrap: int,
@@ -271,25 +270,20 @@ class SensitivityAnalysis(ConversionMixin):
         bootstrap_results: dict[str, dict[str, list]] = {
             name: {metric: [] for metric in metrics} for name in output_names
         }
-
-        for _ in range(n_bootstrap):
-            y_sampled = np.random.normal(
-                loc=y_mean,
-                scale=np.sqrt(np.maximum(y_var, 1e-10)),
-            )
+        y_samples = y_dist.sample(  # (n_bootstrap, n_points, n_outputs)
+            torch.Size([n_bootstrap])
+        )
+        for m in range(n_bootstrap):
+            y_sample = y_samples[m].numpy()  # (n_points, n_outputs)
 
             for i, name in enumerate(output_names):
+                y = y_sample[:, i]  # (n_points,)
                 if config["needs_param_samples"]:
                     Si = config["analyze_fn"](
-                        self.problem,
-                        param_samples,
-                        y_sampled[:, i],
-                        conf_level=conf_level,
+                        self.problem, param_samples, y, conf_level=conf_level
                     )
                 else:
-                    Si = config["analyze_fn"](
-                        self.problem, y_sampled[:, i], conf_level=conf_level
-                    )
+                    Si = config["analyze_fn"](self.problem, y, conf_level=conf_level)
                 for metric in metrics:
                     bootstrap_results[name][metric].append(Si[metric])
 
@@ -405,8 +399,10 @@ class SensitivityAnalysis(ConversionMixin):
         )
 
         # Get predictions with variance
-        y_mean, y_var = self._predict(param_samples, return_variance=True)
+        y_mean = self._predict(param_samples, return_variance=False)
+        y_dist = self._predict(param_samples, return_variance=True)
         assert isinstance(y_mean, NumpyLike)
+        assert isinstance(y_dist, DistributionLike)
         output_names = self._get_output_names(y_mean.shape[1])
 
         # Compute baseline analysis
@@ -414,15 +410,14 @@ class SensitivityAnalysis(ConversionMixin):
             method, param_samples, y_mean, output_names, conf_level
         )
 
-        # Return standard results if no variance available
-        if y_var is None:
-            logger.debug("No prediction variance available, returning standard results")
-            config = self._get_sa_method_config(method)
-            return config["to_df_fn"](results_baseline)
-
         # Bootstrap to estimate additional uncertainty
         bootstrap_results = self._bootstrap_sa_indices(
-            method, param_samples, y_mean, y_var, output_names, conf_level, n_bootstrap
+            method=method,
+            param_samples=param_samples,
+            y_dist=y_dist,
+            output_names=output_names,
+            conf_level=conf_level,
+            n_bootstrap=n_bootstrap,
         )
 
         # Combine uncertainties
@@ -491,21 +486,19 @@ class SensitivityAnalysis(ConversionMixin):
         12,288 evaluations. The Morris method requires far fewer computations.
 
         When include_prediction_variance=True, the emulator's prediction uncertainty is
-        incorporated by sampling from Gaussian distributions with predicted means and
-        variances, then computing sensitivity indices for each bootstrap sample.
+        incorporated by sampling from the predicted distribution, then computing
+        sensitivity indices for each bootstrap sample.
 
         Specifically, the approach is:
         1. Compute baseline indices on the predictive mean outputs.
-        2. Draw n_bootstrap replicated output sets from Normal(mean, var) per design
-        point (independent marginals assumed).
+        2. Draw n_bootstrap replicated output sets per design point.
         3. Recompute indices for each replicate.
         4. Estimate predictive SD of each index and combine with SALib's sampling
         with root-sum-of-squares.
 
-        Key Assumptions: independent predictive marginals, approximate independence of
-        sampling and predictive uncertainties, and near-normal index estimator
-        distribution. See private method docstring _run_sa_with_prediction_variance for
-        detailed discussion.
+        Key Assumptions: approximate independence of sampling and predictive
+        uncertainties and near-normal index estimator distribution. See private method
+        docstring _run_sa_with_prediction_variance for detailed discussion.
         """
         # Validate and normalize method name (case-insensitive)
         method = self._validate_method(method)
