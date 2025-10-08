@@ -8,22 +8,20 @@ from autoemulate.core.types import (
     DeviceLike,
     DistributionLike,
     GaussianLike,
+    InputLike,
     OutputLike,
     TensorLike,
 )
-from autoemulate.data.utils import ValidationMixin
+from autoemulate.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.delta_method import (
     delta_method,
     delta_method_mean_only,
 )
-from autoemulate.transforms.base import (
-    AutoEmulateTransform,
-    is_affine,
-)
+from autoemulate.transforms.base import AutoEmulateTransform, is_affine
 
 
-class TransformedEmulator(Emulator, ValidationMixin):
+class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
     """
     A transformed emulator that applies transformations to input and target data.
 
@@ -73,8 +71,8 @@ class TransformedEmulator(Emulator, ValidationMixin):
 
     def __init__(
         self,
-        x: TensorLike,
-        y: TensorLike,
+        x: InputLike,
+        y: InputLike,
         x_transforms: list[Transform] | None,
         y_transforms: list[Transform] | None,
         model: type[Emulator],
@@ -128,10 +126,18 @@ class TransformedEmulator(Emulator, ValidationMixin):
         """
         self.x_transforms = x_transforms or []
         self.y_transforms = y_transforms or []
-        self._fit_transforms(x, y)
+
+        # Convert and move the new data to device
+        x_tensor, y_tensor = self._convert_to_tensors(x, y)
+        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
+
+        self._fit_transforms(x_tensor, y_tensor)
         self.untransformed_model_name = model.model_name()
         self.model = model(
-            self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
+            self._transform_x(x_tensor),
+            self._transform_y_tensor(y_tensor),
+            device=device,
+            **kwargs,
         )
         # Cache for constant Jacobian of inverse y-transform when affine
         self._fixed_jacobian_y_inv = None
@@ -156,7 +162,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
         # Precompute and cache the Jacobian of the inverse y-transform if affine
         if not self.output_from_samples and self.all_y_transforms_affine:
             try:
-                self._compute_and_cache_inv_y_jacobian(y)
+                self._compute_and_cache_inv_y_jacobian(y_tensor)
             except Exception:
                 self._fixed_jacobian_y_inv = None
 
@@ -406,9 +412,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
             out = delta_method_mean_only(
                 ComposeTransform(self.y_transforms).inv,
                 y_t_pred.mean,
-                y_t_pred.covariance_matrix
-                if isinstance(y_t_pred, GaussianLike)
-                else y_t_pred.variance,
+                (
+                    y_t_pred.covariance_matrix
+                    if isinstance(y_t_pred, GaussianLike)
+                    else y_t_pred.variance
+                ),
                 True,
             )
             return out["mean_total"].detach() if not with_grad else out["mean_total"]
