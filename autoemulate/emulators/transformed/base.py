@@ -128,6 +128,7 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
         self.y_transforms = y_transforms or []
 
         # Convert and move the new data to device
+        TorchDeviceMixin.__init__(self, device=device)
         x_tensor, y_tensor = self._convert_to_tensors(x, y)
         x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
 
@@ -154,7 +155,7 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
             raise RuntimeError(msg)
         self.n_samples = n_samples
         self.full_covariance = full_covariance
-        TorchDeviceMixin.__init__(self, device=device)
+
         # TODO: add API to indicate that pdf not valid when not all transforms bijective
         self.supports_grad = self.model.supports_grad
         self.supports_uq = self.model.supports_uq
