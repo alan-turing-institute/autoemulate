@@ -1,4 +1,3 @@
-import inspect
 import logging
 import warnings
 
@@ -13,10 +12,11 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.plotting import display_figure
+from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result
-from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
+from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, TensorLike
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators import Emulator, TransformedEmulator, get_emulator_class
+from autoemulate.emulators import Emulator
 from autoemulate.simulations.base import Simulator
 
 logger = logging.getLogger("autoemulate")
@@ -352,44 +352,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         # Extract emulator and its parameters from Result or Emulator instance
         if isinstance(emulator, Result):
             self.emulator = emulator.model
-            self.emulator_name = emulator.model_name
-            self.emulator_params = emulator.params
-            self.x_transforms = emulator.x_transforms
-            self.y_transforms = emulator.y_transforms
-        elif isinstance(emulator, Emulator):
-            if isinstance(emulator, TransformedEmulator):
-                self.emulator = emulator.model
-                self.emulator_name = emulator.untransformed_model_name
-                self.x_transforms = emulator.x_transforms
-                self.y_transforms = emulator.y_transforms
-            else:
-                self.emulator = emulator
-                self.emulator_name = emulator.model_name()
-                self.x_transforms = None
-                self.y_transforms = None
-
-            # Extract parameters from the provided emulator instance
-            model_cls = (get_emulator_class(self.emulator_name),)
-            init_sig = inspect.signature(model_cls.__init__)
-            self.emulator_params = {}
-            for param_name in init_sig.parameters:
-                if param_name in ["self", "x", "y", "device"]:
-                    continue
-                # NOTE: some emulators have standardize_x/y params option
-                # this is different to TransformedEmulator transforms
-                if param_name == "standardize_x":
-                    assert hasattr(self.emulator, "x_transforms")
-                    self.emulator_params["standardize_x"] = bool(
-                        self.emulator.x_transforms  # type: ignore[reportAttributeAccessIssue]
-                    )
-                if param_name == "standardize_y":
-                    assert hasattr(self.emulator, "y_transforms")
-                    self.emulator_params["standardize_y"] = bool(
-                        self.emulator.y_transforms  # type: ignore[reportAttributeAccessIssue]
-                    )
-                if hasattr(emulator, param_name):
-                    self.emulator_params[param_name] = getattr(emulator, param_name)
-
+        else:
+            self.emulator = emulator
         self.transformed_emulator_params = transformed_emulator_params or {}
         self.emulator.device = self.device
 
@@ -659,30 +623,26 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         return x, y
 
-    def refit_emulator(self, x: TensorLike, y: TensorLike) -> None:
+    def refit_emulator(self, x: InputLike, y: InputLike) -> None:
         """
         Refit the emulator on the provided data.
 
         Parameters
         ----------
-        x: TensorLike
+        x: InputLike
             Tensor of input data to refit the emulator on.
-        y: TensorLike
+        y: InputLike
             Tensor of output data to refit the emulator on.
         """
-        # Create a fresh model with the same configuration
-
-        self.emulator = TransformedEmulator(
-            x.float(),
-            y.float(),
-            model=get_emulator_class(self.emulator_name),
-            x_transforms=self.x_transforms,
-            y_transforms=self.y_transforms,
-            device=self.device,
-            **self.emulator_params,
+        # NOTE: function passes data to the Emulator model which handles conversion to
+        # tensors and device handling
+        self.emulator = fit_from_reinitialized(
+            x,
+            y,
+            emulator=self.emulator,
+            transformed_emulator_params=self.transformed_emulator_params,
+            device=str(self.device),
         )
-
-        self.emulator.fit(x, y)
 
     def run(
         self,

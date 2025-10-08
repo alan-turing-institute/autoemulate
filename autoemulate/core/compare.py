@@ -19,6 +19,7 @@ from autoemulate.core.plotting import (
     display_figure,
     plot_xy,
 )
+from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
@@ -566,33 +567,16 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Get the result to use
         result = self.best_result() if result_id is None else self.get_result(result_id)
 
-        # Set the random seed for initialization
-        if random_seed is not None:
-            set_random_seed(seed=random_seed)
-
-        # Convert and move the new data to device
-        x_tensor, y_tensor = self._convert_to_tensors(x, y)
-        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
-
-        # Get the model class from the model name
-        model_class = get_emulator_class(result.model_name)
-
-        # Create a fresh model with the same configuration
-        fresh_model = TransformedEmulator(
-            x_tensor,
-            y_tensor,
-            model=model_class,
-            x_transforms=result.x_transforms,
-            y_transforms=result.y_transforms,
-            device=self.device,
-            **result.params,
-            **transformed_emulator_params,
+        # NOTE: function passes data to the Emulator model which handles conversion to
+        # tensors and device handling
+        return fit_from_reinitialized(
+            x,
+            y,
+            emulator=result.model,
+            transformed_emulator_params=transformed_emulator_params,
+            device=str(self.device),
+            random_seed=random_seed,
         )
-
-        # Fit the fresh model on the new data
-        fresh_model.fit(x_tensor, y_tensor)
-
-        return fresh_model
 
     def plot(  # noqa: PLR0912, PLR0915
         self,

@@ -1,17 +1,16 @@
 import inspect
 
-from autoemulate.core.results import Result
-from autoemulate.core.types import TensorLike
+from autoemulate.core.types import DeviceLike, InputLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import Emulator, TransformedEmulator, get_emulator_class
 
 
 def fit_from_reinitialized(
-    x: TensorLike,
-    y: TensorLike,
-    emulator: Result | Emulator,
+    x: InputLike,
+    y: InputLike,
+    emulator: Emulator,
     transformed_emulator_params: dict | None = None,
-    device: str | None = None,
+    device: DeviceLike | None = None,
     random_seed: int | None = None,
 ):
     """
@@ -27,9 +26,8 @@ def fit_from_reinitialized(
         Input features for training the fresh model.
     y: TensorLike
         Target values for training the fresh model.
-    emulator: Result | Emulator
-        A Result object containing the pre-trained emulator and its hyperparameters.
-        Otherwise, an Emulator object containing the pre-trained emulator.
+    emulator: Emulator
+        An Emulator object containing the pre-trained emulator.
     transformed_emulator_params: None | TransformedEmulatorParams
         Parameters for the transformed emulator. When None, the same parameters as
         used when identifying the best model are used. Defaults to None.
@@ -57,46 +55,39 @@ def fit_from_reinitialized(
     if random_seed is not None:
         set_random_seed(seed=random_seed)
 
-    # Extract emulator and its parameters from Result or Emulator instance
-    if isinstance(emulator, Result):
+    # Extract emulator and its parameters from Emulator instance
+    if isinstance(emulator, TransformedEmulator):
         model = emulator.model
-        emulator_name = emulator.model_name
-        emulator_params = emulator.params
+        emulator_name = emulator.untransformed_model_name
         x_transforms = emulator.x_transforms
         y_transforms = emulator.y_transforms
-    elif isinstance(emulator, Emulator):
-        if isinstance(emulator, TransformedEmulator):
-            model = emulator.model
-            emulator_name = emulator.untransformed_model_name
-            x_transforms = emulator.x_transforms
-            y_transforms = emulator.y_transforms
-        else:
-            model = emulator
-            emulator_name = emulator.model_name()
-            x_transforms = None
-            y_transforms = None
+    else:
+        model = emulator
+        emulator_name = emulator.model_name()
+        x_transforms = None
+        y_transforms = None
 
-        # Extract parameters from the provided emulator instance
-        model_cls = (get_emulator_class(emulator_name),)
-        init_sig = inspect.signature(model_cls.__init__)
-        emulator_params = {}
-        for param_name in init_sig.parameters:
-            if param_name in ["self", "x", "y", "device"]:
-                continue
-            # NOTE: some emulators have standardize_x/y params option
-            # this is different to TransformedEmulator x/y transforms
-            if param_name == "standardize_x":
-                emulator_params["standardize_x"] = bool(model.x_transforms)  # type: ignore[reportAttributeAccessIssue]
-            if param_name == "standardize_y":
-                emulator_params["standardize_y"] = bool(model.y_transforms)  # type: ignore[reportAttributeAccessIssue]
-            if hasattr(model, param_name):
-                emulator_params[param_name] = getattr(model, param_name)
+    # Extract parameters from the provided emulator instance
+    model_cls = get_emulator_class(emulator_name)
+    init_sig = inspect.signature(model_cls.__init__)
+    emulator_params = {}
+    for param_name in init_sig.parameters:
+        if param_name in ["self", "x", "y", "device"]:
+            continue
+        # NOTE: some emulators have standardize_x/y params option
+        # this is different to TransformedEmulator x/y transforms
+        if param_name == "standardize_x":
+            emulator_params["standardize_x"] = bool(model.x_transform)
+        if param_name == "standardize_y":
+            emulator_params["standardize_y"] = bool(model.y_transform)
+        if hasattr(model, param_name):
+            emulator_params[param_name] = getattr(model, param_name)
 
     transformed_emulator_params = transformed_emulator_params or {}
 
     new_emulator = TransformedEmulator(
-        x.float(),
-        y.float(),
+        x,
+        y,
         model=get_emulator_class(emulator_name),
         x_transforms=x_transforms,
         y_transforms=y_transforms,
