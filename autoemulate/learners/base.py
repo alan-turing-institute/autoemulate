@@ -8,7 +8,6 @@ from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
 from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.data.utils import ValidationMixin
 from autoemulate.emulators.base import Emulator
 from autoemulate.simulations.base import Simulator
@@ -49,12 +48,7 @@ class Learner(ValidationMixin, ABC):
         log_level = getattr(self, "log_level", "progress_bar")
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info("Initializing Learner with training data.")
-        self.emulator = fit_from_reinitialized(
-            self.x_train,
-            self.y_train,
-            self.emulator,
-            device=self.emulator.device,
-        )
+        self.emulator.fit(self.x_train, self.y_train)
         self.logger.info("Emulator fitted with initial training data.")
         self.in_dim = self.x_train.shape[1]
         self.out_dim = self.y_train.shape[1]
@@ -165,12 +159,7 @@ class Active(Learner):
             assert isinstance(y_true, TensorLike)
             self.x_train = torch.cat([self.x_train, x])
             self.y_train = torch.cat([self.y_train, y_true])
-            self.emulator = fit_from_reinitialized(
-                self.x_train,
-                self.y_train,
-                self.emulator,
-                device=self.emulator.device,
-            )
+            self.emulator.fit(self.x_train, self.y_train)
             self.mse.update(y_pred, y_true)
             self.r2.update(y_pred, y_true)
             self.n_queries += 1
