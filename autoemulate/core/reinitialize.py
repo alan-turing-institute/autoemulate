@@ -89,8 +89,8 @@ def fit_from_reinitialized(
                 emulator_params["standardize_x"] = bool(model.x_transforms)  # type: ignore[reportAttributeAccessIssue]
             if param_name == "standardize_y":
                 emulator_params["standardize_y"] = bool(model.y_transforms)  # type: ignore[reportAttributeAccessIssue]
-            if hasattr(emulator, param_name):
-                emulator_params[param_name] = getattr(emulator, param_name)
+            if hasattr(model, param_name):
+                emulator_params[param_name] = getattr(model, param_name)
 
     transformed_emulator_params = transformed_emulator_params or {}
 
