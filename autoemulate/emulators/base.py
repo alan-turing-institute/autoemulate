@@ -560,8 +560,8 @@ class PyTorchBackend(nn.Module, Emulator):
     epochs: int = 10
     loss_history: ClassVar[list[float]] = []
     verbose: bool = False
-    loss_fn: nn.Module = nn.MSELoss()
-    optimizer_cls: type[optim.Optimizer] = optim.Adam
+    loss_fn: nn.Module
+    optimizer_cls: type[optim.Optimizer]
     optimizer: optim.Optimizer
     supports_grad: bool = True
     lr: float = 1e-1
@@ -608,9 +608,10 @@ class PyTorchBackend(nn.Module, Emulator):
                 # Track loss
                 epoch_loss += loss.item()
                 batches += 1
+
             # Update learning rate if scheduler is defined
             if self.scheduler is not None:
-                self.scheduler.step()  # type: ignore[call-arg]
+                self.scheduler.step()
 
             # Average loss for the epoch
             avg_epoch_loss = epoch_loss / batches

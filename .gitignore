@@ -56,3 +56,6 @@ case_studies/**/data/
 
 # Benchmarking data
 benchmarks/data/
+
+# Ignore experimental outputs
+autoemulate/experimental/outputs/
