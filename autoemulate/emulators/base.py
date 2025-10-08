@@ -13,6 +13,7 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
     DistributionLike,
     GaussianLike,
+    InputLike,
     NumpyLike,
     OutputLike,
     TensorLike,
@@ -41,26 +42,24 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
 
-    def fit(self, x: TensorLike, y: TensorLike):
+    def fit(self, x: InputLike, y: InputLike):
         """Fit the emulator to the provided data."""
-        if isinstance(x, TensorLike) and isinstance(y, TensorLike):
-            self._check(x, y)
-            # Ensure x and y are tensors and 2D
-            x, y = self._convert_to_tensors(x, y)
+        # Ensure x and y are tensors and 2D
+        x, y = self._convert_to_tensors(x, y)
 
-            # Move to device
-            x, y = self._move_tensors_to_device(x, y)
+        # Move to device
+        x, y = self._move_tensors_to_device(x, y)
 
-            # Fit transforms
-            if self.x_transform is not None:
-                self.x_transform.fit(x)
-            if self.y_transform is not None:
-                self.y_transform.fit(y)
-            x = self.x_transform(x) if self.x_transform is not None else x
-            y = self.y_transform(y) if self.y_transform is not None else y
+        # Fit transforms
+        if self.x_transform is not None:
+            self.x_transform.fit(x)
+        if self.y_transform is not None:
+            self.y_transform.fit(y)
+        x = self.x_transform(x) if self.x_transform is not None else x
+        y = self.y_transform(y) if self.y_transform is not None else y
 
-            # Fit emulator
-            self._fit(x, y)
+        # Fit emulator
+        self._fit(x, y)
         self.is_fitted_ = True
 
     @abstractmethod
