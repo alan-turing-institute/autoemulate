@@ -285,8 +285,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def __init__(
         self,
         simulator: Simulator,
-        emulator: Result | Emulator,
         observations: dict[str, tuple[float, float]] | dict[str, float],
+        emulator: Emulator | None = None,
+        result: Result | None = None,
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
@@ -305,13 +306,16 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         simulator: Simulator
             A simulator.
-        emulator: Result | Emulator
-            A Result object containing the pre-trained emulator and its hyperparameters.
-            Otherwise, an Emulator object containing the pre-trained emulator.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise] (with noise
             specified as variances). In case of no uncertainty in observations, provides
             just the observed value.
+        emulator: Emulator | None
+            An Emulator object containing the pre-trained emulator. If not provided, a
+            Result object must be provided instead.
+        result: Result | None
+            A Result object containing the pre-trained emulator and its hyperparameters.
+            If not provided, an Emulator object must be provided instead.
         threshold: float
             Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
@@ -349,11 +353,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
             set_random_seed(seed=random_seed)
         self.logger, self.progress_bar = get_configured_logger(log_level)
 
-        # Extract emulator and its parameters from Result or Emulator instance
-        if isinstance(emulator, Result):
-            self.emulator = emulator.model
-        else:
+        if result is not None:
+            self.emulator = result.model
+        elif emulator is not None:
             self.emulator = emulator
+        else:
+            msg = "Either `emulator` or `result` must be provided."
+            raise ValueError(msg)
+
         self.transformed_emulator_params = transformed_emulator_params or {}
         self.emulator.device = self.device
 
