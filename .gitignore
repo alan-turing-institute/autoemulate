@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 dist/
 .venv/
+*.egg-info/
 
 # Ignore Sphinx build artifacts
 docs/build/
@@ -37,7 +38,7 @@ Thumbs.db
 # Quarto
 README.html
 README_files/
-requirements.txt
+# requirements.txt
 
 
 # Ignore pyrightconfig.json to enable custom venv to be set
@@ -45,3 +46,13 @@ pyrightconfig.json
 docs/data/shallow_water/X.npy
 docs/data/shallow_water/Y.npy
 docs/tutorials/05_reaction_diffusion copy.ipynb
+docs/data/simulator_results.csv
+
+# Ignore experimental exploratory data path
+autoemulate/experimental/exploratory/data
+
+# Ignore case studies data by default
+case_studies/**/data/
+
+# Benchmarking data
+benchmarks/data/

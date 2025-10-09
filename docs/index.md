@@ -2,15 +2,6 @@
 
 `AutoEmulate` is a Python library that makes it easy to create accurate and efficient emulators for complex simulations. Under the hood, the package runs a complete machine learning pipeline to compare and optimise a wide range of models, and provides functions for downstream tasks like prediction, sensitivity analysis and calibration.
 
-```{button-ref} getting-started/index
-:ref-type: doc
-:color: primary
-:class: sd-rounded-pill float-left
-
-
-🚀 Get started
-```
-
 This website provides detailed documentation on how to use `AutoEmulate`, including installation instructions, tutorials, and a comprehensive API reference.
 For an overview of the project, checkout [autoemulate.com](https://alan-turing-institute.github.io/astroemulate/).
 
@@ -19,9 +10,9 @@ For an overview of the project, checkout [autoemulate.com](https://alan-turing-i
 ::::{grid} 1 1 2 3
 :gutter: 2
 
-:::{grid-item-card} ⚡ Quickstart
-:link: https://alan-turing-institute.github.io/autoemulate/getting-started/quickstart
-Our quickstart guide will get you up and running in no time
+:::{grid-item-card} ⚡ Install
+:link: https://alan-turing-institute.github.io/autoemulate/installation
+Our installation guide will get you up and running in no time
 :::
 
 :::{grid-item-card} 📚 Tutorials

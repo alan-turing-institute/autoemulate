@@ -2,6 +2,7 @@ name: precommit
 on:
     workflow_dispatch:
     pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
     push:
         branches:
             - main
@@ -19,32 +20,22 @@ permissions:
 
 jobs:
     pre-commit:
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         name: Pre-commit
         runs-on: ubuntu-latest
         steps:
-          - uses: actions/checkout@v3
+          - uses: actions/checkout@v4
             with:
               fetch-depth: 0
-          - uses: actions/setup-python@v4
+          - uses: actions/setup-python@v5
             with:
               python-version: "3.12"
-          - name: Install poetry
-            run: |
-              curl -sSL https://install.python-poetry.org | python -
-
-          - name: Configure poetry
-            run: |
-              poetry config virtualenvs.in-project true
-
-          - name: Switch to CPU version of PyTorch
-            run: |
-              poetry remove torch
-              poetry source add -p explicit pytorch https://download.pytorch.org/whl/cpu
-              poetry add --source pytorch "torch==2.2.1"
-
           - name: Install dependencies
             run: |
-              poetry install --with dev
+              python -m venv .venv
+              source .venv/bin/activate
+              python -m pip install --upgrade pip
+              pip install -e .[dev,spatiotemporal]
 
           - uses: pre-commit/action@v3.0.0
             with:

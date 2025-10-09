@@ -1,30 +1,24 @@
 repos:
--   repo: https://github.com/psf/black
-    rev: 23.10.1
-    hooks:
-    - id: black
-      language_version: python3
-      exclude: "^autoemulate/experimental/|^tests/experimental/"
--   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.12.0
-    hooks:
-    -   id: reorder-python-imports
-        exclude: "^autoemulate/experimental/|^tests/experimental/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff version.
-  rev: v0.11.4
+  rev: v0.12.11
   hooks:
   # Run the linter.
   - id: ruff
     types_or: [ python, pyi ]
     args: [ --fix ]
-    files: ^autoemulate/experimental/|^tests/experimental/
+    files: ^autoemulate/|^tests/|^benchmarks/
   # Run the formatter.
   - id: ruff-format
     types_or: [ python, pyi ]
-    files: ^autoemulate/experimental/|^tests/experimental/
+    files: ^autoemulate/|^tests/|^benchmarks/
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.398
+  rev: v1.1.405
   hooks:
   - id: pyright
-    files: ^autoemulate/experimental/|^tests/experimental/
+    files: ^autoemulate/|^tests/|^benchmarks/
+- repo: https://github.com/kynan/nbstripout
+  rev: 0.8.1
+  hooks:
+  - id: nbstripout
+    exclude: ^case_studies/

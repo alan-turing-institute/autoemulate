@@ -1,0 +1,14 @@
+[project]
+name = "patient_calibration"
+version = "0.1.0"
+description = "Patient-specific calibration in cardiovascular modeling with AutoEmulate"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "autoemulate==1.1",
+    "jupyterlab",
+    "ModularCirc @ git+https://github.com/alan-turing-institute/ModularCirc.git@dev",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
