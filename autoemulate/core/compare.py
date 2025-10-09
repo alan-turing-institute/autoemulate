@@ -12,6 +12,7 @@ from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.metrics import MetricConfig, get_metric_config, get_metric_configs
 from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
 from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
 from autoemulate.core.results import Result, Results
@@ -64,6 +65,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
+        tuning_metric: str | MetricConfig = "r2",
+        evaluation_metrics: list[str | MetricConfig] | None = None,
     ):
         """
         Initialize the AutoEmulate class.
@@ -114,12 +117,24 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             it will show a progress bar during model comparison. It will set the
             logging level to "error" to avoid cluttering the output
             with debug/info logs.
+        tuning_metric: str | MetricConfig
+            Metric to use for hyperparameter tuning. Can be a string shortcut
+            ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
+        evaluation_metrics: list[str | MetricConfig] | None
+            Metrics to compute during evaluation.
+            If None, then defaults to ["r2", "rmse"].
+            Each entry can be a string shortcut or a MetricConfig object.
         """
         Results.__init__(self)
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
         x, y = self._convert_to_tensors(x, y)
         x, y = self._move_tensors_to_device(x, y)
+
+        # Setup metrics. If evaluation_metrics is None, default to ["r2", "rmse"]
+        evaluation_metrics = evaluation_metrics or ["r2", "rmse"]
+        self.evaluation_metrics = get_metric_configs(evaluation_metrics)
+        self.tuning_metric = get_metric_config(tuning_metric)
 
         # Transforms to search over
         self.x_transforms_list = [
@@ -343,7 +358,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         - Log the results.
         - Save the best model and its parameters.
         """
-        tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
+        tuner = Tuner(
+            self.train_val,
+            y=None,
+            n_iter=self.n_iter,
+            device=self.device,
+            tuning_metric=self.tuning_metric,
+        )
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
         )
@@ -385,7 +406,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 mean_scores = [
                                     np.mean(score).item() for score in scores
                                 ]
-                                best_score_idx = np.argmax(mean_scores)
+                                # Select best based on whether we're maximizing or minimizing
+                                if self.tuning_metric.maximize:
+                                    best_score_idx = np.argmax(mean_scores)
+                                else:
+                                    best_score_idx = np.argmin(mean_scores)
                                 best_params_for_this_model = params_list[best_score_idx]
                                 self.logger.debug(
                                     'Tuner found best params for model "%s": '
@@ -433,35 +458,37 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             # This can fail for some model params
                             transformed_emulator.fit(train_val_x, train_val_y)
 
-                            (
-                                (r2_train_val, r2_train_val_std),
-                                (rmse_train_val, rmse_train_val_std),
-                            ) = bootstrap(
+                            train_metrics = bootstrap(
                                 transformed_emulator,
                                 train_val_x,
                                 train_val_y,
                                 n_bootstraps=self.n_bootstraps,
                                 device=self.device,
+                                metrics=self.evaluation_metrics,
                             )
-                            (r2_test, r2_test_std), (rmse_test, rmse_test_std) = (
-                                bootstrap(
-                                    transformed_emulator,
-                                    test_x,
-                                    test_y,
-                                    n_bootstraps=self.n_bootstraps,
-                                    device=self.device,
-                                )
+                            test_metrics = bootstrap(
+                                transformed_emulator,
+                                test_x,
+                                test_y,
+                                n_bootstraps=self.n_bootstraps,
+                                device=self.device,
+                                metrics=self.evaluation_metrics,
                             )
 
+                            # # Extract r2 and rmse for logging and Result (backward compat)
+                            # r2_test, r2_test_std = test_metrics["r2"]
+                            # rmse_test, rmse_test_std = test_metrics["rmse"]
+                            # r2_train_val, r2_train_val_std = train_metrics["r2"]
+                            # rmse_train_val, rmse_train_val_std = train_metrics["rmse"]
+                            # Log all test metrics from test_metrics dictionary
+                            test_metrics_str = ", ".join(
+                                f"{metric}: {np.mean(values):.3f} (std: {np.std(values):.3f})"
+                                for metric, values in test_metrics.items()
+                            )
                             self.logger.debug(
-                                'Cross-validation for model "%s"'
-                                " completed with test mean (std) R2 score: %.3f (%.3f),"
-                                " mean (std) RMSE score: %.3f (%.3f)",
+                                'Cross-validation for model "%s" completed with test metrics: %s',
                                 model_cls.__name__,
-                                r2_test,
-                                r2_test_std,
-                                rmse_test,
-                                rmse_test_std,
+                                test_metrics_str,
                             )
                             self.logger.info(
                                 "Finished running Model: %s\n", model_cls.__name__
