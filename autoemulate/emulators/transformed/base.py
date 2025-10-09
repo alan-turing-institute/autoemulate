@@ -11,19 +11,16 @@ from autoemulate.core.types import (
     OutputLike,
     TensorLike,
 )
-from autoemulate.data.utils import ValidationMixin
+from autoemulate.data.utils import ConversionMixin, ValidationMixin
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.delta_method import (
     delta_method,
     delta_method_mean_only,
 )
-from autoemulate.transforms.base import (
-    AutoEmulateTransform,
-    is_affine,
-)
+from autoemulate.transforms.base import AutoEmulateTransform, is_affine
 
 
-class TransformedEmulator(Emulator, ValidationMixin):
+class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
     """
     A transformed emulator that applies transformations to input and target data.
 
@@ -128,10 +125,18 @@ class TransformedEmulator(Emulator, ValidationMixin):
         """
         self.x_transforms = x_transforms or []
         self.y_transforms = y_transforms or []
+
+        # Convert and move the new data to device
+        TorchDeviceMixin.__init__(self, device=device)
+        x, y = self._move_tensors_to_device(x, y)
+
         self._fit_transforms(x, y)
         self.untransformed_model_name = model.model_name()
         self.model = model(
-            self._transform_x(x), self._transform_y_tensor(y), device=device, **kwargs
+            self._transform_x(x),
+            self._transform_y_tensor(y),
+            device=device,
+            **kwargs,
         )
         # Cache for constant Jacobian of inverse y-transform when affine
         self._fixed_jacobian_y_inv = None
@@ -148,7 +153,7 @@ class TransformedEmulator(Emulator, ValidationMixin):
             raise RuntimeError(msg)
         self.n_samples = n_samples
         self.full_covariance = full_covariance
-        TorchDeviceMixin.__init__(self, device=device)
+
         # TODO: add API to indicate that pdf not valid when not all transforms bijective
         self.supports_grad = self.model.supports_grad
         self.supports_uq = self.model.supports_uq
@@ -406,9 +411,11 @@ class TransformedEmulator(Emulator, ValidationMixin):
             out = delta_method_mean_only(
                 ComposeTransform(self.y_transforms).inv,
                 y_t_pred.mean,
-                y_t_pred.covariance_matrix
-                if isinstance(y_t_pred, GaussianLike)
-                else y_t_pred.variance,
+                (
+                    y_t_pred.covariance_matrix
+                    if isinstance(y_t_pred, GaussianLike)
+                    else y_t_pred.variance
+                ),
                 True,
             )
             return out["mean_total"].detach() if not with_grad else out["mean_total"]

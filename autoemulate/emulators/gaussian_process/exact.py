@@ -70,7 +70,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
-        **scheduler_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize the GaussianProcess emulator.
@@ -108,7 +109,10 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
-        scheduler_kwargs: dict
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
             Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
@@ -123,8 +127,10 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         num_tasks_torch = torch.Size([num_tasks])
 
         # Initialize the mean and covariance modules
-        mean_module = mean_module_fn(n_features, num_tasks_torch)
-        covar_module = covar_module_fn(n_features, num_tasks_torch)
+        self.mean_module_fn = mean_module_fn
+        self.covar_module_fn = covar_module_fn
+        mean_module = self.mean_module_fn(n_features, num_tasks_torch)
+        covar_module = self.covar_module_fn(n_features, num_tasks_torch)
 
         # If the combined kernel is not a ScaleKernel, wrap it in one
         covar_module = (
@@ -134,7 +140,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         )
 
         # Init likelihood
-        likelihood = likelihood_cls(num_tasks=num_tasks)
+        self.likelihood_cls = likelihood_cls
+        likelihood = self.likelihood_cls(num_tasks=num_tasks)
         likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
@@ -149,15 +156,19 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(scheduler_kwargs)
+        self.scheduler_cls = scheduler_cls
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
         self.to(self.device)
 
         # Fix mean and kernel if required
-        self._fix_module_params(self.mean_module, fixed_mean_params)
-        self._fix_module_params(self.covar_module, fixed_covar_params)
+        self.fixed_mean_params = fixed_mean_params
+        self.fixed_covar_params = fixed_covar_params
+        self._fix_module_params(self.mean_module, self.fixed_mean_params)
+        self._fix_module_params(self.covar_module, self.fixed_covar_params)
 
     @staticmethod
     def _fix_module_params(module: nn.Module, fixed_params: bool):
@@ -293,7 +304,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     @staticmethod
     def get_tune_params():
         """Return the hyperparameters to tune for the Gaussian Process model."""
-        scheduler_params = GaussianProcess.scheduler_params()
+        scheduler_specs = GaussianProcess.get_scheduler_params()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -314,8 +325,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             "epochs": [50, 100, 200],
             "lr": [5e-1, 1e-1, 5e-2, 1e-2],
             "likelihood_cls": [MultitaskGaussianLikelihood],
-            "scheduler_cls": scheduler_params["scheduler_cls"],
-            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
+            "scheduler_cls": scheduler_specs["scheduler_cls"],
+            "scheduler_params": scheduler_specs["scheduler_params"],
         }
 
 
@@ -349,7 +360,8 @@ class GaussianProcessCorrelated(GaussianProcess):
         early_stopping: EarlyStopping | None = None,
         seed: int | None = None,
         device: DeviceLike | None = None,
-        **scheduler_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize the GaussianProcessCorrelated emulator.
@@ -391,7 +403,9 @@ class GaussianProcessCorrelated(GaussianProcess):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
-        scheduler_kwargs: dict
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+        scheduler_params: dict
             Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
@@ -405,8 +419,10 @@ class GaussianProcessCorrelated(GaussianProcess):
 
         # Initialize the mean and covariance modules
         n_features = tuple(x.shape)[1]
-        mean_module = mean_module_fn(n_features, None)
-        covar_module = covar_module_fn(n_features, None)
+        self.mean_module_fn = mean_module_fn
+        self.covar_module_fn = covar_module_fn
+        mean_module = self.mean_module_fn(n_features, None)
+        covar_module = self.covar_module_fn(n_features, None)
 
         # Mean and covariance modules for multitask
         num_tasks = tuple(y.shape)[1]
@@ -424,8 +440,10 @@ class GaussianProcessCorrelated(GaussianProcess):
         likelihood = likelihood.to(self.device)
 
         # Fix mean and kernel if required
-        self._fix_module_params(mean_module, fixed_mean_params)
-        self._fix_module_params(covar_module, fixed_covar_params)
+        self.fixed_mean_params = fixed_mean_params
+        self.fixed_covar_params = fixed_covar_params
+        self._fix_module_params(mean_module, self.fixed_mean_params)
+        self._fix_module_params(covar_module, self.fixed_covar_params)
 
         # Init must be called with preprocessed data
         gpytorch.models.ExactGP.__init__(
@@ -442,7 +460,9 @@ class GaussianProcessCorrelated(GaussianProcess):
         self.epochs = epochs
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(scheduler_kwargs)
+        self.scheduler_cls = scheduler_cls
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
@@ -536,7 +556,7 @@ def create_gp_subclass(
             lr: float = lr,
             early_stopping: EarlyStopping | None = early_stopping,
             device: DeviceLike | None = device,
-            **scheduler_kwargs,
+            **scheduler_params,
         ):
             super().__init__(
                 x,
@@ -553,7 +573,7 @@ def create_gp_subclass(
                 lr,
                 early_stopping,
                 device,
-                **scheduler_kwargs,
+                **scheduler_params,
             )
 
         @staticmethod

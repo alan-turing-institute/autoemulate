@@ -35,7 +35,6 @@ class RandomForest(SklearnBackend):
         max_samples: int | None = None,
         random_seed: int | None = None,
         device: DeviceLike = "cpu",
-        **kwargs,
     ):
         """Initialize a RandomForest emulator.
 
