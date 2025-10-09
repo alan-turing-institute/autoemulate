@@ -8,7 +8,6 @@ from autoemulate.core.types import (
     DeviceLike,
     DistributionLike,
     GaussianLike,
-    InputLike,
     OutputLike,
     TensorLike,
 )
@@ -71,8 +70,8 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
 
     def __init__(
         self,
-        x: InputLike,
-        y: InputLike,
+        x: TensorLike,
+        y: TensorLike,
         x_transforms: list[Transform] | None,
         y_transforms: list[Transform] | None,
         model: type[Emulator],

@@ -13,7 +13,6 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import (
     DistributionLike,
     GaussianLike,
-    InputLike,
     NumpyLike,
     OutputLike,
     TensorLike,
@@ -42,7 +41,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
 
-    def fit(self, x: InputLike, y: InputLike):
+    def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
         # Ensure x and y are tensors and 2D
         x, y = self._convert_to_tensors(x, y)
