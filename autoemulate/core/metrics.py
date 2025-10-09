@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
-from typing import Any
 
 import torchmetrics
 
+from autoemulate.core.types import TensorLike
 
-class MetricConfig:
+
+class Metric:
     """Configuration for a single metric.
 
     Parameters
@@ -21,39 +23,56 @@ class MetricConfig:
         Whether higher values are better. Defaults to True.
     """
 
-    def __init__(
-        self,
-        metric: type[torchmetrics.Metric] | partial[torchmetrics.Metric],
-        name: str,
-        maximize: bool = True,
-    ):
+    metric: Callable
+    name: str
+    maximize: bool
+
+    def __repr__(self) -> str:
+        """Return the string representation of the MetricConfig."""
+        return f"MetricConfig(name={self.name}, maximize={self.maximize})"
+
+    def __call__(self, x: TensorLike, y: TensorLike) -> TensorLike:
+        """Instantiate the metric."""
+        return self.metric(x, y)
+
+class TorchMetrics(Metric):
+    """Configuration for a single torchmetrics metric.
+
+    Parameters
+    ----------
+    metric : type[torchmetrics.Metric] | partial[torchmetrics.Metric]
+        The torchmetrics metric class or partial.
+    name : str
+        Display name for the metric. If None, uses the class name of the metric.
+    maximize : bool
+        Whether higher values are better. 
+    """
+
+    def __init__(self, metric: type[torchmetrics.Metric] | partial[torchmetrics.Metric],
+     name, maximize):
         self.metric = metric
         self.name = name
         self.maximize = maximize
 
-    def __repr__(self) -> str:
-        return f"MetricConfig(name={self.name}, maximize={self.maximize})"
-
-
-R2 = MetricConfig(
+R2 = TorchMetrics(
     metric=torchmetrics.R2Score,
     name="r2",
     maximize=True,
 )
 
-RMSE = MetricConfig(
+RMSE = TorchMetrics(
     metric=partial(torchmetrics.MeanSquaredError, squared=False),
     name="rmse",
     maximize=False,
 )
 
-MSE = MetricConfig(
+MSE = TorchMetrics(
     metric=torchmetrics.MeanSquaredError,
     name="mse",
     maximize=False,
 )
 
-MAE = MetricConfig(
+MAE = TorchMetrics(
     metric=torchmetrics.MeanAbsoluteError,
     name="mae",
     maximize=False,
@@ -68,20 +87,20 @@ AVAILABLE_METRICS = {
 
 
 def get_metric_config(
-    metric: str | MetricConfig,
-) -> MetricConfig:
+    metric: str | Metric,
+) -> Metric:
     """Convert various metric specifications to MetricConfig.
 
     Parameters
     ----------
-    metric : str | type[torchmetrics.Metric] | partial[torchmetrics.Metric] | MetricConfig
+    metric : str | type[torchmetrics.Metric] | partial[torchmetrics.Metric] | Metric
         The metric specification. Can be:
         - A string shortcut like "r2", "rmse", "mse", "mae"
-        - A MetricConfig instance (returned as-is)
+        - A Metric instance (returned as-is)
 
     Returns
     -------
-    MetricConfig
+    Metric
         The metric configuration.
 
     Raises
@@ -91,8 +110,8 @@ def get_metric_config(
 
 
     """
-    # If already a MetricConfig, return as-is
-    if isinstance(metric, MetricConfig):
+    # If already a TorchMetric, return as-is
+    if isinstance(metric, TorchMetrics):
         return metric
 
     if isinstance(metric, str):
@@ -110,8 +129,8 @@ def get_metric_config(
 
 
 def get_metric_configs(
-    metrics: (list[str | MetricConfig]),
-) -> list[MetricConfig]:
+    metrics: (list[str | TorchMetrics]),
+) -> list[TorchMetrics]:
     """Convert a list of metric specifications to MetricConfig objects.
 
     Parameters
@@ -127,7 +146,7 @@ def get_metric_configs(
     result_metrics = []
 
     for m in metrics:
-        config = get_metric_config(m) if isinstance(m, (str, MetricConfig)) else m
+        config = get_metric_config(m) if isinstance(m, (str, TorchMetrics)) else m
         result_metrics.append(config)
 
     return result_metrics

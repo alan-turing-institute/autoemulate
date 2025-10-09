@@ -12,7 +12,7 @@ from autoemulate.core.device import (
     get_torch_device,
     move_tensors_to_device,
 )
-from autoemulate.core.metrics import MetricConfig, get_metric_config, get_metric_configs
+from autoemulate.core.metrics import Metric, get_metric_configs
 from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
@@ -39,7 +39,7 @@ def rmse_metric() -> partial[torchmetrics.Metric]:
 def _update(
     y_true: TensorLike,
     y_pred: TensorLike,
-    metric: torchmetrics.Metric,
+    metric: Metric,
 ):
     if isinstance(y_pred, TensorLike):
         metric.to(y_pred.device)
@@ -52,9 +52,7 @@ def _update(
 def evaluate(
     y_pred: TensorLike,
     y_true: TensorLike,
-    metric: (
-        type[torchmetrics.Metric] | partial[torchmetrics.Metric]
-    ) = torchmetrics.R2Score,
+    metric: Metric = torchmetrics.R2Score,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -87,7 +85,7 @@ def cross_validate(
     y_transforms: list[Transform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
-    metrics: list[MetricConfig] | None = None,
+    metrics: list[Metric] | None = None,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -182,7 +180,7 @@ def bootstrap(
     n_bootstraps: int | None = 100,
     n_samples: int = 100,
     device: str | torch.device = "cpu",
-    metrics: list[MetricConfig] | None = None,
+    metrics: list[Metric] | None = None,
 ) -> dict[str, tuple[float, float]]:
     """
     Get bootstrap estimates of metrics.
