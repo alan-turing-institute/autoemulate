@@ -3,7 +3,7 @@ import logging
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.distributions import Transform, constraints
+from torch.distributions import Normal, Transform, constraints
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
@@ -27,6 +27,8 @@ class VAE(nn.Module, TorchDeviceMixin):
         Device to run the model on. If None, uses the default device (usually CPU or
         GPU). Defaults to None.
     """
+
+    affine = False
 
     def __init__(
         self,
@@ -71,8 +73,8 @@ class VAE(nn.Module, TorchDeviceMixin):
     def reparameterize(self, mu, log_var):
         """Sample from latent distribution using reparameterization trick."""
         std = torch.exp(0.5 * log_var)
-        eps = torch.randn_like(std)
-        return mu + eps * std
+        dist = Normal(mu, std)
+        return dist.rsample()
 
     def decode(self, z):
         """Decode latent representation back to original space."""
@@ -104,7 +106,7 @@ class VAETransform(AutoEmulateTransform):
     bijective = False
     vae: VAE | None = None
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         latent_dim: int = 3,
         hidden_layers: list[int] | None = None,
@@ -165,10 +167,10 @@ class VAETransform(AutoEmulateTransform):
         self.input_dim = None
         self._is_fitted = False
 
-    def _init_vae(self, intput_dim: int):
-        self.input_dim = intput_dim
+    def _init_vae(self, input_dim: int):
+        self.input_dim = input_dim
         self.vae = VAE(
-            intput_dim, self.hidden_layers, self.latent_dim, device=self.device
+            input_dim, self.hidden_layers, self.latent_dim, device=self.device
         ).to(self.device)
 
     def fit(self, x: TensorLike):
@@ -185,14 +187,14 @@ class VAETransform(AutoEmulateTransform):
         )
 
         # Initialize the model
-        self._init_vae(intput_dim=x.shape[1])
+        self._init_vae(input_dim=x.shape[1])
         assert self.vae is not None
 
         # Train the VAE
         optimizer = torch.optim.Adam(self.vae.parameters(), lr=self.learning_rate)
         self.vae.train()
         for epoch in range(self.epochs):
-            total_loss = 0
+            total_loss = 0.0
             for batch_x, _ in data_loader:
                 recon_batch, mu, log_var = self.vae(batch_x)
                 loss = self.vae.loss_function(
@@ -201,32 +203,34 @@ class VAETransform(AutoEmulateTransform):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                total_loss += loss.item()
+                total_loss += float(loss.item())
 
             # Log progress
             if self.verbose and (epoch + 1) % 10 == 0:
                 msg = (
                     f"Epoch {epoch + 1}/{self.epochs}, "
-                    f"Loss: {total_loss / len(data_loader):.4f}"
+                    f"Loss: {total_loss / max(1, len(data_loader)):.4f}"
                 )
                 logging.info(msg)
 
         self._is_fitted = True
+        # Freeze VAE parameters after fitting so transforms are treated as fixed
+        for p in self.vae.parameters():
+            p.requires_grad_(False)
+        self.vae.eval()
 
     def _call(self, x):
         self._check_is_fitted()
         assert self.vae is not None
         self.vae.eval()
-        with torch.no_grad():
-            mu, _ = self.vae.encode(x)
-            return mu
+        mu, _ = self.vae.encode(x)
+        return mu
 
     def _inverse(self, y):
         self._check_is_fitted()
         assert self.vae is not None
         self.vae.eval()
-        with torch.no_grad():
-            return self.vae.decode(y)
+        return self.vae.decode(y)
 
     def log_abs_det_jacobian(self, x, y):
         """Log abs det Jacobian not computable since transform is not bijective."""

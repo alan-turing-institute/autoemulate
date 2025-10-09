@@ -24,10 +24,15 @@ def test_predict_rbf(sample_data_for_ae_compare, new_data_rbf):
     assert isinstance(y_pred, TensorLike)
     assert y_pred.shape == (56, 2)
     assert not y_pred.requires_grad
+    y_pred = rbf.predict(x2, with_grad=True)
+    assert isinstance(y_pred, TensorLike)
+    assert y_pred.requires_grad
 
-    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
-        rbf.predict(x2, with_grad=True)
+    # Detach and convert to numpy for comparison with scipy
+    x2 = x2.detach().numpy()
+    y_pred = y_pred.detach().numpy()
 
+    # Compare with scipy implementation
     RBFscipy = RBFInterpolator(
         x,
         y,

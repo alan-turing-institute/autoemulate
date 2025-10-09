@@ -13,9 +13,19 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
+    GaussianProcessMatern32,
+    GaussianProcessRBF,
+    create_gp_subclass,
 )
+from autoemulate.emulators.gaussian_process.kernel import rbf_kernel
+from autoemulate.emulators.gaussian_process.mean import constant_mean
 
-GPS = [GaussianProcess, GaussianProcessCorrelated]
+GPS = [
+    GaussianProcess,
+    GaussianProcessCorrelated,
+    GaussianProcessMatern32,
+    GaussianProcessRBF,
+]
 
 
 @pytest.mark.parametrize("emulator", GPS)
@@ -32,6 +42,44 @@ def test_predict_with_uncertainty_gp(sample_data_y1d, new_data_y1d, emulator):
 
     y_pred_grad = gp.predict(x2, with_grad=True)
     assert y_pred_grad.mean.requires_grad
+
+
+@pytest.mark.parametrize("emulator", GPS)
+def test_fixed_gp_params(sample_data_y1d, emulator):
+    x, y = sample_data_y1d
+    for fixed in [True, False]:
+        gp = emulator(
+            x,
+            y,
+            fixed_mean_params=fixed,
+            fixed_covar_params=fixed,
+            mean_module_fn=constant_mean,
+            covar_module_fn=rbf_kernel,
+        )
+
+        # Test requires grad for params
+        for param in gp.mean_module.parameters():
+            assert param.requires_grad == (not fixed)
+        for param in gp.covar_module.parameters():
+            assert param.requires_grad == (not fixed)
+
+        # Get params before training
+        mean_params_before = [p.clone() for p in gp.mean_module.parameters()]
+        covar_params_before = [p.clone() for p in gp.covar_module.parameters()]
+
+        # Fit GP
+        gp.fit(x, y)
+
+        # Get params after training
+        mean_params_after = [p.clone() for p in gp.mean_module.parameters()]
+        covar_params_after = [p.clone() for p in gp.covar_module.parameters()]
+
+        # Compare params before and after
+        for p_b, p_a in zip(mean_params_before, mean_params_after, strict=False):
+            assert torch.allclose(p_b, p_a) == fixed
+
+        for p_b, p_a in zip(covar_params_before, covar_params_after, strict=False):
+            assert torch.allclose(p_b, p_a) == fixed
 
 
 @pytest.mark.parametrize("emulator", GPS)
@@ -136,3 +184,38 @@ def test_gp_corr_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     assert not torch.allclose(pred1.variance, pred2.variance)
     assert torch.allclose(pred1.mean, pred3.mean)
     assert torch.allclose(pred1.variance, pred3.variance)
+
+
+def test_create_gp_subclass():
+    """Test the create_gp_subclass function."""
+
+    CustomGPSubclass = create_gp_subclass(
+        name="CustomGPSubclass",
+        gp_base_class=GaussianProcess,
+        mean_module_fn=constant_mean,
+        covar_module_fn=rbf_kernel,
+        epochs=100,
+    )
+
+    assert issubclass(CustomGPSubclass, GaussianProcess)
+    assert CustomGPSubclass.__name__ == "CustomGPSubclass"
+
+    gp_instance = CustomGPSubclass(torch.randn(10, 2), torch.randn(10, 1))
+    assert isinstance(gp_instance, GaussianProcess)
+
+    # Check that the fixed parameter is set correctly
+    assert gp_instance.epochs == 100
+
+    # Check that the mean and covariance modules are set correctly
+    assert gp_instance.mean_module is not None
+    assert gp_instance.covar_module is not None
+
+    # Check that the mean and covariance modules are of the correct type
+    assert isinstance(gp_instance.mean_module, torch.nn.Module)
+    assert isinstance(gp_instance.covar_module, torch.nn.Module)
+
+    # Check that the fixed parameters are not in the tunable parameters
+    tune_params = gp_instance.get_tune_params()
+    assert "epochs" not in tune_params
+    assert "mean_module_fn" not in tune_params
+    assert "covar_module_fn" not in tune_params

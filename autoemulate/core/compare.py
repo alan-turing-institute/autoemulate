@@ -1,3 +1,4 @@
+import inspect
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -12,7 +13,12 @@ from torch.distributions import Transform
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
-from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
+from autoemulate.core.plotting import (
+    calculate_subplot_layout,
+    create_and_plot_slice,
+    display_figure,
+    plot_xy,
+)
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
@@ -23,7 +29,12 @@ from autoemulate.core.types import (
     TransformedEmulatorParams,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
-from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS, get_emulator_class
+from autoemulate.emulators import (
+    ALL_EMULATORS,
+    DEFAULT_EMULATORS,
+    PYTORCH_EMULATORS,
+    get_emulator_class,
+)
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
@@ -40,17 +51,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: InputLike,
         y: InputLike,
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[Transform | dict]] | None = None,
         y_transforms_list: list[list[Transform | dict]] | None = None,
-        model_tuning: bool = True,
-        model_params: None | ModelParams = None,
+        model_params: None | ModelParams | dict = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
-        only_pytorch: bool = False,
         only_probabilistic: bool = False,
         n_iter: int = 10,
         n_splits: int = 5,
@@ -79,17 +88,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y_transforms_list: list[list[Transform]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
-        model_tuning: bool
-            Whether to tune the hyperparameters of the models using cross-validation.
-            If False, the models use the model_params provided. Defaults to True.
         model_params: ModelParams | None
-            Dictionary of model-specific parameters to use when fitting the models.
-            If None, the default parameters for each model are used.
-            This is only used if model_tuning is False. Defaults to None.
+            If None, default behaviour, the model hyperparameters are tuned using
+            cross-validation. If provided, the model hyperparameters are set to the
+            provided values and no tuning is performed. If an empty dictionary {} is
+            provided the default parameters for each model are used without tuning.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
-        only_pytorch: bool
-            If True, only PyTorch emulators are used. Defaults to False.
         only_probabilistic: bool
             If True, only probabilistic emulators are used. Defaults to False.
         n_iter: int
@@ -132,9 +137,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ]
 
         # Set default models if None
-        updated_models = self.get_models(
-            models, only_probabilistic=only_probabilistic, only_pytorch=only_pytorch
-        )
+        updated_models = self.get_models(models, only_probabilistic=only_probabilistic)
 
         # Filter models to only be those that can handle multioutput data
         if y.shape[1] > 1:
@@ -161,8 +164,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.n_iter = n_iter
         self.n_bootstraps = n_bootstraps
         self.max_retries = max_retries
-        self.model_tuning = model_tuning
         self.model_params = model_params or {}
+        self.model_tuning = model_params is None
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
@@ -178,6 +181,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return ALL_EMULATORS
 
     @staticmethod
+    def default_emulators() -> list[type[Emulator]]:
+        """Return a list of default emulators used by AutoEmulate."""
+        return DEFAULT_EMULATORS
+
+    @staticmethod
     def pytorch_emulators() -> list[type[Emulator]]:
         """Return a list of all available PyTorch emulators."""
         return PYTORCH_EMULATORS
@@ -188,36 +196,46 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         return [emulator for emulator in ALL_EMULATORS if emulator.supports_uq]
 
     @staticmethod
-    def list_emulators() -> pd.DataFrame:
+    def list_emulators(default_only: bool = True) -> pd.DataFrame:
         """Return a dataframe with info on all available emulators.
 
-        The dataframe includes the model name and whether it has a PyTorch backend,
-        supports multioutput data and provides uncertainty quantification.
+        The dataframe includes the model name and whether it has a PyTorch backend (and
+        autodiff), supports multioutput data and provides uncertainty quantification.
+
+        Parameters
+        ----------
+        subset: bool
+            Whether to display only default or all available emulators. Defaults to
+            True (default emulators only).
+
 
         Returns
         -------
         pd.DataFrame
             DataFrame with columns:
-                ['Emulator', 'PyTorch', 'Multioutput', 'Uncertainty_Quantification'].
+                - 'Emulator',
+                - 'PyTorch',
+                - 'Multioutput',
+                - 'Uncertainty_Quantification',
+                - 'Automatic_Differentiation`
         """
+        emulator_set = DEFAULT_EMULATORS if default_only else ALL_EMULATORS
         return pd.DataFrame(
             {
-                "Emulator": [
-                    emulator.model_name() for emulator in AutoEmulate.all_emulators()
-                ],
+                "Emulator": [emulator.model_name() for emulator in emulator_set],
                 "PyTorch": [
                     emulator in AutoEmulate.pytorch_emulators()
-                    for emulator in AutoEmulate.all_emulators()
+                    for emulator in emulator_set
                 ],
-                "Multioutput": [
-                    emulator.is_multioutput()
-                    for emulator in AutoEmulate.all_emulators()
-                ],
+                "Multioutput": [emulator.is_multioutput() for emulator in emulator_set],
                 "Uncertainty_Quantification": [
                     emulator in AutoEmulate.probablistic_emulators()
-                    for emulator in AutoEmulate.all_emulators()
+                    for emulator in emulator_set
                 ],
-                # TODO (#743): Add "Differentiable" feature for emulators
+                "Automatic_Differentiation": [
+                    emulator in AutoEmulate.pytorch_emulators()
+                    for emulator in emulator_set
+                ],
                 # TODO: short_name not currently used for anything, so commented out
                 # "short_name": [emulator.short_name() for emulator in ALL_EMULATORS],
             }
@@ -226,7 +244,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def get_models(
         self,
         models: list[type[Emulator] | str] | None = None,
-        only_pytorch: bool = False,
         only_probabilistic: bool = False,
     ) -> list[type[Emulator]]:
         """
@@ -243,17 +260,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             If True, only probabilistic emulators are returned. Defaults to False.
         """
         if models is None:
-            if only_probabilistic and only_pytorch:
-                return list(
-                    set(self.pytorch_emulators()).intersection(
-                        self.probablistic_emulators()
-                    )
-                )
             if only_probabilistic:
-                return self.probablistic_emulators()
-            if only_pytorch:
-                return self.pytorch_emulators()
-            return self.all_emulators()
+                return [
+                    emulator
+                    for emulator in self.default_emulators()
+                    if emulator in self.probablistic_emulators()
+                ]
+            return self.default_emulators()
 
         model_classes = []
         for model in models:
@@ -301,7 +314,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 updated_models.append(model)
         return updated_models
 
-    def log_compare(  # noqa: PLR0913
+    def log_compare(
         self,
         best_model_name,
         x_transforms,
@@ -392,7 +405,14 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                best_params_for_this_model = self.model_params
+                                # extract default parameters from the model's __init__
+                                init_sig = inspect.signature(model_cls.__init__)
+                                init_params = {
+                                    param_name: param.default
+                                    for param_name, param in init_sig.parameters.items()
+                                    if param_name in model_cls.get_tune_params()
+                                }
+                                best_params_for_this_model = init_params
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
@@ -539,8 +559,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         neural networks.
 
         """
-        from autoemulate.emulators import get_emulator_class
-
         transformed_emulator_params = (
             transformed_emulator_params or self.transformed_emulator_params
         )
@@ -576,7 +594,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         return fresh_model
 
-    def plot(  # noqa: PLR0912, PLR0913, PLR0915
+    def plot(  # noqa: PLR0912, PLR0915
         self,
         model_obj: int | Emulator | Result,
         input_index: list[int] | int | None = None,
@@ -691,7 +709,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             for in_idx in input_index:
                 if plot_index < len(axs):
 
-                    def subset_data_by_ranges(x, y, y_p, ranges, data, data_name):  # noqa: PLR0913
+                    def subset_data_by_ranges(x, y, y_p, ranges, data, data_name):
                         """Subsets data to joint specified ranges on a given array."""
                         for idx, (lower, upper) in ranges.items():
                             if idx < 0 or idx >= data.shape[1]:
@@ -748,6 +766,82 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_surface(
+        self,
+        model: Emulator,
+        parameters_range: dict[str, tuple[float, float]],
+        input_index_pair: tuple[int, int] | None = None,
+        output_index: int | None = None,
+        input_ranges: dict[int, tuple[float, float]] | None = None,
+        output_range: tuple[float, float] | None = None,
+        quantile: float = 0.5,
+        figsize=None,
+        fname: str | None = None,
+    ):
+        """Plot the emulator mean and variance over a grid for a pair of parameters.
+
+        This is useful for visualizing the emulator's behavior in 2D slices of the input
+        space while keeping other parameters fixed at a specific quantile (default is
+        median).
+
+        Parameters
+        ----------
+        model: Emulator
+            The emulator model to plot.
+        parameters_range: dict[str, tuple[float, float]]
+            A dictionary specifying the ranges for all input parameters. Keys are
+            parameter names and values are tuples of (min, max). The dictionary should
+            be ordered equivalently to the order of parameters used to train the model.
+        input_index_pair: tuple[int, int] | None
+            A tuple of two integers specifying the indices of the input parameters to
+            plot. If None, the first two parameters (0, 1) are used. Defaults to None.
+        output_index: int | None
+            The index of the output to plot. If None, the first output (0) is used.
+            Defaults to None.
+        input_ranges: dict[int, tuple[float, float]] | None
+            A dictionary specifying the ranges for input parameters to consider.
+            Keys are parameter indices and values are tuples of (min, max). If None,
+            the full range from the simulator is used. Defaults to None.
+        output_range: tuple[float, float] | None
+            A tuple specifying the (min, max) range for the output to consider. If None,
+            the full range from the simulator is used. Defaults to None.
+        quantile: float
+            The quantile of the other input parameters to fix when plotting the 2D
+            slice. Must be between 0 and 1. Defaults to 0.5.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, a default size is used.
+            Defaults to None.
+        fname: str | None
+            If provided, the figure will be saved to this file path. If None, the figure
+            will be displayed. Defaults to None.
+        """
+        # Update parameter ranges if provided
+        if input_ranges is not None:
+            # Copy to avoid modifying the parameters_range passed
+            parameters_range = parameters_range.copy()
+            parameters_range.update(
+                {
+                    list(parameters_range.keys())[k]: input_ranges[k]
+                    for k in input_ranges
+                }
+            )
+
+        fig, _ = create_and_plot_slice(
+            model,
+            parameters_range,
+            input_index_pair if input_index_pair is not None else (0, 1),
+            output_idx=output_index if output_index is not None else 0,
+            vmin=None if output_range is None else output_range[0],
+            vmax=None if output_range is None else output_range[1],
+            quantile=quantile,
+        )
+        if figsize is not None:
+            fig.set_size_inches(figsize)
         if fname is None:
             return display_figure(fig)
         fig.savefig(fname, bbox_inches="tight")

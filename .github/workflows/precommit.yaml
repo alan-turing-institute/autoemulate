@@ -2,6 +2,7 @@ name: precommit
 on:
     workflow_dispatch:
     pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
     push:
         branches:
             - main
@@ -19,6 +20,7 @@ permissions:
 
 jobs:
     pre-commit:
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         name: Pre-commit
         runs-on: ubuntu-latest
         steps:
@@ -33,7 +35,7 @@ jobs:
               python -m venv .venv
               source .venv/bin/activate
               python -m pip install --upgrade pip
-              pip install -e .[dev]
+              pip install -e .[dev,spatiotemporal]
 
           - uses: pre-commit/action@v3.0.0
             with:

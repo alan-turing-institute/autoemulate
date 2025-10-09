@@ -4,7 +4,7 @@ import numpy as np
 from torchrbf import RBFInterpolator
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.types import DeviceLike, OutputLike, TensorLike
+from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import PyTorchBackend
 from autoemulate.transforms.standardize import StandardizeTransform
 
@@ -16,9 +16,9 @@ class RadialBasisFunctions(PyTorchBackend):
     Wraps the Radial Basis Function Interpolation in PyTorch.
     """
 
-    supports_grad = False
+    supports_grad = True
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,  # noqa: ARG002
         y: TensorLike,  # noqa: ARG002
@@ -83,13 +83,6 @@ class RadialBasisFunctions(PyTorchBackend):
     def forward(self, x: TensorLike) -> TensorLike:
         """Forward pass for the radial basis function emulator."""
         return self.model(x)
-
-    def _predict(self, x: TensorLike, with_grad: bool) -> OutputLike:
-        if with_grad:
-            msg = "Gradient calculation is not supported."
-            raise ValueError(msg)
-        self.eval()
-        return self(x)
 
     @staticmethod
     def is_multioutput() -> bool:

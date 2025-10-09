@@ -4,28 +4,35 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
     contents: write
 jobs:
     docs:
+        if: github.event.pull_request.draft == false || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-python@v2
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
               with:
-                python-version: 3.11
+                python-version: 3.12
             - uses: nikeee/setup-pandoc@v1
             - name: "Upgrade pip"
               run: pip install --upgrade pip
             - name: "Install jupyterbook"
               run: pip install -r docs/requirements.txt
             - name: "Install autoemulate"
-              run: pip install git+https://github.com/alan-turing-institute/autoemulate.git
+              run: pip install -e .
             - name: "Run jupyterbook"
-              run: jupyter-book build docs --all
+              run: jupyter-book build docs --all 
             - name: "Deploy"
               uses: peaceiris/actions-gh-pages@v3
               if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/docs') }}

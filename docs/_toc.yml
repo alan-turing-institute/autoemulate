@@ -17,12 +17,15 @@ chapters:
     - file: tutorials/tasks/01_emulation_sensitivity
     - file: tutorials/tasks/02_history_matching
     - file: tutorials/tasks/03_bayes_calibration
+    - file: tutorials/tasks/04_interval_excursion_set
   - file: tutorials/simulator/index
     sections:
     - file: tutorials/simulator/01_custom_simulations
     - file: tutorials/simulator/02_active_learning
     - file: tutorials/simulator/03_history_matching
-
+  - file: tutorials/advanced/index
+    sections:
+    - file: tutorials/advanced/01_add_emulators
 
 - file: community/index
   sections:
@@ -39,9 +42,11 @@ chapters:
   sections:
   - file: reference/calibration/index
     sections:
+    - file: reference/calibration/base
     - file: reference/calibration/bayes
     - file: reference/calibration/history_matching
     - file: reference/calibration/history_matching_dashboard
+    - file: reference/calibration/interval_excursion_set
   - file: reference/core/index
     sections:
     - file: reference/core/compare

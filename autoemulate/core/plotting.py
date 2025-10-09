@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from autoemulate.core.types import NumpyLike
+from autoemulate.core.types import NumpyLike, TensorLike
+from autoemulate.emulators.base import Emulator
 
 
 def display_figure(fig: Figure):
@@ -40,7 +42,7 @@ def display_figure(fig: Figure):
     return fig
 
 
-def plot_xy(  # noqa: PLR0913
+def plot_xy(
     x: NumpyLike,
     y: NumpyLike,
     y_pred: NumpyLike,
@@ -87,27 +89,33 @@ def plot_xy(  # noqa: PLR0913
 
     org_points_color = "Goldenrod"
     pred_points_color = "#6A5ACD"
-    pred_line_color = "#6A5ACD"
-    ci_color = "lightblue"
 
     assert ax is not None, "ax must be provided"
+    # Scatter plot with error bars for predictions
     if y_std is not None:
-        ax.fill_between(
+        ax.errorbar(
             x_sorted,
-            y_pred_sorted - 2 * y_std,
-            y_pred_sorted + 2 * y_std,
-            color=ci_color,
-            alpha=0.25,
-            label="95% Confidence Interval",
+            y_pred_sorted,
+            yerr=2 * y_std,
+            fmt="o",
+            color=pred_points_color,
+            elinewidth=2,
+            capsize=3,
+            alpha=0.5,
+            # use unicode for sigma
+            label="pred. (±2\u03c3)",
         )
-    ax.plot(
-        x_sorted,
-        y_pred_sorted,
-        color=pred_line_color,
-        label="pred.",
-        alpha=0.8,
-        linewidth=1,
-    )  # , linestyle='--'
+    else:
+        ax.scatter(
+            x_sorted,
+            y_pred_sorted,
+            color=pred_points_color,
+            edgecolor="black",
+            linewidth=0.5,
+            alpha=0.5,
+            label="pred.",
+        )
+    # Scatter plot for observed data
     ax.scatter(
         x_sorted,
         y_sorted,
@@ -116,15 +124,6 @@ def plot_xy(  # noqa: PLR0913
         edgecolor="black",
         linewidth=0.5,
         label="data",
-    )
-    ax.scatter(
-        x_sorted,
-        y_pred_sorted,
-        color=pred_points_color,
-        edgecolor="black",
-        linewidth=0.5,
-        alpha=0.7,
-        label="pred.",
     )
 
     ax.set_xlabel(f"$x_{input_index}$", fontsize=13)
@@ -136,7 +135,7 @@ def plot_xy(  # noqa: PLR0913
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    lbl = "pred." if y_variance is None else "pred. (±2σ)"  # noqa: RUF001
+    lbl = "pred." if y_variance is None else "pred. (±2\u03c3)"
     legend = ax.legend(
         handles[-2:],
         ["data", lbl],
@@ -196,3 +195,225 @@ def calculate_subplot_layout(n_plots, n_cols=3):
     n_rows = (n_plots + n_cols - 1) // n_cols
 
     return n_rows, n_cols
+
+
+def mean_and_var_surface(
+    model: Emulator,
+    parameters_range: dict[str, tuple[float, float]],
+    variables: list[str],
+    output_idx: int = 0,
+    quantile: float = 0.5,
+    n_points: int = 30,
+) -> tuple[TensorLike, TensorLike | None, tuple[TensorLike, ...]]:
+    """Create predicted mean and variance on a specified grid for variable subset.
+
+    Create a grid of points varying specified parameters over a specified range,
+    while fixing other parameters at a given quantile along their simulation range.
+
+    Parameters
+    ----------
+    model: Emulator
+        A trained emulator.
+    parameters_range: dict[str, tuple[float, float]]
+        A dictionary specifying the ranges for all input parameters. Keys are parameter
+        names and values are tuples of (min, max). The dictionary should be ordered
+        equivalently to the order of parameters used to train the model.
+    variables: list[str]
+        A list of parameter names to vary.
+    output_idx: int,
+        The index of the output to return.
+    quantile: float
+        The quantile at which to fix other parameters. Defaults to 0.5 (median).
+    n_points: int
+        Number of grid points per variable. Defaults to 30. Higher values increase
+        resolution but also computation time.
+
+    Returns
+    -------
+    mean: TensorLike
+        The predicted mean on the grid.
+    var: TensorLike
+        The predicted variance on the grid.
+    grid: list[TensorLike]
+        The grid of parameter values used for predictions.
+
+    """
+    # Determine which parameters to vary and which to fix
+    grid_params = {}
+    fixed_params = {}
+    for idx, (param_name, param_range) in enumerate(parameters_range.items()):
+        if param_name in variables:
+            grid_params[idx] = torch.linspace(param_range[0], param_range[1], n_points)
+        else:
+            fixed_params[idx] = (
+                param_range[1] - param_range[0]
+            ) * quantile + param_range[0]
+
+    # Create meshgrid
+    grid = torch.meshgrid(*grid_params.values(), indexing="ij")
+    x_grid = torch.stack([g.reshape(-1) for g in grid], dim=1)
+
+    def expand_grid(x_grid, fixed_params, grid_params):
+        # Fill in fixed parameters
+        n_params = len(fixed_params) + len(grid_params)
+        x_expanded = torch.empty((x_grid.shape[0], n_params), dtype=torch.float32)
+        grid_idx = 0
+        for idx in range(n_params):
+            if idx in grid_params:
+                x_expanded[:, idx] = x_grid[:, grid_idx]
+                grid_idx += 1
+            else:
+                x_expanded[:, idx] = fixed_params[idx]
+        return x_expanded
+
+    mean, var = model.predict_mean_and_variance(
+        expand_grid(x_grid, fixed_params, grid_params)
+    )
+    # Subset to specified output_idx
+    var = var[:, output_idx : output_idx + 1] if var is not None else var
+    return mean[:, output_idx : output_idx + 1], var, grid
+
+
+def _plot_2d_slice_with_fixed_params(
+    mean: TensorLike,
+    var: TensorLike | None,
+    grid: tuple[TensorLike, ...],
+    param_names: list[str],
+    lower: float | None,
+    upper: float | None,
+    fixed_params_info=None,
+) -> tuple[Figure, np.ndarray]:
+    """Plot 2D slices when other parameters are held constant.
+
+    This works when you have a 2D grid with other parameters fixed.
+    """
+    ncols = 2 if var is not None else 1
+    fig, axs = plt.subplots(
+        1,
+        ncols,
+        figsize=(10, 4) if var is not None else (5, 4),
+        sharex=True,
+        sharey=True,
+        squeeze=False,
+    )
+
+    # Get grid dimensions
+    n_points_x, n_points_y = grid[0].shape
+
+    # Get coordinate ranges
+    x_min, x_max = grid[0].min(), grid[0].max()
+    y_min, y_max = grid[1].min(), grid[1].max()
+
+    # Reshape predictions to match 2D grid
+    mean_2d = mean.reshape(n_points_x, n_points_y)
+    var_2d = var.reshape(n_points_x, n_points_y) if var is not None else None
+
+    # Plot mean
+    ax = axs[0, 0]
+    im0 = ax.imshow(
+        mean_2d.T,  # Transpose for correct orientation
+        origin="lower",
+        aspect="auto",
+        extent=[x_min, x_max, y_min, y_max],
+        cmap="viridis",
+        vmin=lower,
+        vmax=upper,
+    )
+    ax.set_title("predicted mean")
+    ax.set_xlabel(param_names[0])
+    ax.set_ylabel(param_names[1])
+    fig.colorbar(im0, ax=ax)
+
+    if var_2d is not None:
+        # Plot variance
+        ax = axs[0, 1]
+        im1 = ax.imshow(
+            var_2d.T,
+            origin="lower",
+            aspect="auto",
+            extent=[x_min, x_max, y_min, y_max],
+            cmap="magma",
+        )
+        ax.set_title("predicted variance")
+        ax.set_xlabel(param_names[0])
+        ax.set_ylabel(param_names[1])
+        fig.colorbar(im1, ax=ax)
+
+    # Add fixed parameters info if provided
+    if fixed_params_info:
+        fig.suptitle(f"Fixed parameters: {fixed_params_info}", y=1.02)
+
+    plt.tight_layout()
+    return fig, axs
+
+
+def create_and_plot_slice(
+    model: Emulator,
+    parameters_range: dict[str, tuple[float, float]],
+    param_pair: tuple[int, int],
+    output_idx: int = 0,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    quantile: float = 0.5,
+    n_points: int = 50,
+) -> tuple[Figure, np.ndarray]:
+    """Create a 2D slice for any pair of parameters.
+
+    Parameters
+    ----------
+    model: Emulator
+        A trained emulator.
+    parameters_range: dict[str, tuple[float, float]]
+        A dictionary specifying the ranges for all input parameters. Keys are parameter
+        names and values are tuples of (min, max). The dictionary should be ordered
+        equivalently to the order of parameters used to train the model.
+    param_pair: tuple[int, int]
+        A list of two parameter indices.
+    output_idx: int
+        The output index to plot the surface of.
+    vmin: float | None
+        Minimum value for the mean plot color scale.
+    vmax: float | None
+        Maximum value for the mean plot color scale.
+    quantile: float
+        The quantile at which to fix other parameters. Defaults to 0.5 (median).
+    n_points: int
+        Number of grid points per parameter. Defaults to 50.
+
+    Returns
+    -------
+    mean: TensorLike
+        The predicted mean on the grid.
+    var: TensorLike
+        The predicted variance on the grid.
+    grid: list[TensorLike]
+        The grid points for the two varying parameters.
+    """
+    param_names = list(parameters_range.keys())
+    param_pair_names = [param_names[param_pair[0]], param_names[param_pair[1]]]
+
+    # Get the predicted mean and var across a grid for non-fixed params
+    mean, var, grid = mean_and_var_surface(
+        model,
+        parameters_range,
+        variables=param_pair_names,
+        output_idx=output_idx,
+        quantile=quantile,
+        n_points=n_points,
+    )
+
+    # Get the names of other fixed parameters
+    fixed_params = [p for p in param_names if p not in param_pair_names]
+
+    fig, ax = _plot_2d_slice_with_fixed_params(
+        mean,
+        var,
+        grid,
+        param_pair_names,
+        vmin,
+        vmax,
+        fixed_params_info=f"{', '.join(fixed_params)} at {quantile:.1f} quantile"
+        if len(fixed_params) > 0
+        else "None",
+    )
+    return fig, ax

@@ -15,7 +15,7 @@ integrator_keywords["atol"] = 1e-12
 class ReactionDiffusion(Simulator):
     """Simulate the reaction-diffusion PDE for a given set of parameters."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
@@ -80,8 +80,43 @@ class ReactionDiffusion(Simulator):
         # return tensor shape (1, 2*self.t*self.n*self.n)
         return torch.tensor(concat_array, dtype=torch.float32).reshape(1, -1)
 
+    def forward_samples_spatiotemporal(
+        self, n: int, random_seed: int | None = None
+    ) -> dict:
+        """Reshape to spatiotemporal format.
 
-def reaction_diffusion(  # noqa: PLR0913
+        Parameters
+        ----------
+        n: int
+            Number of samples to generate.
+        random_seed: int | None
+            Random seed for reproducibility. Defaults to None.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the reshaped spatiotemporal data, constant scalars,
+            and constant fields.
+        """
+        # Sample inputs
+        x = self.sample_inputs(n, random_seed)
+
+        # Run simulation
+        y, x = self.forward_batch(x)
+
+        # Reshape and permute output
+        y_reshaped_permuted = y.reshape(
+            y.shape[0], 2, int(self.T / self.dt), self.n, self.n
+        ).permute(0, 2, 3, 4, 1)
+
+        return {
+            "data": y_reshaped_permuted,
+            "constant_scalars": x,
+            "constant_fields": None,
+        }
+
+
+def reaction_diffusion(
     t: float,  # noqa: ARG001
     uvt: NumpyLike,
     K22: NumpyLike,
@@ -131,7 +166,7 @@ def reaction_diffusion(  # noqa: PLR0913
     )
 
 
-def simulate_reaction_diffusion(  # noqa: PLR0913
+def simulate_reaction_diffusion(
     x: NumpyLike,
     return_timeseries: bool = False,
     n: int = 32,

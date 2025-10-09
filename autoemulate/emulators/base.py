@@ -43,23 +43,24 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
-        self._check(x, y)
-        # Ensure x and y are tensors and 2D
-        x, y = self._convert_to_tensors(x, y)
+        if isinstance(x, TensorLike) and isinstance(y, TensorLike):
+            self._check(x, y)
+            # Ensure x and y are tensors and 2D
+            x, y = self._convert_to_tensors(x, y)
 
-        # Move to device
-        x, y = self._move_tensors_to_device(x, y)
+            # Move to device
+            x, y = self._move_tensors_to_device(x, y)
 
-        # Fit transforms
-        if self.x_transform is not None:
-            self.x_transform.fit(x)
-        if self.y_transform is not None:
-            self.y_transform.fit(y)
-        x = self.x_transform(x) if self.x_transform is not None else x
-        y = self.y_transform(y) if self.y_transform is not None else y
+            # Fit transforms
+            if self.x_transform is not None:
+                self.x_transform.fit(x)
+            if self.y_transform is not None:
+                self.y_transform.fit(y)
+            x = self.x_transform(x) if self.x_transform is not None else x
+            y = self.y_transform(y) if self.y_transform is not None else y
 
-        # Fit emulator
-        self._fit(x, y)
+            # Fit emulator
+            self._fit(x, y)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -106,6 +107,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             msg = "Model is not fitted yet. Call fit() before predict()."
             raise RuntimeError(msg)
         self._check(x, None)
+        x = self._ensure_with_grad(x, with_grad)
         (x,) = self._move_tensors_to_device(x)
         x = self.x_transform(x) if self.x_transform is not None else x
         output = self._predict(x, with_grad)
@@ -150,6 +152,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         TensorLike
             Mean tensor of shape `(n_batch, n_targets)`.
         """
+        x = self._ensure_with_grad(x, with_grad)
         y_pred = self._predict(x, with_grad)
         if isinstance(y_pred, TensorLike):
             return y_pred
@@ -187,8 +190,9 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             A tuple containing:
             - Mean tensor of shape `(n_batch, n_targets)`.
             - Variance tensor of shape `(n_batch, n_targets)` if model supports UQ
-              otherwise None.
+            otherwise None.
         """
+        x = self._ensure_with_grad(x, with_grad)
         if not self.supports_uq:
             return (self.predict_mean(x, with_grad, n_samples), None)
         y_pred = self._predict(x, with_grad)
@@ -202,6 +206,34 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                 else y_pred.sample(torch.Size([n_samples]))
             )
             return samples.mean(dim=0), samples.var(dim=0)
+
+    @staticmethod
+    def _ensure_with_grad(x: TensorLike, with_grad: bool) -> TensorLike:
+        """Ensure that the tensor x has requires_grad=True if with_grad is True.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor.
+        with_grad: bool
+            Whether to enable gradient calculation.
+
+        Returns
+        -------
+        TensorLike
+            The input tensor with requires_grad set to True if with_grad is True.
+
+        """
+        if with_grad and isinstance(x, torch.Tensor) and not x.requires_grad:
+            # Prefer enabling grad in-place on leaf tensors so callers can request
+            # gradients w.r.t. their original input tensor.
+            if x.is_leaf:
+                x.requires_grad_(True)
+            else:
+                # Fall back to a detached leaf clone when we cannot mutate flags on
+                # non-leaf tensors.
+                x = x.clone().detach().requires_grad_(True)
+        return x
 
     @staticmethod
     @abstractmethod
@@ -394,7 +426,9 @@ class DeterministicEmulator(Emulator):
             - Mean tensor of shape `(n_batch, n_targets)`.
             - Variance tensor as `None` since the model does not support UQ.
         """
-        mean, variance = super().predict_mean_and_variance(x, with_grad, n_samples)
+        mean, variance = Emulator.predict_mean_and_variance(
+            self, x, with_grad, n_samples
+        )
         assert variance is None
         return mean, variance
 
@@ -449,8 +483,10 @@ class ProbabilisticEmulator(Emulator):
             - Mean tensor of shape `(n_batch, n_targets)`.
             - Variance tensor of shape `(n_batch, n_targets)`.
         """
-        mean, variance = super().predict_mean_and_variance(x, with_grad, n_samples)
-        assert variance is TensorLike
+        mean, variance = Emulator.predict_mean_and_variance(
+            self, x, with_grad, n_samples
+        )
+        assert isinstance(variance, TensorLike)
         return mean, variance
 
 
@@ -513,9 +549,9 @@ class PyTorchBackend(nn.Module, Emulator):
     The class provides the basic structure and methods for PyTorch-based emulators to
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
-      - `.__init__()`: the constructor for the model
-      - `.forward()`: the forward pass of the model
-      - `.get_tune_params()`: the hyperparameters to tune for the model
+    - `.__init__()`: the constructor for the model
+    - `.forward()`: the forward pass of the model
+    - `.get_tune_params()`: the hyperparameters to tune for the model
 
     """
 
@@ -536,11 +572,7 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(
-        self,
-        x: TensorLike,
-        y: TensorLike,
-    ):
+    def _fit(self, x: TensorLike, y: TensorLike):
         """
         Train a PyTorchBackend model.
 
@@ -651,8 +683,8 @@ class SklearnBackend(DeterministicEmulator):
     The class provides the basic structure and methods for sklearn-based emulators to
     enable further subclassing and customization. This provides default implementations
     to simplify model-specific subclasses by only needing to implement:
-      - `.__init__()`: the constructor for the model
-      - `.get_tune_params()`: the hyperparameters to tune for the model
+    - `.__init__()`: the constructor for the model
+    - `.get_tune_params()`: the hyperparameters to tune for the model
     """
 
     model: BaseEstimator

@@ -1,6 +1,6 @@
 [project]
 name = "autoemulate"
-version = "1.0.0"
+version = "1.1.1"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = [{ name = "AutoEmulate contributors (see our GitHub page)" }]
@@ -39,6 +39,7 @@ dependencies = [
     "corner>=2.2.3",
     "torchrbf>=0.0.1",
     "arviz>=0.21.0",
+    "getdist>=1.7.2",
 ]
 
 [project.urls]
@@ -67,8 +68,10 @@ dev = [
     "pytest-cov>=4.1.0",
     "coverage>=7.6.4",
     "plotnine>=0.13.6",
-    "pyright>=1.1.398",
+    "pyright==1.1.405",
+    "ruff==0.12.11",
 ]
+spatiotemporal = ["the-well>=1.1.0", "neuraloperator>=1.0.2"]
 
 [tool.setuptools]
 zip-safe = false
@@ -140,8 +143,9 @@ ignore = [
     "EM102",   # Exception must not use an f-string literal, assign to variable first
     "ISC001",  # Conflicts with formatter
     # "D417",    # Missing trailing new line in docstring
-    "D100", # Missing docstring in public module
-    "D104", # Missing docstring in public package
+    "D100",    # Missing docstring in public module
+    "D104",    # Missing docstring in public package
+    "PLR0913", # too many arguments
 ]
 
 unfixable = [

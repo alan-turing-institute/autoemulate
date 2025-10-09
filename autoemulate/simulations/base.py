@@ -2,12 +2,12 @@ import logging
 from abc import ABC, abstractmethod
 
 import torch
+from scipy.stats import qmc
 from tqdm import tqdm
 
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
-from autoemulate.simulations.experimental_design import LatinHypercube
 
 logger = logging.getLogger("autoemulate")
 
@@ -47,6 +47,11 @@ class Simulator(ABC, ValidationMixin):
         self._parameters_range = parameters_range
         self._param_names = list(parameters_range.keys())
         self._param_bounds = list(parameters_range.values())
+        # separate out param bounds to sample from and constants
+        self.sample_param_bounds = [b for b in self.param_bounds if b[0] != b[1]]
+        self.constant_params = {
+            idx: b[0] for idx, b in enumerate(self.param_bounds) if b[0] == b[1]
+        }
         self._output_names = output_names
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
@@ -78,6 +83,10 @@ class Simulator(ABC, ValidationMixin):
         self._param_names = list(parameters_range.keys())
         self._param_bounds = list(parameters_range.values())
         self._in_dim = len(self.param_names)
+        self.sample_param_bounds = [b for b in self.param_bounds if b[0] != b[1]]
+        self.constant_params = {
+            idx: b[0] for idx, b in enumerate(self.param_bounds) if b[0] == b[1]
+        }
 
     @property
     def param_names(self) -> list[str]:
@@ -132,10 +141,14 @@ class Simulator(ABC, ValidationMixin):
         return self._out_dim
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None
+        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
     ) -> TensorLike:
         """
-        Generate random samples using Latin Hypercube Sampling.
+        Generate random samples using Quasi-Monte Carlo methods.
+
+        Available methods are Sobol or Latin Hypercube Sampling. For overview, see
+        the scipy documentation:
+        https://docs.scipy.org/doc/scipy/reference/stats.qmc.html
 
         Parameters
         ----------
@@ -143,6 +156,8 @@ class Simulator(ABC, ValidationMixin):
             Number of samples to generate.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set.
+        method: str
+            Sampling method to use. One of ["lhs", "sobol"].
 
         Returns
         -------
@@ -151,8 +166,43 @@ class Simulator(ABC, ValidationMixin):
         """
         if random_seed is not None:
             set_random_seed(random_seed)  # type: ignore PGH003
-        lhd = LatinHypercube(self.param_bounds)
-        return lhd.sample(n_samples)
+
+        if len(self.sample_param_bounds) == 0:
+            # All parameters are constant - broadcast to n_samples
+            const_vals = torch.tensor(list(self.constant_params.values()))
+            return const_vals.repeat(n_samples, 1)
+
+        if method.lower() == "lhs":
+            sampler = qmc.LatinHypercube(d=len(self.sample_param_bounds))
+        elif method.lower() == "sobol":
+            sampler = qmc.Sobol(d=len(self.sample_param_bounds))
+        else:
+            msg = (
+                f"Invalid sampling method: {method}. "
+                "Supported methods are 'lhs' and 'sobol'."
+            )
+            raise ValueError(msg)
+
+        # Samples are drawn from [0, 1]^d so need to scale them
+        samples = sampler.random(n=n_samples)
+        scaled_samples = qmc.scale(
+            samples,
+            [b[0] for b in self.sample_param_bounds],
+            [b[1] for b in self.sample_param_bounds],
+        )
+        scaled_samples = torch.tensor(scaled_samples, dtype=torch.float32)
+
+        # Insert constant parameters at correct indices
+        full_samples = torch.empty((n_samples, self.in_dim), dtype=torch.float32)
+        sample_idx = 0
+        for idx in range(self.in_dim):
+            if idx in self.constant_params:
+                full_samples[:, idx] = self.constant_params[idx]
+            else:
+                full_samples[:, idx] = scaled_samples[:, sample_idx]
+                sample_idx += 1
+
+        return full_samples
 
     @abstractmethod
     def _forward(self, x: TensorLike) -> TensorLike | None:
@@ -169,78 +219,61 @@ class Simulator(ABC, ValidationMixin):
         TensorLike | None
             Simulated output tensor. Shape = (1, self.out_dim).
             For example, if the simulator outputs two simulated variables,
-            then the shape would be (1, 2). None if the simulation fails.
+            then the shape would be (1, 2).
         """
 
-    def forward(self, x: TensorLike) -> TensorLike | None:
+    def forward(self, x: TensorLike, allow_failures: bool = True) -> TensorLike | None:
         """
         Generate samples from input data using the simulator.
 
         Combines the abstract method `_forward` with some validation checks.
+        If there is a failure during the forward pass of the simulation,
+        the error is logged and None is returned.
 
         Parameters
         ----------
         x: TensorLike
             Input tensor of shape (n_samples, self.in_dim).
+        allow_failures: bool
+            Whether to allow failures during simulation.
+            Default is True. When true, failed simulations will return None instead
+            of raising an error. When False, error is raised.
 
         Returns
         -------
         TensorLike
             Simulated output tensor. None if the simulation failed.
         """
-        y = self._forward(self.check_tensor_is_2d(x))
-        if isinstance(y, TensorLike):
-            x, y = self.check_pair(x, y)
-            return y
+        try:
+            y = self._forward(self.check_tensor_is_2d(x))
+            if isinstance(y, TensorLike):
+                x, y = self.check_pair(x, y)
+                return y
+        except Exception as e:
+            if not allow_failures:
+                self.logger.error("Error occurred during simulation: %s", e)
+                raise
+            self.logger.warning("Simulation failed with error %s. Returning None", e)
         return None
 
-    def forward_batch(self, x: TensorLike) -> TensorLike:
-        """Run multiple simulations with different parameters.
-
-        For infallible simulators that always succeed.
-        If your simulator might fail, use `forward_batch_skip_failures()` instead.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Tensor of input parameters to make predictions for.
-
-        Returns
-        -------
-        TensorLike
-            Tensor of simulation results of shape (n_batch, self.out_dim).
-
-        Raises
-        ------
-        RuntimeError
-            If the number of simulations does not match the input.
-            Use `forward_batch_skip_failures()` to handle failures.
-        """
-        results, x_valid = self.forward_batch_skip_failures(x)
-
-        # Raise an error if the number of simulations does not match the input
-        if x.shape[0] != x_valid.shape[0]:
-            msg = (
-                "Some simulations failed. Use forward_batch_skip_failures() to handle "
-                "failures."
-            )
-            raise RuntimeError(msg)
-
-        return results
-
-    def forward_batch_skip_failures(
-        self, x: TensorLike
+    def forward_batch(
+        self, x: TensorLike, allow_failures: bool = True
     ) -> tuple[TensorLike, TensorLike]:
-        """Run multiple simulations, skipping any that fail.
+        """
+        Run multiple simulations.
 
-        For simulators where for some inputs the simulation can fail.
-        Failed simulations are skipped, and only successful results are returned
-        along with their corresponding input parameters.
+        If allow_failures is False, failed simulations will raise an error.
+        Otherwise, failed simulations are skipped, and only successful results
+        are returned along with their corresponding input parameters.
 
         Parameters
         ----------
         x: TensorLike
             Tensor of input parameters to make predictions for.
+        allow_failures: bool
+            Whether to allow failures during simulation.
+            Default is True. When true, failed simulations will return None instead
+            of raising an error. When False, error is raised.
 
         Returns
         -------
@@ -264,15 +297,18 @@ class Simulator(ABC, ValidationMixin):
             unit_scale=True,
         ):
             logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
-            result = self.forward(x[i : i + 1])
+            result = self.forward(x[i : i + 1], allow_failures=allow_failures)
             if result is not None:
                 results.append(result)
-                successful += 1
                 valid_idx.append(i)
+                successful += 1
                 logger.debug("Simulation %d/%d successful", i + 1, len(x))
             else:
                 logger.warning(
-                    "Simulation %d/%d failed. Result is None.", i + 1, len(x)
+                    "Simulation %d/%d failed. Result is None"
+                    "and is not appended to the results",
+                    i + 1,
+                    len(x),
                 )
 
         # Report results
@@ -282,6 +318,10 @@ class Simulator(ABC, ValidationMixin):
             len(x),
             (successful / len(x) * 100 if len(x) > 0 else 0.0),
         )
+
+        # handle no simulation results
+        if results == []:
+            return torch.empty((0, self.out_dim)), torch.empty((0, self.in_dim))
 
         # stack results into a 2D array on first dim using torch
         self.results_tensor = torch.cat(results, dim=0)

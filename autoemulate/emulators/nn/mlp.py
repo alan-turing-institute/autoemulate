@@ -16,7 +16,7 @@ class MLP(DropoutTorchBackend):
     provided by different weight initialization and dropout.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         x: TensorLike,
         y: TensorLike,
@@ -25,6 +25,7 @@ class MLP(DropoutTorchBackend):
         activation_cls: type[nn.Module] = nn.ReLU,
         loss_fn_cls: type[nn.Module] = nn.MSELoss,
         epochs: int = 100,
+        batch_size: int = 16,
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
         scale: float = 1.0,
@@ -33,7 +34,7 @@ class MLP(DropoutTorchBackend):
         lr: float = 1e-2,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **kwargs,
+        **scheduler_kwargs,
     ):
         """
         Multi-Layer Perceptron (MLP) emulator.
@@ -76,8 +77,8 @@ class MLP(DropoutTorchBackend):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
-        **kwargs: dict
-            Additional keyword arguments.
+        **scheduler_kwargs: dict
+            Additional keyword arguments related to the scheduler.
 
         Raises
         ------
@@ -114,9 +115,10 @@ class MLP(DropoutTorchBackend):
         self.epochs = epochs
         self.loss_fn = loss_fn_cls()
         self.lr = lr
+        self.batch_size = batch_size
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(kwargs)
-        self.to(device)
+        self.scheduler_setup(scheduler_kwargs)
+        self.to(self.device)
 
     def forward(self, x):
         """Forward pass for the MLP."""
