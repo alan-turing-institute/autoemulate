@@ -95,5 +95,5 @@ def fit_from_reinitialized(
         **emulator_params,
     )
 
-    new_emulator.fit(x, y)
+    new_emulator.fit(x.float(), y.float())
     return new_emulator
