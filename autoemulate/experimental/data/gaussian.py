@@ -1,3 +1,5 @@
+# ruff: noqa: UP038, D101, D102
+
 from abc import ABC, abstractmethod
 
 # from dataclasses import dataclass, field
