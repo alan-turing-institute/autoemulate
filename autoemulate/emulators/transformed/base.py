@@ -128,14 +128,13 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
 
         # Convert and move the new data to device
         TorchDeviceMixin.__init__(self, device=device)
-        x_tensor, y_tensor = self._convert_to_tensors(x, y)
-        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
+        x, y = self._move_tensors_to_device(x, y)
 
-        self._fit_transforms(x_tensor, y_tensor)
+        self._fit_transforms(x, y)
         self.untransformed_model_name = model.model_name()
         self.model = model(
-            self._transform_x(x_tensor),
-            self._transform_y_tensor(y_tensor),
+            self._transform_x(x),
+            self._transform_y_tensor(y),
             device=device,
             **kwargs,
         )
@@ -162,7 +161,7 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
         # Precompute and cache the Jacobian of the inverse y-transform if affine
         if not self.output_from_samples and self.all_y_transforms_affine:
             try:
-                self._compute_and_cache_inv_y_jacobian(y_tensor)
+                self._compute_and_cache_inv_y_jacobian(y)
             except Exception:
                 self._fixed_jacobian_y_inv = None
 
