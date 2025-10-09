@@ -36,7 +36,7 @@ class MLP(DropoutTorchBackend):
         random_seed: int | None = None,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
-        scheduler_kwargs: dict | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Multi-Layer Perceptron (MLP) emulator.
@@ -82,7 +82,7 @@ class MLP(DropoutTorchBackend):
         scheduler_cls: type[LRScheduler] | None
             Learning rate scheduler class. If None, no scheduler is used. Defaults to
             None.
-        scheduler_kwargs: dict | None
+        scheduler_params: dict | None
             Additional keyword arguments related to the scheduler.
 
         Raises
@@ -132,8 +132,8 @@ class MLP(DropoutTorchBackend):
         self.batch_size = batch_size
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_cls = scheduler_cls
-        self.scheduler_kwargs = scheduler_kwargs or {}
-        self.scheduler_setup(self.scheduler_kwargs)
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.to(self.device)
 
     def forward(self, x):
@@ -148,7 +148,7 @@ class MLP(DropoutTorchBackend):
     @staticmethod
     def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
-        scheduler_params = MLP.scheduler_params()
+        scheduler_specs = MLP.get_scheduler_params()
         return {
             "epochs": [100, 200],
             "layer_dims": [[8, 4], [16, 8], [32, 16], [64, 32, 16]],
@@ -158,6 +158,6 @@ class MLP(DropoutTorchBackend):
             "scale": [0.1, 1.0],
             "bias_init": ["default", "zeros"],
             "dropout_prob": [0.3, None],
-            "scheduler_cls": scheduler_params["scheduler_cls"],
-            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
+            "scheduler_cls": scheduler_specs["scheduler_cls"],
+            "scheduler_params": scheduler_specs["scheduler_params"],
         }

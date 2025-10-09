@@ -71,7 +71,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         early_stopping: EarlyStopping | None = None,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
-        scheduler_kwargs: dict | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize the GaussianProcess emulator.
@@ -112,7 +112,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         scheduler_cls: type[LRScheduler] | None
             Learning rate scheduler class. If None, no scheduler is used. Defaults to
             None.
-        scheduler_kwargs: dict | None
+        scheduler_params: dict | None
             Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
@@ -157,8 +157,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_cls = scheduler_cls
-        self.scheduler_kwargs = scheduler_kwargs or {}
-        self.scheduler_setup(self.scheduler_kwargs)
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
@@ -304,7 +304,7 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
     @staticmethod
     def get_tune_params():
         """Return the hyperparameters to tune for the Gaussian Process model."""
-        scheduler_params = GaussianProcess.scheduler_params()
+        scheduler_specs = GaussianProcess.get_scheduler_params()
         return {
             "mean_module_fn": [
                 constant_mean,
@@ -325,8 +325,8 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             "epochs": [50, 100, 200],
             "lr": [5e-1, 1e-1, 5e-2, 1e-2],
             "likelihood_cls": [MultitaskGaussianLikelihood],
-            "scheduler_cls": scheduler_params["scheduler_cls"],
-            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
+            "scheduler_cls": scheduler_specs["scheduler_cls"],
+            "scheduler_params": scheduler_specs["scheduler_params"],
         }
 
 
@@ -361,7 +361,7 @@ class GaussianProcessCorrelated(GaussianProcess):
         seed: int | None = None,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
-        scheduler_kwargs: dict | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize the GaussianProcessCorrelated emulator.
@@ -405,7 +405,7 @@ class GaussianProcessCorrelated(GaussianProcess):
             GPU). Defaults to None.
         scheduler_cls: type[LRScheduler] | None
             Learning rate scheduler class. If None, no scheduler is used. Defaults to
-        scheduler_kwargs: dict
+        scheduler_params: dict
             Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
@@ -461,8 +461,8 @@ class GaussianProcessCorrelated(GaussianProcess):
         self.lr = lr
         self.optimizer = self.optimizer_cls(self.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
         self.scheduler_cls = scheduler_cls
-        self.scheduler_kwargs = scheduler_kwargs or {}
-        self.scheduler_setup(self.scheduler_kwargs)
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.early_stopping = early_stopping
         self.posterior_predictive = posterior_predictive
         self.num_tasks = num_tasks
@@ -556,7 +556,7 @@ def create_gp_subclass(
             lr: float = lr,
             early_stopping: EarlyStopping | None = early_stopping,
             device: DeviceLike | None = device,
-            **scheduler_kwargs,
+            **scheduler_params,
         ):
             super().__init__(
                 x,
@@ -573,7 +573,7 @@ def create_gp_subclass(
                 lr,
                 early_stopping,
                 device,
-                **scheduler_kwargs,
+                **scheduler_params,
             )
 
         @staticmethod

@@ -52,7 +52,7 @@ class TestPyTorchBackend:
         Define the PyTorchBackend instance.
         """
         self.model = self.DummyModel(
-            scheduler_cls=ExponentialLR, scheduler_kwargs={"gamma": 0.9}
+            scheduler_cls=ExponentialLR, scheduler_params={"gamma": 0.9}
         )
 
     def test_model_name(self):
@@ -153,7 +153,7 @@ class TestPyTorchBackend:
     def test_scheduler_setup(self):
         # Should raise ValueError if kwargs is None
         with pytest.raises(
-            ValueError, match="Provide scheduler_kwargs to set up the scheduler."
+            ValueError, match="Provide scheduler_params to set up the scheduler."
         ):
             self.model.scheduler_setup(None)
 
