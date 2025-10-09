@@ -43,9 +43,6 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
-        # Ensure x and y are tensors and 2D
-        x, y = self._convert_to_tensors(x, y)
-
         # Move to device
         x, y = self._move_tensors_to_device(x, y)
 
