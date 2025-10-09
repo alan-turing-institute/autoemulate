@@ -1,13 +1,13 @@
 import inspect
 
-from autoemulate.core.types import DeviceLike, InputLike
+from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import Emulator, TransformedEmulator, get_emulator_class
 
 
 def fit_from_reinitialized(
-    x: InputLike,
-    y: InputLike,
+    x: TensorLike,
+    y: TensorLike,
     emulator: Emulator,
     transformed_emulator_params: dict | None = None,
     device: DeviceLike | None = None,
@@ -86,8 +86,8 @@ def fit_from_reinitialized(
     transformed_emulator_params = transformed_emulator_params or {}
 
     new_emulator = TransformedEmulator(
-        x,
-        y,
+        x.float(),
+        y.float(),
         model=get_emulator_class(emulator_name),
         x_transforms=x_transforms,
         y_transforms=y_transforms,

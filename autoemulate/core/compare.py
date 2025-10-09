@@ -567,14 +567,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Get the result to use
         result = self.best_result() if result_id is None else self.get_result(result_id)
 
+        # Convert and move the new data to device
+        x_tensor, y_tensor = self._convert_to_tensors(x, y)
+        x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
+
         # NOTE: function passes data to the Emulator model which handles conversion to
         # tensors and device handling
         return fit_from_reinitialized(
-            x,
-            y,
+            x_tensor,
+            y_tensor,
             emulator=result.model,
             transformed_emulator_params=transformed_emulator_params,
-            device=str(self.device),
+            device=self.device,
             random_seed=random_seed,
         )
 

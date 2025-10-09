@@ -14,7 +14,7 @@ from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result
-from autoemulate.core.types import DeviceLike, DistributionLike, InputLike, TensorLike
+from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import Emulator
 from autoemulate.simulations.base import Simulator
@@ -630,25 +630,25 @@ class HistoryMatchingWorkflow(HistoryMatching):
 
         return x, y
 
-    def refit_emulator(self, x: InputLike, y: InputLike) -> None:
+    def refit_emulator(self, x: TensorLike, y: TensorLike) -> None:
         """
         Refit the emulator on the provided data.
 
         Parameters
         ----------
-        x: InputLike
+        x: TensorLike
             Tensor of input data to refit the emulator on.
-        y: InputLike
+        y: TensorLike
             Tensor of output data to refit the emulator on.
         """
-        # NOTE: function passes data to the Emulator model which handles conversion to
-        # tensors and device handling
+        x = x.float().to(self.device)
+        y = y.float().to(self.device)
         self.emulator = fit_from_reinitialized(
             x,
             y,
             emulator=self.emulator,
             transformed_emulator_params=self.transformed_emulator_params,
-            device=str(self.device),
+            device=self.device,
         )
 
     def run(
