@@ -44,7 +44,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
         # Move to device
-        x, y = self._move_tensors_to_device(x, y)
+        x, y = self._move_tensors_to_device(x.float(), y.float())
 
         # Fit transforms
         if self.x_transform is not None:
@@ -285,37 +285,37 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         all_params = [
             {
                 "scheduler_cls": [None],
-                "scheduler_kwargs": [{}],
+                "scheduler_params": [{}],
             },
             {
                 "scheduler_cls": [ExponentialLR],
-                "scheduler_kwargs": [
+                "scheduler_params": [
                     {"gamma": 0.9},
                     {"gamma": 0.95},
                 ],
             },
             {
                 "scheduler_cls": [LRScheduler],
-                "scheduler_kwargs": [
+                "scheduler_params": [
                     {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
                 ],
             },
             # TODO: investigate these suggestions from copilot, issue: #597
             # {
             #     "scheduler_cls": [CosineAnnealingLR],
-            #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
+            #     "scheduler_params": [{"T_max": 10, "eta_min": 0.01}],
             # },
             # {
             #     "scheduler_cls": [ReduceLROnPlateau],
-            #     "scheduler_kwargs": [{"mode": "min", "factor": 0.1, "patience": 5}],
+            #     "scheduler_params": [{"mode": "min", "factor": 0.1, "patience": 5}],
             # },
             # {
             #     "scheduler_cls": [StepLR],
-            #     "scheduler_kwargs": [{"step_size": 10, "gamma": 0.1}],
+            #     "scheduler_params": [{"step_size": 10, "gamma": 0.1}],
             # },
             # {
             #     "scheduler_cls": [CyclicLR],
-            #     "scheduler_kwargs": [{
+            #     "scheduler_params": [{
             #         "base_lr": 1e-3,
             #         "max_lr": 1e-1,
             #         "step_size_up": 5,
@@ -324,7 +324,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             # },
             # {
             #     "scheduler_cls": [OneCycleLR],
-            #     "scheduler_kwargs": [{
+            #     "scheduler_params": [{
             #         "max_lr": 1e-1,
             #         "total_steps": self.epochs,
             #         "pct_start": 0.3,
@@ -335,17 +335,17 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         # Randomly select one of the parameter sets
         return random.choice(all_params)
 
-    def scheduler_setup(self, scheduler_kwargs: dict | None = None):
+    def scheduler_setup(self, scheduler_params: dict | None = None):
         """
         Set up the learning rate scheduler for the emulator.
 
         Parameters
         ----------
-        scheduler_kwargs : dict | None
+        scheduler_params : dict | None
             Keyword arguments for the scheduler.
         """
-        if scheduler_kwargs is None:
-            msg = "Provide scheduler_kwargs to set up the scheduler."
+        if scheduler_params is None:
+            msg = "Provide scheduler_params to set up the scheduler."
             raise ValueError(msg)
 
         if not hasattr(self, "optimizer"):
@@ -356,7 +356,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         if self.scheduler_cls is None:
             self.scheduler = None
         else:
-            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_params)  # type: ignore[call-arg]
 
 
 class DeterministicEmulator(Emulator):
