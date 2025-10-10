@@ -213,7 +213,11 @@ class DiscreteFourierTransform(AutoEmulateTransform):
         full_fft = torch.zeros(
             n_samples, self.n_features, dtype=torch.complex64, device=y.device
         )
-        full_fft[:, self.selected_indices] = selected_fft
+        # Expand selected_indices to match batch dimension
+        indices = self.selected_indices.unsqueeze(0).expand(n_samples, -1)
+
+        # Use scatter instead of in-place indexing for vmap compatibility
+        full_fft = full_fft.scatter(1, indices, selected_fft)
 
         # Step 4: Apply IFFT to reconstruct signal
         result_flat = torch.fft.ifft(full_fft, dim=-1).real
