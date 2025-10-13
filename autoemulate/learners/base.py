@@ -4,15 +4,15 @@ from inspect import isabstract
 
 import torch
 from anytree import Node, RenderTree
-from torch.distributions import MultivariateNormal
 from torcheval.metrics import MeanSquaredError, R2Score
 
 from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.data.utils import ValidationMixin
 from autoemulate.emulators.base import Emulator
 from autoemulate.simulations.base import Simulator
 
-from ..core.types import GaussianLike, TensorLike
+from ..core.types import DistributionLike, TensorLike
 
 
 @dataclass(kw_only=True)
@@ -48,7 +48,12 @@ class Learner(ValidationMixin, ABC):
         log_level = getattr(self, "log_level", "progress_bar")
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info("Initializing Learner with training data.")
-        self.emulator.fit(self.x_train, self.y_train)
+        self.emulator = fit_from_reinitialized(
+            self.x_train,
+            self.y_train,
+            emulator=self.emulator,
+            device=self.emulator.device,
+        )
         self.logger.info("Emulator fitted with initial training data.")
         self.in_dim = self.x_train.shape[1]
         self.out_dim = self.y_train.shape[1]
@@ -140,11 +145,9 @@ class Active(Learner):
         x, output, extra = self.query(*args)
         if isinstance(output, TensorLike):
             y_pred = output
-        elif isinstance(output, GaussianLike):
+        elif isinstance(output, DistributionLike):
             assert output.variance.ndim == 2
-            y_pred, _ = output.mean, output.variance
-        elif isinstance(output, GaussianLike):
-            y_pred, _ = output.loc, None
+            y_pred = output.mean
         else:
             msg = (
                 f"Output must be either `Tensor` or `MultivariateNormal` but got "
@@ -159,7 +162,12 @@ class Active(Learner):
             assert isinstance(y_true, TensorLike)
             self.x_train = torch.cat([self.x_train, x])
             self.y_train = torch.cat([self.y_train, y_true])
-            self.emulator.fit(self.x_train, self.y_train)
+            self.emulator = fit_from_reinitialized(
+                self.x_train,
+                self.y_train,
+                emulator=self.emulator,
+                device=self.emulator.device,
+            )
             self.mse.update(y_pred, y_true)
             self.r2.update(y_pred, y_true)
             self.n_queries += 1
@@ -181,7 +189,7 @@ class Active(Learner):
 
         # If Gaussian output
         # TODO: check generality for other GPs (e.g. with full covariance)
-        if isinstance(output, MultivariateNormal):
+        if isinstance(output, DistributionLike):
             assert isinstance(output.variance, TensorLike)
             assert output.variance.ndim == 2
             assert output.variance.shape[1] == self.out_dim
@@ -257,7 +265,11 @@ class Active(Learner):
     @abstractmethod
     def query(
         self, x: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
+    ) -> tuple[
+        TensorLike | None,
+        TensorLike | DistributionLike,
+        dict[str, float],
+    ]:
         """
         Abstract method to query new samples.
 
@@ -268,7 +280,7 @@ class Active(Learner):
 
         Returns
         -------
-        tuple[TensorLike or None, TensorLike, TensorLike, Dict[str, list[Any]]]
+        tuple[TensorLike | None, TensorLike | DistributionLike, dict[str, float]]
             A tuple containing:
             - The queried samples (or None if no query is made),
             - The predicted outputs,

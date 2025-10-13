@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from autoemulate.data.utils import set_random_seed
 
-from ..core.types import GaussianLike, TensorLike
+from ..core.types import DistributionLike, TensorLike
 from .base import Active
 
 
@@ -26,7 +26,7 @@ class Stream(Active):
     @abstractmethod
     def query(
         self, x: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
+    ) -> tuple[TensorLike | None, TensorLike | DistributionLike, dict[str, float]]:
         """
         Abstract method to query new samples from a stream.
 
@@ -37,7 +37,7 @@ class Stream(Active):
 
         Returns
         -------
-        Tuple[torch.Tensor or None, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]
+        tuple[TensorLike | None, TensorLike | DistributionLike, dict[str, float]]
             A tuple containing:
             - The queried samples (or None if no query is made),
             - The predicted outputs,
@@ -64,9 +64,7 @@ class Stream(Active):
             )
         ):
             self.fit(xi.reshape(1, -1))
-            pb.set_postfix(
-                ordered_dict={key: val[-1] for key, val in self.metrics.items()}
-            )
+            pb.set_postfix(ordered_dict={k: v[-1] for k, v in self.metrics.items()})
 
     def fit_batches(self, x: torch.Tensor, batch_size: int):
         """
@@ -114,7 +112,11 @@ class Random(Stream):
         self,
         x: TensorLike | None = None,
         random_seed: int | None = None,
-    ) -> tuple[torch.Tensor | None, TensorLike | GaussianLike, dict[str, float]]:
+    ) -> tuple[
+        torch.Tensor | None,
+        TensorLike | DistributionLike,
+        dict[str, float],
+    ]:
         """
         Query new samples randomly based on a fixed probability.
 
@@ -125,7 +127,7 @@ class Random(Stream):
 
         Returns
         -------
-        Tuple[torch.Tensor or None, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]
+        tuple[TensorLike | None, TensorLike | DistributionLike, dict[str, float]]
             A tuple containing:
             - The queried samples (or None if the random condition is not met),
             - The predicted outputs,
@@ -135,8 +137,7 @@ class Random(Stream):
         assert isinstance(x, TensorLike)
         # TODO: move handling to check method in base class
         output = self.emulator.predict(x)
-        assert isinstance(output, TensorLike | GaussianLike)
-        # assert isinstance(output, TensorLike | DistributionLike)
+        assert isinstance(output, TensorLike | DistributionLike)
         if random_seed is not None:
             set_random_seed(seed=random_seed)
         x = x if np.random.rand() < self.p_query else None
@@ -199,7 +200,7 @@ class Threshold(Stream):
         self, x: TensorLike | None = None
     ) -> tuple[
         torch.Tensor | None,
-        torch.Tensor | GaussianLike,
+        torch.Tensor | DistributionLike,
         dict[str, float],
     ]:
         """
@@ -212,7 +213,7 @@ class Threshold(Stream):
 
         Returns
         -------
-        Tuple[torch.Tensor or None, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]
+        tuple[TensorLike | None, TensorLike | DistributionLike, dict[str, float]]
             A tuple containing:
             - The queried samples (or None if the score does not exceed the threshold),
             - The predicted outputs,
@@ -222,7 +223,7 @@ class Threshold(Stream):
         # TODO: move handling to check method in base class
         assert isinstance(x, torch.Tensor)
         output = self.emulator.predict(x)
-        assert isinstance(output, GaussianLike)
+        assert isinstance(output, DistributionLike)
         assert isinstance(output.variance, torch.Tensor)
         score = self.score(x, output.mean, output.variance)
         x = x if score > self.threshold else None
@@ -457,7 +458,11 @@ class Adaptive(Threshold):
 
     def query(
         self, x: TensorLike | None = None
-    ) -> tuple[TensorLike | None, TensorLike | GaussianLike, dict[str, float]]:
+    ) -> tuple[
+        TensorLike | None,
+        TensorLike | DistributionLike,
+        dict[str, float],
+    ]:
         """
         Query new samples based on the adaptive threshold.
 
@@ -471,7 +476,7 @@ class Adaptive(Threshold):
 
         Returns
         -------
-        Tuple[torch.Tensor or None, torch.Tensor, torch.Tensor, Dict[str, List[Any]]]
+        tuple[TensorLike | None, TensorLike | DistributionLike, dict[str, float]]
             A tuple containing:
             - The queried samples,
             - The predicted outputs,
