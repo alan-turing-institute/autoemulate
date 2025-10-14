@@ -336,6 +336,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional dictionary of parameters for TransformedEmulator. These are
             already contained in a Result object, so only needed if a
             TransformedEmulator instance with non-default params is provided.
+            Defaults to None.
         calibration_params: list[str] | None
             Optional subset of parameters to calibrate. These have to correspond to the
             parameters that the emulator was trained on. If None, calibrate all
