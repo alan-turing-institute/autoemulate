@@ -316,6 +316,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         result: Result | None
             A Result object containing the pre-trained emulator and its hyperparameters.
             If not provided, an Emulator object must be provided instead.
+            Defaults to None.
         threshold: float
             Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
