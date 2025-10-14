@@ -263,13 +263,17 @@ class Distance(Input):
         ----------
         x: torch.Tensor
             Input samples.
+        y: torch.Tensor
+            Predicted outputs (not used).
+        Sigma: torch.Tensor
+            Covariance estimates (not used).
 
         Returns
         -------
         float
             The average minimum distance.
         """
-        _, _, _ = x, y, Sigma  # Unused variables
+        _, _ = y, Sigma  # Unused variables
         distances = torch.cdist(x, self.x_train)
         min_dists, _ = distances.min(dim=1)
         return min_dists.mean()
@@ -307,11 +311,11 @@ class A_Optimal(Output):
         Parameters
         ----------
         x: torch.Tensor
-            Input samples.
+            Input samples (not used).
         y: torch.Tensor
             Predicted outputs (not used).
         Sigma: torch.Tensor
-            Covariance estimates (not used).
+            Covariance estimates.
 
         Returns
         -------
@@ -343,9 +347,9 @@ class D_Optimal(Output):
         Parameters
         ----------
         x: torch.Tensor
-            Input samples.
+            Input samples (not used).
         y: torch.Tensor
-            Predicted outputs.
+            Predicted outputs (not used).
         Sigma: torch.Tensor
             Covariance estimates.
 
@@ -379,9 +383,9 @@ class E_Optimal(Output):
         Parameters
         ----------
         x: torch.Tensor
-            Input samples.
+            Input samples (not used).
         y: torch.Tensor
-            Predicted outputs.
+            Predicted outputs (not used).
         Sigma: torch.Tensor
             Covariance estimates.
 
