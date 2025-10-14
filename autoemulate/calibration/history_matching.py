@@ -312,7 +312,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             just the observed value.
         emulator: Emulator | None
             An Emulator object containing the pre-trained emulator. If not provided, a
-            Result object must be provided instead.
+            Result object must be provided instead. Defaults to None.
         result: Result | None
             A Result object containing the pre-trained emulator and its hyperparameters.
             If not provided, an Emulator object must be provided instead.
