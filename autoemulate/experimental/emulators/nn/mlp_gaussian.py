@@ -9,7 +9,7 @@ from autoemulate.transforms.utils import make_positive_definite
 from torch import nn
 
 
-class GaussianMLP(MLP, GaussianEmulator):
+class GaussianMLP(GaussianEmulator, MLP):
     """Multi-Layer Perceptron (MLP) emulator with Gaussian outputs."""
 
     def __init__(
@@ -72,7 +72,6 @@ class GaussianMLP(MLP, GaussianEmulator):
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore  # noqa: PGH003
         self.scheduler_setup(scheduler_kwargs)
         self.to(device)
-
 
     def forward(self, x):
         """Forward pass for the Gaussian MLP."""
