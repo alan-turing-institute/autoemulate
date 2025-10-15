@@ -73,11 +73,6 @@ class GaussianMLP(MLP, GaussianEmulator):
         self.scheduler_setup(scheduler_kwargs)
         self.to(device)
 
-    def _predict(self, x, with_grad=False):
-        """Predict using the MLP model."""
-        with torch.set_grad_enabled(with_grad):
-            self.nn.eval()
-            return self(x)
 
     def forward(self, x):
         """Forward pass for the Gaussian MLP."""
