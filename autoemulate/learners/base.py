@@ -194,9 +194,16 @@ class Active(Learner):
         self.metrics["n_queries"].append(self.n_queries)
         self.logger.info("Metrics updated: MSE=%s, R2=%s", mse_val, r2_val)
 
-        # If Gaussian output
+        # If distribution output
         # TODO: check generality for other GPs (e.g. with full covariance)
         if isinstance(output, DistributionLike):
+            if not hasattr(output, "variance"):
+                msg = (
+                    f"Output of type {type(output)} does not have a 'variance'"
+                    "property. This may occur if output is a PyTorch "
+                    "TransformedDistribution."
+                )
+                raise AttributeError(msg)
             assert isinstance(output.variance, TensorLike)
             assert output.variance.ndim == 2
             assert output.variance.shape[1] == self.out_dim
