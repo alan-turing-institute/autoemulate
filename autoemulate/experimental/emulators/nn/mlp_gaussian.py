@@ -101,7 +101,7 @@ class GaussianMLP(MLP, GaussianEmulator):
 
         covariance_matrix = scale_tril @ scale_tril.transpose(-1, -2)
 
-        # TODO: for large covariance martrices, numerical instability remains
+        # TODO: for large covariance matrices, numerical instability remains
         return GaussianLike(mean, make_positive_definite(covariance_matrix))
 
     def loss_func(self, y_pred, y_true):
