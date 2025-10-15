@@ -103,6 +103,16 @@ class GaussianMLP(GaussianEmulator, MLP):
         # TODO: for large covariance matrices, numerical instability remains
         return GaussianLike(mean, make_positive_definite(covariance_matrix))
 
+    def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike:
+        """Predict method that returns GaussianLike distribution.
+
+        The method provides the implementation from PyTorchBackend base class but is
+        required to be implemented here to satisfy the type signature.
+        """
+        self.eval()
+        with torch.set_grad_enabled(with_grad):
+            return self(x)
+
     def loss_func(self, y_pred, y_true):
         """Negative log likelihood loss function."""
         return -y_pred.log_prob(y_true).mean()
