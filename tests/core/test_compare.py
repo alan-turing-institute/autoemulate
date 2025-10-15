@@ -102,6 +102,15 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
     assert "likelihood_cls" in gp_params
 
 
+def test_ae_no_tuning_fix_params(sample_data_for_ae_compare):
+    """Test that model_params are correctly passed when tuning is disabled."""
+    x, y = sample_data_for_ae_compare
+    ae = AutoEmulate(
+        x, y, models=["GaussianProcessRBF"], model_params={"posterior_predictive": True}
+    )
+    assert ae.best_result().model.model.posterior_predictive is True  # pyright: ignore[reportAttributeAccessIssue]
+
+
 def test_get_model_subset():
     """Test getting a subset of models based on pytroch and probabilistic flags."""
 
