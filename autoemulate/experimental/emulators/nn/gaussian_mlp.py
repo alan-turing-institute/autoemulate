@@ -25,9 +25,10 @@ class GaussianMLP(GaussianEmulator, MLP):
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
         scale: float = 1.0,
+        full_covariance: bool = False,
         bias_init: str = "default",
         dropout_prob: float | None = None,
-        lr: float = 1e-2,
+        lr: float = 1e-1,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
         **scheduler_kwargs,
@@ -42,8 +43,12 @@ class GaussianMLP(GaussianEmulator, MLP):
         x, y = self._convert_to_tensors(x, y)
 
         # Construct the MLP layers
-        # Total params required for last layer: mean + tril covariance
-        num_params = y.shape[1] + (y.shape[1] * (y.shape[1] + 1)) // 2
+        # Total params required for last layer
+        num_params = (
+            y.shape[1] + (y.shape[1] * (y.shape[1] + 1)) // 2  # mean + tril covariance
+            if full_covariance
+            else 2 * y.shape[1]  # mean + variance (diag covariance)
+        )
         layer_dims = (
             [x.shape[1], *layer_dims]
             if layer_dims
@@ -69,6 +74,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         self.lr = lr
         self.num_tasks = y.shape[1]
         self.batch_size = batch_size
+        self.full_covariance = full_covariance
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore  # noqa: PGH003
         self.scheduler_setup(scheduler_kwargs)
         self.to(device)
@@ -78,30 +84,40 @@ class GaussianMLP(GaussianEmulator, MLP):
         y = self.nn(x)
         mean = y[..., : self.num_tasks]
 
-        # Use Cholesky decomposition to guarantee PSD covariance matrix
-        num_chol_params = (self.num_tasks * (self.num_tasks + 1)) // 2
-        chol_params = y[..., self.num_tasks : self.num_tasks + num_chol_params]
+        if self.full_covariance:
+            # Use Cholesky decomposition to guarantee PSD covariance matrix
+            num_chol_params = (self.num_tasks * (self.num_tasks + 1)) // 2
+            chol_params = y[..., self.num_tasks : self.num_tasks + num_chol_params]
 
-        # Assign params to matrix
-        scale_tril = torch.zeros(
-            *y.shape[:-1], self.num_tasks, self.num_tasks, device=y.device
+            # Assign params to matrix
+            scale_tril = torch.zeros(
+                *y.shape[:-1], self.num_tasks, self.num_tasks, device=y.device
+            )
+            tril_indices = torch.tril_indices(
+                self.num_tasks, self.num_tasks, device=y.device
+            )
+            scale_tril[..., tril_indices[0], tril_indices[1]] = chol_params
+
+            # Ensure positive variance
+            diag_idxs = torch.arange(self.num_tasks)
+            diag = (
+                torch.nn.functional.softplus(scale_tril[..., diag_idxs, diag_idxs])
+                + 1e-6
+            )
+            scale_tril[..., diag_idxs, diag_idxs] = diag
+
+            covariance_matrix = scale_tril @ scale_tril.transpose(-1, -2)
+
+            # TODO: for large covariance matrices, numerical instability remains
+            return GaussianLike(mean, make_positive_definite(covariance_matrix))
+
+        # Diagonal covariance case
+        return GaussianLike(
+            mean,
+            torch.diag_embed(
+                torch.nn.functional.softplus(y[..., self.num_tasks :]) + 1e-6
+            ),
         )
-        tril_indices = torch.tril_indices(
-            self.num_tasks, self.num_tasks, device=y.device
-        )
-        scale_tril[..., tril_indices[0], tril_indices[1]] = chol_params
-
-        # Ensure positive variance
-        diag_idxs = torch.arange(self.num_tasks)
-        diag = (
-            torch.nn.functional.softplus(scale_tril[..., diag_idxs, diag_idxs]) + 1e-6
-        )
-        scale_tril[..., diag_idxs, diag_idxs] = diag
-
-        covariance_matrix = scale_tril @ scale_tril.transpose(-1, -2)
-
-        # TODO: for large covariance matrices, numerical instability remains
-        return GaussianLike(mean, make_positive_definite(covariance_matrix))
 
     def _predict(self, x: TensorLike, with_grad: bool) -> GaussianLike:
         """Predict method that returns GaussianLike distribution.
