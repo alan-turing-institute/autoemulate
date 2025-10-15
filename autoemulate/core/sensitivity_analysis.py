@@ -174,9 +174,9 @@ class SensitivityAnalysis(ConversionMixin):
 
         Returns
         -------
-        NumpyLike | tuple[NumpyLike, NumpyLike | None]
+        NumpyLike | DistributionLike
             If return_variance is False: Array of emulator predictions.
-            If return_variance is True: Tuple of (predictions, variances).
+            If return_variance is True: Emulator predictive distribution.
             Variances are None if emulator doesn't support UQ.
         """
         param_tensor = self._convert_to_tensors(param_samples)
