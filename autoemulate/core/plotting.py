@@ -524,24 +524,26 @@ def plot_calibration_from_distributions(
     levels, empirical = coverage_from_distributions(
         y_pred, y_true, levels=levels, n_samples=n_samples, joint=joint
     )
+    print(empirical.shape)
 
     if figsize is None:
         figsize = (6, 6)
     fig, ax = plt.subplots(figsize=figsize)
 
-    if empirical.ndim == 1:
-        ax.plot(levels, empirical, marker="o", label="empirical")
+    if empirical.shape[1] == 1:
+        ax.plot(empirical, levels, marker="o", label="empirical")
     else:
         # multiple outputs: plot each dimension
         for i in range(empirical.shape[1]):
-            ax.plot(levels, empirical[:, i], marker="o", label=f"dim {i}")
+            ax.plot(empirical[:, i], levels, marker="o", label=f"dim {i}")
 
     # diagonal reference
     ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideal")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel("Nominal coverage")
-    ax.set_ylabel("Empirical coverage")
+    ax.set_xlabel("Predicted probability")
+    ax.set_ylabel("Observed proportion")
+
     if title:
         ax.set_title(title)
     ax.grid(alpha=0.3)
