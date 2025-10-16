@@ -11,7 +11,7 @@ resolution-markers = [
 ]
 
 [manifest]
-overrides = [{ name = "triton", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'", git = "https://github.com/openai/triton.git?rev=main" }]
+overrides = [{ name = "triton", git = "https://github.com/openai/triton.git?rev=main" }]
 
 [[package]]
 name = "accessible-pygments"
@@ -3581,7 +3581,7 @@ dependencies = [
     { name = "nvidia-nvtx-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "setuptools", marker = "python_full_version >= '3.12'" },
     { name = "sympy" },
-    { name = "triton", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "triton" },
     { name = "typing-extensions" },
 ]
 wheels = [
@@ -3607,7 +3607,7 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "torch" },
-    { name = "triton", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "triton" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e9/02/2bcd5eb625dec116191ec40f66a04070b65d5251cae4865dc27af0d1fa24/torch_harmonics-0.6.5.tar.gz", hash = "sha256:e467d04bc58eb2dc800eb21870025407d38ebcbf8df4de479bd5b4915daf987e", size = 47767, upload-time = "2024-01-30T14:09:20.23Z" }
 wheels = [
