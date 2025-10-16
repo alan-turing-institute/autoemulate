@@ -52,8 +52,8 @@ data:
 
 # Trainer configuration
 trainer:
-  epochs: 100
-  device: "mps"           # Use "cuda" for NVIDIA GPU, "mps" for Apple Silicon, "cpu" for CPU
+  epochs: 20
+  device: "cuda"           # Use "cuda" for NVIDIA GPU, "mps" for Apple Silicon, "cpu" for CPU
   
   optimizer_type: "adam"
   optimizer_params:
@@ -98,7 +98,7 @@ paths:
   output_dir: "./outputs/advection_diffusion_generated"
   model_save_path: "./outputs/advection_diffusion_generated/artifacts/final_model.pt"
   # Optionally save generated data for reuse
-  data_save_path: "./data/advection_diffusion_generated"
+  data_save_path: "./outputs/data/advection_diffusion_generated"
   save_format: "h5"
 
 # Logging
