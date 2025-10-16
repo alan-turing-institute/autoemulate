@@ -440,7 +440,7 @@ def coverage_from_distributions(
         used. Defaults to None.
     n_samples: int
         Number of Monte-Carlo samples to draw from the predictive
-        distribution.
+        distribution to compute empirical intervals.
     joint: bool
         If True and the predictive outputs are multivariate, compute joint
         coverage (i.e., the true vector must lie inside the interval for all
@@ -508,7 +508,7 @@ def plot_calibration_from_distributions(
         used.
     n_samples: int
         Number of Monte-Carlo samples to draw from the predictive
-        distribution when analytic quantiles are not available.
+        distribution to compute empirical intervals.
     joint: bool
         If True and the predictive outputs are multivariate, compute joint
         coverage (i.e., the true vector must lie inside the interval for all
@@ -542,7 +542,7 @@ def plot_calibration_from_distributions(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_xlabel("Probability interval")
-    ax.set_ylabel("Proportion of data inside interval")
+    ax.set_ylabel("Proportion of data inside the interval")
 
     if title:
         ax.set_title(title)

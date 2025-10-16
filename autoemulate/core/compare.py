@@ -874,7 +874,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             used.
         n_samples: int
             Number of Monte-Carlo samples to draw from the predictive
-            distribution when analytic quantiles are not available.
+            distribution to compute empirical intervals.
         joint: bool
             If True and the predictive outputs are multivariate, compute joint
             coverage (i.e., the true vector must lie inside the interval for all
@@ -890,8 +890,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         figsize: tuple[int, int] | None
             The size of the figure to create. If None, a default size is used.
             Defaults to None.
-        joint:
-        **kwargs: passed to ``plot_calibration_from_distributions``
         """
         if x_test is None or y_test is None:
             if not (x_test is None and y_test is None):
