@@ -117,7 +117,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             it will show a progress bar during model comparison. It will set the
             logging level to "error" to avoid cluttering the output
             with debug/info logs.
-        tuning_metric: str | MetricConfig
+        tuning_metric: str | Metric
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
         evaluation_metrics: list[str | MetricConfig] | None
@@ -483,7 +483,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             )
                             self.logger.debug(
                                 'Cross-validation for model "%s" '
-                                'completed with test metrics: %s',
+                                "completed with test metrics: %s",
                                 model_cls.__name__,
                                 test_metrics_str,
                             )
