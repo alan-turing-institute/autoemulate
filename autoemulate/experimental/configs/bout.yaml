@@ -21,7 +21,7 @@ model_params:
 # Data configuration - File-based loading
 # Setting data_path without well_dataset_name triggers FILE source type
 data:
-  data_path: "./exploratory/data/bout"  # Path to BOUT++ data directory with train/valid/test subdirs
+  data_path: "./autoemulate/experimental/exploratory/data/bout"  # Path to BOUT++ data directory with train/valid/test subdirs
   # Structure expected:
   #   ./data/bout/train/data.pt
   #   ./data/bout/valid/data.pt
@@ -39,8 +39,7 @@ data:
 # Trainer configuration
 trainer:
   epochs: 100
-  # device: "cuda"          
-  device: "mps"          # Use "cuda" for GPU, "mps" for Apple Silicon, "cpu" for CPU
+  device: "cuda"
   
   optimizer_type: "adam"
   optimizer_params:
