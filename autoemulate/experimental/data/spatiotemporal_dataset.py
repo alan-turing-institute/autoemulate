@@ -321,7 +321,7 @@ class AutoEmulateDataModule(WellDataModule):
             dtype=dtype,
             verbose=self.verbose,
         )
-        self.valid_dataset = dataset_cls(
+        self.val_dataset = dataset_cls(
             data_path=str(valid_path) if valid_path is not None else None,
             data=data["valid"] if data is not None else None,
             n_steps_input=n_steps_input,
@@ -378,7 +378,7 @@ class AutoEmulateDataModule(WellDataModule):
     def val_dataloader(self) -> DataLoader:
         """DataLoader for standard validation (not full trajectory rollouts)."""
         return DataLoader(
-            self.valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=1
+            self.val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=1
         )
 
     def rollout_val_dataloader(self) -> DataLoader:

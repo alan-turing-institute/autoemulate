@@ -22,7 +22,7 @@ class ReactionDiffusion(Simulator):
         return_timeseries: bool = False,
         log_level: str = "progress_bar",
         n: int = 32,
-        L: int = 20,
+        L: float = 20.0,
         T: float = 10.0,
         dt: float = 0.1,
     ):
