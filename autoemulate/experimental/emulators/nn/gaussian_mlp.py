@@ -28,7 +28,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         full_covariance: bool = False,
         bias_init: str = "default",
         dropout_prob: float | None = None,
-        lr: float = 1e-1,
+        lr: float = 5e-3,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
         **scheduler_kwargs,
@@ -52,7 +52,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         layer_dims = (
             [x.shape[1], *layer_dims]
             if layer_dims
-            else [x.shape[1], 4 * num_params, 2 * num_params]
+            else [x.shape[1], 32 * num_params, 16 * num_params]
         )
         layers = []
         for idx, dim in enumerate(layer_dims[1:]):
