@@ -139,7 +139,7 @@ class EnsembleMLP(Ensemble):
         standardize_y: bool = True,
         n_emulators: int = 4,
         device: DeviceLike | None = None,
-        mlp_kwargs: dict | None = None,
+        **mlp_kwargs,
     ):
         """
         Initialize an ensemble of MLPs.
