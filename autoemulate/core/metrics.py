@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from functools import partial
 
 import torchmetrics
@@ -36,7 +37,7 @@ class TorchMetrics(Metric):
 
     Parameters
     ----------
-    metric : type[torchmetrics.Metric] | partial[torchmetrics.Metric]
+    metric : MetricLike
         The torchmetrics metric class or partial.
     name : str
         Display name for the metric. If None, uses the class name of the metric.
@@ -46,7 +47,7 @@ class TorchMetrics(Metric):
 
     def __init__(
         self,
-        metric: type[torchmetrics.Metric] | partial[torchmetrics.Metric],
+        metric: MetricLike,
         name: str,
         maximize: bool,
     ):
@@ -130,18 +131,18 @@ def get_metric_config(
 
 
 def get_metric_configs(
-    metrics: (list[str | TorchMetrics]),
+    metrics: Sequence[str | TorchMetrics],
 ) -> list[TorchMetrics]:
     """Convert a list of metric specifications to MetricConfig objects.
 
     Parameters
     ----------
-    metrics : list | None
-        List of metric specifications. If None, returns default evaluation metrics.
+    metrics : Sequence[str | TorchMetrics]
+        Sequence of metric specifications.
 
     Returns
     -------
-    list[Metric]
+    list[TorchMetrics]
         List of metric configurations.
     """
     result_metrics = []

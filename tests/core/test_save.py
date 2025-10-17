@@ -128,14 +128,14 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         model_name="dummy_model",
         model=em,
         params=params,
-        r2_test=0.9,
-        r2_test_std=0.01,
-        r2_train=0.95,
-        r2_train_std=0.015,
-        rmse_test=0.1,
-        rmse_train=0.05,
-        rmse_test_std=0.02,
-        rmse_train_std=0.025,
+        test_metrics={
+            "r2": (0.9, 0.01),
+            "rmse": (0.1, 0.02),
+        },
+        train_metrics={
+            "r2": (0.95, 0.015),
+            "rmse": (0.05, 0.025),
+        },
     )
     with TemporaryDirectory() as temp_dir:
         original_wd = os.getcwd()
@@ -167,8 +167,10 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
                     assert str(loaded_v) in str(v)
                 else:
                     assert loaded_v == v
-            assert loaded.r2_test == result.r2_test
-            assert loaded.rmse_test == result.rmse_test
+            assert loaded.test_metrics["r2"] == result.test_metrics["r2"]
+            assert loaded.test_metrics["rmse"] == result.test_metrics["rmse"]
+            assert loaded.train_metrics["r2"] == result.train_metrics["r2"]
+            assert loaded.train_metrics["rmse"] == result.train_metrics["rmse"]
 
         finally:
             os.chdir(original_wd)

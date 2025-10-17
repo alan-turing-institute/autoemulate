@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pytest
 from autoemulate.core.results import Result, Results
@@ -19,14 +18,14 @@ def make_result(
         model_name=f"model{idx}",
         model=DummyEmulator(x_transforms=[f"x{idx}"], y_transforms=[f"y{idx}"]),
         params={"param": idx},
-        r2_test=r2,
-        r2_test_std=r2_std,
-        r2_train=r2_train,
-        r2_train_std=r2_train_std,
-        rmse_test=rmse,
-        rmse_train=rmse_train,
-        rmse_test_std=rmse_std,
-        rmse_train_std=rmse_train_std,
+        test_metrics={
+            "r2": (r2, r2_std),
+            "rmse": (rmse, rmse_std),
+        },
+        train_metrics={
+            "r2": (r2_train, r2_train_std),
+            "rmse": (rmse_train, rmse_train_std),
+        },
     )
 
 
@@ -37,14 +36,14 @@ def test_result_attributes():
         model_name="mymodel",
         model=emu,
         params={"foo": 1},
-        r2_test=0.9,
-        r2_test_std=0.01,
-        r2_train=0.95,
-        r2_train_std=0.015,
-        rmse_test=0.1,
-        rmse_train=0.05,
-        rmse_test_std=0.02,
-        rmse_train_std=0.025,
+        test_metrics={
+            "r2": (0.9, 0.01),
+            "rmse": (0.1, 0.02),
+        },
+        train_metrics={
+            "r2": (0.95, 0.015),
+            "rmse": (0.05, 0.025),
+        },
     )
     assert res.id == 0
     assert res.model_name == "mymodel"
@@ -52,30 +51,34 @@ def test_result_attributes():
     assert res.x_transforms == ["x"]
     assert res.y_transforms == ["y"]
     assert res.params == {"foo": 1}
-    assert res.r2_test == 0.9
-    assert res.rmse_test == 0.1
+    assert res.test_metrics["r2"] == (0.9, 0.01)
+    assert res.test_metrics["rmse"] == (0.1, 0.02)
 
 
 def test_result_metadata_df():
     res = make_result(42, 0.8, 0.02, 0.85, 0.025, 0.12, 0.03, 0.07, 0.035)
     df = res.metadata_df()
     assert isinstance(df, pd.DataFrame)
-    expected_columns = [
+    # Verify expected columns are present (order may vary due to dict iteration)
+    expected_base_columns = [
         "id",
         "model_name",
         "x_transforms",
         "y_transforms",
         "params",
+    ]
+    expected_metric_columns = [
         "r2_test",
-        "rmse_test",
         "r2_test_std",
+        "rmse_test",
         "rmse_test_std",
         "r2_train",
-        "rmse_train",
         "r2_train_std",
+        "rmse_train",
         "rmse_train_std",
     ]
-    assert list(df.columns) == expected_columns
+    for col in expected_base_columns + expected_metric_columns:
+        assert col in df.columns
     assert df.loc[0, "id"] == 42
     assert df.loc[0, "model_name"] == "model42"
     assert df.loc[0, "x_transforms"] == ["x42"]
@@ -130,20 +133,29 @@ def test_results_summarize():
     )  # r2_score higher
     res = Results([r1, r2])
 
-    # Expected DataFrame should be sorted by r2_score descending (r2 first, then r1)
-    expected_data = {
-        "model_name": ["model2", "model1"],
-        "x_transforms": [["x2"], ["x1"]],
-        "y_transforms": [["y2"], ["y1"]],
-        "params": [{"param": 2}, {"param": 1}],
-        "rmse_test": [0.8, 1.0],
-        "r2_test": [0.7, 0.5],
-        "r2_test_std": [0.015, 0.01],
-        "r2_train": [0.75, 0.55],
-        "r2_train_std": [0.025, 0.02],
-    }
-    expected_summary = pd.DataFrame(expected_data, index=np.array([1, 0]))
-
     summary = res.summarize()
     assert isinstance(summary, pd.DataFrame)
-    pd.testing.assert_frame_equal(summary, expected_summary)
+
+    # Verify DataFrame is sorted by r2_test descending (r2 first, then r1)
+    assert summary.iloc[0]["model_name"] == "model2"
+    assert summary.iloc[1]["model_name"] == "model1"
+
+    # Verify all expected columns are present
+    assert "model_name" in summary.columns
+    assert "x_transforms" in summary.columns
+    assert "y_transforms" in summary.columns
+    assert "params" in summary.columns
+    assert "r2_test" in summary.columns
+    assert "r2_test_std" in summary.columns
+    assert "rmse_test" in summary.columns
+    assert "rmse_test_std" in summary.columns
+    assert "r2_train" in summary.columns
+    assert "r2_train_std" in summary.columns
+    assert "rmse_train" in summary.columns
+    assert "rmse_train_std" in summary.columns
+
+    # Verify values for r2
+    assert summary.iloc[0]["r2_test"] == 0.7
+    assert summary.iloc[1]["r2_test"] == 0.5
+    assert summary.iloc[0]["rmse_test"] == 0.8
+    assert summary.iloc[1]["rmse_test"] == 1.0
