@@ -497,6 +497,9 @@ def plot_calibration_from_distributions(
 
     This draws empirical coverage (y-axis) against nominal coverage (x-axis).
 
+    When points lie above or below the diagonal, this indicates that uncertainty
+    is respectively being  overestimated or underestimated.
+
     Parameters
     ----------
     y_pred: DistributionLike
