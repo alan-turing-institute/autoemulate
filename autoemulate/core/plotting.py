@@ -457,7 +457,7 @@ def coverage_from_distributions(
         output_dim==1.
     """
     if levels is None:
-        levels = np.linspace(0.01, 0.99, 49)
+        levels = np.linspace(0.0, 1.0, 51)
     levels = np.asarray(levels)
 
     samples = y_pred.sample((n_samples,))
