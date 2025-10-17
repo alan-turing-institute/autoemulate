@@ -39,7 +39,7 @@ data:
   # No data_path - triggers GENERATED source type
   
   # Data generation
-  n_train_samples: 2000
+  n_train_samples: 400
   n_valid_samples: 20
   n_test_samples: 20
   random_seed: 42
