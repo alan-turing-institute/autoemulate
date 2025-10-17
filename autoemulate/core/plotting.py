@@ -5,7 +5,7 @@ from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from autoemulate.core.types import NumpyLike, TensorLike
+from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
 
@@ -236,7 +236,6 @@ def mean_and_var_surface(
         The predicted variance on the grid.
     grid: list[TensorLike]
         The grid of parameter values used for predictions.
-
     """
     # Determine which parameters to vary and which to fix
     grid_params = {}
@@ -412,8 +411,162 @@ def create_and_plot_slice(
         param_pair_names,
         vmin,
         vmax,
-        fixed_params_info=f"{', '.join(fixed_params)} at {quantile:.1f} quantile"
-        if len(fixed_params) > 0
-        else "None",
+        fixed_params_info=(
+            f"{', '.join(fixed_params)} at {quantile:.1f} quantile"
+            if len(fixed_params) > 0
+            else "None"
+        ),
     )
+    return fig, ax
+
+
+def coverage_from_distributions(
+    y_pred: DistributionLike,
+    y_true: TensorLike,
+    levels: list[float] | NumpyLike | TensorLike | None = None,
+    n_samples: int = 2000,
+    joint: bool = False,
+) -> tuple[NumpyLike, NumpyLike]:
+    """Compute empirical coverage for a set of nominal confidence levels.
+
+    Parameters
+    ----------
+    y_pred: DistributionLike
+        The emulator predicted distribution.
+    y_true: TensorLike
+        The true values.
+    levels: array-like, optional
+        Nominal coverage levels (between 0 and 1). If None, a default grid is
+        used. Defaults to None.
+    n_samples: int
+        Number of Monte-Carlo samples to draw from the predictive
+        distribution to compute empirical intervals if analytical quantiles
+        are not available.
+    joint: bool
+        If True and the predictive outputs are multivariate, compute joint
+        coverage (i.e., the true vector must lie inside the interval for all
+        dimensions). If False (default), compute marginal coverage per output
+        dimension and return the mean across data points.
+
+    Returns
+    -------
+    levels: np.ndarray
+        Nominal coverage levels.
+    empirical: np.ndarray
+        Empirical coverages. Shape is (len(levels), output_dim) when
+        `joint=False` and output_dim>1, or (len(levels),) when joint=True or
+        output_dim==1.
+    """
+    if levels is None:
+        levels = np.linspace(0.0, 1.0, 51)
+    levels = np.asarray(levels)
+
+    # if dist.icdf not available, compute empirical intervals using sample quantiles
+    samples = None
+    y_dist = None
+    if isinstance(y_pred, GaussianLike):
+        y_dist = y_pred
+    elif isinstance(y_pred, torch.distributions.Independent) and isinstance(
+        y_pred.base_dist, GaussianLike
+    ):
+        y_dist = y_pred.base_dist
+    else:
+        samples = y_pred.sample((n_samples,))
+
+    empirical_list = []
+    for p in levels:
+        lower_q = (1.0 - p) / 2.0
+        upper_q = 1.0 - lower_q
+
+        if y_dist is not None:
+            lower = y_dist.icdf(lower_q)
+            upper = y_dist.icdf(upper_q)
+        else:
+            assert samples is not None
+            lower = torch.quantile(samples, float(lower_q), dim=0)
+            upper = torch.quantile(samples, float(upper_q), dim=0)
+
+        inside = (y_true >= lower) & (y_true <= upper)
+        if joint:
+            inside_all = inside.all(dim=-1)
+            empirical = inside_all.float().mean().item()
+        else:
+            # marginal per-dim coverage
+            empirical = inside.float().mean(dim=0).cpu().numpy()
+        empirical_list.append(empirical)
+
+    empirical_arr = np.asarray(empirical_list)
+
+    return levels, empirical_arr
+
+
+def plot_calibration_from_distributions(
+    y_pred: DistributionLike,
+    y_true: TensorLike,
+    levels: np.ndarray | None = None,
+    n_samples: int = 2000,
+    joint: bool = False,
+    title: str | None = None,
+    legend: bool = True,
+    figsize: tuple[int, int] | None = None,
+):
+    """Plot calibration curve(s) given predictive distributions and true values.
+
+    This draws empirical coverage (y-axis) against nominal coverage (x-axis).
+
+    When points lie above or below the diagonal, this indicates that uncertainty
+    is respectively being  overestimated or underestimated.
+
+    Parameters
+    ----------
+    y_pred: DistributionLike
+        The emulator predicted distribution.
+    y_true: TensorLike
+        The true values.
+    levels: array-like, optional
+        Nominal coverage levels (between 0 and 1). If None, a default grid is
+        used.
+    n_samples: int
+        Number of Monte-Carlo samples to draw from the predictive
+        distribution to compute empirical intervals.
+    joint: bool
+        If True and the predictive outputs are multivariate, compute joint
+        coverage (i.e., the true vector must lie inside the interval for all
+        dimensions). If False (default), compute marginal coverage per output
+        dimension and return the mean across data points.
+    title: str | None
+        An optional title for the plot. Defaults to None (no title).
+    legend: bool
+        Whether to display a legend. Defaults to True.
+    figsize: tuple[int, int] | None
+        The size of the figure to create. If None, a default size is used.
+    """
+    levels, empirical = coverage_from_distributions(
+        y_pred, y_true, levels=levels, n_samples=n_samples, joint=joint
+    )
+
+    if figsize is None:
+        figsize = (6, 6)
+    fig, ax = plt.subplots(figsize=figsize)
+
+    if len(empirical.shape) == 1 or empirical.shape[1] == 1:
+        ax.plot(levels, empirical, marker="o", label="empirical")
+    else:
+        # multiple outputs: plot each dimension
+        for i in range(empirical.shape[1]):
+            ax.plot(levels, empirical[:, i], marker="o", label=f"$y_{i}$")
+
+    # diagonal reference
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideal")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("Expected coverage")
+    ax.set_ylabel("Observed coverage")
+
+    if title:
+        ax.set_title(title)
+    ax.grid(alpha=0.3)
+    if legend:
+        ax.legend()
+
     return fig, ax
