@@ -5,13 +5,7 @@ from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from autoemulate.core.types import (
-    DistributionLike,
-    GaussianLike,
-    GaussianProcessLike,
-    NumpyLike,
-    TensorLike,
-)
+from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
 
@@ -474,11 +468,11 @@ def coverage_from_distributions(
         lower_q = (1.0 - p) / 2.0
         upper_q = 1.0 - lower_q
 
-        if isinstance(y_pred, GaussianLike | GaussianProcessLike):
+        if isinstance(y_pred, GaussianLike):
             lower = y_pred.icdf(lower_q)
             upper = y_pred.icdf(upper_q)
         elif isinstance(y_pred, torch.distributions.Independent) and isinstance(
-            y_pred.base_dist, GaussianLike | GaussianProcessLike
+            y_pred.base_dist, GaussianLike
         ):
             lower = y_pred.base_dist.icdf(lower_q)
             upper = y_pred.base_dist.icdf(upper_q)
@@ -549,7 +543,7 @@ def plot_calibration_from_distributions(
         figsize = (6, 6)
     fig, ax = plt.subplots(figsize=figsize)
 
-    if empirical.shape[1] == 1:
+    if len(empirical.shape) == 1 or empirical.shape[1] == 1:
         ax.plot(levels, empirical, marker="o", label="empirical")
     else:
         # multiple outputs: plot each dimension
