@@ -4,9 +4,9 @@ import logging
 import numpy as np
 from sklearn.model_selection import KFold
 from torch.distributions import Transform
-from torchmetrics import R2Score
 
 from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.metrics import TorchMetrics, get_metric_config
 from autoemulate.core.model_selection import cross_validate
 from autoemulate.core.types import (
     DeviceLike,
@@ -46,6 +46,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_iter: int = 10,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        tuning_metric: str | TorchMetrics = "r2",
     ):
         TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter
@@ -58,8 +59,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
-        # Q: should users be able to choose a different validation metric?
-        self.metric = R2Score
+        # Setup tuning metric
+        self.tuning_metric = get_metric_config(tuning_metric)
 
         if random_seed is not None:
             set_random_seed(seed=random_seed)
@@ -128,6 +129,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     transformed_emulator_params=transformed_emulator_params,
                     device=self.device,
                     random_seed=None,
+                    metrics=[self.tuning_metric],
                 )
 
                 # Reset retries following a successful cross_validation call
@@ -135,17 +137,19 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
 
                 # Store the model params and validation scores
                 model_params_tested.append(model_params)
-                val_scores.append(scores["r2"])  # type: ignore  # noqa: PGH003
+                metric_name = self.tuning_metric.name
+                val_scores.append(scores[metric_name])  # type: ignore  # noqa: PGH003
 
                 # Log the tuning iteration results
                 logger.debug(
-                    "tuning model: %s; iteration: %d/%d; mean (std) r2=%.3f (%.3f); "
+                    "tuning model: %s; iteration: %d/%d; mean (std) %s=%.3f (%.3f); "
                     "model_params: %s",
                     model_class.model_name(),
                     len(model_params_tested),
                     self.n_iter,
-                    np.mean(scores["r2"]),
-                    np.std(scores["r2"]),
+                    metric_name,
+                    np.mean(scores[metric_name]),
+                    np.std(scores[metric_name]),
                     str(model_params),
                 )
 

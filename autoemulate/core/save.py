@@ -140,19 +140,31 @@ class ModelSerialiser:
         params = row["params"]
         params = ast.literal_eval(params)
 
+        # Parse test and train metrics dynamically from the CSV columns
+        test_metrics = {}
+        train_metrics = {}
+
+        for col in metadata_df.columns:
+            if col.endswith("_test") and not col.endswith("_test_std"):
+                # Extract metric name (e.g., "r2" from "r2_test")
+                metric_name = col[:-5]  # Remove "_test" suffix
+                mean = row[col]
+                std = row.get(f"{metric_name}_test_std", float("nan"))
+                test_metrics[metric_name] = (mean, std)
+            elif col.endswith("_train") and not col.endswith("_train_std"):
+                # Extract metric name (e.g., "r2" from "r2_train")
+                metric_name = col[:-6]  # Remove "_train" suffix
+                mean = row[col]
+                std = row.get(f"{metric_name}_train_std", float("nan"))
+                train_metrics[metric_name] = (mean, std)
+
         return Result(
             id=row["id"],
             model_name=row["model_name"],
             model=model,
             params=params,
-            r2_test=row["r2_test"],
-            rmse_test=row["rmse_test"],
-            r2_test_std=row["r2_test_std"],
-            rmse_test_std=row["rmse_test_std"],
-            r2_train=row["r2_train"],
-            rmse_train=row["rmse_train"],
-            r2_train_std=row["r2_train_std"],
-            rmse_train_std=row["rmse_train_std"],
+            test_metrics=test_metrics,
+            train_metrics=train_metrics,
         )
 
     def _prepare_path(self, path: str | Path | None, model_name: str):

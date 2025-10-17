@@ -1,7 +1,12 @@
+import logging
+
 import pandas as pd
 
+from autoemulate.core.metrics import AVAILABLE_METRICS
 from autoemulate.core.types import ModelParams
 from autoemulate.emulators.transformed.base import TransformedEmulator
+
+logger = logging.getLogger("autoemulate")
 
 
 class Result:
@@ -13,14 +18,8 @@ class Result:
         model_name: str,
         model: TransformedEmulator,
         params: ModelParams,
-        r2_test: float,
-        rmse_test: float,
-        r2_train: float,
-        rmse_train: float,
-        r2_test_std: float,
-        rmse_test_std: float,
-        r2_train_std: float,
-        rmse_train_std: float,
+        test_metrics: dict[str, tuple[float, float]],
+        train_metrics: dict[str, tuple[float, float]],
     ):
         """Initialize a Result object.
 
@@ -34,22 +33,12 @@ class Result:
             The emulator model used for predictions.
         params: ModelParams
             Parameters used for the model.
-        r2_test: float
-            R2 score on the test set.
-        rmse_test: float
-            Root Mean Squared Error on the test set.
-        r2_train: float
-            R2 score on the training set.
-        rmse_train: float
-            Root Mean Squared Error on the training set.
-        r2_test_std: float
-            Standard deviation of the R2 score on the test set.
-        rmse_test_std: float
-            Standard deviation of the RMSE on the test set.
-        r2_train_std: float
-            Standard deviation of the R2 score on the training set.
-        rmse_train_std: float
-            Standard deviation of the RMSE on the training set.
+        test_metrics: dict[str, tuple[float, float]]
+            Dictionary of metrics on the test set. Each key is a metric name and
+            each value is a tuple of (mean, std).
+        train_metrics: dict[str, tuple[float, float]]
+            Dictionary of metrics on the training set. Each key is a metric name and
+            each value is a tuple of (mean, std).
 
         """
         self.id = id
@@ -58,14 +47,8 @@ class Result:
         self.x_transforms = model.x_transforms
         self.y_transforms = model.y_transforms
         self.params = params
-        self.r2_test = r2_test
-        self.rmse_test = rmse_test
-        self.r2_test_std = r2_test_std
-        self.rmse_test_std = rmse_test_std
-        self.r2_train = r2_train
-        self.rmse_train = rmse_train
-        self.r2_train_std = r2_train_std
-        self.rmse_train_std = rmse_train_std
+        self.test_metrics = test_metrics
+        self.train_metrics = train_metrics
 
     def metadata_df(self) -> pd.DataFrame:
         """
@@ -75,9 +58,8 @@ class Result:
         -------
         pd.DataFrame
             DataFrame with columns:
-            ['id', 'model_name', 'x_transforms', 'y_transforms', 'params',
-            'r2_test', 'rmse_test', 'r2_test_std', 'rmse_test_std',
-            'r2_train', 'rmse_train', 'r2_train_std', 'rmse_train_std'].
+            ['id', 'model_name', 'x_transforms', 'y_transforms', 'params']
+            plus columns for each metric in test_metrics and train_metrics.
         """
 
         # Serialize the params dictionary to a string representation
@@ -90,23 +72,25 @@ class Result:
                     out[k] = v
             return out
 
-        return pd.DataFrame(
-            {
-                "id": [self.id],
-                "model_name": [self.model_name],
-                "x_transforms": [self.x_transforms],
-                "y_transforms": [self.y_transforms],
-                "params": str(serialize_params(self.params)),
-                "r2_test": [self.r2_test],
-                "rmse_test": [self.rmse_test],
-                "r2_test_std": [self.r2_test_std],
-                "rmse_test_std": [self.rmse_test_std],
-                "r2_train": [self.r2_train],
-                "rmse_train": [self.rmse_train],
-                "r2_train_std": [self.r2_train_std],
-                "rmse_train_std": [self.rmse_train_std],
-            }
-        )
+        data = {
+            "id": [self.id],
+            "model_name": [self.model_name],
+            "x_transforms": [self.x_transforms],
+            "y_transforms": [self.y_transforms],
+            "params": str(serialize_params(self.params)),
+        }
+
+        # Add test metrics
+        for metric_name, (mean, std) in self.test_metrics.items():
+            data[f"{metric_name}_test"] = [mean]
+            data[f"{metric_name}_test_std"] = [std]
+
+        # Add train metrics
+        for metric_name, (mean, std) in self.train_metrics.items():
+            data[f"{metric_name}_train"] = [mean]
+            data[f"{metric_name}_train_std"] = [std]
+
+        return pd.DataFrame(data)
 
 
 class Results:
@@ -144,39 +128,126 @@ class Results:
         -------
         pd.DataFrame
             DataFrame with columns:
-                ['model', 'x_transforms', 'y_transforms', 'params', 'r2_score',
-                'rmse_score'].
-        TODO: include test data
+                ['model_name', 'x_transforms', 'y_transforms', 'params']
+                plus columns for all metrics in the results.
         """
+        if not self.results:
+            return pd.DataFrame()
+
         data = {
             "model_name": [result.model_name for result in self.results],
             "x_transforms": [result.x_transforms for result in self.results],
             "y_transforms": [result.y_transforms for result in self.results],
             "params": [result.params for result in self.results],
-            "rmse_test": [result.rmse_test for result in self.results],
-            "r2_test": [result.r2_test for result in self.results],
-            "r2_test_std": [result.r2_test_std for result in self.results],
-            "r2_train": [result.r2_train for result in self.results],
-            "r2_train_std": [result.r2_train_std for result in self.results],
         }
+
+        # Collect all unique metric names from all results
+        all_test_metrics = set()
+        all_train_metrics = set()
+        for result in self.results:
+            all_test_metrics.update(result.test_metrics.keys())
+            all_train_metrics.update(result.train_metrics.keys())
+
+        # Add test metrics columns
+        for metric_name in sorted(all_test_metrics):
+            data[f"{metric_name}_test"] = [
+                result.test_metrics.get(metric_name, (float("nan"), float("nan")))[0]
+                for result in self.results
+            ]
+            data[f"{metric_name}_test_std"] = [
+                result.test_metrics.get(metric_name, (float("nan"), float("nan")))[1]
+                for result in self.results
+            ]
+
+        # Add train metrics columns
+        for metric_name in sorted(all_train_metrics):
+            data[f"{metric_name}_train"] = [
+                result.train_metrics.get(metric_name, (float("nan"), float("nan")))[0]
+                for result in self.results
+            ]
+            data[f"{metric_name}_train_std"] = [
+                result.train_metrics.get(metric_name, (float("nan"), float("nan")))[1]
+                for result in self.results
+            ]
+
         df = pd.DataFrame(data)
-        return df.sort_values(by="r2_test", ascending=False)
+        # Sort by r2_test if available, otherwise by the first available test metric
+        sort_by = "r2_test" if "r2_test" in df.columns else str(df.columns[4])
+        return df.sort_values(by=sort_by, ascending=False)
 
     summarise = summarize
 
-    def best_result(self) -> Result:
+    def best_result(self, metric_name: str | None = None) -> Result:
         """
-        Get the model with the best result based on the highest R2 score.
+        Get the model with the best result based on the given metric.
+
+        Parameters
+        ----------
+        metric_name: str | None
+            The name of the metric to use for comparison. If None, uses the first
+            available metric found in the results. The metric should exist in the
+            test_metrics of the results.
+        metric_maximize: bool | None
+            Whether higher values are better for the metric. If None, defaults to True
+            (assumes higher is better). Set to False for metrics like RMSE or MAE where
+            lower is better.
 
         Returns
         -------
         Result
-            The result with the highest R2 score.
+            The result with the best score for the specified metric.
         """
         if not self.results:
             msg = "No results available. Please run AutoEmulate.compare() first."
             raise ValueError(msg)
-        return max(self.results, key=lambda r: r.r2_test)
+
+        # If metric_name is None, use the first available metric
+        if metric_name is None:
+            # Collect all available metrics
+            available_metrics = set()
+            for result in self.results:
+                available_metrics.update(result.test_metrics.keys())
+
+            if not available_metrics:
+                msg = "No metrics available in results."
+                raise ValueError(msg)
+
+            # Use the first metric
+            metric_name = next(iter(available_metrics))
+            logger.info("Using metric '%s' to determine best result.", metric_name)
+        else:
+            # Check if the specified metric exists in at least one result
+            if not any(metric_name in result.test_metrics for result in self.results):
+                available_metrics = set()
+                for result in self.results:
+                    available_metrics.update(result.test_metrics.keys())
+                msg = (
+                    f"Metric '{metric_name}' not found in any results. "
+                    f"Available metrics: {sorted(available_metrics)}"
+                )
+                raise ValueError(msg)
+
+            logger.info("Using metric '%s' to determine best result.", metric_name)
+
+        # Determine if we are maximizing or minimizing the metric
+        # from the metric name
+        assert metric_name is not None  # for pyright
+        metric_config = AVAILABLE_METRICS.get(metric_name)
+        if metric_config is None:
+            msg = f"Metric '{metric_name}' not found in AVAILABLE_METRICS."
+            raise ValueError(msg)
+        metric_maximize = metric_config.maximize
+
+        # Select best result based on whether we're maximizing or minimizing
+        if metric_maximize:
+            return max(
+                self.results,
+                key=lambda r: r.test_metrics.get(metric_name, (float("-inf"), 0))[0],
+            )
+        return min(
+            self.results,
+            key=lambda r: r.test_metrics.get(metric_name, (float("inf"), 0))[0],
+        )
 
     def get_result(self, result_id: int) -> Result:
         """
