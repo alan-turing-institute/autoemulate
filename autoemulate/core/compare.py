@@ -19,6 +19,14 @@ from autoemulate.core.metrics import (
 )
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
+from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
+from autoemulate.core.plotting import (
+    calculate_subplot_layout,
+    create_and_plot_slice,
+    display_figure,
+    plot_xy,
+)
+from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.core.tuner import Tuner
@@ -430,14 +438,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     "parameters",
                                     model_cls.__name__,
                                 )
-                                # extract default parameters from the model's __init__
+                                # Extract default parameters from the model's __init__
                                 init_sig = inspect.signature(model_cls.__init__)
-                                init_params = {
+                                default_params = {
                                     param_name: param.default
                                     for param_name, param in init_sig.parameters.items()
                                     if param_name in model_cls.get_tune_params()
                                 }
-                                best_params_for_this_model = init_params
+                                # Overwrite defaults with user-supplied values
+                                best_params_for_this_model = {
+                                    **default_params,
+                                    **self.model_params,
+                                }
 
                             self.logger.debug(
                                 'Running cross-validation for model "%s" '
@@ -586,33 +598,20 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Get the result to use
         result = self.best_result() if result_id is None else self.get_result(result_id)
 
-        # Set the random seed for initialization
-        if random_seed is not None:
-            set_random_seed(seed=random_seed)
-
         # Convert and move the new data to device
         x_tensor, y_tensor = self._convert_to_tensors(x, y)
         x_tensor, y_tensor = self._move_tensors_to_device(x_tensor, y_tensor)
 
-        # Get the model class from the model name
-        model_class = get_emulator_class(result.model_name)
-
-        # Create a fresh model with the same configuration
-        fresh_model = TransformedEmulator(
+        # NOTE: function passes data to the Emulator model which handles conversion to
+        # tensors and device handling
+        return fit_from_reinitialized(
             x_tensor,
             y_tensor,
-            model=model_class,
-            x_transforms=result.x_transforms,
-            y_transforms=result.y_transforms,
+            emulator=result.model,
+            transformed_emulator_params=transformed_emulator_params,
             device=self.device,
-            **result.params,
-            **transformed_emulator_params,
+            random_seed=random_seed,
         )
-
-        # Fit the fresh model on the new data
-        fresh_model.fit(x_tensor, y_tensor)
-
-        return fresh_model
 
     def plot(  # noqa: PLR0912, PLR0915
         self,
@@ -786,6 +785,82 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_surface(
+        self,
+        model: Emulator,
+        parameters_range: dict[str, tuple[float, float]],
+        input_index_pair: tuple[int, int] | None = None,
+        output_index: int | None = None,
+        input_ranges: dict[int, tuple[float, float]] | None = None,
+        output_range: tuple[float, float] | None = None,
+        quantile: float = 0.5,
+        figsize=None,
+        fname: str | None = None,
+    ):
+        """Plot the emulator mean and variance over a grid for a pair of parameters.
+
+        This is useful for visualizing the emulator's behavior in 2D slices of the input
+        space while keeping other parameters fixed at a specific quantile (default is
+        median).
+
+        Parameters
+        ----------
+        model: Emulator
+            The emulator model to plot.
+        parameters_range: dict[str, tuple[float, float]]
+            A dictionary specifying the ranges for all input parameters. Keys are
+            parameter names and values are tuples of (min, max). The dictionary should
+            be ordered equivalently to the order of parameters used to train the model.
+        input_index_pair: tuple[int, int] | None
+            A tuple of two integers specifying the indices of the input parameters to
+            plot. If None, the first two parameters (0, 1) are used. Defaults to None.
+        output_index: int | None
+            The index of the output to plot. If None, the first output (0) is used.
+            Defaults to None.
+        input_ranges: dict[int, tuple[float, float]] | None
+            A dictionary specifying the ranges for input parameters to consider.
+            Keys are parameter indices and values are tuples of (min, max). If None,
+            the full range from the simulator is used. Defaults to None.
+        output_range: tuple[float, float] | None
+            A tuple specifying the (min, max) range for the output to consider. If None,
+            the full range from the simulator is used. Defaults to None.
+        quantile: float
+            The quantile of the other input parameters to fix when plotting the 2D
+            slice. Must be between 0 and 1. Defaults to 0.5.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, a default size is used.
+            Defaults to None.
+        fname: str | None
+            If provided, the figure will be saved to this file path. If None, the figure
+            will be displayed. Defaults to None.
+        """
+        # Update parameter ranges if provided
+        if input_ranges is not None:
+            # Copy to avoid modifying the parameters_range passed
+            parameters_range = parameters_range.copy()
+            parameters_range.update(
+                {
+                    list(parameters_range.keys())[k]: input_ranges[k]
+                    for k in input_ranges
+                }
+            )
+
+        fig, _ = create_and_plot_slice(
+            model,
+            parameters_range,
+            input_index_pair if input_index_pair is not None else (0, 1),
+            output_idx=output_index if output_index is not None else 0,
+            vmin=None if output_range is None else output_range[0],
+            vmax=None if output_range is None else output_range[1],
+            quantile=quantile,
+        )
+        if figsize is not None:
+            fig.set_size_inches(figsize)
         if fname is None:
             return display_figure(fig)
         fig.savefig(fname, bbox_inches="tight")

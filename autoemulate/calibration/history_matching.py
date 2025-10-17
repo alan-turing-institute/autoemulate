@@ -12,10 +12,11 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.plotting import display_figure
+from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
-from autoemulate.emulators import TransformedEmulator, get_emulator_class
+from autoemulate.emulators import Emulator
 from autoemulate.simulations.base import Simulator
 
 logger = logging.getLogger("autoemulate")
@@ -284,13 +285,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
     def __init__(
         self,
         simulator: Simulator,
-        result: Result,
         observations: dict[str, tuple[float, float]] | dict[str, float],
+        emulator: Emulator | None = None,
+        result: Result | None = None,
         threshold: float = 3.0,
         model_discrepancy: float = 0.0,
         rank: int = 1,
         train_x: TensorLike | None = None,
         train_y: TensorLike | None = None,
+        transformed_emulator_params: dict | None = None,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
@@ -303,12 +306,17 @@ class HistoryMatchingWorkflow(HistoryMatching):
         ----------
         simulator: Simulator
             A simulator.
-        result: Result
-            A Result object containing the pre-trained emulator and its hyperparameters.
         observations: dict[str, tuple[float, float] | dict[str, float]
             For each output variable, specifies observed [value, noise] (with noise
             specified as variances). In case of no uncertainty in observations, provides
             just the observed value.
+        emulator: Emulator | None
+            An Emulator object containing the pre-trained emulator. If not provided, a
+            Result object must be provided instead. Defaults to None.
+        result: Result | None
+            A Result object containing the pre-trained emulator and its hyperparameters.
+            If not provided, an Emulator object must be provided instead.
+            Defaults to None.
         threshold: float
             Implausibility threshold (query points with implausibility scores that
             exceed this value are ruled out). Defaults to 3, which is considered
@@ -324,6 +332,11 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional tensor of input data the emulator was trained on.
         train_y: TensorLike | None
             Optional tensor of output data the emulator was trained on.
+        transformed_emulator_params: dict | None
+            Optional dictionary of parameters for TransformedEmulator. These are
+            already contained in a Result object, so only needed if a
+            TransformedEmulator instance with non-default params is provided.
+            Defaults to None.
         calibration_params: list[str] | None
             Optional subset of parameters to calibrate. These have to correspond to the
             parameters that the emulator was trained on. If None, calibrate all
@@ -342,8 +355,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
             set_random_seed(seed=random_seed)
         self.logger, self.progress_bar = get_configured_logger(log_level)
 
-        self.result = result
-        self.emulator = result.model
+        if result is not None:
+            self.emulator = result.model
+        elif emulator is not None:
+            self.emulator = emulator
+        else:
+            msg = "Either `emulator` or `result` must be provided."
+            raise ValueError(msg)
+
+        self.transformed_emulator_params = transformed_emulator_params or {}
         self.emulator.device = self.device
 
         # New data is simulated in `run()` and appended here
@@ -623,18 +643,15 @@ class HistoryMatchingWorkflow(HistoryMatching):
         y: TensorLike
             Tensor of output data to refit the emulator on.
         """
-        # Create a fresh model with the same configuration
-        self.emulator = TransformedEmulator(
-            x.float(),
-            y.float(),
-            model=get_emulator_class(self.result.model_name),
-            x_transforms=self.result.x_transforms,
-            y_transforms=self.result.y_transforms,
+        x = x.float().to(self.device)
+        y = y.float().to(self.device)
+        self.emulator = fit_from_reinitialized(
+            x,
+            y,
+            emulator=self.emulator,
+            transformed_emulator_params=self.transformed_emulator_params,
             device=self.device,
-            **self.result.params,
         )
-
-        self.emulator.fit(x, y)
 
     def run(
         self,

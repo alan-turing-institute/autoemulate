@@ -96,14 +96,19 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
     assert "max_samples" in rf_params
 
     gp_params = ae.get_result(2).params
-    assert gp_params == {}
-    # TODO: update test as part of #867
-    # assert gp_params != {}
-    # assert "mean_module_fn" in gp_params
-    # assert "covar_module_fn" in gp_params
-    # assert "epochs" in gp_params
-    # assert "lr" in gp_params
-    # assert "likelihood_cls" in gp_params
+    assert gp_params != {}
+    assert "epochs" in gp_params
+    assert "lr" in gp_params
+    assert "likelihood_cls" in gp_params
+
+
+def test_ae_no_tuning_fix_params(sample_data_for_ae_compare):
+    """Test that model_params are correctly passed when tuning is disabled."""
+    x, y = sample_data_for_ae_compare
+    ae = AutoEmulate(
+        x, y, models=["GaussianProcessRBF"], model_params={"posterior_predictive": True}
+    )
+    assert ae.best_result().model.model.posterior_predictive is True  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_get_model_subset():

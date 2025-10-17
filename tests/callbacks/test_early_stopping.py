@@ -3,9 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 from autoemulate.callbacks.early_stopping import EarlyStopping
-from autoemulate.emulators.gaussian_process.exact import (
-    GaussianProcess,
-)
+from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from gpytorch.likelihoods import MultitaskGaussianLikelihood
 
 
@@ -18,7 +16,6 @@ def gp_exact():
         y=y,
         likelihood_cls=MultitaskGaussianLikelihood,
         epochs=5,
-        batch_size=2,
         lr=0.1,
         early_stopping=None,
     )
