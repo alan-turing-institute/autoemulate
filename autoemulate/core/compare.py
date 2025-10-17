@@ -18,8 +18,6 @@ from autoemulate.core.metrics import (
     get_metric_configs,
 )
 from autoemulate.core.model_selection import bootstrap, evaluate
-from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
-from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
 from autoemulate.core.plotting import (
     calculate_subplot_layout,
     create_and_plot_slice,
