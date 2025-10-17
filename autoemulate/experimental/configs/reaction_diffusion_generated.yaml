@@ -39,7 +39,7 @@ data:
   # No data_path - triggers GENERATED source type
   
   # Data generation
-  n_train_samples: 200
+  n_train_samples: 2000
   n_valid_samples: 20
   n_test_samples: 20
   random_seed: 42
@@ -58,7 +58,7 @@ data:
 # Trainer configuration
 trainer:
   epochs: 100
-  device: "mps"           # Use "cuda" for NVIDIA GPU, "mps" for Apple Silicon, "cpu" for CPU
+  device: "cuda"
   
   optimizer_type: "adam"
   optimizer_params:
@@ -100,10 +100,10 @@ trainer:
 
 # Paths
 paths:
-  output_dir: "./outputs/reaction_diffusion_generated"
+  output_dir: "./outputs/2025-10-17/reaction_diffusion_generated"
   model_save_path: "./outputs/reaction_diffusion_generated/artifacts/final_model.pt"
   # Optionally save generated data for reuse
-  data_save_path: "./data/reaction_diffusion_generated"
+  data_save_path: "./outputs/2025-10-17/data/reaction_diffusion_generated"
   save_format: "h5"       # or "pt" for PyTorch format
 
 # Logging

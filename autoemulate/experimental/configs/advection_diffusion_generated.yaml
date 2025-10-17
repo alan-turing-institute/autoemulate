@@ -38,7 +38,7 @@ data:
   # No data_path - triggers GENERATED source type
   
   # Data generation
-  n_train_samples: 200
+  n_train_samples: 2000
   n_valid_samples: 20
   n_test_samples: 20
   random_seed: 42
@@ -95,10 +95,10 @@ trainer:
 
 # Paths
 paths:
-  output_dir: "./outputs/advection_diffusion_generated"
+  output_dir: "./outputs/2025-10-17/advection_diffusion_generated"
   model_save_path: "./outputs/advection_diffusion_generated/artifacts/final_model.pt"
   # Optionally save generated data for reuse
-  data_save_path: "./outputs/data/advection_diffusion_generated"
+  data_save_path: "./outputs/2025-10-17/data/advection_diffusion_generated"
   save_format: "h5"
 
 # Logging

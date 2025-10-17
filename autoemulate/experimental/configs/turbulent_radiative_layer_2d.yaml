@@ -23,7 +23,7 @@ model_params:
 # Setting well_dataset_name automatically uses WELL_NATIVE source type
 data:
   well_dataset_name: "turbulent_radiative_layer_2D"  # This triggers native Well dataset loading
-  data_path: "./exploratory/data/the_well/datasets"  # Optional: base path to Well datasets
+  data_path: "./autoemulate/experimental/exploratory/data/the_well/datasets"  # Optional: base path to Well datasets
   n_steps_input: 4
   n_steps_output: 1
   batch_size: 4
@@ -34,7 +34,7 @@ data:
 # Trainer configuration
 trainer:
   epochs: 100
-  device: "mps"
+  device: "cuda"
   
   optimizer_type: "adam"
   optimizer_params:
@@ -72,8 +72,8 @@ trainer:
 
 # Paths
 paths:
-  output_dir: "./outputs/turbulent_radiative_layer_2d"
-  model_save_path: "./outputs/turbulent_radiative_layer_2d/artifacts/final_model.pt"
+  output_dir: "./outputs/2025-10-17/turbulent_radiative_layer_2d"
+  model_save_path: "./outputs/2025-10-17/turbulent_radiative_layer_2d/artifacts/final_model.pt"
 
 # Logging
 log_level: "INFO"
