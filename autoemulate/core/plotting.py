@@ -5,7 +5,13 @@ from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from autoemulate.core.types import DistributionLike, NumpyLike, TensorLike
+from autoemulate.core.types import (
+    DistributionLike,
+    GaussianLike,
+    GaussianProcessLike,
+    NumpyLike,
+    TensorLike,
+)
 from autoemulate.emulators.base import Emulator
 
 
@@ -440,7 +446,8 @@ def coverage_from_distributions(
         used. Defaults to None.
     n_samples: int
         Number of Monte-Carlo samples to draw from the predictive
-        distribution to compute empirical intervals.
+        distribution to compute empirical intervals if analytical quantiles
+        are not available.
     joint: bool
         If True and the predictive outputs are multivariate, compute joint
         coverage (i.e., the true vector must lie inside the interval for all
@@ -460,15 +467,25 @@ def coverage_from_distributions(
         levels = np.linspace(0.0, 1.0, 51)
     levels = np.asarray(levels)
 
-    samples = y_pred.sample((n_samples,))
-
     # compute empirical intervals using sample quantiles
     empirical_list = []
+    samples = y_pred.sample((n_samples,))
     for p in levels:
         lower_q = (1.0 - p) / 2.0
         upper_q = 1.0 - lower_q
-        lower = torch.quantile(samples, float(lower_q), dim=0)
-        upper = torch.quantile(samples, float(upper_q), dim=0)
+
+        if isinstance(y_pred, GaussianLike | GaussianProcessLike):
+            lower = y_pred.icdf(lower_q)
+            upper = y_pred.icdf(upper_q)
+        elif isinstance(y_pred, torch.distributions.Independent) and isinstance(
+            y_pred.base_dist, GaussianLike | GaussianProcessLike
+        ):
+            lower = y_pred.base_dist.icdf(lower_q)
+            upper = y_pred.base_dist.icdf(upper_q)
+        else:
+            lower = torch.quantile(samples, float(lower_q), dim=0)
+            upper = torch.quantile(samples, float(upper_q), dim=0)
+
         inside = (y_true >= lower) & (y_true <= upper)
         if joint:
             inside_all = inside.all(dim=-1)

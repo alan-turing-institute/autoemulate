@@ -874,7 +874,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             used.
         n_samples: int
             Number of Monte-Carlo samples to draw from the predictive
-            distribution to compute empirical intervals.
+            distribution to compute empirical intervals if analytical quantiles
+            are not available.
         joint: bool
             If True and the predictive outputs are multivariate, compute joint
             coverage (i.e., the true vector must lie inside the interval for all
