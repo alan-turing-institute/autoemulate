@@ -524,7 +524,6 @@ def plot_calibration_from_distributions(
     levels, empirical = coverage_from_distributions(
         y_pred, y_true, levels=levels, n_samples=n_samples, joint=joint
     )
-    print(empirical.shape)
 
     if figsize is None:
         figsize = (6, 6)
