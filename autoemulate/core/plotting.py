@@ -560,8 +560,8 @@ def plot_calibration_from_distributions(
     ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideal")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel("Observed coverage")
-    ax.set_ylabel("Expected coverage")
+    ax.set_xlabel("Expected coverage")
+    ax.set_ylabel("Observed coverage")
 
     if title:
         ax.set_title(title)
