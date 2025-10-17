@@ -114,3 +114,178 @@ def test_get_model_subset():
 
     ae = AutoEmulate(x, y, only_probabilistic=True, model_params={})
     assert set(ae.models) == probabilistic_subset
+
+
+@pytest.mark.parametrize(
+    "tuning_metric",
+    ["r2", "rmse", "mse", "mae"],
+)
+def test_ae_with_different_tuning_metrics(sample_data_for_ae_compare, tuning_metric):
+    """Test AutoEmulate with different tuning metrics."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        tuning_metric=tuning_metric,
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    # Verify that the tuning metric was set correctly
+    assert ae.tuning_metric.name == tuning_metric
+    # Verify results have test_metrics
+    for result in ae.results:
+        assert result.test_metrics is not None
+        assert len(result.test_metrics) > 0
+
+
+@pytest.mark.parametrize(
+    "evaluation_metrics",
+    [
+        ["r2"],
+        ["rmse"],
+        ["mse"],
+        ["mae"],
+        ["r2", "rmse"],
+        ["r2", "mse", "mae"],
+        ["rmse", "mae"],
+    ],
+)
+def test_ae_with_different_evaluation_metrics(
+    sample_data_for_ae_compare, evaluation_metrics
+):
+    """Test AutoEmulate with different evaluation metrics."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        evaluation_metrics=evaluation_metrics,
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    # Verify that evaluation metrics were set correctly
+    assert len(ae.evaluation_metrics) == len(evaluation_metrics)
+    metric_names = [m.name for m in ae.evaluation_metrics]
+    assert metric_names == evaluation_metrics
+
+    # Verify that all specified metrics are in test_metrics for each result
+    for result in ae.results:
+        assert result.test_metrics is not None
+        for metric_name in evaluation_metrics:
+            assert metric_name in result.test_metrics
+            # Verify the metric value is a tuple of (mean, std)
+            assert isinstance(result.test_metrics[metric_name], tuple)
+            assert len(result.test_metrics[metric_name]) == 2
+
+
+@pytest.mark.parametrize(
+    ("tuning_metric", "evaluation_metrics"),
+    [
+        ("r2", ["r2", "rmse"]),
+        ("rmse", ["r2", "rmse"]),
+        ("mse", ["mse", "mae"]),
+        ("mae", ["r2", "mae"]),
+        ("r2", ["rmse", "mse", "mae"]),
+        ("rmse", ["r2"]),
+    ],
+)
+def test_ae_with_tuning_and_evaluation_metric_combinations(
+    sample_data_for_ae_compare, tuning_metric, evaluation_metrics
+):
+    """Test AutoEmulate with various combinations of tuning and evaluation metrics."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        tuning_metric=tuning_metric,
+        evaluation_metrics=evaluation_metrics,
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    # Verify tuning metric
+    assert ae.tuning_metric.name == tuning_metric
+    # Verify evaluation metrics
+    assert len(ae.evaluation_metrics) == len(evaluation_metrics)
+    metric_names = [m.name for m in ae.evaluation_metrics]
+    assert metric_names == evaluation_metrics
+
+    # Verify all metrics are computed in results
+    for result in ae.results:
+        assert result.test_metrics is not None
+        for metric_name in evaluation_metrics:
+            assert metric_name in result.test_metrics
+
+
+def test_ae_with_same_tuning_and_evaluation_metric(sample_data_for_ae_compare):
+    """Test AutoEmulate when the same metric is used for tuning and evaluation."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        tuning_metric="rmse",
+        evaluation_metrics=["rmse"],
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    assert ae.tuning_metric.name == "rmse"
+    assert len(ae.evaluation_metrics) == 1
+    assert ae.evaluation_metrics[0].name == "rmse"
+
+    for result in ae.results:
+        assert "rmse" in result.test_metrics
+
+
+def test_ae_with_maximizing_and_minimizing_metrics(sample_data_for_ae_compare):
+    """Test AutoEmulate with a mix of maximizing and minimizing metrics."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    # r2 is maximizing, rmse/mse/mae are minimizing
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        tuning_metric="r2",
+        evaluation_metrics=["r2", "rmse", "mse", "mae"],
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    # Verify metric properties
+    assert ae.tuning_metric.maximize is True
+    assert ae.evaluation_metrics[0].maximize is True  # r2
+    assert ae.evaluation_metrics[1].maximize is False  # rmse
+    assert ae.evaluation_metrics[2].maximize is False  # mse
+    assert ae.evaluation_metrics[3].maximize is False  # mae
+
+    # Verify all metrics are computed
+    for result in ae.results:
+        assert len(result.test_metrics) == 4
+        assert all(
+            metric in result.test_metrics for metric in ["r2", "rmse", "mse", "mae"]
+        )
