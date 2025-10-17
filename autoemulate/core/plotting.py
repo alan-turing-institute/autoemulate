@@ -461,8 +461,7 @@ def coverage_from_distributions(
         levels = np.linspace(0.0, 1.0, 51)
     levels = np.asarray(levels)
 
-    # compute empirical intervals using sample quantiles
-    empirical_list = []
+    # if dist.icdf not available, compute empirical intervals using sample quantiles
     samples = None
     y_dist = None
     if isinstance(y_pred, GaussianLike):
@@ -473,9 +472,12 @@ def coverage_from_distributions(
         y_dist = y_pred.base_dist
     else:
         samples = y_pred.sample((n_samples,))
+
+    empirical_list = []
     for p in levels:
         lower_q = (1.0 - p) / 2.0
         upper_q = 1.0 - lower_q
+
         if y_dist is not None:
             lower = y_dist.icdf(lower_q)
             upper = y_dist.icdf(upper_q)
