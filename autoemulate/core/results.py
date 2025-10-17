@@ -172,14 +172,12 @@ class Results:
 
         df = pd.DataFrame(data)
         # Sort by r2_test if available, otherwise by the first available test metric
-        sort_by = "r2_test" if "r2_test" in df.columns else df.columns[4]
+        sort_by = "r2_test" if "r2_test" in df.columns else str(df.columns[4])
         return df.sort_values(by=sort_by, ascending=False)
 
     summarise = summarize
 
-    def best_result(
-        self, metric_name: str | None = None
-    ) -> Result:
+    def best_result(self, metric_name: str | None = None) -> Result:
         """
         Get the model with the best result based on the given metric.
 
@@ -231,10 +229,14 @@ class Results:
 
             logger.info("Using metric '%s' to determine best result.", metric_name)
 
-
         # Determine if we are maximizing or minimizing the metric
         # from the metric name
-        metric_maximize = AVAILABLE_METRICS.get(metric_name).maximize
+        assert metric_name is not None  # for pyright
+        metric_config = AVAILABLE_METRICS.get(metric_name)
+        if metric_config is None:
+            msg = f"Metric '{metric_name}' not found in AVAILABLE_METRICS."
+            raise ValueError(msg)
+        metric_maximize = metric_config.maximize
 
         # Select best result based on whether we're maximizing or minimizing
         if metric_maximize:

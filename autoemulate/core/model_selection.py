@@ -12,7 +12,7 @@ from autoemulate.core.device import (
     get_torch_device,
     move_tensors_to_device,
 )
-from autoemulate.core.metrics import Metric, get_metric_configs
+from autoemulate.core.metrics import TorchMetrics, get_metric_configs
 from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
@@ -26,21 +26,11 @@ from autoemulate.emulators.transformed.base import TransformedEmulator
 logger = logging.getLogger("autoemulate")
 
 
-def r2_metric() -> type[torchmetrics.Metric]:
-    """Return a torchmetrics.R2Score metric."""
-    return torchmetrics.R2Score
-
-
-def rmse_metric() -> partial[torchmetrics.Metric]:
-    """Return a torchmetrics.MeanSquaredError metric with squared=False."""
-    return partial(torchmetrics.MeanSquaredError, squared=False)
-
-
 def _update(
     y_true: TensorLike,
     y_pred: TensorLike,
-    metric: Metric,
-):
+    metric: torchmetrics.Metric,
+) -> None:
     if isinstance(y_pred, TensorLike):
         metric.to(y_pred.device)
         # Assume first dim is a batch dim and flatten remaining for metric calculation
@@ -52,7 +42,8 @@ def _update(
 def evaluate(
     y_pred: TensorLike,
     y_true: TensorLike,
-    metric: Metric = torchmetrics.R2Score,
+    metric: type[torchmetrics.Metric]
+    | partial[torchmetrics.Metric] = torchmetrics.R2Score,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -85,7 +76,7 @@ def cross_validate(
     y_transforms: list[Transform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
-    metrics: list[Metric] | None = None,
+    metrics: list[TorchMetrics] | None = None,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -108,7 +99,7 @@ def cross_validate(
         The device to use for model training and evaluation.
     random_seed: int | None
         Optional random seed for reproducibility.
-    metrics: list[MetricConfig] | None
+    metrics: list[TorchMetrics] | None
         List of metrics to compute. If None, uses r2 and rmse.
 
     Returns
@@ -180,7 +171,7 @@ def bootstrap(
     n_bootstraps: int | None = 100,
     n_samples: int = 100,
     device: str | torch.device = "cpu",
-    metrics: list[Metric] | None = None,
+    metrics: list[TorchMetrics] | None = None,
 ) -> dict[str, tuple[float, float]]:
     """
     Get bootstrap estimates of metrics.

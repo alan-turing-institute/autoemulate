@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.metrics import Metric, get_metric_config
+from autoemulate.core.metrics import TorchMetrics, get_metric_config
 from autoemulate.core.model_selection import cross_validate
 from autoemulate.core.types import (
     DeviceLike,
@@ -46,7 +46,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_iter: int = 10,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        tuning_metric: str | Metric = "r2",
+        tuning_metric: str | TorchMetrics = "r2",
     ):
         TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter

@@ -12,8 +12,12 @@ from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.metrics import Metric, get_metric_config, get_metric_configs
-from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
+from autoemulate.core.metrics import (
+    TorchMetrics,
+    get_metric_config,
+    get_metric_configs,
+)
+from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import calculate_subplot_layout, display_figure, plot_xy
 from autoemulate.core.results import Result, Results
 from autoemulate.core.save import ModelSerialiser
@@ -65,8 +69,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
-        tuning_metric: str | Metric = "r2",
-        evaluation_metrics: list[str | Metric] | None = None,
+        tuning_metric: str | TorchMetrics = "r2",
+        evaluation_metrics: list[str | TorchMetrics] | None = None,
     ):
         """
         Initialize the AutoEmulate class.
@@ -117,10 +121,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             it will show a progress bar during model comparison. It will set the
             logging level to "error" to avoid cluttering the output
             with debug/info logs.
-        tuning_metric: str | Metric
+        tuning_metric: str | TorchMetrics
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
-        evaluation_metrics: list[str | MetricConfig] | None
+        evaluation_metrics: list[str | TorchMetrics] | None
             Metrics to compute during evaluation.
             If None, then defaults to ["r2", "rmse"].
             Each entry can be a string shortcut or a MetricConfig object.
@@ -664,7 +668,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Re-run prediction with just this model to get the predictions
         y_pred, y_variance = model.predict_mean_and_variance(test_x)
-        r2_score = evaluate(y_pred, test_y, r2_metric())
+        r2_score = evaluate(y_pred, test_y)
 
         # Handle ranges
         input_ranges = input_ranges or {}

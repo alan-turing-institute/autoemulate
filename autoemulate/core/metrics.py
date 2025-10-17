@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import partial
 
 import torchmetrics
 
-from autoemulate.core.types import TensorLike
+from autoemulate.core.types import MetricLike
 
 
 class Metric:
@@ -15,7 +14,7 @@ class Metric:
 
     Parameters
     ----------
-    metric : type[torchmetrics.Metric] | partial[torchmetrics.Metric]
+    metric : MetricLike
         The torchmetrics metric class or partial.
     name : str
         Display name for the metric.
@@ -23,7 +22,7 @@ class Metric:
         Whether higher values are better. Defaults to True.
     """
 
-    metric: Callable
+    metric: MetricLike
     name: str
     maximize: bool
 
@@ -31,9 +30,6 @@ class Metric:
         """Return the string representation of the MetricConfig."""
         return f"MetricConfig(name={self.name}, maximize={self.maximize})"
 
-    def __call__(self, x: TensorLike, y: TensorLike) -> TensorLike:
-        """Instantiate the metric."""
-        return self.metric(x, y)
 
 class TorchMetrics(Metric):
     """Configuration for a single torchmetrics metric.
@@ -45,14 +41,19 @@ class TorchMetrics(Metric):
     name : str
         Display name for the metric. If None, uses the class name of the metric.
     maximize : bool
-        Whether higher values are better. 
+        Whether higher values are better.
     """
 
-    def __init__(self, metric: type[torchmetrics.Metric] | partial[torchmetrics.Metric],
-     name, maximize):
+    def __init__(
+        self,
+        metric: type[torchmetrics.Metric] | partial[torchmetrics.Metric],
+        name: str,
+        maximize: bool,
+    ):
         self.metric = metric
         self.name = name
         self.maximize = maximize
+
 
 R2 = TorchMetrics(
     metric=torchmetrics.R2Score,
@@ -87,8 +88,8 @@ AVAILABLE_METRICS = {
 
 
 def get_metric_config(
-    metric: str | Metric,
-) -> Metric:
+    metric: str | TorchMetrics,
+) -> TorchMetrics:
     """Convert various metric specifications to MetricConfig.
 
     Parameters
@@ -100,7 +101,7 @@ def get_metric_config(
 
     Returns
     -------
-    Metric
+    TorchMetrics
         The metric configuration.
 
     Raises
@@ -140,13 +141,13 @@ def get_metric_configs(
 
     Returns
     -------
-    list[MetricConfig]
+    list[Metric]
         List of metric configurations.
     """
     result_metrics = []
 
     for m in metrics:
-        config = get_metric_config(m) if isinstance(m, (str, TorchMetrics)) else m
+        config = get_metric_config(m) if isinstance(m, (str | TorchMetrics)) else m
         result_metrics.append(config)
 
     return result_metrics
