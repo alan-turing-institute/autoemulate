@@ -534,7 +534,7 @@ def plot_calibration_from_distributions(
     else:
         # multiple outputs: plot each dimension
         for i in range(empirical.shape[1]):
-            ax.plot(levels, empirical[:, i], marker="o", label=f"dim {i}")
+            ax.plot(levels, empirical[:, i], marker="o", label=f"$y_{i}$")
 
     # diagonal reference
     ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideal")
