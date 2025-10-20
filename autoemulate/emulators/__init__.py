@@ -14,46 +14,175 @@ from .random_forest import RandomForest
 from .svm import SupportVectorMachine
 from .transformed.base import TransformedEmulator
 
-DEFAULT_EMULATORS: list[type[Emulator]] = [
-    GaussianProcessMatern32,
-    GaussianProcessRBF,
-    RadialBasisFunctions,
-    PolynomialRegression,
-    MLP,
-    EnsembleMLP,
-]
 
-# listing non pytorch emulators as we do not expect this list to grow
-NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
-    LightGBM,
-    SupportVectorMachine,
-    RandomForest,
-]
+class Registry:
+    """
+    Registry for managing emulators.
 
-ALL_EMULATORS: list[type[Emulator]] = [
-    *DEFAULT_EMULATORS,
-    *NON_PYTORCH_EMULATORS,
-    GaussianProcessCorrelatedMatern32,
-    GaussianProcessCorrelatedRBF,
-    EnsembleMLPDropout,
-]
+    The Registry class maintains collections of emulator classes organized by
+    their properties (e.g., Gaussian Process emulators, PyTorch-based emulators).
+    It provides methods to register new emulators and retrieve them by name.
 
-PYTORCH_EMULATORS: list[type[Emulator]] = [
-    emulator for emulator in ALL_EMULATORS if emulator not in NON_PYTORCH_EMULATORS
-]
-GAUSSIAN_PROCESS_EMULATORS: list[type[Emulator]] = [
-    emulator
-    for emulator in ALL_EMULATORS
-    if issubclass(emulator, GaussianProcessEmulator)
-]
+    Attributes
+    ----------
+    emulators : dict[str, type[Emulator]]
+        Dictionary mapping emulator names to classes.
+    """
 
-EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
-EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
+    emulators: dict[str, type[Emulator]]
+
+    def __init__(self):
+        self._default_emulators: list[type[Emulator]] = [
+            GaussianProcessMatern32,
+            GaussianProcessRBF,
+            RadialBasisFunctions,
+            PolynomialRegression,
+            MLP,
+            EnsembleMLP,
+        ]
+
+        # listing non pytorch emulators as we do not expect this list to grow
+        self._non_pytorch_emulators: list[type[Emulator]] = [
+            LightGBM,
+            SupportVectorMachine,
+            RandomForest,
+        ]
+
+        self._all_emulators: list[type[Emulator]] = [
+            *self._default_emulators,
+            *self._non_pytorch_emulators,
+            GaussianProcessCorrelatedMatern32,
+            GaussianProcessCorrelatedRBF,
+            EnsembleMLPDropout,
+        ]
+
+        self._pytorch_emulators: list[type[Emulator]] = [
+            emulator
+            for emulator in self._all_emulators
+            if emulator not in self._non_pytorch_emulators
+        ]
+        self._gaussian_process_emulators: list[type[Emulator]] = [
+            emulator
+            for emulator in self._all_emulators
+            if issubclass(emulator, GaussianProcessEmulator)
+        ]
+
+        self._emulator_registry = {
+            em_cls.model_name().lower(): em_cls for em_cls in self._all_emulators
+        }
+        self._emulator_registry_short_name = {
+            em_cls.short_name(): em_cls for em_cls in self._all_emulators
+        }
+
+    def register_model(self, model_cls: type[Emulator]) -> type[Emulator]:
+        """
+        Register a new emulator model to the registry.
+
+        Can be used as a method or as a decorator.
+
+        Parameters
+        ----------
+        model_cls : type[Emulator]
+            The emulator class to register.
+
+        Returns
+        -------
+        type[Emulator]
+            The registered emulator class (unchanged).
+
+        """
+        # Add to ALL_EMULATORS if not already present
+        if model_cls not in self._all_emulators:
+            self._all_emulators.append(model_cls)
+
+        # Update registries
+        self._emulator_registry[model_cls.model_name().lower()] = model_cls
+        self._emulator_registry_short_name[model_cls.short_name()] = model_cls
+
+        # Update categorical lists based on model properties
+        if (
+            issubclass(model_cls, GaussianProcessEmulator)
+            and model_cls not in self._gaussian_process_emulators
+        ):
+            self._gaussian_process_emulators.append(model_cls)
+
+        # Check if it's a PyTorch emulator (not in NON_PYTORCH_EMULATORS)
+        if (
+            model_cls not in self._non_pytorch_emulators
+            and model_cls not in self._pytorch_emulators
+        ):
+            self._pytorch_emulators.append(model_cls)
+
+        return model_cls
+
+    @property
+    def gaussian_process_emulators(self) -> list[type[Emulator]]:
+        """Return the list of Gaussian Process emulators."""
+        return self._gaussian_process_emulators
+
+    @property
+    def pytorch_emulators(self) -> list[type[Emulator]]:
+        """Return the list of PyTorch-based emulators."""
+        return self._pytorch_emulators
+
+    @property
+    def all_emulators(self) -> list[type[Emulator]]:
+        """Return the list of all registered emulators."""
+        return self._all_emulators
+
+    @property
+    def non_pytorch_emulators(self) -> list[type[Emulator]]:
+        """Return the list of non-PyTorch emulators."""
+        return self._non_pytorch_emulators
+
+    @property
+    def default_emulators(self) -> list[type[Emulator]]:
+        """Return the list of default emulators."""
+        return self._default_emulators
+
+    def get_emulator_class(self, name: str) -> type[Emulator]:
+        """
+        Get the emulator class by name.
+
+        Parameters
+        ----------
+        name: str
+            The name of the emulator class.
+
+        Returns
+        -------
+        type[Emulator] | None
+            The emulator class if found, None otherwise.
+        """
+        emulator_cls = self._emulator_registry.get(
+            name.lower()
+        ) or self._emulator_registry_short_name.get(name.lower())
+
+        if emulator_cls is None:
+            raise ValueError(
+                f"Unknown emulator name: {name}."
+                f"Available: {list(self._emulator_registry.keys())}"
+            )
+
+        return emulator_cls
+
+
+# Create a default registry instance for backward compatibility
+_default_registry = Registry()
+
+# Module-level constants for backward compatibility
+DEFAULT_EMULATORS = _default_registry._default_emulators
+NON_PYTORCH_EMULATORS = _default_registry._non_pytorch_emulators
+ALL_EMULATORS = _default_registry._all_emulators
+PYTORCH_EMULATORS = _default_registry._pytorch_emulators
+GAUSSIAN_PROCESS_EMULATORS = _default_registry._gaussian_process_emulators
+EMULATOR_REGISTRY = _default_registry._emulator_registry
+EMULATOR_REGISTRY_SHORT_NAME = _default_registry._emulator_registry_short_name
 
 
 def get_emulator_class(name: str) -> type[Emulator]:
     """
-    Get the emulator class by name.
+    Get the emulator class by name using the default registry.
 
     Parameters
     ----------
@@ -62,19 +191,30 @@ def get_emulator_class(name: str) -> type[Emulator]:
 
     Returns
     -------
-    type[Emulator] | None
-        The emulator class if found, None otherwise.
+    type[Emulator]
+        The emulator class if found.
     """
-    emulator_cls = EMULATOR_REGISTRY.get(
-        name.lower()
-    ) or EMULATOR_REGISTRY_SHORT_NAME.get(name.lower())
+    return _default_registry.get_emulator_class(name)
 
-    if emulator_cls is None:
-        raise ValueError(
-            f"Unknown emulator name: {name}.Available: {list(EMULATOR_REGISTRY.keys())}"
-        )
 
-    return emulator_cls
+def register(model_cls: type[Emulator]) -> type[Emulator]:
+    """
+    Register a new emulator model to the default registry.
+
+    Can be used as a function or as a decorator.
+
+    Parameters
+    ----------
+    model_cls : type[Emulator]
+        The emulator class to register.
+
+    Returns
+    -------
+    type[Emulator]
+        The registered emulator class (unchanged).
+
+    """
+    return _default_registry.register_model(model_cls)
 
 
 __all__ = [
@@ -89,6 +229,9 @@ __all__ = [
     "PolynomialRegression",
     "RadialBasisFunctions",
     "RandomForest",
+    "Registry",
     "SupportVectorMachine",
     "TransformedEmulator",
+    "get_emulator_class",
+    "register",
 ]
