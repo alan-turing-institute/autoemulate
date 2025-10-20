@@ -1,6 +1,8 @@
 from collections.abc import Callable
 from typing import overload
 
+from torch import nn
+
 from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
@@ -35,6 +37,7 @@ class Registry:
     emulators: dict[str, type[Emulator]]
 
     def __init__(self):
+        # Initialize the registry with default emulators, this is not updated
         self._default_emulators: list[type[Emulator]] = [
             GaussianProcessMatern32,
             GaussianProcessRBF,
@@ -44,7 +47,6 @@ class Registry:
             EnsembleMLP,
         ]
 
-        # listing non pytorch emulators as we do not expect this list to grow
         self._non_pytorch_emulators: list[type[Emulator]] = [
             LightGBM,
             SupportVectorMachine,
@@ -134,8 +136,10 @@ class Registry:
                 self._gaussian_process_emulators.remove(existing_cls_by_name)
             if existing_cls_by_name in self._pytorch_emulators:
                 self._pytorch_emulators.remove(existing_cls_by_name)
+            if existing_cls_by_name in self._non_pytorch_emulators:
+                self._non_pytorch_emulators.remove(existing_cls_by_name)
 
-        # Add to ALL_EMULATORS if not already present
+        # Add to all_emulators if not already present
         if model_cls not in self._all_emulators:
             self._all_emulators.append(model_cls)
 
@@ -143,19 +147,22 @@ class Registry:
         self._emulator_registry[model_name] = model_cls
         self._emulator_registry_short_name[short_name] = model_cls
 
-        # Update categorical lists based on model properties
+        # Add the gaussian process emulator list if a GaussianProcessEmulator subclass
         if (
             issubclass(model_cls, GaussianProcessEmulator)
             and model_cls not in self._gaussian_process_emulators
         ):
             self._gaussian_process_emulators.append(model_cls)
 
-        # Check if it's a PyTorch emulator (not in NON_PYTORCH_EMULATORS)
+        # Check if it's a PyTorch emulator (subclass of nn.Module) + not in PyTorch list
         if (
-            model_cls not in self._non_pytorch_emulators
+            issubclass(model_cls, nn.Module)
             and model_cls not in self._pytorch_emulators
         ):
             self._pytorch_emulators.append(model_cls)
+        # Check it's not in non-PyTorch list
+        elif model_cls not in self._non_pytorch_emulators:
+            self._non_pytorch_emulators.append(model_cls)
 
         return model_cls
 
