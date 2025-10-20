@@ -14,17 +14,16 @@ from autoemulate.emulators.gaussian_process.exact import (
     GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
+    create_gp_subclass,
 )
-from autoemulate.emulators.gaussian_process.kernel import rbf
+from autoemulate.emulators.gaussian_process.kernel import rbf_kernel
 from autoemulate.emulators.gaussian_process.mean import constant_mean
 
 GPS = [
     GaussianProcess,
     GaussianProcessCorrelated,
     GaussianProcessMatern32,
-    GaussianProcessMatern52,
     GaussianProcessRBF,
 ]
 
@@ -55,7 +54,7 @@ def test_fixed_gp_params(sample_data_y1d, emulator):
             fixed_mean_params=fixed,
             fixed_covar_params=fixed,
             mean_module_fn=constant_mean,
-            covar_module_fn=rbf,
+            covar_module_fn=rbf_kernel,
         )
 
         # Test requires grad for params
@@ -185,3 +184,38 @@ def test_gp_corr_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     assert not torch.allclose(pred1.variance, pred2.variance)
     assert torch.allclose(pred1.mean, pred3.mean)
     assert torch.allclose(pred1.variance, pred3.variance)
+
+
+def test_create_gp_subclass():
+    """Test the create_gp_subclass function."""
+
+    CustomGPSubclass = create_gp_subclass(
+        name="CustomGPSubclass",
+        gp_base_class=GaussianProcess,
+        mean_module_fn=constant_mean,
+        covar_module_fn=rbf_kernel,
+        epochs=100,
+    )
+
+    assert issubclass(CustomGPSubclass, GaussianProcess)
+    assert CustomGPSubclass.__name__ == "CustomGPSubclass"
+
+    gp_instance = CustomGPSubclass(torch.randn(10, 2), torch.randn(10, 1))
+    assert isinstance(gp_instance, GaussianProcess)
+
+    # Check that the fixed parameter is set correctly
+    assert gp_instance.epochs == 100
+
+    # Check that the mean and covariance modules are set correctly
+    assert gp_instance.mean_module is not None
+    assert gp_instance.covar_module is not None
+
+    # Check that the mean and covariance modules are of the correct type
+    assert isinstance(gp_instance.mean_module, torch.nn.Module)
+    assert isinstance(gp_instance.covar_module, torch.nn.Module)
+
+    # Check that the fixed parameters are not in the tunable parameters
+    tune_params = gp_instance.get_tune_params()
+    assert "epochs" not in tune_params
+    assert "mean_module_fn" not in tune_params
+    assert "covar_module_fn" not in tune_params

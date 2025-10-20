@@ -1,4 +1,5 @@
 from torch import nn
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
@@ -35,7 +36,8 @@ class MLP(DropoutTorchBackend):
         params_size: int = 1,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **scheduler_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Multi-Layer Perceptron (MLP) emulator.
@@ -80,7 +82,10 @@ class MLP(DropoutTorchBackend):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
-        **scheduler_kwargs: dict
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
             Additional keyword arguments related to the scheduler.
 
         Raises
@@ -98,31 +103,42 @@ class MLP(DropoutTorchBackend):
         x, y = self._convert_to_tensors(x, y)
 
         # Construct the MLP layers
-        layer_dims = [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
+        self.layer_dims = (
+            [x.shape[1], *layer_dims] if layer_dims else [x.shape[1], 32, 16]
+        )
+        self.dropout_prob = dropout_prob
+        self.activation_cls = activation_cls
+
         layers = []
-        for idx, dim in enumerate(layer_dims[1:]):
-            layers.append(nn.Linear(layer_dims[idx], dim, device=self.device))
-            layers.append(activation_cls())
-            if dropout_prob is not None:
-                layers.append(nn.Dropout(p=dropout_prob))
+        for idx, dim in enumerate(self.layer_dims[1:]):
+            layers.append(nn.Linear(self.layer_dims[idx], dim, device=self.device))
+            layers.append(self.activation_cls())
+            if self.dropout_prob is not None:
+                layers.append(nn.Dropout(p=self.dropout_prob))
 
         # Add final layer without activation
         num_tasks = y.shape[1]
         layers.append(
-            nn.Linear(layer_dims[-1], num_tasks * params_size, device=self.device)
+            nn.Linear(self.layer_dims[-1], num_tasks * params_size, device=self.device)
         )
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization
-        self._initialize_weights(weight_init, scale, bias_init)
+        self.weight_init = weight_init
+        self.scale = scale
+        self.bias_init = bias_init
+        self._initialize_weights(self.weight_init, self.scale, self.bias_init)
         self.x_transform = StandardizeTransform() if standardize_x else None
         self.y_transform = StandardizeTransform() if standardize_y else None
         self.epochs = epochs
+        self.loss_fn_cls = loss_fn_cls
         self.loss_fn = loss_fn_cls()
         self.lr = lr
         self.batch_size = batch_size
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(scheduler_kwargs)
+        self.scheduler_cls = scheduler_cls
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.to(self.device)
 
     def forward(self, x):
@@ -137,7 +153,7 @@ class MLP(DropoutTorchBackend):
     @staticmethod
     def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
-        scheduler_params = MLP.scheduler_params()
+        scheduler_specs = MLP.get_scheduler_params()
         return {
             "epochs": [100, 200],
             "layer_dims": [[8, 4], [16, 8], [32, 16], [64, 32, 16]],
@@ -147,6 +163,6 @@ class MLP(DropoutTorchBackend):
             "scale": [0.1, 1.0],
             "bias_init": ["default", "zeros"],
             "dropout_prob": [0.3, None],
-            "scheduler_cls": scheduler_params["scheduler_cls"],
-            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
+            "scheduler_cls": scheduler_specs["scheduler_cls"],
+            "scheduler_params": scheduler_specs["scheduler_params"],
         }

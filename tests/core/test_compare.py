@@ -5,7 +5,7 @@ import pytest
 import torch
 from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
-from autoemulate.emulators import ALL_EMULATORS, PYTORCH_EMULATORS
+from autoemulate.emulators import DEFAULT_EMULATORS
 from autoemulate.emulators.base import Emulator
 from torch.distributions import Transform
 
@@ -31,7 +31,7 @@ def test_ae(sample_data_for_ae_compare, device):
 def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
     """Test AutoEmulate with models passed as strings and transforms as dictionaries."""
     x, y = sample_data_for_ae_compare
-    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "GaussianProcessRBF"]
     x_transforms_list: list[list[Transform | dict]] = [
         [{"standardize": {}}],
         [{"pca": {"n_components": 3}}],
@@ -54,13 +54,13 @@ def test_ae_with_str_models_and_dict_transforms(sample_data_for_ae_compare):
 
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
-    assert "GaussianProcess" in result_model_names
+    assert "GaussianProcessRBF" in result_model_names
 
 
 def test_ae_no_tuning(sample_data_for_ae_compare):
     """Test AutoEmulate with model tuning disabled."""
     x, y = sample_data_for_ae_compare
-    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "gp"]
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest", "GaussianProcessRBF"]
 
     ae = AutoEmulate(x, y, models=models, model_params={})
 
@@ -71,7 +71,7 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
 
     assert "MLP" in result_model_names
     assert "RandomForest" in result_model_names
-    assert "GaussianProcess" in result_model_names
+    assert "GaussianProcessRBF" in result_model_names
 
     mlp_params = ae.get_result(0).params
     assert mlp_params != {}
@@ -97,25 +97,25 @@ def test_ae_no_tuning(sample_data_for_ae_compare):
 
     gp_params = ae.get_result(2).params
     assert gp_params != {}
-    assert "mean_module_fn" in gp_params
-    assert "covar_module_fn" in gp_params
     assert "epochs" in gp_params
     assert "lr" in gp_params
     assert "likelihood_cls" in gp_params
+
+
+def test_ae_no_tuning_fix_params(sample_data_for_ae_compare):
+    """Test that model_params are correctly passed when tuning is disabled."""
+    x, y = sample_data_for_ae_compare
+    ae = AutoEmulate(
+        x, y, models=["GaussianProcessRBF"], model_params={"posterior_predictive": True}
+    )
+    assert ae.best_result().model.model.posterior_predictive is True  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_get_model_subset():
     """Test getting a subset of models based on pytroch and probabilistic flags."""
 
     x, y = torch.rand(10, 2), torch.rand(10)
-    pytorch_subset = set(PYTORCH_EMULATORS)
-    probabilistic_subset = {e for e in ALL_EMULATORS if e.supports_uq}
-
-    ae = AutoEmulate(x, y, only_pytorch=True, model_params={})
-    assert set(ae.models) == pytorch_subset
+    probabilistic_subset = {e for e in DEFAULT_EMULATORS if e.supports_uq}
 
     ae = AutoEmulate(x, y, only_probabilistic=True, model_params={})
     assert set(ae.models) == probabilistic_subset
-
-    ae = AutoEmulate(x, y, only_pytorch=True, only_probabilistic=True, model_params={})
-    assert set(ae.models) == pytorch_subset.intersection(probabilistic_subset)

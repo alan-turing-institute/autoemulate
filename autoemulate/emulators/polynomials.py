@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, TensorLike
@@ -29,7 +30,8 @@ class PolynomialRegression(PyTorchBackend):
         batch_size: int = 16,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """Initialize a PolynomialRegression emulator.
 
@@ -56,8 +58,11 @@ class PolynomialRegression(PyTorchBackend):
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device. Defaults to
             None.
-        **kwargs: dict
-            Additional keyword arguments.
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
+            Additional keyword arguments related to the scheduler.
         """
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
@@ -80,7 +85,9 @@ class PolynomialRegression(PyTorchBackend):
             self.poly.n_output_features, self.n_outputs, bias=False
         ).to(self.device)
         self.optimizer = self.optimizer_cls(self.linear.parameters(), lr=self.lr)  # type: ignore[call-arg] since all optimizers include lr
-        self.scheduler_setup(kwargs)
+        self.scheduler_cls = scheduler_cls
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through for polynomial regression."""
@@ -96,11 +103,11 @@ class PolynomialRegression(PyTorchBackend):
     @staticmethod
     def get_tune_params():
         """Return a dictionary of hyperparameters to tune."""
-        scheduler_params = PolynomialRegression.scheduler_params()
+        scheduler_specs = PolynomialRegression.get_scheduler_params()
         return {
             "lr": [1e-3, 1e-2, 1e-1, 2e-1],
             "epochs": [50, 100, 200, 500, 1000],
             "batch_size": [8, 16, 32],
-            "scheduler_cls": scheduler_params["scheduler_cls"],
-            "scheduler_kwargs": scheduler_params["scheduler_kwargs"],
+            "scheduler_cls": scheduler_specs["scheduler_cls"],
+            "scheduler_params": scheduler_specs["scheduler_params"],
         }
