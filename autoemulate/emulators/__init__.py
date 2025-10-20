@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import overload
+
 from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
@@ -243,24 +246,40 @@ def get_emulator_class(name: str) -> type[Emulator]:
     return _default_registry.get_emulator_class(name)
 
 
-def register(model_cls: type[Emulator], overwrite: bool = True) -> type[Emulator]:
+# Overload signatures for type checking
+@overload
+def register(model_cls: type[Emulator]) -> type[Emulator]: ...
+
+
+@overload
+def register(
+    *, overwrite: bool = True
+) -> Callable[[type[Emulator]], type[Emulator]]: ...
+
+
+# Actual implementation
+def register(
+    model_cls: type[Emulator] | None = None, *, overwrite: bool = True
+) -> type[Emulator] | Callable[[type[Emulator]], type[Emulator]]:
     """
     Register a new emulator model to the default registry.
 
-    Can be used as a function or as a decorator.
+    Can be used as a function, a decorator without arguments, or a decorator with
+    arguments.
+
 
     Parameters
     ----------
-    model_cls: type[Emulator]
-        The emulator class to register.
-    overwrite: bool
+    model_cls : type[Emulator] | None
+        The emulator class to register. If None, returns a decorator function.
+    overwrite : bool
         If True, allows overwriting an existing model with the same name. If False,
         raises an error if a model with the same name already exists. Defaults to True.
 
     Returns
     -------
-    type[Emulator]
-        The registered emulator class (unchanged).
+    type[Emulator] | Callable[[type[Emulator]], type[Emulator]]
+        The registered emulator class (unchanged) or a decorator function.
 
     Raises
     ------
@@ -268,7 +287,15 @@ def register(model_cls: type[Emulator], overwrite: bool = True) -> type[Emulator
         If overwrite is False and a model with the same name already exists.
 
     """
-    return _default_registry.register_model(model_cls, overwrite=overwrite)
+
+    def decorator(cls: type[Emulator]) -> type[Emulator]:
+        return _default_registry.register_model(cls, overwrite=overwrite)
+
+    if model_cls is None:
+        # Called as @register(overwrite=...) or @register()
+        return decorator
+    # Called as @register or register(MyClass)
+    return decorator(model_cls)
 
 
 __all__ = [
