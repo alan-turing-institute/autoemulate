@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.nn.mlp import MLP
 from torch import nn
+from torch.optim.lr_scheduler import LRScheduler
 
 
 class ZeroOneInflatedBeta(torch.distributions.Distribution):
@@ -105,12 +106,7 @@ class ZeroOneInflatedBeta(torch.distributions.Distribution):
 
 
 class ZOIBMLP(MLP):
-    """
-    Zero-One Inflated Beta distribution Multi-Layer Perceptron (MLP) emulator.
-
-    MLP provides a simple deterministic emulator with optional model stochasticity
-    provided by different weight initialization and dropout.
-    """
+    """Zero-One Inflated Beta distribution Multi-Layer Perceptron (MLP) emulator."""
 
     supports_uq: bool = True
 
@@ -131,7 +127,8 @@ class ZOIBMLP(MLP):
         lr: float = 1e-2,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **scheduler_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Zero-One Inflated Beta Distribution Multi-Layer Perceptron (MLP) emulator.
@@ -171,7 +168,10 @@ class ZOIBMLP(MLP):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
-        **scheduler_kwargs: dict
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
             Additional keyword arguments related to the scheduler.
 
         Raises
@@ -198,7 +198,8 @@ class ZOIBMLP(MLP):
             5,  # params_size=5 for Zero-Inflated Beta distribution
             random_seed,
             device,
-            **scheduler_kwargs,
+            scheduler_cls,
+            scheduler_params,
         )
 
     def loss_func(self, y_pred, y_true):  # noqa: D102
