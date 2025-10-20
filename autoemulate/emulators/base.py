@@ -43,24 +43,22 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
 
     def fit(self, x: TensorLike, y: TensorLike):
         """Fit the emulator to the provided data."""
-        if isinstance(x, TensorLike) and isinstance(y, TensorLike):
-            self._check(x, y)
-            # Ensure x and y are tensors and 2D
-            x, y = self._convert_to_tensors(x, y)
+        # Ensure x and y are tensors and 2D
+        x, y = self._convert_to_tensors(x, y)
 
-            # Move to device
-            x, y = self._move_tensors_to_device(x, y)
+        # Move to device
+        x, y = self._move_tensors_to_device(x, y)
 
-            # Fit transforms
-            if self.x_transform is not None:
-                self.x_transform.fit(x)
-            if self.y_transform is not None:
-                self.y_transform.fit(y)
-            x = self.x_transform(x) if self.x_transform is not None else x
-            y = self.y_transform(y) if self.y_transform is not None else y
+        # Fit transforms
+        if self.x_transform is not None:
+            self.x_transform.fit(x)
+        if self.y_transform is not None:
+            self.y_transform.fit(y)
+        x = self.x_transform(x) if self.x_transform is not None else x
+        y = self.y_transform(y) if self.y_transform is not None else y
 
-            # Fit emulator
-            self._fit(x, y)
+        # Fit emulator
+        self._fit(x, y)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -280,7 +278,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         }
 
     @classmethod
-    def scheduler_params(cls) -> dict:
+    def get_scheduler_params(cls) -> dict:
         """
         Return a random parameters for the learning rate scheduler.
 
@@ -290,37 +288,37 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         all_params = [
             {
                 "scheduler_cls": [None],
-                "scheduler_kwargs": [{}],
+                "scheduler_params": [{}],
             },
             {
                 "scheduler_cls": [ExponentialLR],
-                "scheduler_kwargs": [
+                "scheduler_params": [
                     {"gamma": 0.9},
                     {"gamma": 0.95},
                 ],
             },
             {
                 "scheduler_cls": [LRScheduler],
-                "scheduler_kwargs": [
+                "scheduler_params": [
                     {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
                 ],
             },
             # TODO: investigate these suggestions from copilot, issue: #597
             # {
             #     "scheduler_cls": [CosineAnnealingLR],
-            #     "scheduler_kwargs": [{"T_max": 10, "eta_min": 0.01}],
+            #     "scheduler_params": [{"T_max": 10, "eta_min": 0.01}],
             # },
             # {
             #     "scheduler_cls": [ReduceLROnPlateau],
-            #     "scheduler_kwargs": [{"mode": "min", "factor": 0.1, "patience": 5}],
+            #     "scheduler_params": [{"mode": "min", "factor": 0.1, "patience": 5}],
             # },
             # {
             #     "scheduler_cls": [StepLR],
-            #     "scheduler_kwargs": [{"step_size": 10, "gamma": 0.1}],
+            #     "scheduler_params": [{"step_size": 10, "gamma": 0.1}],
             # },
             # {
             #     "scheduler_cls": [CyclicLR],
-            #     "scheduler_kwargs": [{
+            #     "scheduler_params": [{
             #         "base_lr": 1e-3,
             #         "max_lr": 1e-1,
             #         "step_size_up": 5,
@@ -329,7 +327,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
             # },
             # {
             #     "scheduler_cls": [OneCycleLR],
-            #     "scheduler_kwargs": [{
+            #     "scheduler_params": [{
             #         "max_lr": 1e-1,
             #         "total_steps": self.epochs,
             #         "pct_start": 0.3,
@@ -340,40 +338,28 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         # Randomly select one of the parameter sets
         return random.choice(all_params)
 
-    def scheduler_setup(self, kwargs: dict | None = None):
+    def scheduler_setup(self, scheduler_params: dict | None = None):
         """
         Set up the learning rate scheduler for the emulator.
 
         Parameters
         ----------
-        kwargs : dict | None
-            Keyword arguments for the model. This should include scheduler_kwargs.
+        scheduler_params : dict | None
+            Keyword arguments for the scheduler.
         """
-        if kwargs is None:
-            msg = (
-                "Provide a kwargs dictionary including "
-                "scheduler_kwargs to set up the scheduler."
-            )
+        if scheduler_params is None:
+            msg = "Provide scheduler_params to set up the scheduler."
             raise ValueError(msg)
 
         if not hasattr(self, "optimizer"):
             msg = "Optimizer must be set before setting up the scheduler."
             raise RuntimeError(msg)
 
-        # Extract scheduler-specific kwargs if present
-        try:
-            assert type(kwargs) is dict
-            scheduler_kwargs = kwargs.pop("scheduler_kwargs", {})
-        except AttributeError:
-            # If kwargs does not contain scheduler_kwargs, throw an error
-            msg = "No kwargs for scheduler setup detected."
-            raise ValueError(msg) from None
-
         # Set up the scheduler if a scheduler class is defined
         if self.scheduler_cls is None:
             self.scheduler = None
         else:
-            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_kwargs)  # type: ignore[call-arg]
+            self.scheduler = self.scheduler_cls(self.optimizer, **scheduler_params)  # type: ignore[call-arg]
 
 
 class DeterministicEmulator(Emulator):
