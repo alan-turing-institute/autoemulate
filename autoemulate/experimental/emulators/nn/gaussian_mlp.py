@@ -19,7 +19,6 @@ class GaussianMLP(GaussianEmulator, MLP):
         standardize_x: bool = True,
         standardize_y: bool = True,
         activation_cls: type[nn.Module] = nn.ReLU,
-        loss_fn_cls: type[nn.Module] = nn.MSELoss,
         epochs: int = 100,
         batch_size: int = 16,
         layer_dims: list[int] | None = None,
@@ -33,6 +32,65 @@ class GaussianMLP(GaussianEmulator, MLP):
         device: DeviceLike | None = None,
         **scheduler_kwargs,
     ):
+        """
+        Multi-Layer Perceptron (MLP) emulator with Gaussian outputs.
+
+        GaussianMLP extends the standard MLP to output Gaussian distributions with
+        either diagonal or full covariance matrices, allowing for uncertainty
+        quantification in predictions.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input features.
+        y: TensorLike
+            Target values.
+        standardize_x: bool
+            Whether to standardize the input features. Defaults to True.
+        standardize_y: bool
+            Whether to standardize the target values. Defaults to True.
+        batch_size: int
+            Batch size for training. Defaults to 16.
+        activation_cls: type[nn.Module]
+            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
+        layer_dims: list[int] | None
+            Dimensions of the hidden layers. If None, defaults to [32, 16].
+            Defaults to None.
+        weight_init: str
+            Weight initialization method. Options are "default", "normal", "uniform",
+            "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
+            "kaiming_normal". Defaults to "default".
+        scale: float
+            Scale parameter for weight initialization methods. Used as:
+            - gain for Xavier methods
+            - std for normal distribution
+            - bound for uniform distribution (range: [-scale, scale])
+            - ignored for Kaiming methods (uses optimal scaling)
+            Defaults to 1.0.
+        full_covariance: bool
+            If True, the emulator predicts full covariance matrices for the outputs. If
+            False, only variance is predicted. Defaults to False.
+        bias_init: str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
+        dropout_prob: float | None
+            Dropout probability for regularization. If None, no dropout is applied.
+            Defaults to None.
+        lr: float
+            Learning rate for the optimizer. Defaults to 5e-3.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
+        **scheduler_kwargs: dict
+            Additional keyword arguments related to the scheduler.
+
+        Raises
+        ------
+        ValueError
+            If the input dimensions of `x` and `y` are not matrices.
+        """
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)
 
@@ -70,7 +128,6 @@ class GaussianMLP(GaussianEmulator, MLP):
         self.x_transform = StandardizeTransform() if standardize_x else None
         self.y_transform = StandardizeTransform() if standardize_y else None
         self.epochs = epochs
-        self.loss_fn = loss_fn_cls()
         self.lr = lr
         self.num_tasks = y.shape[1]
         self.batch_size = batch_size
