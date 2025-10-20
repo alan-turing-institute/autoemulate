@@ -482,6 +482,7 @@ def create_gp_subclass(
     covar_module_fn: CovarModuleFn,
     mean_module_fn: MeanModuleFn = constant_mean,
     auto_register: bool = True,
+    overwrite: bool = True,
     **fixed_kwargs,
 ) -> type[GaussianProcess]:
     """
@@ -506,10 +507,10 @@ def create_gp_subclass(
     auto_register : bool
         Whether to automatically register the created subclass with the main emulator
         Registry. Defaults to True.
-    allow_overwrite : bool
+    overwrite : bool
         Whether to allow overwriting an existing class with the same name in the
         main Registry. Useful for interactive development in notebooks. Defaults to
-        False.
+        True.
     **fixed_kwargs
         Keyword arguments to fix in the subclass. These parameters will be
         set to the provided values and excluded from hyperparameter tuning.
@@ -524,7 +525,7 @@ def create_gp_subclass(
     ------
     ValueError
         If `name` matches `model_name()` or `short_name()` of an already registered
-        emulator in the main Registry and `allow_overwrite=False`.
+        emulator in the main Registry and `overwrite=False`.
 
     Notes
     -----
@@ -646,22 +647,26 @@ def create_gp_subclass(
         # Lazy import to avoid circular dependency with __init__.py
         from autoemulate.emulators import register  # noqa: PLC0415
 
-        register(GaussianProcessSubclass)
+        register(GaussianProcessSubclass, overwrite=overwrite)
 
     return GaussianProcessSubclass
 
 
+# Built-in GP classes - auto_register=False to avoid circular imports
+# These are registered explicitly in autoemulate/emulators/__init__.py
 GaussianProcessRBF = create_gp_subclass(
     "GaussianProcessRBF",
     GaussianProcess,
     covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
 GaussianProcessMatern32 = create_gp_subclass(
     "GaussianProcessMatern32",
     GaussianProcess,
     covar_module_fn=matern_3_2_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
 
 # correlated GP kernels
@@ -670,10 +675,12 @@ GaussianProcessCorrelatedRBF = create_gp_subclass(
     GaussianProcessCorrelated,
     covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
 GaussianProcessCorrelatedMatern32 = create_gp_subclass(
     "GaussianProcessCorrelatedMatern32",
     GaussianProcessCorrelated,
     covar_module_fn=matern_3_2_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
