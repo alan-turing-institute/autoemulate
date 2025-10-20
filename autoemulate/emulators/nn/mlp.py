@@ -33,6 +33,7 @@ class MLP(DropoutTorchBackend):
         bias_init: str = "default",
         dropout_prob: float | None = None,
         lr: float = 1e-2,
+        params_size: int = 1,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
@@ -75,6 +76,8 @@ class MLP(DropoutTorchBackend):
             Defaults to None.
         lr: float
             Learning rate for the optimizer. Defaults to 1e-2.
+        params_size: int
+            Number of parameters to predict per output dimension. Defaults to 1.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
@@ -115,7 +118,9 @@ class MLP(DropoutTorchBackend):
 
         # Add final layer without activation
         num_tasks = y.shape[1]
-        layers.append(nn.Linear(self.layer_dims[-1], num_tasks, device=self.device))
+        layers.append(
+            nn.Linear(self.layer_dims[-1], num_tasks * params_size, device=self.device)
+        )
         self.nn = nn.Sequential(*layers)
 
         # Finalize initialization
