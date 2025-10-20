@@ -20,7 +20,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         standardize_x: bool = True,
         standardize_y: bool = True,
         activation_cls: type[nn.Module] = nn.ReLU,
-        epochs: int = 100,
+        epochs: int = 500,
         batch_size: int = 16,
         layer_dims: list[int] | None = None,
         weight_init: str = "default",
@@ -28,7 +28,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         full_covariance: bool = False,
         bias_init: str = "default",
         dropout_prob: float | None = None,
-        lr: float = 5e-3,
+        lr: float = 1e-2,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
@@ -51,6 +51,8 @@ class GaussianMLP(GaussianEmulator, MLP):
             Whether to standardize the input features. Defaults to True.
         standardize_y: bool
             Whether to standardize the target values. Defaults to True.
+        epochs: int
+            Number of training epochs. Defaults to 500.
         batch_size: int
             Batch size for training. Defaults to 16.
         activation_cls: type[nn.Module]
@@ -80,7 +82,7 @@ class GaussianMLP(GaussianEmulator, MLP):
             Dropout probability for regularization. If None, no dropout is applied.
             Defaults to None.
         lr: float
-            Learning rate for the optimizer. Defaults to 5e-3.
+            Learning rate for the optimizer. Defaults to 1e-2.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
