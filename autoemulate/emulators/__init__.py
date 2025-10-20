@@ -74,7 +74,9 @@ class Registry:
             em_cls.short_name(): em_cls for em_cls in self._all_emulators
         }
 
-    def register_model(self, model_cls: type[Emulator]) -> type[Emulator]:
+    def register_model(
+        self, model_cls: type[Emulator], overwrite: bool = True
+    ) -> type[Emulator]:
         """
         Register a new emulator model to the registry.
 
@@ -82,22 +84,61 @@ class Registry:
 
         Parameters
         ----------
-        model_cls : type[Emulator]
+        model_cls: type[Emulator]
             The emulator class to register.
+        overwrite: bool
+            If True, allows overwriting an existing model with the same name. If False,
+            raises an error if a model with the same name already exists. Defaults to
+            True.
 
         Returns
         -------
         type[Emulator]
             The registered emulator class (unchanged).
 
+        Raises
+        ------
+        ValueError
+            If overwrite is False and a model with the same name already exists.
+
         """
+        model_name = model_cls.model_name().lower()
+        short_name = model_cls.short_name()
+
+        # Check if model already exists
+        existing_cls_by_name = self._emulator_registry.get(model_name)
+        existing_cls_by_short_name = self._emulator_registry_short_name.get(short_name)
+
+        if not overwrite:
+            if existing_cls_by_name is not None:
+                raise ValueError(
+                    f"Model with name '{model_name}' already exists. Set overwrite=True"
+                    f" to replace it."
+                )
+            if existing_cls_by_short_name is not None:
+                raise ValueError(
+                    f"Model with short name '{short_name}' already exists. Set "
+                    f"overwrite=True to replace it."
+                )
+
+        # If overwriting, remove the old model from all lists
+        if (
+            existing_cls_by_name is not None
+            and existing_cls_by_name in self._all_emulators
+        ):
+            self._all_emulators.remove(existing_cls_by_name)
+            if existing_cls_by_name in self._gaussian_process_emulators:
+                self._gaussian_process_emulators.remove(existing_cls_by_name)
+            if existing_cls_by_name in self._pytorch_emulators:
+                self._pytorch_emulators.remove(existing_cls_by_name)
+
         # Add to ALL_EMULATORS if not already present
         if model_cls not in self._all_emulators:
             self._all_emulators.append(model_cls)
 
         # Update registries
-        self._emulator_registry[model_cls.model_name().lower()] = model_cls
-        self._emulator_registry_short_name[model_cls.short_name()] = model_cls
+        self._emulator_registry[model_name] = model_cls
+        self._emulator_registry_short_name[short_name] = model_cls
 
         # Update categorical lists based on model properties
         if (
@@ -151,8 +192,13 @@ class Registry:
 
         Returns
         -------
-        type[Emulator] | None
-            The emulator class if found, None otherwise.
+        type[Emulator]
+            The emulator class if found.
+
+        Raises
+        ------
+        ValueError
+            If the emulator name is not found.
         """
         emulator_cls = self._emulator_registry.get(
             name.lower()
@@ -197,7 +243,7 @@ def get_emulator_class(name: str) -> type[Emulator]:
     return _default_registry.get_emulator_class(name)
 
 
-def register(model_cls: type[Emulator]) -> type[Emulator]:
+def register(model_cls: type[Emulator], overwrite: bool = True) -> type[Emulator]:
     """
     Register a new emulator model to the default registry.
 
@@ -205,16 +251,24 @@ def register(model_cls: type[Emulator]) -> type[Emulator]:
 
     Parameters
     ----------
-    model_cls : type[Emulator]
+    model_cls: type[Emulator]
         The emulator class to register.
+    overwrite: bool
+        If True, allows overwriting an existing model with the same name. If False,
+        raises an error if a model with the same name already exists. Defaults to True.
 
     Returns
     -------
     type[Emulator]
         The registered emulator class (unchanged).
 
+    Raises
+    ------
+    ValueError
+        If overwrite is False and a model with the same name already exists.
+
     """
-    return _default_registry.register_model(model_cls)
+    return _default_registry.register_model(model_cls, overwrite=overwrite)
 
 
 __all__ = [
