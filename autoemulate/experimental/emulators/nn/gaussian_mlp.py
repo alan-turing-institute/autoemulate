@@ -7,6 +7,7 @@ from autoemulate.emulators.nn.mlp import MLP
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.utils import make_positive_definite
 from torch import nn
+from torch.optim.lr_scheduler import LRScheduler
 
 
 class GaussianMLP(GaussianEmulator, MLP):
@@ -30,7 +31,8 @@ class GaussianMLP(GaussianEmulator, MLP):
         lr: float = 5e-3,
         random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **scheduler_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Multi-Layer Perceptron (MLP) emulator with Gaussian outputs.
@@ -83,7 +85,10 @@ class GaussianMLP(GaussianEmulator, MLP):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
-        **scheduler_kwargs: dict
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
             Additional keyword arguments related to the scheduler.
 
         Raises
@@ -133,7 +138,9 @@ class GaussianMLP(GaussianEmulator, MLP):
         self.batch_size = batch_size
         self.full_covariance = full_covariance
         self.optimizer = self.optimizer_cls(self.nn.parameters(), lr=lr)  # type: ignore  # noqa: PGH003
-        self.scheduler_setup(scheduler_kwargs)
+        self.scheduler_cls = scheduler_cls
+        self.scheduler_params = scheduler_params or {}
+        self.scheduler_setup(self.scheduler_params)
         self.to(device)
 
     def forward(self, x):
