@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import overload
 
-from torch import nn
+import torch
 
 from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
@@ -154,9 +154,9 @@ class Registry:
         ):
             self._gaussian_process_emulators.append(model_cls)
 
-        # Check if it's a PyTorch emulator (subclass of nn.Module) + not in PyTorch list
+        # Check if it's a PyTorch emulator (subclass of torch.nn.Module)
         if (
-            issubclass(model_cls, nn.Module)
+            issubclass(model_cls, torch.nn.Module)
             and model_cls not in self._pytorch_emulators
         ):
             self._pytorch_emulators.append(model_cls)
@@ -256,6 +256,10 @@ def get_emulator_class(name: str) -> type[Emulator]:
 # Overload signatures for type checking
 @overload
 def register(model_cls: type[Emulator]) -> type[Emulator]: ...
+
+
+@overload
+def register(model_cls: type[Emulator], *, overwrite: bool) -> type[Emulator]: ...
 
 
 @overload
