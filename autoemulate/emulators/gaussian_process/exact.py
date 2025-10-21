@@ -652,8 +652,8 @@ def create_gp_subclass(
     return GaussianProcessSubclass
 
 
-# Built-in GP classes - auto_register=False to avoid circular imports
-# These are registered explicitly in autoemulate/emulators/__init__.py
+# Built-in GP subclasses - auto_register=False as already registered in Registry init:
+# autoemulate/emulators/__init__.py
 GaussianProcessRBF = create_gp_subclass(
     "GaussianProcessRBF",
     GaussianProcess,

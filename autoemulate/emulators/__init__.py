@@ -21,20 +21,12 @@ from .transformed.base import TransformedEmulator
 
 
 class Registry:
-    """
-    Registry for managing emulators.
+    """Registry for managing emulators.
 
     The Registry class maintains collections of emulator classes organized by
     their properties (e.g., Gaussian Process emulators, PyTorch-based emulators).
     It provides methods to register new emulators and retrieve them by name.
-
-    Attributes
-    ----------
-    emulators : dict[str, type[Emulator]]
-        Dictionary mapping emulator names to classes.
     """
-
-    emulators: dict[str, type[Emulator]]
 
     def __init__(self):
         # Initialize the registry with default emulators, this is not updated
@@ -82,10 +74,7 @@ class Registry:
     def register_model(
         self, model_cls: type[Emulator], overwrite: bool = True
     ) -> type[Emulator]:
-        """
-        Register a new emulator model to the registry.
-
-        Can be used as a method or as a decorator.
+        """Register a new emulator model to the registry.
 
         Parameters
         ----------
@@ -154,14 +143,18 @@ class Registry:
         ):
             self._gaussian_process_emulators.append(model_cls)
 
-        # Check if it's a PyTorch emulator (subclass of torch.nn.Module)
+        # Check if it's a PyTorch emulator (subclass of torch.nn.Module) and it's not in
+        # PyTorch list
         if (
             issubclass(model_cls, torch.nn.Module)
             and model_cls not in self._pytorch_emulators
         ):
             self._pytorch_emulators.append(model_cls)
-        # Check it's not in non-PyTorch list
-        elif model_cls not in self._non_pytorch_emulators:
+        # Check if not a PyTorch emulator and it's not in non-PyTorch list)
+        if (
+            not issubclass(model_cls, torch.nn.Module)
+            and model_cls not in self._non_pytorch_emulators
+        ):
             self._non_pytorch_emulators.append(model_cls)
 
         return model_cls
@@ -192,13 +185,12 @@ class Registry:
         return self._default_emulators
 
     def get_emulator_class(self, name: str) -> type[Emulator]:
-        """
-        Get the emulator class by name.
+        """Get the emulator class by name or short name.
 
         Parameters
         ----------
         name: str
-            The name of the emulator class.
+            Either the name or short name of the emulator class.
 
         Returns
         -------
@@ -223,10 +215,10 @@ class Registry:
         return emulator_cls
 
 
-# Create a default registry instance for backward compatibility
+# Create a default registry instance
 _default_registry = Registry()
 
-# Module-level constants for backward compatibility
+# Module-level constants for backward compatibility and simplified public access
 DEFAULT_EMULATORS = _default_registry._default_emulators
 NON_PYTORCH_EMULATORS = _default_registry._non_pytorch_emulators
 ALL_EMULATORS = _default_registry._all_emulators
@@ -237,13 +229,12 @@ EMULATOR_REGISTRY_SHORT_NAME = _default_registry._emulator_registry_short_name
 
 
 def get_emulator_class(name: str) -> type[Emulator]:
-    """
-    Get the emulator class by name using the default registry.
+    """Get the emulator class by name or short name using the default registry.
 
     Parameters
     ----------
     name: str
-        The name of the emulator class.
+        The name or short name of the emulator class.
 
     Returns
     -------
@@ -263,27 +254,23 @@ def register(model_cls: type[Emulator], *, overwrite: bool) -> type[Emulator]: .
 
 
 @overload
-def register(
-    *, overwrite: bool = True
-) -> Callable[[type[Emulator]], type[Emulator]]: ...
+def register(*, overwrite: bool) -> Callable[[type[Emulator]], type[Emulator]]: ...
 
 
 # Actual implementation
 def register(
     model_cls: type[Emulator] | None = None, *, overwrite: bool = True
 ) -> type[Emulator] | Callable[[type[Emulator]], type[Emulator]]:
-    """
-    Register a new emulator model to the default registry.
+    """Register a new emulator model to the default registry.
 
     Can be used as a function, a decorator without arguments, or a decorator with
     arguments.
 
-
     Parameters
     ----------
-    model_cls : type[Emulator] | None
+    model_cls: type[Emulator] | None
         The emulator class to register. If None, returns a decorator function.
-    overwrite : bool
+    overwrite: bool
         If True, allows overwriting an existing model with the same name. If False,
         raises an error if a model with the same name already exists. Defaults to True.
 
