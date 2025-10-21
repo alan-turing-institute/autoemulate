@@ -1,13 +1,15 @@
-"""Tests for the Registry functionality."""
-
 import pytest
 from autoemulate.emulators import Registry
 from autoemulate.emulators.base import Emulator, GaussianProcessEmulator
 
 
-def test_register_custom_emulator():
+@pytest.fixture
+def registry():
+    return Registry()
+
+
+def test_register_custom_emulator(registry):
     """Test registering a custom emulator subclass."""
-    registry = Registry()
 
     class TestEmulator(Emulator): ...
 
@@ -20,9 +22,8 @@ def test_register_custom_emulator():
     assert retrieved == TestEmulator
 
 
-def test_register_gp_from_factory():
+def test_register_gp_from_factory(registry):
     """Test registering a GP subclass created manually."""
-    registry = Registry()
 
     # Create a custom GP emulator class
     class TestGP(GaussianProcessEmulator): ...
@@ -35,9 +36,8 @@ def test_register_gp_from_factory():
     assert TestGP in registry.gaussian_process_emulators
 
 
-def test_overwrite_flag():
+def test_overwrite_flag(registry):
     """Test that overwrite flag controls duplicate registration."""
-    registry = Registry()
 
     class TestOverwrite(Emulator):
         version = 1
@@ -70,3 +70,36 @@ def test_overwrite_flag():
 
     with pytest.raises(ValueError, match="already exists"):
         registry.register_model(TestOverwrite3, overwrite=False)
+
+
+@pytest.mark.parametrize(
+    "emulator_cls", Registry().all_emulators, ids=lambda cls: cls.model_name()
+)
+def test_get_emulator_class_by_name(registry, emulator_cls):
+    """Test that all registered emulators can be retrieved by model_name."""
+    model_name = emulator_cls.model_name()
+
+    # Should retrieve the correct class by model_name (case-insensitive)
+    assert registry.get_emulator_class(model_name) == emulator_cls
+    assert registry.get_emulator_class(model_name.upper()) == emulator_cls
+    assert registry.get_emulator_class(model_name.lower()) == emulator_cls
+
+
+@pytest.mark.parametrize(
+    "emulator_cls", Registry().all_emulators, ids=lambda cls: cls.model_name()
+)
+def test_get_emulator_class_by_short_name(registry, emulator_cls):
+    """Test that all registered emulators can be retrieved by short_name."""
+    short_name = emulator_cls.short_name()
+
+    # Should retrieve the correct class by short_name (case-insensitive)
+    assert registry.get_emulator_class(short_name) == emulator_cls
+    assert registry.get_emulator_class(short_name.upper()) == emulator_cls
+    assert registry.get_emulator_class(short_name.lower()) == emulator_cls
+
+
+def test_get_emulator_class_unknown_raises(registry):
+    """Test that get_emulator_class raises ValueError for unknown emulator."""
+
+    with pytest.raises(ValueError, match="Unknown emulator name"):
+        registry.get_emulator_class("UnknownEmulator")
