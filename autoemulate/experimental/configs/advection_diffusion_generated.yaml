@@ -15,8 +15,9 @@ formatter_type: "default_channels_first"
 model_params:
   modes1: 16              # Fourier modes in first dimension
   modes2: 16              # Fourier modes in second dimension
-  width: 32               # Width of the FNO layers
-  n_blocks: 4             # Number of FNO blocks
+  hidden_channels: 128    # Number of channels in the FNO layers
+  # width: 32               # Width of the FNO layers
+  # n_blocks: 4             # Number of FNO blocks
 
 # Simulator configuration for advection-diffusion
 # This triggers GENERATED data source type
@@ -38,7 +39,7 @@ data:
   # No data_path - triggers GENERATED source type
   
   # Data generation
-  n_train_samples: 1000
+  n_train_samples: 100
   n_valid_samples: 20
   n_test_samples: 20
   random_seed: 42
@@ -55,10 +56,10 @@ trainer:
   epochs: 20
   device: "cuda"           # Use "cuda" for NVIDIA GPU, "mps" for Apple Silicon, "cpu" for CPU
   
-  optimizer_type: "adam"
+  optimizer_type: "adamw"
   optimizer_params:
-    lr: 0.0001             # Learning rate
-    weight_decay: 0.0
+    lr: 0.01             # Learning rate
+    weight_decay: 0.0001
   
   lr_scheduler_type: "step_lr"
   lr_scheduler_params:
