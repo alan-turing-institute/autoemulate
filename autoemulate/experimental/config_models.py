@@ -152,6 +152,9 @@ class DataConfig(BaseModel):
     # DataLoader configuration
     batch_size: int = Field(default=4, description="Batch size for DataLoader")
     dtype: str = Field(default="float32", description="Data type (float32 or float64)")
+    use_normalization: bool = Field(
+        default=False, description="Whether to use normalization (for Well datasets)"
+    )
 
     def get_source_type(self) -> DataSourceType:
         """Automatically determine data source type from configuration."""
@@ -161,10 +164,9 @@ class DataConfig(BaseModel):
         # Auto-detect based on fields
         if self.well_dataset_name is not None:
             return DataSourceType.WELL_NATIVE
-        elif self.data_path is not None:
+        if self.data_path is not None:
             return DataSourceType.FILE
-        else:
-            return DataSourceType.GENERATED
+        return DataSourceType.GENERATED
 
 
 class TeacherForcingConfig(BaseModel):
