@@ -77,6 +77,11 @@ spatiotemporal = [
     "the-well[dev,benchmark] @ git+https://github.com/PolymathicAI/the_well.git@a123419",
     # "triton>=3.0.0",
 ]
+physicsnemo = [
+    # "nvidia-physicsnemo[launch,dev,makani,fignet,storage,shardtensor,natten] @ git+https://github.com/NVIDIA/physicsnemo.git@main",
+    # "nvidia-physicsnemo[launch,makani,fignet,storage,shardtensor,natten] @ git+https://github.com/NVIDIA/physicsnemo.git@main",
+    "nvidia-physicsnemo[launch,makani,storage,shardtensor] @ git+https://github.com/NVIDIA/physicsnemo.git@main",
+]
 
 [tool.setuptools]
 zip-safe = false
