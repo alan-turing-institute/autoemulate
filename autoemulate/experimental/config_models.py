@@ -112,13 +112,13 @@ class DataConfig(BaseModel):
     # Data paths
     data_path: str | None = Field(
         default=None,
-        description="Path to data directory (for file loading) or Well datasets base path (for well_native)",
+        description="Path to data directory (for file loading) or Well datasets base path (for well_native)",  # noqa: E501
     )
 
     # The Well native dataset configuration
     well_dataset_name: str | None = Field(
         default=None,
-        description="Name of The Well dataset (e.g., 'turbulent_radiative_layer_2D'). Set this to use Well native datasets.",
+        description="Name of The Well dataset (e.g., 'turbulent_radiative_layer_2D'). Set this to use Well native datasets.",  # noqa: E501
     )
 
     # Data generation (for generated source type)
@@ -153,7 +153,9 @@ class DataConfig(BaseModel):
     batch_size: int = Field(default=4, description="Batch size for DataLoader")
     dtype: str = Field(default="float32", description="Data type (float32 or float64)")
     use_normalization: bool = Field(
-        default=False, description="Whether to use normalization (for Well datasets)"
+        default=False,
+        description="Whether to use Z-score normalization ((x - mean) / std). "
+        "Stats computed from training data and applied to all splits.",
     )
 
     def get_source_type(self) -> DataSourceType:

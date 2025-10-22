@@ -219,6 +219,7 @@ def generate_or_load_data(
             n_steps_output=data_cfg.n_steps_output,
             batch_size=data_cfg.batch_size,
             train_dataset=WellDataset,
+            use_normalization=data_cfg.use_normalization,
         )
 
         logger.info("Training dataset size: %d samples", len(datamodule.train_dataset))
@@ -244,6 +245,7 @@ def generate_or_load_data(
             batch_size=data_cfg.batch_size,
             dtype=dtype,
             verbose=config.verbose,
+            use_normalization=data_cfg.use_normalization,
         )
     else:  # GENERATED
         # Generate data from simulator
@@ -294,6 +296,7 @@ def generate_or_load_data(
             batch_size=data_cfg.batch_size,
             dtype=dtype,
             verbose=config.verbose,
+            use_normalization=data_cfg.use_normalization,
         )
 
     return datamodule

@@ -8,6 +8,133 @@ from the_well.data.datasets import WellMetadata
 from torch.utils.data import DataLoader, Dataset
 
 
+class SimpleZScoreNormalization:
+    """Simple Z-score normalization for AutoEmulate datasets.
+
+    Computes mean and std from the data and applies (x - mean) / std normalization.
+    Compatible with The Well's Trainer interface.
+    """
+
+    def __init__(self, data: torch.Tensor, min_std: float = 1e-6):
+        """Initialize normalization with data statistics.
+
+        Parameters
+        ----------
+        data : torch.Tensor
+            Training data tensor of shape [N, T, W, H, C]
+        min_std : float
+            Minimum standard deviation to avoid division by zero
+        """
+        # Compute statistics over all dimensions except channels
+        # Shape: [C] - one mean/std per channel
+        self.mean = data.mean(dim=(0, 1, 2, 3))
+        self.std = data.std(dim=(0, 1, 2, 3)).clamp(min=min_std)
+        self.min_std = min_std
+
+    def normalize(self, x: torch.Tensor) -> torch.Tensor:
+        """Normalize input tensor.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape [..., C]
+
+        Returns
+        -------
+        torch.Tensor
+            Normalized tensor
+        """
+        return (x - self.mean.to(x.device)) / self.std.to(x.device)
+
+    def denormalize(self, x: torch.Tensor) -> torch.Tensor:
+        """Denormalize input tensor.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Normalized tensor of shape [..., C]
+
+        Returns
+        -------
+        torch.Tensor
+            Denormalized tensor
+        """
+        return x * self.std.to(x.device) + self.mean.to(x.device)
+
+    def normalize_flattened(
+        self,
+        x: torch.Tensor,
+        mode: str = "variable",  # noqa: ARG002
+    ) -> torch.Tensor:
+        """Normalize tensor where fields are flattened as channels.
+
+        Compatible with The Well's Trainer interface.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape [..., C]
+        mode : str
+            Mode for normalization ("variable" or "constant").
+            Currently both use same stats.
+
+        Returns
+        -------
+        torch.Tensor
+            Normalized tensor
+        """
+        return self.normalize(x)
+
+    def denormalize_flattened(
+        self,
+        x: torch.Tensor,
+        mode: str = "variable",  # noqa: ARG002
+    ) -> torch.Tensor:
+        """Denormalize tensor where fields are flattened as channels.
+
+        Compatible with The Well's Trainer interface.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Normalized tensor of shape [..., C]
+        mode : str
+            Mode for denormalization ("variable" or "constant").
+            Currently both use same stats.
+
+        Returns
+        -------
+        torch.Tensor
+            Denormalized tensor
+        """
+        return self.denormalize(x)
+
+    def delta_denormalize_flattened(
+        self,
+        x: torch.Tensor,
+        mode: str = "variable",  # noqa: ARG002
+    ) -> torch.Tensor:
+        """Delta denormalize tensor (for delta models).
+
+        For simple Z-score normalization, delta denormalization only
+        requires std scaling (no mean shift needed).
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Normalized delta tensor of shape [..., C]
+        mode : str
+            Mode for denormalization ("variable" or "constant").
+            Currently both use same stats.
+
+        Returns
+        -------
+        torch.Tensor
+            Denormalized delta tensor
+        """
+        return x * self.std.to(x.device)
+
+
 class AutoEmulateDataset(Dataset):
     """A class for spatio-temporal datasets."""
 
@@ -24,6 +151,8 @@ class AutoEmulateDataset(Dataset):
         full_trajectory_mode: bool = False,
         dtype: torch.dtype = torch.float32,
         verbose: bool = False,
+        use_normalization: bool = False,
+        norm: SimpleZScoreNormalization | None = None,
     ):
         """
         Initialize the dataset.
@@ -50,9 +179,15 @@ class AutoEmulateDataset(Dataset):
             Data type for tensors. Defaults to torch.float32.
         verbose: bool
             If True, print dataset information.
+        use_normalization: bool
+            Whether to apply Z-score normalization. Defaults to False.
+        norm: SimpleZScoreNormalization | None
+            Normalization object (computed from training data). Defaults to None.
         """
         self.dtype = dtype
         self.verbose = verbose
+        self.use_normalization = use_normalization
+        self.norm = norm
 
         # Read or parse data
         self.read_data(data_path) if data_path is not None else self.parse_data(data)
@@ -178,9 +313,12 @@ class AutoEmulateDataset(Dataset):
         return len(self.all_input_fields)
 
     def __getitem__(self, idx):  # noqa: D105
+        input_fields = self.all_input_fields[idx]
+        output_fields = self.all_output_fields[idx]
+
         item = {
-            "input_fields": self.all_input_fields[idx],
-            "output_fields": self.all_output_fields[idx],
+            "input_fields": input_fields,
+            "output_fields": output_fields,
         }
         if len(self.all_constant_scalars) > 0:
             item["constant_scalars"] = self.all_constant_scalars[idx]
@@ -222,8 +360,6 @@ class ReactionDiffusionDataset(AutoEmulateDataset):
             n_steps_per_trajectory=[self.data.shape[1]] * self.data.shape[0],
             grid_type="cartesian",
         )
-        self.use_normalization = False
-        self.norm = None
 
 
 class AdvectionDiffusionDataset(AutoEmulateDataset):
@@ -249,8 +385,6 @@ class AdvectionDiffusionDataset(AutoEmulateDataset):
             n_steps_per_trajectory=[self.data.shape[1]] * self.data.shape[0],
             grid_type="cartesian",
         )
-        self.use_normalization = False
-        self.norm = None
 
 
 class BOUTDataset(AutoEmulateDataset):
@@ -279,8 +413,6 @@ class BOUTDataset(AutoEmulateDataset):
             n_steps_per_trajectory=[self.data.shape[1]] * self.data.shape[0],
             grid_type="cartesian",
         )
-        self.use_normalization = False
-        self.norm = None
 
 
 # class AutoEmulateDataModule(AbstractDataModule):
@@ -302,14 +434,19 @@ class AutoEmulateDataModule(WellDataModule):
         dtype: torch.dtype = torch.float32,
         ftype: str = "torch",
         verbose: bool = False,
+        use_normalization: bool = False,
     ):
         self.verbose = verbose
+        self.use_normalization = use_normalization
+
         base_path = Path(data_path) if data_path is not None else None
         suffix = ".pt" if ftype == "torch" else ".h5"
         fname = f"data{suffix}"
         train_path = base_path / "train" / fname if base_path is not None else None
         valid_path = base_path / "valid" / fname if base_path is not None else None
         test_path = base_path / "test" / fname if base_path is not None else None
+
+        # Create training dataset first (without normalization)
         self.train_dataset = dataset_cls(
             data_path=str(train_path) if train_path is not None else None,
             data=data["train"] if data is not None else None,
@@ -320,7 +457,24 @@ class AutoEmulateDataModule(WellDataModule):
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
             verbose=self.verbose,
+            use_normalization=False,  # Temporarily disable to compute stats
+            norm=None,
         )
+
+        # Compute normalization from training data if requested
+        norm = None
+        if self.use_normalization:
+            if self.verbose:
+                print("Computing normalization statistics from training data...")
+            norm = SimpleZScoreNormalization(self.train_dataset.data)
+            if self.verbose:
+                print(f"  Mean (per channel): {norm.mean}")
+                print(f"  Std (per channel): {norm.std}")
+
+            # Now enable normalization for training dataset
+            self.train_dataset.use_normalization = True
+            self.train_dataset.norm = norm
+
         self.val_dataset = dataset_cls(
             data_path=str(valid_path) if valid_path is not None else None,
             data=data["valid"] if data is not None else None,
@@ -331,6 +485,8 @@ class AutoEmulateDataModule(WellDataModule):
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
             verbose=self.verbose,
+            use_normalization=self.use_normalization,
+            norm=norm,
         )
         self.test_dataset = dataset_cls(
             data_path=str(test_path) if test_path is not None else None,
@@ -342,6 +498,8 @@ class AutoEmulateDataModule(WellDataModule):
             output_channel_idxs=output_channel_idxs,
             dtype=dtype,
             verbose=self.verbose,
+            use_normalization=self.use_normalization,
+            norm=norm,
         )
         self.rollout_val_dataset = dataset_cls(
             data_path=str(train_path) if train_path is not None else None,
@@ -354,6 +512,8 @@ class AutoEmulateDataModule(WellDataModule):
             full_trajectory_mode=True,
             dtype=dtype,
             verbose=self.verbose,
+            use_normalization=self.use_normalization,
+            norm=norm,
         )
         self.rollout_test_dataset = dataset_cls(
             data_path=str(test_path) if test_path is not None else None,
@@ -366,6 +526,8 @@ class AutoEmulateDataModule(WellDataModule):
             full_trajectory_mode=True,
             dtype=dtype,
             verbose=self.verbose,
+            use_normalization=self.use_normalization,
+            norm=norm,
         )
         self.batch_size = batch_size
 
