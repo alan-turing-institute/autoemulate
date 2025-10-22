@@ -43,6 +43,7 @@ data:
   n_valid_samples: 20
   n_test_samples: 20
   random_seed: 42
+  use_normalization: true
   
   # Dataset configuration
   dataset_type: "advection_diffusion"
