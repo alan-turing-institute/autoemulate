@@ -72,8 +72,8 @@ trainer:
 
 # Paths
 paths:
-  output_dir: "./outputs/2025-10-17/turbulent_radiative_layer_2d"
-  model_save_path: "./outputs/2025-10-17/turbulent_radiative_layer_2d/artifacts/final_model.pt"
+  output_dir: "./outputs/2025-10-22/turbulent_radiative_layer_2d"
+  model_save_path: "./outputs/2025-10-22/turbulent_radiative_layer_2d/artifacts/final_model.pt"
 
 # Logging
 log_level: "INFO"
