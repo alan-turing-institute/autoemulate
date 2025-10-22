@@ -13,10 +13,11 @@ formatter_type: "default_channels_first"
 
 # Model architecture parameters
 model_params:
-  modes1: 12              # Fourier modes in first dimension
-  modes2: 12              # Fourier modes in second dimension
-  width: 32               # Width of the FNO layers
-  n_blocks: 4             # Number of FNO blocks
+  modes1: 16              # Fourier modes in first dimension
+  modes2: 16              # Fourier modes in second dimension
+  hidden_channels: 128
+  # width: 32               # Width of the FNO layers
+  # n_blocks: 4             # Number of FNO blocks
 
 # Simulator configuration for reaction-diffusion
 # This triggers GENERATED data source type
@@ -39,15 +40,16 @@ data:
   # No data_path - triggers GENERATED source type
   
   # Data generation
-  n_train_samples: 400
+  n_train_samples: 200
   n_valid_samples: 20
   n_test_samples: 20
   random_seed: 42
+  use_normalization: true
   
   # Dataset configuration
   dataset_type: "reaction_diffusion"
   n_steps_input: 4        # Number of input timesteps
-  n_steps_output: 10      # Number of output timesteps (rollout length)
+  n_steps_output: 1       # Number of output timesteps (rollout length)
   batch_size: 4           # Batch size for training
   stride: 1               # Stride for sampling
   
@@ -60,10 +62,10 @@ trainer:
   epochs: 100
   device: "cuda"
   
-  optimizer_type: "adam"
+  optimizer_type: "adamw"
   optimizer_params:
-    lr: 0.001             # Learning rate
-    weight_decay: 0.0
+    lr: 0.01             # Learning rate
+    weight_decay: 0.0001
   
   lr_scheduler_type: "step_lr"
   lr_scheduler_params:
@@ -100,10 +102,10 @@ trainer:
 
 # Paths
 paths:
-  output_dir: "./outputs/2025-10-17/reaction_diffusion_generated"
+  output_dir: "./outputs/2025-10-22/reaction_diffusion_generated"
   model_save_path: "./outputs/reaction_diffusion_generated/artifacts/final_model.pt"
   # Optionally save generated data for reuse
-  data_save_path: "./outputs/2025-10-17/data/reaction_diffusion_generated"
+  data_save_path: "./outputs/2025-10-22/data/reaction_diffusion_generated"
   save_format: "h5"       # or "pt" for PyTorch format
 
 # Logging
