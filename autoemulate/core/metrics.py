@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Sequence
 from functools import partial
 
 import torchmetrics
 
-from autoemulate.core.types import MetricLike
+from autoemulate.core.types import OutputLike, TensorLike, TorchMetricsLike
 
 
 class Metric:
@@ -32,6 +33,7 @@ class Metric:
     def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
         """Calculate metric."""
 
+
 class TorchMetrics(Metric):
     """Configuration for a single torchmetrics metric.
 
@@ -47,7 +49,7 @@ class TorchMetrics(Metric):
 
     def __init__(
         self,
-        metric: MetricLike,
+        metric: TorchMetricsLike,
         name: str,
         maximize: bool,
     ):
@@ -67,6 +69,8 @@ class TorchMetrics(Metric):
         # Assume first dim is a batch dim, flatten others for metric calculation
         metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
         return metric.compute()
+
+
 R2 = TorchMetrics(
     metric=torchmetrics.R2Score,
     name="r2",
