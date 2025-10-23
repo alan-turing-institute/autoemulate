@@ -72,7 +72,7 @@ class Registry:
         }
 
     def register_model(
-        self, model_cls: type[Emulator], overwrite: bool = True
+        self, model_cls: type[Emulator], overwrite: bool = False
     ) -> type[Emulator]:
         """Register a new emulator model to the registry.
 
@@ -83,7 +83,7 @@ class Registry:
         overwrite: bool
             If True, allows overwriting an existing model with the same name. If False,
             raises an error if a model with the same name already exists. Defaults to
-            True.
+            False.
 
         Returns
         -------
@@ -259,7 +259,7 @@ def register(*, overwrite: bool) -> Callable[[type[Emulator]], type[Emulator]]: 
 
 # Actual implementation
 def register(
-    model_cls: type[Emulator] | None = None, *, overwrite: bool = True
+    model_cls: type[Emulator] | None = None, *, overwrite: bool = False
 ) -> type[Emulator] | Callable[[type[Emulator]], type[Emulator]]:
     """Register a new emulator model to the default registry.
 
@@ -272,7 +272,7 @@ def register(
         The emulator class to register. If None, returns a decorator function.
     overwrite: bool
         If True, allows overwriting an existing model with the same name. If False,
-        raises an error if a model with the same name already exists. Defaults to True.
+        raises an error if a model with the same name already exists. Defaults to False.
 
     Returns
     -------
