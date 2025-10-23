@@ -134,6 +134,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Metrics to compute during evaluation.
             If None, then defaults to ["r2", "rmse"].
             Each entry can be a string shortcut or a MetricConfig object.
+            IMPORTANT: The first metric in the list is used to
+            determine the best model.
         """
         Results.__init__(self)
         self.random_seed = random_seed
