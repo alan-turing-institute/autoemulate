@@ -12,7 +12,12 @@ from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.model_selection import bootstrap, evaluate, r2_metric
+from autoemulate.core.metrics import (
+    TorchMetrics,
+    get_metric_config,
+    get_metric_configs,
+)
+from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
     calculate_subplot_layout,
     create_and_plot_slice,
@@ -72,6 +77,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
+        tuning_metric: str | TorchMetrics = "r2",
+        evaluation_metrics: list[str | TorchMetrics] | None = None,
     ):
         """
         Initialize the AutoEmulate class.
@@ -122,12 +129,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             it will show a progress bar during model comparison. It will set the
             logging level to "error" to avoid cluttering the output
             with debug/info logs.
+        tuning_metric: str | TorchMetrics
+            Metric to use for hyperparameter tuning. Can be a string shortcut
+            ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
+        evaluation_metrics: list[str | TorchMetrics] | None
+            Metrics to compute during evaluation.
+            If None, then defaults to ["r2", "rmse"].
+            Each entry can be a string shortcut or a MetricConfig object.
+            IMPORTANT: The first metric in the list is used to
+            determine the best model.
         """
         Results.__init__(self)
         self.random_seed = random_seed
         TorchDeviceMixin.__init__(self, device=device)
         x, y = self._convert_to_tensors(x, y)
         x, y = self._move_tensors_to_device(x, y)
+
+        # Setup metrics. If evaluation_metrics is None, default to ["r2", "rmse"]
+        evaluation_metrics = evaluation_metrics or ["r2", "rmse"]
+        self.evaluation_metrics = get_metric_configs(evaluation_metrics)
+        self.tuning_metric = get_metric_config(tuning_metric)
 
         # Transforms to search over
         self.x_transforms_list = [
@@ -323,18 +344,19 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         x_transforms,
         y_transforms,
         best_params_for_this_model,
-        r2_score,
-        rmse_score,
+        test_metrics,
     ):
         """Log the comparison results."""
+        metrics_str = ", ".join(
+            f"{metric}: {mean:.3f}" for metric, (mean, _std) in test_metrics.items()
+        )
         msg = (
             "Comparison results:\n"
             f"Best Model: {best_model_name}, "
             f"x transforms: {x_transforms}, "
-            f"y transforms: {y_transforms}",
+            f"y transforms: {y_transforms}, "
             f"Best params: {best_params_for_this_model}, "
-            f"R2 score: {r2_score:.3f}, "
-            f"RMSE score: {rmse_score:.3f}",
+            f"Metrics: {metrics_str}"
         )
         self.logger.debug(msg)
 
@@ -351,7 +373,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         - Log the results.
         - Save the best model and its parameters.
         """
-        tuner = Tuner(self.train_val, y=None, n_iter=self.n_iter, device=self.device)
+        tuner = Tuner(
+            self.train_val,
+            y=None,
+            n_iter=self.n_iter,
+            device=self.device,
+            tuning_metric=self.tuning_metric,
+        )
         self.logger.info(
             "Comparing %s", [model_cls.__name__ for model_cls in self.models]
         )
@@ -393,7 +421,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 mean_scores = [
                                     np.mean(score).item() for score in scores
                                 ]
-                                best_score_idx = np.argmax(mean_scores)
+                                # Select best whether we're maximizing or minimizing
+                                if self.tuning_metric.maximize:
+                                    best_score_idx = np.argmax(mean_scores)
+                                else:
+                                    best_score_idx = np.argmin(mean_scores)
                                 best_params_for_this_model = params_list[best_score_idx]
                                 self.logger.debug(
                                     'Tuner found best params for model "%s": '
@@ -445,35 +477,33 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             # This can fail for some model params
                             transformed_emulator.fit(train_val_x, train_val_y)
 
-                            (
-                                (r2_train_val, r2_train_val_std),
-                                (rmse_train_val, rmse_train_val_std),
-                            ) = bootstrap(
+                            train_metrics = bootstrap(
                                 transformed_emulator,
                                 train_val_x,
                                 train_val_y,
                                 n_bootstraps=self.n_bootstraps,
                                 device=self.device,
+                                metrics=self.evaluation_metrics,
                             )
-                            (r2_test, r2_test_std), (rmse_test, rmse_test_std) = (
-                                bootstrap(
-                                    transformed_emulator,
-                                    test_x,
-                                    test_y,
-                                    n_bootstraps=self.n_bootstraps,
-                                    device=self.device,
-                                )
+                            test_metrics = bootstrap(
+                                transformed_emulator,
+                                test_x,
+                                test_y,
+                                n_bootstraps=self.n_bootstraps,
+                                device=self.device,
+                                metrics=self.evaluation_metrics,
                             )
 
+                            # Log all test metrics from test_metrics dictionary
+                            test_metrics_str = ", ".join(
+                                f"{metric}: {mean:.3f} (std: {std:.3f})"
+                                for metric, (mean, std) in test_metrics.items()
+                            )
                             self.logger.debug(
-                                'Cross-validation for model "%s"'
-                                " completed with test mean (std) R2 score: %.3f (%.3f),"
-                                " mean (std) RMSE score: %.3f (%.3f)",
+                                'Cross-validation for model "%s" '
+                                "completed with test metrics: %s",
                                 model_cls.__name__,
-                                r2_test,
-                                r2_test_std,
-                                rmse_test,
-                                rmse_test_std,
+                                test_metrics_str,
                             )
                             self.logger.info(
                                 "Finished running Model: %s\n", model_cls.__name__
@@ -483,14 +513,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 model_name=transformed_emulator.untransformed_model_name,
                                 model=transformed_emulator,
                                 params=best_params_for_this_model,
-                                r2_test=r2_test,
-                                rmse_test=rmse_test,
-                                r2_test_std=r2_test_std,
-                                rmse_test_std=rmse_test_std,
-                                r2_train=r2_train_val,
-                                rmse_train=rmse_train_val,
-                                r2_train_std=r2_train_val_std,
-                                rmse_train_std=rmse_train_val_std,
+                                test_metrics=test_metrics,
+                                train_metrics=train_metrics,
                             )
                             self.add_result(result)
                             # if successful, break out of the retry loop
@@ -511,14 +535,17 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 )
 
         # Get the best result and log the comparison
-        best_result = self.best_result()
+        # Use the first evaluation metric to determine the best result
+        first_metric = self.evaluation_metrics[0]
+        best_result = self.best_result(
+            metric_name=first_metric.name,
+        )
         self.log_compare(
             best_model_name=best_result.model_name,
             x_transforms=best_result.x_transforms,
             y_transforms=best_result.y_transforms,
             best_params_for_this_model=best_result.params,
-            r2_score=best_result.r2_test,
-            rmse_score=best_result.rmse_test,
+            test_metrics=best_result.test_metrics,
         )
 
     def fit_from_reinitialized(
@@ -642,7 +669,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Re-run prediction with just this model to get the predictions
         y_pred, y_variance = model.predict_mean_and_variance(test_x)
-        r2_score = evaluate(y_pred, test_y, r2_metric())
+        r2_score = evaluate(y_pred, test_y)
 
         # Handle ranges
         input_ranges = input_ranges or {}
