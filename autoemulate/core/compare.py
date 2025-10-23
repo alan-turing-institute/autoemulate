@@ -22,6 +22,7 @@ from autoemulate.core.plotting import (
     calculate_subplot_layout,
     create_and_plot_slice,
     display_figure,
+    plot_calibration_from_distributions,
     plot_xy,
 )
 from autoemulate.core.reinitialize import fit_from_reinitialized
@@ -32,6 +33,7 @@ from autoemulate.core.types import (
     DeviceLike,
     InputLike,
     ModelParams,
+    TensorLike,
     TransformedEmulatorParams,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
@@ -41,7 +43,7 @@ from autoemulate.emulators import (
     PYTORCH_EMULATORS,
     get_emulator_class,
 )
-from autoemulate.emulators.base import Emulator
+from autoemulate.emulators.base import Emulator, ProbabilisticEmulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
@@ -861,6 +863,78 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         )
         if figsize is not None:
             fig.set_size_inches(figsize)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_calibration(
+        self,
+        emulator: ProbabilisticEmulator,
+        x_test: TensorLike | None = None,
+        y_test: TensorLike | None = None,
+        levels: np.ndarray | None = None,
+        n_samples: int = 2000,
+        joint: bool = False,
+        title: str | None = None,
+        legend: bool = True,
+        fname: str | None = None,
+        figsize: tuple[int, int] | None = None,
+        **kwargs,
+    ):
+        """Plot calibration curve(s) for a given emulator.
+
+        This draws empirical coverage (y-axis) against nominal coverage (x-axis).
+
+        Parameters
+        ----------
+        emulator: ProbabilisticEmulator
+            Emulator that outputs a predictive distribution.
+        x_test: Tensorlike | None
+            Optional test inputs. If None, the held out test data is used.
+            Defaults to None.
+        y_test: Tensorlike | None
+            Optional true test outputs. If None, the held out test data is used.
+            Defaults to None.
+        levels: array-like, optional
+            Nominal coverage levels (between 0 and 1). If None, a default grid is
+            used.
+        n_samples: int
+            Number of Monte-Carlo samples to draw from the predictive
+            distribution to compute empirical intervals if analytical quantiles
+            are not available.
+        joint: bool
+            If True and the predictive outputs are multivariate, compute joint
+            coverage (i.e., the true vector must lie inside the interval for all
+            dimensions). If False (default), compute marginal coverage per output
+            dimension and return the mean across data points.
+        title: str | None
+            An optional title for the plot. Defaults to None (no title).
+        legend: bool
+            Whether to display a legend. Defaults to True.
+        fname: str | None
+            If provided, the figure will be saved to this file path. If None, the figure
+            will be displayed. Defaults to None.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, a default size is used.
+            Defaults to None.
+        """
+        if x_test is None or y_test is None:
+            if not (x_test is None and y_test is None):
+                msg = (
+                    "Both x_test and y_test must be provided, or neither to use held "
+                    "out test data."
+                )
+                raise ValueError(msg)
+            self.logger.info(
+                "Using held out test data for calibration plot. "
+                "To use different data, provide x_test and y_test."
+            )
+        x_test, y_test = self._convert_to_tensors(self.test)
+        y_pred = emulator.predict(x_test)
+        fig, _ = plot_calibration_from_distributions(
+            y_pred, y_test, levels, n_samples, joint, title, legend, figsize
+        )
         if fname is None:
             return display_figure(fig)
         fig.savefig(fname, bbox_inches="tight")
