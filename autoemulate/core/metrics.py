@@ -15,15 +15,12 @@ class Metric:
 
     Parameters
     ----------
-    metric : MetricLike
-        The torchmetrics metric class or partial.
     name : str
         Display name for the metric.
     maximize : bool
         Whether higher values are better. Defaults to True.
     """
 
-    metric: MetricLike
     name: str
     maximize: bool
 
