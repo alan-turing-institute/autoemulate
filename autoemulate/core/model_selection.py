@@ -1,9 +1,7 @@
 import inspect
 import logging
-from functools import partial
 
 import torch
-import torchmetrics
 from sklearn.model_selection import BaseCrossValidator
 from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
@@ -12,7 +10,7 @@ from autoemulate.core.device import (
     get_torch_device,
     move_tensors_to_device,
 )
-from autoemulate.core.metrics import TorchMetrics, get_metric_configs
+from autoemulate.core.metrics import R2, Metric, TorchMetrics, get_metric_configs
 from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
@@ -26,44 +24,28 @@ from autoemulate.emulators.transformed.base import TransformedEmulator
 logger = logging.getLogger("autoemulate")
 
 
-def _update(
-    y_true: TensorLike,
-    y_pred: TensorLike,
-    metric: torchmetrics.Metric,
-) -> None:
-    if isinstance(y_pred, TensorLike):
-        metric.to(y_pred.device)
-        # Assume first dim is a batch dim and flatten remaining for metric calculation
-        metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
-    else:
-        raise ValueError(f"Metric not implmented for {type(y_pred)}")
-
-
 def evaluate(
     y_pred: TensorLike,
     y_true: TensorLike,
-    metric: type[torchmetrics.Metric]
-    | partial[torchmetrics.Metric] = torchmetrics.R2Score,
+    metric: Metric = R2,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
 
     Parameters
     ----------
-    y_true: InputLike
+    y_true: TensorLike
         Ground truth target values.
-    y_pred: OutputLike
+    y_pred: TensorLike
         Predicted target values, as returned by an Emulator.
-    metric: type[Metric]
-        A torchmetrics metric to compute the score.
+    metric: Metric
+        Metric to use for evaluation. Defaults to R2.
 
     Returns
     -------
     float
     """
-    _metric = metric()
-    _update(y_true, y_pred, _metric)
-    return _metric.compute().item()
+    return metric(y_pred, y_true).item()
 
 
 def cross_validate(
@@ -159,7 +141,7 @@ def cross_validate(
         # compute and save results
         y_pred = transformed_emulator.predict_mean(x_val)
         for metric in metrics:
-            score = evaluate(y_pred, y_val, metric.metric)
+            score = evaluate(y_pred, y_val, metric)
             cv_results[metric.name].append(score)
     return cv_results
 
@@ -213,7 +195,7 @@ def bootstrap(
         y_pred = model.predict_mean(x, n_samples=n_samples)
         results = {}
         for metric in metrics:
-            score = evaluate(y_pred, y, metric.metric)
+            score = evaluate(y_pred, y, metric)
             results[metric.name] = (score, float("nan"))
         return results
 
@@ -235,7 +217,7 @@ def bootstrap(
 
         # Compute metrics for this bootstrap sample
         for metric in metrics:
-            metric_scores[metric.name][i] = evaluate(y_pred, y_bootstrap, metric.metric)
+            metric_scores[metric.name][i] = evaluate(y_pred, y_bootstrap, metric)
 
     # Return mean and std for each metric
     return {
