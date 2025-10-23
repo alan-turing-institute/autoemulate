@@ -21,7 +21,7 @@ TuneParams: TypeAlias = dict[str, list[ParamLike]]
 ModelParams: TypeAlias = dict[str, ParamLike]
 TransformedEmulatorParams: TypeAlias = dict[str, ParamLike]
 DeviceLike: TypeAlias = str | torch.device
-MetricLike: TypeAlias = type[torchmetrics.Metric] | partial[torchmetrics.Metric]
+TorchMetricsLike: TypeAlias = type[torchmetrics.Metric] | partial[torchmetrics.Metric]
 
 # Torch dtype's
 TorchScalarDType = (torch.float32, torch.float64, torch.int32, torch.int64)

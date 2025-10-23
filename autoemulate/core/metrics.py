@@ -28,6 +28,9 @@ class Metric:
         """Return the string representation of the MetricConfig."""
         return f"MetricConfig(name={self.name}, maximize={self.maximize})"
 
+    @abstractmethod
+    def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
+        """Calculate metric."""
 
 class TorchMetrics(Metric):
     """Configuration for a single torchmetrics metric.
@@ -52,7 +55,18 @@ class TorchMetrics(Metric):
         self.name = name
         self.maximize = maximize
 
+    def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
+        """Calculate metric."""
+        if not isinstance(y_pred, TensorLike):
+            raise ValueError(f"Metric not implemented for y_pred ({type(y_pred)})")
+        if not isinstance(y_true, TensorLike):
+            raise ValueError(f"Metric not implemented for y_true ({type(y_true)})")
 
+        metric = self.metric()
+        metric.to(y_pred.device)
+        # Assume first dim is a batch dim, flatten others for metric calculation
+        metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
+        return metric.compute()
 R2 = TorchMetrics(
     metric=torchmetrics.R2Score,
     name="r2",
