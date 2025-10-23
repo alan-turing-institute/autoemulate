@@ -37,12 +37,7 @@ from autoemulate.core.types import (
     TransformedEmulatorParams,
 )
 from autoemulate.data.utils import ConversionMixin, set_random_seed
-from autoemulate.emulators import (
-    ALL_EMULATORS,
-    DEFAULT_EMULATORS,
-    PYTORCH_EMULATORS,
-    get_emulator_class,
-)
+from autoemulate.emulators import _default_registry, get_emulator_class
 from autoemulate.emulators.base import Emulator, ProbabilisticEmulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
@@ -202,22 +197,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     @staticmethod
     def all_emulators() -> list[type[Emulator]]:
         """Return a list of all available emulators."""
-        return ALL_EMULATORS
+        return _default_registry.all_emulators
 
     @staticmethod
     def default_emulators() -> list[type[Emulator]]:
         """Return a list of default emulators used by AutoEmulate."""
-        return DEFAULT_EMULATORS
+        return _default_registry.default_emulators
 
     @staticmethod
     def pytorch_emulators() -> list[type[Emulator]]:
         """Return a list of all available PyTorch emulators."""
-        return PYTORCH_EMULATORS
+        return _default_registry.pytorch_emulators
 
     @staticmethod
     def probablistic_emulators() -> list[type[Emulator]]:
         """Return a list of all available probabilistic emulators."""
-        return [emulator for emulator in ALL_EMULATORS if emulator.supports_uq]
+        return [
+            emulator
+            for emulator in _default_registry.all_emulators
+            if emulator.supports_uq
+        ]
 
     @staticmethod
     def list_emulators(default_only: bool = True) -> pd.DataFrame:
@@ -243,7 +242,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 - 'Uncertainty_Quantification',
                 - 'Automatic_Differentiation`
         """
-        emulator_set = DEFAULT_EMULATORS if default_only else ALL_EMULATORS
+        emulator_set = (
+            _default_registry.default_emulators
+            if default_only
+            else _default_registry.all_emulators
+        )
         return pd.DataFrame(
             {
                 "Emulator": [emulator.model_name() for emulator in emulator_set],

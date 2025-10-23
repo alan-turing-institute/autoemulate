@@ -476,18 +476,13 @@ class GaussianProcessCorrelated(GaussianProcess):
         return GaussianProcessLike(mean_x, covar_x)
 
 
-# GP registry to raise exception if duplicate created
-GP_REGISTRY = {
-    "GaussianProcess": GaussianProcess,
-    "GaussianProcessCorrelated": GaussianProcessCorrelated,
-}
-
-
 def create_gp_subclass(
     name: str,
     gp_base_class: type[GaussianProcess],
     covar_module_fn: CovarModuleFn,
     mean_module_fn: MeanModuleFn = constant_mean,
+    auto_register: bool = True,
+    overwrite: bool = True,
     **fixed_kwargs,
 ) -> type[GaussianProcess]:
     """
@@ -495,6 +490,9 @@ def create_gp_subclass(
 
     This function creates a subclass of GaussianProcess where certain parameters
     are fixed to specific values, reducing the parameter space for tuning.
+
+    The created subclass is automatically registered with the main emulator Registry
+    (unless auto_register=False), making it discoverable by AutoEmulate.
 
     Parameters
     ----------
@@ -506,6 +504,13 @@ def create_gp_subclass(
         Covariance module function to use in the subclass.
     mean_module_fn : MeanModuleFn
         Mean module function to use in the subclass. Defaults to `constant_mean`.
+    auto_register : bool
+        Whether to automatically register the created subclass with the main emulator
+        Registry. Defaults to True.
+    overwrite : bool
+        Whether to allow overwriting an existing class with the same name in the
+        main Registry. Useful for interactive development in notebooks. Defaults to
+        True.
     **fixed_kwargs
         Keyword arguments to fix in the subclass. These parameters will be
         set to the provided values and excluded from hyperparameter tuning.
@@ -516,17 +521,21 @@ def create_gp_subclass(
         A new subclass of GaussianProcess with the specified parameters fixed.
         The returned class can be pickled and used like any other GP emulator.
 
+    Raises
+    ------
+    ValueError
+        If `name` matches `model_name()` or `short_name()` of an already registered
+        emulator in the main Registry and `overwrite=False`.
+
     Notes
     -----
-    Fixed parameters are automatically excluded from `get_tune_params()` to
-    prevent them from being included in hyperparameter optimization.
+    - Fixed parameters are automatically excluded from `get_tune_params()` to prevent
+    them from being included in hyperparameter optimization.
+    - Pickling: The created subclass is registered in the caller's module namespace,
+    ensuring it can be pickled and unpickled correctly even when created in downstream
+    code that uses autoemulate as a dependency.
+    - If auto_register=True (default), the class is also added to the main Registry.
     """
-    if name in GP_REGISTRY:
-        raise ValueError(
-            f"A GP class named '{name}' already exists. "
-            f"Use a unique name or delete the existing class from GP_REGISTRY."
-        )
-
     standardize_x = fixed_kwargs.get("standardize_x", False)
     standardize_y = fixed_kwargs.get("standardize_y", True)
     fixed_mean_params = fixed_kwargs.get("fixed_mean_params", False)
@@ -614,30 +623,50 @@ def create_gp_subclass(
     model training and are not fixed.
     """
 
-    # Set the provided name for the class
+    # Determine the caller's module for proper pickling support.
+    # When called from autoemulate itself, use __name__.
+    # When called from user code, use the caller's module
+    caller_frame = sys._getframe(1)
+    caller_module_name = caller_frame.f_globals.get("__name__", __name__)
+
+    # Set the class name and module
     GaussianProcessSubclass.__name__ = name
     GaussianProcessSubclass.__qualname__ = name
-    GaussianProcessSubclass.__module__ = __name__
+    GaussianProcessSubclass.__module__ = caller_module_name
 
-    # Register class in the module's globals so can be pickled
-    setattr(sys.modules[__name__], name, GaussianProcessSubclass)
-    # Register subclass
-    GP_REGISTRY[name] = GaussianProcessSubclass
+    # Register class in the caller's module globals for pickling
+    # This ensures the class can be pickled/unpickled correctly
+    caller_frame.f_globals[name] = GaussianProcessSubclass
+
+    # Also register in the caller's module if it's a real module (not __main__)
+    if caller_module_name in sys.modules and caller_module_name != "__main__":
+        setattr(sys.modules[caller_module_name], name, GaussianProcessSubclass)
+
+    # Automatically register with the main emulator Registry if requested
+    if auto_register:
+        # Lazy import to avoid circular dependency with __init__.py
+        from autoemulate.emulators import register  # noqa: PLC0415
+
+        register(GaussianProcessSubclass, overwrite=overwrite)
 
     return GaussianProcessSubclass
 
 
+# Built-in GP subclasses - auto_register=False as already registered in Registry init:
+# autoemulate/emulators/__init__.py
 GaussianProcessRBF = create_gp_subclass(
     "GaussianProcessRBF",
     GaussianProcess,
     covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
 GaussianProcessMatern32 = create_gp_subclass(
     "GaussianProcessMatern32",
     GaussianProcess,
     covar_module_fn=matern_3_2_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
 
 # correlated GP kernels
@@ -646,10 +675,12 @@ GaussianProcessCorrelatedRBF = create_gp_subclass(
     GaussianProcessCorrelated,
     covar_module_fn=rbf_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )
 GaussianProcessCorrelatedMatern32 = create_gp_subclass(
     "GaussianProcessCorrelatedMatern32",
     GaussianProcessCorrelated,
     covar_module_fn=matern_3_2_kernel,
     mean_module_fn=constant_mean,
+    auto_register=False,
 )

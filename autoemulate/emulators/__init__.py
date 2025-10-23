@@ -1,4 +1,4 @@
-from .base import Emulator, GaussianProcessEmulator
+from .base import Emulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
     GaussianProcessCorrelatedMatern32,
@@ -11,74 +11,22 @@ from .nn.mlp import MLP
 from .polynomials import PolynomialRegression
 from .radial_basis_functions import RadialBasisFunctions
 from .random_forest import RandomForest
+from .registry import Registry, _default_registry, get_emulator_class, register
 from .svm import SupportVectorMachine
 from .transformed.base import TransformedEmulator
 
-DEFAULT_EMULATORS: list[type[Emulator]] = [
-    GaussianProcessMatern32,
-    GaussianProcessRBF,
-    RadialBasisFunctions,
-    PolynomialRegression,
-    MLP,
-    EnsembleMLP,
-]
-
-# listing non pytorch emulators as we do not expect this list to grow
-NON_PYTORCH_EMULATORS: list[type[Emulator]] = [
-    LightGBM,
-    SupportVectorMachine,
-    RandomForest,
-]
-
-ALL_EMULATORS: list[type[Emulator]] = [
-    *DEFAULT_EMULATORS,
-    *NON_PYTORCH_EMULATORS,
-    GaussianProcessCorrelatedMatern32,
-    GaussianProcessCorrelatedRBF,
-    EnsembleMLPDropout,
-]
-
-PYTORCH_EMULATORS: list[type[Emulator]] = [
-    emulator for emulator in ALL_EMULATORS if emulator not in NON_PYTORCH_EMULATORS
-]
-GAUSSIAN_PROCESS_EMULATORS: list[type[Emulator]] = [
-    emulator
-    for emulator in ALL_EMULATORS
-    if issubclass(emulator, GaussianProcessEmulator)
-]
-
-EMULATOR_REGISTRY = {em_cls.model_name().lower(): em_cls for em_cls in ALL_EMULATORS}
-EMULATOR_REGISTRY_SHORT_NAME = {em_cls.short_name(): em_cls for em_cls in ALL_EMULATORS}
-
-
-def get_emulator_class(name: str) -> type[Emulator]:
-    """
-    Get the emulator class by name.
-
-    Parameters
-    ----------
-    name: str
-        The name of the emulator class.
-
-    Returns
-    -------
-    type[Emulator] | None
-        The emulator class if found, None otherwise.
-    """
-    emulator_cls = EMULATOR_REGISTRY.get(
-        name.lower()
-    ) or EMULATOR_REGISTRY_SHORT_NAME.get(name.lower())
-
-    if emulator_cls is None:
-        raise ValueError(
-            f"Unknown emulator name: {name}.Available: {list(EMULATOR_REGISTRY.keys())}"
-        )
-
-    return emulator_cls
-
+# Module-level constants for backward compatibility and simplified public access
+DEFAULT_EMULATORS = _default_registry._default_emulators
+NON_PYTORCH_EMULATORS = _default_registry._non_pytorch_emulators
+ALL_EMULATORS = _default_registry._all_emulators
+PYTORCH_EMULATORS = _default_registry._pytorch_emulators
+GAUSSIAN_PROCESS_EMULATORS = _default_registry._gaussian_process_emulators
+EMULATOR_REGISTRY = _default_registry._emulator_registry
+EMULATOR_REGISTRY_SHORT_NAME = _default_registry._emulator_registry_short_name
 
 __all__ = [
     "MLP",
+    "Emulator",
     "EnsembleMLP",
     "EnsembleMLPDropout",
     "GaussianProcessCorrelatedMatern32",
@@ -89,6 +37,9 @@ __all__ = [
     "PolynomialRegression",
     "RadialBasisFunctions",
     "RandomForest",
+    "Registry",
     "SupportVectorMachine",
     "TransformedEmulator",
+    "get_emulator_class",
+    "register",
 ]
