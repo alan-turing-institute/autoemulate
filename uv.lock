@@ -10,6 +10,13 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'linux'",
 ]
 
+[manifest]
+members = [
+    "autocast",
+    "autoemulate",
+    "autox",
+]
+
 [[package]]
 name = "accessible-pygments"
 version = "0.0.5"
@@ -108,9 +115,14 @@ wheels = [
 ]
 
 [[package]]
+name = "autocast"
+version = "0.1.0"
+source = { editable = "autox/autocast" }
+
+[[package]]
 name = "autoemulate"
-version = "1.1.1"
-source = { editable = "." }
+version = "1.2.0"
+source = { editable = "autox/autoemulate" }
 dependencies = [
     { name = "anytree" },
     { name = "arviz" },
@@ -216,6 +228,11 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.66.2" },
 ]
 provides-extras = ["docs", "dev", "spatiotemporal"]
+
+[[package]]
+name = "autox"
+version = "0.0.1"
+source = { virtual = "." }
 
 [[package]]
 name = "babel"
