@@ -7,8 +7,15 @@ from collections.abc import Sequence
 from functools import partial
 
 import torchmetrics
+from einops import rearrange
+from torchmetrics.regression.crps import ContinuousRankedProbabilityScore
 
-from autoemulate.core.types import OutputLike, TensorLike, TorchMetricsLike
+from autoemulate.core.types import (
+    DistributionLike,
+    OutputLike,
+    TensorLike,
+    TorchMetricsLike,
+)
 
 
 class Metric:
@@ -69,6 +76,97 @@ class TorchMetrics(Metric):
         # Assume first dim is a batch dim, flatten others for metric calculation
         metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
         return metric.compute()
+
+
+class ProbabilisticMetric(Metric):
+    """Base class for probabilistic metrics."""
+
+    @abstractmethod
+    def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
+        """Calculate metric."""
+
+
+class CRPS(ProbabilisticMetric):
+    """Continuous Ranked Probability Score (CRPS) metric.
+
+    Parameters
+    ----------
+    name : str
+        Display name for the metric.
+    maximize : bool
+        Whether higher values are better. Defaults to False.
+    """
+
+    name: str = "crps"
+    maximize: bool = False
+
+    def __call__(
+        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+    ) -> TensorLike:
+        """Calculate CRPS metric.
+
+        The metric can handle both deterministic predictions (tensors) and probabilistic
+        predictions.
+
+        Aggregation across batch and target dimensions is performed by flattening such
+        that the sum of scores is taken across all samples for each point.
+
+        Parameters
+        ----------
+        y_pred: OutputLike
+            Predicted outputs. Can be a tensor or a distribution. If `y_pred` is a
+            tensor of shape (batch_size, *(target_shape)), it is treated as
+            a deterministic prediction and reduces the metric calculation to mean
+            absolute error.
+            If `y_pred` is a tensor of shape
+            `(batch_size, *(target_shape),  n_samples)`, it is treated as a
+            probabilistic prediction and the metric is computed across the samples.
+            If `y_pred` is a distribution, then `n_samples` are drawn from the predicted
+            distribution to estimate the CRPS.
+        y_true: TensorLike
+            True target values.
+        n_samples: int
+            Number of samples to draw from the predicted distribution if `y_pred` is a
+            distribution. Defaults to 1000.
+
+        """
+        if not isinstance(y_true, TensorLike):
+            raise ValueError(f"Metric not implemented for y_true ({type(y_true)})")
+
+        crps_metric = ContinuousRankedProbabilityScore()
+        crps_metric.to(y_true.device)
+
+        # Deterministic predictions case
+        if (isinstance(y_pred, TensorLike) and y_pred.dim() == y_true.dim()) or (
+            isinstance(y_pred, TensorLike) and y_pred.dim() == y_true.dim() + 1
+        ):
+            samples = y_pred
+        # Distribution case
+        elif isinstance(y_pred, DistributionLike):
+            # Move sample dim to end
+            samples = rearrange(y_pred.sample((n_samples,)), "s b ... -> b ... s")
+            print(samples.shape, y_true.shape)
+            assert samples.shape[:-1] == y_true.shape, (
+                f"predictive distribution samples shape {samples.shape} does not match "
+                f"y_true shape {y_true.shape}  "
+            )
+        # Otherwise, raise error
+        else:
+            if isinstance(y_pred, TensorLike) and isinstance(y_true, TensorLike):
+                msg = (
+                    f"Metric not implemented for y_pred shape ({y_pred.shape}) given "
+                    f"y_true shape ({y_true.shape})"
+                )
+                raise ValueError(msg)
+            msg = (
+                f"Metric not implemented for y_pred ({type(y_pred)}) and y_true "
+                f"({type(y_true)})"
+            )
+            raise ValueError(msg)
+
+        # Reshape samples and y_true to (-1, n_samples) and (-1,) respectively, compute
+        samples = samples.flatten(start_dim=0, end_dim=-2)
+        return crps_metric(samples, y_true.flatten())
 
 
 R2 = TorchMetrics(
