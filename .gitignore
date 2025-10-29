@@ -2,7 +2,7 @@ notebooks/
 __pycache__/
 .pytest_cache/
 dist/
-.venv/
+.venv*
 *.egg-info/
 
 # Ignore Sphinx build artifacts
