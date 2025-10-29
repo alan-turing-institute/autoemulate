@@ -109,12 +109,13 @@ wheels = [
 
 [[package]]
 name = "autoemulate"
-version = "1.1.1"
+version = "1.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "anytree" },
     { name = "arviz" },
     { name = "corner" },
+    { name = "einops" },
     { name = "getdist" },
     { name = "gpytorch" },
     { name = "iprogress" },
@@ -175,6 +176,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.10.1" },
     { name = "corner", specifier = ">=2.2.3" },
     { name = "coverage", marker = "extra == 'dev'", specifier = ">=7.6.4" },
+    { name = "einops", specifier = ">=0.8.1" },
     { name = "furo", marker = "extra == 'dev'", specifier = ">=2023.9.10" },
     { name = "furo", marker = "extra == 'docs'", specifier = ">=2023.9.10" },
     { name = "getdist", specifier = ">=1.7.2" },
