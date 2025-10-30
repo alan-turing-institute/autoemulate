@@ -197,8 +197,6 @@ class CRPSMetric(ProbabilisticMetric):
         return crps_metric(samples_flat, y_true_flat)
 
 
-CRPS = CRPSMetric()
-
 R2 = TorchMetrics(
     metric=torchmetrics.R2Score,
     name="r2",
@@ -222,6 +220,8 @@ MAE = TorchMetrics(
     name="mae",
     maximize=False,
 )
+
+CRPS = CRPSMetric()
 
 AVAILABLE_METRICS = {
     "r2": R2,
