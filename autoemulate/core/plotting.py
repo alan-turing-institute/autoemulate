@@ -52,6 +52,7 @@ def plot_xy(
     input_index: int | None = None,
     output_index: int | None = None,
     r2_score: float | None = None,
+    error_style: str = "bars",
 ):
     """
     Plot observed and predicted values vs. features.
@@ -76,6 +77,9 @@ def plot_xy(
         An optional index of the output dimension to plot.
     r2_score: float | None
         An option r2 score to include in the plot legend.
+    error_style: str
+        The style of error representation in the plots. Can be "bars" for error
+        bars or "fill" for shaded error regions. Defaults to "bars".
     """
     # Sort the data
     sort_idx = np.argsort(x).flatten()
@@ -93,18 +97,46 @@ def plot_xy(
     assert ax is not None, "ax must be provided"
     # Scatter plot with error bars for predictions
     if y_std is not None:
-        ax.errorbar(
-            x_sorted,
-            y_pred_sorted,
-            yerr=2 * y_std,
-            fmt="o",
-            color=pred_points_color,
-            elinewidth=2,
-            capsize=3,
-            alpha=0.5,
-            # use unicode for sigma
-            label="pred. (±2\u03c3)",
-        )
+        if error_style not in ["bars", "fill"]:
+            msg = "error_style must be one of ['bars', 'fill']"
+            raise ValueError(msg)
+        if error_style == "bars":
+            ax.errorbar(
+                x_sorted,
+                y_pred_sorted,
+                yerr=2 * y_std,
+                fmt="o",
+                color=pred_points_color,
+                elinewidth=2,
+                capsize=3,
+                alpha=0.5,
+                # use unicode for sigma
+                label="pred. (±2\u03c3)",
+            )
+            ax.scatter(
+                x_sorted,
+                y_pred_sorted,
+                color=pred_points_color,
+                edgecolor="black",
+                linewidth=0.5,
+                alpha=0.5,
+            )
+        else:
+            ax.fill_between(
+                x_sorted,
+                y_pred_sorted - 1.96 * y_std,
+                y_pred_sorted + 1.96 * y_std,
+                color=pred_points_color,
+                alpha=0.2,
+                label="0.95 CI",
+            )
+            ax.plot(
+                x_sorted,
+                y_pred_sorted,
+                color=pred_points_color,
+                alpha=0.75,
+                label="pred.",
+            )
     else:
         ax.scatter(
             x_sorted,
@@ -135,10 +167,7 @@ def plot_xy(
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    lbl = "pred." if y_variance is None else "pred. (±2\u03c3)"
     legend = ax.legend(
-        handles[-2:],
-        ["data", lbl],
         loc="best",
         handletextpad=0,
         columnspacing=0,

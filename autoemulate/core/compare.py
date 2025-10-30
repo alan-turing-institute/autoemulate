@@ -595,6 +595,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         output_index: list[int] | int | None = None,
         input_ranges: dict | None = None,
         output_ranges: dict | None = None,
+        error_style: str = "bars",
         figsize=None,
         ncols: int = 3,
         fname: str | None = None,
@@ -619,6 +620,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ranges of the output features to consider for the plot. Ranges are
             combined such that the final subset is the intersection data within
             the specified ranges. Defaults to None.
+        error_style: str
+            The style of error representation in the plots. Can be "bars" for error
+            bars or "fill" for shaded error regions. Defaults to "bars".
         figsize: tuple[int, int] | None
             The size of the figure to create. If None, it is set based on the number
             of input and output features.
@@ -752,6 +756,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         input_index=in_idx,
                         output_index=out_idx,
                         r2_score=r2_score,
+                        error_style=error_style,
                     )
                     plot_index += 1
 
