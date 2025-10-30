@@ -23,9 +23,9 @@ class Metric:
 
     Parameters
     ----------
-    name : str
+    name: str
         Display name for the metric.
-    maximize : bool
+    maximize: bool
         Whether higher values are better. Defaults to True.
     """
 
@@ -33,8 +33,8 @@ class Metric:
     maximize: bool
 
     def __repr__(self) -> str:
-        """Return the string representation of the MetricConfig."""
-        return f"MetricConfig(name={self.name}, maximize={self.maximize})"
+        """Return the string representation of the Metric."""
+        return f"Metric(name={self.name}, maximize={self.maximize})"
 
     @abstractmethod
     def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
