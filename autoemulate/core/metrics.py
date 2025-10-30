@@ -37,7 +37,9 @@ class Metric:
         return f"Metric(name={self.name}, maximize={self.maximize})"
 
     @abstractmethod
-    def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
+    def __call__(
+        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+    ) -> TensorLike:
         """Calculate metric."""
 
 
@@ -64,13 +66,21 @@ class TorchMetrics(Metric):
         self.name = name
         self.maximize = maximize
 
-    def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
+    def __call__(
+        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+    ) -> TensorLike:
         """Calculate metric."""
-        if not isinstance(y_pred, TensorLike):
+        if not isinstance(y_pred, OutputLike):
             raise ValueError(f"Metric not implemented for y_pred ({type(y_pred)})")
         if not isinstance(y_true, TensorLike):
             raise ValueError(f"Metric not implemented for y_true ({type(y_true)})")
 
+        # Handle probabilistic predictions
+        if isinstance(y_pred, DistributionLike):
+            try:
+                y_pred = y_pred.mean
+            except Exception:
+                y_pred = y_pred.rsample((n_samples,)).mean(dim=0)
         metric = self.metric()
         metric.to(y_pred.device)
         # Assume first dim is a batch dim, flatten others for metric calculation
@@ -82,7 +92,9 @@ class ProbabilisticMetric(Metric):
     """Base class for probabilistic metrics."""
 
     @abstractmethod
-    def __call__(self, y_pred: OutputLike, y_true: TensorLike) -> TensorLike:
+    def __call__(
+        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+    ) -> TensorLike:
         """Calculate metric."""
 
 

@@ -528,3 +528,69 @@ def test_crps_with_1d_targets():
     assert result.ndim == 0, "Result should be a scalar tensor"
     assert isinstance(result, torch.Tensor)
     assert result >= 0, "CRPS should be non-negative"
+
+
+# Tests for OutputLike support in TorchMetrics
+
+
+def test_torchmetrics_with_distribution_vs_mean():
+    """Test TorchMetrics with distribution gives same result as using mean."""
+    batch_size, n_targets = 10, 3
+    y_true = torch.randn(batch_size, n_targets)
+
+    # Create a Normal distribution
+    mean = torch.randn(batch_size, n_targets)
+    std = torch.ones(batch_size, n_targets) * 0.5
+    y_pred_dist = Normal(mean, std)
+
+    # Get result with distribution
+    result_dist = MSE(y_pred_dist, y_true)
+
+    # Get result with mean tensor
+    result_mean = MSE(mean, y_true)
+
+    assert torch.isclose(result_dist, result_mean, rtol=1e-4), "Should be close"
+
+
+@pytest.mark.parametrize(
+    "metric_instance",
+    [
+        metric
+        for metric in AVAILABLE_METRICS.values()
+        if isinstance(metric, TorchMetrics)
+    ],
+)
+def test_all_torchmetrics_support_distributions(metric_instance):
+    """Test all TorchMetrics instances support distribution inputs."""
+    batch_size = 20
+    y_true = torch.randn(batch_size, 2)
+
+    # Create a distribution
+    mean = torch.randn(batch_size, 2)
+    std = torch.ones(batch_size, 2) * 0.3
+    y_pred_dist = Normal(mean, std)
+
+    # Should work without error
+    result = metric_instance(y_pred_dist, y_true)
+
+    assert isinstance(result, torch.Tensor)
+    assert result.ndim == 0
+    assert torch.isfinite(result), "Result should be finite"
+
+
+def test_torchmetrics_distribution_multioutput():
+    """Test TorchMetrics with distribution for multioutput case."""
+    batch_size, n_outputs = 50, 5
+    y_true = torch.randn(batch_size, n_outputs)
+
+    # Create distribution with different means for different outputs
+    mean = torch.randn(batch_size, n_outputs)
+    std = torch.rand(batch_size, n_outputs) * 0.5 + 0.1  # Avoid zero std
+    y_pred_dist = Normal(mean, std)
+
+    # Test with MAE
+    result = MAE(y_pred_dist, y_true)
+
+    assert isinstance(result, torch.Tensor)
+    assert result.ndim == 0
+    assert result >= 0, "MAE should be non-negative"
