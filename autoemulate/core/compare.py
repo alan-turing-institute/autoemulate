@@ -873,13 +873,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             output_names = [f"$y_{i}$" for i in range(n_outputs)]
 
         for i in range(n_outputs):
-            axs[i].scatter(
-                test_y[:, i],
-                y_pred[:, i],
-                alpha=0.6,
-                linewidth=0.5,
-                label="predicted",
-            )
             if y_std is not None:
                 axs[i].errorbar(
                     test_y[:, i],
@@ -889,6 +882,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     alpha=0.4,
                     capsize=3,
                 )
+            axs[i].scatter(
+                test_y[:, i],
+                y_pred[:, i],
+                alpha=0.6,
+                linewidth=0.5,
+            )
             axs[i].plot(
                 [test_y[:, i].min(), test_y[:, i].max()],
                 [test_y[:, i].min(), test_y[:, i].max()],
@@ -897,7 +896,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             )
             axs[i].set_title(output_names[i])
             axs[i].set_xlabel("True values")
-            axs[i].set_ylabel("Predicted values")
+            axs[i].set_ylabel("Predicted values ±2\u03c3")
+        plt.tight_layout()
 
         if figsize is not None:
             fig.set_size_inches(figsize)
