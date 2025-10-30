@@ -796,7 +796,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         fig.savefig(fname, bbox_inches="tight")
         return None
 
-    def plot_preds(
+    def plot_preds(  # noqa: PLR0912
         self,
         model_obj: int | Emulator | Result,
         output_names: list[str] | None = None,
@@ -838,7 +838,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Re-run prediction with just this model to get the predictions
         y_pred, y_variance = model.predict_mean_and_variance(test_x)
-        y_std = np.sqrt(y_variance) if y_variance is not None else None
+        y_std = None
+        if y_variance is not None:
+            y_variance, _ = self._convert_to_numpy(y_variance, None)
+            y_variance = self._ensure_numpy_2d(y_variance)
+            y_std = np.sqrt(y_variance)
 
         # Convert to numpy for plotting
         test_x, test_y = self._convert_to_numpy(test_x, test_y)
@@ -846,6 +850,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         assert test_y is not None
         assert y_pred is not None
         y_pred, _ = self._convert_to_numpy(y_pred, None)
+        test_x = self._ensure_numpy_2d(test_x)
+        test_y = self._ensure_numpy_2d(test_y)
+        y_pred = self._ensure_numpy_2d(y_pred)
 
         # Figure out layoyt
         n_outputs = test_y.shape[1] if test_y.ndim > 1 else 1
