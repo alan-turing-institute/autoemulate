@@ -7,15 +7,18 @@ import torch
 import torchmetrics
 from autoemulate.core.metrics import (
     AVAILABLE_METRICS,
+    CRPS,
     MAE,
     MSE,
     R2,
     RMSE,
+    CRPSMetric,
     Metric,
     TorchMetrics,
     get_metric_config,
     get_metric_configs,
 )
+from torch.distributions import Normal
 
 # Tests for the base Metric class
 
@@ -28,7 +31,7 @@ def test_metric_repr():
     metric.maximize = True
 
     repr_str = repr(metric)
-    assert "MetricConfig" in repr_str
+    assert "Metric" in repr_str
     assert "test_metric" in repr_str
     assert "True" in repr_str
 
@@ -326,14 +329,15 @@ def test_get_metric_configs_with_torchmetrics_instances():
 
 def test_get_metric_configs_case_insensitive():
     """Test get_metric_configs is case insensitive for strings."""
-    metrics = ["R2", "RMSE", "mse", "MaE"]
+    metrics = ["R2", "RMSE", "mse", "MaE", "Crps"]
     configs = get_metric_configs(metrics)
 
-    assert len(configs) == 4
+    assert len(configs) == 5
     assert configs[0] == R2
     assert configs[1] == RMSE
     assert configs[2] == MSE
     assert configs[3] == MAE
+    assert configs[4] == CRPS
 
 
 # Integration tests for metrics with actual computation
@@ -408,3 +412,119 @@ def test_metric_configs_workflow():
     assert "rmse" in results
     assert torch.isclose(results["r2"], torch.tensor(1.0))  # Perfect R2
     assert torch.isclose(results["rmse"], torch.tensor(0.0))  # Perfect RMSE
+
+
+# Tests for CRPS metric
+
+
+def test_crps_in_available_metrics():
+    """Test CRPS is in AVAILABLE_METRICS."""
+    assert "crps" in AVAILABLE_METRICS
+    assert AVAILABLE_METRICS["crps"] == CRPS
+
+
+def test_crps_deterministic_reduces_to_mae():
+    """Test CRPS with deterministic predictions reduces to MAE."""
+    y_pred = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+    y_true = torch.tensor([[1.5, 2.5], [3.5, 4.5]])
+
+    crps_result = CRPS(y_pred, y_true)
+
+    mae = torch.nn.functional.l1_loss(y_pred, y_true)
+    assert torch.isclose(crps_result, mae, rtol=1e-4), "CRPS should equal MAE"
+
+
+@pytest.mark.parametrize(
+    ("batch_size", "n_targets", "n_samples"),
+    [
+        (10, 1, 5),  # Single target
+        (10, 3, 5),  # Multiple targets
+        (5, 2, 10),  # More samples than batch
+        (100, 5, 20),  # Large batch
+        (1, 1, 100),  # Single sample, many ensemble members
+    ],
+)
+def test_crps_with_various_shapes(batch_size, n_targets, n_samples):
+    """Test CRPS with various tensor shapes."""
+    y_pred = torch.randn(batch_size, n_targets, n_samples)
+    y_true = torch.randn(batch_size, n_targets)
+
+    result = CRPS(y_pred, y_true)
+
+    assert result.ndim == 0, "Result should be a scalar tensor"
+    assert isinstance(result, torch.Tensor)
+    assert result >= 0, "CRPS should be non-negative"
+
+
+def test_crps_with_distribution():
+    """Test CRPS with distribution input."""
+    batch_size, n_targets = 10, 3
+    y_true = torch.randn(batch_size, n_targets)
+
+    # Create a distribution
+    mean = torch.randn(batch_size, n_targets)
+    std = torch.ones(batch_size, n_targets) * 0.5
+    y_pred_dist = Normal(mean, std)
+
+    result = CRPS(y_pred_dist, y_true, n_samples=500)
+
+    assert result.ndim == 0, "Result should be a scalar tensor"
+    assert isinstance(result, torch.Tensor)
+    assert result >= 0, "CRPS should be non-negative"
+
+
+def test_crps_shape_mismatch_raises_error():
+    """Test CRPS raises error for shape mismatch."""
+    y_pred = torch.randn(10, 3, 5)
+    y_true = torch.randn(10, 5)
+
+    with pytest.raises(ValueError, match="does not match"):
+        CRPS(y_pred, y_true)
+
+
+def test_crps_invalid_dimensions_raises_error():
+    """Test CRPS raises error for invalid dimensions."""
+    y_pred = torch.randn(10, 3, 5, 7)
+    y_true = torch.randn(10, 3)
+
+    with pytest.raises(ValueError, match="incompatible"):
+        CRPS(y_pred, y_true)
+
+
+def test_crps_aggregation_across_batch():
+    """Test CRPS aggregates correctly across batch dimension."""
+    # Create predictions with very different errors in different batch elements
+    y_pred = torch.tensor([[1.0, 2.0], [10.0, 20.0]])
+    y_true = torch.tensor([[1.0, 2.0], [10.0, 20.0]])
+
+    result_perfect = CRPS(y_pred, y_true)
+
+    # Add error to second batch element
+    y_pred_error = torch.tensor([[1.0, 2.0], [15.0, 25.0]])
+    result_with_error = CRPS(y_pred_error, y_true)
+
+    assert torch.isclose(result_perfect, torch.tensor(0.0))
+    assert result_with_error > result_perfect, "Result with error should be larger"
+
+
+def test_get_metric_config_crps():
+    """Test get_metric_config with 'crps' string."""
+    config = get_metric_config("crps")
+
+    assert config == CRPS
+    assert isinstance(config, CRPSMetric)
+    assert config.name == "crps"
+    assert config.maximize is False
+
+
+def test_crps_with_1d_targets():
+    """Test CRPS handles 1D targets correctly."""
+    # When targets are 1D, predictions should have both target and sample dimensions
+    y_pred = torch.randn(10, 1, 5)  # (batch, targets=1, samples)
+    y_true = torch.randn(10)  # (batch,) - will be unsqueezed to (batch, 1)
+
+    result = CRPS(y_pred, y_true)
+
+    assert result.ndim == 0, "Result should be a scalar tensor"
+    assert isinstance(result, torch.Tensor)
+    assert result >= 0, "CRPS should be non-negative"
