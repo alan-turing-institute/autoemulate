@@ -35,7 +35,7 @@ def test_plot_xy():
     # plot without error bars
     fig, ax = plt.subplots()
     plotting.plot_xy(
-        X, y, y_pred, None, ax=ax, input_index=1, output_index=2, r2_score=0.5
+        X, y, y_pred, None, ax=ax, input_label="1", output_label="2", r2_score=0.5
     )
     # test for error bars
     assert len(ax.containers) == 0
@@ -45,7 +45,7 @@ def test_plot_xy():
     # plot with error bars
     fig, ax = plt.subplots()
     plotting.plot_xy(
-        X, y, y_pred, y_variance, ax=ax, input_index=1, output_index=2, r2_score=0.5
+        X, y, y_pred, y_variance, ax=ax, input_label="1", output_label="2", r2_score=0.5
     )
     assert len(ax.containers) > 0
     assert len(ax.collections) > 0
