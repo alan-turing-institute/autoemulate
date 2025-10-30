@@ -1,5 +1,5 @@
 ---
-title: "AutoEmulate v1.0: A PyTorch tool for end-to-end emulation workflows"
+title: "AutoEmulate: A PyTorch tool for end-to-end emulation workflows"
 tags: 
     - Python
     - Surrogate Modelling
