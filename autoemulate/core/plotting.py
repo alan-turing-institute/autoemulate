@@ -49,8 +49,8 @@ def plot_xy(
     y_variance: NumpyLike | None = None,
     ax: Axes | None = None,
     title: str = "xy",
-    input_index: int | None = None,
-    output_index: int | None = None,
+    input_label: str | None = None,
+    output_label: str | None = None,
     r2_score: float | None = None,
     error_style: str = "bars",
 ):
@@ -71,10 +71,10 @@ def plot_xy(
         An optional matplotlib Axes object to plot on.
     title: str
         An optional title for the plot.
-    input_index: int | None
-        An optional index of the input dimension to plot.
-    output_index: int | None
-        An optional index of the output dimension to plot.
+    input_label: str | None
+        An optional input label to plot.
+    output_label: str | None
+        An optional output label to plot.
     r2_score: float | None
         An option r2 score to include in the plot legend.
     error_style: str
@@ -158,8 +158,10 @@ def plot_xy(
         label="data",
     )
 
-    ax.set_xlabel(f"$x_{input_index}$", fontsize=13)
-    ax.set_ylabel(f"$y_{output_index}$", fontsize=13)
+    x_label = input_label if input_label is not None else "x"
+    y_label = output_label if output_label is not None else "y"
+    ax.set_xlabel(x_label, fontsize=13)
+    ax.set_ylabel(y_label, fontsize=13)
     ax.set_title(title, fontsize=13)
     ax.grid(True, alpha=0.3)
 
