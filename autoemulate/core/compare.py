@@ -770,6 +770,95 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         fig.savefig(fname, bbox_inches="tight")
         return None
 
+    def plot_preds(
+        self,
+        model_obj: int | Emulator | Result,
+        figsize=None,
+        ncols: int = 3,
+        fname: str | None = None,
+    ):
+        """
+        Plot predicted means (and variances) against observations for all outputs.
+
+        Parameters
+        ----------
+        model_obj: int | Emulator | Result
+            The model to plot. Can be an integer ID of a Result, an Emulator instance,
+            or a Result instance.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, it is set based on the number
+            of outputs.
+        ncols: int
+            The maximum number of columns in the subplot grid. Defaults to 3.
+        fname: str | None
+            If provided, the figure will be saved to this file path.
+        """
+        result = None
+        if isinstance(model_obj, int):
+            if model_obj not in self._id_to_result:
+                raise ValueError(f"No result found with ID: {model_obj}")
+            result = self.get_result(model_obj)
+            model = result.model
+        elif isinstance(model_obj, Emulator):
+            model = model_obj
+        elif isinstance(model_obj, Result):
+            model = model_obj.model
+
+        test_x, test_y = self._convert_to_tensors(self.test)
+
+        # Re-run prediction with just this model to get the predictions
+        y_pred, y_variance = model.predict_mean_and_variance(test_x)
+        y_std = np.sqrt(y_variance) if y_variance is not None else None
+
+        # Convert to numpy for plotting
+        test_x, test_y = self._convert_to_numpy(test_x, test_y)
+        assert test_x is not None
+        assert test_y is not None
+        assert y_pred is not None
+        y_pred, _ = self._convert_to_numpy(y_pred, None)
+
+        # Figure out layoyt
+        n_outputs = test_y.shape[1] if test_y.ndim > 1 else 1
+        nrows, ncols = calculate_subplot_layout(n_outputs, ncols)
+        if figsize is None:
+            figsize = (5 * ncols, 4 * nrows)
+        fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
+        axs = axs.flatten()
+
+        for i in range(n_outputs):
+            axs[i].scatter(
+                test_y[:, i],
+                y_pred[:, i],
+                alpha=0.6,
+                linewidth=0.5,
+                label="predicted",
+            )
+            if y_std is not None:
+                axs[i].errorbar(
+                    test_y[:, i],
+                    y_pred[:, i],
+                    yerr=2 * y_std[:, i],
+                    fmt="none",
+                    alpha=0.4,
+                    capsize=3,
+                )
+            axs[i].plot(
+                [test_y[:, i].min(), test_y[:, i].max()],
+                [test_y[:, i].min(), test_y[:, i].max()],
+                linestyle="--",
+                color="gray",
+            )
+            axs[i].set_title(f"Output {i}")
+            axs[i].set_xlabel("True values")
+            axs[i].set_ylabel("Predicted values")
+
+        if figsize is not None:
+            fig.set_size_inches(figsize)
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
     def plot_surface(
         self,
         model: Emulator,
