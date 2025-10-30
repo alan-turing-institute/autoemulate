@@ -228,6 +228,7 @@ AVAILABLE_METRICS = {
     "rmse": RMSE,
     "mse": MSE,
     "mae": MAE,
+    "crps": CRPS,
 }
 
 
