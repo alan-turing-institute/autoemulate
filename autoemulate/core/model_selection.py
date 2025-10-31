@@ -156,7 +156,7 @@ def bootstrap(
     x: TensorLike,
     y: TensorLike,
     n_bootstraps: int | None = 100,
-    n_samples: int = 100,
+    n_samples: int = 1000,
     device: str | torch.device = "cpu",
     metrics: list[TorchMetrics] | None = None,
 ) -> dict[str, tuple[float, float]]:
@@ -177,7 +177,7 @@ def bootstrap(
         Defaults to 100.
     n_samples: int
         Number of samples to generate to predict mean when emulator does not have a
-        mean directly available. Defaults to 100.
+        mean directly available. Defaults to 1000.
     device: str | torch.device
         The device to use for computations. Default is "cpu".
     metrics: list[MetricConfig] | None
@@ -200,7 +200,7 @@ def bootstrap(
         y_pred = model.predict(x)
         results = {}
         for metric in metrics:
-            score = evaluate(y_pred, y, metric)
+            score = evaluate(y_pred, y, metric=metric, n_samples=n_samples)
             results[metric.name] = (score, float("nan"))
         return results
 
@@ -218,11 +218,13 @@ def bootstrap(
         y_bootstrap = y[idxs]
 
         # Make predictions
-        y_pred = model.predict_mean(x_bootstrap, n_samples=n_samples)
+        y_pred = model.predict(x_bootstrap)
 
         # Compute metrics for this bootstrap sample
         for metric in metrics:
-            metric_scores[metric.name][i] = evaluate(y_pred, y_bootstrap, metric)
+            metric_scores[metric.name][i] = evaluate(
+                y_pred, y_bootstrap, metric=metric, n_samples=n_samples
+            )
 
     # Return mean and std for each metric
     return {
