@@ -97,7 +97,7 @@ def plot_xy(
     assert ax is not None, "ax must be provided"
     # Scatter plot with error bars for predictions
     if y_std is not None:
-        if error_style not in ["bars", "fill"]:
+        if error_style.lower() not in ["bars", "fill"]:
             msg = "error_style must be one of ['bars', 'fill']"
             raise ValueError(msg)
         if error_style == "bars":
