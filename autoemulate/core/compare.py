@@ -626,7 +626,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ranges of the output features to consider for the plot. Ranges are
             combined such that the final subset is the intersection data within
             the specified ranges. Defaults to None.
-        error_style: str
+        error_style: Literal["bars", "fill"]
             The style of error representation in the plots. Can be "bars" for error
             bars or "fill" for shaded error regions. Defaults to "bars".
         figsize: tuple[int, int] | None
