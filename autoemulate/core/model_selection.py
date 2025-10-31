@@ -14,6 +14,7 @@ from autoemulate.core.metrics import R2, Metric, TorchMetrics, get_metric_config
 from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
+    OutputLike,
     TensorLike,
     TransformedEmulatorParams,
 )
@@ -25,27 +26,31 @@ logger = logging.getLogger("autoemulate")
 
 
 def evaluate(
-    y_pred: TensorLike,
+    y_pred: OutputLike,
     y_true: TensorLike,
     metric: Metric = R2,
+    n_samples: int = 1000,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
 
     Parameters
     ----------
+    y_pred: OutputLike
+        Predicted target values, as returned by an Emulator.
     y_true: TensorLike
         Ground truth target values.
-    y_pred: TensorLike
-        Predicted target values, as returned by an Emulator.
     metric: Metric
         Metric to use for evaluation. Defaults to R2.
+    n_samples: int
+        Number of samples to generate to predict mean when y_pred does not have a mean
+        directly available. Defaults to 1000.
 
     Returns
     -------
     float
     """
-    return metric(y_pred, y_true).item()
+    return metric(y_pred, y_true, n_samples=n_samples).item()
 
 
 def cross_validate(
@@ -139,7 +144,7 @@ def cross_validate(
         transformed_emulator.fit(x, y)
 
         # compute and save results
-        y_pred = transformed_emulator.predict_mean(x_val)
+        y_pred = transformed_emulator.predict(x_val)
         for metric in metrics:
             score = evaluate(y_pred, y_val, metric)
             cv_results[metric.name].append(score)
@@ -151,7 +156,7 @@ def bootstrap(
     x: TensorLike,
     y: TensorLike,
     n_bootstraps: int | None = 100,
-    n_samples: int = 100,
+    n_samples: int = 1000,
     device: str | torch.device = "cpu",
     metrics: list[TorchMetrics] | None = None,
 ) -> dict[str, tuple[float, float]]:
@@ -172,7 +177,7 @@ def bootstrap(
         Defaults to 100.
     n_samples: int
         Number of samples to generate to predict mean when emulator does not have a
-        mean directly available. Defaults to 100.
+        mean directly available. Defaults to 1000.
     device: str | torch.device
         The device to use for computations. Default is "cpu".
     metrics: list[MetricConfig] | None
@@ -192,10 +197,10 @@ def bootstrap(
 
     # If no bootstraps are specified, fall back to a single evaluation on given data
     if n_bootstraps is None:
-        y_pred = model.predict_mean(x, n_samples=n_samples)
+        y_pred = model.predict(x)
         results = {}
         for metric in metrics:
-            score = evaluate(y_pred, y, metric)
+            score = evaluate(y_pred, y, metric=metric, n_samples=n_samples)
             results[metric.name] = (score, float("nan"))
         return results
 
@@ -213,11 +218,13 @@ def bootstrap(
         y_bootstrap = y[idxs]
 
         # Make predictions
-        y_pred = model.predict_mean(x_bootstrap, n_samples=n_samples)
+        y_pred = model.predict(x_bootstrap)
 
         # Compute metrics for this bootstrap sample
         for metric in metrics:
-            metric_scores[metric.name][i] = evaluate(y_pred, y_bootstrap, metric)
+            metric_scores[metric.name][i] = evaluate(
+                y_pred, y_bootstrap, metric=metric, n_samples=n_samples
+            )
 
     # Return mean and std for each metric
     return {

@@ -14,6 +14,7 @@ from torch.distributions import Transform
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.metrics import (
+    R2,
     TorchMetrics,
     get_metric_config,
     get_metric_configs,
@@ -683,7 +684,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Re-run prediction with just this model to get the predictions
         y_pred, y_variance = model.predict_mean_and_variance(test_x)
-        r2_score = evaluate(y_pred, test_y)
+        r2_score = evaluate(y_pred, test_y, metric=R2)
 
         # Handle ranges
         input_ranges = input_ranges or {}
