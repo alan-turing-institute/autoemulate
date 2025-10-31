@@ -52,7 +52,7 @@ def plot_xy(
     input_label: str | None = None,
     output_label: str | None = None,
     r2_score: float | None = None,
-    error_style: str = "bars",
+    error_style: Literal["bars", "fill"] = "bars",
 ):
     """
     Plot observed and predicted values vs. features.
