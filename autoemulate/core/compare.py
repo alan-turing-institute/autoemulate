@@ -854,7 +854,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         test_y = self._ensure_numpy_2d(test_y)
         y_pred = self._ensure_numpy_2d(y_pred)
 
-        # Figure out layoyt
+        # Figure out layout
         n_outputs = test_y.shape[1] if test_y.ndim > 1 else 1
         nrows, ncols = calculate_subplot_layout(n_outputs, ncols)
         if figsize is None:
