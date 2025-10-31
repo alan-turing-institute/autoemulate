@@ -396,18 +396,13 @@ def test_metric_with_multidimensional_tensors():
 def test_metric_configs_workflow():
     """Test complete workflow of getting and using metric configs."""
     # Get configs from strings
-    configs = get_metric_configs(["r2", "rmse"])
+    metrics = get_metric_configs(["r2", "rmse"])
 
     # Use configs to compute metrics
     y_pred = torch.tensor([1.0, 2.0, 3.0])
     y_true = torch.tensor([1.0, 2.0, 3.0])
 
-    results = {}
-    for config in configs:
-        metric = config.metric()
-        metric.update(y_pred, y_true)
-        results[config.name] = metric.compute()
-
+    results = {metric.name: metric(y_pred, y_true) for metric in metrics}
     assert "r2" in results
     assert "rmse" in results
     assert torch.isclose(results["r2"], torch.tensor(1.0))  # Perfect R2

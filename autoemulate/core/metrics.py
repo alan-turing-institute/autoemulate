@@ -83,8 +83,12 @@ class TorchMetrics(Metric):
                 y_pred = y_pred.rsample((n_samples,)).mean(dim=0)
         metric = self.metric()
         metric.to(y_pred.device)
-        # Assume first dim is a batch dim, flatten others for metric calculation
-        metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
+
+        # Assume first dim is a batch dim if >=2D, flatten others for metric calculation
+        metric.update(
+            y_pred.flatten(start_dim=1) if y_pred.ndim > 1 else y_pred,
+            y_true.flatten(start_dim=1) if y_true.ndim > 1 else y_true,
+        )
         return metric.compute()
 
 
