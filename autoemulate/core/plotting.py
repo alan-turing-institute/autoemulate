@@ -1,3 +1,5 @@
+from typing import Literal
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -124,8 +126,8 @@ def plot_xy(
         else:
             ax.fill_between(
                 x_sorted,
-                y_pred_sorted - 1.96 * y_std,
-                y_pred_sorted + 1.96 * y_std,
+                y_pred_sorted - 2 * y_std,
+                y_pred_sorted + 2 * y_std,
                 color=pred_points_color,
                 alpha=0.2,
                 label="±2\u03c3",
