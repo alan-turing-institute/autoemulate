@@ -1,5 +1,5 @@
 ---
-title: "AutoEmulate v1.0: A PyTorch tool for end-to-end emulation workflows"
+title: "AutoEmulate: A PyTorch tool for end-to-end emulation workflows"
 tags: 
     - Python
     - Surrogate Modelling
@@ -81,23 +81,20 @@ date: 26 August 2025
 bibliography: paper.bib
 ---
 
-# Summary
 
-Computational simulations lie at the heart of modern science and engineering, but they are often slow and computationally costly. This poses a significant bottleneck. A common solution is to use emulators: fast, cheap models trained to approximate the simulator. However, constructing these requires substantial expertise. AutoEmulate is a low-code Python package for emulation workflows, making it easy to replace simulations with fast, accurate emulators. In version 1.0, AutoEmulate has been fully refactored to use PyTorch as a backend, enabling GPU acceleration, automatic differentiation, and seamless integration with the broader PyTorch ecosystem. The toolkit has also been extended with easy-to-use interfaces for common emulation tasks, including model calibration (determining which input values are most likely to have generated real-world observations) and active learning (where simulations are chosen to improve emulator performance at minimal computational cost). Together these updates make AutoEmulate uniquely suited to running performant end-to-end emulation workflows.
+Computational simulations lie at the heart of modern science and engineering, but they are often slow and computationally costly. A common solution is to use emulators: fast, cheap models trained to approximate the simulator. However, constructing these requires substantial expertise. AutoEmulate is a low-code Python package for emulation workflows, making it easy to replace simulations with fast, accurate emulators. In version 1.0, AutoEmulate has been fully refactored to use PyTorch as a backend, enabling GPU acceleration, automatic differentiation, and seamless integration with the broader PyTorch ecosystem. The toolkit has also been extended with easy-to-use interfaces for common emulation tasks, including model calibration (determining which input values are most likely to have generated real-world observations) and active learning (where simulations are chosen to improve emulator performance at minimal computational cost). Together these updates make AutoEmulate uniquely suited to running performant end-to-end emulation workflows.
 
 # Statement of need
 
-Physical systems are often modelled using computer simulations. Depending on the complexity of the system, these simulations can be computationally expensive and time-consuming. This bottleneck can be resolved by approximating simulations with emulators, which can be orders of magnitudes faster [@kennedy_ohagan_2000]. Emulators are key to enabling any computationally expensive downstream tasks that require generating predictions for a large number of inputs. These tasks include sensitivity analysis to quantify the impact of each input parameter on the output as well as model calibration to identify input values most likely to have generated real-world observations.
+Physical systems are often modelled using computer simulations. Depending on the complexity of the system, these simulations can be computationally expensive and time-consuming. This bottleneck can be resolved by approximating simulations with emulators, which can be orders of magnitudes faster [@kennedy_ohagan_2000].
 
-Emulation requires significant expertise in machine learning as well as familiarity with a broad and evolving ecosystem of tools for model training and downstream tasks. This creates a barrier to entry for domain researchers whose focus is on the underlying scientific problem. AutoEmulate [@autoemulate] lowers the barrier to entry by automating the entire emulator construction process (training, evaluation, model selection, and hyperparameter tuning). This makes emulation accessible to non-specialists while also offering a reference set of cutting-edge emulators, from classical approaches (e.g. Gaussian Processes) to modern deep learning methods, enabling benchmarking for experienced users.
+Emulation requires significant expertise in machine learning as well as familiarity with a broad and evolving ecosystem of tools. This creates a barrier to entry for domain researchers whose focus is on the underlying scientific problem. AutoEmulate [@autoemulate] lowers the barrier to entry by automating the entire emulator construction process (training, hyperparameter tuning and model selection). This makes emulation accessible to non-specialists while also offering a reference set of emulators for benchmarking to experienced users.
 
-AutoEmulate v1.0 introduces easy-to-use interfaces for common emulation tasks. By providing these tasks within a single package it enables users to construct sequential workflows. For instance, sensitivity analysis can be applied in order to narrow down the parameter space to key variables. This allows the user to calibrate the much smaller reduced set to match the output of the model to real-world observations. AutoEmulate also supports direct integration of custom simulators and active learning, in which the tool adaptively selects informative simulations to run to improve emulator performance at minimal computational cost.
+AutoEmulate v1.0 extends support for common emulation tasks. These include sensitivity analysis to quantify the impact of each input parameter on the output and model calibration to identify input values most likely to have generated real-world observations. AutoEmulate now also supports direct integration of custom simulators and active learning, in which the tool adaptively selects informative simulations to run to improve emulator performance at minimal computational cost.
 
 AutoEmulate was originally built on scikit-learn, which is well suited for traditional machine learning but less flexible for complex workflows. Version 1.0 introduces a PyTorch [@pytorch] backend that provides GPU acceleration for faster training and inference and automatic differentiation via PyTorch’s autograd system. It also makes AutoEmulate easy to integrate with other PyTorch-based tools. For example, the PyTorch refactor enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo exposed through Pyro [@pyro].
 
-Lastly, AutoEmulate v1.0 expands the set of implemented emulators, with a particular emphasis on predictive uncertainty quantification through ensemble methods. It also improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
-
-AutoEmulate fills a gap in the current landscape of emulation tools as it is both accessible to newcomers while offering flexibility and advanced features for experienced users. It also uniquely combines emulator training with support for a wide range of downstream tasks such as sensitivity analysis, model calibration and active learning.
+Lastly, AutoEmulate v1.0 improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
 
 # Example usage
 
@@ -115,9 +112,9 @@ result = ae.best_result()
 emulator = result.model
 ```
 
-This simple script runs a search over a library of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with hyperparameter values and performance metrics in a `Results` object. The user can then easily extract the best performing emulator.
+This simple script runs a search over a library of emulator models, performs hyperparameter tuning and compares models using cross validation. Each model is stored along with metadata in a `Results` object. The user can then easily extract the best performing emulator.
 
-AutoEmulate can additionally search over different data preprocessing methods, such as normalization or dimensionality reduction techniques. AutoEmulate implements principal component analysis (PCA) and variational autoencoders (VAEs) for handling high dimensional input or output data. Any `Transform` from PyTorch distributions can also be used. The transforms are passed as a list to permit the user to define a sequence of transforms to apply to the data. For example, the following code standardizes the input data and compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
+AutoEmulate can additionally search over different data preprocessing methods, such as normalization or dimensionality reduction techniques (PCA, VAEs). Any `Transform` from PyTorch distributions can also be used. The transforms are passed as a list to permit the user to define a sequence of transforms to apply to the data. For example, the following code standardizes the input data and compares three different output transformations: no transformation, PCA with 16 components, and PCA with 32 components in combination with the default set of emulators:
 
 ```python
 from autoemulate.transforms import PCATransform, StandardizeTransform
@@ -138,7 +135,7 @@ The result in this case will return the best combination of model and output tra
 
 ![GP with PCA emulator prediction for a reaction diffusion simulation compared to the ground truth.](reaction_diffusion_emulation.png)
 
-Once an emulator has been trained it can be used to generate fast predictions for new input values or to perform [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as sensitivity analysis or model calibration. For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a plausible range of values, and two outputs `output1` and `output2`:
+Once an emulator has been trained it can generate fast predictions for new input values, enabling [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as [sensitivity analysis](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/01_emulation_sensitivity.html) or [model calibration](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/03_bayes_calibration.html). For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a plausible range of values, and two outputs `output1` and `output2`:
 
 ```python
 from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
@@ -159,9 +156,7 @@ sa = SensitivityAnalysis(emulator, problem=problem)
 sobol_df = sa.run()
 ```
 
-A more complete application of sensitivity analysis to a cardiovascular simulator is demonstrated [here](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/01_emulation_sensitivity.html).
-
-The PyTorch backend enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo with Pyro. AutoEmulate provides a simple interface for this given a trained PyTorch emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
+AutoEmulate also provides a simple interface for calibration given a trained emulator, input parameter ranges (same as in the sensitivity analysis example), and real-world observations:
 
 ```python
 from autoemulate.calibration.bayes import BayesianCalibration
@@ -176,8 +171,6 @@ bc = BayesianCalibration(
 mcmc = bc.run()
 ```
 
-A more complete application of Bayesian calibration to an epidemic simulation is demonstrated [here](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/03_bayes_calibration.html).
-
-Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. Integrating custom simulators enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
+Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. This enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
 
 # References
