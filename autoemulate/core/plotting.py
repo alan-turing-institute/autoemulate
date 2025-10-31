@@ -128,7 +128,7 @@ def plot_xy(
                 y_pred_sorted + 1.96 * y_std,
                 color=pred_points_color,
                 alpha=0.2,
-                label="0.95 CI",
+                label="±2\u03c3",
             )
             ax.plot(
                 x_sorted,
