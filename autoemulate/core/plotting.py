@@ -77,7 +77,7 @@ def plot_xy(
         An optional output label to plot.
     r2_score: float | None
         An option r2 score to include in the plot legend.
-    error_style: str
+    error_style: Literal["bars", "fill"]
         The style of error representation in the plots. Can be "bars" for error
         bars or "fill" for shaded error regions. Defaults to "bars".
     """
