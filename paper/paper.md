@@ -86,7 +86,7 @@ Computational simulations lie at the heart of modern science and engineering, bu
 
 # Statement of need
 
-Physical systems are often modelled using computer simulations. Depending on the complexity of the system, these simulations can be computationally expensive and time-consuming. This bottleneck can be resolved by approximating simulations with emulators, which can be orders of magnitudes faster [@kennedy_ohagan_2000]. 
+Physical systems are often modelled using computer simulations. Depending on the complexity of the system, these simulations can be computationally expensive and time-consuming. This bottleneck can be resolved by approximating simulations with emulators, which can be orders of magnitudes faster [@kennedy_ohagan_2000].
 
 Emulation requires significant expertise in machine learning as well as familiarity with a broad and evolving ecosystem of tools. This creates a barrier to entry for domain researchers whose focus is on the underlying scientific problem. AutoEmulate [@autoemulate] lowers the barrier to entry by automating the entire emulator construction process (training, hyperparameter tuning and model selection). This makes emulation accessible to non-specialists while also offering a reference set of emulators for benchmarking to experienced users.
 
