@@ -2,6 +2,7 @@ import inspect
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 import joblib
 import matplotlib.pyplot as plt
@@ -597,7 +598,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         output_index: list[int] | int | None = None,
         input_ranges: dict | None = None,
         output_ranges: dict | None = None,
-        error_style: str = "bars",
+        error_style: Literal["bars", "fill"] = "bars",
         figsize=None,
         ncols: int = 3,
         fname: str | None = None,
