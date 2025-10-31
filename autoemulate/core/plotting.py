@@ -1,3 +1,5 @@
+from typing import Literal
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -49,9 +51,10 @@ def plot_xy(
     y_variance: NumpyLike | None = None,
     ax: Axes | None = None,
     title: str = "xy",
-    input_index: int | None = None,
-    output_index: int | None = None,
+    input_label: str | None = None,
+    output_label: str | None = None,
     r2_score: float | None = None,
+    error_style: Literal["bars", "fill"] = "bars",
 ):
     """
     Plot observed and predicted values vs. features.
@@ -70,12 +73,15 @@ def plot_xy(
         An optional matplotlib Axes object to plot on.
     title: str
         An optional title for the plot.
-    input_index: int | None
-        An optional index of the input dimension to plot.
-    output_index: int | None
-        An optional index of the output dimension to plot.
+    input_label: str | None
+        An optional input label to plot.
+    output_label: str | None
+        An optional output label to plot.
     r2_score: float | None
         An option r2 score to include in the plot legend.
+    error_style: Literal["bars", "fill"]
+        The style of error representation in the plots. Can be "bars" for error
+        bars or "fill" for shaded error regions. Defaults to "bars".
     """
     # Sort the data
     sort_idx = np.argsort(x).flatten()
@@ -93,18 +99,46 @@ def plot_xy(
     assert ax is not None, "ax must be provided"
     # Scatter plot with error bars for predictions
     if y_std is not None:
-        ax.errorbar(
-            x_sorted,
-            y_pred_sorted,
-            yerr=2 * y_std,
-            fmt="o",
-            color=pred_points_color,
-            elinewidth=2,
-            capsize=3,
-            alpha=0.5,
-            # use unicode for sigma
-            label="pred. (±2\u03c3)",
-        )
+        if error_style.lower() not in ["bars", "fill"]:
+            msg = "error_style must be one of ['bars', 'fill']"
+            raise ValueError(msg)
+        if error_style.lower() == "bars":
+            ax.errorbar(
+                x_sorted,
+                y_pred_sorted,
+                yerr=2 * y_std,
+                fmt="o",
+                color=pred_points_color,
+                elinewidth=2,
+                capsize=3,
+                alpha=0.5,
+                # use unicode for sigma
+                label="pred. (±2\u03c3)",
+            )
+            ax.scatter(
+                x_sorted,
+                y_pred_sorted,
+                color=pred_points_color,
+                edgecolor="black",
+                linewidth=0.5,
+                alpha=0.5,
+            )
+        else:
+            ax.fill_between(
+                x_sorted,
+                y_pred_sorted - 2 * y_std,
+                y_pred_sorted + 2 * y_std,
+                color=pred_points_color,
+                alpha=0.2,
+                label="±2\u03c3",
+            )
+            ax.plot(
+                x_sorted,
+                y_pred_sorted,
+                color=pred_points_color,
+                alpha=0.75,
+                label="pred.",
+            )
     else:
         ax.scatter(
             x_sorted,
@@ -126,8 +160,10 @@ def plot_xy(
         label="data",
     )
 
-    ax.set_xlabel(f"$x_{input_index}$", fontsize=13)
-    ax.set_ylabel(f"$y_{output_index}$", fontsize=13)
+    x_label = input_label if input_label is not None else "x"
+    y_label = output_label if output_label is not None else "y"
+    ax.set_xlabel(x_label, fontsize=13)
+    ax.set_ylabel(y_label, fontsize=13)
     ax.set_title(title, fontsize=13)
     ax.grid(True, alpha=0.3)
 
@@ -135,10 +171,7 @@ def plot_xy(
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    lbl = "pred." if y_variance is None else "pred. (±2\u03c3)"
     legend = ax.legend(
-        handles[-2:],
-        ["data", lbl],
         loc="best",
         handletextpad=0,
         columnspacing=0,

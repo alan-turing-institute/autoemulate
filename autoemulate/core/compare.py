@@ -2,6 +2,7 @@ import inspect
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 import joblib
 import matplotlib.pyplot as plt
@@ -621,10 +622,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     def plot(  # noqa: PLR0912, PLR0915
         self,
         model_obj: int | Emulator | Result,
+        input_names: list[str] | None = None,
+        output_names: list[str] | None = None,
         input_index: list[int] | int | None = None,
         output_index: list[int] | int | None = None,
         input_ranges: dict | None = None,
         output_ranges: dict | None = None,
+        error_style: Literal["bars", "fill"] = "bars",
         figsize=None,
         ncols: int = 3,
         fname: str | None = None,
@@ -637,6 +641,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         model_obj: int | Emulator | Result
             The model to plot. Can be an integer ID of a Result, an Emulator instance,
             or a Result instance.
+        input_names: list[str] | None
+            The names of the input features. If None, generic names are used.
+        output_names: list[str] | None
+            The names of the output features. If None, generic names are used.
         input_index: int
             The index of the input feature to plot against the output.
         output_index: int
@@ -649,6 +657,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ranges of the output features to consider for the plot. Ranges are
             combined such that the final subset is the intersection data within
             the specified ranges. Defaults to None.
+        error_style: Literal["bars", "fill"]
+            The style of error representation in the plots. Can be "bars" for error
+            bars or "fill" for shaded error regions. Defaults to "bars".
         figsize: tuple[int, int] | None
             The size of the figure to create. If None, it is set based on the number
             of input and output features.
@@ -728,6 +739,26 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
         axs = axs.flatten()
 
+        if input_names is not None:
+            if len(input_names) != n_features:
+                msg = (
+                    "Length of input_names does not match number of input features. "
+                    f"Expected {n_features}, got {len(input_names)}."
+                )
+                raise ValueError(msg)
+        else:
+            input_names = [f"$x_{i}$" for i in range(n_features)]
+
+        if output_names is not None:
+            if len(output_names) != n_outputs:
+                msg = (
+                    "Length of output_names does not match number of outputs. "
+                    f"Expected {n_outputs}, got {len(output_names)}."
+                )
+                raise ValueError(msg)
+        else:
+            output_names = [f"$y_{i}$" for i in range(n_outputs)]
+
         plot_index = 0
         for out_idx in output_index:
             for in_idx in input_index:
@@ -778,10 +809,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                         y_pred_subset[:, out_idx],
                         y_variance[:, out_idx] if y_variance is not None else None,
                         ax=axs[plot_index],
-                        title=f"$x_{in_idx}$ vs. $y_{out_idx}$",
-                        input_index=in_idx,
-                        output_index=out_idx,
+                        title=f"{input_names[in_idx]} vs. {output_names[out_idx]}",
+                        input_label=input_names[in_idx],
+                        output_label=output_names[out_idx],
                         r2_score=r2_score,
+                        error_style=error_style,
                     )
                     plot_index += 1
 
@@ -790,6 +822,116 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             ax.set_visible(False)
         plt.tight_layout()
 
+        if fname is None:
+            return display_figure(fig)
+        fig.savefig(fname, bbox_inches="tight")
+        return None
+
+    def plot_preds(  # noqa: PLR0912
+        self,
+        model_obj: int | Emulator | Result,
+        output_names: list[str] | None = None,
+        figsize=None,
+        ncols: int = 3,
+        fname: str | None = None,
+    ):
+        """
+        Plot predicted means (and variances) against observations for all outputs.
+
+        Parameters
+        ----------
+        model_obj: int | Emulator | Result
+            The model to plot. Can be an integer ID of a Result, an Emulator instance,
+            or a Result instance.
+        output_names: list[str] | None
+            The names of the outputs to use in the plot titles. If None, generic names
+            like "y_0", "y_1", etc. are used.
+        figsize: tuple[int, int] | None
+            The size of the figure to create. If None, it is set based on the number
+            of outputs.
+        ncols: int
+            The maximum number of columns in the subplot grid. Defaults to 3.
+        fname: str | None
+            If provided, the figure will be saved to this file path.
+        """
+        result = None
+        if isinstance(model_obj, int):
+            if model_obj not in self._id_to_result:
+                raise ValueError(f"No result found with ID: {model_obj}")
+            result = self.get_result(model_obj)
+            model = result.model
+        elif isinstance(model_obj, Emulator):
+            model = model_obj
+        elif isinstance(model_obj, Result):
+            model = model_obj.model
+
+        test_x, test_y = self._convert_to_tensors(self.test)
+
+        # Re-run prediction with just this model to get the predictions
+        y_pred, y_variance = model.predict_mean_and_variance(test_x)
+        y_std = None
+        if y_variance is not None:
+            y_variance, _ = self._convert_to_numpy(y_variance, None)
+            y_variance = self._ensure_numpy_2d(y_variance)
+            y_std = np.sqrt(y_variance)
+
+        # Convert to numpy for plotting
+        test_x, test_y = self._convert_to_numpy(test_x, test_y)
+        assert test_x is not None
+        assert test_y is not None
+        assert y_pred is not None
+        y_pred, _ = self._convert_to_numpy(y_pred, None)
+        test_x = self._ensure_numpy_2d(test_x)
+        test_y = self._ensure_numpy_2d(test_y)
+        y_pred = self._ensure_numpy_2d(y_pred)
+
+        # Figure out layout
+        n_outputs = test_y.shape[1] if test_y.ndim > 1 else 1
+        nrows, ncols = calculate_subplot_layout(n_outputs, ncols)
+        if figsize is None:
+            figsize = (5 * ncols, 4 * nrows)
+        fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
+        axs = axs.flatten()
+
+        if output_names is not None:
+            if len(output_names) != n_outputs:
+                msg = (
+                    "Length of output_names does not match number of outputs. "
+                    f"Expected {n_outputs}, got {len(output_names)}."
+                )
+                raise ValueError(msg)
+        else:
+            output_names = [f"$y_{i}$" for i in range(n_outputs)]
+
+        for i in range(n_outputs):
+            if y_std is not None:
+                axs[i].errorbar(
+                    test_y[:, i],
+                    y_pred[:, i],
+                    yerr=2 * y_std[:, i],
+                    fmt="none",
+                    alpha=0.4,
+                    capsize=3,
+                )
+            axs[i].scatter(
+                test_y[:, i],
+                y_pred[:, i],
+                alpha=0.6,
+                linewidth=0.5,
+            )
+            axs[i].plot(
+                [test_y[:, i].min(), test_y[:, i].max()],
+                [test_y[:, i].min(), test_y[:, i].max()],
+                linestyle="--",
+                color="gray",
+            )
+            axs[i].set_title(output_names[i])
+            axs[i].set_xlabel("True values")
+            axs[i].set_ylabel("Predicted values ±2\u03c3")
+        plt.tight_layout()
+
+        if figsize is not None:
+            fig.set_size_inches(figsize)
         if fname is None:
             return display_figure(fig)
         fig.savefig(fname, bbox_inches="tight")
