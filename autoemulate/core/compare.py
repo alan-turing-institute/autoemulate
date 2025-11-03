@@ -16,8 +16,8 @@ from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.metrics import (
     R2,
     TorchMetrics,
-    get_metric_config,
-    get_metric_configs,
+    get_metric,
+    get_metrics,
 )
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
@@ -144,8 +144,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         # Setup metrics. If evaluation_metrics is None, default to ["r2", "rmse"]
         evaluation_metrics = evaluation_metrics or ["r2", "rmse"]
-        self.evaluation_metrics = get_metric_configs(evaluation_metrics)
-        self.tuning_metric = get_metric_config(tuning_metric)
+        self.evaluation_metrics = get_metrics(evaluation_metrics)
+        self.tuning_metric = get_metric(tuning_metric)
 
         # Transforms to search over
         self.x_transforms_list = [

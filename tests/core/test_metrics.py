@@ -15,8 +15,8 @@ from autoemulate.core.metrics import (
     CRPSMetric,
     Metric,
     TorchMetrics,
-    get_metric_config,
-    get_metric_configs,
+    get_metric,
+    get_metrics,
 )
 from torch.distributions import Normal
 
@@ -176,7 +176,7 @@ def test_mae_computation():
 
 def test_get_metric_config_with_string_r2():
     """Test get_metric_config with 'r2' string."""
-    config = get_metric_config("r2")
+    config = get_metric("r2")
 
     assert config == R2
     assert config.name == "r2"
@@ -185,7 +185,7 @@ def test_get_metric_config_with_string_r2():
 
 def test_get_metric_config_with_string_rmse():
     """Test get_metric_config with 'rmse' string."""
-    config = get_metric_config("rmse")
+    config = get_metric("rmse")
 
     assert config == RMSE
     assert config.name == "rmse"
@@ -194,7 +194,7 @@ def test_get_metric_config_with_string_rmse():
 
 def test_get_metric_config_with_string_mse():
     """Test get_metric_config with 'mse' string."""
-    config = get_metric_config("mse")
+    config = get_metric("mse")
 
     assert config == MSE
     assert config.name == "mse"
@@ -203,7 +203,7 @@ def test_get_metric_config_with_string_mse():
 
 def test_get_metric_config_with_string_mae():
     """Test get_metric_config with 'mae' string."""
-    config = get_metric_config("mae")
+    config = get_metric("mae")
 
     assert config == MAE
     assert config.name == "mae"
@@ -212,9 +212,9 @@ def test_get_metric_config_with_string_mae():
 
 def test_get_metric_config_case_insensitive():
     """Test get_metric_config is case insensitive."""
-    config_upper = get_metric_config("R2")
-    config_lower = get_metric_config("r2")
-    config_mixed = get_metric_config("R2")
+    config_upper = get_metric("R2")
+    config_lower = get_metric("r2")
+    config_mixed = get_metric("R2")
 
     assert config_upper == config_lower == config_mixed == R2
 
@@ -225,7 +225,7 @@ def test_get_metric_config_with_torchmetrics_instance():
         metric=torchmetrics.R2Score, name="custom_r2", maximize=True
     )
 
-    config = get_metric_config(custom_metric)
+    config = get_metric(custom_metric)
 
     assert config == custom_metric
     assert config.name == "custom_r2"
@@ -234,7 +234,7 @@ def test_get_metric_config_with_torchmetrics_instance():
 def test_get_metric_config_invalid_string():
     """Test get_metric_config with invalid string raises ValueError."""
     with pytest.raises(ValueError, match="Unknown metric shortcut") as excinfo:
-        get_metric_config("invalid_metric")
+        get_metric("invalid_metric")
 
     assert "Unknown metric shortcut" in str(excinfo.value)
     assert "invalid_metric" in str(excinfo.value)
@@ -244,7 +244,7 @@ def test_get_metric_config_invalid_string():
 def test_get_metric_config_unsupported_type():
     """Test get_metric_config with unsupported type raises ValueError."""
     with pytest.raises(ValueError, match="Unsupported metric type") as excinfo:
-        get_metric_config(123)  # type: ignore[arg-type]
+        get_metric(123)  # type: ignore[arg-type]
 
     assert "Unsupported metric type" in str(excinfo.value)
 
@@ -252,7 +252,7 @@ def test_get_metric_config_unsupported_type():
 def test_get_metric_config_with_none():
     """Test get_metric_config with None raises ValueError."""
     with pytest.raises(ValueError, match="Unsupported metric type") as excinfo:
-        get_metric_config(None)  # type: ignore[arg-type]
+        get_metric(None)  # type: ignore[arg-type]
 
     assert "Unsupported metric type" in str(excinfo.value)
 
@@ -263,7 +263,7 @@ def test_get_metric_config_with_none():
 def test_get_metric_configs_with_strings():
     """Test get_metric_configs with list of strings."""
     metrics = ["r2", "rmse", "mse"]
-    configs = get_metric_configs(metrics)
+    configs = get_metrics(metrics)
 
     assert len(configs) == 3
     assert configs[0] == R2
@@ -278,7 +278,7 @@ def test_get_metric_configs_with_mixed_types():
     )
 
     metrics = ["r2", custom_metric, "mse"]
-    configs = get_metric_configs(metrics)
+    configs = get_metrics(metrics)
 
     assert len(configs) == 3
     assert configs[0] == R2
@@ -288,7 +288,7 @@ def test_get_metric_configs_with_mixed_types():
 
 def test_get_metric_configs_with_empty_list():
     """Test get_metric_configs with empty list."""
-    configs = get_metric_configs([])
+    configs = get_metrics([])
 
     assert len(configs) == 0
     assert configs == []
@@ -296,7 +296,7 @@ def test_get_metric_configs_with_empty_list():
 
 def test_get_metric_configs_with_single_metric():
     """Test get_metric_configs with single metric."""
-    configs = get_metric_configs(["r2"])
+    configs = get_metrics(["r2"])
 
     assert len(configs) == 1
     assert configs[0] == R2
@@ -305,7 +305,7 @@ def test_get_metric_configs_with_single_metric():
 def test_get_metric_configs_with_all_available_metrics():
     """Test get_metric_configs with all available metrics."""
     metrics = list(AVAILABLE_METRICS.keys())
-    configs = get_metric_configs(metrics)
+    configs = get_metrics(metrics)
 
     assert len(configs) == len(AVAILABLE_METRICS)
 
@@ -320,7 +320,7 @@ def test_get_metric_configs_with_torchmetrics_instances():
         metric=torchmetrics.MeanSquaredError, name="mse_1", maximize=False
     )
 
-    configs = get_metric_configs([metric1, metric2])
+    configs = get_metrics([metric1, metric2])
 
     assert len(configs) == 2
     assert configs[0] == metric1
@@ -330,7 +330,7 @@ def test_get_metric_configs_with_torchmetrics_instances():
 def test_get_metric_configs_case_insensitive():
     """Test get_metric_configs is case insensitive for strings."""
     metrics = ["R2", "RMSE", "mse", "MaE", "Crps"]
-    configs = get_metric_configs(metrics)
+    configs = get_metrics(metrics)
 
     assert len(configs) == 5
     assert configs[0] == R2
@@ -396,18 +396,13 @@ def test_metric_with_multidimensional_tensors():
 def test_metric_configs_workflow():
     """Test complete workflow of getting and using metric configs."""
     # Get configs from strings
-    configs = get_metric_configs(["r2", "rmse"])
+    metrics = get_metrics(["r2", "rmse"])
 
     # Use configs to compute metrics
     y_pred = torch.tensor([1.0, 2.0, 3.0])
     y_true = torch.tensor([1.0, 2.0, 3.0])
 
-    results = {}
-    for config in configs:
-        metric = config.metric()
-        metric.update(y_pred, y_true)
-        results[config.name] = metric.compute()
-
+    results = {metric.name: metric(y_pred, y_true) for metric in metrics}
     assert "r2" in results
     assert "rmse" in results
     assert torch.isclose(results["r2"], torch.tensor(1.0))  # Perfect R2
@@ -509,7 +504,7 @@ def test_crps_aggregation_across_batch():
 
 def test_get_metric_config_crps():
     """Test get_metric_config with 'crps' string."""
-    config = get_metric_config("crps")
+    config = get_metric("crps")
 
     assert config == CRPS
     assert isinstance(config, CRPSMetric)

@@ -48,11 +48,11 @@ class TorchMetrics(Metric):
 
     Parameters
     ----------
-    metric : MetricLike
+    metric: MetricLike
         The torchmetrics metric class or partial.
-    name : str
+    name: str
         Display name for the metric. If None, uses the class name of the metric.
-    maximize : bool
+    maximize: bool
         Whether higher values are better.
     """
 
@@ -83,8 +83,12 @@ class TorchMetrics(Metric):
                 y_pred = y_pred.rsample((n_samples,)).mean(dim=0)
         metric = self.metric()
         metric.to(y_pred.device)
-        # Assume first dim is a batch dim, flatten others for metric calculation
-        metric.update(y_pred.flatten(start_dim=1), y_true.flatten(start_dim=1))
+
+        # Assume first dim is a batch dim if >=2D, flatten others for metric calculation
+        metric.update(
+            y_pred.flatten(start_dim=1) if y_pred.ndim > 1 else y_pred,
+            y_true.flatten(start_dim=1) if y_true.ndim > 1 else y_true,
+        )
         return metric.compute()
 
 
@@ -244,32 +248,30 @@ AVAILABLE_METRICS = {
 }
 
 
-def get_metric_config(
-    metric: str | TorchMetrics,
-) -> TorchMetrics:
-    """Convert various metric specifications to MetricConfig.
+def get_metric(metric: str | Metric) -> Metric:
+    """Convert metric specification to a `Metric`.
 
     Parameters
     ----------
-    metric : str | type[torchmetrics.Metric] | partial[torchmetrics.Metric] | Metric
+    metric: str | Metric
         The metric specification. Can be:
         - A string shortcut like "r2", "rmse", "mse", "mae"
         - A Metric instance (returned as-is)
 
     Returns
     -------
-    TorchMetrics
-        The metric configuration.
+    Metric
+        The metric.
 
     Raises
     ------
     ValueError
-        If the metric specification is invalid or name is not provided when required.
-
+        If the metric specification is not a string (and registered in
+        AVAILABLE_METRICS) or Metric instance.
 
     """
-    # If already a TorchMetric, return as-is
-    if isinstance(metric, TorchMetrics):
+    # If already a Metric, return as-is
+    if isinstance(metric, Metric):
         return metric
 
     if isinstance(metric, str):
@@ -286,25 +288,17 @@ def get_metric_config(
     )
 
 
-def get_metric_configs(
-    metrics: Sequence[str | TorchMetrics],
-) -> list[TorchMetrics]:
-    """Convert a list of metric specifications to MetricConfig objects.
+def get_metrics(metrics: Sequence[str | Metric]) -> list[Metric]:
+    """Convert a list of metric specifications to list of `Metric`s.
 
     Parameters
     ----------
-    metrics : Sequence[str | TorchMetrics]
+    metrics: Sequence[str | Metric]
         Sequence of metric specifications.
 
     Returns
     -------
-    list[TorchMetrics]
-        List of metric configurations.
+    list[Metric]
+        List of metrics.
     """
-    result_metrics = []
-
-    for m in metrics:
-        config = get_metric_config(m) if isinstance(m, (str | TorchMetrics)) else m
-        result_metrics.append(config)
-
-    return result_metrics
+    return [get_metric(m) for m in metrics]
