@@ -34,8 +34,12 @@ class Metric:
     maximize: bool
 
     def __repr__(self) -> str:
-        """Return the string representation of the Metric."""
+        """Representation of the Metric."""
         return f"Metric(name={self.name}, maximize={self.maximize})"
+
+    def __str__(self):
+        """Metric when formatted as a string."""
+        return self.name
 
     def __eq__(self, other: object) -> bool:
         """Check equality based on metric name."""
