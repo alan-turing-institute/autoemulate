@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from autoemulate.core.metrics import R2, RMSE
 from autoemulate.core.results import Result, Results
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
@@ -19,12 +20,12 @@ def make_result(
         model=DummyEmulator(x_transforms=[f"x{idx}"], y_transforms=[f"y{idx}"]),
         params={"param": idx},
         test_metrics={
-            "r2": (r2, r2_std),
-            "rmse": (rmse, rmse_std),
+            R2: (r2, r2_std),
+            RMSE: (rmse, rmse_std),
         },
         train_metrics={
-            "r2": (r2_train, r2_train_std),
-            "rmse": (rmse_train, rmse_train_std),
+            R2: (r2_train, r2_train_std),
+            RMSE: (rmse_train, rmse_train_std),
         },
     )
 
@@ -36,14 +37,8 @@ def test_result_attributes():
         model_name="mymodel",
         model=emu,
         params={"foo": 1},
-        test_metrics={
-            "r2": (0.9, 0.01),
-            "rmse": (0.1, 0.02),
-        },
-        train_metrics={
-            "r2": (0.95, 0.015),
-            "rmse": (0.05, 0.025),
-        },
+        test_metrics={R2: (0.9, 0.01), RMSE: (0.1, 0.02)},
+        train_metrics={R2: (0.95, 0.015), RMSE: (0.05, 0.025)},
     )
     assert res.id == 0
     assert res.model_name == "mymodel"
@@ -51,8 +46,8 @@ def test_result_attributes():
     assert res.x_transforms == ["x"]
     assert res.y_transforms == ["y"]
     assert res.params == {"foo": 1}
-    assert res.test_metrics["r2"] == (0.9, 0.01)
-    assert res.test_metrics["rmse"] == (0.1, 0.02)
+    assert res.test_metrics[R2] == (0.9, 0.01)
+    assert res.test_metrics[RMSE] == (0.1, 0.02)
 
 
 def test_result_metadata_df():

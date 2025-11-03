@@ -542,9 +542,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Get the best result and log the comparison
         # Use the first evaluation metric to determine the best result
         first_metric = self.evaluation_metrics[0]
-        best_result = self.best_result(
-            metric_name=first_metric.name,
-        )
+        best_result = self.best_result(first_metric)
         self.log_compare(
             best_model_name=best_result.model_name,
             x_transforms=best_result.x_transforms,

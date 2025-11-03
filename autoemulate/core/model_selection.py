@@ -159,7 +159,7 @@ def bootstrap(
     n_samples: int = 1000,
     device: str | torch.device = "cpu",
     metrics: list[Metric] | None = None,
-) -> dict[str, tuple[float, float]]:
+) -> dict[Metric, tuple[float, float]]:
     """
     Get bootstrap estimates of metrics.
 
@@ -228,7 +228,7 @@ def bootstrap(
 
     # Return mean and std for each metric
     return {
-        metric.name: (
+        metric: (
             metric_scores[metric.name].mean().item(),
             metric_scores[metric.name].std().item(),
         )

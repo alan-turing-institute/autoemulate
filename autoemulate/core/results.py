@@ -2,7 +2,7 @@ import logging
 
 import pandas as pd
 
-from autoemulate.core.metrics import AVAILABLE_METRICS
+from autoemulate.core.metrics import Metric, get_metric
 from autoemulate.core.types import ModelParams
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
@@ -18,8 +18,8 @@ class Result:
         model_name: str,
         model: TransformedEmulator,
         params: ModelParams,
-        test_metrics: dict[str, tuple[float, float]],
-        train_metrics: dict[str, tuple[float, float]],
+        test_metrics: dict[Metric, tuple[float, float]],
+        train_metrics: dict[Metric, tuple[float, float]],
     ):
         """Initialize a Result object.
 
@@ -177,13 +177,13 @@ class Results:
 
     summarise = summarize
 
-    def best_result(self, metric_name: str | None = None) -> Result:
+    def best_result(self, metric: str | Metric | None = None) -> Result:
         """
         Get the model with the best result based on the given metric.
 
         Parameters
         ----------
-        metric_name: str | None
+        metric: str | Metric | None
             The name of the metric to use for comparison. If None, uses the first
             available metric found in the results. The metric should exist in the
             test_metrics of the results.
@@ -202,7 +202,7 @@ class Results:
             raise ValueError(msg)
 
         # If metric_name is None, use the first available metric
-        if metric_name is None:
+        if metric is None:
             # Collect all available metrics
             available_metrics = set()
             for result in self.results:
@@ -213,40 +213,33 @@ class Results:
                 raise ValueError(msg)
 
             # Use the first metric
-            metric_name = next(iter(available_metrics))
-            logger.info("Using metric '%s' to determine best result.", metric_name)
+            metric_selected = next(iter(available_metrics))
+            logger.info("Using metric '%s' to determine best result.", metric_selected)
         else:
             # Check if the specified metric exists in at least one result
-            if not any(metric_name in result.test_metrics for result in self.results):
+            if not any(metric in result.test_metrics for result in self.results):
                 available_metrics = set()
                 for result in self.results:
                     available_metrics.update(result.test_metrics.keys())
                 msg = (
-                    f"Metric '{metric_name}' not found in any results. "
+                    f"Metric '{metric}' not found in any results. "
                     f"Available metrics: {sorted(available_metrics)}"
                 )
                 raise ValueError(msg)
-
-            logger.info("Using metric '%s' to determine best result.", metric_name)
-
-        # Determine if we are maximizing or minimizing the metric
-        # from the metric name
-        assert metric_name is not None  # for pyright
-        metric_config = AVAILABLE_METRICS.get(metric_name)
-        if metric_config is None:
-            msg = f"Metric '{metric_name}' not found in AVAILABLE_METRICS."
-            raise ValueError(msg)
-        metric_maximize = metric_config.maximize
+            metric_selected = get_metric(metric)
+            logger.info("Using metric '%s' to determine best result.", metric_selected)
 
         # Select best result based on whether we're maximizing or minimizing
-        if metric_maximize:
+        if metric_selected.maximize:
             return max(
                 self.results,
-                key=lambda r: r.test_metrics.get(metric_name, (float("-inf"), 0))[0],
+                key=lambda r: r.test_metrics.get(metric_selected, (float("-inf"), 0))[
+                    0
+                ],
             )
         return min(
             self.results,
-            key=lambda r: r.test_metrics.get(metric_name, (float("inf"), 0))[0],
+            key=lambda r: r.test_metrics.get(metric_selected, (float("inf"), 0))[0],
         )
 
     def get_result(self, result_id: int) -> Result:
