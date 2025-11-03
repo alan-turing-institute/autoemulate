@@ -5,6 +5,8 @@ import pytest
 import torch
 from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
+from autoemulate.core.metrics import Metric, get_metric
+from autoemulate.core.types import OutputLike, TensorLike
 from autoemulate.emulators import DEFAULT_EMULATORS
 from autoemulate.emulators.base import Emulator
 from torch.distributions import Transform
@@ -187,11 +189,12 @@ def test_ae_with_different_evaluation_metrics(
     # Verify that all specified metrics are in test_metrics for each result
     for result in ae.results:
         assert result.test_metrics is not None
+        metric_names = [m.name for m in result.test_metrics]
         for metric_name in evaluation_metrics:
-            assert metric_name in result.test_metrics
+            assert metric_name in metric_names
             # Verify the metric value is a tuple of (mean, std)
-            assert isinstance(result.test_metrics[metric_name], tuple)
-            assert len(result.test_metrics[metric_name]) == 2
+            assert isinstance(result.test_metrics[get_metric(metric_name)], tuple)
+            assert len(result.test_metrics[get_metric(metric_name)]) == 2
 
 
 @pytest.mark.parametrize(
@@ -235,7 +238,8 @@ def test_ae_with_tuning_and_evaluation_metric_combinations(
     for result in ae.results:
         assert result.test_metrics is not None
         for metric_name in evaluation_metrics:
-            assert metric_name in result.test_metrics
+            metric_names = [m.name for m in result.test_metrics]
+            assert metric_name in metric_names
 
 
 def test_ae_with_same_tuning_and_evaluation_metric(sample_data_for_ae_compare):
@@ -260,7 +264,8 @@ def test_ae_with_same_tuning_and_evaluation_metric(sample_data_for_ae_compare):
     assert ae.evaluation_metrics[0].name == "rmse"
 
     for result in ae.results:
-        assert "rmse" in result.test_metrics
+        metric_names = [m.name for m in result.test_metrics]
+        assert "rmse" in metric_names
 
 
 def test_ae_with_maximizing_and_minimizing_metrics(sample_data_for_ae_compare):
@@ -290,7 +295,134 @@ def test_ae_with_maximizing_and_minimizing_metrics(sample_data_for_ae_compare):
 
     # Verify all metrics are computed
     for result in ae.results:
+        metric_names = [m.name for m in result.test_metrics]
         assert len(result.test_metrics) == 4
-        assert all(
-            metric in result.test_metrics for metric in ["r2", "rmse", "mse", "mae"]
+        assert all(metric in metric_names for metric in ["r2", "rmse", "mse", "mae"])
+
+
+def test_ae_with_custom_evaluation_metrics(sample_data_for_ae_compare):
+    """Test AutoEmulate with custom metric implementations alongside built-in
+    metrics."""
+
+    class CustomMSEMetric(Metric):
+        """Custom MSE metric for testing custom metric functionality."""
+
+        name = "custom_mse"
+        maximize = False
+
+        def __call__(
+            self,
+            y_pred: OutputLike,
+            y_true: TensorLike,
+            n_samples: int = 1000,  # noqa: ARG002
+        ) -> TensorLike:
+            """Calculate mean squared error."""
+            assert isinstance(y_pred, torch.Tensor)
+            return torch.mean((y_pred - y_true) ** 2)
+
+    custom_mse = CustomMSEMetric()
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    # Test with custom metric alongside built-in metrics
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        tuning_metric="r2",
+        evaluation_metrics=[custom_mse, "r2", "mse"],
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+
+    # Verify custom metric configuration
+    assert ae.evaluation_metrics[0] == custom_mse
+    assert ae.evaluation_metrics[0].name == "custom_mse"
+    assert ae.evaluation_metrics[0].maximize is False
+
+    # Verify all metrics are computed
+    for result in ae.results:
+        assert result.test_metrics is not None
+        assert len(result.test_metrics) == 3
+
+        # Check all expected metrics are present
+        metric_names = [m.name for m in result.test_metrics]
+        assert "custom_mse" in metric_names
+        assert "r2" in metric_names
+        assert "mse" in metric_names
+
+        # Verify custom_mse and built-in mse produce similar values (both are MSE)
+        custom_mse_value = result.test_metrics[custom_mse][0]
+        builtin_mse = get_metric("mse")
+        builtin_mse_value = result.test_metrics[builtin_mse][0]
+
+        # Custom and built-in MSE should be close
+        assert torch.isclose(
+            torch.tensor(custom_mse_value), torch.tensor(builtin_mse_value), rtol=0.1
+        ), (
+            f"Custom MSE ({custom_mse_value}) should match "
+            f"built-in MSE ({builtin_mse_value})"
         )
+
+        # All metric values should be tuples of (mean, std)
+        for metric_value in result.test_metrics.values():
+            assert isinstance(metric_value, tuple)
+            assert len(metric_value) == 2
+            assert isinstance(metric_value[0], int | float)
+            assert isinstance(metric_value[1], int | float)
+
+
+def test_ae_with_custom_tuning_metric(sample_data_for_ae_compare):
+    """Test AutoEmulate using a custom metric for hyperparameter tuning."""
+
+    class CustomR2Metric(Metric):
+        """Custom R2 metric for testing custom tuning metric functionality."""
+
+        name = "custom_r2"
+        maximize = True
+
+        def __call__(
+            self,
+            y_pred: OutputLike,
+            y_true: TensorLike,
+            n_samples: int = 1000,  # noqa: ARG002
+        ) -> TensorLike:
+            """Calculate R-squared score."""
+            assert isinstance(y_pred, torch.Tensor)
+            # R2 = 1 - (SS_res / SS_tot)
+            ss_res = torch.sum((y_true - y_pred) ** 2)
+            ss_tot = torch.sum((y_true - torch.mean(y_true)) ** 2)
+            return 1 - (ss_res / ss_tot)
+
+    custom_r2 = CustomR2Metric()
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    # Use custom metric for tuning
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        tuning_metric=custom_r2,
+        evaluation_metrics=[custom_r2, "rmse"],
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+
+    # Verify custom tuning metric was set
+    assert ae.tuning_metric == custom_r2
+    assert ae.tuning_metric.name == "custom_r2"
+    assert ae.tuning_metric.maximize is True
+
+    # Verify metrics are computed
+    for result in ae.results:
+        assert result.test_metrics is not None
+        metric_names = [m.name for m in result.test_metrics]
+        assert "custom_r2" in metric_names
+        assert "rmse" in metric_names

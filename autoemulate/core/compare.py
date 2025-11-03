@@ -15,7 +15,7 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.metrics import (
     R2,
-    TorchMetrics,
+    Metric,
     get_metric,
     get_metrics,
 )
@@ -74,8 +74,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
-        tuning_metric: str | TorchMetrics = "r2",
-        evaluation_metrics: list[str | TorchMetrics] | None = None,
+        tuning_metric: str | Metric = "r2",
+        evaluation_metrics: list[str | Metric] | None = None,
     ):
         """
         Initialize the AutoEmulate class.
