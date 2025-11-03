@@ -248,8 +248,8 @@ AVAILABLE_METRICS = {
 }
 
 
-def get_metric_config(metric: str | Metric) -> Metric:
-    """Convert various metric specifications to MetricConfig.
+def get_metric(metric: str | Metric) -> Metric:
+    """Convert metric specification to a `Metric`.
 
     Parameters
     ----------
@@ -288,12 +288,12 @@ def get_metric_config(metric: str | Metric) -> Metric:
     )
 
 
-def get_metric_configs(metrics: Sequence[str | Metric]) -> list[Metric]:
-    """Convert a list of metric specifications to Metric objects.
+def get_metrics(metrics: Sequence[str | Metric]) -> list[Metric]:
+    """Convert a list of metric specifications to list of `Metric`s.
 
     Parameters
     ----------
-    metrics : Sequence[str | Metrics]
+    metrics: Sequence[str | Metric]
         Sequence of metric specifications.
 
     Returns
@@ -301,4 +301,4 @@ def get_metric_configs(metrics: Sequence[str | Metric]) -> list[Metric]:
     list[Metric]
         List of metrics.
     """
-    return [get_metric_config(m) for m in metrics]
+    return [get_metric(m) for m in metrics]

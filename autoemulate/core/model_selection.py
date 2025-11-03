@@ -10,7 +10,7 @@ from autoemulate.core.device import (
     get_torch_device,
     move_tensors_to_device,
 )
-from autoemulate.core.metrics import R2, Metric, get_metric_configs
+from autoemulate.core.metrics import R2, Metric, get_metrics
 from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
@@ -100,7 +100,7 @@ def cross_validate(
 
     # Setup metrics
     if metrics is None:
-        metrics = get_metric_configs(["r2", "rmse"])
+        metrics = get_metrics(["r2", "rmse"])
 
     cv_results = {metric.name: [] for metric in metrics}
     device = get_torch_device(device)
@@ -193,7 +193,7 @@ def bootstrap(
 
     # Setup metrics
     if metrics is None:
-        metrics = get_metric_configs(["r2", "rmse"])
+        metrics = get_metrics(["r2", "rmse"])
 
     # If no bootstraps are specified, fall back to a single evaluation on given data
     if n_bootstraps is None:

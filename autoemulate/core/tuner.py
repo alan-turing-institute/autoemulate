@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.metrics import Metric, get_metric_config
+from autoemulate.core.metrics import Metric, get_metric
 from autoemulate.core.model_selection import cross_validate
 from autoemulate.core.types import (
     DeviceLike,
@@ -60,7 +60,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         self.dataset = self._convert_to_dataset(x_tensor, y_tensor)
 
         # Setup tuning metric
-        self.tuning_metric = get_metric_config(tuning_metric)
+        self.tuning_metric = get_metric(tuning_metric)
 
         if random_seed is not None:
             set_random_seed(seed=random_seed)
