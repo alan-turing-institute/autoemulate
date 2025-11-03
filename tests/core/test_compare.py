@@ -139,7 +139,6 @@ def test_ae_with_different_tuning_metrics(sample_data_for_ae_compare, tuning_met
         tuning_metric=tuning_metric,
         n_iter=2,
         n_splits=2,
-        model_params={},  # Skip tuning for speed
     )
 
     assert len(ae.results) > 0
@@ -223,7 +222,6 @@ def test_ae_with_tuning_and_evaluation_metric_combinations(
         evaluation_metrics=evaluation_metrics,
         n_iter=2,
         n_splits=2,
-        model_params={},  # Skip tuning for speed
     )
 
     assert len(ae.results) > 0
@@ -410,7 +408,6 @@ def test_ae_with_custom_tuning_metric(sample_data_for_ae_compare):
         evaluation_metrics=[custom_r2, "rmse"],
         n_iter=2,
         n_splits=2,
-        model_params={},  # Skip tuning for speed
     )
 
     assert len(ae.results) > 0
