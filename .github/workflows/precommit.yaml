@@ -41,6 +41,5 @@ jobs:
             run: |
               uv pip install -e .[dev,spatiotemporal]
 
-          - uses: pre-commit/action@v3.0.0
-            with:
-              extra_args: --hook-stage manual --all-files
+          - name: Run pre-commit
+            run: uv run pre-commit run --hook-stage manual --all-files
