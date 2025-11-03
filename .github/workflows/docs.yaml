@@ -32,10 +32,8 @@ jobs:
                 cache-suffix: docs
                 activate-environment: true
             - uses: nikeee/setup-pandoc@v1
-            - name: "Install jupyterbook"
-              run: uv pip install -r docs/requirements.txt
-            - name: "Install autoemulate"
-              run: uv pip install -e .
+            - name: "Install autoemulate with extras: dev, docs"
+              run: uv pip install -e .[dev,docs]
             - name: "Run jupyterbook"
               run: jupyter-book build docs --all 
             - name: "Deploy"
