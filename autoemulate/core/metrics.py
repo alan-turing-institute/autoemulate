@@ -48,11 +48,11 @@ class TorchMetrics(Metric):
 
     Parameters
     ----------
-    metric : MetricLike
+    metric: MetricLike
         The torchmetrics metric class or partial.
-    name : str
+    name: str
         Display name for the metric. If None, uses the class name of the metric.
-    maximize : bool
+    maximize: bool
         Whether higher values are better.
     """
 
@@ -253,7 +253,7 @@ def get_metric(metric: str | Metric) -> Metric:
 
     Parameters
     ----------
-    metric : str | Metric
+    metric: str | Metric
         The metric specification. Can be:
         - A string shortcut like "r2", "rmse", "mse", "mae"
         - A Metric instance (returned as-is)
