@@ -58,7 +58,12 @@ class FNOEmulator(SpatioTemporalEmulator):
     def is_multioutput() -> bool:  # noqa: D102
         return True
 
-    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
+    def _fit(
+        self,
+        x: TensorLike | DataLoader,
+        y: TensorLike | None = None,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         assert isinstance(x, DataLoader), "x currently must be a DataLoader"
         assert y is None, "y currently must be None"
 

@@ -356,7 +356,12 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
         """
         return TransformedDistribution(y_t, [ComposeTransform(self.y_transforms).inv])
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         # Transform x and y
         x_t = self._transform_x(x)
         y_t = self._transform_y_tensor(y)

@@ -190,7 +190,12 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             MultivariateNormal(mean, covar)
         )
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         self.train()
         self.likelihood.train()
 

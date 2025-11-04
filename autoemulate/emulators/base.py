@@ -39,9 +39,19 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     supports_uq: bool = False
 
     @abstractmethod
-    def _fit(self, x: TensorLike, y: TensorLike): ...
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ): ...
 
-    def fit(self, x: TensorLike, y: TensorLike):
+    def fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ):
         """Fit the emulator to the provided data."""
         # Ensure x and y are tensors and 2D
         x, y = self._convert_to_tensors(x, y)
@@ -58,7 +68,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         y = self.y_transform(y) if self.y_transform is not None else y
 
         # Fit emulator
-        self._fit(x, y)
+        self._fit(x, y, validation_data)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -559,7 +569,12 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         """
         Train a PyTorchBackend model.
 
@@ -683,7 +698,12 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean
