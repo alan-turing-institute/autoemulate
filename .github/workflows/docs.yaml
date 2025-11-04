@@ -24,13 +24,16 @@ jobs:
             - uses: actions/setup-python@v5
               with:
                 python-version: 3.12
+            - name: Install uv
+              uses: astral-sh/setup-uv@v7
+              with:
+                python-version: 3.12
+                enable-cache: true
+                cache-suffix: docs
+                activate-environment: true
             - uses: nikeee/setup-pandoc@v1
-            - name: "Upgrade pip"
-              run: pip install --upgrade pip
-            - name: "Install jupyterbook"
-              run: pip install -r docs/requirements.txt
-            - name: "Install autoemulate"
-              run: pip install -e .
+            - name: "Install autoemulate with extras: dev, docs"
+              run: uv pip install -e .[dev,docs]
             - name: "Run jupyterbook"
               run: jupyter-book build docs --all 
             - name: "Deploy"
