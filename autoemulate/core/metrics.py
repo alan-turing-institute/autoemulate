@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Sequence
-from functools import partial
+from functools import partial, total_ordering
 
 import torchmetrics
 from einops import rearrange
@@ -18,6 +18,7 @@ from autoemulate.core.types import (
 )
 
 
+@total_ordering
 class Metric:
     """Configuration for a single metric.
 
@@ -33,8 +34,26 @@ class Metric:
     maximize: bool
 
     def __repr__(self) -> str:
-        """Return the string representation of the Metric."""
+        """Representation of the Metric."""
         return f"Metric(name={self.name}, maximize={self.maximize})"
+
+    def __str__(self):
+        """Metric when formatted as a string."""
+        return self.name
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality based on metric name."""
+        if not isinstance(other, Metric):
+            return NotImplemented
+        return self.name == other.name
+
+    def __hash__(self) -> int:
+        """Return hash based on metric name."""
+        return hash(self.name)
+
+    def __lt__(self, other: Metric) -> bool:
+        """Compare metrics based on their str name."""
+        return self.name < other.name
 
     @abstractmethod
     def __call__(

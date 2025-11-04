@@ -15,7 +15,7 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.metrics import (
     R2,
-    TorchMetrics,
+    Metric,
     get_metric,
     get_metrics,
 )
@@ -74,8 +74,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         log_level: str = "progress_bar",
-        tuning_metric: str | TorchMetrics = "r2",
-        evaluation_metrics: list[str | TorchMetrics] | None = None,
+        tuning_metric: str | Metric = "r2",
+        evaluation_metrics: list[str | Metric] | None = None,
     ):
         """
         Initialize the AutoEmulate class.
@@ -542,9 +542,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Get the best result and log the comparison
         # Use the first evaluation metric to determine the best result
         first_metric = self.evaluation_metrics[0]
-        best_result = self.best_result(
-            metric_name=first_metric.name,
-        )
+        best_result = self.best_result(first_metric)
         self.log_compare(
             best_model_name=best_result.model_name,
             x_transforms=best_result.x_transforms,

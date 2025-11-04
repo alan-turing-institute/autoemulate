@@ -4,6 +4,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from autoemulate.core.metrics import get_metric
 from autoemulate.core.results import Result  # , Results
 from autoemulate.emulators.base import Emulator
 
@@ -150,13 +151,17 @@ class ModelSerialiser:
                 metric_name = col[:-5]  # Remove "_test" suffix
                 mean = row[col]
                 std = row.get(f"{metric_name}_test_std", float("nan"))
-                test_metrics[metric_name] = (mean, std)
+                # Convert metric name string back to Metric object
+                metric = get_metric(metric_name)
+                test_metrics[metric] = (mean, std)
             elif col.endswith("_train") and not col.endswith("_train_std"):
                 # Extract metric name (e.g., "r2" from "r2_train")
                 metric_name = col[:-6]  # Remove "_train" suffix
                 mean = row[col]
                 std = row.get(f"{metric_name}_train_std", float("nan"))
-                train_metrics[metric_name] = (mean, std)
+                # Convert metric name string back to Metric object
+                metric = get_metric(metric_name)
+                train_metrics[metric] = (mean, std)
 
         return Result(
             id=row["id"],

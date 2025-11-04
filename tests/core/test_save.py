@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.metrics import R2, RMSE
 from autoemulate.core.results import Result  # , Results
 from autoemulate.core.save import ModelSerialiser
 from autoemulate.emulators.base import Emulator
@@ -129,12 +130,12 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
         model=em,
         params=params,
         test_metrics={
-            "r2": (0.9, 0.01),
-            "rmse": (0.1, 0.02),
+            R2: (0.9, 0.01),
+            RMSE: (0.1, 0.02),
         },
         train_metrics={
-            "r2": (0.95, 0.015),
-            "rmse": (0.05, 0.025),
+            R2: (0.95, 0.015),
+            RMSE: (0.05, 0.025),
         },
     )
     with TemporaryDirectory() as temp_dir:
@@ -167,10 +168,10 @@ def test_save_and_load_result(model_serialiser, sample_data_y2d):
                     assert str(loaded_v) in str(v)
                 else:
                     assert loaded_v == v
-            assert loaded.test_metrics["r2"] == result.test_metrics["r2"]
-            assert loaded.test_metrics["rmse"] == result.test_metrics["rmse"]
-            assert loaded.train_metrics["r2"] == result.train_metrics["r2"]
-            assert loaded.train_metrics["rmse"] == result.train_metrics["rmse"]
+            assert loaded.test_metrics[R2] == result.test_metrics[R2]
+            assert loaded.test_metrics[RMSE] == result.test_metrics[RMSE]
+            assert loaded.train_metrics[R2] == result.train_metrics[R2]
+            assert loaded.train_metrics[RMSE] == result.train_metrics[RMSE]
 
         finally:
             os.chdir(original_wd)
