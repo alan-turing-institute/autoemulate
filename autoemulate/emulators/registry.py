@@ -3,6 +3,8 @@ from typing import overload
 
 import torch
 
+from autoemulate.emulators.conformal import ConformalMLP
+
 from .base import Emulator, GaussianProcessEmulator
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
@@ -50,6 +52,7 @@ class Registry:
             GaussianProcessCorrelatedMatern32,
             GaussianProcessCorrelatedRBF,
             EnsembleMLPDropout,
+            ConformalMLP,
         ]
 
         self._pytorch_emulators: list[type[Emulator]] = [
