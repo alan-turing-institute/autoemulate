@@ -162,18 +162,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         """
         x = self._ensure_with_grad(x, with_grad)
         y_pred = self._predict(x, with_grad)
-        if isinstance(y_pred, TensorLike):
-            return y_pred
-        try:
-            return y_pred.mean
-        except Exception:
-            # Use sampling to get a mean if mean property not available
-            samples = (
-                y_pred.rsample(torch.Size([n_samples]))
-                if with_grad
-                else y_pred.sample(torch.Size([n_samples]))
-            )
-            return samples.mean(dim=0)
+        return self.output_to_tensor(y_pred, n_samples)
 
     def predict_mean_and_variance(
         self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
