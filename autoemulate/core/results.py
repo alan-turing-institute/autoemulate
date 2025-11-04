@@ -204,16 +204,16 @@ class Results:
         # If metric_name is None, use the first available metric
         if metric is None:
             # Collect all available metrics
-            available_metrics = set()
-            for result in self.results:
-                available_metrics.update(result.test_metrics.keys())
+            available_metrics = [
+                m for result in self.results for m in result.test_metrics
+            ]
 
             if not available_metrics:
                 msg = "No metrics available in results."
                 raise ValueError(msg)
 
             # Use the first metric
-            metric_selected = next(iter(available_metrics))
+            metric_selected = available_metrics[0]
             logger.info("Using metric '%s' to determine best result.", metric_selected)
         else:
             # Check if the specified metric exists in at least one result
