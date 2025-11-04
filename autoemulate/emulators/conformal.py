@@ -41,6 +41,9 @@ class Conformal(Emulator):
         calibration_ratio: float
             Fraction of the training data to reserve for calibration if explicit
             validation data is not provided. Must lie in (0, 1). Defaults to 0.2.
+        n_samples: int
+            Number of samples used for sampling-based predictions or
+            internal procedures. Defaults to 1000.
         """
         self.emulator = emulator
         self.supports_grad = emulator.supports_grad
@@ -178,8 +181,43 @@ class ConformalMLP(Conformal, PyTorchBackend):
         calibration_ratio: float
             Fraction of training samples to hold out for calibration when an explicit
             validation set is not provided.
-        mlp_kwargs: dict | None
-            Additional keyword arguments for the MLP constructor.
+        activation_cls: type[nn.Module]
+            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
+        loss_fn_cls: type[nn.Module]
+            Loss function class used to construct the loss function for training.
+            Defaults to `nn.MSELoss`.
+        layer_dims: list[int] | None
+            Dimensions of the hidden layers. If None, defaults to [32, 16].
+            Defaults to None.
+        weight_init: str
+            Weight initialization method. Options are "default", "normal", "uniform",
+            "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
+            "kaiming_normal". Defaults to "default".
+        scale: float
+            Scale parameter for weight initialization methods. Used as:
+            - gain for Xavier methods
+            - std for normal distribution
+            - bound for uniform distribution (range: [-scale, scale])
+            - ignored for Kaiming methods (uses optimal scaling)
+            Defaults to 1.0.
+        bias_init: str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
+        dropout_prob: float | None
+            Dropout probability for regularization. If None, no dropout is applied.
+            Defaults to None.
+        lr: float
+            Learning rate for the optimizer. Defaults to 1e-2.
+        params_size: int
+            Number of parameters to predict per output dimension. Defaults to 1.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
+            Additional keyword arguments related to the scheduler.
         """
         nn.Module.__init__(self)
 
