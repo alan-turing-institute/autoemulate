@@ -6,6 +6,7 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from functools import partial, total_ordering
 
+import torch
 import torchmetrics
 from einops import rearrange
 from torchmetrics.regression.crps import ContinuousRankedProbabilityScore
@@ -193,7 +194,10 @@ class CRPSMetric(ProbabilisticMetric):
         # Handle different prediction types
         if isinstance(y_pred, DistributionLike):
             # Distribution case: sample from it
-            samples = rearrange(y_pred.sample((n_samples,)), "s b ... -> b ... s")
+            samples = rearrange(
+                y_pred.sample(torch.Size((n_samples,))),
+                "s b ... -> b ... s",
+            )
             if samples.shape[:-1] != y_true.shape:
                 raise ValueError(
                     f"Sampled predictions shape {samples.shape[:-1]} (excluding sample "
