@@ -23,6 +23,8 @@ class Conformal(Emulator):
         emulator: Emulator,
         alpha: float = 0.95,
         device: DeviceLike | None = None,
+        calibration_ratio: float = 0.2,
+        n_samples: int = 1000,
     ):
         """Initialize a conformal emulator.
 
@@ -35,14 +37,21 @@ class Conformal(Emulator):
             (0, 1).
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
+        calibration_ratio: float
+            Fraction of the training data to reserve for calibration if explicit
+            validation data is not provided. Must lie in (0, 1). Defaults to 0.2.
         """
         self.emulator = emulator
         self.supports_grad = emulator.supports_grad
         if not 0 < alpha < 1:
             msg = "Conformal coverage level alpha must be in (0, 1)."
             raise ValueError(msg)
+        if not 0 < calibration_ratio < 1:
+            msg = "Calibration ratio must lie strictly between 0 and 1."
+            raise ValueError(msg)
         self.alpha = alpha  # desired predictive coverage (e.g., 0.95)
-        self.n_samples = 1000  # number of samples to draw from base emulator if needed
+        self.calibration_ratio = calibration_ratio
+        self.n_samples = n_samples
         TorchDeviceMixin.__init__(self, device=device)
         self.supports_grad = emulator.supports_grad
 
@@ -62,16 +71,32 @@ class Conformal(Emulator):
         y: TensorLike,
         validation_data: tuple[TensorLike, TensorLike] | None = None,
     ) -> None:
-        self.emulator.fit(x, y, validation_data=None)
-
-        with torch.no_grad():
-            if validation_data is None:
-                msg = "Conformal emulator requires calibration data for quantiles."
+        x_train, y_train = x, y
+        if validation_data is None:
+            n_samples = x.shape[0]
+            if n_samples < 2:
+                msg = "At least two samples are required to create a calibration split."
                 raise ValueError(msg)
 
-            # Destructure calibration data
+            n_cal = max(1, math.ceil(n_samples * self.calibration_ratio))
+            if n_cal >= n_samples:
+                n_cal = n_samples - 1
+            perm = torch.randperm(n_samples, device=x.device)
+            cal_idx = perm[:n_cal]
+            train_idx = perm[n_cal:]
+            if train_idx.numel() == 0:
+                msg = "Calibration split left no samples for training."
+                raise ValueError(msg)
+            x_cal = x[cal_idx]
+            y_true_cal = y[cal_idx]
+            x_train = x[train_idx]
+            y_train = y[train_idx]
+        else:
             x_cal, y_true_cal = validation_data
 
+        self.emulator.fit(x_train, y_train, validation_data=None)
+
+        with torch.no_grad():
             n_cal = x_cal.shape[0]
             # Check calibration data is non-empty
             if n_cal == 0:
@@ -101,8 +126,7 @@ class Conformal(Emulator):
 
 
 class ConformalMLP(Conformal, PyTorchBackend):
-    """
-    Conformal UQ with an MLP.
+    """Conformal UQ with an MLP.
 
     This class is to provide ensemble of MLP emulators, each initialized with the same
     input and output data.
@@ -113,10 +137,11 @@ class ConformalMLP(Conformal, PyTorchBackend):
         self,
         x: TensorLike,
         y: TensorLike,
-        alpha: float = 0.95,
         standardize_x: bool = True,
         standardize_y: bool = True,
         device: DeviceLike | None = None,
+        alpha: float = 0.95,
+        calibration_ratio: float = 0.2,
         **mlp_kwargs,
     ):
         """
@@ -134,6 +159,11 @@ class ConformalMLP(Conformal, PyTorchBackend):
             Whether to standardize the output data. Defaults to True.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
+        alpha: float
+            Desired predictive coverage level forwarded to the conformal wrapper.
+        calibration_ratio: float
+            Fraction of training samples to hold out for calibration when an explicit
+            validation set is not provided.
         mlp_kwargs: dict | None
             Additional keyword arguments for the MLP constructor.
         """
@@ -147,7 +177,13 @@ class ConformalMLP(Conformal, PyTorchBackend):
             device=device,
             **self.mlp_kwargs,
         )
-        Conformal.__init__(self, emulator=emulator, alpha=alpha, device=device)
+        Conformal.__init__(
+            self,
+            emulator=emulator,
+            alpha=alpha,
+            device=device,
+            calibration_ratio=calibration_ratio,
+        )
 
     @staticmethod
     def is_multioutput() -> bool:
