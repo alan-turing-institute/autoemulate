@@ -1,7 +1,8 @@
 import math
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike, TuneParams
@@ -142,7 +143,20 @@ class ConformalMLP(Conformal, PyTorchBackend):
         device: DeviceLike | None = None,
         alpha: float = 0.95,
         calibration_ratio: float = 0.2,
-        **mlp_kwargs,
+        activation_cls: type[nn.Module] = nn.ReLU,
+        loss_fn_cls: type[nn.Module] = nn.MSELoss,
+        epochs: int = 100,
+        batch_size: int = 16,
+        layer_dims: list[int] | None = None,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+        dropout_prob: float | None = None,
+        lr: float = 1e-2,
+        params_size: int = 1,
+        random_seed: int | None = None,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize an ensemble of MLPs.
@@ -167,15 +181,28 @@ class ConformalMLP(Conformal, PyTorchBackend):
         mlp_kwargs: dict | None
             Additional keyword arguments for the MLP constructor.
         """
-        PyTorchBackend.__init__(self)
-        self.mlp_kwargs = mlp_kwargs or {}
+        nn.Module.__init__(self)
+
         emulator = MLP(
             x,
             y,
             standardize_x=standardize_x,
             standardize_y=standardize_y,
             device=device,
-            **self.mlp_kwargs,
+            activation_cls=activation_cls,
+            loss_fn_cls=loss_fn_cls,
+            epochs=epochs,
+            batch_size=batch_size,
+            layer_dims=layer_dims,
+            weight_init=weight_init,
+            scale=scale,
+            bias_init=bias_init,
+            dropout_prob=dropout_prob,
+            lr=lr,
+            params_size=params_size,
+            random_seed=random_seed,
+            scheduler_cls=scheduler_cls,
+            scheduler_params=scheduler_params,
         )
         Conformal.__init__(
             self,
