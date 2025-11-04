@@ -141,7 +141,7 @@ class Results:
             "params": [result.params for result in self.results],
         }
 
-        # Collect all unique metric names from all results
+        # Collect all unique metrics from all results
         all_test_metrics = set()
         all_train_metrics = set()
         for result in self.results:
@@ -149,24 +149,24 @@ class Results:
             all_train_metrics.update(result.train_metrics.keys())
 
         # Add test metrics columns
-        for metric_name in sorted(all_test_metrics):
-            data[f"{metric_name}_test"] = [
-                result.test_metrics.get(metric_name, (float("nan"), float("nan")))[0]
+        for metric in sorted(all_test_metrics):
+            data[f"{metric}_test"] = [
+                result.test_metrics.get(metric, (float("nan"), float("nan")))[0]
                 for result in self.results
             ]
-            data[f"{metric_name}_test_std"] = [
-                result.test_metrics.get(metric_name, (float("nan"), float("nan")))[1]
+            data[f"{metric}_test_std"] = [
+                result.test_metrics.get(metric, (float("nan"), float("nan")))[1]
                 for result in self.results
             ]
 
         # Add train metrics columns
-        for metric_name in sorted(all_train_metrics):
-            data[f"{metric_name}_train"] = [
-                result.train_metrics.get(metric_name, (float("nan"), float("nan")))[0]
+        for metric in sorted(all_train_metrics):
+            data[f"{metric}_train"] = [
+                result.train_metrics.get(metric, (float("nan"), float("nan")))[0]
                 for result in self.results
             ]
-            data[f"{metric_name}_train_std"] = [
-                result.train_metrics.get(metric_name, (float("nan"), float("nan")))[1]
+            data[f"{metric}_train_std"] = [
+                result.train_metrics.get(metric, (float("nan"), float("nan")))[1]
                 for result in self.results
             ]
 
