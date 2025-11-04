@@ -185,8 +185,8 @@ def bootstrap(
 
     Returns
     -------
-    dict[str, tuple[float, float]]
-        Dictionary mapping metric names to (mean, std) tuples.
+    dict[Metric, tuple[float, float]]
+        Dictionary mapping metrics to (mean, std) tuples.
     """
     device = get_torch_device(device)
     x, y = move_tensors_to_device(x, y, device=device)
@@ -201,7 +201,7 @@ def bootstrap(
         results = {}
         for metric in metrics:
             score = evaluate(y_pred, y, metric=metric, n_samples=n_samples)
-            results[metric.name] = (score, float("nan"))
+            results[metric] = (score, float("nan"))
         return results
 
     # Initialize score tensors for each metric
