@@ -1,7 +1,8 @@
 from collections.abc import Sequence
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, GaussianLike, TensorLike, TuneParams
@@ -138,8 +139,21 @@ class EnsembleMLP(Ensemble):
         standardize_x: bool = True,
         standardize_y: bool = True,
         n_emulators: int = 4,
+        activation_cls: type[nn.Module] = nn.ReLU,
+        loss_fn_cls: type[nn.Module] = nn.MSELoss,
+        epochs: int = 100,
+        batch_size: int = 16,
+        layer_dims: list[int] | None = None,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+        dropout_prob: float | None = None,
+        lr: float = 1e-2,
+        params_size: int = 1,
+        random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **mlp_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize an ensemble of MLPs.
@@ -158,18 +172,64 @@ class EnsembleMLP(Ensemble):
             Number of MLP emulators to create in the ensemble. Defaults to 4.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
-        mlp_kwargs: dict | None
-            Additional keyword arguments for the MLP constructor.
+        activation_cls: type[nn.Module]
+            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
+        layer_dims: list[int] | None
+            Dimensions of the hidden layers. If None, defaults to [32, 16].
+            Defaults to None.
+        weight_init: str
+            Weight initialization method. Options are "default", "normal", "uniform",
+            "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
+            "kaiming_normal". Defaults to "default".
+        scale: float
+            Scale parameter for weight initialization methods. Used as:
+            - gain for Xavier methods
+            - std for normal distribution
+            - bound for uniform distribution (range: [-scale, scale])
+            - ignored for Kaiming methods (uses optimal scaling)
+            Defaults to 1.0.
+        bias_init: str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
+        dropout_prob: float | None
+            Dropout probability for regularization. If None, no dropout is applied.
+            Defaults to None.
+        lr: float
+            Learning rate for the optimizer. Defaults to 1e-2.
+        params_size: int
+            Number of parameters to predict per output dimension. Defaults to 1.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
+            Additional keyword arguments related to the scheduler.
         """
-        self.mlp_kwargs = mlp_kwargs or {}
         emulators = [
             MLP(
                 x,
                 y,
                 standardize_x=standardize_x,
                 standardize_y=standardize_y,
+                activation_cls=activation_cls,
+                loss_fn_cls=loss_fn_cls,
+                epochs=epochs,
+                batch_size=batch_size,
+                layer_dims=layer_dims,
+                weight_init=weight_init,
+                scale=scale,
+                bias_init=bias_init,
+                dropout_prob=dropout_prob,
+                lr=lr,
+                params_size=params_size,
+                random_seed=random_seed,
                 device=device,
-                **self.mlp_kwargs,
+                scheduler_cls=scheduler_cls,
+                scheduler_params=scheduler_params,
             )
             for i in range(n_emulators)
         ]
@@ -295,9 +355,21 @@ class EnsembleMLPDropout(DropoutEnsemble):
         y: TensorLike,
         standardize_x: bool = True,
         standardize_y: bool = True,
-        dropout_prob: float = 0.2,
+        activation_cls: type[nn.Module] = nn.ReLU,
+        loss_fn_cls: type[nn.Module] = nn.MSELoss,
+        epochs: int = 100,
+        batch_size: int = 16,
+        layer_dims: list[int] | None = None,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+        dropout_prob: float | None = None,
+        lr: float = 1e-2,
+        params_size: int = 1,
+        random_seed: int | None = None,
         device: DeviceLike | None = None,
-        mlp_kwargs: dict | None = None,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
         """
         Initialize an ensemble of MLPs with dropout.
@@ -312,23 +384,68 @@ class EnsembleMLPDropout(DropoutEnsemble):
             Whether to standardize the input data. Defaults to True.
         standardize_y: bool
             Whether to standardize the output data. Defaults to True.
-        dropout_prob: float
-            Dropout probability to use in the MLP layers. Defaults to 0.2.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
-        mlp_kwargs: dict | None
-            Additional keyword arguments for the MLP constructor.
+        activation_cls: type[nn.Module]
+            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
+        layer_dims: list[int] | None
+            Dimensions of the hidden layers. If None, defaults to [32, 16].
+            Defaults to None.
+        weight_init: str
+            Weight initialization method. Options are "default", "normal", "uniform",
+            "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
+            "kaiming_normal". Defaults to "default".
+        scale: float
+            Scale parameter for weight initialization methods. Used as:
+            - gain for Xavier methods
+            - std for normal distribution
+            - bound for uniform distribution (range: [-scale, scale])
+            - ignored for Kaiming methods (uses optimal scaling)
+            Defaults to 1.0.
+        bias_init: str
+            Bias initialization method. Options: "zeros", "default":
+                - "zeros" initializes biases to zero
+                - "default" uses PyTorch's default uniform initialization
+        dropout_prob: float | None
+            Dropout probability for regularization. If None, no dropout is applied.
+            Defaults to 0.2.
+        lr: float
+            Learning rate for the optimizer. Defaults to 1e-2.
+        params_size: int
+            Number of parameters to predict per output dimension. Defaults to 1.
+        random_seed: int | None
+            Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
+        scheduler_cls: type[LRScheduler] | None
+            Learning rate scheduler class. If None, no scheduler is used. Defaults to
+            None.
+        scheduler_params: dict | None
+            Additional keyword arguments related to the scheduler.
+
         """
-        self.mlp_kwargs = mlp_kwargs or {}
-        super().__init__(
+        DropoutEnsemble.__init__(
+            self,
             MLP(
                 x,
                 y,
                 standardize_x=standardize_x,
                 standardize_y=standardize_y,
+                activation_cls=activation_cls,
+                loss_fn_cls=loss_fn_cls,
+                epochs=epochs,
+                batch_size=batch_size,
+                layer_dims=layer_dims,
+                weight_init=weight_init,
+                scale=scale,
+                bias_init=bias_init,
                 dropout_prob=dropout_prob,
+                lr=lr,
+                params_size=params_size,
+                random_seed=random_seed,
                 device=device,
-                **self.mlp_kwargs,
+                scheduler_cls=scheduler_cls,
+                scheduler_params=scheduler_params,
             ),
             device=device,
         )
