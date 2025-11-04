@@ -10,13 +10,13 @@ from autoemulate.emulators.nn.mlp import MLP
 
 
 class Conformal(Emulator):
-    """
-    Ensemble emulator that aggregates multiple Emulator instances to provide UQ.
+    """Conformal Uncertainty Quantification (UQ) wrapper for emulators.
 
-    Ensemble emulator that aggregates multiple Emulator instances and returns
-    a GaussianLike representing the ensemble posterior.
-    Note that an Emulator instance may also be an Ensemble itself.
+    This class wraps a base emulator to provide conformal prediction intervals with
+    guaranteed frequentist coverage.
     """
+
+    supports_uq = True
 
     def __init__(
         self,
@@ -24,6 +24,18 @@ class Conformal(Emulator):
         alpha: float = 0.95,
         device: DeviceLike | None = None,
     ):
+        """Initialize a conformal emulator.
+
+        Parameters
+        ----------
+        emulator: Emulator
+            Base emulator to wrap for conformal UQ.
+        alpha: float
+            Desired predictive coverage level (e.g., 0.95 for 95% coverage). Must be in
+            (0, 1).
+        device: DeviceLike | None
+            Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
+        """
         self.emulator = emulator
         self.supports_grad = emulator.supports_grad
         if not 0 < alpha < 1:
@@ -32,6 +44,7 @@ class Conformal(Emulator):
         self.alpha = alpha  # desired predictive coverage (e.g., 0.95)
         self.n_samples = 1000  # number of samples to draw from base emulator if needed
         TorchDeviceMixin.__init__(self, device=device)
+        self.supports_grad = emulator.supports_grad
 
     @staticmethod
     def is_multioutput() -> bool:
@@ -100,6 +113,7 @@ class ConformalMLP(Conformal, PyTorchBackend):
         self,
         x: TensorLike,
         y: TensorLike,
+        alpha: float = 0.95,
         standardize_x: bool = True,
         standardize_y: bool = True,
         device: DeviceLike | None = None,
@@ -123,6 +137,7 @@ class ConformalMLP(Conformal, PyTorchBackend):
         mlp_kwargs: dict | None
             Additional keyword arguments for the MLP constructor.
         """
+        PyTorchBackend.__init__(self)
         self.mlp_kwargs = mlp_kwargs or {}
         emulator = MLP(
             x,
@@ -132,7 +147,7 @@ class ConformalMLP(Conformal, PyTorchBackend):
             device=device,
             **self.mlp_kwargs,
         )
-        super().__init__(emulator, device=device)
+        Conformal.__init__(self, emulator=emulator, alpha=alpha, device=device)
 
     @staticmethod
     def is_multioutput() -> bool:
