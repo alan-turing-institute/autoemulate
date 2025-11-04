@@ -4,6 +4,7 @@ import pytest
 import torch
 from autoemulate.core.types import TensorLike
 from autoemulate.emulators import GAUSSIAN_PROCESS_EMULATORS, PYTORCH_EMULATORS
+from autoemulate.emulators.conformal import Conformal, ConformalMLP
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.pca import PCATransform
@@ -18,8 +19,8 @@ Y_TRANSFORMS = [
 
 
 def get_pytest_param_yof(model, x_t, y_t, o, f):
-    return (
-        pytest.param(
+    if o and f and model.supports_uq:
+        return pytest.param(
             model,
             x_t,
             y_t,
@@ -30,9 +31,21 @@ def get_pytest_param_yof(model, x_t, y_t, o, f):
                 reason="Full covariance sampling not implemented",
             ),
         )
-        if (o and f and model.supports_uq)
-        else (model, x_t, y_t, o, f)
-    )
+
+    if (not o) and issubclass(model, Conformal):
+        return pytest.param(
+            model,
+            x_t,
+            y_t,
+            o,
+            f,
+            marks=pytest.mark.xfail(
+                raises=ValueError,
+                reason="Conformal emulators require sampling for predictions",
+            ),
+        )
+
+    return (model, x_t, y_t, o, f)
 
 
 def get_parametrize_cases():
@@ -52,7 +65,8 @@ def get_parametrize_cases():
     output_from_samples_and_full_covariance_cases_cases = [
         get_pytest_param_yof(model, x_t, y_t, o, f)
         for model, x_t, y_t, o, f in itertools.product(
-            [GaussianProcess],
+            # ConformalMLP also included here as not tested above since
+            [GaussianProcess, ConformalMLP],
             X_TRANSFORMS,
             Y_TRANSFORMS,
             [False, True],
