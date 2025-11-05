@@ -363,7 +363,7 @@ class EnsembleMLPDropout(DropoutEnsemble):
         weight_init: str = "default",
         scale: float = 1.0,
         bias_init: str = "default",
-        dropout_prob: float | None = None,
+        dropout_prob: float | None = 0.2,
         lr: float = 1e-2,
         params_size: int = 1,
         random_seed: int | None = None,
