@@ -37,6 +37,7 @@ dependencies = [
     "arviz>=0.21.0",
     "getdist>=1.7.2",
     "einops>=0.8.1",
+    "neuralprocesses>=0.2.7",
 ]
 
 [project.urls]
