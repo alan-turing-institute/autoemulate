@@ -1,3 +1,5 @@
+import textwrap
+
 from torch import nn
 from torch.optim.lr_scheduler import LRScheduler
 
@@ -18,11 +20,24 @@ def _generate_mlp_docstring(
     Parameters
     ----------
     additional_parameters_docstring: str
-        Subclass specific parameters to include in the docstring.
+        Subclass specific parameters to include in the docstring. This should be passed
+        such as:
+        another_arg_str = '''
+        another_arg: str
+            Description for another_arg.
+        '''
     default_dropout_prob: float | None
         Default value for dropout_prob parameter.
     """
-    return f"""
+    # Unindent the additional parameters docstring
+    additional_parameters_docstring = textwrap.dedent(additional_parameters_docstring)
+    # Re-indent with 4 spaces for docstring formatting
+    if additional_parameters_docstring.strip():
+        additional_parameters_docstring = textwrap.indent(
+            additional_parameters_docstring.strip(), "    "
+        )
+
+    docstring_base = f"""
     Parameters
     ----------
     x: TensorLike
@@ -64,14 +79,20 @@ def _generate_mlp_docstring(
         Learning rate scheduler class. If None, no scheduler is used. Defaults to
         None.
     scheduler_params: dict | None
-        Additional keyword arguments related to the scheduler.
-    {additional_parameters_docstring}
+        Additional keyword arguments related to the scheduler."""
 
+    if additional_parameters_docstring.strip():
+        docstring_base += "\n" + additional_parameters_docstring + "\n"
+    else:
+        docstring_base += "\n"
+
+    docstring_base += """
     Raises
     ------
     ValueError
         If the input dimensions of `x` and `y` are not matrices.
     """
+    return docstring_base
 
 
 class MLP(DropoutTorchBackend):
