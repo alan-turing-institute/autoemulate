@@ -93,6 +93,7 @@ def fit_from_reinitialized(
         y_transforms=y_transforms,
         device=device,
         **emulator_params,
+        **transformed_emulator_params,
     )
 
     new_emulator.fit(x.float(), y.float())

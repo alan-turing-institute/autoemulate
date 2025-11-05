@@ -297,12 +297,13 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
                     {"gamma": 0.95},
                 ],
             },
-            {
-                "scheduler_cls": [LRScheduler],
-                "scheduler_params": [
-                    {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
-                ],
-            },
+            # TODO: commented out for now as raising exception
+            # {
+            #     "scheduler_cls": [LRScheduler],
+            #     "scheduler_params": [
+            #         {"policy": "ReduceLROnPlateau", "patience": 5, "factor": 0.5}
+            #     ],
+            # },
             # TODO: investigate these suggestions from copilot, issue: #597
             # {
             #     "scheduler_cls": [CosineAnnealingLR],

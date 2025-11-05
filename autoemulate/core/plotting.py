@@ -497,14 +497,12 @@ def coverage_from_distributions(
     # if dist.icdf not available, compute empirical intervals using sample quantiles
     samples = None
     y_dist = None
-    if isinstance(y_pred, GaussianLike):
-        y_dist = y_pred
-    elif isinstance(y_pred, torch.distributions.Independent) and isinstance(
+    if isinstance(y_pred, torch.distributions.Independent) and isinstance(
         y_pred.base_dist, GaussianLike
     ):
         y_dist = y_pred.base_dist
     else:
-        samples = y_pred.sample((n_samples,))
+        samples = y_pred.sample(torch.Size((n_samples,)))
 
     empirical_list = []
     for p in levels:

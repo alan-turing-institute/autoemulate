@@ -33,12 +33,12 @@ class Result:
             The emulator model used for predictions.
         params: ModelParams
             Parameters used for the model.
-        test_metrics: dict[str, tuple[float, float]]
-            Dictionary of metrics on the test set. Each key is a metric name and
-            each value is a tuple of (mean, std).
-        train_metrics: dict[str, tuple[float, float]]
-            Dictionary of metrics on the training set. Each key is a metric name and
-            each value is a tuple of (mean, std).
+        test_metrics: dict[Metric, tuple[float, float]]
+            Dictionary of metrics on the test set. Each key is a metric and each
+            value is a tuple of (mean, std).
+        train_metrics: dict[Metric, tuple[float, float]]
+            Dictionary of metrics on the training set. Each key is a metric and each
+            value is a tuple of (mean, std).
 
         """
         self.id = id
@@ -217,7 +217,9 @@ class Results:
             logger.info("Using metric '%s' to determine best result.", metric_selected)
         else:
             # Check if the specified metric exists in at least one result
-            if not any(metric in result.test_metrics for result in self.results):
+            if not any(
+                get_metric(metric) in result.test_metrics for result in self.results
+            ):
                 available_metrics = set()
                 for result in self.results:
                     available_metrics.update(result.test_metrics.keys())
