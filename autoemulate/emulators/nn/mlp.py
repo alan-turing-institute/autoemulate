@@ -9,6 +9,71 @@ from autoemulate.transforms.standardize import StandardizeTransform
 from ..base import DropoutTorchBackend
 
 
+def _generate_mlp_docstring(
+    additional_parameters_docstring: str = "",
+    default_dropout_prob: float | None = None,
+):
+    """Generate variants of MLP docstring.
+
+    Parameters
+    ----------
+    additional_parameters_docstring: str
+        Subclass specific parameters to include in the docstring.
+    default_dropout_prob: float | None
+        Default value for dropout_prob parameter.
+    """
+    return f"""
+    Parameters
+    ----------
+    x: TensorLike
+        Input features.
+    y: TensorLike
+        Target values.
+    activation_cls: type[nn.Module]
+        Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
+    layer_dims: list[int] | None
+        Dimensions of the hidden layers. If None, defaults to [32, 16].
+        Defaults to None.
+    weight_init: str
+        Weight initialization method. Options are "default", "normal", "uniform",
+        "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
+        "kaiming_normal". Defaults to "default".
+    scale: float
+        Scale parameter for weight initialization methods. Used as:
+        - gain for Xavier methods
+        - std for normal distribution
+        - bound for uniform distribution (range: [-scale, scale])
+        - ignored for Kaiming methods (uses optimal scaling)
+        Defaults to 1.0.
+    bias_init: str
+        Bias initialization method. Options: "zeros", "default":
+            - "zeros" initializes biases to zero
+            - "default" uses PyTorch's default uniform initialization
+    dropout_prob: float | None
+        Dropout probability for regularization. If None, no dropout is applied.
+        Defaults to {default_dropout_prob}.
+    lr: float
+        Learning rate for the optimizer. Defaults to 1e-2.
+    params_size: int
+        Number of parameters to predict per output dimension. Defaults to 1.
+    random_seed: int | None
+        Random seed for reproducibility. If None, no seed is set. Defaults to None.
+    device: DeviceLike | None
+        Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
+    scheduler_cls: type[LRScheduler] | None
+        Learning rate scheduler class. If None, no scheduler is used. Defaults to
+        None.
+    scheduler_params: dict | None
+        Additional keyword arguments related to the scheduler.
+    {additional_parameters_docstring}
+
+    Raises
+    ------
+    ValueError
+        If the input dimensions of `x` and `y` are not matrices.
+    """
+
+
 class MLP(DropoutTorchBackend):
     """
     Multi-Layer Perceptron (MLP) emulator.
@@ -39,59 +104,16 @@ class MLP(DropoutTorchBackend):
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
     ):
-        """
+        self.__doc__ = f"""
         Multi-Layer Perceptron (MLP) emulator.
 
         MLP provides a simple deterministic emulator with optional model stochasticity
         provided by different weight initialization and dropout.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Input features.
-        y: TensorLike
-            Target values.
-        activation_cls: type[nn.Module]
-            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
-        layer_dims: list[int] | None
-            Dimensions of the hidden layers. If None, defaults to [32, 16].
-            Defaults to None.
-        weight_init: str
-            Weight initialization method. Options are "default", "normal", "uniform",
-            "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
-            "kaiming_normal". Defaults to "default".
-        scale: float
-            Scale parameter for weight initialization methods. Used as:
-            - gain for Xavier methods
-            - std for normal distribution
-            - bound for uniform distribution (range: [-scale, scale])
-            - ignored for Kaiming methods (uses optimal scaling)
-            Defaults to 1.0.
-        bias_init: str
-            Bias initialization method. Options: "zeros", "default":
-                - "zeros" initializes biases to zero
-                - "default" uses PyTorch's default uniform initialization
-        dropout_prob: float | None
-            Dropout probability for regularization. If None, no dropout is applied.
-            Defaults to None.
-        lr: float
-            Learning rate for the optimizer. Defaults to 1e-2.
-        params_size: int
-            Number of parameters to predict per output dimension. Defaults to 1.
-        random_seed: int | None
-            Random seed for reproducibility. If None, no seed is set. Defaults to None.
-        device: DeviceLike | None
-            Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
-        scheduler_cls: type[LRScheduler] | None
-            Learning rate scheduler class. If None, no scheduler is used. Defaults to
-            None.
-        scheduler_params: dict | None
-            Additional keyword arguments related to the scheduler.
-
-        Raises
-        ------
-        ValueError
-            If the input dimensions of `x` and `y` are not matrices.
+        {
+            _generate_mlp_docstring(
+                additional_parameters_docstring="", default_dropout_prob=None
+            )
+        }
         """
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)
