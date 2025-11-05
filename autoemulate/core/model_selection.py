@@ -64,6 +64,7 @@ def cross_validate(
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
     metrics: list[Metric] | None = None,
+    n_samples: int = 1000,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -88,6 +89,9 @@ def cross_validate(
         Optional random seed for reproducibility.
     metrics: list[TorchMetrics] | None
         List of metrics to compute. If None, uses r2 and rmse.
+    n_samples: int
+        Number of samples to generate to predict mean when emulator does not have a
+        mean directly available. Defaults to 1000.
 
     Returns
     -------
@@ -146,7 +150,7 @@ def cross_validate(
         # compute and save results
         y_pred = transformed_emulator.predict(x_val)
         for metric in metrics:
-            score = evaluate(y_pred, y_val, metric)
+            score = evaluate(y_pred, y_val, metric, n_samples=n_samples)
             cv_results[metric.name].append(score)
     return cv_results
 
