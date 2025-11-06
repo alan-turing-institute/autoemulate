@@ -1,12 +1,13 @@
 from collections.abc import Sequence
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
+from torch.optim.lr_scheduler import LRScheduler
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, GaussianLike, TensorLike, TuneParams
 from autoemulate.emulators.base import DropoutTorchBackend, Emulator, GaussianEmulator
-from autoemulate.emulators.nn.mlp import MLP
+from autoemulate.emulators.nn.mlp import MLP, _generate_mlp_docstring
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.utils import make_positive_definite
 
@@ -137,39 +138,59 @@ class EnsembleMLP(Ensemble):
         y: TensorLike,
         standardize_x: bool = True,
         standardize_y: bool = True,
-        n_emulators: int = 4,
+        activation_cls: type[nn.Module] = nn.ReLU,
+        loss_fn_cls: type[nn.Module] = nn.MSELoss,
+        epochs: int = 100,
+        batch_size: int = 16,
+        layer_dims: list[int] | None = None,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+        dropout_prob: float | None = None,
+        lr: float = 1e-2,
+        params_size: int = 1,
+        random_seed: int | None = None,
         device: DeviceLike | None = None,
-        **mlp_kwargs,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
+        n_emulators: int = 4,
     ):
-        """
-        Initialize an ensemble of MLPs.
-
-        Parameters
-        ----------
-        x: TensorLike
-            Input data tensor of shape (batch_size, n_features).
-        y: TensorLike
-            Target values tensor of shape (batch_size, n_outputs).
-        standardize_x: bool
-            Whether to standardize the input data. Defaults to True.
-        standardize_y: bool
-            Whether to standardize the output data. Defaults to True.
+        additional_parameters_docstring = """
         n_emulators: int
             Number of MLP emulators to create in the ensemble. Defaults to 4.
-        device: DeviceLike | None
-            Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
-        mlp_kwargs: dict | None
-            Additional keyword arguments for the MLP constructor.
         """
-        self.mlp_kwargs = mlp_kwargs or {}
+        self.__doc__ = f"""
+        Initialize an ensemble of MLPs.
+
+        {
+            _generate_mlp_docstring(
+                additional_parameters_docstring=additional_parameters_docstring,
+                default_dropout_prob=None,
+            )
+        }
+        """
+
         emulators = [
             MLP(
                 x,
                 y,
                 standardize_x=standardize_x,
                 standardize_y=standardize_y,
+                activation_cls=activation_cls,
+                loss_fn_cls=loss_fn_cls,
+                epochs=epochs,
+                batch_size=batch_size,
+                layer_dims=layer_dims,
+                weight_init=weight_init,
+                scale=scale,
+                bias_init=bias_init,
+                dropout_prob=dropout_prob,
+                lr=lr,
+                params_size=params_size,
+                random_seed=random_seed,
                 device=device,
-                **self.mlp_kwargs,
+                scheduler_cls=scheduler_cls,
+                scheduler_params=scheduler_params,
             )
             for i in range(n_emulators)
         ]
@@ -295,40 +316,53 @@ class EnsembleMLPDropout(DropoutEnsemble):
         y: TensorLike,
         standardize_x: bool = True,
         standardize_y: bool = True,
-        dropout_prob: float = 0.2,
+        activation_cls: type[nn.Module] = nn.ReLU,
+        loss_fn_cls: type[nn.Module] = nn.MSELoss,
+        epochs: int = 100,
+        batch_size: int = 16,
+        layer_dims: list[int] | None = None,
+        weight_init: str = "default",
+        scale: float = 1.0,
+        bias_init: str = "default",
+        dropout_prob: float | None = 0.2,
+        lr: float = 1e-2,
+        params_size: int = 1,
+        random_seed: int | None = None,
         device: DeviceLike | None = None,
-        mlp_kwargs: dict | None = None,
+        scheduler_cls: type[LRScheduler] | None = None,
+        scheduler_params: dict | None = None,
     ):
-        """
+        self.__doc__ = f"""
         Initialize an ensemble of MLPs with dropout.
 
-        Parameters
-        ----------
-        x: TensorLike
-            Input data tensor of shape (batch_size, n_features).
-        y: TensorLike
-            Target values tensor of shape (batch_size, n_outputs).
-        standardize_x: bool
-            Whether to standardize the input data. Defaults to True.
-        standardize_y: bool
-            Whether to standardize the output data. Defaults to True.
-        dropout_prob: float
-            Dropout probability to use in the MLP layers. Defaults to 0.2.
-        device: DeviceLike | None
-            Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
-        mlp_kwargs: dict | None
-            Additional keyword arguments for the MLP constructor.
+        {
+            _generate_mlp_docstring(
+                additional_parameters_docstring="", default_dropout_prob=0.2
+            )
+        }
         """
-        self.mlp_kwargs = mlp_kwargs or {}
-        super().__init__(
+        DropoutEnsemble.__init__(
+            self,
             MLP(
                 x,
                 y,
                 standardize_x=standardize_x,
                 standardize_y=standardize_y,
+                activation_cls=activation_cls,
+                loss_fn_cls=loss_fn_cls,
+                epochs=epochs,
+                batch_size=batch_size,
+                layer_dims=layer_dims,
+                weight_init=weight_init,
+                scale=scale,
+                bias_init=bias_init,
                 dropout_prob=dropout_prob,
+                lr=lr,
+                params_size=params_size,
+                random_seed=random_seed,
                 device=device,
-                **self.mlp_kwargs,
+                scheduler_cls=scheduler_cls,
+                scheduler_params=scheduler_params,
             ),
             device=device,
         )
