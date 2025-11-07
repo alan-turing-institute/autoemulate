@@ -154,7 +154,7 @@ class Conformal(Emulator):
         x: TensorLike,
         y: TensorLike,
         validation_data: tuple[TensorLike, TensorLike] | None = None,
-    ) -> None:
+    ):
         x_train, y_train = x, y
         if validation_data is None:
             n_samples = x.shape[0]
@@ -213,7 +213,7 @@ class Conformal(Emulator):
         y_train: TensorLike,
         x_cal: TensorLike,
         y_true_cal: TensorLike,
-    ) -> None:
+    ):
         """Fit quantile regressors for CQR method.
 
         Trains two quantile regressors to predict lower and upper quantiles,
