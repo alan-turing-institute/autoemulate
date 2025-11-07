@@ -119,7 +119,7 @@ def test_conformal_methods_comparison():
         quantile_emulator_kwargs={"epochs": 50, "lr": 1e-2},
     )
     model_quantile.fit(x_train, y_train, validation_data=(x_cal, y_cal))
-    pred_quantile = model_quantile.predict(x_test, with_grad=False)
+    pred_quantile = model_quantile.predict(x_test)
 
     # Compare interval widths
     with torch.no_grad():
@@ -130,10 +130,12 @@ def test_conformal_methods_comparison():
         width_split = (split_base.high - split_base.low).squeeze()
         width_quantile = (quantile_base.high - quantile_base.low).squeeze()
 
-    # Split conformal should have more uniform widths
-    # Quantile conformal should have more variable widths
-    assert width_quantile.std() >= width_split.std(), (
-        "Quantile method should have more variable interval widths"
+    # Split conformal should have constant widths (std ≈ 0)
+    assert width_split.std() < 1e-6, "Split method should have constant interval widths"
+
+    # Quantile conformal should have variable widths (std > 0)
+    assert width_quantile.std() > 0, (
+        "Quantile method should have variable interval widths"
     )
 
     # Both methods should produce valid predictions
