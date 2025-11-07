@@ -49,6 +49,7 @@ class QuantileLoss(nn.Module):
             Scalar loss value.
         """
         errors = y_true - y_pred
+        # Mean across batch and targets
         return torch.max(self.quantile * errors, (self.quantile - 1) * errors).mean()
 
 
