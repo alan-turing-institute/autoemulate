@@ -156,6 +156,9 @@ class Conformal(Emulator):
         validation_data: tuple[TensorLike, TensorLike] | None = None,
     ):
         x_train, y_train = x, y
+
+        # If not validation data passed, take random permutation of training data and
+        # hold out a calibration set according to calibration_ratio
         if validation_data is None:
             n_samples = x.shape[0]
             if n_samples < 2:
