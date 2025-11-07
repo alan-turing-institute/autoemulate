@@ -223,22 +223,22 @@ class Conformal(Emulator):
         lower_q = (1 - self.alpha) / 2
         upper_q = 1 - lower_q
 
-        # Create quantile regression emulators
-        mlp_kwargs = {
-            "epochs": 100,
-            "batch_size": 16,
-            "lr": 1e-2,
-            **self.quantile_emulator_kwargs,
-        }
-
         # Lower quantile emulator
         self.lower_quantile_emulator = QuantileMLP(
-            lower_q, x=x_train, y=y_train, device=self.device, **mlp_kwargs
+            lower_q,
+            x=x_train,
+            y=y_train,
+            device=self.device,
+            **self.quantile_emulator_kwargs,
         )
 
         # Upper quantile emulator
         self.upper_quantile_emulator = QuantileMLP(
-            upper_q, x=x_train, y=y_train, device=self.device, **mlp_kwargs
+            upper_q,
+            x=x_train,
+            y=y_train,
+            device=self.device,
+            **self.quantile_emulator_kwargs,
         )
 
         # Fit the quantile emulators
