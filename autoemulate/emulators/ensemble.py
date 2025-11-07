@@ -164,16 +164,13 @@ class EnsembleMLP(Ensemble):
         n_emulators: int
             Number of MLP emulators to create in the ensemble. Defaults to 4.
         """
-        self.__doc__ = f"""
-        Initialize an ensemble of MLPs.
-
-        {
-            _generate_mlp_docstring(
+        self.__doc__ = (
+            "    Initialize an ensemble of MLPs.\n"
+            + _generate_mlp_docstring(
                 additional_parameters_docstring=additional_parameters_docstring,
                 default_dropout_prob=None,
             )
-        }
-        """
+        )
 
         emulators = [
             MLP(
@@ -342,15 +339,12 @@ class EnsembleMLPDropout(DropoutEnsemble):
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
     ):
-        self.__doc__ = f"""
-        Initialize an ensemble of MLPs with dropout.
-
-        {
-            _generate_mlp_docstring(
+        self.__doc__ = (
+            "    Initialize an ensemble of MLPs with dropout.\n"
+            + _generate_mlp_docstring(
                 additional_parameters_docstring="", default_dropout_prob=0.2
             )
-        }
-        """
+        )
         DropoutEnsemble.__init__(
             self,
             MLP(
