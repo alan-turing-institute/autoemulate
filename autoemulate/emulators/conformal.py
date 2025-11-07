@@ -8,7 +8,7 @@ from torch.optim.lr_scheduler import LRScheduler
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike, TuneParams
 from autoemulate.emulators.base import Emulator, PyTorchBackend
-from autoemulate.emulators.nn.mlp import MLP
+from autoemulate.emulators.nn.mlp import MLP, _generate_mlp_docstring
 
 
 class QuantileLoss(nn.Module):
@@ -316,10 +316,6 @@ class ConformalMLP(Conformal, PyTorchBackend):
         y: TensorLike,
         standardize_x: bool = True,
         standardize_y: bool = True,
-        device: DeviceLike | None = None,
-        alpha: float = 0.95,
-        calibration_ratio: float = 0.2,
-        method: Literal["split", "quantile"] = "split",
         activation_cls: type[nn.Module] = nn.ReLU,
         loss_fn_cls: type[nn.Module] = nn.MSELoss,
         epochs: int = 100,
@@ -332,25 +328,18 @@ class ConformalMLP(Conformal, PyTorchBackend):
         lr: float = 1e-2,
         params_size: int = 1,
         random_seed: int | None = None,
+        device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        alpha: float = 0.95,
+        calibration_ratio: float = 0.2,
+        method: Literal["split", "quantile"] = "split",
         quantile_emulator_kwargs: dict | None = None,
     ):
-        """
-        Initialize an ensemble of MLPs.
+        nn.Module.__init__(self)
 
-        Parameters
-        ----------
-        x: TensorLike
-            Input data tensor of shape (batch_size, n_features).
-        y: TensorLike
-            Target values tensor of shape (batch_size, n_outputs).
-        standardize_x: bool
-            Whether to standardize the input data. Defaults to True.
-        standardize_y: bool
-            Whether to standardize the output data. Defaults to True.
-        device: DeviceLike | None
-            Device to run the model on (e.g., "cpu", "cuda"). Defaults to None.
+        # Construct docstring
+        conformal_kwargs = """
         alpha: float
             Desired predictive coverage level forwarded to the conformal wrapper.
         calibration_ratio: float
@@ -361,48 +350,17 @@ class ConformalMLP(Conformal, PyTorchBackend):
             - "split": Standard split conformal (constant-width intervals)
             - "quantile": Conformalized Quantile Regression (input-dependent intervals)
             Defaults to "split".
-        activation_cls: type[nn.Module]
-            Activation function to use in the hidden layers. Defaults to `nn.ReLU`.
-        loss_fn_cls: type[nn.Module]
-            Loss function class used to construct the loss function for training.
-            Defaults to `nn.MSELoss`.
-        layer_dims: list[int] | None
-            Dimensions of the hidden layers. If None, defaults to [32, 16].
-            Defaults to None.
-        weight_init: str
-            Weight initialization method. Options are "default", "normal", "uniform",
-            "zeros", "ones", "xavier_uniform", "xavier_normal", "kaiming_uniform",
-            "kaiming_normal". Defaults to "default".
-        scale: float
-            Scale parameter for weight initialization methods. Used as:
-            - gain for Xavier methods
-            - std for normal distribution
-            - bound for uniform distribution (range: [-scale, scale])
-            - ignored for Kaiming methods (uses optimal scaling)
-            Defaults to 1.0.
-        bias_init: str
-            Bias initialization method. Options: "zeros", "default":
-                - "zeros" initializes biases to zero
-                - "default" uses PyTorch's default uniform initialization
-        dropout_prob: float | None
-            Dropout probability for regularization. If None, no dropout is applied.
-            Defaults to None.
-        lr: float
-            Learning rate for the optimizer. Defaults to 1e-2.
-        params_size: int
-            Number of parameters to predict per output dimension. Defaults to 1.
-        random_seed: int | None
-            Random seed for reproducibility. If None, no seed is set. Defaults to None.
-        scheduler_cls: type[LRScheduler] | None
-            Learning rate scheduler class. If None, no scheduler is used. Defaults to
-            None.
-        scheduler_params: dict | None
-            Additional keyword arguments related to the scheduler.
         quantile_emulator_kwargs: dict | None
             Additional keyword arguments for the quantile emulators when
             method="quantile". Defaults to None.
         """
-        nn.Module.__init__(self)
+        conformal_mlp_params = _generate_mlp_docstring(
+            additional_parameters_docstring=conformal_kwargs,
+            default_dropout_prob=None,
+        )
+        self.__doc__ = (
+            """    Initialize a conformal MLP emulator.\n\n""" + conformal_mlp_params
+        )
 
         emulator = MLP(
             x,
