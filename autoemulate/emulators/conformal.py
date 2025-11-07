@@ -308,8 +308,11 @@ class Conformal(Emulator):
 class ConformalMLP(Conformal, PyTorchBackend):
     """Conformal UQ with an MLP.
 
-    This class is to provide ensemble of MLP emulators, each initialized with the same
-    input and output data.
+    This class is to provides UQ via conformal prediction intervals wrapped around a
+    Multi-Layer Perceptron (MLP) emulator.
+
+    Both standard split conformal and Conformalized Quantile Regression (CQR) methods
+    are supported.
 
     """
 
