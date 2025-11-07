@@ -74,7 +74,7 @@ def test_conformal_mlp_quantile_method():
 def test_conformal_methods_comparison():
     """Compare split vs quantile conformal methods on heteroscedastic data."""
 
-    def heteroscedastic_function(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def heteroscedastic_function(x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Function with heteroscedastic noise (variance depends on x)."""
         mean = torch.sin(2 * x)
         # Variance increases with x
