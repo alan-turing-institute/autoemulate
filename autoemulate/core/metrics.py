@@ -301,6 +301,9 @@ class MSLLMetric(ProbabilisticMetric):
         if not isinstance(y_true, TensorLike):
             raise ValueError(f"y_true must be a tensor, got {type(y_true)}")
 
+        # Ensure 2D y_true for consistent handling
+        y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
+
         # Handle distributions without mean/variance attributes
         try:
             y_pred_mean, y_pred_var = y_pred.mean, y_pred.variance
@@ -308,6 +311,12 @@ class MSLLMetric(ProbabilisticMetric):
             y_pred_samples = y_pred.rsample(torch.Size([n_samples]))
             y_pred_mean = y_pred_samples.mean(dim=0)
             y_pred_var = y_pred_samples.var(dim=0)
+
+        if y_pred_mean.shape != y_true.shape:
+            raise ValueError(
+                f"Predictions shape {y_pred_mean.shape} does not match "
+                f"y_true shape {y_true.shape}."
+            )
 
         # Compute mean log loss
         mean_log_loss = (
@@ -318,6 +327,9 @@ class MSLLMetric(ProbabilisticMetric):
         # If no training data, return mean log loss
         if y_train is None:
             return mean_log_loss
+
+        # Ensure 2D y_train for consistent handling
+        y_train = y_train.unsqueeze(-1) if y_train.ndim == 1 else y_train
 
         y_train_mean = y_train.mean(dim=0)
         y_train_var = y_train.var(dim=0)
