@@ -100,7 +100,7 @@ class TorchMetrics(Metric):
             try:
                 y_pred = y_pred.mean
             except Exception:
-                y_pred = y_pred.rsample((n_samples,)).mean(dim=0)
+                y_pred = y_pred.rsample(torch.Size([n_samples])).mean(dim=0)
         metric = self.metric()
         metric.to(y_pred.device)
 
@@ -236,6 +236,105 @@ class CRPSMetric(ProbabilisticMetric):
         return crps_metric(samples_flat, y_true_flat)
 
 
+class MSLLMetric(ProbabilisticMetric):
+    """Mean Standardized Log Loss (MSLL) metric.
+
+    MSLL evaluates the quality of probabilistic predictions by measuring the
+    log-likelihood of the true values under the predictive distribution,
+    standardized by the log-likelihood under the trivial model (i.e., predictive
+    distribution parameterized with the data mean and variance).
+
+    If no training data is supplied, the mean log loss is computed.
+
+    Lower MSLL values indicate better predictive performance.
+
+    Note: This metric requires probabilistic predictions.
+
+    Attributes
+    ----------
+    name: str
+        Display name for the metric.
+    maximize: bool
+        Whether higher values are better. False for MSLL (lower is better).
+    """
+
+    name: str = "msll"
+    maximize: bool = False
+
+    def __call__(
+        self,
+        y_pred: OutputLike,
+        y_true: TensorLike,
+        n_samples: int = 1000,
+        y_train: TensorLike | None = None,
+    ) -> TensorLike:
+        """Calculate MSLL metric.
+
+        Parameters
+        ----------
+        y_pred: OutputLike
+            Predicted outputs. Must be a distribution.
+        y_true: TensorLike
+            True target values.
+        n_samples: int
+            Number of samples to draw from the predicted distribution if `y_pred` is a
+            distribution without `.mean` and `.variance` attributese. Defaults to 1000.
+        y_train: TensorLike | None
+            Training target values used to parameterize the trivial model for
+            standardization. If None, mean log loss is computed without standardization.
+
+        Returns
+        -------
+        TensorLike
+            Mean Standardized Log Loss (MSLL) score.
+
+        Raises
+        ------
+        ValueError
+            If y_pred is not a distribution.
+        """
+        if not isinstance(y_pred, DistributionLike):
+            raise ValueError(
+                f"MSLL metric requires probabilistic predictions, got {type(y_pred)}. "
+            )
+
+        if not isinstance(y_true, TensorLike):
+            raise ValueError(f"y_true must be a tensor, got {type(y_true)}")
+
+        # Handle distributions without mean/variance attributes
+        try:
+            y_pred_mean, y_pred_var = y_pred.mean, y_pred.variance
+        except Exception:
+            y_pred_samples = y_pred.rsample(torch.Size([n_samples]))
+            y_pred_mean = y_pred_samples.mean(dim=0)
+            y_pred_var = y_pred_samples.var(dim=0)
+
+        # Compute mean log loss
+        mean_log_loss = (
+            0.5 * torch.log(2 * torch.pi * y_pred_var)
+            + torch.square(y_true - y_pred_mean) / (2 * y_pred_var)
+        ).mean(dim=0)
+
+        # If no training data, return mean log loss
+        if y_train is None:
+            return mean_log_loss
+
+        y_train_mean = y_train.mean(dim=0)
+        y_train_var = y_train.var(dim=0)
+
+        # Avoid numerical issues
+        y_train_var = torch.clamp(y_train_var, min=1e-6)
+
+        # Compute mean log prob under trivial Gaussian model
+        mean_trivial_log_loss = -0.5 * (
+            torch.log(2 * torch.pi * y_train_var)
+            + torch.square(y_true - y_train_mean) / (2 * y_train_var)
+        ).mean(dim=0)
+
+        # Return mean standardized log loss
+        return mean_log_loss - mean_trivial_log_loss
+
+
 R2 = TorchMetrics(
     metric=torchmetrics.R2Score,
     name="r2",
@@ -262,12 +361,15 @@ MAE = TorchMetrics(
 
 CRPS = CRPSMetric()
 
+MSLL = MSLLMetric()
+
 AVAILABLE_METRICS = {
     "r2": R2,
     "rmse": RMSE,
     "mse": MSE,
     "mae": MAE,
     "crps": CRPS,
+    "msll": MSLL,
 }
 
 
