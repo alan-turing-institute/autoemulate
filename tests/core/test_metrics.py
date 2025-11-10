@@ -10,10 +10,12 @@ from autoemulate.core.metrics import (
     CRPS,
     MAE,
     MSE,
+    MSLL,
     R2,
     RMSE,
     CRPSMetric,
     Metric,
+    MSLLMetric,
     TorchMetrics,
     get_metric,
     get_metrics,
@@ -523,6 +525,106 @@ def test_crps_with_1d_targets():
     assert result.ndim == 0, "Result should be a scalar tensor"
     assert isinstance(result, torch.Tensor)
     assert result >= 0, "CRPS should be non-negative"
+
+
+# Tests for MSLL metric
+
+
+def test_msll_in_available_metrics():
+    """Test MSLL is in AVAILABLE_METRICS."""
+    assert "msll" in AVAILABLE_METRICS
+    assert AVAILABLE_METRICS["msll"] == MSLL
+
+
+def test_get_metric_config_msll():
+    """Test get_metric_config with 'crps' string."""
+    config = get_metric("msll")
+
+    assert config == MSLL
+    assert isinstance(config, MSLLMetric)
+    assert config.name == "msll"
+    assert config.maximize is False
+
+
+def test_msll_with_1d_inputs():
+    """Test MSLL handles 1D tensors correctly."""
+    y_true = torch.tensor([1.0, 2.0, 3.0])
+    y_train = torch.tensor([0.5, 1.5, 2.5])
+    # predictions are always 2D: (n_data, n_outputs)
+    y_pred = Normal(
+        loc=y_true.view(-1, 1), scale=torch.ones_like(y_true.view(-1, 1)) * 0.5
+    )
+
+    msll = MSLL(y_pred, y_true, y_train=y_train)
+
+    assert isinstance(msll, torch.Tensor)
+    assert msll.shape == torch.Size([1])
+
+
+def test_msll_with_2d_inputs():
+    """Test MSLL handles 2D tensors correctly."""
+    n_data, n_outputs = 10, 3
+    y_true = torch.randn(n_data, n_outputs)
+    y_train = torch.randn(n_data, n_outputs)
+    y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true))
+
+    msll = MSLL(y_pred, y_true, y_train=y_train)
+
+    assert isinstance(msll, torch.Tensor)
+    assert msll.shape == torch.Size([n_outputs])
+
+
+def test_msll_raises_for_non_distribution():
+    """Test MSLL raises ValueError for non-distribution predictions."""
+    y_true = torch.tensor([1.0, 2.0, 3.0])
+    y_pred = torch.tensor([1.0, 2.0, 3.0])  # Not a distribution
+
+    with pytest.raises(
+        ValueError, match="MSLL metric requires probabilistic predictions"
+    ):
+        MSLL(y_pred, y_true)
+
+
+def test_msll_perfect_prediction_with_training_data():
+    """Test MSLL when predictions perfectly match true values."""
+    y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
+    y_train = torch.tensor([0.5, 1.5, 2.5]).view(-1, 1)
+
+    # Perfect prediction: distribution centered at true values with small variance
+    y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true) * 0.01)
+
+    msll = MSLL(y_pred, y_true, y_train=y_train)
+
+    # MSLL should be negative (better than trivial model)
+    assert msll < 0
+
+
+def test_msll_poor_prediction_with_training_data():
+    """Test MSLL when predictions are far from true values."""
+    y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
+    y_train = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
+
+    # Poor prediction: distribution centered far from true values
+    y_pred = Normal(
+        loc=torch.zeros(3).view(-1, 1), scale=torch.ones(3).view(-1, 1) * 10.0
+    )
+
+    msll = MSLL(y_pred, y_true, y_train=y_train)
+
+    # MSLL should be positive (worse than trivial model)
+    assert msll > 0
+
+
+def test_msll_without_training_data():
+    """Test MSLL returns mean log loss when y_train is None."""
+    y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
+    y_pred = Normal(loc=torch.ones(3).view(-1, 1), scale=torch.ones(3).view(-1, 1))
+
+    msll = MSLL(y_pred, y_true, y_train=None)
+
+    # Should return a positive value (mean log loss)
+    assert isinstance(msll, torch.Tensor)
+    assert msll > 0
 
 
 # Tests for OutputLike support in TorchMetrics
