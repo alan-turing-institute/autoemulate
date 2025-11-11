@@ -555,10 +555,15 @@ def test_msll_with_1d_inputs():
         loc=y_true.view(-1, 1), scale=torch.ones_like(y_true.view(-1, 1)) * 0.5
     )
 
-    msll = MSLL(y_pred, y_true, y_train=y_train)
+    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="none")
 
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([1])
+
+    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="mean")
+
+    assert isinstance(msll, torch.Tensor)
+    assert msll.shape == torch.Size([])
 
 
 def test_msll_with_2d_inputs():
@@ -568,10 +573,15 @@ def test_msll_with_2d_inputs():
     y_train = torch.randn(n_data, n_outputs)
     y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true))
 
-    msll = MSLL(y_pred, y_true, y_train=y_train)
+    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="none")
 
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([n_outputs])
+
+    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="mean")
+
+    assert isinstance(msll, torch.Tensor)
+    assert msll.shape == torch.Size([])
 
 
 def test_msll_raises_for_non_distribution():
