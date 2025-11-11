@@ -157,6 +157,7 @@ def test_ae_with_different_tuning_metrics(sample_data_for_ae_compare, tuning_met
         ["rmse"],
         ["mse"],
         ["mae"],
+        ["crps"],
         ["r2", "rmse"],
         ["r2", "mse", "mae"],
         ["rmse", "mae"],
@@ -168,6 +169,42 @@ def test_ae_with_different_evaluation_metrics(
     """Test AutoEmulate with different evaluation metrics."""
     x, y = sample_data_for_ae_compare
     models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        evaluation_metrics=evaluation_metrics,
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    # Verify that evaluation metrics were set correctly
+    assert len(ae.evaluation_metrics) == len(evaluation_metrics)
+    metric_names = [m.name for m in ae.evaluation_metrics]
+    assert metric_names == evaluation_metrics
+
+    # Verify that all specified metrics are in test_metrics for each result
+    for result in ae.results:
+        assert result.test_metrics is not None
+        metric_names = [m.name for m in result.test_metrics]
+        for metric_name in evaluation_metrics:
+            assert metric_name in metric_names
+            # Verify the metric value is a tuple of (mean, std)
+            assert isinstance(result.test_metrics[get_metric(metric_name)], tuple)
+            assert len(result.test_metrics[get_metric(metric_name)]) == 2
+
+
+@pytest.mark.parametrize(
+    "evaluation_metrics",
+    [["msll"], ["crps"], ["crps", "msll"]],
+)
+def test_uncertainty_aware_metrics(sample_data_for_ae_compare, evaluation_metrics):
+    """Test AutoEmulate with uncertainty-aware metrics and probablistics emulators."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["GaussianProcessRBF", "EnsembleMLP"]
 
     ae = AutoEmulate(
         x,
