@@ -267,6 +267,7 @@ class MSLLMetric(ProbabilisticMetric):
         y_true: TensorLike,
         n_samples: int = 1000,
         y_train: TensorLike | None = None,
+        reduction: str = "mean",
     ) -> TensorLike:
         """Calculate MSLL metric.
 
@@ -282,6 +283,9 @@ class MSLLMetric(ProbabilisticMetric):
         y_train: TensorLike | None
             Training target values used to parameterize the trivial model for
             standardization. If None, mean log loss is computed without standardization.
+        reduction: str
+            Reduction method to apply to the final MSLL scores computer per task.
+            Options are 'mean' or 'none'. Defaults to 'mean'.
 
         Returns
         -------
@@ -318,11 +322,11 @@ class MSLLMetric(ProbabilisticMetric):
                 f"y_true shape {y_true.shape}."
             )
 
-        # Compute mean log loss - average over tasks
+        # Compute mean log loss
         mean_log_loss = (
             0.5 * torch.log(2 * torch.pi * y_pred_var)
             + torch.square(y_true - y_pred_mean) / (2 * y_pred_var)
-        ).mean()
+        ).mean(dim=0)
 
         # If no training data, return mean log loss
         if y_train is None:
@@ -339,17 +343,19 @@ class MSLLMetric(ProbabilisticMetric):
         # Avoid numerical issues
         y_train_var = torch.clamp(y_train_var, min=1e-6)
 
-        # Compute mean log prob under trivial Gaussian model - average over tasks
-        mean_trivial_log_loss = (
-            0.5
-            * (
-                torch.log(2 * torch.pi * y_train_var)
-                + torch.square(y_true - y_train_mean) / (2 * y_train_var)
-            ).mean()
-        )
+        # Compute mean log prob under trivial Gaussian model
+        mean_trivial_log_loss = 0.5 * (
+            torch.log(2 * torch.pi * y_train_var)
+            + torch.square(y_true - y_train_mean) / (2 * y_train_var)
+        ).mean(dim=0)
 
         # Return mean standardized log loss
-        return mean_log_loss - mean_trivial_log_loss
+        if reduction == "none":
+            return mean_log_loss - mean_trivial_log_loss
+        if reduction == "mean":
+            return (mean_log_loss - mean_trivial_log_loss).mean()
+        msg = f"Invalid reduction '{reduction}'. Expected 'mean' or 'none'."
+        raise ValueError(msg)
 
 
 R2 = TorchMetrics(
