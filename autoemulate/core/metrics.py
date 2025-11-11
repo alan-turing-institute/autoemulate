@@ -332,7 +332,9 @@ class MSLLMetric(ProbabilisticMetric):
         y_train = y_train.unsqueeze(-1) if y_train.ndim == 1 else y_train
 
         y_train_mean = y_train.mean(dim=0)
-        y_train_var = y_train.var(dim=0)
+        # following GPyTorch implementation, use global variance rather than per task
+        # https://github.com/cornellius-gp/gpytorch/blob/c0fb6c64311fdbef2862fd3ba2bd613fbd081e79/gpytorch/metrics/metrics.py#L60
+        y_train_var = y_train.var()
 
         # Avoid numerical issues
         y_train_var = torch.clamp(y_train_var, min=1e-6)
