@@ -318,11 +318,11 @@ class MSLLMetric(ProbabilisticMetric):
                 f"y_true shape {y_true.shape}."
             )
 
-        # Compute mean log loss
+        # Compute mean log loss - average over tasks
         mean_log_loss = (
             0.5 * torch.log(2 * torch.pi * y_pred_var)
             + torch.square(y_true - y_pred_mean) / (2 * y_pred_var)
-        ).mean(dim=0)
+        ).mean()
 
         # If no training data, return mean log loss
         if y_train is None:
@@ -337,11 +337,14 @@ class MSLLMetric(ProbabilisticMetric):
         # Avoid numerical issues
         y_train_var = torch.clamp(y_train_var, min=1e-6)
 
-        # Compute mean log prob under trivial Gaussian model
-        mean_trivial_log_loss = -0.5 * (
-            torch.log(2 * torch.pi * y_train_var)
-            + torch.square(y_true - y_train_mean) / (2 * y_train_var)
-        ).mean(dim=0)
+        # Compute mean log prob under trivial Gaussian model - average over tasks
+        mean_trivial_log_loss = (
+            0.5
+            * (
+                torch.log(2 * torch.pi * y_train_var)
+                + torch.square(y_true - y_train_mean) / (2 * y_train_var)
+            ).mean()
+        )
 
         # Return mean standardized log loss
         return mean_log_loss - mean_trivial_log_loss
