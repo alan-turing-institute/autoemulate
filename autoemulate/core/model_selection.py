@@ -6,10 +6,7 @@ from sklearn.model_selection import BaseCrossValidator
 from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
 
-from autoemulate.core.device import (
-    get_torch_device,
-    move_tensors_to_device,
-)
+from autoemulate.core.device import get_torch_device, move_tensors_to_device
 from autoemulate.core.metrics import R2, Metric, get_metrics
 from autoemulate.core.types import (
     DeviceLike,
@@ -30,6 +27,7 @@ def evaluate(
     y_true: TensorLike,
     metric: Metric = R2,
     n_samples: int = 1000,
+    metric_kwargs: dict | None = None,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -45,12 +43,15 @@ def evaluate(
     n_samples: int
         Number of samples to generate to predict mean when y_pred does not have a mean
         directly available. Defaults to 1000.
+    metric_kwargs: dict | None
+        Additional keyword arguments to pass to the metric.
 
     Returns
     -------
     float
     """
-    return metric(y_pred, y_true, n_samples=n_samples).item()
+    metric_kwargs = metric_kwargs or {}
+    return metric(y_pred, y_true, n_samples=n_samples, **metric_kwargs).item()
 
 
 def cross_validate(
@@ -159,6 +160,7 @@ def bootstrap(
     n_samples: int = 1000,
     device: str | torch.device = "cpu",
     metrics: list[Metric] | None = None,
+    metric_kwargs: dict[str, dict] | None = None,
 ) -> dict[Metric, tuple[float, float]]:
     """
     Get bootstrap estimates of metrics.
@@ -182,6 +184,10 @@ def bootstrap(
         The device to use for computations. Default is "cpu".
     metrics: list[MetricConfig] | None
         List of metrics to compute. If None, uses r2 and rmse.
+    metric_kwargs: dict[str, dict] | None
+        Dictionary mapping metric names to their specific kwargs.
+        Example: {"r2": {"multioutput": "uniform_average"}}
+
 
     Returns
     -------
@@ -194,6 +200,8 @@ def bootstrap(
     # Setup metrics
     if metrics is None:
         metrics = get_metrics(["r2", "rmse"])
+
+    metric_kwargs = metric_kwargs or {}
 
     # If no bootstraps are specified, fall back to a single evaluation on given data
     if n_bootstraps is None:
@@ -222,8 +230,13 @@ def bootstrap(
 
         # Compute metrics for this bootstrap sample
         for metric in metrics:
+            kwargs = metric_kwargs.get(metric.name, {})
             metric_scores[metric.name][i] = evaluate(
-                y_pred, y_bootstrap, metric=metric, n_samples=n_samples
+                y_pred,
+                y_bootstrap,
+                metric=metric,
+                n_samples=n_samples,
+                metric_kwargs=kwargs,
             )
 
     # Return mean and std for each metric
