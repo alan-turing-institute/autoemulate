@@ -51,7 +51,8 @@ def evaluate(
     float
     """
     metric_kwargs = metric_kwargs or {}
-    return metric(y_pred, y_true, n_samples=n_samples, **metric_kwargs).item()
+    val = metric(y_pred, y_true, n_samples=n_samples, **metric_kwargs)
+    return val.item()
 
 
 def cross_validate(
@@ -240,6 +241,7 @@ def bootstrap(
             )
 
     # Return mean and std for each metric
+
     return {
         metric: (
             metric_scores[metric.name].mean().item(),
