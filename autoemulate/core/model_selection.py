@@ -187,7 +187,7 @@ def bootstrap(
         List of metrics to compute. If None, uses r2 and rmse.
     metric_kwargs: dict[str, dict] | None
         Dictionary mapping metric names to their specific kwargs.
-        Example: {"r2": {"multioutput": "uniform_average"}}
+        Example: {"msll": {"y_train": TensorLike}}
 
 
     Returns
