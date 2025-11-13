@@ -206,6 +206,8 @@ class ConversionMixin:
             The output to convert to a tensor.
         n_samples: int
             Number of samples to draw from the distribution. Defaults to 1000.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
 
         Returns
         -------
