@@ -1,4 +1,5 @@
 import math
+from collections.abc import Callable
 from typing import Literal
 
 import torch
@@ -92,6 +93,9 @@ class Conformal(Emulator):
         calibration_ratio: float = 0.2,
         n_samples: int = 1000,
         method: Literal["constant", "quantile"] = "constant",
+        to_distribution: Callable[
+            [TensorLike | None, tuple[TensorLike, TensorLike]], DistributionLike
+        ] = lambda _mean, bounds: torch.distributions.Uniform(bounds[0], bounds[1]),
         quantile_emulator_kwargs: dict | None = None,
     ):
         """Initialize a conformal emulator.
@@ -116,10 +120,14 @@ class Conformal(Emulator):
             - "constant": Standard split conformal with constant-width intervals
             - "quantile": Conformalized Quantile Regression (CQR) with input-dependent
               intervals. Defaults to "constant".
+        to_distribution: Callable[[TensorLike | None, tuple[TensorLike, TensorLike]], DistributionLike]
+            A callable that takes an optional mean and a tuple of lower and upper bounds
+            as input and returns a distribution over that interval.
+            Defaults to lambda _mean, bounds: torch.distributions.Uniform(bounds[0], bounds[1]).
         quantile_emulator_kwargs: dict | None
             Additional keyword arguments for the quantile emulators when
             method="quantile". Defaults to None.
-        """
+        """  # noqa: E501
         self.emulator = emulator
         self.supports_grad = emulator.supports_grad
         if not 0 < alpha < 1:
@@ -135,6 +143,7 @@ class Conformal(Emulator):
         self.calibration_ratio = calibration_ratio
         self.n_samples = n_samples
         self.method = method
+        self.to_distribution = to_distribution
         self.quantile_emulator_kwargs = quantile_emulator_kwargs or {}
         TorchDeviceMixin.__init__(self, device=device)
         self.supports_grad = emulator.supports_grad
@@ -279,7 +288,7 @@ class Conformal(Emulator):
             mean = self.output_to_tensor(pred)
             q = self.q.to(mean.device)
             return torch.distributions.Independent(
-                torch.distributions.Uniform(mean - q, mean + q),
+                self.to_distribution(None, (mean - q, mean + q)),
                 reinterpreted_batch_ndims=mean.ndim - 1,
             )
 
@@ -299,7 +308,7 @@ class Conformal(Emulator):
 
             # Return uniform distribution over the calibrated interval
             return torch.distributions.Independent(
-                torch.distributions.Uniform(lower_bound, upper_bound),
+                self.to_distribution(None, (lower_bound, upper_bound)),
                 reinterpreted_batch_ndims=lower_bound.ndim - 1,
             )
 
