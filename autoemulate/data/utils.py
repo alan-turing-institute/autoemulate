@@ -212,7 +212,8 @@ class ConversionMixin:
         Returns
         -------
         TensorLike
-            Tensor of shape (n_samples, output_dim) containing samples from the output.
+            Tensor of shape `(n_batch, n_targets)` as input or the mean of the output if
+            output is a distribution.
         """
         if isinstance(output, TensorLike):
             return output
