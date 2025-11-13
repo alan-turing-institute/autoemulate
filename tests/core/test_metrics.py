@@ -15,6 +15,7 @@ from autoemulate.core.metrics import (
     RMSE,
     CRPSMetric,
     Metric,
+    MetricParams,
     MSLLMetric,
     TorchMetrics,
     get_metric,
@@ -463,7 +464,7 @@ def test_crps_with_distribution():
     std = torch.ones(batch_size, n_targets) * 0.5
     y_pred_dist = Normal(mean, std)
 
-    result = CRPS(y_pred_dist, y_true, n_samples=500)
+    result = CRPS(y_pred_dist, y_true, metric_params=MetricParams(n_samples=500))
 
     assert result.ndim == 0, "Result should be a scalar tensor"
     assert isinstance(result, torch.Tensor)
@@ -555,12 +556,16 @@ def test_msll_with_1d_inputs():
         loc=y_true.view(-1, 1), scale=torch.ones_like(y_true.view(-1, 1)) * 0.5
     )
 
-    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="none")
+    msll = MSLL(
+        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="none")
+    )
 
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([1])
 
-    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="mean")
+    msll = MSLL(
+        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="mean")
+    )
 
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([])
@@ -573,12 +578,16 @@ def test_msll_with_2d_inputs():
     y_train = torch.randn(n_data, n_outputs)
     y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true))
 
-    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="none")
+    msll = MSLL(
+        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="none")
+    )
 
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([n_outputs])
 
-    msll = MSLL(y_pred, y_true, y_train=y_train, reduction="mean")
+    msll = MSLL(
+        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="mean")
+    )
 
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([])
@@ -603,7 +612,7 @@ def test_msll_perfect_prediction_with_training_data():
     # Perfect prediction: distribution centered at true values with small variance
     y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true) * 0.01)
 
-    msll = MSLL(y_pred, y_true, y_train=y_train)
+    msll = MSLL(y_pred, y_true, metric_params=MetricParams(y_train=y_train))
 
     # MSLL should be negative (better than trivial model)
     assert msll < 0
@@ -619,7 +628,7 @@ def test_msll_poor_prediction_with_training_data():
         loc=torch.zeros(3).view(-1, 1), scale=torch.ones(3).view(-1, 1) * 10.0
     )
 
-    msll = MSLL(y_pred, y_true, y_train=y_train)
+    msll = MSLL(y_pred, y_true, metric_params=MetricParams(y_train=y_train))
 
     # MSLL should be positive (worse than trivial model)
     assert msll > 0
@@ -630,7 +639,7 @@ def test_msll_without_training_data():
     y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
     y_pred = Normal(loc=torch.ones(3).view(-1, 1), scale=torch.ones(3).view(-1, 1))
 
-    msll = MSLL(y_pred, y_true, y_train=None)
+    msll = MSLL(y_pred, y_true, metric_params=MetricParams(y_train=None))
 
     # Should return a positive value (mean log loss)
     assert isinstance(msll, torch.Tensor)

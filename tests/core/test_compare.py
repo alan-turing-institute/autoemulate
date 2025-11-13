@@ -5,7 +5,7 @@ import pytest
 import torch
 from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
-from autoemulate.core.metrics import Metric, get_metric
+from autoemulate.core.metrics import Metric, MetricParams, get_metric
 from autoemulate.core.types import OutputLike, TensorLike
 from autoemulate.emulators import DEFAULT_EMULATORS
 from autoemulate.emulators.base import Emulator
@@ -348,9 +348,10 @@ def test_ae_with_custom_evaluation_metrics(sample_data_for_ae_compare):
             self,
             y_pred: OutputLike,
             y_true: TensorLike,
-            n_samples: int = 1000,  # noqa: ARG002
+            metric_params: MetricParams | None = None,  # noqa: ARG002
         ) -> TensorLike:
             """Calculate mean squared error."""
+
             assert isinstance(y_pred, TensorLike)
             return (y_pred - y_true).pow(2).mean()
 
@@ -422,7 +423,7 @@ def test_ae_with_custom_tuning_metric(sample_data_for_ae_compare):
             self,
             y_pred: OutputLike,
             y_true: TensorLike,
-            n_samples: int = 1000,  # noqa: ARG002
+            metric_params: MetricParams | None = None,  # noqa: ARG002
         ) -> TensorLike:
             """Calculate R-squared score."""
             assert isinstance(y_pred, TensorLike)

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass
 from functools import partial, total_ordering
+from typing import Literal
 
 import torch
 import torchmetrics
@@ -17,6 +19,30 @@ from autoemulate.core.types import (
     TensorLike,
     TorchMetricsLike,
 )
+
+
+@dataclass
+class MetricParams:
+    """
+    Parameters for metric calculations.
+
+    Attributes
+    ----------
+    n_samples: int
+        Number of samples to draw from the predicted distribution if `y_pred` is a
+        distribution. Defaults to 1000.
+    y_train: TensorLike | None
+        Training target values. In MSLL used to parameterize the trivial model for
+        standardization. If None, mean log loss is computed without standardization.
+    reduction: Literal["mean", "none"]
+        Reduction method to apply to the final metric scores computer per task.
+        Options are 'mean' or 'none'. Defaults to 'mean'.
+    """
+
+    n_samples: int = 1000
+    y_train: TensorLike | None = None
+    reduction: Literal["mean", "none"] = "mean"
+    metric_kwargs: dict | None = None  # supports subclasses with arbitrary new kwargs
 
 
 @total_ordering
@@ -58,7 +84,10 @@ class Metric:
 
     @abstractmethod
     def __call__(
-        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+        self,
+        y_pred: OutputLike,
+        y_true: TensorLike,
+        metric_params: MetricParams | None = None,
     ) -> TensorLike:
         """Calculate metric."""
 
@@ -87,7 +116,10 @@ class TorchMetrics(Metric):
         self.maximize = maximize
 
     def __call__(
-        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+        self,
+        y_pred: OutputLike,
+        y_true: TensorLike,
+        metric_params: MetricParams | None = None,
     ) -> TensorLike:
         """Calculate metric."""
         if not isinstance(y_pred, OutputLike):
@@ -95,12 +127,17 @@ class TorchMetrics(Metric):
         if not isinstance(y_true, TensorLike):
             raise ValueError(f"Metric not implemented for y_true ({type(y_true)})")
 
+        if metric_params is None:
+            metric_params = MetricParams()
+
         # Handle probabilistic predictions
         if isinstance(y_pred, DistributionLike):
             try:
                 y_pred = y_pred.mean
             except Exception:
-                y_pred = y_pred.rsample(torch.Size([n_samples])).mean(dim=0)
+                y_pred = y_pred.rsample(torch.Size([metric_params.n_samples])).mean(
+                    dim=0
+                )
         metric = self.metric()
         metric.to(y_pred.device)
 
@@ -117,7 +154,10 @@ class ProbabilisticMetric(Metric):
 
     @abstractmethod
     def __call__(
-        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+        self,
+        y_pred: OutputLike,
+        y_true: TensorLike,
+        metric_params: MetricParams | None = None,
     ) -> TensorLike:
         """Calculate metric."""
 
@@ -145,7 +185,10 @@ class CRPSMetric(ProbabilisticMetric):
     maximize: bool = False
 
     def __call__(
-        self, y_pred: OutputLike, y_true: TensorLike, n_samples: int = 1000
+        self,
+        y_pred: OutputLike,
+        y_true: TensorLike,
+        metric_params: MetricParams | None = None,
     ) -> TensorLike:
         """Calculate CRPS metric.
 
@@ -167,9 +210,8 @@ class CRPSMetric(ProbabilisticMetric):
             - If distribution: `n_samples` are drawn to estimate CRPS.
         y_true: TensorLike
             True target values of shape `(batch_size, *target_shape)`.
-        n_samples: int
-            Number of samples to draw from the predicted distribution if `y_pred` is a
-            distribution. Defaults to 1000.
+        metric_params: MetricParams
+            Metric parameters including: n_samples.
 
         Returns
         -------
@@ -184,6 +226,9 @@ class CRPSMetric(ProbabilisticMetric):
         if not isinstance(y_true, TensorLike):
             raise ValueError(f"y_true must be a tensor, got {type(y_true)}")
 
+        if metric_params is None:
+            metric_params = MetricParams()
+
         # Ensure 2D y_true for consistent handling
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
@@ -195,7 +240,7 @@ class CRPSMetric(ProbabilisticMetric):
         if isinstance(y_pred, DistributionLike):
             # Distribution case: sample from it
             samples = rearrange(
-                y_pred.sample(torch.Size((n_samples,))),
+                y_pred.sample(torch.Size((metric_params.n_samples,))),
                 "s b ... -> b ... s",
             )
             if samples.shape[:-1] != y_true.shape:
@@ -265,11 +310,12 @@ class MSLLMetric(ProbabilisticMetric):
         self,
         y_pred: OutputLike,
         y_true: TensorLike,
-        n_samples: int = 1000,
-        y_train: TensorLike | None = None,
-        reduction: Literal["mean", "none"] = "mean",
+        metric_params: MetricParams | None = None,
     ) -> TensorLike:
         """Calculate MSLL metric.
+
+        If no training data is provided in `metric_params.y_train`, the mean log loss
+        is computed without standardization.
 
         Parameters
         ----------
@@ -277,15 +323,8 @@ class MSLLMetric(ProbabilisticMetric):
             Predicted outputs. Must be a distribution.
         y_true: TensorLike
             True target values.
-        n_samples: int
-            Number of samples to draw from the predicted distribution if `y_pred` is a
-            distribution without `.mean` and `.variance` attributese. Defaults to 1000.
-        y_train: TensorLike | None
-            Training target values used to parameterize the trivial model for
-            standardization. If None, mean log loss is computed without standardization.
-        reduction: str
-            Reduction method to apply to the final MSLL scores computer per task.
-            Options are 'mean' or 'none'. Defaults to 'mean'.
+        metric_params: MetricParams
+            Metric parameters including: n_samples, y_train, reduction.
 
         Returns
         -------
@@ -305,6 +344,9 @@ class MSLLMetric(ProbabilisticMetric):
         if not isinstance(y_true, TensorLike):
             raise ValueError(f"y_true must be a tensor, got {type(y_true)}")
 
+        if metric_params is None:
+            metric_params = MetricParams()
+
         # Ensure 2D y_true for consistent handling
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
@@ -312,7 +354,7 @@ class MSLLMetric(ProbabilisticMetric):
         try:
             y_pred_mean, y_pred_var = y_pred.mean, y_pred.variance
         except Exception:
-            y_pred_samples = y_pred.rsample(torch.Size([n_samples]))
+            y_pred_samples = y_pred.rsample(torch.Size([metric_params.n_samples]))
             y_pred_mean = y_pred_samples.mean(dim=0)
             y_pred_var = y_pred_samples.var(dim=0)
 
@@ -329,11 +371,23 @@ class MSLLMetric(ProbabilisticMetric):
         ).mean(dim=0)
 
         # If no training data, return mean log loss
-        if y_train is None:
-            return mean_log_loss
+        if metric_params.y_train is None:
+            if metric_params.reduction == "none":
+                return mean_log_loss
+            if metric_params.reduction == "mean":
+                return mean_log_loss.mean()
+            msg = (
+                f"Invalid reduction '{metric_params.reduction}'. "
+                "Expected 'mean' or 'none'."
+            )
+            raise ValueError(msg)
 
         # Ensure 2D y_train for consistent handling
-        y_train = y_train.unsqueeze(-1) if y_train.ndim == 1 else y_train
+        y_train = (
+            metric_params.y_train.unsqueeze(-1)
+            if metric_params.y_train.ndim == 1
+            else metric_params.y_train
+        )
 
         y_train_mean = y_train.mean(dim=0)
         # following GPyTorch implementation, use global variance rather than per task
@@ -350,11 +404,13 @@ class MSLLMetric(ProbabilisticMetric):
         ).mean(dim=0)
 
         # Return mean standardized log loss
-        if reduction == "none":
+        if metric_params.reduction == "none":
             return mean_log_loss - mean_trivial_log_loss
-        if reduction == "mean":
+        if metric_params.reduction == "mean":
             return (mean_log_loss - mean_trivial_log_loss).mean()
-        msg = f"Invalid reduction '{reduction}'. Expected 'mean' or 'none'."
+        msg = (
+            f"Invalid reduction '{metric_params.reduction}'. Expected 'mean' or 'none'."
+        )
         raise ValueError(msg)
 
 

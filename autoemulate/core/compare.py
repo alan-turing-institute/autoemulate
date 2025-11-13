@@ -13,7 +13,7 @@ from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.metrics import R2, Metric, get_metric, get_metrics
+from autoemulate.core.metrics import R2, Metric, MetricParams, get_metric, get_metrics
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
     calculate_subplot_layout,
@@ -484,7 +484,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 n_bootstraps=self.n_bootstraps,
                                 device=self.device,
                                 metrics=self.evaluation_metrics,
-                                metric_kwargs={"msll": {"y_train": train_val_y}},
+                                metric_params=MetricParams(y_train=train_val_y),
                             )
                             test_metrics = bootstrap(
                                 transformed_emulator,
@@ -493,7 +493,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 n_bootstraps=self.n_bootstraps,
                                 device=self.device,
                                 metrics=self.evaluation_metrics,
-                                metric_kwargs={"msll": {"y_train": train_val_y}},
+                                metric_params=MetricParams(y_train=train_val_y),
                             )
 
                             # Log all test metrics from test_metrics dictionary
