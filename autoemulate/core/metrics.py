@@ -267,7 +267,7 @@ class MSLLMetric(ProbabilisticMetric):
         y_true: TensorLike,
         n_samples: int = 1000,
         y_train: TensorLike | None = None,
-        reduction: str = "mean",
+        reduction: Literal["mean", "none"] = "mean",
     ) -> TensorLike:
         """Calculate MSLL metric.
 
