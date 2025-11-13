@@ -1,4 +1,5 @@
 import math
+import sys
 from collections.abc import Callable
 from typing import Literal
 
@@ -461,3 +462,217 @@ class ConformalMLP(Conformal, PyTorchBackend):
     def get_tune_params() -> TuneParams:
         """Return a dictionary of hyperparameters to tune."""
         return MLP.get_tune_params()
+
+
+def create_conformal_subclass(
+    name: str,
+    conformal_mlp_base_class: type[ConformalMLP],
+    method: Literal["constant", "quantile"],
+    auto_register: bool = True,
+    overwrite: bool = True,
+    **fixed_kwargs,
+) -> type[ConformalMLP]:
+    """
+    Create a subclass of ConformalMLP with given fixed_kwargs.
+
+    This function creates a subclass of ConformalMLP where certain parameters
+    are fixed to specific values, reducing the parameter space for tuning.
+
+    The created subclass is automatically registered with the main emulator Registry
+    (unless auto_register=False), making it discoverable by AutoEmulate.
+
+    Parameters
+    ----------
+    name: str
+        Name for the created subclass.
+    conformal_mlp_base_class: type[ConformalMLP]
+        Base class to inherit from (typically ConformalMLP).
+    method: Literal["constant", "quantile"]
+        Conformalization method to use in the subclass.
+    auto_register : bool
+        Whether to automatically register the created subclass with the main emulator
+        Registry. Defaults to True.
+    overwrite : bool
+        Whether to allow overwriting an existing class with the same name in the
+        main Registry. Useful for interactive development in notebooks. Defaults to
+        True.
+    **fixed_kwargs
+        Keyword arguments to fix in the subclass. These parameters will be
+        set to the provided values and excluded from hyperparameter tuning.
+
+    Returns
+    -------
+    type[ConformalMLP]
+        A new subclass of ConformalMLP with the specified parameters fixed.
+        The returned class can be pickled and used like any other GP emulator.
+
+    Raises
+    ------
+    ValueError
+        If `name` matches `model_name()` or `short_name()` of an already registered
+        emulator in the main Registry and `overwrite=False`.
+
+    Notes
+    -----
+    - Fixed parameters are automatically excluded from `get_tune_params()` to prevent
+    them from being included in hyperparameter optimization.
+    - Pickling: The created subclass is registered in the caller's module namespace,
+    ensuring it can be pickled and unpickled correctly even when created in downstream
+    code that uses autoemulate as a dependency.
+    - If auto_register=True (default), the class is also added to the main Registry.
+    """
+    standardize_x = fixed_kwargs.get("standardize_x", True)
+    standardize_y = fixed_kwargs.get("standardize_y", True)
+    activation_cls: type[nn.Module] = fixed_kwargs.get("activation_cls", nn.ReLU)
+    loss_fn_cls: type[nn.Module] = fixed_kwargs.get("loss_fn_cls", nn.MSELoss)
+    epochs: int = fixed_kwargs.get("epochs", 100)
+    batch_size: int = fixed_kwargs.get("batch_size", 16)
+    layer_dims: list[int] | None = fixed_kwargs.get("layer_dims")
+    weight_init: str = fixed_kwargs.get("weight_init", "default")
+    scale: float = fixed_kwargs.get("scale", 1.0)
+    bias_init: str = fixed_kwargs.get("bias_init", "default")
+    dropout_prob: float | None = fixed_kwargs.get("dropout_prob")
+    lr: float = fixed_kwargs.get("lr", 1e-2)
+    params_size: int = fixed_kwargs.get("params_size", 1)
+    random_seed: int | None = fixed_kwargs.get("random_seed")
+    device: DeviceLike | None = fixed_kwargs.get("device")
+    scheduler_cls: type[LRScheduler] | None = fixed_kwargs.get("scheduler_cls")
+    scheduler_params: dict | None = fixed_kwargs.get("scheduler_params")
+    alpha: float = fixed_kwargs.get("alpha", 0.95)
+    calibration_ratio: float = fixed_kwargs.get("calibration_ratio", 0.2)
+    quantile_emulator_kwargs: dict | None = fixed_kwargs.get("quantile_emulator_kwargs")
+    epochs = fixed_kwargs.get("epochs", 50)
+    lr = fixed_kwargs.get("lr", 2e-1)
+    device = fixed_kwargs.get("device")
+
+    class ConformalMLPSubclass(conformal_mlp_base_class):
+        def __init__(
+            self,
+            x: TensorLike,
+            y: TensorLike,
+            standardize_x: bool = standardize_x,
+            standardize_y: bool = standardize_y,
+            activation_cls: type[nn.Module] = activation_cls,
+            loss_fn_cls: type[nn.Module] = loss_fn_cls,
+            epochs: int = epochs,
+            batch_size: int = batch_size,
+            layer_dims: list[int] | None = layer_dims,
+            weight_init: str = weight_init,
+            scale: float = scale,
+            bias_init: str = bias_init,
+            dropout_prob: float | None = dropout_prob,
+            lr: float = lr,
+            params_size: int = params_size,
+            random_seed: int | None = random_seed,
+            device: DeviceLike | None = device,
+            scheduler_cls: type[LRScheduler] | None = scheduler_cls,
+            scheduler_params: dict | None = scheduler_params,
+            alpha: float = alpha,
+            calibration_ratio: float = calibration_ratio,
+            method: Literal["constant", "quantile"] = method,
+            quantile_emulator_kwargs: dict | None = quantile_emulator_kwargs,
+        ):
+            super().__init__(
+                x,
+                y,
+                standardize_x=standardize_x,
+                standardize_y=standardize_y,
+                activation_cls=activation_cls,
+                loss_fn_cls=loss_fn_cls,
+                epochs=epochs,
+                batch_size=batch_size,
+                layer_dims=layer_dims,
+                weight_init=weight_init,
+                scale=scale,
+                bias_init=bias_init,
+                dropout_prob=dropout_prob,
+                lr=lr,
+                params_size=params_size,
+                random_seed=random_seed,
+                device=device,
+                scheduler_cls=scheduler_cls,
+                scheduler_params=scheduler_params,
+                alpha=alpha,
+                calibration_ratio=calibration_ratio,
+                method=method,
+                quantile_emulator_kwargs=quantile_emulator_kwargs,
+            )
+
+        @staticmethod
+        def get_tune_params():
+            """Get tunable parameters, excluding those that are fixed."""
+            tune_params = conformal_mlp_base_class.get_tune_params()
+            # Remove fixed parameters from tuning
+            tune_params.pop("mean_module_fn", None)
+            tune_params.pop("covar_module_fn", None)
+            for key in fixed_kwargs:
+                tune_params.pop(key, None)
+            return tune_params
+
+    # Create a more descriptive docstring that includes fixed parameters
+    mean_covar_and_fixed_kwargs = {
+        **fixed_kwargs,
+    }
+    fixed_params_str = "\n    ".join(
+        f"- {k} = {v.__name__ if callable(v) else v}"
+        for k, v in mean_covar_and_fixed_kwargs.items()
+    )
+
+    ConformalMLPSubclass.__doc__ = f"""
+    {conformal_mlp_base_class.__doc__}
+
+    Notes
+    -----
+    {name} is a subclass of {conformal_mlp_base_class.__name__} and has the following
+    parameters set during initialization:
+    {fixed_params_str}
+
+    For any parameters set with this approach, they are also excluded from the search
+    space when tuning. For example, if the `method` is set to `constant`,
+    the "constant" method will always be used as the `method`. Note that in this case
+    the associated hyperparameters (such as lengthscale) will still be fitted during
+    model training and are not fixed.
+    """
+
+    # Determine the caller's module for proper pickling support.
+    # When called from autoemulate itself, use __name__.
+    # When called from user code, use the caller's module
+    caller_frame = sys._getframe(1)
+    caller_module_name = caller_frame.f_globals.get("__name__", __name__)
+
+    # Set the class name and module
+    ConformalMLPSubclass.__name__ = name
+    ConformalMLPSubclass.__qualname__ = name
+    ConformalMLPSubclass.__module__ = caller_module_name
+
+    # Register class in the caller's module globals for pickling
+    # This ensures the class can be pickled/unpickled correctly
+    caller_frame.f_globals[name] = ConformalMLPSubclass
+    # Also register in the caller's module if it's a real module (not __main__)
+    if caller_module_name in sys.modules and caller_module_name != "__main__":
+        setattr(sys.modules[caller_module_name], name, ConformalMLPSubclass)
+
+    # Automatically register with the main emulator Registry if requested
+    if auto_register:
+        # Lazy import to avoid circular dependency with __init__.py
+        from autoemulate.emulators import register  # noqa: PLC0415
+
+        register(ConformalMLPSubclass, overwrite=overwrite)
+
+    return ConformalMLPSubclass
+
+
+# Built-in GP subclasses - auto_register=False as already registered in Registry init:
+# autoemulate/emulators/__init__.py
+ConformalMLPConstant = create_conformal_subclass(
+    "ConformalMLPConstant",
+    ConformalMLP,
+    method="constant",
+    auto_register=False,
+)
+ConformalMLPQuantile = create_conformal_subclass(
+    "ConformalMLPQuantile",
+    ConformalMLP,
+    method="quantile",
+    auto_register=False,
+)
