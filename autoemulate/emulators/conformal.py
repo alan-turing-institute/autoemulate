@@ -137,7 +137,7 @@ class Conformal(Emulator):
             msg = "Calibration ratio must lie strictly between 0 and 1."
             raise ValueError(msg)
         if method not in {"constant", "quantile"}:
-            msg = f"Method must be 'split' or 'quantile', got '{method}'."
+            msg = f"Method must be 'constant' or 'quantile', got '{method}'."
             raise ValueError(msg)
         self.alpha = alpha  # desired predictive coverage (e.g., 0.95)
         self.calibration_ratio = calibration_ratio
