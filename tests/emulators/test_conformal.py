@@ -72,7 +72,7 @@ def test_conformal_mlp_quantile_method():
 
 
 def test_conformal_methods_comparison():
-    """Compare split vs quantile conformal methods on heteroscedastic data."""
+    """Compare constant vs quantile conformal methods on heteroscedastic data."""
 
     def heteroscedastic_function(x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Function with heteroscedastic noise (variance depends on x)."""
@@ -94,18 +94,18 @@ def test_conformal_methods_comparison():
     # Generate test data
     x_test = torch.linspace(-5, 5, 50).reshape(-1, 1)
 
-    # Test split method
-    model_split = ConformalMLP(
+    # Test constant method
+    model_constant = ConformalMLP(
         x_train,
         y_train,
-        method="split",
+        method="constant",
         alpha=0.90,
         layer_dims=[32, 16],
         epochs=50,
         lr=1e-2,
     )
-    model_split.fit(x_train, y_train, validation_data=(x_cal, y_cal))
-    pred_split = model_split.predict(x_test)
+    model_constant.fit(x_train, y_train, validation_data=(x_cal, y_cal))
+    pred_constant = model_constant.predict(x_test)
 
     # Test quantile method
     model_quantile = ConformalMLP(
@@ -124,14 +124,16 @@ def test_conformal_methods_comparison():
     # Compare interval widths
     with torch.no_grad():
         # Uniform distribution bounds provide interval limits directly
-        split_base = pred_split.base_dist  # type: ignore[attr-defined]
+        constant_base = pred_constant.base_dist  # type: ignore[attr-defined]
         quantile_base = pred_quantile.base_dist  # type: ignore[attr-defined]
 
-        width_split = (split_base.high - split_base.low).squeeze()
+        width_constant = (constant_base.high - constant_base.low).squeeze()
         width_quantile = (quantile_base.high - quantile_base.low).squeeze()
 
-    # Split conformal should have constant widths (std ≈ 0)
-    assert width_split.std() < 1e-6, "Split method should have constant interval widths"
+    # Constant conformal should have constant widths (std ≈ 0)
+    assert width_constant.std() < 1e-6, (
+        "Constant method should have constant interval widths"
+    )
 
     # Quantile conformal should have variable widths (std > 0)
     assert width_quantile.std() > 0, (
@@ -139,5 +141,5 @@ def test_conformal_methods_comparison():
     )
 
     # Both methods should produce valid predictions
-    assert pred_split.mean.shape == x_test.shape  # type: ignore[attr-defined]
+    assert pred_constant.mean.shape == x_test.shape  # type: ignore[attr-defined]
     assert pred_quantile.mean.shape == x_test.shape  # type: ignore[attr-defined]
