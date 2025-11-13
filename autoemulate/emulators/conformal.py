@@ -90,6 +90,10 @@ class Conformal(Emulator):
     step to ensure valid coverage. Note the _fit_quantile_regressors method can be
     overridden to implement custom quantile regressors.
 
+    Additional methods for input-dependent intervals (such as scaling) can be
+    implemented by adding further supported "method" strings and providing corresponding
+    logic in the _fit and _predict methods.
+
     References
     ----------
     - Romano, Y., Patterson, E., & Candes, E. (2019). Conformalized Quantile Regression.
