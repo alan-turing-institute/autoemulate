@@ -208,8 +208,16 @@ def bootstrap(
     if n_bootstraps is None:
         y_pred = model.predict(x)
         results = {}
+
         for metric in metrics:
-            score = evaluate(y_pred, y, metric=metric, n_samples=n_samples)
+            kwargs = metric_kwargs.get(metric.name, {})
+            score = evaluate(
+                y_pred,
+                y,
+                metric=metric,
+                n_samples=n_samples,
+                metric_kwargs=kwargs,
+            )
             results[metric] = (score, float("nan"))
         return results
 
