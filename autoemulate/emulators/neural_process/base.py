@@ -1,16 +1,15 @@
 import functools
 
-import neuralprocesses as nps
+import neuralprocesses.torch as nps
 import torch
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
-from autoemulate.emulators.base import Emulator, PyTorchBackend
+from autoemulate.emulators.base import PyTorchBackend
 from autoemulate.emulators.neural_process.dataset import CNPDataset, cnp_collate_fn
+from torch import nn
 
-# from torch import nn
 
-
-class NeuralProceess(Emulator, TorchDeviceMixin):
+class NeuralProceess(PyTorchBackend, TorchDeviceMixin):
     """Neural Process base class."""
 
     def __init__(
@@ -27,9 +26,10 @@ class NeuralProceess(Emulator, TorchDeviceMixin):
         n_episodes: int = 12,
         batch_size: int = 4,
         device: DeviceLike | None = None,
+        verbose: bool = False,
     ):
         TorchDeviceMixin.__init__(self, device=device)
-        # nn.Module.__init__(self)
+        nn.Module.__init__(self)
 
         self.min_context_points = min_context_points
         self.max_context_points = self.min_context_points + offset_context_points
@@ -43,12 +43,12 @@ class NeuralProceess(Emulator, TorchDeviceMixin):
         self.convcnp = nps.construct_convgnp(
             dim_x=x.shape[1],
             dim_y=y.shape[1],
-            likelihood="het",  # TODO: make configurable
-            # likelihood="lowrank",  # TODO: what is this?
+            # likelihood="het",  # TODO: make configurable
+            likelihood="lowrank",  # TODO: what is this?
         )
         self.optimizer = torch.optim.Adam(self.convcnp.parameters(), lr=0.001)
-        self.epochs = 100
-        # self.to(self.device)
+        self.verbose = verbose
+        self.to(self.device)
 
     def _fit(self, x: TensorLike, y: TensorLike) -> None:
         # self.train()
@@ -113,10 +113,10 @@ class NeuralProceess(Emulator, TorchDeviceMixin):
 
             # Average loss for the epoch
             avg_epoch_loss = epoch_loss / batches
-            # self.loss_history.append(avg_epoch_loss)
+            self.loss_history.append(avg_epoch_loss)
 
-            # if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
-            #     print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")  # noqa: E501
+            if self.verbose and (epoch + 1) % (self.epochs // 10 or 1) == 0:
+                print(f"Epoch [{epoch + 1}/{self.epochs}], Loss: {avg_epoch_loss:.4f}")
 
     def forward(
         self, x_context: TensorLike, y_context: TensorLike, x_target: TensorLike
@@ -130,17 +130,19 @@ class NeuralProceess(Emulator, TorchDeviceMixin):
 
     def _predict(self, x: TensorLike, with_grad: bool = False) -> DistributionLike:
         """...."""
-        # Testing: make some predictions.
-        # From: https://github.com/wesselb/neuralprocesses?tab=readme-ov-file#tldr-just-get-me-started
-        mean, var, noiseless_samples, noisy_samples = nps.predict(
-            self.convcnp,
-            self.x_train,
-            self.y_train,
-            x,
-        )
-        return torch.distributions.Independent(
-            torch.distributions.Normal(mean, var.sqrt()), reinterpreted_batch_ndims=1
-        )
+        with torch.set_grad_enabled(with_grad):
+            # Testing: make some predictions.
+            # From: https://github.com/wesselb/neuralprocesses?tab=readme-ov-file#tldr-just-get-me-started
+            mean, var, noiseless_samples, noisy_samples = nps.predict(
+                self.convcnp,
+                self.x_train,
+                self.y_train,
+                x,
+            )
+            return torch.distributions.Independent(
+                torch.distributions.Normal(mean, var.sqrt()),
+                reinterpreted_batch_ndims=1,
+            )
 
     @staticmethod
     def is_multioutput() -> bool:
