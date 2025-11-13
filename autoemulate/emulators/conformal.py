@@ -91,7 +91,7 @@ class Conformal(Emulator):
         device: DeviceLike | None = None,
         calibration_ratio: float = 0.2,
         n_samples: int = 1000,
-        method: Literal["split", "quantile"] = "split",
+        method: Literal["constant", "quantile"] = "constant",
         quantile_emulator_kwargs: dict | None = None,
     ):
         """Initialize a conformal emulator.
@@ -111,11 +111,11 @@ class Conformal(Emulator):
         n_samples: int
             Number of samples used for sampling-based predictions or internal
             procedures. Defaults to 1000.
-        method: Literal["split", "quantile"]
+        method: Literal["constant", "quantile"]
             Conformalization method to use:
-            - "split": Standard split conformal with constant-width intervals
+            - "constant": Standard split conformal with constant-width intervals
             - "quantile": Conformalized Quantile Regression (CQR) with input-dependent
-              intervals. Defaults to "split".
+              intervals. Defaults to "constant".
         quantile_emulator_kwargs: dict | None
             Additional keyword arguments for the quantile emulators when
             method="quantile". Defaults to None.
@@ -128,7 +128,7 @@ class Conformal(Emulator):
         if not 0 < calibration_ratio < 1:
             msg = "Calibration ratio must lie strictly between 0 and 1."
             raise ValueError(msg)
-        if method not in {"split", "quantile"}:
+        if method not in {"constant", "quantile"}:
             msg = f"Method must be 'split' or 'quantile', got '{method}'."
             raise ValueError(msg)
         self.alpha = alpha  # desired predictive coverage (e.g., 0.95)
@@ -194,8 +194,9 @@ class Conformal(Emulator):
             # Predict and calculate residuals
             y_pred_cal = self.output_to_tensor(self.emulator.predict(x_cal))
 
-        if self.method == "split":
-            # Standard split conformal: compute global quantile of residuals
+        # Standard split conformal for constant-width intervals
+        if self.method == "constant":
+            # Compute absolute residuals
             residuals = torch.abs(y_true_cal - y_pred_cal)
 
             # Apply finite-sample correction to quantile level
@@ -204,8 +205,9 @@ class Conformal(Emulator):
             # Calibrate over the batch dim with a separate quantile per output
             self.q = torch.quantile(residuals, quantile_level, dim=0)
 
+        # Conformalized Quantile Regression for input-dependent intervals
         elif self.method == "quantile":
-            # Conformalized Quantile Regression: train quantile regressors
+            # Train quantile regressors
             self._fit_quantile_regressors(x_train, y_train, x_cal, y_true_cal)
 
         self.is_fitted_ = True
@@ -271,8 +273,8 @@ class Conformal(Emulator):
             self.q_cqr = torch.quantile(scores, quantile_level, dim=0)
 
     def _predict(self, x: TensorLike, with_grad: bool) -> DistributionLike:
-        if self.method == "split":
-            # Standard split conformal: constant-width intervals
+        # Standard split conformal: constant width intervals
+        if self.method == "constant":
             pred = self.emulator.predict(x, with_grad)
             mean = self.output_to_tensor(pred)
             q = self.q.to(mean.device)
@@ -281,8 +283,8 @@ class Conformal(Emulator):
                 reinterpreted_batch_ndims=mean.ndim - 1,
             )
 
+        # Conformalized Quantile Regression: input-dependent intervals
         if self.method == "quantile":
-            # CQR: input-dependent intervals
             lower_pred = self.output_to_tensor(
                 self.lower_quantile_emulator.predict(x, with_grad)
             )
@@ -339,7 +341,7 @@ class ConformalMLP(Conformal, PyTorchBackend):
         scheduler_params: dict | None = None,
         alpha: float = 0.95,
         calibration_ratio: float = 0.2,
-        method: Literal["split", "quantile"] = "split",
+        method: Literal["constant", "quantile"] = "constant",
         quantile_emulator_kwargs: dict | None = None,
     ):
         nn.Module.__init__(self)
@@ -351,11 +353,11 @@ class ConformalMLP(Conformal, PyTorchBackend):
         calibration_ratio: float
             Fraction of training samples to hold out for calibration when an explicit
             validation set is not provided.
-        method: Literal["split", "quantile"]
+        method: Literal["constant", "quantile"]
             Conformalization method:
-            - "split": Standard split conformal (constant-width intervals)
+            - "constant": Standard split conformal (constant-width intervals)
             - "quantile": Conformalized Quantile Regression (input-dependent intervals)
-            Defaults to "split".
+            Defaults to "constant".
         quantile_emulator_kwargs: dict | None
             Additional keyword arguments for the quantile emulators when
             method="quantile". Defaults to None.
