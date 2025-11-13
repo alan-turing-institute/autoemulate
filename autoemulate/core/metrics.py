@@ -287,13 +287,14 @@ class MSLLMetric(ProbabilisticMetric):
     MSLL evaluates the quality of probabilistic predictions by measuring the
     log-likelihood of the true values under the predictive distribution,
     standardized by the log-likelihood under the trivial model (i.e., predictive
-    distribution parameterized with the data mean and variance).
+    normal distribution parameterized with the data mean and variance).
 
     If no training data is supplied, the mean log loss is computed.
 
     Lower MSLL values indicate better predictive performance.
 
-    Note: This metric requires probabilistic predictions.
+    Note: This metric requires probabilistic predictions. Standardization
+    assumes that the predictive distribution is Gaussian.
 
     Attributes
     ----------
@@ -324,7 +325,7 @@ class MSLLMetric(ProbabilisticMetric):
         y_true: TensorLike
             True target values.
         metric_params: MetricParams
-            Metric parameters including: n_samples, y_train, reduction.
+            Metric parameters including: y_train.
 
         Returns
         -------
@@ -350,37 +351,12 @@ class MSLLMetric(ProbabilisticMetric):
         # Ensure 2D y_true for consistent handling
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
-        # Handle distributions without mean/variance attributes
-        try:
-            y_pred_mean, y_pred_var = y_pred.mean, y_pred.variance
-        except Exception:
-            y_pred_samples = y_pred.rsample(torch.Size([metric_params.n_samples]))
-            y_pred_mean = y_pred_samples.mean(dim=0)
-            y_pred_var = y_pred_samples.var(dim=0)
-
-        if y_pred_mean.shape != y_true.shape:
-            raise ValueError(
-                f"Predictions shape {y_pred_mean.shape} does not match "
-                f"y_true shape {y_true.shape}."
-            )
-
         # Compute mean log loss
-        mean_log_loss = (
-            0.5 * torch.log(2 * torch.pi * y_pred_var)
-            + torch.square(y_true - y_pred_mean) / (2 * y_pred_var)
-        ).mean(dim=0)
+        mean_log_loss = y_pred.log_prob(y_true).mean(dim=0)
 
         # If no training data, return mean log loss
         if metric_params.y_train is None:
-            if metric_params.reduction == "none":
-                return mean_log_loss
-            if metric_params.reduction == "mean":
-                return mean_log_loss.mean()
-            msg = (
-                f"Invalid reduction '{metric_params.reduction}'. "
-                "Expected 'mean' or 'none'."
-            )
-            raise ValueError(msg)
+            return mean_log_loss
 
         # Ensure 2D y_train for consistent handling
         y_train = (
@@ -389,7 +365,8 @@ class MSLLMetric(ProbabilisticMetric):
             else metric_params.y_train
         )
 
-        y_train_mean = y_train.mean(dim=0)
+        y_train_mean = y_train.mean()
+
         # following GPyTorch implementation, use global variance rather than per task
         # https://github.com/cornellius-gp/gpytorch/blob/c0fb6c64311fdbef2862fd3ba2bd613fbd081e79/gpytorch/metrics/metrics.py#L60
         y_train_var = y_train.var()
@@ -398,20 +375,16 @@ class MSLLMetric(ProbabilisticMetric):
         y_train_var = torch.clamp(y_train_var, min=1e-6)
 
         # Compute mean log prob under trivial Gaussian model
-        mean_trivial_log_loss = 0.5 * (
-            torch.log(2 * torch.pi * y_train_var)
-            + torch.square(y_true - y_train_mean) / (2 * y_train_var)
-        ).mean(dim=0)
+        mean_trivial_log_loss = (
+            0.5
+            * (
+                torch.log(2 * torch.pi * y_train_var)
+                + torch.square(y_true - y_train_mean) / (2 * y_train_var)
+            ).mean()
+        )
 
         # Return mean standardized log loss
-        if metric_params.reduction == "none":
-            return mean_log_loss - mean_trivial_log_loss
-        if metric_params.reduction == "mean":
-            return (mean_log_loss - mean_trivial_log_loss).mean()
-        msg = (
-            f"Invalid reduction '{metric_params.reduction}'. Expected 'mean' or 'none'."
-        )
-        raise ValueError(msg)
+        return mean_log_loss - mean_trivial_log_loss
 
 
 R2 = TorchMetrics(
