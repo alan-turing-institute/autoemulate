@@ -81,6 +81,21 @@ class Conformal(Emulator):
 
     This class wraps a base emulator to provide conformal prediction intervals with
     guaranteed frequentist coverage.
+
+    Both standard split conformal and Conformalized Quantile Regression (CQR) methods
+    are supported.
+
+    Conformalized Quantile Regression (CQR) is defaultly implemented with two neural net
+    quantile regressors predicting lower and upper quantiles, followed by a calibration
+    step to ensure valid coverage. Note the _fit_quantile_regressors method can be
+    overridden to implement custom quantile regressors.
+
+    References
+    ----------
+    - Romano, Y., Patterson, E., & Candes, E. (2019). Conformalized Quantile Regression.
+      In Advances in Neural Information Processing Systems (Vol. 32).
+      https://papers.nips.cc/paper/8613-conformalized-quantile-regression.pdf
+
     """
 
     supports_uq = True
