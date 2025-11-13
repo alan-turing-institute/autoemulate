@@ -198,7 +198,7 @@ class ConversionMixin:
         n_samples: int = 1000,
         with_grad: bool = False,
     ) -> torch.Tensor:
-        """Convert an output to a tensor.
+        """Convert an output to a tensor (returns the mean if output is a distribution).
 
         Parameters
         ----------
