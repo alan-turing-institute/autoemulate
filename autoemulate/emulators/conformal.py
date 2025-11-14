@@ -541,9 +541,6 @@ def create_conformal_subclass(
     alpha: float = fixed_kwargs.get("alpha", 0.95)
     calibration_ratio: float = fixed_kwargs.get("calibration_ratio", 0.2)
     quantile_emulator_kwargs: dict | None = fixed_kwargs.get("quantile_emulator_kwargs")
-    epochs = fixed_kwargs.get("epochs", 50)
-    lr = fixed_kwargs.get("lr", 2e-1)
-    device = fixed_kwargs.get("device")
 
     class ConformalMLPSubclass(conformal_mlp_base_class):
         def __init__(
@@ -603,19 +600,18 @@ def create_conformal_subclass(
             """Get tunable parameters, excluding those that are fixed."""
             tune_params = conformal_mlp_base_class.get_tune_params()
             # Remove fixed parameters from tuning
-            tune_params.pop("mean_module_fn", None)
-            tune_params.pop("covar_module_fn", None)
+            tune_params.pop("method", None)
             for key in fixed_kwargs:
                 tune_params.pop(key, None)
             return tune_params
 
     # Create a more descriptive docstring that includes fixed parameters
-    mean_covar_and_fixed_kwargs = {
+    method_and_fixed_kwargs = {
         **fixed_kwargs,
     }
     fixed_params_str = "\n    ".join(
         f"- {k} = {v.__name__ if callable(v) else v}"
-        for k, v in mean_covar_and_fixed_kwargs.items()
+        for k, v in method_and_fixed_kwargs.items()
     )
 
     ConformalMLPSubclass.__doc__ = f"""
