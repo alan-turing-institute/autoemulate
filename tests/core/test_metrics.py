@@ -21,7 +21,7 @@ from autoemulate.core.metrics import (
     get_metric,
     get_metrics,
 )
-from torch.distributions import Normal
+from torch.distributions import Independent, Normal
 
 # Tests for the base Metric class
 
@@ -578,9 +578,25 @@ def test_msll_with_2d_inputs():
         y_true,
         metric_params=MetricParams(y_train=y_train),
     )
-
     assert isinstance(msll, torch.Tensor)
     assert msll.shape == torch.Size([])
+
+    # can't compuate per-output MSLL for non-Independent distributions
+    with pytest.raises(ValueError, match="Per-output MLL not available"):
+        msll = MSLL(
+            y_pred,
+            y_true,
+            metric_params=MetricParams(y_train=y_train, reduction="none"),
+        )
+
+    y_pred = Independent(Normal(loc=y_true, scale=torch.ones_like(y_true)), 1)
+    msll = MSLL(
+        y_pred,
+        y_true,
+        metric_params=MetricParams(y_train=y_train, reduction="none"),
+    )
+    assert isinstance(msll, torch.Tensor)
+    assert msll.shape == torch.Size([3])
 
 
 def test_msll_raises_for_non_distribution():

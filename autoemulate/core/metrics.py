@@ -11,6 +11,7 @@ from typing import Literal
 import torch
 import torchmetrics
 from einops import rearrange
+from torch.distributions import Independent
 from torchmetrics.regression.crps import ContinuousRankedProbabilityScore
 
 from autoemulate.core.types import (
@@ -351,12 +352,32 @@ class MSLLMetric(ProbabilisticMetric):
         # Ensure 2D y_true for consistent handling
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
-        # Compute mean negative log likelihood
-        mean_log_loss = -y_pred.log_prob(y_true).mean()
+        # Compute mean negative log likelihood (also by output dimension if have
+        # Independent distribution)
+        if isinstance(y_pred, Independent):
+            model_nll_output = -y_pred.base_dist.log_prob(y_true).mean(dim=0)
+            model_nll_total = model_nll_output.mean()
+        else:
+            model_nll_output = None
+            model_nll_total = -y_pred.log_prob(y_true).mean()
 
         # If no training data, return mean log loss
         if metric_params.y_train is None:
-            return mean_log_loss
+            if metric_params.reduction == "mean":
+                return model_nll_total
+            if metric_params.reduction == "none":
+                if model_nll_output is None:
+                    msg = (
+                        "Per-output MLL not available for non-Independent "
+                        "distributions."
+                    )
+                    raise ValueError(msg)
+                return model_nll_output
+            msg = (
+                f"Unknown reduction method: {metric_params.reduction}. "
+                "Expected 'mean' or 'none'."
+            )
+            raise ValueError(msg)
 
         # Ensure 2D y_train for consistent handling
         y_train_mean = metric_params.y_train.mean(dim=0, keepdim=True).view(1, -1)
@@ -369,16 +390,24 @@ class MSLLMetric(ProbabilisticMetric):
         y_train_var = torch.clamp(y_train_var, min=1e-6)
 
         # Compute mean negative log likelihood under trivial Gaussian model
-        mean_trivial_log_loss = (
-            0.5
-            * (
-                torch.log(2 * torch.pi * y_train_var)
-                + torch.square(y_true - y_train_mean) / (2 * y_train_var)
-            ).mean()
-        )
+        trivial_nll_output = 0.5 * (
+            torch.log(2 * torch.pi * y_train_var)
+            + torch.square(y_true - y_train_mean) / (2 * y_train_var)
+        ).mean(dim=0)
 
         # Return mean standardized log loss
-        return mean_log_loss - mean_trivial_log_loss
+        if metric_params.reduction == "mean":
+            return model_nll_total - trivial_nll_output.mean()
+        if metric_params.reduction == "none":
+            if model_nll_output is None:
+                msg = "Per-output MLL not available for non-Independent distributions."
+                raise ValueError(msg)
+            return model_nll_output - trivial_nll_output
+        msg = (
+            f"Unknown reduction method: {metric_params.reduction}. "
+            "Expected 'mean' or 'none'."
+        )
+        raise ValueError(msg)
 
 
 R2 = TorchMetrics(
