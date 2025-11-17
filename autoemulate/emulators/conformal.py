@@ -115,7 +115,9 @@ class Conformal(Emulator):
         method: Literal["constant", "quantile"] = "constant",
         to_distribution: Callable[
             [TensorLike | None, tuple[TensorLike, TensorLike]], DistributionLike
-        ] = lambda _mean, bounds: torch.distributions.Uniform(bounds[0], bounds[1]),
+        ] = lambda _mean, bounds: torch.distributions.Uniform(
+            torch.min(bounds[0], bounds[1]), torch.max(bounds[0], bounds[1])
+        ),
         quantile_emulator_kwargs: dict | None = None,
     ):
         """Initialize a conformal emulator.
