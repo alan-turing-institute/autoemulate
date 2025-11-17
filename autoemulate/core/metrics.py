@@ -351,8 +351,8 @@ class MSLLMetric(ProbabilisticMetric):
         # Ensure 2D y_true for consistent handling
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
-        # Compute mean log loss
-        mean_log_loss = y_pred.log_prob(y_true).mean()
+        # Compute mean negative log likelihood
+        mean_log_loss = -y_pred.log_prob(y_true).mean()
 
         # If no training data, return mean log loss
         if metric_params.y_train is None:
@@ -368,7 +368,7 @@ class MSLLMetric(ProbabilisticMetric):
         # Avoid numerical issues
         y_train_var = torch.clamp(y_train_var, min=1e-6)
 
-        # Compute mean log prob under trivial Gaussian model
+        # Compute mean negative log likelihood under trivial Gaussian model
         mean_trivial_log_loss = (
             0.5
             * (
