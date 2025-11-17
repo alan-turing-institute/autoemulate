@@ -325,7 +325,7 @@ class MSLLMetric(ProbabilisticMetric):
         y_true: TensorLike
             True target values.
         metric_params: MetricParams
-            Metric parameters including: y_train.
+            Metric parameters including: y_train and reduction.
 
         Returns
         -------
@@ -352,24 +352,18 @@ class MSLLMetric(ProbabilisticMetric):
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
         # Compute mean log loss
-        mean_log_loss = y_pred.log_prob(y_true).mean(dim=0)
+        mean_log_loss = y_pred.log_prob(y_true).mean()
 
         # If no training data, return mean log loss
         if metric_params.y_train is None:
             return mean_log_loss
 
         # Ensure 2D y_train for consistent handling
-        y_train = (
-            metric_params.y_train.unsqueeze(-1)
-            if metric_params.y_train.ndim == 1
-            else metric_params.y_train
-        )
-
-        y_train_mean = y_train.mean()
+        y_train_mean = metric_params.y_train.mean(dim=0, keepdim=True).view(1, -1)
 
         # following GPyTorch implementation, use global variance rather than per task
         # https://github.com/cornellius-gp/gpytorch/blob/c0fb6c64311fdbef2862fd3ba2bd613fbd081e79/gpytorch/metrics/metrics.py#L60
-        y_train_var = y_train.var()
+        y_train_var = metric_params.y_train.var()
 
         # Avoid numerical issues
         y_train_var = torch.clamp(y_train_var, min=1e-6)

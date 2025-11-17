@@ -557,14 +557,9 @@ def test_msll_with_1d_inputs():
     )
 
     msll = MSLL(
-        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="none")
-    )
-
-    assert isinstance(msll, torch.Tensor)
-    assert msll.shape == torch.Size([1])
-
-    msll = MSLL(
-        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="mean")
+        y_pred,
+        y_true,
+        metric_params=MetricParams(y_train=y_train),
     )
 
     assert isinstance(msll, torch.Tensor)
@@ -579,14 +574,9 @@ def test_msll_with_2d_inputs():
     y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true))
 
     msll = MSLL(
-        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="none")
-    )
-
-    assert isinstance(msll, torch.Tensor)
-    assert msll.shape == torch.Size([n_outputs])
-
-    msll = MSLL(
-        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="mean")
+        y_pred,
+        y_true,
+        metric_params=MetricParams(y_train=y_train),
     )
 
     assert isinstance(msll, torch.Tensor)
@@ -607,7 +597,7 @@ def test_msll_raises_for_non_distribution():
 def test_msll_perfect_prediction_with_training_data():
     """Test MSLL when predictions perfectly match true values."""
     y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
-    y_train = torch.tensor([0.5, 1.5, 2.5]).view(-1, 1)
+    y_train = torch.tensor([0.5, 1.5, 2.5])
 
     # Perfect prediction: distribution centered at true values with small variance
     y_pred = Normal(loc=y_true, scale=torch.ones_like(y_true) * 0.01)
@@ -621,7 +611,7 @@ def test_msll_perfect_prediction_with_training_data():
 def test_msll_poor_prediction_with_training_data():
     """Test MSLL when predictions are far from true values."""
     y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
-    y_train = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)
+    y_train = torch.tensor([1.0, 2.0, 3.0])
 
     # Poor prediction: distribution centered far from true values
     y_pred = Normal(
