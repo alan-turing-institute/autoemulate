@@ -6,11 +6,8 @@ from sklearn.model_selection import BaseCrossValidator
 from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
 
-from autoemulate.core.device import (
-    get_torch_device,
-    move_tensors_to_device,
-)
-from autoemulate.core.metrics import R2, Metric, get_metrics
+from autoemulate.core.device import get_torch_device, move_tensors_to_device
+from autoemulate.core.metrics import R2, Metric, MetricParams, get_metrics
 from autoemulate.core.types import (
     DeviceLike,
     ModelParams,
@@ -29,7 +26,7 @@ def evaluate(
     y_pred: OutputLike,
     y_true: TensorLike,
     metric: Metric = R2,
-    n_samples: int = 1000,
+    metric_params: MetricParams | None = None,
 ) -> float:
     """
     Evaluate Emulator prediction performance using a `torchmetrics.Metric`.
@@ -42,15 +39,15 @@ def evaluate(
         Ground truth target values.
     metric: Metric
         Metric to use for evaluation. Defaults to R2.
-    n_samples: int
-        Number of samples to generate to predict mean when y_pred does not have a mean
-        directly available. Defaults to 1000.
+    metric_params: MetricParams | None
+        Additional parameters to pass to the metric. Defaults to None.
 
     Returns
     -------
     float
     """
-    return metric(y_pred, y_true, n_samples=n_samples).item()
+    val = metric(y_pred, y_true, metric_params=metric_params)
+    return val.item()
 
 
 def cross_validate(
@@ -156,9 +153,9 @@ def bootstrap(
     x: TensorLike,
     y: TensorLike,
     n_bootstraps: int | None = 100,
-    n_samples: int = 1000,
     device: str | torch.device = "cpu",
     metrics: list[Metric] | None = None,
+    metric_params: MetricParams | None = None,
 ) -> dict[Metric, tuple[float, float]]:
     """
     Get bootstrap estimates of metrics.
@@ -182,6 +179,8 @@ def bootstrap(
         The device to use for computations. Default is "cpu".
     metrics: list[MetricConfig] | None
         List of metrics to compute. If None, uses r2 and rmse.
+    metric_params: MetricParams | None
+        Additional parameters to pass to the metrics. Defaults to None.
 
     Returns
     -------
@@ -199,8 +198,14 @@ def bootstrap(
     if n_bootstraps is None:
         y_pred = model.predict(x)
         results = {}
+
         for metric in metrics:
-            score = evaluate(y_pred, y, metric=metric, n_samples=n_samples)
+            score = evaluate(
+                y_pred,
+                y,
+                metric=metric,
+                metric_params=metric_params,
+            )
             results[metric] = (score, float("nan"))
         return results
 
@@ -223,7 +228,10 @@ def bootstrap(
         # Compute metrics for this bootstrap sample
         for metric in metrics:
             metric_scores[metric.name][i] = evaluate(
-                y_pred, y_bootstrap, metric=metric, n_samples=n_samples
+                y_pred,
+                y_bootstrap,
+                metric=metric,
+                metric_params=metric_params,
             )
 
     # Return mean and std for each metric
