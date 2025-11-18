@@ -274,6 +274,15 @@
       "contributions": [
         "ideas"
       ]
+    },
+    {
+      "login": "era-23",
+      "name": "Ethan Attwood",
+      "avatar_url": "https://avatars.githubusercontent.com/u/115151590?v=4",
+      "profile": "https://github.com/era-23",
+      "contributions": [
+        "bug"
+      ]
     }
   ]
 }
