@@ -380,8 +380,8 @@ class MSLLMetric(ProbabilisticMetric):
             )
             raise ValueError(msg)
 
-        # Ensure 2D y_train for consistent handling
-        y_train_mean = metric_params.y_train.mean(dim=0, keepdim=True).view(1, -1)
+        # Keep original shape for y_train_mean to match y_true shape
+        y_train_mean = metric_params.y_train.mean(dim=0, keepdim=True)
 
         # following GPyTorch implementation, use global variance rather than per task
         # https://github.com/cornellius-gp/gpytorch/blob/c0fb6c64311fdbef2862fd3ba2bd613fbd081e79/gpytorch/metrics/metrics.py#L60
