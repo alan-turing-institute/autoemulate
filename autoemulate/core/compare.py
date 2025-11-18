@@ -422,6 +422,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     n_splits=self.n_splits,
                                     shuffle=self.shuffle,
                                     transformed_emulator_params=self.transformed_emulator_params,
+                                    metric_params=MetricParams(
+                                        n_samples=self.n_samples
+                                    ),
                                 )
                                 mean_scores = [
                                     np.mean(score).item() for score in scores

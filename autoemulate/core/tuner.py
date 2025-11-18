@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.metrics import Metric, get_metric
+from autoemulate.core.metrics import Metric, MetricParams, get_metric
 from autoemulate.core.model_selection import cross_validate
 from autoemulate.core.types import (
     DeviceLike,
@@ -74,6 +74,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_splits: int = 5,
         seed: int | None = None,
         shuffle: bool = True,
+        metric_params: MetricParams | None = None,
     ) -> tuple[list[list[float]], list[ModelParams]]:
         """
         Run randomised hyperparameter search for a given model.
@@ -97,6 +98,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         shuffle: bool
             Whether to shuffle data before splitting into cross validation folds.
             Defaults to True.
+        metric_params: MetricParams | None
+            Additional parameters to pass to the metrics. Defaults to None.
 
         Returns
         -------
@@ -130,6 +133,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
                     device=self.device,
                     random_seed=None,
                     metrics=[self.tuning_metric],
+                    metric_params=metric_params,
                 )
 
                 # Reset retries following a successful cross_validation call
