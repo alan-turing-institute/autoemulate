@@ -167,9 +167,12 @@ def test_gp_corr_deterministic_with_seed(sample_data_y1d, new_data_y1d, device):
     x2, _ = new_data_y1d
     seed = 42
     new_seed = 43
-    model1 = GaussianProcessCorrelated(x, y, device=device, seed=seed)
-    model2 = GaussianProcessCorrelated(x, y, device=device, seed=new_seed)
-    model3 = GaussianProcessCorrelated(x, y, device=device, seed=seed)
+    set_random_seed(seed)
+    model1 = GaussianProcessCorrelated(x, y, device=device)
+    set_random_seed(new_seed)
+    model2 = GaussianProcessCorrelated(x, y, device=device)
+    set_random_seed(seed)
+    model3 = GaussianProcessCorrelated(x, y, device=device)
     model1.fit(x, y)
     pred1 = model1.predict(x2)
     model2.fit(x, y)
