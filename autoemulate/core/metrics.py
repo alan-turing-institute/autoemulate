@@ -373,7 +373,7 @@ class MSLLMetric(ProbabilisticMetric):
                         "distributions."
                     )
                     raise ValueError(msg)
-                return model_nll_output
+                return model_nll_output.reshape(*y_true.shape)
             msg = (
                 f"Unknown reduction method: {metric_params.reduction}. "
                 "Expected 'mean' or 'none'."
