@@ -373,7 +373,7 @@ class MSLLMetric(ProbabilisticMetric):
                         "distributions."
                     )
                     raise ValueError(msg)
-                return model_nll_output.reshape(*y_true.shape)
+                return model_nll_output.reshape(*y_true.shape[1:])
             msg = (
                 f"Unknown reduction method: {metric_params.reduction}. "
                 "Expected 'mean' or 'none'."
@@ -403,7 +403,7 @@ class MSLLMetric(ProbabilisticMetric):
             if model_nll_output is None:
                 msg = "Per-output MLL not available for non-Independent distributions."
                 raise ValueError(msg)
-            return (model_nll_output - trivial_nll_output).reshape(*y_true.shape)
+            return (model_nll_output - trivial_nll_output).reshape(*y_true.shape[1:])
         msg = (
             f"Unknown reduction method: {metric_params.reduction}. "
             "Expected 'mean' or 'none'."
