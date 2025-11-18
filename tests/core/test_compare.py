@@ -5,7 +5,7 @@ import pytest
 import torch
 from autoemulate.core.compare import AutoEmulate
 from autoemulate.core.device import SUPPORTED_DEVICES, check_torch_device_is_available
-from autoemulate.core.metrics import Metric, get_metric
+from autoemulate.core.metrics import Metric, MetricParams, get_metric
 from autoemulate.core.types import OutputLike, TensorLike
 from autoemulate.emulators import DEFAULT_EMULATORS
 from autoemulate.emulators.base import Emulator
@@ -157,6 +157,7 @@ def test_ae_with_different_tuning_metrics(sample_data_for_ae_compare, tuning_met
         ["rmse"],
         ["mse"],
         ["mae"],
+        ["crps"],
         ["r2", "rmse"],
         ["r2", "mse", "mae"],
         ["rmse", "mae"],
@@ -168,6 +169,42 @@ def test_ae_with_different_evaluation_metrics(
     """Test AutoEmulate with different evaluation metrics."""
     x, y = sample_data_for_ae_compare
     models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    ae = AutoEmulate(
+        x,
+        y,
+        models=models,
+        evaluation_metrics=evaluation_metrics,
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert len(ae.results) > 0
+    # Verify that evaluation metrics were set correctly
+    assert len(ae.evaluation_metrics) == len(evaluation_metrics)
+    metric_names = [m.name for m in ae.evaluation_metrics]
+    assert metric_names == evaluation_metrics
+
+    # Verify that all specified metrics are in test_metrics for each result
+    for result in ae.results:
+        assert result.test_metrics is not None
+        metric_names = [m.name for m in result.test_metrics]
+        for metric_name in evaluation_metrics:
+            assert metric_name in metric_names
+            # Verify the metric value is a tuple of (mean, std)
+            assert isinstance(result.test_metrics[get_metric(metric_name)], tuple)
+            assert len(result.test_metrics[get_metric(metric_name)]) == 2
+
+
+@pytest.mark.parametrize(
+    "evaluation_metrics",
+    [["msll"], ["crps"], ["crps", "msll"]],
+)
+def test_uncertainty_aware_metrics(sample_data_for_ae_compare, evaluation_metrics):
+    """Test AutoEmulate with uncertainty-aware metrics and probablistics emulators."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["GaussianProcessRBF", "EnsembleMLP"]
 
     ae = AutoEmulate(
         x,
@@ -311,9 +348,10 @@ def test_ae_with_custom_evaluation_metrics(sample_data_for_ae_compare):
             self,
             y_pred: OutputLike,
             y_true: TensorLike,
-            n_samples: int = 1000,  # noqa: ARG002
+            metric_params: MetricParams | None = None,  # noqa: ARG002
         ) -> TensorLike:
             """Calculate mean squared error."""
+
             assert isinstance(y_pred, TensorLike)
             return (y_pred - y_true).pow(2).mean()
 
@@ -385,7 +423,7 @@ def test_ae_with_custom_tuning_metric(sample_data_for_ae_compare):
             self,
             y_pred: OutputLike,
             y_true: TensorLike,
-            n_samples: int = 1000,  # noqa: ARG002
+            metric_params: MetricParams | None = None,  # noqa: ARG002
         ) -> TensorLike:
             """Calculate R-squared score."""
             assert isinstance(y_pred, TensorLike)

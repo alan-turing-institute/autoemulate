@@ -18,7 +18,6 @@ from autoemulate.core.types import (
     GaussianProcessLike,
     TensorLike,
 )
-from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import GaussianProcessEmulator
 from autoemulate.emulators.gaussian_process import CovarModuleFn, MeanModuleFn
 from autoemulate.transforms.standardize import StandardizeTransform
@@ -363,7 +362,6 @@ class GaussianProcessCorrelated(GaussianProcess):
         epochs: int = 50,
         lr: float = 2e-1,
         early_stopping: EarlyStopping | None = None,
-        seed: int | None = None,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
@@ -403,8 +401,6 @@ class GaussianProcessCorrelated(GaussianProcess):
             Learning rate for the optimizer. Defaults to 2e-1.
         early_stopping: EarlyStopping | None
             An optional EarlyStopping callback. Defaults to None.
-        seed: int | None
-            Random seed for reproducibility. If None, no seed is set. Defaults to None.
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device (usually CPU or
             GPU). Defaults to None.
@@ -415,9 +411,6 @@ class GaussianProcessCorrelated(GaussianProcess):
         """
         # Init device
         TorchDeviceMixin.__init__(self, device=device)
-
-        if seed is not None:
-            set_random_seed(seed)
 
         # Convert to 2D tensors if needed and move to device
         x, y = self._move_tensors_to_device(*self._convert_to_tensors(x, y))
@@ -575,18 +568,18 @@ def create_gp_subclass(
             super().__init__(
                 x,
                 y,
-                standardize_x,
-                standardize_y,
-                likelihood_cls,
-                mean_module_fn,
-                covar_module_fn,
-                fixed_mean_params,
-                fixed_covar_params,
-                posterior_predictive,
-                epochs,
-                lr,
-                early_stopping,
-                device,
+                standardize_x=standardize_x,
+                standardize_y=standardize_y,
+                likelihood_cls=likelihood_cls,
+                mean_module_fn=mean_module_fn,
+                covar_module_fn=covar_module_fn,
+                fixed_mean_params=fixed_mean_params,
+                fixed_covar_params=fixed_covar_params,
+                posterior_predictive=posterior_predictive,
+                epochs=epochs,
+                lr=lr,
+                early_stopping=early_stopping,
+                device=device,
                 **scheduler_params,
             )
 
