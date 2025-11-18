@@ -6,12 +6,14 @@ from autoemulate.core.types import TensorLike
 from autoemulate.emulators import GAUSSIAN_PROCESS_EMULATORS, PYTORCH_EMULATORS
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.emulators.transformed.base import TransformedEmulator
+from autoemulate.transforms.discrete_fourier import DiscreteFourierTransform
 from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.vae import VAETransform
 
 X_TRANSFORMS = [[StandardizeTransform()]]
 Y_TRANSFORMS = [
+    [StandardizeTransform(), DiscreteFourierTransform(n_components=1)],
     [StandardizeTransform(), PCATransform(n_components=1)],
     [StandardizeTransform(), VAETransform(latent_dim=1)],
 ]
