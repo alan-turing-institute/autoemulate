@@ -35,6 +35,7 @@ class MetricParams:
     y_train: TensorLike | None
         Training target values. In MSLL used to parameterize the trivial model for
         standardization. If None, mean log loss is computed without standardization.
+        Defaults to None.
     reduction: Literal["mean", "none"]
         Reduction method to apply to the final metric scores computer per task.
         Options are 'mean' or 'none'. Defaults to 'mean'.
