@@ -235,7 +235,6 @@ def bootstrap(
             )
 
     # Return mean and std for each metric
-
     return {
         metric: (
             metric_scores[metric.name].mean().item(),
