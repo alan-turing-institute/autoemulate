@@ -354,7 +354,7 @@ class MSLLMetric(ProbabilisticMetric):
         y_true = y_true.unsqueeze(-1) if y_true.ndim == 1 else y_true
 
         # Compute mean negative log likelihood (also by output dimension if have
-        # Independent distribution)
+        # Independent distribution to support 'none' reduction)
         if isinstance(y_pred, Independent):
             model_nll_output = -y_pred.base_dist.log_prob(y_true).mean(dim=0)
             model_nll_total = model_nll_output.mean()
