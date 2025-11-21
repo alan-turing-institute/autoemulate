@@ -181,7 +181,9 @@ def plot_xy(
     # Place R² just below the legend
     if legend:
         # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
+        bbox = legend.get_window_extent(
+            ax.figure.canvas.get_renderer()
+        )  # pyright: ignore[reportAttributeAccessIssue]
         inv = ax.transAxes.inverted()
         bbox_axes = bbox.transformed(inv)
         # Place the text just below the legend
@@ -599,5 +601,61 @@ def plot_calibration_from_distributions(
     ax.grid(alpha=0.3)
     if legend:
         ax.legend()
+
+    return fig, ax
+
+
+def plot_loss(
+    model: Emulator, title: str | None = None, figsize: tuple[int, int] | None = None
+):
+    """
+    Plot the training loss curve for an emulator.
+
+    This visualizes the evolution of the training loss across epochs using
+    the `loss_history` attribute of the provided emulator.
+
+    The emulator must expose a ``loss_history`` attribute containing a list
+    or array of loss values, one per epoch. If the attribute is missing,
+    an ``AttributeError`` is raised.
+
+    Parameters
+    ----------
+    model : Emulator
+        A fitted emulator instance containing a ``loss_history`` attribute
+        that stores the training loss at each epoch.
+    title : str, optional
+        An optional title for the plot. If None, no title is applied.
+    figsize : tuple of int, optional
+        Size of the figure to create (width, height). If None, a default
+        size of ``(6, 6)`` is used.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The generated matplotlib Figure object.
+    ax : matplotlib.axes.Axes
+        The Axes object on which the training loss curve is plotted.
+
+    Raises
+    ------
+    AttributeError
+        If the emulator does not have a ``loss_history`` attribute.
+    """
+
+    try:
+        history = model.loss_history
+    except:
+        raise AttributeError("Emulator does not have a Loss history")
+
+    if figsize is None:
+        figsize = (6, 6)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot(range(1, len(history) + 1), history)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Train Loss")
+
+    if title:
+        ax.set_title(title)
 
     return fig, ax
