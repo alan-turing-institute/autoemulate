@@ -611,18 +611,17 @@ def plot_loss(
     """
     Plot the training loss curve for an emulator.
 
-    This visualizes the evolution of the training loss across epochs using
+    This visualizes the training loss across epochs using
     the `loss_history` attribute of the provided emulator.
 
     The emulator must expose a ``loss_history`` attribute containing a list
-    or array of loss values, one per epoch. If the attribute is missing,
+    or array of loss values. If the attribute is missing,
     an ``AttributeError`` is raised.
 
     Parameters
     ----------
     model : Emulator
-        A fitted emulator instance containing a ``loss_history`` attribute
-        that stores the training loss at each epoch.
+        A fitted emulator instance containing a ``loss_history`` attribute.
     title : str, optional
         An optional title for the plot. If None, no title is applied.
     figsize : tuple of int, optional
