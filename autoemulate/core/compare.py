@@ -55,6 +55,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self,
         x: InputLike,
         y: InputLike,
+        test_data: tuple[InputLike, InputLike] | None = None,
         models: list[type[Emulator] | str] | None = None,
         x_transforms_list: list[list[Transform | dict]] | None = None,
         y_transforms_list: list[list[Transform | dict]] | None = None,
@@ -81,6 +82,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Input features.
         y: InputLike or None
             Target values (not needed if x is a Dataset).
+        test_data: tuple[InputLike, InputLike] | None
+            Optional test data as a tuple (x_test, y_test). If None, a random split
+            from the provided data is used. Defaults to None.
         models: list[type[Emulator]] | None
             List of emulator classes to compare. If None, all available emulators
             are used.
@@ -164,7 +168,17 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.models = updated_models
         if random_seed is not None:
             set_random_seed(seed=random_seed)
-        self.train_val, self.test = self._random_split(self._convert_to_dataset(x, y))
+
+        if test_data is None:
+            self.train_val, self.test = self._random_split(
+                self._convert_to_dataset(x, y)
+            )
+        else:
+            self.train_val = self._convert_to_dataset(x, y)
+            test_x, test_y = self._move_tensors_to_device(
+                *self._convert_to_tensors(*test_data)
+            )
+            self.test = self._convert_to_dataset(test_x, test_y)
 
         # Run the compare method with the provided models
         if not self.models:

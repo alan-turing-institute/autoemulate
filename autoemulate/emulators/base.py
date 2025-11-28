@@ -1,6 +1,5 @@
 import random
 from abc import ABC, abstractmethod
-from typing import ClassVar
 
 import numpy as np
 import torch
@@ -545,7 +544,6 @@ class PyTorchBackend(nn.Module, Emulator):
     batch_size: int = 16
     shuffle: bool = True
     epochs: int = 10
-    loss_history: ClassVar[list[float]] = []
     verbose: bool = False
     loss_fn: nn.Module = nn.MSELoss()
     optimizer_cls: type[optim.Optimizer] = optim.Adam
@@ -570,6 +568,8 @@ class PyTorchBackend(nn.Module, Emulator):
         y: OutputLike or None
             Target values (not needed if x is a DataLoader).
         """
+        self.loss_history: list[float] = []
+
         self.train()  # Set model to training mode
 
         # Convert input to DataLoader if not already

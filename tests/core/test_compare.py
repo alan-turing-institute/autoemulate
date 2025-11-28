@@ -10,6 +10,7 @@ from autoemulate.core.types import OutputLike, TensorLike
 from autoemulate.emulators import DEFAULT_EMULATORS
 from autoemulate.emulators.base import Emulator
 from torch.distributions import Transform
+from torch.utils.data import TensorDataset
 
 
 @pytest.mark.parametrize("device", SUPPORTED_DEVICES)
@@ -462,3 +463,29 @@ def test_ae_with_custom_tuning_metric(sample_data_for_ae_compare):
         metric_names = [m.name for m in result.test_metrics]
         assert "custom_r2" in metric_names
         assert "rmse" in metric_names
+
+
+def test_ae_with_fixed_test_data(sample_data_for_ae_compare):
+    """Test AutoEmulate with a fixed test dataset."""
+    x, y = sample_data_for_ae_compare
+    models: list[str | type[Emulator]] = ["mlp", "RandomForest"]
+
+    # Create fixed test set
+    test_size = 25
+    x_test, y_test = x[:test_size], y[:test_size]
+    x_train, y_train = x[test_size:], y[test_size:]
+
+    ae = AutoEmulate(
+        x_train,
+        y_train,
+        models=models,
+        test_data=(x_test, y_test),
+        n_iter=2,
+        n_splits=2,
+        model_params={},  # Skip tuning for speed
+    )
+
+    assert isinstance(ae.test, TensorDataset)
+    assert ae.test.tensors == (x_test, y_test)
+    assert isinstance(ae.train_val, TensorDataset)
+    assert ae.train_val.tensors == (x_train, y_train)
