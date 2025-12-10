@@ -72,6 +72,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ritkaarsingh30"><img src="https://avatars.githubusercontent.com/u/85431642?v=4?s=100" width="100px;" alt="Ritkaar Singh"/><br /><sub><b>Ritkaar Singh</b></sub></a><br /><a href="#doc-ritkaarsingh30" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/vchhabra-turing"><img src="https://avatars.githubusercontent.com/u/140401853?v=4?s=100" width="100px;" alt="vchhabra-turing"/><br /><sub><b>vchhabra-turing</b></sub></a><br /><a href="#ideas-vchhabra-turing" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/era-23"><img src="https://avatars.githubusercontent.com/u/115151590?v=4?s=100" width="100px;" alt="Ethan Attwood"/><br /><sub><b>Ethan Attwood</b></sub></a><br /><a href="#bug-era-23" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/TheCSGuy25"><img src="https://avatars.githubusercontent.com/u/87066683?v=4?s=100" width="100px;" alt="__aar0n__.py"/><br /><sub><b>__aar0n__.py</b></sub></a><br /><a href="#code-TheCSGuy25" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
