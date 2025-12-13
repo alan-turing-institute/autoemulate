@@ -8,7 +8,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
-from autoemulate.emulators.base import Emulator
+from autoemulate.emulators.base import Emulator, PyTorchBackend
 
 
 def display_figure(fig: Figure):
@@ -606,49 +606,50 @@ def plot_calibration_from_distributions(
 
 
 def plot_loss(
-    model: Emulator, title: str | None = None, figsize: tuple[int, int] | None = None
+    model: PyTorchBackend, title: str | None = None, figsize: tuple[int, int] | None = None
 ):
     """
-    Plot the training loss curve for an emulator.
+    Plot the training loss curve for a model using the PyTorch backend.
 
-    This visualizes the training loss across epochs using
-    the `loss_history` attribute of the provided emulator.
-
-    The emulator must expose a ``loss_history`` attribute containing a list
-    or array of loss values. If the attribute is missing,
-    an ``AttributeError`` is raised.
+    This function visualizes the per-epoch training loss stored in the
+    model's ``loss_history`` attribute. The model must also expose an
+    ``epochs`` attribute; if either attribute is missing, an
+    ``AttributeError`` is raised.
 
     Parameters
     ----------
-    model : Emulator
-        A fitted emulator instance containing a ``loss_history`` attribute.
+    model : PyTorchBackend
+        A model instance using the PyTorch backend, required to provide
+        ``loss_history`` and ``epochs`` attributes.
     title : str, optional
-        An optional title for the plot. If None, no title is applied.
+        Title for the plot. If ``None``, no title is added.
     figsize : tuple of int, optional
-        Size of the figure to create (width, height). If None, a default
-        size of ``(6, 6)`` is used.
+        Size of the figure as ``(width, height)`` in inches. Defaults to
+        ``(6, 6)`` if not provided.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The generated matplotlib Figure object.
+        The created matplotlib Figure object.
     ax : matplotlib.axes.Axes
-        The Axes object on which the training loss curve is plotted.
+        The Axes on which the loss curve is plotted.
 
     Raises
     ------
     AttributeError
-        If the emulator does not have a ``loss_history`` attribute.
+        If the model does not provide ``loss_history`` or ``epochs`` attributes.
     """
 
-    try:
-        history = model.loss_history
-    except:
-        raise AttributeError("Emulator does not have a Loss history")
-
+    if not hasattr(model, "loss_history"):
+        msg = "Emulator does not have a Loss history"
+        raise AttributeError(msg)
+    
+    history = model.loss_history
+    
     if figsize is None:
         figsize = (6, 6)
 
+    
     fig, ax = plt.subplots(figsize=figsize)
     ax.plot(range(1, len(history) + 1), history)
     ax.set_xlabel("Epochs")
