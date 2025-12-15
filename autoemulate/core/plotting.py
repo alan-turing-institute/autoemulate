@@ -181,9 +181,7 @@ def plot_xy(
     # Place R² just below the legend
     if legend:
         # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(
-            ax.figure.canvas.get_renderer()
-        )  # pyright: ignore[reportAttributeAccessIssue]
+        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
         inv = ax.transAxes.inverted()
         bbox_axes = bbox.transformed(inv)
         # Place the text just below the legend
@@ -606,20 +604,21 @@ def plot_calibration_from_distributions(
 
 
 def plot_loss(
-    model: PyTorchBackend, title: str | None = None, figsize: tuple[int, int] | None = None
+    model: PyTorchBackend,
+    title: str | None = None,
+    figsize: tuple[int, int] | None = None,
 ):
     """
-    Plot the training loss curve for a model using the PyTorch backend.
+    Plot the per-epoch training loss for a model using the PyTorch backend.
 
-    This function visualizes the per-epoch training loss stored in the
-    model's ``loss_history`` attribute. The model must also expose an
-    ``epochs`` attribute; if either attribute is missing, an
-    ``AttributeError`` is raised.
+    This function visualizes the training loss curve stored in the model's
+    ``loss_history`` attribute. The model must also provide an ``epochs``
+    attribute. If either attribute is missing, an ``AttributeError`` is raised.
 
     Parameters
     ----------
     model : PyTorchBackend
-        A model instance using the PyTorch backend, required to provide
+        A model instance using the PyTorch backend. It must provide both
         ``loss_history`` and ``epochs`` attributes.
     title : str, optional
         Title for the plot. If ``None``, no title is added.
@@ -637,19 +636,17 @@ def plot_loss(
     Raises
     ------
     AttributeError
-        If the model does not provide ``loss_history`` or ``epochs`` attributes.
+        If the model does not provide ``loss_history`` or ``epochs``.
     """
-
     if not hasattr(model, "loss_history"):
         msg = "Emulator does not have a Loss history"
         raise AttributeError(msg)
-    
+
     history = model.loss_history
-    
+
     if figsize is None:
         figsize = (6, 6)
 
-    
     fig, ax = plt.subplots(figsize=figsize)
     ax.plot(range(1, len(history) + 1), history)
     ax.set_xlabel("Epochs")
