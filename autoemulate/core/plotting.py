@@ -8,7 +8,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
-from autoemulate.emulators.base import Emulator
+from autoemulate.emulators.base import Emulator, PyTorchBackend
 
 
 def display_figure(fig: Figure):
@@ -599,5 +599,60 @@ def plot_calibration_from_distributions(
     ax.grid(alpha=0.3)
     if legend:
         ax.legend()
+
+    return fig, ax
+
+
+def plot_loss(
+    model: PyTorchBackend,
+    title: str | None = None,
+    figsize: tuple[int, int] | None = None,
+):
+    """
+    Plot the per-epoch training loss for a model using the PyTorch backend.
+
+    This function visualizes the training loss curve stored in the model's
+    ``loss_history`` attribute. The model must also provide an ``epochs``
+    attribute. If either attribute is missing, an ``AttributeError`` is raised.
+
+    Parameters
+    ----------
+    model : PyTorchBackend
+        A model instance using the PyTorch backend. It must provide both
+        ``loss_history`` and ``epochs`` attributes.
+    title : str, optional
+        Title for the plot. If ``None``, no title is added.
+    figsize : tuple of int, optional
+        Size of the figure as ``(width, height)`` in inches. Defaults to
+        ``(6, 6)`` if not provided.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The created matplotlib Figure object.
+    ax : matplotlib.axes.Axes
+        The Axes on which the loss curve is plotted.
+
+    Raises
+    ------
+    AttributeError
+        If the model does not provide ``loss_history`` or ``epochs``.
+    """
+    if not hasattr(model, "loss_history"):
+        msg = "Emulator does not have a Loss history"
+        raise AttributeError(msg)
+
+    history = model.loss_history
+
+    if figsize is None:
+        figsize = (6, 6)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot(range(1, len(history) + 1), history)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Train Loss")
+
+    if title:
+        ax.set_title(title)
 
     return fig, ax
