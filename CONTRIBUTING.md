@@ -67,6 +67,24 @@ It would be great if you could also [update the documentation](https://alan-turi
 
 While making your changes, commit often and write good, detailed commit messages. [This blog](https://chris.beams.io/posts/git-commit/) explains how to write a good Git commit message and why it matters.
 
+#### Run pre-commit locally
+
+We run [`pre-commit`](https://pre-commit.com/) in CI for every pull request, so please run it before you push to GitHub. This keeps formatting, linting, and metadata changes consistent and helps you catch failures earlier.
+
+1. Install the hook runner once (pick the option that matches how you manage dependencies):
+   * `pip install pre-commit`
+   * or `uv tool install pre-commit`
+2. Register the hooks in your clone so they run automatically on every `git commit`:
+   ```
+   pre-commit install
+   ```
+3. When you want to check the entire tree (recommended right before you open a PR), run:
+   ```
+   pre-commit run --all-files
+   ```
+
+If a hook makes changes, simply re-stage the affected files and run the command again until you get a `Passed` message. For hooks that fail with an error, follow the hint printed in the terminal (for example, formatting with Black or fixing lint) and then re-run `pre-commit run --all-files`.
+
 ### 4. Open a Pull Request
 
 We encourage you to open a pull request as early in your contributing process as possible. This allows everyone to see what is currently being worked on. It also provides you, the contributor, feedback in real-time. GitHub has a [nice introduction](https://guides.github.com/introduction/flow) to the pull request workflow.
