@@ -61,7 +61,7 @@ def simulate_seir_epidemic(
         vectorized=False,
     )
 
-    _, E, I, R = sol.y  # noqa: E741 
+    _, E, I, R = sol.y  # noqa: E741
     I_max = np.max(I)
 
     return float(I_max) / float(N)
