@@ -68,9 +68,7 @@ def simulate_seir_epidemic(
 
 
 class SEIRSimulator(Simulator):
-    """
-    Simulator of infectious disease spread using the SEIR model.
-    """
+    """Simulator of infectious disease spread using the SEIR model."""
 
     def __init__(
         self,
