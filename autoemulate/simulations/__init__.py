@@ -1,7 +1,7 @@
 from .epidemic import Epidemic
-from .seir import SEIRSimulator
 from .flow_problem import FlowProblem
 from .projectile import Projectile, ProjectileMultioutput
+from .seir import SEIRSimulator
 
 ALL_SIMULATORS = [
     Epidemic,
