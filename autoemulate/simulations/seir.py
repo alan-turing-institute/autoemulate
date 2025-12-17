@@ -43,7 +43,7 @@ def simulate_seir_epidemic(
     t_span = (0.0, 160.0)
     y0 = [S0, E0, I0, R0]
 
-    def seir_model(t, y, N, beta, gamma, sigma):
+    def seir_model(t, y, N, beta, gamma, sigma):  # noqa: ARG001
         S, E, I, R = y  # noqa: E741
         dSdt = -beta * S * I / N
         dEdt = beta * S * I / N - sigma * E
