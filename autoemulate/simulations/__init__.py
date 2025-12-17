@@ -11,6 +11,12 @@ ALL_SIMULATORS = [
     ProjectileMultioutput,
 ]
 
-__all__ = ["Epidemic", "SEIRSimulator", "FlowProblem", "Projectile", "ProjectileMultioutput"]
+__all__ = [
+    "Epidemic",
+    "FlowProblem",
+    "Projectile",
+    "ProjectileMultioutput",
+    "SEIRSimulator",
+]
 
 SIMULATOR_REGISTRY = dict(zip(__all__, ALL_SIMULATORS, strict=False))
