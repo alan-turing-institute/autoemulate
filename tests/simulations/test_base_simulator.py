@@ -1,7 +1,7 @@
 import pytest
 import torch
 from autoemulate.core.types import TensorLike
-from autoemulate.simulations.base import Simulator
+from autoemulate.simulations.base import Simulator, TorchSimulator
 from torch import Tensor
 
 
@@ -30,6 +30,25 @@ class MockSimulator(Simulator):
             outputs.append(output.view(-1, 1))
 
         # Concatenate all outputs along dimension 1
+        return torch.cat(outputs, dim=1)
+
+
+class TorchMockSimulator(TorchSimulator):
+    """Torch-based simulator for testing TorchSimulator behaviour."""
+
+    def __init__(
+        self,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        device: str | torch.device | None = "cpu",
+    ):
+        super().__init__(parameters_range, output_names, device=device)
+
+    def _forward(self, x: TensorLike) -> TensorLike | None:
+        outputs = []
+        for i, _ in enumerate(self._output_names):
+            output = torch.sum(x, dim=1) * (i + 1)
+            outputs.append(output.view(-1, 1))
         return torch.cat(outputs, dim=1)
 
 
@@ -324,3 +343,63 @@ def test_forward_batch_allow_failures():
     assert len(results) == 2  # All simulations successful
     assert len(valid_inputs) == 2
     assert torch.allclose(valid_inputs, success_batch)
+
+
+def test_torch_simulator_initializes_device(parameters_range):
+    sim = TorchMockSimulator(parameters_range, ["var1", "var2"], device="cpu")
+    assert sim.device == torch.device("cpu")
+
+
+def test_torch_simulator_forward_moves_inputs(parameters_range, monkeypatch):
+    sim = TorchMockSimulator(parameters_range, ["var1", "var2"], device="cpu")
+    original_move = TorchSimulator._move_tensors_to_device
+    calls = {"count": 0}
+
+    def recording_move(self, *args):
+        calls["count"] += 1
+        return original_move(self, *args)
+
+    monkeypatch.setattr(TorchSimulator, "_move_tensors_to_device", recording_move)
+    sim.forward(torch.tensor([[0.1, 0.2, 0.3]], dtype=torch.float32))
+    assert calls["count"] == 1
+
+
+def test_torch_simulator_forward_batch_moves_inputs(parameters_range, monkeypatch):
+    sim = TorchMockSimulator(parameters_range, ["var1"], device="cpu")
+    original_move = TorchSimulator._move_tensors_to_device
+    calls = {"count": 0}
+
+    def recording_move(self, *args):
+        calls["count"] += 1
+        return original_move(self, *args)
+
+    monkeypatch.setattr(TorchSimulator, "_move_tensors_to_device", recording_move)
+    batch = torch.tensor(
+        [
+            [0.2, 0.5, 0.5],
+            [0.6, 0.5, 0.5],
+        ],
+        dtype=torch.float32,
+    )
+    sim.forward_batch(batch)
+    # Forward batch moves the entire tensor once, then each per-sample forward
+    # moves the corresponding slice.
+    assert calls["count"] == 1 + len(batch)
+
+
+def test_torch_simulator_sample_inputs_on_device(parameters_range, monkeypatch):
+    sim = TorchMockSimulator(parameters_range, ["var1"], device="cpu")
+    original_move = TorchSimulator._move_tensors_to_device
+    calls = {"count": 0}
+
+    def recording_move(self, *args):
+        calls["count"] += 1
+        return original_move(self, *args)
+
+    monkeypatch.setattr(
+        TorchSimulator,
+        "_move_tensors_to_device",
+        recording_move,
+    )
+    sim.sample_inputs(5)
+    assert calls["count"] == 1
