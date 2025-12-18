@@ -19,7 +19,7 @@ def test_cross_validate():
             TorchDeviceMixin.__init__(self, device=device)
             _, _ = x, y
 
-        def _fit(self, x, y):
+        def _fit(self, x, y, validation_data=None):
             pass
 
         def _predict(self, x, with_grad=False):
