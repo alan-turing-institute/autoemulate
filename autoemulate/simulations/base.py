@@ -5,8 +5,9 @@ import torch
 from scipy.stats import qmc
 from tqdm import tqdm
 
+from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.types import TensorLike
+from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
 
 logger = logging.getLogger("autoemulate")
@@ -362,3 +363,99 @@ class Simulator(ABC, ValidationMixin):
             output_dict[output_name] = self.results_tensor[:, i]
 
         return output_dict
+
+
+class TorchSimulator(Simulator, TorchDeviceMixin):
+    """
+    Simulator that runs computations on a specified torch device.
+
+    This subclass extends :class:`Simulator` with the :class:`TorchDeviceMixin`
+    so that simulators implemented in PyTorch (e.g., ``torchcor``) can run on
+    CPU or accelerator hardware. Inputs are moved to ``self.device`` before the
+    forward pass and the resulting tensors are kept on the same device.
+    """
+
+    def __init__(
+        self,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        log_level: str = "progress_bar",
+        device: DeviceLike | None = None,
+    ):
+        Simulator.__init__(self, parameters_range, output_names, log_level)
+        TorchDeviceMixin.__init__(self, device=device)
+
+    def sample_inputs(
+        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
+    ) -> TensorLike:
+        """
+        Sample inputs and move them to the simulator's device.
+
+        Parameters
+        ----------
+        n_samples: int
+            Number of samples to generate.
+        random_seed: int | None
+            Optional random seed to make sampling reproducible.
+        method: str
+            Sampling method, one of ``"lhs"`` or ``"sobol"``.
+
+        Returns
+        -------
+        TensorLike
+            Sampled inputs located on ``self.device``.
+        """
+        samples = super().sample_inputs(
+            n_samples, random_seed=random_seed, method=method
+        )
+        (samples_device,) = self._move_tensors_to_device(samples)
+        return samples_device
+
+    def forward(self, x: TensorLike, allow_failures: bool = True) -> TensorLike | None:
+        """
+        Run a single simulation on the configured device.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor with shape ``(n_samples, in_dim)``.
+        allow_failures: bool
+            When True, failures return ``None`` instead of raising.
+
+        Returns
+        -------
+        TensorLike | None
+            Simulation result on ``self.device`` or ``None`` on failure.
+        """
+        (x_device,) = self._move_tensors_to_device(x)
+        y = super().forward(x_device, allow_failures=allow_failures)
+        if isinstance(y, torch.Tensor):
+            return y.to(self.device)
+        return y
+
+    def forward_batch(
+        self, x: TensorLike, allow_failures: bool = True
+    ) -> tuple[TensorLike, TensorLike]:
+        """
+        Run a batch of simulations with device management.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Batch of inputs with shape ``(batch_size, in_dim)``.
+        allow_failures: bool
+            Whether to skip failures (True) or raise immediately (False).
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tuple of ``(results, valid_inputs)`` residing on ``self.device``.
+        """
+        (x_device,) = self._move_tensors_to_device(x)
+        results, valid_inputs = super().forward_batch(
+            x_device, allow_failures=allow_failures
+        )
+        results = results.to(self.device)
+        self.results_tensor = results
+        valid_inputs = valid_inputs.to(self.device)
+        return results, valid_inputs
