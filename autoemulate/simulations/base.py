@@ -381,10 +381,9 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
         output_names: list[str],
         log_level: str = "progress_bar",
         device: DeviceLike | None = None,
-        cpu_only: bool = False,
     ):
         Simulator.__init__(self, parameters_range, output_names, log_level)
-        TorchDeviceMixin.__init__(self, device=device, cpu_only=cpu_only)
+        TorchDeviceMixin.__init__(self, device=device)
 
     def sample_inputs(
         self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
