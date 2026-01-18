@@ -1,8 +1,11 @@
 """Tests for Bayesian evidence computation."""
 
-from autoemulate.simulations.epidemic import Epidemic
+import pyro
+import pyro.distributions as dist
 import pytest
 import torch
+from pyro.infer import MCMC
+from pyro.infer.mcmc import RandomWalkKernel
 
 from autoemulate.calibration.bayes import (
     BayesianCalibration,
@@ -11,6 +14,7 @@ from autoemulate.calibration.bayes import (
 from autoemulate.calibration.evidence import EvidenceComputation
 from autoemulate.core.types import TensorLike
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
+from autoemulate.simulations.epidemic import Epidemic
 from autoemulate.simulations.projectile import Projectile
 
 
@@ -84,9 +88,6 @@ class TestExtractLogProbabilities:
 
     def test_empty_mcmc_raises_error(self):
         """Test that empty MCMC object raises ValueError."""
-        from pyro.infer import MCMC
-        from pyro.infer.mcmc import RandomWalkKernel
-        import pyro.distributions as dist
 
         def dummy_model():
             pyro.sample("x", dist.Normal(0, 1))
@@ -94,7 +95,9 @@ class TestExtractLogProbabilities:
         kernel = RandomWalkKernel(dummy_model)
         mcmc = MCMC(kernel, num_samples=0, warmup_steps=0, num_chains=1)
 
-        with pytest.raises(ValueError, match="(Failed to extract samples|contains no samples)"):
+        with pytest.raises(
+            ValueError, match="(Failed to extract samples|contains no samples)"
+        ):
             extract_log_probabilities(mcmc, dummy_model)
 
 
@@ -189,7 +192,9 @@ class TestEvidenceComputation:
         assert results["num_parameters"] == 2
 
     @pytest.mark.parametrize("training_proportion", [0.3, 0.5, 0.7])
-    def test_different_training_proportions(self, simple_mcmc_setup, training_proportion):
+    def test_different_training_proportions(
+        self, simple_mcmc_setup, training_proportion
+    ):
         """Test evidence computation with different training proportions."""
         mcmc, model, _ = simple_mcmc_setup
 

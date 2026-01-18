@@ -267,7 +267,10 @@ def extract_log_probabilities(
 
     Examples
     --------
-    >>> from autoemulate.calibration import BayesianCalibration, extract_log_probabilities
+    >>> from autoemulate.calibration import (
+    ...     BayesianCalibration,
+    ...     extract_log_probabilities,
+    ... )
     >>> # After running MCMC calibration
     >>> bc = BayesianCalibration(emulator, param_range, observations)
     >>> mcmc = bc.run_mcmc(num_samples=1000, num_chains=4)
@@ -325,7 +328,10 @@ def extract_log_probabilities(
             try:
                 trace = poutine.trace(conditioned_model).get_trace()
                 log_prob = trace.log_prob_sum()
-                chain_log_probs.append(log_prob.item())
+                log_prob_value = (
+                    log_prob.item() if hasattr(log_prob, "item") else float(log_prob)
+                )
+                chain_log_probs.append(log_prob_value)
             except Exception as e:
                 msg = (
                     f"Failed to compute log probability for chain {chain_idx}, "
@@ -337,9 +343,7 @@ def extract_log_probabilities(
 
     # Convert samples to tensor: (num_chains, num_samples_per_chain, ndim)
     # Stack parameters in the order they appear in the dictionary
-    samples_tensor = torch.stack(
-        [samples[k] for k in samples.keys()], dim=-1
-    ).to(device)
+    samples_tensor = torch.stack([samples[k] for k in samples], dim=-1).to(device)
 
     # Convert log probabilities to tensor: (num_chains, num_samples_per_chain)
     log_probs_tensor = torch.tensor(log_probs_list, device=device)

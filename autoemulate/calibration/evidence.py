@@ -1,7 +1,7 @@
 """Bayesian evidence computation using the Harmonic method."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 from pyro.infer import MCMC
@@ -10,6 +10,9 @@ from autoemulate.calibration.bayes import extract_log_probabilities
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike
+
+if TYPE_CHECKING:
+    import harmonic as hm
 
 
 class EvidenceComputation(TorchDeviceMixin):
@@ -132,7 +135,10 @@ class EvidenceComputation(TorchDeviceMixin):
             raise ValueError(msg)
 
         if flow_model not in ["RQSpline"]:
-            msg = f"Unsupported flow_model: {flow_model}. Currently only 'RQSpline' is supported."
+            msg = (
+                f"Unsupported flow_model: {flow_model}. "
+                "Currently only 'RQSpline' is supported."
+            )
             self.logger.error(msg)
             raise ValueError(msg)
 
@@ -143,9 +149,9 @@ class EvidenceComputation(TorchDeviceMixin):
         self.flow_model_type = flow_model
 
         self.logger.info("Initializing EvidenceComputation")
-        self.logger.info(f"Training proportion: {training_proportion}")
-        self.logger.info(f"Temperature: {temperature}")
-        self.logger.info(f"Flow model: {flow_model}")
+        self.logger.info("Training proportion: %s", training_proportion)
+        self.logger.info("Temperature: %s", temperature)
+        self.logger.info("Flow model: %s", flow_model)
 
         # Extract samples and log probabilities
         self.logger.info("Extracting log probabilities from MCMC samples...")
@@ -158,18 +164,18 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise RuntimeError(msg) from e
 
-        self.logger.info(f"Samples shape: {self.samples.shape}")
-        self.logger.info(f"Log probabilities shape: {self.log_probs.shape}")
+        self.logger.info("Samples shape: %s", self.samples.shape)
+        self.logger.info("Log probabilities shape: %s", self.log_probs.shape)
 
         # Validate that training_proportion is appropriate for number of chains
         num_chains = self.samples.shape[0]
         min_train_chains = int(num_chains * training_proportion)
         if min_train_chains < 1:
             msg = (
-                f"training_proportion ({training_proportion:.2f}) is too small for "
-                f"{num_chains} chains. This would result in {min_train_chains} training "
-                f"chains. Increase num_chains or training_proportion to ensure at least "
-                f"1 training chain."
+                f"training_proportion ({training_proportion:.2f}) is too small "
+                f"for {num_chains} chains. This would result in "
+                f"{min_train_chains} training chains. Increase num_chains or "
+                f"training_proportion to ensure at least 1 training chain."
             )
             self.logger.error(msg)
             raise ValueError(msg)
@@ -186,11 +192,11 @@ class EvidenceComputation(TorchDeviceMixin):
             raise ValueError(msg)
 
         # Initialize Harmonic components (will be populated in compute_evidence)
-        self.chains = None
-        self.chains_train = None
-        self.chains_infer = None
-        self.flow = None
-        self.evidence = None
+        self.chains: hm.Chains | None = None  # type: ignore[name-defined]
+        self.chains_train: hm.Chains | None = None  # type: ignore[name-defined]
+        self.chains_infer: hm.Chains | None = None  # type: ignore[name-defined]
+        self.flow: hm.model.RQSplineModel | None = None  # type: ignore[name-defined]
+        self.evidence: hm.Evidence | None = None  # type: ignore[name-defined]
 
         self.logger.info("EvidenceComputation initialized successfully")
 
@@ -276,36 +282,43 @@ class EvidenceComputation(TorchDeviceMixin):
         self.logger.info("Creating Harmonic Chains...")
         ndim = self.samples.shape[2]
         self.chains = hm.Chains(ndim)
+        assert self.chains is not None  # for type checker
         self.chains.add_chains_3d(
             self.samples.cpu().numpy(), self.log_probs.cpu().numpy()
         )
 
         # Split into training and inference sets
         self.logger.info(
-            f"Splitting chains (training proportion: {self.training_proportion})..."
+            "Splitting chains (training proportion: %s)...",
+            self.training_proportion,
         )
         self.chains_train, self.chains_infer = hm.utils.split_data(
             self.chains, training_proportion=self.training_proportion
         )
+        assert self.chains_train is not None  # for type checker
+        assert self.chains_infer is not None  # for type checker
 
         self.logger.info(
-            f"Training chains: {self.chains_train.nchains} chains, "
-            f"{self.chains_train.samples.shape[0]} total samples"
+            "Training chains: %s chains, %s total samples",
+            self.chains_train.nchains,
+            self.chains_train.samples.shape[0],
         )
         self.logger.info(
-            f"Inference chains: {self.chains_infer.nchains} chains, "
-            f"{self.chains_infer.samples.shape[0]} total samples"
+            "Inference chains: %s chains, %s total samples",
+            self.chains_infer.nchains,
+            self.chains_infer.samples.shape[0],
         )
 
         # Train normalizing flow
         self.logger.info(
-            f"Training {self.flow_model_type} flow model (epochs={epochs})..."
+            "Training %s flow model (epochs=%s)...", self.flow_model_type, epochs
         )
         try:
             if self.flow_model_type == "RQSpline":
                 self.flow = hm.model.RQSplineModel(
                     ndim, standardize=True, temperature=self.temperature
                 )
+            assert self.flow is not None  # for type checker
             self.flow.fit(self.chains_train.samples, epochs=epochs, verbose=verbose)
         except Exception as e:
             msg = f"Flow training failed: {e}"
@@ -318,6 +331,7 @@ class EvidenceComputation(TorchDeviceMixin):
         self.logger.info("Computing evidence...")
         try:
             self.evidence = hm.Evidence(self.chains_infer.nchains, self.flow)
+            assert self.evidence is not None  # for type checker
             self.evidence.add_chains(self.chains_infer)
 
             ln_inv_evidence = self.evidence.ln_evidence_inv
@@ -345,9 +359,11 @@ class EvidenceComputation(TorchDeviceMixin):
         }
 
         self.logger.info("Evidence computation completed")
-        self.logger.info(f"ln(Evidence) = {ln_evidence:.4f}")
-        self.logger.info(f"ln(Inverse Evidence) = {ln_inv_evidence:.4f}")
-        self.logger.info(f"Error bounds: [{error_lower:.4f}, {error_upper:.4f}]")
+        self.logger.info("ln(Evidence) = %.4f", ln_evidence)
+        self.logger.info("ln(Inverse Evidence) = %.4f", ln_inv_evidence)
+        self.logger.info(
+            "Error bounds: [%.4f, %.4f]", error_lower, error_upper
+        )
 
         return results
 
