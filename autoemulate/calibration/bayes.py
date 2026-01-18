@@ -328,9 +328,11 @@ def extract_log_probabilities(
             try:
                 trace = poutine.trace(conditioned_model).get_trace()
                 log_prob = trace.log_prob_sum()
-                log_prob_value = (
-                    log_prob.item() if hasattr(log_prob, "item") else float(log_prob)
-                )
+                # Convert to float, handling both tensor and scalar cases
+                if isinstance(log_prob, torch.Tensor):
+                    log_prob_value = log_prob.item()
+                else:
+                    log_prob_value = float(log_prob)
                 chain_log_probs.append(log_prob_value)
             except Exception as e:
                 msg = (

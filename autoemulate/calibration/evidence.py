@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import torch
+import harmonic as hm
 from pyro.infer import MCMC
 
 from autoemulate.calibration.bayes import extract_log_probabilities
@@ -11,8 +12,8 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike
 
-if TYPE_CHECKING:
-    import harmonic as hm
+
+
 
 
 class EvidenceComputation(TorchDeviceMixin):
@@ -123,7 +124,26 @@ class EvidenceComputation(TorchDeviceMixin):
         TorchDeviceMixin.__init__(self, device=device)
         self.logger, self.progress_bar = get_configured_logger(log_level)
 
-        # Validate inputs
+        # Validate and store parameters
+        self._validate_parameters(training_proportion, temperature, flow_model)
+        self.mcmc = mcmc
+        self.model = model
+        self.training_proportion = training_proportion
+        self.temperature = temperature
+        self.flow_model_type = flow_model
+
+        # Extract and validate samples
+        self._extract_and_validate_samples()
+
+        # Initialize Harmonic components (will be populated in compute_evidence)
+        self._initialize_harmonic_components()
+
+        self.logger.info("EvidenceComputation initialized successfully")
+
+    def _validate_parameters(
+        self, training_proportion: float, temperature: float, flow_model: str
+    ):
+        """Validate initialization parameters."""
         if not 0 < training_proportion < 1:
             msg = "training_proportion must be between 0 and 1"
             self.logger.error(msg)
@@ -142,22 +162,17 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
-        self.mcmc = mcmc
-        self.model = model
-        self.training_proportion = training_proportion
-        self.temperature = temperature
-        self.flow_model_type = flow_model
-
         self.logger.info("Initializing EvidenceComputation")
         self.logger.info("Training proportion: %s", training_proportion)
         self.logger.info("Temperature: %s", temperature)
         self.logger.info("Flow model: %s", flow_model)
 
-        # Extract samples and log probabilities
+    def _extract_and_validate_samples(self):
+        """Extract samples from MCMC and validate them."""
         self.logger.info("Extracting log probabilities from MCMC samples...")
         try:
             self.samples, self.log_probs = extract_log_probabilities(
-                mcmc, model, device=self.device
+                self.mcmc, self.model, device=self.device
             )
         except Exception as e:
             msg = f"Failed to extract log probabilities: {e}"
@@ -167,12 +182,12 @@ class EvidenceComputation(TorchDeviceMixin):
         self.logger.info("Samples shape: %s", self.samples.shape)
         self.logger.info("Log probabilities shape: %s", self.log_probs.shape)
 
-        # Validate that training_proportion is appropriate for number of chains
+        # Validate training_proportion for number of chains
         num_chains = self.samples.shape[0]
-        min_train_chains = int(num_chains * training_proportion)
+        min_train_chains = int(num_chains * self.training_proportion)
         if min_train_chains < 1:
             msg = (
-                f"training_proportion ({training_proportion:.2f}) is too small "
+                f"training_proportion ({self.training_proportion:.2f}) is too small "
                 f"for {num_chains} chains. This would result in "
                 f"{min_train_chains} training chains. Increase num_chains or "
                 f"training_proportion to ensure at least 1 training chain."
@@ -191,14 +206,13 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
-        # Initialize Harmonic components (will be populated in compute_evidence)
+    def _initialize_harmonic_components(self):
+        """Initialize Harmonic library components."""
         self.chains: hm.Chains | None = None  # type: ignore[name-defined]
         self.chains_train: hm.Chains | None = None  # type: ignore[name-defined]
         self.chains_infer: hm.Chains | None = None  # type: ignore[name-defined]
         self.flow: hm.model.RQSplineModel | None = None  # type: ignore[name-defined]
         self.evidence: hm.Evidence | None = None  # type: ignore[name-defined]
-
-        self.logger.info("EvidenceComputation initialized successfully")
 
     def compute_evidence(
         self,
@@ -266,15 +280,6 @@ class EvidenceComputation(TorchDeviceMixin):
         >>> err_upper = results['error_upper']
         >>> print(f"ln(Evidence) = {ln_ev:.2f} (+{err_upper:.3f}, {err_lower:.3f})")
         """
-        try:
-            import harmonic as hm
-        except ImportError as e:
-            msg = (
-                "harmonic package is required for evidence computation. "
-                "Install it with: pip install harmonic"
-            )
-            self.logger.error(msg)
-            raise ImportError(msg) from e
 
         self.logger.info("Starting evidence computation")
 
@@ -319,7 +324,10 @@ class EvidenceComputation(TorchDeviceMixin):
                     ndim, standardize=True, temperature=self.temperature
                 )
             assert self.flow is not None  # for type checker
-            self.flow.fit(self.chains_train.samples, epochs=epochs, verbose=verbose)
+            # Type ignore for harmonic's samples attribute which is numpy array
+            self.flow.fit(
+                self.chains_train.samples, epochs=epochs, verbose=verbose  # type: ignore[arg-type]
+            )
         except Exception as e:
             msg = f"Flow training failed: {e}"
             self.logger.error(msg)
