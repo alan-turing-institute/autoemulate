@@ -1,10 +1,11 @@
 """Bayesian evidence computation using the Harmonic method."""
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
 import harmonic as hm
+import numpy as np
 from pyro.infer import MCMC
 
 from autoemulate.calibration.bayes import extract_log_probabilities
@@ -324,9 +325,8 @@ class EvidenceComputation(TorchDeviceMixin):
                     ndim, standardize=True, temperature=self.temperature
                 )
             assert self.flow is not None  # for type checker
-            # Type ignore for harmonic's samples attribute which is numpy array
             self.flow.fit(
-                self.chains_train.samples, epochs=epochs, verbose=verbose  # type: ignore[arg-type]
+                np.asarray(self.chains_train.samples), epochs=epochs, verbose=verbose  
             )
         except Exception as e:
             msg = f"Flow training failed: {e}"
