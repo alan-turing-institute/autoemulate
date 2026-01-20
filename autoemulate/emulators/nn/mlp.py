@@ -125,17 +125,15 @@ class MLP(DropoutTorchBackend):
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
     ):
-        self.__doc__ = f"""
-        Multi-Layer Perceptron (MLP) emulator.
-
-        MLP provides a simple deterministic emulator with optional model stochasticity
-        provided by different weight initialization and dropout.
-        {
-            _generate_mlp_docstring(
+        self.__doc__ = (
+            "    Multi-Layer Perceptron (MLP) emulator.\n\n"
+            "    MLP provides a simple deterministic emulator with optional model\n"
+            "    stochasticity provided by different weight initialization and "
+            "    dropout.\n"
+            + _generate_mlp_docstring(
                 additional_parameters_docstring="", default_dropout_prob=None
             )
-        }
-        """
+        )
         TorchDeviceMixin.__init__(self, device=device)
         nn.Module.__init__(self)
 

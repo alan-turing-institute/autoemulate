@@ -38,9 +38,19 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     supports_uq: bool = False
 
     @abstractmethod
-    def _fit(self, x: TensorLike, y: TensorLike): ...
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ): ...
 
-    def fit(self, x: TensorLike, y: TensorLike):
+    def fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ):
         """Fit the emulator to the provided data."""
         # Ensure x and y are tensors and 2D
         x, y = self._convert_to_tensors(x, y)
@@ -57,7 +67,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         y = self.y_transform(y) if self.y_transform is not None else y
 
         # Fit emulator
-        self._fit(x, y)
+        self._fit(x, y, validation_data)
         self.is_fitted_ = True
 
     @abstractmethod
@@ -151,18 +161,7 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
         """
         x = self._ensure_with_grad(x, with_grad)
         y_pred = self._predict(x, with_grad)
-        if isinstance(y_pred, TensorLike):
-            return y_pred
-        try:
-            return y_pred.mean
-        except Exception:
-            # Use sampling to get a mean if mean property not available
-            samples = (
-                y_pred.rsample(torch.Size([n_samples]))
-                if with_grad
-                else y_pred.sample(torch.Size([n_samples]))
-            )
-            return samples.mean(dim=0)
+        return self.output_to_tensor(y_pred, n_samples)
 
     def predict_mean_and_variance(
         self, x: TensorLike, with_grad: bool = False, n_samples: int = 100
@@ -557,7 +556,12 @@ class PyTorchBackend(nn.Module, Emulator):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         """
         Train a PyTorchBackend model.
 
@@ -683,7 +687,12 @@ class SklearnBackend(DeterministicEmulator):
     def _model_specific_check(self, x: NumpyLike, y: NumpyLike):
         _, _ = x, y
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         if self.normalize_y:
             y, y_mean, y_std = self._normalize(y)
             self.y_mean = y_mean
