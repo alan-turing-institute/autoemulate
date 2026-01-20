@@ -4,9 +4,6 @@ import pyro
 import pyro.distributions as dist
 import pytest
 import torch
-from pyro.infer import MCMC
-from pyro.infer.mcmc import RandomWalkKernel
-
 from autoemulate.calibration.bayes import (
     BayesianCalibration,
     extract_log_probabilities,
@@ -16,6 +13,8 @@ from autoemulate.core.types import TensorLike
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.simulations.epidemic import Epidemic
 from autoemulate.simulations.projectile import Projectile
+from pyro.infer import MCMC
+from pyro.infer.mcmc import RandomWalkKernel
 
 
 @pytest.fixture
@@ -293,4 +292,3 @@ class TestIntegration:
         assert "ln_evidence" in results
         assert isinstance(results["ln_evidence"], float)
         assert not torch.isnan(torch.tensor(results["ln_evidence"]))
-
