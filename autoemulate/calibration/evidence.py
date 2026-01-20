@@ -3,18 +3,15 @@
 from collections.abc import Callable
 from typing import Any
 
-import torch
 import harmonic as hm
 import numpy as np
+import torch
 from pyro.infer import MCMC
 
 from autoemulate.calibration.bayes import extract_log_probabilities
 from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike
-
-
-
 
 
 class EvidenceComputation(TorchDeviceMixin):
@@ -276,12 +273,11 @@ class EvidenceComputation(TorchDeviceMixin):
         --------
         >>> ec = EvidenceComputation(mcmc, model)
         >>> results = ec.compute_evidence(epochs=50, verbose=True)
-        >>> ln_ev = results['ln_evidence']
-        >>> err_lower = results['error_lower']
-        >>> err_upper = results['error_upper']
+        >>> ln_ev = results["ln_evidence"]
+        >>> err_lower = results["error_lower"]
+        >>> err_upper = results["error_upper"]
         >>> print(f"ln(Evidence) = {ln_ev:.2f} (+{err_upper:.3f}, {err_lower:.3f})")
         """
-
         self.logger.info("Starting evidence computation")
 
         # Create Harmonic Chains object
@@ -325,9 +321,10 @@ class EvidenceComputation(TorchDeviceMixin):
                     ndim, standardize=True, temperature=self.temperature
                 )
             assert self.flow is not None  # for type checker
-            samples_array: np.ndarray = self.chains_train.samples
             self.flow.fit(
-                samples_array, epochs=epochs, verbose=verbose  
+                np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
+                epochs=epochs,
+                verbose=verbose,
             )
         except Exception as e:
             msg = f"Flow training failed: {e}"
@@ -370,9 +367,7 @@ class EvidenceComputation(TorchDeviceMixin):
         self.logger.info("Evidence computation completed")
         self.logger.info("ln(Evidence) = %.4f", ln_evidence)
         self.logger.info("ln(Inverse Evidence) = %.4f", ln_inv_evidence)
-        self.logger.info(
-            "Error bounds: [%.4f, %.4f]", error_lower, error_upper
-        )
+        self.logger.info("Error bounds: [%.4f, %.4f]", error_lower, error_upper)
 
         return results
 

@@ -2,8 +2,8 @@ from collections.abc import Callable
 
 import pyro
 import pyro.distributions as dist
-import pyro.poutine as poutine
 import torch
+from pyro import poutine
 from pyro.infer import MCMC
 
 from autoemulate.calibration.base import BayesianMixin
@@ -317,9 +317,7 @@ def extract_log_probabilities(
         chain_log_probs = []
         for sample_idx in range(num_samples_per_chain):
             # Extract parameter values for this sample
-            sample_params = {
-                k: v[chain_idx, sample_idx] for k, v in samples.items()
-            }
+            sample_params = {k: v[chain_idx, sample_idx] for k, v in samples.items()}
 
             # Condition the model on these parameter values
             conditioned_model = pyro.condition(model, data=sample_params)
