@@ -325,8 +325,9 @@ class EvidenceComputation(TorchDeviceMixin):
                     ndim, standardize=True, temperature=self.temperature
                 )
             assert self.flow is not None  # for type checker
+            samples_array: np.ndarray = self.chains_train.samples
             self.flow.fit(
-                np.asarray(self.chains_train.samples), epochs=epochs, verbose=verbose  
+                samples_array, epochs=epochs, verbose=verbose  
             )
         except Exception as e:
             msg = f"Flow training failed: {e}"
