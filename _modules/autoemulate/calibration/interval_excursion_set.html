@@ -1,0 +1,1182 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>autoemulate.calibration.interval_excursion_set &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/autoemulate/calibration/interval_excursion_set';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2F_modules/autoemulate/calibration/interval_excursion_set.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for autoemulate.calibration.interval_excursion_set</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">arviz</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">az</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyro</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyro.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MultivariateNormal</span><span class="p">,</span>
+    <span class="n">Normal</span><span class="p">,</span>
+    <span class="n">TransformedDistribution</span><span class="p">,</span>  <span class="c1"># type: ignore since this is a valid import</span>
+    <span class="n">Uniform</span><span class="p">,</span>
+    <span class="n">constraints</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyro.distributions.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AffineTransform</span><span class="p">,</span>
+    <span class="n">ComposeTransform</span><span class="p">,</span>
+    <span class="n">SigmoidTransform</span><span class="p">,</span>
+    <span class="n">Transform</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyro.infer</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCMC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndtr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.calibration.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BayesianMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDeviceMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.logging_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_configured_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceLike</span><span class="p">,</span> <span class="n">TensorLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_random_seed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.emulators.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProbabilisticEmulator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.emulators.transformed.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformedEmulator</span>
+
+
+<div class="viewcode-block" id="BoundedDomainTransform">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BoundedDomainTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform to map from unbounded domain to bounded domain.&quot;&quot;&quot;</span>
+
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">constraints</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">codomain</span> <span class="o">=</span> <span class="n">constraints</span><span class="o">.</span><span class="n">interval</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">bijective</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain_min</span><span class="p">,</span> <span class="n">domain_max</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">domain_min</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">domain_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span> <span class="o">=</span> <span class="n">SigmoidTransform</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span> <span class="o">=</span> <span class="n">AffineTransform</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BoundedDomainTransform.log_abs_det_jacobian">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform.log_abs_det_jacobian">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_abs_det_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the log absolute determinant of the Jacobian.&quot;&quot;&quot;</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="o">.</span><span class="n">log_abs_det_jacobian</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">u</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span><span class="o">.</span><span class="n">log_abs_det_jacobian</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IntervalExcursionSetCalibration">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IntervalExcursionSetCalibration</span><span class="p">(</span><span class="n">TorchDeviceMixin</span><span class="p">,</span> <span class="n">BayesianMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Interval excursion set calibration using MC methods.</span>
+
+<span class="sd">    Interval excursion set calibration identifies the set of input parameters that lead</span>
+<span class="sd">    to model outputs that are within specified intervals of observed data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">MIN_VAR</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimum variance to avoid numerical issues.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">emulator</span><span class="p">:</span> <span class="n">ProbabilisticEmulator</span> <span class="o">|</span> <span class="n">TransformedEmulator</span><span class="p">,</span>
+        <span class="n">parameters_range</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+        <span class="n">output_bounds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+        <span class="n">output_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">DeviceLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;progress_bar&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the calibration object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        emulator: Emulator</span>
+<span class="sd">            Fitted Emulator object.</span>
+<span class="sd">        parameters_range : dict[str, tuple[float, float]]</span>
+<span class="sd">            A dictionary mapping input parameter names to their (min, max) ranges.</span>
+<span class="sd">        output_bounds: dict[str, tuple[float, float]],</span>
+<span class="sd">            A dictionary of lower and upper bounds for each output.</span>
+<span class="sd">        device: DeviceLike | None</span>
+<span class="sd">            The device to use. If None, the default torch device is returned.</span>
+<span class="sd">        log_level: str</span>
+<span class="sd">            Logging level for the calibration. Can be one of:</span>
+<span class="sd">            - &quot;progress_bar&quot;: shows a progress bar during batch simulations</span>
+<span class="sd">            - &quot;debug&quot;: shows debug messages</span>
+<span class="sd">            - &quot;info&quot;: shows informational messages</span>
+<span class="sd">            - &quot;warning&quot;: shows warning messages</span>
+<span class="sd">            - &quot;error&quot;: shows error messages</span>
+<span class="sd">            - &quot;critical&quot;: shows critical messages</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">emulator</span><span class="o">.</span><span class="n">supports_uq</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Emulator </span><span class="si">{</span><span class="n">emulator</span><span class="si">}</span><span class="s2"> does not support UQ. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;IntervalExcursionSetCalibration only supports emulators that support &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;UQ since the likelihood requires variance/covariance specification.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">TorchDeviceMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span> <span class="o">=</span> <span class="n">parameters_range</span>
+
+        <span class="c1"># Set domain lower and upper bounds as tensors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+
+        <span class="c1"># Process output bounds into tensors, ensuring order matches output_names so</span>
+        <span class="c1"># that we can subset emulator outputs with idxs in the same order</span>
+        <span class="n">y_lower</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">output_bounds</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_bounds</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">y_upper</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">output_bounds</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_bounds</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_bounds</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_y_lower</span> <span class="o">=</span> <span class="n">y_lower</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_y_upper</span> <span class="o">=</span> <span class="n">y_upper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span> <span class="o">=</span> <span class="n">emulator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="c1"># TODO: we might want to check that the len equals the number of tasks returned</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">progress_bar</span> <span class="o">=</span> <span class="n">get_configured_logger</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Initializing IntervalExcursionSetCalibration with parameters: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># TODO: add input handling for y_lower and y_upper as floats or lists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processed observations for outputs: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">y_lower</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lower bounds as a tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y_lower</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">y_upper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return upper bounds as a tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y_upper</span>
+
+<div class="viewcode-block" id="IntervalExcursionSetCalibration.interval_prob_from_mu_sigma">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.interval_prob_from_mu_sigma">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interval_prob_from_mu_sigma</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mu</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>
+        <span class="n">var_or_cov</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">y1</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">y2</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">aggregate</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;geomean&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interval probability across tasks given GP mean and variance/covariance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu: TensorLike</span>
+<span class="sd">            Mean per task (N, T) or (T,)</span>
+<span class="sd">        var_or_cov: TensorLike</span>
+<span class="sd">            (N, T) variance per task OR (N, T, T) covariance across tasks</span>
+<span class="sd">        y1, y2 : TensorLike</span>
+<span class="sd">            (T,) lower/upper bounds per task</span>
+<span class="sd">        aggregate : str</span>
+<span class="sd">            &#39;geomean&#39; | &#39;sumlog&#39; | &#39;none&#39;</span>
+<span class="sd">                - &#39;geomean&#39;: returns geometric mean across tasks (shape N,)</span>
+<span class="sd">                - &#39;sumlog&#39;: returns sum of log-probs across tasks (shape N,)</span>
+<span class="sd">                - &#39;none&#39;: returns per-task probabilities (shape N, T)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">mu</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Derive per-task std devs from variance / covariance</span>
+        <span class="k">if</span> <span class="n">var_or_cov</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">var_diag</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">var_or_cov</span><span class="p">,</span> <span class="n">dim1</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim2</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span>
+                <span class="n">IntervalExcursionSetCalibration</span><span class="o">.</span><span class="n">MIN_VAR</span>
+            <span class="p">)</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">var_diag</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># (N, T) variance or (T,) variance for single sample</span>
+            <span class="k">if</span> <span class="n">var_or_cov</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">var_or_cov</span> <span class="o">=</span> <span class="n">var_or_cov</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">var_or_cov</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="n">IntervalExcursionSetCalibration</span><span class="o">.</span><span class="n">MIN_VAR</span><span class="p">)</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+
+        <span class="c1"># Broadcast bounds to (N, T)</span>
+        <span class="n">y1v</span> <span class="o">=</span> <span class="n">y1</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">y2v</span> <span class="o">=</span> <span class="n">y2</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Subset mu and sigma to only the outputs being calibrated</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_idxs</span><span class="p">]</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_idxs</span><span class="p">]</span>
+
+        <span class="c1"># Stable CDF differences</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="n">y1v</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="o">-</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">((</span><span class="n">y2v</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="o">-</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">)</span>
+        <span class="n">p_task</span> <span class="o">=</span> <span class="p">(</span><span class="n">ndtr</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">double</span><span class="p">())</span> <span class="o">-</span> <span class="n">ndtr</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">double</span><span class="p">()))</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-12</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">mu</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">aggregate</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">p_task</span>
+        <span class="n">log_p</span> <span class="o">=</span> <span class="n">p_task</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">aggregate</span> <span class="o">==</span> <span class="s2">&quot;geomean&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">log_p</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">aggregate</span> <span class="o">==</span> <span class="s2">&quot;sumlog&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">log_p</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;aggregate must be one of {&#39;geomean&#39;, &#39;sumlog&#39;, &#39;none&#39;}&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntervalExcursionSetCalibration.interval_logprob">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.interval_logprob">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interval_logprob</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mu</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>
+        <span class="n">var</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>
+        <span class="n">y1</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>
+        <span class="n">y2</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multi-task interval log-probability (sum of log-probs across tasks).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu: TensorLike</span>
+<span class="sd">            Predicted mean. Shape (N, T) or (T,)</span>
+<span class="sd">        var: TensorLike</span>
+<span class="sd">            Predicted variance per task (N, T) or covariance (N, T, T)</span>
+<span class="sd">        y1: TensorLike</span>
+<span class="sd">            lower bounds (T,)</span>
+<span class="sd">        y2: TensorLike</span>
+<span class="sd">            upper bounds (T,)</span>
+<span class="sd">        temperature: float</span>
+<span class="sd">            Optional temperature scaling. Defaults to 1.0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TensorLike</span>
+<span class="sd">            Scalar per sample (sums over tasks) and then summed over batch here only</span>
+<span class="sd">            when inputs are 1-sample; callers can keep per-sample if needed by removing</span>
+<span class="sd">            .sum().</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Ensure batch: (N, T)</span>
+        <span class="k">if</span> <span class="n">mu</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Exact likelihood across tasks is sum log-probs with temperature</span>
+        <span class="n">log_p_exact</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_prob_from_mu_sigma</span><span class="p">(</span>
+            <span class="n">mu</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="s2">&quot;sumlog&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Return total log-prob summed over the batch (sum over samples).</span>
+        <span class="k">return</span> <span class="n">log_p_exact</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="IntervalExcursionSetCalibration.model">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">uniform_prior</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">predict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pyro model for interval excursion set calibration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uniform_prior</span><span class="p">:</span>
+            <span class="c1"># Sample each parameter as its own transformed site so names are preserved</span>
+            <span class="n">xs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">):</span>
+                <span class="n">lo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">hi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span>
+                <span class="n">td</span> <span class="o">=</span> <span class="n">TransformedDistribution</span><span class="p">(</span>
+                    <span class="n">Normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                    <span class="p">[</span><span class="n">SigmoidTransform</span><span class="p">(),</span> <span class="n">AffineTransform</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span> <span class="n">scale</span><span class="p">)],</span>
+                <span class="p">)</span>
+                <span class="n">xi</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">td</span><span class="p">)</span>
+                <span class="n">xs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Sample each parameter uniformly within its bounds</span>
+            <span class="n">param_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">:</span>
+                    <span class="c1"># Sample from uniform prior</span>
+                    <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+                    <span class="n">sampled_val</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">))</span>
+                    <span class="n">param_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sampled_val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">param_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="c1"># Calculate mean and variance at x with grad for HMC/NUTS</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">predict_mean_and_variance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">with_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">predict</span><span class="p">:</span>
+            <span class="c1"># Add log-prob factor for posterior calculation</span>
+            <span class="n">log_prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_logprob</span><span class="p">(</span>
+                <span class="n">mu</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_upper</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span>
+            <span class="p">)</span>
+            <span class="n">pyro</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="s2">&quot;interval_logp&quot;</span><span class="p">,</span> <span class="n">log_prob</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Predictive sampling: draws from the multivariate normal predictive</span>
+            <span class="c1"># distribution, y_pred ~ p(y | x_post)</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="n">pyro</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+                <span class="s2">&quot;y_pred&quot;</span><span class="p">,</span>
+                <span class="n">MultivariateNormal</span><span class="p">(</span>
+                    <span class="c1"># mu and var are both (1, T)</span>
+                    <span class="n">mu</span><span class="p">,</span>
+                    <span class="n">covariance_matrix</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">diag_embed</span><span class="p">(</span><span class="n">var</span><span class="p">),</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">to_event</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">):</span>
+                <span class="n">pyro</span><span class="o">.</span><span class="n">deterministic</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="IntervalExcursionSetCalibration.plot_samples">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.plot_samples">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_samples</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">MCMC</span> <span class="o">|</span> <span class="n">az</span><span class="o">.</span><span class="n">InferenceData</span> <span class="o">|</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="n">x_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y_idx</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot samples with interval probabilities and GP mean.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">az</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">):</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()[</span>  <span class="c1"># type: ignore  # noqa: PGH003</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parameters_range</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">MCMC</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get_samples</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Parameter keys do not match calibration_params, stacking all &quot;</span>
+                    <span class="s2">&quot;samples&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_samples</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">num_chains</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">num_samples</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">):</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;data must be MCMC, InferenceData, or TensorLike&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">mu_s</span><span class="p">,</span> <span class="n">var_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">predict_mean_and_variance</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var_s</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">)</span>
+            <span class="n">p_interval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_prob_from_mu_sigma</span><span class="p">(</span>
+                <span class="n">mu_s</span><span class="p">,</span> <span class="n">var_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_upper</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="s2">&quot;geomean&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">_fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+        <span class="c1"># Probability in interval</span>
+        <span class="n">sc1</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">samples</span><span class="p">[:,</span> <span class="n">x_idx</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span>
+            <span class="n">samples</span><span class="p">[:,</span> <span class="n">y_idx</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">p_interval</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Interval Probability (agg across tasks)&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">[</span><span class="n">x_idx</span><span class="p">])</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">[</span><span class="n">y_idx</span><span class="p">])</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">[</span><span class="n">x_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">[</span><span class="n">x_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">[</span><span class="n">y_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">[</span><span class="n">y_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sc1</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;P[y in interval]&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Predicted mean</span>
+        <span class="n">mu_color</span> <span class="o">=</span> <span class="n">mu_s</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">mu_s</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">mu_s</span>
+        <span class="n">sc2</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">samples</span><span class="p">[:,</span> <span class="n">x_idx</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span>
+            <span class="n">samples</span><span class="p">[:,</span> <span class="n">y_idx</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">mu_color</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+            <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Emulator Mean (avg across tasks)&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">[</span><span class="n">x_idx</span><span class="p">])</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">[</span><span class="n">y_idx</span><span class="p">])</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">[</span><span class="n">x_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">[</span><span class="n">x_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">[</span><span class="n">y_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">[</span><span class="n">y_idx</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sc2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Emulator Mean&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="IntervalExcursionSetCalibration.run_smc">
+<a class="viewcode-back" href="../../../reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.run_smc">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_smc</span><span class="p">(</span>  <span class="c1"># noqa: PLR0915</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_particles</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4000</span><span class="p">,</span>
+        <span class="n">ess_target_frac</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="n">move_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">rw_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">uniform_prior</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">plot_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">return_az_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">az</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;SMC with adaptive tempering for interval posterior.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_particles: int</span>
+<span class="sd">            Number of particles to use. Defaults to 4000.</span>
+<span class="sd">        ess_target_frac: float</span>
+<span class="sd">            Target effective sample size (ESS) as a fraction of n_particles.</span>
+<span class="sd">            Defaults to 0.7.</span>
+<span class="sd">        max_steps: int</span>
+<span class="sd">            Maximum number of tempering steps. Defaults to 60.</span>
+<span class="sd">        move_steps: int</span>
+<span class="sd">            Number of random-walk Metropolis steps per rejuvenation. Defaults to 2.</span>
+<span class="sd">        rw_step: float</span>
+<span class="sd">            Standard deviation of the random-walk proposal in whitened space.</span>
+<span class="sd">            Defaults to 0.</span>
+<span class="sd">        seed: int | None</span>
+<span class="sd">            Random seed for reproducibility. Defaults to None.</span>
+<span class="sd">        uniform_prior: bool</span>
+<span class="sd">            If True, use uniform prior over the bounded domain. If False, use standard</span>
+<span class="sd">            normal prior in the whitened space (z ~ N(0, I_d)). Defaults to True.</span>
+<span class="sd">        plot_diagnostics: bool</span>
+<span class="sd">            Whether to plot diagnostic plots of the final particles, temperature</span>
+<span class="sd">            schedule, and ESS history. Defaults to True.</span>
+<span class="sd">        return_az_data: bool</span>
+<span class="sd">            Whether to return ArviZ InferenceData object. Defaults to True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[TensorLike, TensorLike, TensorLike, TensorLike, int] | az.InferenceData</span>
+<span class="sd">            A tuple of x_final, weights, beta_schedule, ess_history, unique_count or</span>
+<span class="sd">            an ArviZ InferenceData object if return_az_data is True.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        See Del Moral et al. (2006) &lt;https://doi.org/10.1111/j.1467-9868.2006.00553.x&gt;</span>
+<span class="sd">        &quot;Sequential Monte Carlo samplers&quot; for details on the SMC algorithm.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">set_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">BoundedDomainTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">uniform_prior</span>
+            <span class="k">else</span> <span class="n">ComposeTransform</span><span class="p">([])</span>
+        <span class="p">)</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="c1"># Sample from whitened space z ~ N(0, I_d) or original space if uniform prior</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">uniform_prior</span>
+            <span class="k">else</span> <span class="n">Uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">((</span><span class="n">n_particles</span><span class="p">,))</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">compute_ll</span><span class="p">(</span><span class="n">z_batch</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">z_batch</span><span class="p">)</span>  <span class="c1"># (N, d)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">)</span>
+            <span class="n">mu</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">predict_mean_and_variance</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">)</span>
+            <span class="c1"># Sum of log-probs across tasks</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_prob_from_mu_sigma</span><span class="p">(</span>
+                <span class="n">mu</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_upper</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="s2">&quot;sumlog&quot;</span>
+            <span class="p">)</span>  <span class="c1"># (N,)</span>
+
+        <span class="c1"># Initial log-likelihoods</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">compute_ll</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="c1"># Initialize weights at beta=0 (prior)</span>
+        <span class="n">logw</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_particles</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">betas</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">beta</span><span class="p">]</span>
+        <span class="n">ess_hist</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">ess_from_logw</span><span class="p">(</span><span class="n">lw</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="n">lw</span> <span class="o">-</span> <span class="n">lw</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-12</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">systematic_resample</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+            <span class="n">u0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((),</span> <span class="n">device</span><span class="o">=</span><span class="n">w</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+            <span class="n">cdf</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">thresholds</span> <span class="o">=</span> <span class="n">u0</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">w</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cdf</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">idx</span><span class="o">.</span><span class="n">clamp_max</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">rejuvenate_rw</span><span class="p">(</span>
+            <span class="n">z</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">ll</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Vectorized RW-MH with tempered target.</span>
+
+<span class="sd">            - If uniform_prior: proposals outside [domain_min, domain_max] are rejected</span>
+<span class="sd">              and prior term cancels (constant inside domain).</span>
+<span class="sd">            - Else (whitened Gaussian): include standard normal prior term in MH ratio.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">move_steps</span><span class="p">):</span>
+                <span class="c1"># Create Gaussian random-walk proposals</span>
+                <span class="n">z_prop</span> <span class="o">=</span> <span class="n">z</span> <span class="o">+</span> <span class="n">rw_step</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn_like</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">uniform_prior</span><span class="p">:</span>
+                    <span class="c1"># Reject out-of-bounds proposals under uniform prior</span>
+                    <span class="n">inside</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="p">(</span><span class="n">z_prop</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">z_prop</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain_max</span><span class="p">)</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+                    <span class="c1"># Evaluate ll_prop for all (keeps vectorization); masked later</span>
+                    <span class="n">ll_prop</span> <span class="o">=</span> <span class="n">compute_ll</span><span class="p">(</span><span class="n">z_prop</span><span class="p">)</span>
+                    <span class="n">dprior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ll</span><span class="p">)</span>
+                    <span class="n">dlike</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">ll_prop</span> <span class="o">-</span> <span class="n">ll</span><span class="p">)</span>
+                    <span class="n">log_alpha</span> <span class="o">=</span> <span class="n">dprior</span> <span class="o">+</span> <span class="n">dlike</span>
+                    <span class="n">ulog</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">accept</span> <span class="o">=</span> <span class="p">(</span><span class="n">ulog</span> <span class="o">&lt;=</span> <span class="n">log_alpha</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">inside</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ll_prop</span> <span class="o">=</span> <span class="n">compute_ll</span><span class="p">(</span><span class="n">z_prop</span><span class="p">)</span>
+                    <span class="n">dprior</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">z_prop</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">z</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">dlike</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">ll_prop</span> <span class="o">-</span> <span class="n">ll</span><span class="p">)</span>
+                    <span class="n">log_alpha</span> <span class="o">=</span> <span class="n">dprior</span> <span class="o">+</span> <span class="n">dlike</span>
+                    <span class="n">ulog</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">accept</span> <span class="o">=</span> <span class="n">ulog</span> <span class="o">&lt;=</span> <span class="n">log_alpha</span>
+
+                <span class="k">if</span> <span class="n">accept</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">accept</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">z_prop</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+                    <span class="n">ll</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">accept</span><span class="p">,</span> <span class="n">ll_prop</span><span class="p">,</span> <span class="n">ll</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">ll</span>
+
+        <span class="c1"># Adaptive tempering loop from prior (beta=0) to posterior (beta=1)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
+            <span class="c1"># Target ESS as number of particles</span>
+            <span class="n">target_ess</span> <span class="o">=</span> <span class="n">ess_target_frac</span> <span class="o">*</span> <span class="n">n_particles</span>
+
+            <span class="c1"># Find largest delta via binary search that gives ess &gt;= target_ess</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">25</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">high</span> <span class="o">&lt;=</span> <span class="mf">1e-6</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">delta</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">low</span> <span class="o">+</span> <span class="n">high</span><span class="p">)</span>
+                <span class="n">lw_try</span> <span class="o">=</span> <span class="n">logw</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">ll</span>
+                <span class="n">ess_try</span> <span class="o">=</span> <span class="n">ess_from_logw</span><span class="p">(</span><span class="n">lw_try</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ess_try</span> <span class="o">&lt;</span> <span class="n">target_ess</span><span class="p">:</span>
+                    <span class="n">high</span> <span class="o">=</span> <span class="n">delta</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">low</span> <span class="o">=</span> <span class="n">delta</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">low</span>
+            <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;=</span> <span class="mf">1e-8</span> <span class="ow">and</span> <span class="n">beta</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">delta</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">beta</span> <span class="o">+</span> <span class="n">delta</span><span class="p">))</span>
+            <span class="n">logw</span> <span class="o">=</span> <span class="n">logw</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">ll</span>
+
+            <span class="c1"># Normalize and compute ESS</span>
+            <span class="n">lw_norm</span> <span class="o">=</span> <span class="n">logw</span> <span class="o">-</span> <span class="n">logw</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">lw_norm</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
+            <span class="n">ess</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-12</span><span class="p">))</span>
+            <span class="n">betas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
+            <span class="n">ess_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ess</span><span class="p">)</span>
+
+            <span class="c1"># Resample and rejuvenate if ESS below target or at final beta=1 so that</span>
+            <span class="c1"># the final output is unweighted and represents the posterior</span>
+            <span class="n">need_resample</span> <span class="o">=</span> <span class="p">(</span><span class="n">ess</span> <span class="o">&lt;</span> <span class="n">target_ess</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">beta</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">need_resample</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">systematic_resample</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">ll</span> <span class="o">=</span> <span class="n">ll</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">logw</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+                <span class="n">z</span><span class="p">,</span> <span class="n">ll</span> <span class="o">=</span> <span class="n">rejuvenate_rw</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ll</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+            <span class="c1"># Break if reached beta=1, i.e. full posterior</span>
+            <span class="k">if</span> <span class="n">beta</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="n">x_final</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_final</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">)</span>
+        <span class="n">lw_norm</span> <span class="o">=</span> <span class="n">logw</span> <span class="o">-</span> <span class="n">logw</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">w_final</span> <span class="o">=</span> <span class="n">lw_norm</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
+        <span class="n">unique_count</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">x_final</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">plot_diagnostics</span><span class="p">:</span>
+            <span class="c1"># Diagnostic plots</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+                <span class="n">x_final</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">x_final</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">s</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;tab:orange&quot;</span>
+            <span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;SMC particles (final), unique=</span><span class="si">{</span><span class="n">unique_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">x_final</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x1&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;x2&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;beta&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;step&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Temperatures&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ess_hist</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;ESS&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;step&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;ESS over steps&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">return_az_data</span><span class="p">:</span>
+            <span class="c1"># Convert to SMC-specific ArviZ InferenceData</span>
+            <span class="n">x_np</span> <span class="o">=</span> <span class="n">x_final</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">w_np</span> <span class="o">=</span> <span class="n">w_final</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">lw_np</span> <span class="o">=</span> <span class="n">lw_norm</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+            <span class="c1"># Posterior: store each calibrated parameter as its own variable</span>
+            <span class="n">posterior</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="n">x_np</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span>  <span class="c1"># shape (chain=1, draw=N)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_params</span><span class="p">)</span>
+            <span class="p">}</span>
+
+            <span class="c1"># Sample stats: normalized weights and log-weights per draw</span>
+            <span class="n">sample_stats</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="n">w_np</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>  <span class="c1"># (chain=1, draw=N)</span>
+                <span class="s2">&quot;log_weight&quot;</span><span class="p">:</span> <span class="n">lw_np</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>
+            <span class="p">}</span>
+
+            <span class="c1"># Constant data: beta schedule, ESS history, and unique_count</span>
+            <span class="n">constant_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;beta_schedule&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                <span class="s2">&quot;ess_history&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ess_hist</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                <span class="s2">&quot;unique_count&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">unique_count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="n">az</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+                <span class="n">posterior</span><span class="o">=</span><span class="n">posterior</span><span class="p">,</span>
+                <span class="n">sample_stats</span><span class="o">=</span><span class="n">sample_stats</span><span class="p">,</span>
+                <span class="n">constant_data</span><span class="o">=</span><span class="n">constant_data</span><span class="p">,</span>
+                <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;tempering_step&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">betas</span><span class="p">)),</span>
+                    <span class="s2">&quot;tempering_step_ess&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ess_hist</span><span class="p">)),</span>
+                <span class="p">},</span>
+                <span class="n">dims</span><span class="o">=</span><span class="p">{</span>
+                    <span class="c1"># beta schedule has one entry per tempering step</span>
+                    <span class="s2">&quot;beta_schedule&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;tempering_step&quot;</span><span class="p">],</span>
+                    <span class="c1"># ess history typically logged after each step</span>
+                    <span class="s2">&quot;ess_history&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;tempering_step_ess&quot;</span><span class="p">],</span>
+                    <span class="c1"># per-parameter posterior vars are scalars per draw (no extra dims)</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">x_final</span><span class="p">,</span>
+            <span class="n">w_final</span><span class="p">,</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">betas</span><span class="p">),</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">ess_hist</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">unique_count</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1225 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>autoemulate.emulators.base &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/emulators/base';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="autoemulate.emulators.ensemble" href="ensemble.html" />
+    <link rel="prev" title="Emulators" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Emulators</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Freference/emulators/base.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/reference/emulators/base.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>autoemulate.emulators.base</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator"><code class="docutils literal notranslate"><span class="pre">Emulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.is_fitted_"><code class="docutils literal notranslate"><span class="pre">Emulator.is_fitted_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.supports_grad"><code class="docutils literal notranslate"><span class="pre">Emulator.supports_grad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.scheduler_cls"><code class="docutils literal notranslate"><span class="pre">Emulator.scheduler_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.x_transform"><code class="docutils literal notranslate"><span class="pre">Emulator.x_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.y_transform"><code class="docutils literal notranslate"><span class="pre">Emulator.y_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.supports_uq"><code class="docutils literal notranslate"><span class="pre">Emulator.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.fit"><code class="docutils literal notranslate"><span class="pre">Emulator.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.model_name"><code class="docutils literal notranslate"><span class="pre">Emulator.model_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.short_name"><code class="docutils literal notranslate"><span class="pre">Emulator.short_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.predict"><code class="docutils literal notranslate"><span class="pre">Emulator.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.predict_mean"><code class="docutils literal notranslate"><span class="pre">Emulator.predict_mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.predict_mean_and_variance"><code class="docutils literal notranslate"><span class="pre">Emulator.predict_mean_and_variance()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.is_multioutput"><code class="docutils literal notranslate"><span class="pre">Emulator.is_multioutput()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.get_tune_params"><code class="docutils literal notranslate"><span class="pre">Emulator.get_tune_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.get_random_params"><code class="docutils literal notranslate"><span class="pre">Emulator.get_random_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.get_scheduler_params"><code class="docutils literal notranslate"><span class="pre">Emulator.get_scheduler_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.scheduler_setup"><code class="docutils literal notranslate"><span class="pre">Emulator.scheduler_setup()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator.supports_uq"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator.predict"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator.predict_mean_and_variance"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator.predict_mean_and_variance()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator.supports_uq"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator.predict"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator.predict_mean_and_variance"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator.predict_mean_and_variance()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianEmulator"><code class="docutils literal notranslate"><span class="pre">GaussianEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianEmulator.supports_grad"><code class="docutils literal notranslate"><span class="pre">GaussianEmulator.supports_grad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianEmulator.predict"><code class="docutils literal notranslate"><span class="pre">GaussianEmulator.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianProcessEmulator"><code class="docutils literal notranslate"><span class="pre">GaussianProcessEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianProcessEmulator.predict"><code class="docutils literal notranslate"><span class="pre">GaussianProcessEmulator.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.batch_size"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.batch_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.shuffle"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.shuffle</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.epochs"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.epochs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.verbose"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.verbose</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.loss_fn"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.loss_fn</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.optimizer_cls"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.optimizer_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.optimizer"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.optimizer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.supports_grad"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.supports_grad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.lr"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.lr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.scheduler_cls"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.scheduler_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.supports_uq"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.loss_func"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.loss_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend"><code class="docutils literal notranslate"><span class="pre">SklearnBackend</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.model"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.model</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.normalize_y"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.normalize_y</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.y_mean"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.y_mean</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.y_std"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.y_std</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.supports_grad"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.supports_grad</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DropoutTorchBackend"><code class="docutils literal notranslate"><span class="pre">DropoutTorchBackend</span></code></a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-autoemulate.emulators.base">
+<span id="autoemulate-emulators-base"></span><h1>autoemulate.emulators.base<a class="headerlink" href="#module-autoemulate.emulators.base" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Emulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ConversionMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDeviceMixin</span></code></p>
+<p>Base class for all emulators.</p>
+<p>This class provides the basic structure and methods for emulators in AutoEmulate.
+It includes methods for fitting, predicting, and handling device management.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.is_fitted_">
+<span class="sig-name descname"><span class="pre">is_fitted_</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.Emulator.is_fitted_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.supports_grad">
+<span class="sig-name descname"><span class="pre">supports_grad</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.Emulator.supports_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.scheduler_cls">
+<span class="sig-name descname"><span class="pre">scheduler_cls</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#autoemulate.emulators.base.Emulator.scheduler_cls" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.x_transform">
+<span class="sig-name descname"><span class="pre">x_transform</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#autoemulate.emulators.base.Emulator.x_transform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.y_transform">
+<span class="sig-name descname"><span class="pre">y_transform</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#autoemulate.emulators.base.Emulator.y_transform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.supports_uq">
+<span class="sig-name descname"><span class="pre">supports_uq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.Emulator.supports_uq" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the emulator to the provided data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.model_name">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.model_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.model_name" title="Link to this definition">#</a></dt>
+<dd><p>Return the full name of the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.short_name">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">short_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.short_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.short_name" title="Link to this definition">#</a></dt>
+<dd><p>Return a short name for the model.</p>
+<p>Take the capital letters of the class name and return them as a lower case
+string. For example, if the class name is <cite>GaussianProcess</cite>, this will return
+<cite>gp</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.predict" title="Link to this definition">#</a></dt>
+<dd><p>Predict the output for the given input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor to make predictions for.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to enable gradient calculation. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The predicted output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>OutputLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.predict_mean">
+<span class="sig-name descname"><span class="pre">predict_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.predict_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.predict_mean" title="Link to this definition">#</a></dt>
+<dd><p>Predict the mean of the target variable for input <cite>x</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor of shape <cite>(n_batch, n_features)</cite> for which to predict
+the mean.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to compute gradients with respect to the input. Defaults to False.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of samples to draw when using sampling-based predictions.
+Defaults to 100.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mean tensor of shape <cite>(n_batch, n_targets)</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TensorLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.predict_mean_and_variance">
+<span class="sig-name descname"><span class="pre">predict_mean_and_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.predict_mean_and_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.predict_mean_and_variance" title="Link to this definition">#</a></dt>
+<dd><p>Predict the mean and variance of the target variable for input <cite>x</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor of shape <cite>(n_batch, n_features)</cite> for which to predict
+the mean and variance.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to compute gradients with respect to the input. Defaults to False.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of samples to draw when using sampling-based predictions.
+Defaults to 100.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing:
+- Mean tensor of shape <cite>(n_batch, n_targets)</cite>.
+- Variance tensor of shape <cite>(n_batch, n_targets)</cite> if model supports UQ
+otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[TensorLike, TensorLike | None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.is_multioutput">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_multioutput</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.is_multioutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.is_multioutput" title="Link to this definition">#</a></dt>
+<dd><p>Flag to indicate if the model is multioutput or not.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.get_tune_params">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_tune_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.get_tune_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.get_tune_params" title="Link to this definition">#</a></dt>
+<dd><p>Return a dictionary of hyperparameters to tune.</p>
+<p>The keys in the TuneParams must be implemented as keyword arguments in the
+__init__ method of any subclasses.</p>
+<p>e.g.</p>
+<dl class="simple">
+<dt>tune_params: TuneParams = {</dt><dd><p>“lr”: list[0.01, 0.1],
+“batch_size”: [16, 32],
+“mean”</p>
+</dd>
+</dl>
+<p>}</p>
+<dl class="simple">
+<dt>model_params: ModelParams = {</dt><dd><p>“lr”: 0.01,
+“batch_size”: 16</p>
+</dd>
+</dl>
+<p>}</p>
+<dl class="simple">
+<dt>class MySubClass(Emulator):</dt><dd><dl class="simple">
+<dt>def __init__(lr, batch_size):</dt><dd><p>self.lr = lr
+self.batch_size = batch_size</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.get_random_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_random_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.get_random_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.get_random_params" title="Link to this definition">#</a></dt>
+<dd><p>Return a random set of params for the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.get_scheduler_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_scheduler_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.get_scheduler_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.get_scheduler_params" title="Link to this definition">#</a></dt>
+<dd><p>Return a random parameters for the learning rate scheduler.</p>
+<p>This should be added to the <cite>get_tune_params()</cite> method of subclasses
+to allow tuning of the scheduler parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.Emulator.scheduler_setup">
+<span class="sig-name descname"><span class="pre">scheduler_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#Emulator.scheduler_setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.Emulator.scheduler_setup" title="Link to this definition">#</a></dt>
+<dd><p>Set up the learning rate scheduler for the emulator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scheduler_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> | </em><em>None</em>) – Keyword arguments for the scheduler.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.DeterministicEmulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeterministicEmulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#DeterministicEmulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.DeterministicEmulator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#autoemulate.emulators.base.Emulator" title="autoemulate.emulators.base.Emulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Emulator</span></code></a></p>
+<p>A base class for deterministic emulators.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.DeterministicEmulator.supports_uq">
+<span class="sig-name descname"><span class="pre">supports_uq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.DeterministicEmulator.supports_uq" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.DeterministicEmulator.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#DeterministicEmulator.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.DeterministicEmulator.predict" title="Link to this definition">#</a></dt>
+<dd><p>Predict the output for the given input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor to make predictions for.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to enable gradient calculation. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The emulator predicted output for <cite>x</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TensorLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.DeterministicEmulator.predict_mean_and_variance">
+<span class="sig-name descname"><span class="pre">predict_mean_and_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#DeterministicEmulator.predict_mean_and_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.DeterministicEmulator.predict_mean_and_variance" title="Link to this definition">#</a></dt>
+<dd><p>Predict the mean and variance of the target variable for input <cite>x</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor of shape <cite>(n_batch, n_features)</cite> for which to predict
+the mean and variance.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to compute gradients with respect to the input. Defaults to False.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of samples to draw when using sampling-based predictions.
+Defaults to 100.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing:
+- Mean tensor of shape <cite>(n_batch, n_targets)</cite>.
+- Variance tensor as <cite>None</cite> since the model does not support UQ.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[TensorLike, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.ProbabilisticEmulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProbabilisticEmulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#ProbabilisticEmulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.ProbabilisticEmulator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#autoemulate.emulators.base.Emulator" title="autoemulate.emulators.base.Emulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Emulator</span></code></a></p>
+<p>A base class for probabilistic emulators.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.ProbabilisticEmulator.supports_uq">
+<span class="sig-name descname"><span class="pre">supports_uq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#autoemulate.emulators.base.ProbabilisticEmulator.supports_uq" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.ProbabilisticEmulator.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#ProbabilisticEmulator.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.ProbabilisticEmulator.predict" title="Link to this definition">#</a></dt>
+<dd><p>Predict the output distribution for the given input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor to make predictions for.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to enable gradient calculation. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The emulator predicted distribution for <cite>x</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DistributionLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.ProbabilisticEmulator.predict_mean_and_variance">
+<span class="sig-name descname"><span class="pre">predict_mean_and_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#ProbabilisticEmulator.predict_mean_and_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.ProbabilisticEmulator.predict_mean_and_variance" title="Link to this definition">#</a></dt>
+<dd><p>Predict the mean and variance of the target variable for input <cite>x</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor of shape <cite>(n_batch, n_features)</cite> for which to predict
+the mean and variance.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to compute gradients with respect to the input. Defaults to False.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of samples to draw when using sampling-based predictions.
+Defaults to 100.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing:
+- Mean tensor of shape <cite>(n_batch, n_targets)</cite>.
+- Variance tensor of shape <cite>(n_batch, n_targets)</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[TensorLike, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.GaussianEmulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GaussianEmulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#GaussianEmulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.GaussianEmulator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#autoemulate.emulators.base.ProbabilisticEmulator" title="autoemulate.emulators.base.ProbabilisticEmulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProbabilisticEmulator</span></code></a></p>
+<p>A base class for Gaussian emulators.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.GaussianEmulator.supports_grad">
+<span class="sig-name descname"><span class="pre">supports_grad</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#autoemulate.emulators.base.GaussianEmulator.supports_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.GaussianEmulator.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#GaussianEmulator.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.GaussianEmulator.predict" title="Link to this definition">#</a></dt>
+<dd><p>Predict the Gaussian distribution for the given input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor to make predictions for.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to enable gradient calculation. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The emulator predicted Gaussian distribution for <cite>x</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GaussianLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.GaussianProcessEmulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GaussianProcessEmulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#GaussianProcessEmulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.GaussianProcessEmulator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#autoemulate.emulators.base.GaussianEmulator" title="autoemulate.emulators.base.GaussianEmulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">GaussianEmulator</span></code></a></p>
+<p>A base class for Gaussian Process emulators.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.GaussianProcessEmulator.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#GaussianProcessEmulator.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.GaussianProcessEmulator.predict" title="Link to this definition">#</a></dt>
+<dd><p>Predict the Gaussian distribution for the given input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>TensorLike</em>) – Input tensor to make predictions for.</p></li>
+<li><p><strong>with_grad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to enable gradient calculation. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The emulator predicted Gaussian distribution for <cite>x</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GaussianLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PyTorchBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#PyTorchBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <a class="reference internal" href="#autoemulate.emulators.base.Emulator" title="autoemulate.emulators.base.Emulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Emulator</span></code></a></p>
+<p><cite>PyTorchBackend</cite> provides a backend for PyTorch models.</p>
+<p>The class provides the basic structure and methods for PyTorch-based emulators to
+enable further subclassing and customization. This provides default implementations
+to simplify model-specific subclasses by only needing to implement:
+- <cite>.__init__()</cite>: the constructor for the model
+- <cite>.forward()</cite>: the forward pass of the model
+- <cite>.get_tune_params()</cite>: the hyperparameters to tune for the model</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.batch_size" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.shuffle">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.shuffle" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.epochs">
+<span class="sig-name descname"><span class="pre">epochs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.epochs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.verbose">
+<span class="sig-name descname"><span class="pre">verbose</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.verbose" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.loss_fn">
+<span class="sig-name descname"><span class="pre">loss_fn</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">MSELoss()</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.loss_fn" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.optimizer_cls">
+<span class="sig-name descname"><span class="pre">optimizer_cls</span></span><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.optimizer_cls" title="Link to this definition">#</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Adam</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.optimizer">
+<span class="sig-name descname"><span class="pre">optimizer</span></span><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.optimizer" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.supports_grad">
+<span class="sig-name descname"><span class="pre">supports_grad</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.supports_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.lr">
+<span class="sig-name descname"><span class="pre">lr</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.lr" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.scheduler_cls">
+<span class="sig-name descname"><span class="pre">scheduler_cls</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.scheduler_cls" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.supports_uq">
+<span class="sig-name descname"><span class="pre">supports_uq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.supports_uq" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.PyTorchBackend.loss_func">
+<span class="sig-name descname"><span class="pre">loss_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#PyTorchBackend.loss_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.PyTorchBackend.loss_func" title="Link to this definition">#</a></dt>
+<dd><p>Loss function to be used for training the model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.SklearnBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SklearnBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#SklearnBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.SklearnBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#autoemulate.emulators.base.DeterministicEmulator" title="autoemulate.emulators.base.DeterministicEmulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeterministicEmulator</span></code></a></p>
+<p><cite>SklearnBackend</cite> provides a backend for sklearn models.</p>
+<p>The class provides the basic structure and methods for sklearn-based emulators to
+enable further subclassing and customization. This provides default implementations
+to simplify model-specific subclasses by only needing to implement:
+- <cite>.__init__()</cite>: the constructor for the model
+- <cite>.get_tune_params()</cite>: the hyperparameters to tune for the model</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.SklearnBackend.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#autoemulate.emulators.base.SklearnBackend.model" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.SklearnBackend.normalize_y">
+<span class="sig-name descname"><span class="pre">normalize_y</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.SklearnBackend.normalize_y" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.SklearnBackend.y_mean">
+<span class="sig-name descname"><span class="pre">y_mean</span></span><a class="headerlink" href="#autoemulate.emulators.base.SklearnBackend.y_mean" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.SklearnBackend.y_std">
+<span class="sig-name descname"><span class="pre">y_std</span></span><a class="headerlink" href="#autoemulate.emulators.base.SklearnBackend.y_std" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.SklearnBackend.supports_grad">
+<span class="sig-name descname"><span class="pre">supports_grad</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#autoemulate.emulators.base.SklearnBackend.supports_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="autoemulate.emulators.base.DropoutTorchBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DropoutTorchBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/autoemulate/emulators/base.html#DropoutTorchBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autoemulate.emulators.base.DropoutTorchBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#autoemulate.emulators.base.PyTorchBackend" title="autoemulate.emulators.base.PyTorchBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyTorchBackend</span></code></a></p>
+<p>PyTorch backend model that is able to support dropout.</p>
+</dd></dl>
+
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./reference/emulators"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Emulators</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ensemble.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">autoemulate.emulators.ensemble</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator"><code class="docutils literal notranslate"><span class="pre">Emulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.is_fitted_"><code class="docutils literal notranslate"><span class="pre">Emulator.is_fitted_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.supports_grad"><code class="docutils literal notranslate"><span class="pre">Emulator.supports_grad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.scheduler_cls"><code class="docutils literal notranslate"><span class="pre">Emulator.scheduler_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.x_transform"><code class="docutils literal notranslate"><span class="pre">Emulator.x_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.y_transform"><code class="docutils literal notranslate"><span class="pre">Emulator.y_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.supports_uq"><code class="docutils literal notranslate"><span class="pre">Emulator.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.fit"><code class="docutils literal notranslate"><span class="pre">Emulator.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.model_name"><code class="docutils literal notranslate"><span class="pre">Emulator.model_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.short_name"><code class="docutils literal notranslate"><span class="pre">Emulator.short_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.predict"><code class="docutils literal notranslate"><span class="pre">Emulator.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.predict_mean"><code class="docutils literal notranslate"><span class="pre">Emulator.predict_mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.predict_mean_and_variance"><code class="docutils literal notranslate"><span class="pre">Emulator.predict_mean_and_variance()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.is_multioutput"><code class="docutils literal notranslate"><span class="pre">Emulator.is_multioutput()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.get_tune_params"><code class="docutils literal notranslate"><span class="pre">Emulator.get_tune_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.get_random_params"><code class="docutils literal notranslate"><span class="pre">Emulator.get_random_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.get_scheduler_params"><code class="docutils literal notranslate"><span class="pre">Emulator.get_scheduler_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.Emulator.scheduler_setup"><code class="docutils literal notranslate"><span class="pre">Emulator.scheduler_setup()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator.supports_uq"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator.predict"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DeterministicEmulator.predict_mean_and_variance"><code class="docutils literal notranslate"><span class="pre">DeterministicEmulator.predict_mean_and_variance()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator.supports_uq"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator.predict"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.ProbabilisticEmulator.predict_mean_and_variance"><code class="docutils literal notranslate"><span class="pre">ProbabilisticEmulator.predict_mean_and_variance()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianEmulator"><code class="docutils literal notranslate"><span class="pre">GaussianEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianEmulator.supports_grad"><code class="docutils literal notranslate"><span class="pre">GaussianEmulator.supports_grad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianEmulator.predict"><code class="docutils literal notranslate"><span class="pre">GaussianEmulator.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianProcessEmulator"><code class="docutils literal notranslate"><span class="pre">GaussianProcessEmulator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.GaussianProcessEmulator.predict"><code class="docutils literal notranslate"><span class="pre">GaussianProcessEmulator.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.batch_size"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.batch_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.shuffle"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.shuffle</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.epochs"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.epochs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.verbose"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.verbose</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.loss_fn"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.loss_fn</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.optimizer_cls"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.optimizer_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.optimizer"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.optimizer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.supports_grad"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.supports_grad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.lr"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.lr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.scheduler_cls"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.scheduler_cls</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.supports_uq"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.supports_uq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.PyTorchBackend.loss_func"><code class="docutils literal notranslate"><span class="pre">PyTorchBackend.loss_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend"><code class="docutils literal notranslate"><span class="pre">SklearnBackend</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.model"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.model</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.normalize_y"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.normalize_y</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.y_mean"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.y_mean</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.y_std"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.y_std</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.SklearnBackend.supports_grad"><code class="docutils literal notranslate"><span class="pre">SklearnBackend.supports_grad</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#autoemulate.emulators.base.DropoutTorchBackend"><code class="docutils literal notranslate"><span class="pre">DropoutTorchBackend</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
