@@ -262,6 +262,105 @@ class TestEvidenceComputation:
         evidence = ec.get_evidence_object()
         assert evidence is not None
 
+    def test_split_data_method(self, simple_mcmc_setup):
+        """Test split_data method separately."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        ec = EvidenceComputation(
+            mcmc, model, training_proportion=0.6, log_level="error"
+        )
+        chains_train, chains_infer = ec.split_data()
+
+        # Check that chains were created and split
+        assert ec.chains is not None
+        assert chains_train is not None
+        assert chains_infer is not None
+        assert ec.chains_train is chains_train
+        assert ec.chains_infer is chains_infer
+
+        # Check split proportion (approximately)
+        total_samples = ec.chains.samples.shape[0]
+        train_samples = chains_train.samples.shape[0]
+        train_ratio = train_samples / total_samples
+        assert 0.55 < train_ratio < 0.65  # Allow some tolerance
+
+    def test_fit_flow_method(self, simple_mcmc_setup):
+        """Test fit_flow method separately."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec.split_data()
+        ec.fit_flow(epochs=10, verbose=False)
+
+        # Check that flow was created and trained
+        assert ec.flow is not None
+        # Check flow has expected attributes from RQSplineModel
+        assert hasattr(ec.flow, "fit")
+        assert hasattr(ec.flow, "temperature")
+
+    def test_fit_flow_without_split_raises_error(self, simple_mcmc_setup):
+        """Test that fit_flow raises error if split_data not called."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        ec = EvidenceComputation(mcmc, model, log_level="error")
+
+        with pytest.raises(RuntimeError, match="Must call split_data"):
+            ec.fit_flow(epochs=10)
+
+    def test_compute_ln_evidence_method(self, simple_mcmc_setup):
+        """Test compute_ln_evidence method separately."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec.split_data()
+        ec.fit_flow(epochs=10, verbose=False)
+        results = ec.compute_ln_evidence()
+
+        # Check results structure
+        assert isinstance(results, dict)
+        assert "ln_evidence" in results
+        assert "ln_inv_evidence" in results
+        assert "error_lower" in results
+        assert "error_upper" in results
+        assert results["num_chains"] == 10
+        assert results["num_parameters"] == 2
+
+    def test_compute_ln_evidence_without_fit_raises_error(self, simple_mcmc_setup):
+        """Test that compute_ln_evidence raises error if fit_flow not called."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec.split_data()
+
+        with pytest.raises(RuntimeError, match="Must call split_data.*and fit_flow"):
+            ec.compute_ln_evidence()
+
+    def test_modular_workflow(self, simple_mcmc_setup):
+        """Test the modular workflow: split -> fit -> compute."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        ec = EvidenceComputation(mcmc, model, log_level="error")
+
+        # Step 1: Split data
+        chains_train, chains_infer = ec.split_data()
+        assert chains_train is not None
+        assert chains_infer is not None
+
+        # Step 2: Fit flow
+        ec.fit_flow(epochs=10, verbose=False)
+        assert ec.flow is not None
+
+        # Step 3: Compute evidence
+        results = ec.compute_ln_evidence()
+        assert "ln_evidence" in results
+
+        # Verify consistency with convenience method
+        ec2 = EvidenceComputation(mcmc, model, log_level="error")
+        results2 = ec2.compute_evidence(epochs=10, verbose=False)
+
+        # Both should produce similar results (may not be identical due to randomness)
+        assert abs(results["ln_evidence"] - results2["ln_evidence"]) < 5.0
+
 
 class TestIntegration:
     """Integration tests for the full workflow."""

@@ -88,7 +88,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         self.emulator.device = self.device
         self.output_names = list(observations.keys())
         self.logger, self.progress_bar = get_configured_logger(log_level)
-        self.logger.info(
+        self.logger.debug(
             "Initializing BayesianCalibration with parameters: %s",
             self.calibration_params,
         )
@@ -116,7 +116,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             raise ValueError(msg)
         self.observations = processed_observations
         self.n_observations = obs_lengths[0]
-        self.logger.info("Processed observations for outputs: %s", self.output_names)
+        self.logger.debug("Processed observations for outputs: %s", self.output_names)
 
         # Save observation noise as {output: value} dictionary
         if isinstance(observation_noise, float):

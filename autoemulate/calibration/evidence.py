@@ -136,7 +136,7 @@ class EvidenceComputation(TorchDeviceMixin):
         # Initialize Harmonic components (will be populated in compute_evidence)
         self._initialize_harmonic_components()
 
-        self.logger.info("EvidenceComputation initialized successfully")
+        self.logger.debug("EvidenceComputation initialized successfully")
 
     def _validate_parameters(
         self, training_proportion: float, temperature: float, flow_model: str
@@ -160,14 +160,14 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
-        self.logger.info("Initializing EvidenceComputation")
-        self.logger.info("Training proportion: %s", training_proportion)
-        self.logger.info("Temperature: %s", temperature)
-        self.logger.info("Flow model: %s", flow_model)
+        self.logger.debug("Initializing EvidenceComputation")
+        self.logger.debug("Training proportion: %s", training_proportion)
+        self.logger.debug("Temperature: %s", temperature)
+        self.logger.debug("Flow model: %s", flow_model)
 
     def _extract_and_validate_samples(self):
         """Extract samples from MCMC and validate them."""
-        self.logger.info("Extracting log probabilities from MCMC samples...")
+        self.logger.debug("Extracting log probabilities from MCMC samples...")
         try:
             self.samples, self.log_probs = extract_log_probabilities(
                 self.mcmc, self.model, device=self.device
@@ -177,8 +177,8 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise RuntimeError(msg) from e
 
-        self.logger.info("Samples shape: %s", self.samples.shape)
-        self.logger.info("Log probabilities shape: %s", self.log_probs.shape)
+        self.logger.debug("Samples shape: %s", self.samples.shape)
+        self.logger.debug("Log probabilities shape: %s", self.log_probs.shape)
 
         # Validate training_proportion for number of chains
         num_chains = self.samples.shape[0]
@@ -212,76 +212,23 @@ class EvidenceComputation(TorchDeviceMixin):
         self.flow: hm.model.RQSplineModel | None = None  # type: ignore[name-defined]
         self.evidence: hm.Evidence | None = None  # type: ignore[name-defined]
 
-    def compute_evidence(
-        self,
-        epochs: int = 30,
-        verbose: bool = False,
-    ) -> dict:
+    def split_data(self) -> tuple:
         """
-        Compute the Bayesian evidence.
-
-        This method trains a normalizing flow on a subset of MCMC samples, then
-        uses the trained flow to compute the evidence on the remaining samples.
-
-        Parameters
-        ----------
-        epochs : int, optional
-            Number of training epochs for the normalizing flow model. More epochs
-            may improve accuracy but increase computation time. Default is 30.
-        verbose : bool, optional
-            Whether to print training progress and details during flow training.
-            Default is False.
+        Split MCMC samples into training and inference sets.
 
         Returns
         -------
-        dict
-            Dictionary containing evidence estimation results:
-            - "ln_evidence" : float
-                Natural logarithm of the evidence (log marginal likelihood).
-            - "ln_inv_evidence" : float
-                Natural logarithm of the inverse evidence (as computed by Harmonic).
-            - "error_lower" : float
-                Lower bound of the error estimate (asymmetric).
-            - "error_upper" : float
-                Upper bound of the error estimate (asymmetric).
-            - "samples_shape" : tuple
-                Shape of the samples tensor used.
-            - "num_chains" : int
-                Number of MCMC chains.
-            - "num_samples_per_chain" : int
-                Number of samples per chain.
-            - "num_parameters" : int
-                Number of parameters in the model.
-
-        Raises
-        ------
-        RuntimeError
-            If flow training or evidence computation fails.
+        tuple
+            A tuple containing (chains_train, chains_infer) where each is a
+            harmonic.Chains object.
 
         Notes
         -----
-        The returned "ln_evidence" is the most commonly used quantity for model
-        comparison via Bayes factors:
-            BF = exp(ln_evidence_model1 - ln_evidence_model2)
-
-        The error bounds are asymmetric and represent the uncertainty in the
-        log inverse evidence. To interpret these errors:
-        - Tight errors (< 0.1) indicate reliable estimation
-        - Large errors (> 1.0) suggest more samples or longer training needed
-
-        Examples
-        --------
-        >>> ec = EvidenceComputation(mcmc, model)
-        >>> results = ec.compute_evidence(epochs=50, verbose=True)
-        >>> ln_ev = results["ln_evidence"]
-        >>> err_lower = results["error_lower"]
-        >>> err_upper = results["error_upper"]
-        >>> print(f"ln(Evidence) = {ln_ev:.2f} (+{err_upper:.3f}, {err_lower:.3f})")
+        This creates a Harmonic Chains object from the MCMC samples and splits
+        it according to the training_proportion specified during initialization.
+        The training set is used to fit the normalizing flow, while the inference
+        set is used for evidence computation.
         """
-        self.logger.info("Starting evidence computation")
-
-        # Create Harmonic Chains object
-        self.logger.info("Creating Harmonic Chains...")
         ndim = self.samples.shape[2]
         self.chains = hm.Chains(ndim)
         assert self.chains is not None  # for type checker
@@ -289,86 +236,138 @@ class EvidenceComputation(TorchDeviceMixin):
             self.samples.cpu().numpy(), self.log_probs.cpu().numpy()
         )
 
-        # Split into training and inference sets
-        self.logger.info(
-            "Splitting chains (training proportion: %s)...",
-            self.training_proportion,
-        )
         self.chains_train, self.chains_infer = hm.utils.split_data(
             self.chains, training_proportion=self.training_proportion
         )
-        assert self.chains_train is not None  # for type checker
-        assert self.chains_infer is not None  # for type checker
 
-        self.logger.info(
-            "Training chains: %s chains, %s total samples",
-            self.chains_train.nchains,
-            self.chains_train.samples.shape[0],
+        return self.chains_train, self.chains_infer
+
+    def fit_flow(self, epochs: int = 30, verbose: bool = False) -> None:
+        """
+        Train the normalizing flow model on training data.
+
+        Parameters
+        ----------
+        epochs : int, optional
+            Number of training epochs. Default is 30.
+        verbose : bool, optional
+            Whether to print training progress. Default is False.
+
+        Raises
+        ------
+        RuntimeError
+            If flow training fails.
+
+        Notes
+        -----
+        This method trains a normalizing flow (RQSpline) on the training chains
+        to learn the posterior distribution. The trained flow is then used for
+        evidence computation.
+        """
+        if self.chains_train is None:
+            msg = "Must call split_data() before fit_flow()"
+            raise RuntimeError(msg)
+
+        ndim = self.samples.shape[2]
+        self.flow = hm.model.RQSplineModel(
+            ndim, standardize=True, temperature=self.temperature
         )
-        self.logger.info(
-            "Inference chains: %s chains, %s total samples",
-            self.chains_infer.nchains,
-            self.chains_infer.samples.shape[0],
+        assert self.flow is not None  # for type checker
+        self.flow.fit(
+            np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
+            epochs=epochs,
+            verbose=verbose,
         )
 
-        # Train normalizing flow
-        self.logger.info(
-            "Training %s flow model (epochs=%s)...", self.flow_model_type, epochs
-        )
-        try:
-            if self.flow_model_type == "RQSpline":
-                self.flow = hm.model.RQSplineModel(
-                    ndim, standardize=True, temperature=self.temperature
-                )
-            assert self.flow is not None  # for type checker
-            self.flow.fit(
-                np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
-                epochs=epochs,
-                verbose=verbose,
-            )
-        except Exception as e:
-            msg = f"Flow training failed: {e}"
-            self.logger.error(msg)
-            raise RuntimeError(msg) from e
+    def compute_ln_evidence(self) -> dict:
+        """
+        Compute the Bayesian evidence using the trained flow.
 
-        self.logger.info("Flow training completed")
+        Returns
+        -------
+        dict
+            Dictionary containing:
+            - "ln_evidence" : float - Natural log of the evidence
+            - "ln_inv_evidence" : float - Natural log of inverse evidence
+            - "error_lower" : float - Lower error bound
+            - "error_upper" : float - Upper error bound
+            - "samples_shape" : tuple - Shape of samples tensor
+            - "num_chains" : int - Number of MCMC chains
+            - "num_samples_per_chain" : int - Samples per chain
+            - "num_parameters" : int - Number of parameters
 
-        # Compute evidence
-        self.logger.info("Computing evidence...")
-        try:
-            self.evidence = hm.Evidence(self.chains_infer.nchains, self.flow)
-            assert self.evidence is not None  # for type checker
-            self.evidence.add_chains(self.chains_infer)
+        Raises
+        ------
+        RuntimeError
+            If evidence computation fails or required methods haven't been called.
 
-            ln_inv_evidence = self.evidence.ln_evidence_inv
-            error_bounds = self.evidence.compute_ln_inv_evidence_errors()
+        Notes
+        -----
+        The evidence is computed using the learned harmonic mean estimator.
+        The flow must be trained (fit_flow) and data must be split (split_data)
+        before calling this method.
+        """
+        if self.chains_infer is None or self.flow is None:
+            msg = "Must call split_data() and fit_flow() before compute_ln_evidence()"
+            raise RuntimeError(msg)
 
-        except Exception as e:
-            msg = f"Evidence computation failed: {e}"
-            self.logger.error(msg)
-            raise RuntimeError(msg) from e
+        self.evidence = hm.Evidence(self.chains_infer.nchains, self.flow)
+        assert self.evidence is not None  # for type checker
+        self.evidence.add_chains(self.chains_infer)
 
-        # Prepare results
+        ln_inv_evidence = self.evidence.ln_evidence_inv
+        error_bounds = self.evidence.compute_ln_inv_evidence_errors()
+
         ln_evidence = -ln_inv_evidence
-        error_lower = float(error_bounds[0])  # Negative error
-        error_upper = float(error_bounds[1])  # Positive error
 
-        results = {
+        return {
             "ln_evidence": float(ln_evidence),
             "ln_inv_evidence": float(ln_inv_evidence),
-            "error_lower": error_lower,
-            "error_upper": error_upper,
+            "error_lower": float(error_bounds[0]),
+            "error_upper": float(error_bounds[1]),
             "samples_shape": tuple(self.samples.shape),
             "num_chains": self.samples.shape[0],
             "num_samples_per_chain": self.samples.shape[1],
             "num_parameters": self.samples.shape[2],
         }
 
-        self.logger.info("Evidence computation completed")
-        self.logger.info("ln(Evidence) = %.4f", ln_evidence)
-        self.logger.info("ln(Inverse Evidence) = %.4f", ln_inv_evidence)
-        self.logger.info("Error bounds: [%.4f, %.4f]", error_lower, error_upper)
+    def compute_evidence(
+        self,
+        epochs: int = 30,
+        verbose: bool = False,
+    ) -> dict:
+        """
+        Compute the Bayesian evidence (convenience method).
 
+        This method runs the complete evidence computation pipeline:
+        1. Split data into training/inference sets
+        2. Train normalizing flow on training set
+        3. Compute evidence on inference set
+
+        Parameters
+        ----------
+        epochs : int, optional
+            Number of training epochs for the normalizing flow. Default is 30.
+        verbose : bool, optional
+            Whether to print training progress. Default is False.
+
+        Returns
+        -------
+        dict
+            Dictionary containing evidence estimation results. See compute_ln_evidence()
+            for details.
+
+        Examples
+        --------
+        >>> ec = EvidenceComputation(mcmc, model)
+        >>> results = ec.compute_evidence(epochs=50, verbose=True)
+        >>> print(f"ln(Evidence) = {results['ln_evidence']:.2f}")
+        """
+        self.logger.debug("Starting evidence computation pipeline")
+        self.split_data()
+        self.fit_flow(epochs=epochs, verbose=verbose)
+        results = self.compute_ln_evidence()
+        self.logger.info("Evidence computed: ln(Z) = %.4f", results["ln_evidence"])
         return results
 
     def get_chains(self) -> Any:
