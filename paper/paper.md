@@ -77,7 +77,7 @@ affiliations:
       index: 4
     - name: University of Edinburgh, Edinburgh, United Kingdom
       index: 5
-date: 26 August 2025
+date: 26 January 2026
 bibliography: paper.bib
 ---
 
@@ -94,15 +94,15 @@ AutoEmulate v1.0 extends support for common emulation tasks. These include sensi
 
 AutoEmulate was originally built on scikit-learn, which is well suited for traditional machine learning but less flexible for complex workflows. Version 1.0 introduces a PyTorch [@pytorch] backend that provides GPU acceleration for faster training and inference and automatic differentiation via PyTorch’s autograd system. It also makes AutoEmulate easy to integrate with other PyTorch-based tools. For example, the PyTorch refactor enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo exposed through Pyro [@pyro].
 
-Lastly, AutoEmulate v1.0 improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
+Lastly, AutoEmulate v1.0 improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). 
 
 # Software Design
 
-# Research Impact Statement
+The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
 
 # Example usage
 
-The AutoEmulate documentation provides a comprehensive set of [tutorials](https://alan-turing-institute.github.io/autoemulate/tutorials/index.html) showcasing all functionality. We are also collecting [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies) demonstrating how to use AutoEmulate for real-world problems and complex workflows. Below we provide a brief overview of the main features.
+The AutoEmulate documentation provides a comprehensive set of [tutorials](https://alan-turing-institute.github.io/autoemulate/tutorials/index.html) showcasing all functionality. Below we provide a brief overview of the main features.
 
 The core use case for AutoEmulate is emulator construction. AutoEmulate takes as input variables `x`, `y`. The variable `x` is a 2D array with columns corresponding to simulation parameters and rows corresponding to parameter sets. The variable `y` is an array of one or more simulation outputs corresponding to each set of parameters. From this data, AutoEmulate constructs an emulator in just a few lines of code:
 
@@ -176,6 +176,10 @@ mcmc = bc.run()
 ```
 
 Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. This enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
+
+# Research Impact Statement
+
+We are acollecting [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies) demonstrating how to use AutoEmulate for real-world problems and complex workflows. 
 
 # AI usage disclosure
 
