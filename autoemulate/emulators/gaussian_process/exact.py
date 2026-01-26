@@ -679,15 +679,16 @@ GaussianProcessCorrelatedMatern32 = create_gp_subclass(
 )
 
 
-
 class DiscrepancyGaussianProcess(GaussianProcess, gpytorch.models.ExactGP):
     """
     Discrepancy Gaussian Process Emulator.
 
     This class implements an exact Discrepancy Gaussian Process emulator using the GPyTorch library
 
+    Discrepancy GPs are a transfer learning method that require a pre-existing cohort of emulators for similar systems.
+
     It supports:
-    - multi-task Gaussian processes
+    - multi-task discrepancy Gaussian processes
     - custom mean and kernel specification
     """
 
@@ -765,8 +766,8 @@ class DiscrepancyGaussianProcess(GaussianProcess, gpytorch.models.ExactGP):
         self.covar_module_fn = covar_module_fn
         mean_module = self.mean_module_fn(n_features, num_tasks_torch)
         covar_module = self.covar_module_fn(n_features, num_tasks_torch)
-        self.ref_model=ref_model
-        self.ref_likelihood=ref_likelihood
+        self.ref_model = ref_model
+        self.ref_likelihood = ref_likelihood
         # If the combined kernel is not a ScaleKernel, wrap it in one
         covar_module = (
             covar_module
@@ -775,7 +776,9 @@ class DiscrepancyGaussianProcess(GaussianProcess, gpytorch.models.ExactGP):
         )
 
         # Init likelihood
-        likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=num_tasks)
+        likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
+            num_tasks=num_tasks
+        )
         likelihood = likelihood.to(self.device)
 
         # Init must be called with preprocessed data
@@ -785,16 +788,29 @@ class DiscrepancyGaussianProcess(GaussianProcess, gpytorch.models.ExactGP):
         self.likelihood = likelihood
         self.x_transform = StandardizeTransform() if standardize_x else None
         self.y_transform = StandardizeTransform() if standardize_y else None
-        
-        self.covar_module = covar_module #gpytorch.kernels.RBFKernel(ard_num_dims=n_features,batch_shape=num_tasks_torch)
-        self.register_parameter(name="a", parameter=torch.nn.Parameter(torch.randn([len(self.ref_model),num_tasks])))
-                
-       
-        self.mean_module= DiscrepancyMeanCohort(input_size=n_features,mean_module=mean_module,ref_model=self.ref_model,ref_likelihood=self.ref_likelihood,a=self.a)
-        
-        for i in range(len(self.ref_model)): #Iterate over ref_models to build additive kernel TODO: Put this loop inside of the aKernel function
 
-            self.covar_module = aKernel(self.a[i],self.ref_model[i],self.ref_likelihood[i]) + self.covar_module
+        self.covar_module = covar_module  # gpytorch.kernels.RBFKernel(ard_num_dims=n_features,batch_shape=num_tasks_torch)
+        self.register_parameter(
+            name="a",
+            parameter=torch.nn.Parameter(torch.randn([len(self.ref_model), num_tasks])),
+        )
+
+        self.mean_module = DiscrepancyMeanCohort(
+            input_size=n_features,
+            mean_module=mean_module,
+            ref_model=self.ref_model,
+            ref_likelihood=self.ref_likelihood,
+            a=self.a,
+        )
+
+        for i in range(
+            len(self.ref_model)
+        ):  # Iterate over ref_models to build additive kernel TODO: Put this loop inside of the aKernel function
+
+            self.covar_module = (
+                aKernel(self.a[i], self.ref_model[i], self.ref_likelihood[i])
+                + self.covar_module
+            )
             self.covar_module.kernels[0].ref_model.requires_grad_(False)
             self.covar_module.kernels[0].ref_likelihood.requires_grad_(False)
         self.epochs = epochs
@@ -808,55 +824,82 @@ class DiscrepancyGaussianProcess(GaussianProcess, gpytorch.models.ExactGP):
         self.num_tasks = num_tasks
         self.to(self.device)
 
-class aKernel(gpytorch.kernels.Kernel):
-# Function to iteratively build weighted sum of reference kernels
 
-    def __init__(self,a,ref_model,ref_likelihood, length_prior=None, length_constraint=None, **kwargs):
+class aKernel(gpytorch.kernels.Kernel):
+    """
+    Custom kernel for Discrepancy GPs.
+    """
+
+    def __init__(
+        self,
+        a,
+        ref_model,
+        ref_likelihood,
+        length_prior=None,
+        length_constraint=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
-    
-        self.a=a
-        self.ref_model=ref_model
-        self.ref_likelihood=ref_likelihood
+
+        self.a = a
+        self.ref_model = ref_model
+        self.ref_likelihood = ref_likelihood
+
     def forward(self, x1, x2, **params):
 
-        
         self.ref_model.eval()
-        self.ref_likelihood.eval() 
+        self.ref_likelihood.eval()
 
-        a2=(self.a**2)
-        
-        diff=a2[None,None].T*(self.ref_model.covar_module(x1,x2)+((self.ref_likelihood.task_noises+self.ref_likelihood.noise)[None,None].T*(torch.eye(x1.shape[0],x2.shape[0]).tile([a2.shape[0],1,1]))))
+        a2 = self.a**2
+
+        diff = a2[None, None].T * (
+            self.ref_model.covar_module(x1, x2)
+            + (
+                (self.ref_likelihood.task_noises + self.ref_likelihood.noise)[
+                    None, None
+                ].T
+                * (torch.eye(x1.shape[0], x2.shape[0]).tile([a2.shape[0], 1, 1]))
+            )
+        )
 
         return diff
 
 
 class DiscrepancyMeanCohort(gpytorch.means.Mean):
-    # Function to generate weighted sum of reference means and discrepancy mean
-    def __init__(self, input_size,mean_module,ref_model,ref_likelihood,a, batch_shape=torch.Size(), bias=True):
-        super().__init__()
-        #self.register_parameter(name="weights", parameter=torch.nn.Parameter(torch.randn(*batch_shape, input_size, 2)))
-        #if bias:
-            #self.register_parameter(name="bias", parameter=torch.nn.Parameter(torch.randn(*batch_shape, 2)))
-        #else:
-            #self.bias = None
-        self.a=a
-        self.ref_model=ref_model
-        self.ref_likelihood=ref_likelihood
-        self.mean_module=mean_module
-    def forward(self, x):
-        res2=0
-        res1 = self.mean_module.forward(x).T #x.matmul(self.weights).squeeze(-1)
-        for i in range(len(self.ref_model)): 
-            self.ref_model[i].eval()
-            self.ref_likelihood[i].eval() 
-            res2+=self.a[i]*self.ref_likelihood[i](self.ref_model[i](x)).mean
-        
-        res=res1+res2
+    """
+    Custom mean for Discrepancy GPs.
+    """
 
-        return res.T 
+    def __init__(
+        self,
+        input_size,
+        mean_module,
+        ref_model,
+        ref_likelihood,
+        a,
+        batch_shape=torch.Size(),
+        bias=True,
+    ):
+        super().__init__()
+        self.a = a
+        self.ref_model = ref_model
+        self.ref_likelihood = ref_likelihood
+        self.mean_module = mean_module
+
+    def forward(self, x):
+        res2 = 0
+        res1 = self.mean_module.forward(x).T
+        for i in range(len(self.ref_model)):
+            self.ref_model[i].eval()
+            self.ref_likelihood[i].eval()
+            res2 += self.a[i] * self.ref_likelihood[i](self.ref_model[i](x)).mean
+
+        res = res1 + res2
+
+        return res.T
+
 
 def create_dgp_subclass(
-    # very slight alteration of create_gp_subclass adds in the ref_model and ref_likelihood arguments
     name: str,
     gp_base_class: type[DiscrepancyGaussianProcess],
     covar_module_fn: CovarModuleFn,
@@ -868,7 +911,7 @@ def create_dgp_subclass(
     **fixed_kwargs,
 ) -> type[GaussianProcess]:
     """
-    Create a subclass of GaussianProcess with given fixed_kwargs.
+    Create a subclass of DiscrepancyGaussianProcess with given fixed_kwargs.
 
     This function creates a subclass of GaussianProcess where certain parameters
     are fixed to specific values, reducing the parameter space for tuning.
@@ -1036,5 +1079,3 @@ def create_dgp_subclass(
         register(DGaussianProcessSubclass, overwrite=overwrite)
 
     return DGaussianProcessSubclass
-
-
