@@ -96,6 +96,10 @@ AutoEmulate was originally built on scikit-learn, which is well suited for tradi
 
 Lastly, AutoEmulate v1.0 improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
 
+# Software Design
+
+# Research Impact Statement
+
 # Example usage
 
 The AutoEmulate documentation provides a comprehensive set of [tutorials](https://alan-turing-institute.github.io/autoemulate/tutorials/index.html) showcasing all functionality. We are also collecting [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies) demonstrating how to use AutoEmulate for real-world problems and complex workflows. Below we provide a brief overview of the main features.
@@ -172,5 +176,7 @@ mcmc = bc.run()
 ```
 
 Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. This enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
+
+# AI usage disclosure
 
 # References
