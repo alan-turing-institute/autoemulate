@@ -37,6 +37,7 @@ dependencies = [
     "arviz>=0.21.0",
     "getdist>=1.7.2",
     "einops>=0.8.1",
+    "harmonic>=1.3.0",
 ]
 
 [project.urls]
