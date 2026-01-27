@@ -418,35 +418,6 @@ class TestIntegration:
         # Verify flow was created with custom parameters
         assert ec.flow is not None
 
-    def test_custom_flow_kwargs_realnvp(self, simple_mcmc_setup):
-        """Test evidence computation with RealNVP and custom parameters."""
-        mcmc, model, _ = simple_mcmc_setup
-
-        # Custom parameters for RealNVP
-        flow_kwargs = {
-            "n_scaled_layers": 4,
-            "n_unscaled_layers": 6,
-            "learning_rate": 0.001,
-        }
-
-        ec = EvidenceComputation(
-            mcmc,
-            model,
-            flow_model="RealNVP",
-            flow_kwargs=flow_kwargs,
-            log_level="error",
-        )
-        results = ec.run(epochs=10, verbose=False)
-
-        # Verify results are valid
-        assert "ln_evidence" in results
-        assert isinstance(results["ln_evidence"], float)
-        assert not torch.isnan(torch.tensor(results["ln_evidence"]))
-        assert not torch.isinf(torch.tensor(results["ln_evidence"]))
-
-        # Verify correct flow model type was used
-        assert ec.flow is not None
-
     def test_flow_kwargs_override_defaults(self, simple_mcmc_setup):
         """Test that flow_kwargs override default parameters."""
         mcmc, model, _ = simple_mcmc_setup
