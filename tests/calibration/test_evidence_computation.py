@@ -160,12 +160,12 @@ class TestEvidenceComputation:
         ):
             EvidenceComputation(mcmc, model, training_proportion=0.05)
 
-    def test_compute_evidence_basic(self, simple_mcmc_setup):
+    def test_run_basic(self, simple_mcmc_setup):
         """Test basic evidence computation."""
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(mcmc, model, log_level="error")
-        results = ec.compute_evidence(epochs=50, verbose=False)
+        results = ec.run(epochs=50, verbose=False)
 
         # Check results structure
         assert isinstance(results, dict)
@@ -200,7 +200,7 @@ class TestEvidenceComputation:
         ec = EvidenceComputation(
             mcmc, model, training_proportion=training_proportion, log_level="error"
         )
-        results = ec.compute_evidence(epochs=5, verbose=False)
+        results = ec.run(epochs=5, verbose=False)
 
         assert isinstance(results, dict)
         assert "ln_evidence" in results
@@ -213,44 +213,44 @@ class TestEvidenceComputation:
         ec = EvidenceComputation(
             mcmc, model, temperature=temperature, log_level="error"
         )
-        results = ec.compute_evidence(epochs=5, verbose=False)
+        results = ec.run(epochs=5, verbose=False)
 
         assert isinstance(results, dict)
         assert "ln_evidence" in results
 
     def test_get_chains_before_compute(self, simple_mcmc_setup):
-        """Test that get_chains raises error before compute_evidence."""
+        """Test that get_chains raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(mcmc, model, log_level="error")
 
-        with pytest.raises(RuntimeError, match="Call compute_evidence"):
+        with pytest.raises(RuntimeError, match="Call run"):
             ec.get_chains()
 
     def test_get_flow_model_before_compute(self, simple_mcmc_setup):
-        """Test that get_flow_model raises error before compute_evidence."""
+        """Test that get_flow_model raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(mcmc, model, log_level="error")
 
-        with pytest.raises(RuntimeError, match="Call compute_evidence"):
+        with pytest.raises(RuntimeError, match="Call run"):
             ec.get_flow_model()
 
     def test_get_evidence_object_before_compute(self, simple_mcmc_setup):
-        """Test that get_evidence_object raises error before compute_evidence."""
+        """Test that get_evidence_object raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(mcmc, model, log_level="error")
 
-        with pytest.raises(RuntimeError, match="Call compute_evidence"):
+        with pytest.raises(RuntimeError, match="Call run"):
             ec.get_evidence_object()
 
     def test_getter_methods_after_compute(self, simple_mcmc_setup):
-        """Test getter methods work after compute_evidence."""
+        """Test getter methods work after run."""
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(mcmc, model, log_level="error")
-        ec.compute_evidence(epochs=5, verbose=False)
+        ec.run(epochs=5, verbose=False)
 
         # Test all getter methods
         chains = ec.get_chains()
@@ -356,7 +356,7 @@ class TestEvidenceComputation:
 
         # Verify consistency with convenience method
         ec2 = EvidenceComputation(mcmc, model, log_level="error")
-        results2 = ec2.compute_evidence(epochs=10, verbose=False)
+        results2 = ec2.run(epochs=10, verbose=False)
 
         # Both should produce similar results (may not be identical due to randomness)
         assert abs(results["ln_evidence"] - results2["ln_evidence"]) < 5.0
@@ -385,9 +385,89 @@ class TestIntegration:
 
         # Compute evidence
         ec = EvidenceComputation(mcmc, bc.model, log_level="error")
-        results = ec.compute_evidence(epochs=5, verbose=False)
+        results = ec.run(epochs=5, verbose=False)
 
         # Verify results
         assert "ln_evidence" in results
         assert isinstance(results["ln_evidence"], float)
         assert not torch.isnan(torch.tensor(results["ln_evidence"]))
+
+    def test_custom_flow_kwargs_rqspline(self, simple_mcmc_setup):
+        """Test evidence computation with custom RQSpline flow parameters."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        # Custom parameters for RQSpline
+        flow_kwargs = {
+            "n_layers": 12,
+            "n_bins": 16,
+            "hidden_size": [128, 128],
+            "learning_rate": 0.0005,
+        }
+
+        ec = EvidenceComputation(
+            mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
+        )
+        results = ec.run(epochs=10, verbose=False)
+
+        # Verify results are valid
+        assert "ln_evidence" in results
+        assert isinstance(results["ln_evidence"], float)
+        assert not torch.isnan(torch.tensor(results["ln_evidence"]))
+        assert not torch.isinf(torch.tensor(results["ln_evidence"]))
+
+        # Verify flow was created with custom parameters
+        assert ec.flow is not None
+
+    def test_custom_flow_kwargs_realnvp(self, simple_mcmc_setup):
+        """Test evidence computation with RealNVP and custom parameters."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        # Custom parameters for RealNVP
+        flow_kwargs = {
+            "n_scaled_layers": 4,
+            "n_unscaled_layers": 6,
+            "learning_rate": 0.001,
+        }
+
+        ec = EvidenceComputation(
+            mcmc,
+            model,
+            flow_model="RealNVP",
+            flow_kwargs=flow_kwargs,
+            log_level="error",
+        )
+        results = ec.run(epochs=10, verbose=False)
+
+        # Verify results are valid
+        assert "ln_evidence" in results
+        assert isinstance(results["ln_evidence"], float)
+        assert not torch.isnan(torch.tensor(results["ln_evidence"]))
+        assert not torch.isinf(torch.tensor(results["ln_evidence"]))
+
+        # Verify correct flow model type was used
+        assert ec.flow is not None
+
+    def test_flow_kwargs_override_defaults(self, simple_mcmc_setup):
+        """Test that flow_kwargs override default parameters."""
+        mcmc, model, _ = simple_mcmc_setup
+
+        # Override standardize (default is True)
+        flow_kwargs = {"standardize": False, "n_layers": 4}
+
+        ec = EvidenceComputation(
+            mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
+        )
+
+        # Initialize to access flow creation
+        ec._extract_and_validate_samples()
+        ec._initialize_harmonic_components()
+        ec.split_data()
+
+        # Create flow and check it was configured
+        flow = ec._create_flow_model(ec.ndim)
+        assert flow is not None
+
+        # Run full computation to ensure it works
+        results = ec.run(epochs=10, verbose=False)
+        assert "ln_evidence" in results
+        assert isinstance(results["ln_evidence"], float)

@@ -44,7 +44,30 @@ class EvidenceComputation(TorchDeviceMixin):
         underfit. Default is 0.8.
     flow_model : str, optional
         Type of normalizing flow model to use. Currently supports "RQSpline"
-        (Rational Quadratic Spline flows). Default is "RQSpline".
+        (Rational Quadratic Spline flows) and "RealNVP" (Real-valued Non-Volume
+        Preserving transformations). Default is "RQSpline".
+    flow_kwargs : dict | None, optional
+        Additional keyword arguments to pass to the flow model constructor.
+        These override the default values. Common parameters include:
+
+        For RQSplineModel:
+            - standardize : bool - Whether to standardize inputs (default: True)
+            - n_layers : int - Number of coupling layers (default: 8)
+            - n_bins : int - Number of spline bins (default: 8)
+            - hidden_size : list[int] - Hidden layer sizes (default: [64, 64])
+            - spline_range : tuple[float, float] - Spline range (default: (-10, 10))
+            - learning_rate : float - Optimizer learning rate (default: 0.001)
+            - momentum : float - Optimizer momentum (default: 0.9)
+
+        For RealNVPModel:
+            - standardize : bool - Whether to standardize inputs (default: True)
+            - n_scaled_layers : int - Number of scaled layers (default: 2)
+            - n_unscaled_layers : int - Number of unscaled layers (default: 4)
+            - learning_rate : float - Optimizer learning rate (default: 0.001)
+            - momentum : float - Optimizer momentum (default: 0.9)
+
+        Note: temperature is set separately via the temperature parameter.
+        Default is None (uses Harmonic's defaults with standardize=True).
     device : DeviceLike | None, optional
         Device for computations (e.g., 'cpu', 'cuda'). If None, uses the default
         device. Default is None.
@@ -58,6 +81,8 @@ class EvidenceComputation(TorchDeviceMixin):
         Posterior samples of shape (num_chains, num_samples_per_chain, ndim).
     log_probs : torch.Tensor
         Log probabilities of shape (num_chains, num_samples_per_chain).
+    ndim : int
+        Number of parameters (dimensions) in the model.
     chains : harmonic.Chains
         Harmonic Chains object containing samples and log probabilities.
     chains_train : harmonic.Chains
@@ -71,17 +96,40 @@ class EvidenceComputation(TorchDeviceMixin):
 
     Examples
     --------
+    Basic usage:
+
     >>> from autoemulate.calibration import BayesianCalibration, EvidenceComputation
     >>> # Run MCMC calibration
     >>> bc = BayesianCalibration(emulator, param_range, observations)
     >>> mcmc = bc.run_mcmc(num_samples=1000, num_chains=4)
     >>>
-    >>> # Compute evidence
+    >>> # Compute evidence with defaults
     >>> ec = EvidenceComputation(mcmc, bc.model)
-    >>> results = ec.compute_evidence(epochs=30)
+    >>> results = ec.run(epochs=30)
     >>>
     >>> print(f"Log Evidence: {results['ln_evidence']:.2f}")
     >>> print(f"Error: [{results['error_lower']:.3f}, {results['error_upper']:.3f}]")
+
+    Using custom flow model parameters:
+
+    >>> # Customize RQSpline flow model
+    >>> flow_kwargs = {
+    ...     "n_layers": 12,
+    ...     "n_bins": 16,
+    ...     "hidden_size": [128, 128],
+    ...     "learning_rate": 0.0005,
+    ... }
+    >>> ec = EvidenceComputation(mcmc, bc.model, flow_kwargs=flow_kwargs)
+    >>> results = ec.run(epochs=50)
+    >>>
+    >>> # Use RealNVP model instead
+    >>> ec = EvidenceComputation(
+    ...     mcmc,
+    ...     bc.model,
+    ...     flow_model="RealNVP",
+    ...     flow_kwargs={"n_scaled_layers": 4, "n_unscaled_layers": 6},
+    ... )
+    >>> results = ec.run(epochs=30)
 
     Notes
     -----
@@ -98,8 +146,8 @@ class EvidenceComputation(TorchDeviceMixin):
 
     References
     ----------
-    .. [1] McEwen, J. D., et al. (2021). "Robust Bayesian Evidence Calculation via
-           the Learned Harmonic Mean Estimator." arXiv:2111.12720.
+    .. [1] McEwen, J. D., et al. (2021). "Machine learning assisted Bayesian model
+           comparison: learnt harmonic mean estimator." arXiv:2111.12720.
     .. [2] Harmonic documentation: https://github.com/astro-informatics/harmonic
 
     See Also
@@ -108,6 +156,9 @@ class EvidenceComputation(TorchDeviceMixin):
     extract_log_probabilities : Extract log probabilities from MCMC samples
     """
 
+    # Supported normalizing flow models
+    SUPPORTED_MODELS = ("RQSpline", "RealNVP")
+
     def __init__(
         self,
         mcmc: MCMC,
@@ -115,6 +166,7 @@ class EvidenceComputation(TorchDeviceMixin):
         training_proportion: float = 0.5,
         temperature: float = 0.8,
         flow_model: str = "RQSpline",
+        flow_kwargs: dict | None = None,
         device: DeviceLike | None = None,
         log_level: str = "info",
     ):
@@ -129,6 +181,7 @@ class EvidenceComputation(TorchDeviceMixin):
         self.training_proportion = training_proportion
         self.temperature = temperature
         self.flow_model_type = flow_model
+        self.flow_kwargs = flow_kwargs if flow_kwargs is not None else {}
 
         # Extract and validate samples
         self._extract_and_validate_samples()
@@ -152,10 +205,10 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
-        if flow_model not in ["RQSpline"]:
+        if flow_model not in self.SUPPORTED_MODELS:
             msg = (
                 f"Unsupported flow_model: {flow_model}. "
-                "Currently only 'RQSpline' is supported."
+                f"Currently supports: {', '.join(self.SUPPORTED_MODELS)}."
             )
             self.logger.error(msg)
             raise ValueError(msg)
@@ -204,13 +257,51 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
+        # Save number of dimensions for later use
+        self.ndim = self.samples.shape[2]
+        self.logger.debug("Number of parameters: %d", self.ndim)
+
     def _initialize_harmonic_components(self):
         """Initialize Harmonic library components."""
         self.chains: hm.Chains | None = None  # type: ignore[name-defined]
         self.chains_train: hm.Chains | None = None  # type: ignore[name-defined]
         self.chains_infer: hm.Chains | None = None  # type: ignore[name-defined]
-        self.flow: hm.model.RQSplineModel | None = None  # type: ignore[name-defined]
+        self.flow: Any = None  # Can be RQSplineModel or RealNVPModel
         self.evidence: hm.Evidence | None = None  # type: ignore[name-defined]
+
+    def _create_flow_model(self, ndim: int) -> Any:
+        """
+        Create a normalizing flow model based on flow_model_type.
+
+        Parameters
+        ----------
+        ndim : int
+            Number of dimensions (parameters) in the model.
+
+        Returns
+        -------
+        Any
+            A Harmonic flow model instance (RQSplineModel or RealNVPModel).
+
+        Raises
+        ------
+        ValueError
+            If flow_model_type is not supported (should not occur if
+            _validate_parameters was called).
+        """
+        # Set default kwargs with standardize and temperature
+        default_kwargs = {"standardize": True, "temperature": self.temperature}
+
+        # Merge with user-provided flow_kwargs (user values override defaults)
+        model_kwargs = {**default_kwargs, **self.flow_kwargs}
+
+        if self.flow_model_type == "RQSpline":
+            return hm.model.RQSplineModel(ndim, **model_kwargs)
+        if self.flow_model_type == "RealNVP":
+            return hm.model.RealNVPModel(ndim, **model_kwargs)
+        msg = f"Unsupported flow_model: {self.flow_model_type}"
+        self.logger.error(msg)
+        raise ValueError(msg)
 
     def split_data(self) -> tuple:
         """
@@ -229,8 +320,7 @@ class EvidenceComputation(TorchDeviceMixin):
         The training set is used to fit the normalizing flow, while the inference
         set is used for evidence computation.
         """
-        ndim = self.samples.shape[2]
-        self.chains = hm.Chains(ndim)
+        self.chains = hm.Chains(self.ndim)
         assert self.chains is not None  # for type checker
         self.chains.add_chains_3d(
             self.samples.cpu().numpy(), self.log_probs.cpu().numpy()
@@ -260,18 +350,16 @@ class EvidenceComputation(TorchDeviceMixin):
 
         Notes
         -----
-        This method trains a normalizing flow (RQSpline) on the training chains
-        to learn the posterior distribution. The trained flow is then used for
-        evidence computation.
+        This method trains a normalizing flow on the training chains to learn
+        the posterior distribution. The trained flow is then used for evidence
+        computation. The flow model type is determined by the flow_model
+        parameter passed during initialization.
         """
         if self.chains_train is None:
             msg = "Must call split_data() before fit_flow()"
             raise RuntimeError(msg)
 
-        ndim = self.samples.shape[2]
-        self.flow = hm.model.RQSplineModel(
-            ndim, standardize=True, temperature=self.temperature
-        )
+        self.flow = self._create_flow_model(self.ndim)
         assert self.flow is not None  # for type checker
         self.flow.fit(
             np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
@@ -331,13 +419,15 @@ class EvidenceComputation(TorchDeviceMixin):
             "num_parameters": self.samples.shape[2],
         }
 
-    def compute_evidence(
+    def run(
         self,
         epochs: int = 30,
         verbose: bool = False,
     ) -> dict:
         """
-        Compute the Bayesian evidence (convenience method).
+        Run the complete Bayesian evidence computation pipeline.
+
+        Compute the Bayesian evidence.
 
         This method runs the complete evidence computation pipeline:
         1. Split data into training/inference sets
@@ -360,8 +450,14 @@ class EvidenceComputation(TorchDeviceMixin):
         Examples
         --------
         >>> ec = EvidenceComputation(mcmc, model)
-        >>> results = ec.compute_evidence(epochs=50, verbose=True)
+        >>> results = ec.run(epochs=50, verbose=True)
         >>> print(f"ln(Evidence) = {results['ln_evidence']:.2f}")
+
+        See Also
+        --------
+        compute_ln_evidence : Compute evidence from already-trained flow
+        split_data : Split data into training/inference sets
+        fit_flow : Train the normalizing flow
         """
         self.logger.debug("Starting evidence computation pipeline")
         self.split_data()
@@ -382,10 +478,10 @@ class EvidenceComputation(TorchDeviceMixin):
         Raises
         ------
         RuntimeError
-            If compute_evidence has not been called yet.
+            If run has not been called yet.
         """
         if self.chains is None:
-            msg = "Chains not initialized. Call compute_evidence() first."
+            msg = "Chains not initialized. Call run() first."
             self.logger.error(msg)
             raise RuntimeError(msg)
         return self.chains
@@ -402,10 +498,10 @@ class EvidenceComputation(TorchDeviceMixin):
         Raises
         ------
         RuntimeError
-            If compute_evidence has not been called yet or flow training failed.
+            If run has not been called yet or flow training failed.
         """
         if self.flow is None:
-            msg = "Flow model not trained. Call compute_evidence() first."
+            msg = "Flow model not trained. Call run() first."
             self.logger.error(msg)
             raise RuntimeError(msg)
         return self.flow
@@ -422,10 +518,10 @@ class EvidenceComputation(TorchDeviceMixin):
         Raises
         ------
         RuntimeError
-            If compute_evidence has not been called yet.
+            If run has not been called yet.
         """
         if self.evidence is None:
-            msg = "Evidence not computed. Call compute_evidence() first."
+            msg = "Evidence not computed. Call run() first."
             self.logger.error(msg)
             raise RuntimeError(msg)
         return self.evidence
