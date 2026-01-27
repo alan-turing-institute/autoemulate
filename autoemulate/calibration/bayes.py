@@ -302,7 +302,7 @@ def extract_log_probabilities(
         raise ValueError(msg) from e
 
     if not samples:
-        msg = "MCMC object contains no samples"
+        msg = "The MCMC object contains no samples"
         raise ValueError(msg)
 
     # Get dimensions
