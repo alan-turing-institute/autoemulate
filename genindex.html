@@ -1,0 +1,1307 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=7f8ff830"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation instructions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/index.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials/emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="tutorials/emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials/tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials/simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials/advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Fgenindex.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#X"><strong>X</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
+ 
+</div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.all_emulators">all_emulators() (AutoEmulate static method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate">AutoEmulate (class in autoemulate.core.compare)</a>
+</li>
+      <li>
+    autoemulate.calibration.base
+
+      <ul>
+        <li><a href="reference/calibration/base.html#module-autoemulate.calibration.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.calibration.bayes
+
+      <ul>
+        <li><a href="reference/calibration/bayes.html#module-autoemulate.calibration.bayes">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.calibration.history_matching
+
+      <ul>
+        <li><a href="reference/calibration/history_matching.html#module-autoemulate.calibration.history_matching">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.calibration.history_matching_dashboard
+
+      <ul>
+        <li><a href="reference/calibration/history_matching_dashboard.html#module-autoemulate.calibration.history_matching_dashboard">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.calibration.interval_excursion_set
+
+      <ul>
+        <li><a href="reference/calibration/interval_excursion_set.html#module-autoemulate.calibration.interval_excursion_set">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.core.compare
+
+      <ul>
+        <li><a href="reference/core/compare.html#module-autoemulate.core.compare">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.core.model_selection
+
+      <ul>
+        <li><a href="reference/core/model_selection.html#module-autoemulate.core.model_selection">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.core.plotting
+
+      <ul>
+        <li><a href="reference/core/plotting.html#module-autoemulate.core.plotting">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.core.sensitivity_analysis
+
+      <ul>
+        <li><a href="reference/core/sensitivity_analysis.html#module-autoemulate.core.sensitivity_analysis">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.core.tuner
+
+      <ul>
+        <li><a href="reference/core/tuner.html#module-autoemulate.core.tuner">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.base
+
+      <ul>
+        <li><a href="reference/emulators/base.html#module-autoemulate.emulators.base">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    autoemulate.emulators.ensemble
+
+      <ul>
+        <li><a href="reference/emulators/ensemble.html#module-autoemulate.emulators.ensemble">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.gradient_boosting
+
+      <ul>
+        <li><a href="reference/emulators/gradient_boosting.html#module-autoemulate.emulators.gradient_boosting">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.lightgbm
+
+      <ul>
+        <li><a href="reference/emulators/lightgbm.html#module-autoemulate.emulators.lightgbm">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.polynomials
+
+      <ul>
+        <li><a href="reference/emulators/polynomials.html#module-autoemulate.emulators.polynomials">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.radial_basis_functions
+
+      <ul>
+        <li><a href="reference/emulators/radial_basis_functions.html#module-autoemulate.emulators.radial_basis_functions">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.random_forest
+
+      <ul>
+        <li><a href="reference/emulators/random_forest.html#module-autoemulate.emulators.random_forest">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.emulators.svm
+
+      <ul>
+        <li><a href="reference/emulators/svm.html#module-autoemulate.emulators.svm">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.simulations.base
+
+      <ul>
+        <li><a href="reference/simulations/base.html#module-autoemulate.simulations.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.simulations.epidemic
+
+      <ul>
+        <li><a href="reference/simulations/epidemic.html#module-autoemulate.simulations.epidemic">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.simulations.flow_problem
+
+      <ul>
+        <li><a href="reference/simulations/flow_problem.html#module-autoemulate.simulations.flow_problem">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.simulations.projectile
+
+      <ul>
+        <li><a href="reference/simulations/projectile.html#module-autoemulate.simulations.projectile">module</a>
+</li>
+      </ul></li>
+      <li>
+    autoemulate.simulations.reaction_diffusion
+
+      <ul>
+        <li><a href="reference/simulations/reaction_diffusion.html#module-autoemulate.simulations.reaction_diffusion">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.batch_size">batch_size (PyTorchBackend attribute)</a>
+</li>
+      <li><a href="reference/calibration/bayes.html#autoemulate.calibration.bayes.BayesianCalibration">BayesianCalibration (class in autoemulate.calibration.bayes)</a>
+</li>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin">BayesianMixin (class in autoemulate.calibration.base)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform.bijective">bijective (BoundedDomainTransform attribute)</a>
+</li>
+      <li><a href="reference/core/model_selection.html#autoemulate.core.model_selection.bootstrap">bootstrap() (in module autoemulate.core.model_selection)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform">BoundedDomainTransform (class in autoemulate.calibration.interval_excursion_set)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.calculate_implausibility">calculate_implausibility() (HistoryMatching method)</a>
+</li>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.calculate_subplot_layout">calculate_subplot_layout() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.cloud_sample">cloud_sample() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform.codomain">codomain (BoundedDomainTransform attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.compare">compare() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.coverage_from_distributions">coverage_from_distributions() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.create_and_plot_slice">create_and_plot_slice() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/core/model_selection.html#autoemulate.core.model_selection.cross_validate">cross_validate() (in module autoemulate.core.model_selection)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.default_emulators">default_emulators() (AutoEmulate static method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.DeterministicEmulator">DeterministicEmulator (class in autoemulate.emulators.base)</a>
+</li>
+      <li><a href="reference/calibration/history_matching_dashboard.html#autoemulate.calibration.history_matching_dashboard.HistoryMatchingDashboard.display">display() (HistoryMatchingDashboard method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.display_figure">display_figure() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform.domain">domain (BoundedDomainTransform attribute)</a>
+</li>
+      <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.DropoutEnsemble">DropoutEnsemble (class in autoemulate.emulators.ensemble)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.DropoutTorchBackend">DropoutTorchBackend (class in autoemulate.emulators.base)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator">Emulator (class in autoemulate.emulators.base)</a>
+</li>
+      <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.Ensemble">Ensemble (class in autoemulate.emulators.ensemble)</a>
+</li>
+      <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.EnsembleMLP">EnsembleMLP (class in autoemulate.emulators.ensemble)</a>
+</li>
+      <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.EnsembleMLPDropout">EnsembleMLPDropout (class in autoemulate.emulators.ensemble)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/epidemic.html#autoemulate.simulations.epidemic.Epidemic">Epidemic (class in autoemulate.simulations.epidemic)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.epochs">epochs (PyTorchBackend attribute)</a>
+</li>
+      <li><a href="reference/core/model_selection.html#autoemulate.core.model_selection.evaluate">evaluate() (in module autoemulate.core.model_selection)</a>
+</li>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.event">event() (in module autoemulate.simulations.projectile)</a>
+</li>
+      <li><a href="reference/calibration/bayes.html#autoemulate.calibration.bayes.extract_log_probabilities">extract_log_probabilities() (in module autoemulate.calibration.bayes)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.f">f() (in module autoemulate.simulations.projectile)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.filter_models_if_multioutput">filter_models_if_multioutput() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.fit">fit() (Emulator method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.fit_from_reinitialized">fit_from_reinitialized() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/simulations/flow_problem.html#autoemulate.simulations.flow_problem.FlowProblem">FlowProblem (class in autoemulate.simulations.flow_problem)</a>
+</li>
+      <li><a href="reference/emulators/polynomials.html#autoemulate.emulators.polynomials.PolynomialRegression.forward">forward() (PolynomialRegression method)</a>
+
+      <ul>
+        <li><a href="reference/emulators/radial_basis_functions.html#autoemulate.emulators.radial_basis_functions.RadialBasisFunctions.forward">(RadialBasisFunctions method)</a>
+</li>
+        <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.forward">(Simulator method)</a>
+</li>
+        <li><a href="reference/simulations/base.html#autoemulate.simulations.base.TorchSimulator.forward">(TorchSimulator method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.forward_batch">forward_batch() (Simulator method)</a>
+
+      <ul>
+        <li><a href="reference/simulations/base.html#autoemulate.simulations.base.TorchSimulator.forward_batch">(TorchSimulator method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/simulations/reaction_diffusion.html#autoemulate.simulations.reaction_diffusion.ReactionDiffusion.forward_samples_spatiotemporal">forward_samples_spatiotemporal() (ReactionDiffusion method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.GaussianEmulator">GaussianEmulator (class in autoemulate.emulators.base)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.GaussianProcessEmulator">GaussianProcessEmulator (class in autoemulate.emulators.base)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.generate_param_bounds">generate_param_bounds() (HistoryMatching static method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.generate_samples">generate_samples() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.get_models">get_models() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.get_nroy">get_nroy() (HistoryMatching method)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.get_outputs_as_dict">get_outputs_as_dict() (Simulator method)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.get_parameter_idx">get_parameter_idx() (Simulator method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.get_random_params">get_random_params() (Emulator class method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching.get_ro">get_ro() (HistoryMatching method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.get_scheduler_params">get_scheduler_params() (Emulator class method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.get_transforms">get_transforms() (AutoEmulate method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.DropoutEnsemble.get_tune_params">get_tune_params() (DropoutEnsemble static method)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.get_tune_params">(Emulator static method)</a>
+</li>
+        <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.Ensemble.get_tune_params">(Ensemble static method)</a>
+</li>
+        <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.EnsembleMLP.get_tune_params">(EnsembleMLP static method)</a>
+</li>
+        <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.EnsembleMLPDropout.get_tune_params">(EnsembleMLPDropout static method)</a>
+</li>
+        <li><a href="reference/emulators/gradient_boosting.html#autoemulate.emulators.gradient_boosting.GradientBoosting.get_tune_params">(GradientBoosting static method)</a>
+</li>
+        <li><a href="reference/emulators/lightgbm.html#autoemulate.emulators.lightgbm.LightGBM.get_tune_params">(LightGBM static method)</a>
+</li>
+        <li><a href="reference/emulators/polynomials.html#autoemulate.emulators.polynomials.PolynomialRegression.get_tune_params">(PolynomialRegression static method)</a>
+</li>
+        <li><a href="reference/emulators/radial_basis_functions.html#autoemulate.emulators.radial_basis_functions.RadialBasisFunctions.get_tune_params">(RadialBasisFunctions static method)</a>
+</li>
+        <li><a href="reference/emulators/random_forest.html#autoemulate.emulators.random_forest.RandomForest.get_tune_params">(RandomForest static method)</a>
+</li>
+        <li><a href="reference/emulators/svm.html#autoemulate.emulators.svm.SupportVectorMachine.get_tune_params">(SupportVectorMachine static method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.get_wave_results">get_wave_results() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/emulators/gradient_boosting.html#autoemulate.emulators.gradient_boosting.GradientBoosting">GradientBoosting (class in autoemulate.emulators.gradient_boosting)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatching">HistoryMatching (class in autoemulate.calibration.history_matching)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/history_matching_dashboard.html#autoemulate.calibration.history_matching_dashboard.HistoryMatchingDashboard">HistoryMatchingDashboard (class in autoemulate.calibration.history_matching_dashboard)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow">HistoryMatchingWorkflow (class in autoemulate.calibration.history_matching)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.in_dim">in_dim (Simulator property)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.interval_logprob">interval_logprob() (IntervalExcursionSetCalibration method)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.interval_prob_from_mu_sigma">interval_prob_from_mu_sigma() (IntervalExcursionSetCalibration method)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration">IntervalExcursionSetCalibration (class in autoemulate.calibration.interval_excursion_set)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.is_fitted_">is_fitted_ (Emulator attribute)</a>
+</li>
+      <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.DropoutEnsemble.is_multioutput">is_multioutput() (DropoutEnsemble static method)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.is_multioutput">(Emulator static method)</a>
+</li>
+        <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.Ensemble.is_multioutput">(Ensemble static method)</a>
+</li>
+        <li><a href="reference/emulators/ensemble.html#autoemulate.emulators.ensemble.EnsembleMLP.is_multioutput">(EnsembleMLP static method)</a>
+</li>
+        <li><a href="reference/emulators/gradient_boosting.html#autoemulate.emulators.gradient_boosting.GradientBoosting.is_multioutput">(GradientBoosting static method)</a>
+</li>
+        <li><a href="reference/emulators/lightgbm.html#autoemulate.emulators.lightgbm.LightGBM.is_multioutput">(LightGBM static method)</a>
+</li>
+        <li><a href="reference/emulators/polynomials.html#autoemulate.emulators.polynomials.PolynomialRegression.is_multioutput">(PolynomialRegression static method)</a>
+</li>
+        <li><a href="reference/emulators/radial_basis_functions.html#autoemulate.emulators.radial_basis_functions.RadialBasisFunctions.is_multioutput">(RadialBasisFunctions static method)</a>
+</li>
+        <li><a href="reference/emulators/random_forest.html#autoemulate.emulators.random_forest.RandomForest.is_multioutput">(RandomForest static method)</a>
+</li>
+        <li><a href="reference/emulators/svm.html#autoemulate.emulators.svm.SupportVectorMachine.is_multioutput">(SupportVectorMachine static method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/lightgbm.html#autoemulate.emulators.lightgbm.LightGBM">LightGBM (class in autoemulate.emulators.lightgbm)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.list_emulators">list_emulators() (AutoEmulate static method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.load">load() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.load_model">load_model() (AutoEmulate static method)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.BoundedDomainTransform.log_abs_det_jacobian">log_abs_det_jacobian() (BoundedDomainTransform method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.log_compare">log_compare() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.logger">logger (BayesianMixin attribute)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.loss_fn">loss_fn (PyTorchBackend attribute)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.loss_func">loss_func() (PyTorchBackend method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.lr">lr (PyTorchBackend attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.mean_and_var_surface">mean_and_var_surface() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.MIN_VAR">MIN_VAR (IntervalExcursionSetCalibration attribute)</a>
+</li>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.model">model (BayesianMixin attribute)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.SklearnBackend.model">(SklearnBackend attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/calibration/bayes.html#autoemulate.calibration.bayes.BayesianCalibration.model">model() (BayesianCalibration method)</a>
+
+      <ul>
+        <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.model">(IntervalExcursionSetCalibration method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.model_name">model_name() (Emulator class method)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="reference/calibration/base.html#module-autoemulate.calibration.base">autoemulate.calibration.base</a>
+</li>
+        <li><a href="reference/calibration/bayes.html#module-autoemulate.calibration.bayes">autoemulate.calibration.bayes</a>
+</li>
+        <li><a href="reference/calibration/history_matching.html#module-autoemulate.calibration.history_matching">autoemulate.calibration.history_matching</a>
+</li>
+        <li><a href="reference/calibration/history_matching_dashboard.html#module-autoemulate.calibration.history_matching_dashboard">autoemulate.calibration.history_matching_dashboard</a>
+</li>
+        <li><a href="reference/calibration/interval_excursion_set.html#module-autoemulate.calibration.interval_excursion_set">autoemulate.calibration.interval_excursion_set</a>
+</li>
+        <li><a href="reference/core/compare.html#module-autoemulate.core.compare">autoemulate.core.compare</a>
+</li>
+        <li><a href="reference/core/model_selection.html#module-autoemulate.core.model_selection">autoemulate.core.model_selection</a>
+</li>
+        <li><a href="reference/core/plotting.html#module-autoemulate.core.plotting">autoemulate.core.plotting</a>
+</li>
+        <li><a href="reference/core/sensitivity_analysis.html#module-autoemulate.core.sensitivity_analysis">autoemulate.core.sensitivity_analysis</a>
+</li>
+        <li><a href="reference/core/tuner.html#module-autoemulate.core.tuner">autoemulate.core.tuner</a>
+</li>
+        <li><a href="reference/emulators/base.html#module-autoemulate.emulators.base">autoemulate.emulators.base</a>
+</li>
+        <li><a href="reference/emulators/ensemble.html#module-autoemulate.emulators.ensemble">autoemulate.emulators.ensemble</a>
+</li>
+        <li><a href="reference/emulators/gradient_boosting.html#module-autoemulate.emulators.gradient_boosting">autoemulate.emulators.gradient_boosting</a>
+</li>
+        <li><a href="reference/emulators/lightgbm.html#module-autoemulate.emulators.lightgbm">autoemulate.emulators.lightgbm</a>
+</li>
+        <li><a href="reference/emulators/polynomials.html#module-autoemulate.emulators.polynomials">autoemulate.emulators.polynomials</a>
+</li>
+        <li><a href="reference/emulators/radial_basis_functions.html#module-autoemulate.emulators.radial_basis_functions">autoemulate.emulators.radial_basis_functions</a>
+</li>
+        <li><a href="reference/emulators/random_forest.html#module-autoemulate.emulators.random_forest">autoemulate.emulators.random_forest</a>
+</li>
+        <li><a href="reference/emulators/svm.html#module-autoemulate.emulators.svm">autoemulate.emulators.svm</a>
+</li>
+        <li><a href="reference/simulations/base.html#module-autoemulate.simulations.base">autoemulate.simulations.base</a>
+</li>
+        <li><a href="reference/simulations/epidemic.html#module-autoemulate.simulations.epidemic">autoemulate.simulations.epidemic</a>
+</li>
+        <li><a href="reference/simulations/flow_problem.html#module-autoemulate.simulations.flow_problem">autoemulate.simulations.flow_problem</a>
+</li>
+        <li><a href="reference/simulations/projectile.html#module-autoemulate.simulations.projectile">autoemulate.simulations.projectile</a>
+</li>
+        <li><a href="reference/simulations/reaction_diffusion.html#module-autoemulate.simulations.reaction_diffusion">autoemulate.simulations.reaction_diffusion</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.SklearnBackend.normalize_y">normalize_y (SklearnBackend attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.observations">observations (BayesianMixin attribute)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.optimizer">optimizer (PyTorchBackend attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.optimizer_cls">optimizer_cls (PyTorchBackend attribute)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.out_dim">out_dim (Simulator property)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.output_names">output_names (Simulator property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.param_bounds">param_bounds (Simulator property)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.param_names">param_names (Simulator property)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.parameters_range">parameters_range (Simulator property)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.plot">plot() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.plot_calibration">plot_calibration() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.plot_calibration_from_distributions">plot_calibration_from_distributions() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.plot_loss">plot_loss() (in module autoemulate.core.plotting)</a>
+</li>
+      <li><a href="reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.plot_morris">plot_morris() (SensitivityAnalysis static method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.plot_preds">plot_preds() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.plot_run">plot_run() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.plot_sa_heatmap">plot_sa_heatmap() (SensitivityAnalysis method)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.plot_samples">plot_samples() (IntervalExcursionSetCalibration method)</a>
+</li>
+      <li><a href="reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.plot_sobol">plot_sobol() (SensitivityAnalysis static method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.plot_surface">plot_surface() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.plot_wave">plot_wave() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.plot_wave_evolution">plot_wave_evolution() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/core/plotting.html#autoemulate.core.plotting.plot_xy">plot_xy() (in module autoemulate.core.plotting)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/polynomials.html#autoemulate.emulators.polynomials.PolynomialRegression">PolynomialRegression (class in autoemulate.emulators.polynomials)</a>
+</li>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.posterior_predictive">posterior_predictive() (BayesianMixin method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.DeterministicEmulator.predict">predict() (DeterministicEmulator method)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.predict">(Emulator method)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.GaussianEmulator.predict">(GaussianEmulator method)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.GaussianProcessEmulator.predict">(GaussianProcessEmulator method)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.ProbabilisticEmulator.predict">(ProbabilisticEmulator method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.predict_mean">predict_mean() (Emulator method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.DeterministicEmulator.predict_mean_and_variance">predict_mean_and_variance() (DeterministicEmulator method)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.predict_mean_and_variance">(Emulator method)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.ProbabilisticEmulator.predict_mean_and_variance">(ProbabilisticEmulator method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.ProbabilisticEmulator">ProbabilisticEmulator (class in autoemulate.emulators.base)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.probablistic_emulators">probablistic_emulators() (AutoEmulate static method)</a>
+</li>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.Projectile">Projectile (class in autoemulate.simulations.projectile)</a>
+</li>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.ProjectileMultioutput">ProjectileMultioutput (class in autoemulate.simulations.projectile)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.pytorch_emulators">pytorch_emulators() (AutoEmulate static method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend">PyTorchBackend (class in autoemulate.emulators.base)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/radial_basis_functions.html#autoemulate.emulators.radial_basis_functions.RadialBasisFunctions">RadialBasisFunctions (class in autoemulate.emulators.radial_basis_functions)</a>
+</li>
+      <li><a href="reference/emulators/random_forest.html#autoemulate.emulators.random_forest.RandomForest">RandomForest (class in autoemulate.emulators.random_forest)</a>
+</li>
+      <li><a href="reference/simulations/reaction_diffusion.html#autoemulate.simulations.reaction_diffusion.reaction_diffusion">reaction_diffusion() (in module autoemulate.simulations.reaction_diffusion)</a>
+</li>
+      <li><a href="reference/simulations/reaction_diffusion.html#autoemulate.simulations.reaction_diffusion.ReactionDiffusion">ReactionDiffusion (class in autoemulate.simulations.reaction_diffusion)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.refit_emulator">refit_emulator() (HistoryMatchingWorkflow method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.run">run() (HistoryMatchingWorkflow method)</a>
+
+      <ul>
+        <li><a href="reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.run">(SensitivityAnalysis method)</a>
+</li>
+        <li><a href="reference/core/tuner.html#autoemulate.core.tuner.Tuner.run">(Tuner method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.run_mcmc">run_mcmc() (BayesianMixin method)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.run_smc">run_smc() (IntervalExcursionSetCalibration method)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.run_waves">run_waves() (HistoryMatchingWorkflow method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.sample_inputs">sample_inputs() (Simulator method)</a>
+
+      <ul>
+        <li><a href="reference/simulations/base.html#autoemulate.simulations.base.TorchSimulator.sample_inputs">(TorchSimulator method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.sample_tensor">sample_tensor() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/core/compare.html#autoemulate.core.compare.AutoEmulate.save">save() (AutoEmulate method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.scheduler_cls">scheduler_cls (Emulator attribute)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.scheduler_cls">(PyTorchBackend attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.scheduler_setup">scheduler_setup() (Emulator method)</a>
+</li>
+      <li><a href="reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis">SensitivityAnalysis (class in autoemulate.core.sensitivity_analysis)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.short_name">short_name() (Emulator class method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.shuffle">shuffle (PyTorchBackend attribute)</a>
+</li>
+      <li><a href="reference/calibration/history_matching.html#autoemulate.calibration.history_matching.HistoryMatchingWorkflow.simulate">simulate() (HistoryMatchingWorkflow method)</a>
+</li>
+      <li><a href="reference/simulations/epidemic.html#autoemulate.simulations.epidemic.simulate_epidemic">simulate_epidemic() (in module autoemulate.simulations.epidemic)</a>
+</li>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.simulate_projectile">simulate_projectile() (in module autoemulate.simulations.projectile)</a>
+</li>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.simulate_projectile_multioutput">simulate_projectile_multioutput() (in module autoemulate.simulations.projectile)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/simulations/reaction_diffusion.html#autoemulate.simulations.reaction_diffusion.simulate_reaction_diffusion">simulate_reaction_diffusion() (in module autoemulate.simulations.reaction_diffusion)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator">Simulator (class in autoemulate.simulations.base)</a>
+</li>
+      <li><a href="reference/simulations/projectile.html#autoemulate.simulations.projectile.simulator_base">simulator_base() (in module autoemulate.simulations.projectile)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.Simulator.simulator_name">simulator_name() (Simulator class method)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.SklearnBackend">SklearnBackend (class in autoemulate.emulators.base)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.supports_grad">supports_grad (Emulator attribute)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.GaussianEmulator.supports_grad">(GaussianEmulator attribute)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.supports_grad">(PyTorchBackend attribute)</a>
+</li>
+        <li><a href="reference/emulators/radial_basis_functions.html#autoemulate.emulators.radial_basis_functions.RadialBasisFunctions.supports_grad">(RadialBasisFunctions attribute)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.SklearnBackend.supports_grad">(SklearnBackend attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.DeterministicEmulator.supports_uq">supports_uq (DeterministicEmulator attribute)</a>
+
+      <ul>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.supports_uq">(Emulator attribute)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.ProbabilisticEmulator.supports_uq">(ProbabilisticEmulator attribute)</a>
+</li>
+        <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.supports_uq">(PyTorchBackend attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/emulators/svm.html#autoemulate.emulators.svm.SupportVectorMachine">SupportVectorMachine (class in autoemulate.emulators.svm)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.to_arviz">to_arviz() (BayesianMixin method)</a>
+</li>
+      <li><a href="reference/calibration/base.html#autoemulate.calibration.base.BayesianMixin.to_getdist">to_getdist() (BayesianMixin static method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.top_n_sobol_params">top_n_sobol_params() (SensitivityAnalysis static method)</a>
+</li>
+      <li><a href="reference/simulations/base.html#autoemulate.simulations.base.TorchSimulator">TorchSimulator (class in autoemulate.simulations.base)</a>
+</li>
+      <li><a href="reference/core/tuner.html#autoemulate.core.tuner.Tuner">Tuner (class in autoemulate.core.tuner)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.PyTorchBackend.verbose">verbose (PyTorchBackend attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.x_transform">x_transform (Emulator attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Y">Y</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.y_lower">y_lower (IntervalExcursionSetCalibration property)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.SklearnBackend.y_mean">y_mean (SklearnBackend attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.SklearnBackend.y_std">y_std (SklearnBackend attribute)</a>
+</li>
+      <li><a href="reference/emulators/base.html#autoemulate.emulators.base.Emulator.y_transform">y_transform (Emulator attribute)</a>
+</li>
+      <li><a href="reference/calibration/interval_excursion_set.html#autoemulate.calibration.interval_excursion_set.IntervalExcursionSetCalibration.y_upper">y_upper (IntervalExcursionSetCalibration property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

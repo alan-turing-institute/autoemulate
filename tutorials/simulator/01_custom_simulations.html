@@ -1,0 +1,809 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Custom Simulations &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/simulator/01_custom_simulations';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Active Learning with AutoEmulate" href="02_active_learning.html" />
+    <link rel="prev" title="Simulator in the loop" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Simulator in the loop</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/simulator/01_custom_simulations.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/simulator/01_custom_simulations.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Custom Simulations</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-simulator-class">The Simulator Class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-can-the-simulator-do">What can the simulator do?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lets-look-at-the-results-of-10-000-simulations">Lets look at the results of 10,000 simulations</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="custom-simulations">
+<h1>Custom Simulations<a class="headerlink" href="#custom-simulations" title="Link to this heading">#</a></h1>
+<p>Some features in AutoEmuluate can be run simply on data where as other require a simulation to be run. For example, features such as <em>active learning</em>, require the user to provide a simulator that can be run by AutoEmulate. This tutorial will step through how to do this.</p>
+<section id="the-simulator-class">
+<h2>The Simulator Class<a class="headerlink" href="#the-simulator-class" title="Link to this heading">#</a></h2>
+<p>The simulator class is a Base Python Class that can be inherited to create a custom simulator. The simulator class requires the user to implement the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">parameter_range</span></code>: A parameter set at class inititation. A dictionary of str to tuple pairs. The string is the name of the prameter and the tuple is the min and max value of the parameter. A range is given because the simulator will sample prior to running the simulation from this distribution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_variables</span></code>: A parameter set at class initiation. A list of strings that are the names of the outputs that the simulator will return.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_forward</span></code>: An abstract method that must be implemented by the user. This method will define a single forward pass of the simulation, taking in the input parameters and returning the output variables. <em>There are some important rules for this method:</em></p>
+<ul>
+<li><p>The input to the method must be a tensor of shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">n)</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of input parameters.</p></li>
+<li><p>The output of th method must be a tensor of shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">m)</span></code> where <code class="docutils literal notranslate"><span class="pre">m</span></code> is the number of output variables.</p></li>
+</ul>
+</li>
+</ul>
+<p>Below is an example of a custom simulator that can be used with AutoEmulate.</p>
+<p>The example is a projectile simulation, where we will simulate the distance travelled given a launch angle and initial velocity.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Projectile</span><span class="p">(</span><span class="n">Simulator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulator of projectile motion.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_ranges</span><span class="p">,</span> <span class="n">output_names</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">param_ranges</span><span class="p">,</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the horizontal distance a projectile travels using PyTorch.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        velocity: float or torch.Tensor </span>
+<span class="sd">            Initial velocity in m/s.</span>
+<span class="sd">        angle_degrees: float or torch.Tensor </span>
+<span class="sd">            Launch angle in degrees.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor </span>
+<span class="sd">            Distance traveled in meters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Extract velocity and angle from input tensor</span>
+        <span class="n">angle_degrees</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">velocity</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Convert angle from degrees to radians and calculate distance</span>
+        <span class="n">angle_radians</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">angle_degrees</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the distance using the projectile motion formula</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="p">(</span><span class="n">velocity</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">angle_radians</span><span class="p">)</span> <span class="o">/</span> <span class="mf">9.81</span>
+
+        <span class="c1"># Ensure the output is a 2D tensor</span>
+        <span class="k">if</span> <span class="n">distance</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">distance</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">param_ranges</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;angle&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">85</span><span class="p">),</span> <span class="s2">&quot;velocity&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)}</span>
+<span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;distance&quot;</span><span class="p">]</span>
+
+<span class="n">projectile_simulator</span> <span class="o">=</span> <span class="n">Projectile</span><span class="p">(</span><span class="n">param_ranges</span><span class="o">=</span><span class="n">param_ranges</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="what-can-the-simulator-do">
+<h2>What can the simulator do?<a class="headerlink" href="#what-can-the-simulator-do" title="Link to this heading">#</a></h2>
+<p>The first thing to do is sample inputs from the parameter space. In the following cell, we sample 10 times. This is appended into a single tensor of shape <code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">2)</span></code> where the first column is the angle and the second column is the velocity.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">input_samples</span></code> method implements latin hypercube sampling of the input parameters. However, if you have a preferred sampling method, you can simply override this method.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_samples</span> <span class="o">=</span> <span class="n">projectile_simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">input_samples</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>torch.Size([10, 2])
+</pre></div>
+</div>
+</div>
+</div>
+<p>These input samples can now be passed to the simulator to run a simulation. The <code class="docutils literal notranslate"><span class="pre">forward</span></code> method will simulate a single forward pass of the simulation whereas <code class="docutils literal notranslate"><span class="pre">forward_batch</span></code> will simulate a batch of forward passes.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">single_output</span> <span class="o">=</span> <span class="n">projectile_simulator</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">input_samples</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Single output: &quot;</span><span class="p">,</span> <span class="n">single_output</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Single output shape: &quot;</span><span class="p">,</span> <span class="n">single_output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Single output:  tensor([[7148.2173]])
+Single output shape:  torch.Size([1, 1])
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">multiple_output</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">projectile_simulator</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">input_samples</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multiple output: &quot;</span><span class="p">,</span> <span class="n">multiple_output</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multiple output shape: &quot;</span><span class="p">,</span> <span class="n">multiple_output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Multiple output:  tensor([[ 7148.2173],
+        [34932.6641],
+        [18589.7949],
+        [21358.0215],
+        [ 6263.2700],
+        [ 3810.5615],
+        [27173.0469],
+        [  366.6593],
+        [88887.9766],
+        [ 6164.4077]])
+Multiple output shape:  torch.Size([10, 1])
+</pre></div>
+</div>
+</div>
+</div>
+<p>You can access the outputs of the simulation in a dictionary format by calling the <code class="docutils literal notranslate"><span class="pre">get_outputs_as_dict()</span></code> method. This is most useful in the cases where the simulator has multiple outputs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">outputs_dict</span> <span class="o">=</span> <span class="n">projectile_simulator</span><span class="o">.</span><span class="n">get_outputs_as_dict</span><span class="p">()</span>
+<span class="n">outputs_dict</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;distance&#39;: tensor([ 7148.2173, 34932.6641, 18589.7949, 21358.0215,  6263.2700,  3810.5615,
+         27173.0469,   366.6593, 88887.9766,  6164.4077])}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="lets-look-at-the-results-of-10-000-simulations">
+<h2>Lets look at the results of 10,000 simulations<a class="headerlink" href="#lets-look-at-the-results-of-10-000-simulations" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span> <span class="o">=</span> <span class="n">projectile_simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">10_000</span><span class="p">)</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">projectile_simulator</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>  <span class="c1"># angle</span>
+    <span class="n">inputs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>  <span class="c1"># velocity</span>
+    <span class="n">c</span><span class="o">=</span><span class="n">outputs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>  <span class="c1"># distance</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">6</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Angle (degrees)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Velocity (m/s)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Projectile Distance by Angle and Velocity&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sc</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Distance (m)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/b4620112c719a40b9e0f291f1f8b50dd4586a3c8da92e1127bc9016f986f9f85.png" src="../../_images/b4620112c719a40b9e0f291f1f8b50dd4586a3c8da92e1127bc9016f986f9f85.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/simulator"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Simulator in the loop</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="02_active_learning.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Active Learning with AutoEmulate</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-simulator-class">The Simulator Class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-can-the-simulator-do">What can the simulator do?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lets-look-at-the-results-of-10-000-simulations">Lets look at the results of 10,000 simulations</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

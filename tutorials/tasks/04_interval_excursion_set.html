@@ -1,0 +1,897 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Interval Excursion Set &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/tasks/04_interval_excursion_set';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Simulator in the loop" href="../simulator/index.html" />
+    <link rel="prev" title="Bayesian calibration" href="03_bayes_calibration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Downstream tasks</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/tasks/04_interval_excursion_set.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/tasks/04_interval_excursion_set.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Interval Excursion Set</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#projectile-simulation-run-simulator-and-fit-emulator">Projectile simulation: run simulator and fit emulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#problem-set-up-identify-an-interval-excursion-set-for-f-x">Problem set-up: identify an interval excursion set for <span class="math notranslate nohighlight">\(f(x)\)</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interval-excursion-set-samples-using-mcmc">Interval excursion set samples using MCMC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interval-excursion-set-samples-using-smc-with-adaptive-tempering">Interval excursion set samples using SMC with adaptive tempering</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># probabilistic programming</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyro</span> 
+
+<span class="c1"># MCMC plotting</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">arviz</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">az</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">getdist</span><span class="w"> </span><span class="kn">import</span> <span class="n">plots</span>
+
+<span class="c1"># autoemulate imports</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.calibration.interval_excursion_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntervalExcursionSetCalibration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoEmulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_random_seed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.projectile</span><span class="w"> </span><span class="kn">import</span> <span class="n">Projectile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.emulators.gaussian_process.exact</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianProcessRBF</span>
+
+<span class="c1"># suppress warnings in notebook for readability</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="c1"># ignore warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+
+<span class="c1"># random seed for reproducibility</span>
+<span class="n">random_seed</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">set_random_seed</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+<span class="n">pyro</span><span class="o">.</span><span class="n">set_rng_seed</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section class="tex2jax_ignore mathjax_ignore" id="interval-excursion-set">
+<h1>Interval Excursion Set<a class="headerlink" href="#interval-excursion-set" title="Link to this heading">#</a></h1>
+<p>In this tutorial we will demonstrate how to use <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> to estimate the interval excursion set of a simulator. The interval excursion set is the set of input parameters for which the simulator output lies within a specified interval. This is a more general problem than estimating level sets, superlevel sets, or sublevel sets, as it allows for the specification of both lower and upper bounds on the output.</p>
+<p>We will use the <code class="docutils literal notranslate"><span class="pre">Projectile</span></code> simulator from the previous tutorials. We will first generate training data and fit a Gaussian process (GP) model to the data. We will then formulate the interval excursion set as a probabilistic model and then use the <code class="docutils literal notranslate"><span class="pre">IntervalExcursionSetCalibration</span></code> class to estimate the interval excursion set using both gradient-based MCMC (NUTS) and Sequential Monte Carlo (SMC) sampling methods.</p>
+<section id="projectile-simulation-run-simulator-and-fit-emulator">
+<h2>Projectile simulation: run simulator and fit emulator<a class="headerlink" href="#projectile-simulation-run-simulator-and-fit-emulator" title="Link to this heading">#</a></h2>
+<p>To begin with we create a simulator and generate some training data, before fitting a Gaussian process (GP) emulator to the data using AutoEmulate.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create simulator and generate training data</span>
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">Projectile</span><span class="p">(</span>
+    <span class="n">parameters_range</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">&quot;v0&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)},</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span>
+<span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Visualize training data</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">v0</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v0</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Drag coefficient&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Initial velocity (m/s)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Distance (m)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Run AutoEmulate to find the best GP model</span>
+<span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span> 
+    <span class="n">y</span><span class="p">,</span> 
+    <span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="n">GaussianProcessRBF</span><span class="p">],</span>
+    <span class="n">model_params</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> 
+<span class="p">)</span>
+
+<span class="c1"># Get best GP model</span>
+<span class="n">gp</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">best_result</span><span class="p">()</span><span class="o">.</span><span class="n">model</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/673fe731b17284c577acf5466fca1d99d3f0199f9e23542a776ed1523917e22a.png" src="../../_images/673fe731b17284c577acf5466fca1d99d3f0199f9e23542a776ed1523917e22a.png" />
+</div>
+</div>
+</section>
+<section id="problem-set-up-identify-an-interval-excursion-set-for-f-x">
+<h2>Problem set-up: identify an interval excursion set for <span class="math notranslate nohighlight">\(f(x)\)</span><a class="headerlink" href="#problem-set-up-identify-an-interval-excursion-set-for-f-x" title="Link to this heading">#</a></h2>
+<p>The aim for the remainder of this notebook is to explore methods that are able to identify samples <span class="math notranslate nohighlight">\(x\)</span> from the interval excursion set.</p>
+<p>Mathematically this is:</p>
+<div class="math notranslate nohighlight">
+\[
+x \in \mathbb{R}^n, \quad 
+a, b \in \mathbb{R}^m, \quad 
+f: \mathbb{R}^n \to \mathbb{R}^m, \quad 
+a_i &lt; f_i(x) &lt; b_i \;\; \forall i \in I \subseteq \{1,\dots,m\}
+\]</div>
+<p>with the interval excursion defined as:</p>
+<div class="math notranslate nohighlight">
+\[
+\text{Interval Excursion Set (IES):} \quad 
+\mathrm{IES}_{a,b,I} := \{\, x \in \mathbb{R}^n : a_i &lt; f_i(x) &lt; b_i \;\; \forall i \in I \,\}.
+\
+\]</div>
+<p>The interval excursion set encompasses, as special cases, several familiar constructions:</p>
+<ul class="simple">
+<li><p>the level set defined by <span class="math notranslate nohighlight">\(f(x) = c\)</span>,</p></li>
+<li><p>the superlevel set defined by <span class="math notranslate nohighlight">\(f(x) &gt; c\)</span>, and</p></li>
+<li><p>the sublevel set defined by <span class="math notranslate nohighlight">\(f(x) &lt; c\)</span>.</p></li>
+</ul>
+<p>The probability that a Gaussian random variable <span class="math notranslate nohighlight">\(y \sim \mathcal{N}(\mu, \sigma^2)\)</span> lies in the interval <span class="math notranslate nohighlight">\(a &lt; y &lt; b\)</span> is:</p>
+<div class="math notranslate nohighlight">
+\[
+P(a &lt; y &lt; b) = \Phi\left(\frac{b - \mu}{\sigma}\right) - \Phi\left(\frac{a - \mu}{\sigma}\right)
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi(\cdot)\)</span> is the cumulative distribution function (CDF) of the standard normal distribution.</p>
+<p>In the Bayesian setting, this interval probability is used as a likelihood function. The posterior density for <span class="math notranslate nohighlight">\(x\)</span> is then proportional to the product of the prior <span class="math notranslate nohighlight">\(p(x)\)</span> and the probability that the model output <span class="math notranslate nohighlight">\(f(x)\)</span> lies in the interval <span class="math notranslate nohighlight">\(a &lt; y &lt; b\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[p(x \mid a &lt; f(x) &lt; b) \propto p(x) \left[ \Phi\left(\frac{b - \mu(x)}{\sigma(x)}\right) - \Phi\left(\frac{a - \mu(x)}{\sigma(x)}\right) \right]\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu(x)\)</span> and <span class="math notranslate nohighlight">\(\sigma(x)\)</span> are the mean and standard deviation of the model output at <span class="math notranslate nohighlight">\(x\)</span>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">8.0</span>
+<span class="n">ies</span> <span class="o">=</span> <span class="n">IntervalExcursionSetCalibration</span><span class="p">(</span>
+    <span class="n">gp</span><span class="p">,</span>
+    <span class="n">parameters_range</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">parameters_range</span><span class="p">,</span>
+    <span class="n">output_bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;distance&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)},</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="interval-excursion-set-samples-using-mcmc">
+<h2>Interval excursion set samples using MCMC<a class="headerlink" href="#interval-excursion-set-samples-using-mcmc" title="Link to this heading">#</a></h2>
+<p>We next run the MCMC sampler. By default, it uses NUTS here, but Metropolis can also produce reasonable samples for low-dimensional parameter spaces, as is the case in this projectile simulator model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmc</span> <span class="o">=</span> <span class="n">ies</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">warmup_steps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">num_chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">sampler</span><span class="o">=</span><span class="s2">&quot;nuts&quot;</span><span class="p">,</span>
+    <span class="c1"># sampler=&quot;metropolis&quot;,</span>
+    <span class="n">model_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;uniform_prior&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">az_mcmc</span> <span class="o">=</span> <span class="n">ies</span><span class="o">.</span><span class="n">to_arviz</span><span class="p">(</span><span class="n">mcmc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Draw posterior predictive samples.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_pred</span> <span class="o">=</span> <span class="n">ies</span><span class="o">.</span><span class="n">posterior_predictive</span><span class="p">(</span><span class="n">mcmc</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">y_pred</span><span class="p">[</span><span class="s2">&quot;distance&quot;</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Distance (m)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Frequency&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/6889649edc191c19ae58bd09065b26bff4b62639b5bf44c498779b8206c18da8.png" src="../../_images/6889649edc191c19ae58bd09065b26bff4b62639b5bf44c498779b8206c18da8.png" />
+</div>
+</div>
+<p>Plot likelihood and mean of MCMC samples.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ies</span><span class="o">.</span><span class="n">plot_samples</span><span class="p">(</span><span class="n">az_mcmc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/a79b5cb0a795828f073ed73f674c490037a9f154633301df63772faa4149d238.png" src="../../_images/a79b5cb0a795828f073ed73f674c490037a9f154633301df63772faa4149d238.png" />
+</div>
+</div>
+<p>Convert to arviz InferenceData object for further analysis, such as <code class="docutils literal notranslate"><span class="pre">plot_posterior()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">az_data</span> <span class="o">=</span> <span class="n">ies</span><span class="o">.</span><span class="n">to_arviz</span><span class="p">(</span><span class="n">mcmc</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">plot_posterior</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/05f1d1a831b101a5c5873bf6209695525ace4b7d2e9c32391810119da45eeab0.png" src="../../_images/05f1d1a831b101a5c5873bf6209695525ace4b7d2e9c32391810119da45eeab0.png" />
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">GetDist</span></code> can also be used to create a plot of posterior sample densities.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_dist_and_plot</span><span class="p">(</span><span class="n">ies</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert and plot GetDist MCSamples from MCMC samples.&quot;&quot;&quot;</span>
+    <span class="n">emu_data</span> <span class="o">=</span> <span class="n">ies</span><span class="o">.</span><span class="n">to_getdist</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Emulator&quot;</span><span class="p">)</span>
+    <span class="n">emu_data</span><span class="o">.</span><span class="n">smooth_scale_1D</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">get_subplot_plotter</span><span class="p">()</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">triangle_plot</span><span class="p">([</span><span class="n">emu_data</span><span class="p">],</span> <span class="n">filled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">get_dist_and_plot</span><span class="p">(</span><span class="n">ies</span><span class="p">,</span> <span class="n">mcmc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Removed no burn in
+</pre></div>
+</div>
+<img alt="../../_images/af9208661475db72c26cdb82bc17c8ed557b650aa83b11a97de43db1cfa2c8b3.png" src="../../_images/af9208661475db72c26cdb82bc17c8ed557b650aa83b11a97de43db1cfa2c8b3.png" />
+</div>
+</div>
+</section>
+<section id="interval-excursion-set-samples-using-smc-with-adaptive-tempering">
+<h2>Interval excursion set samples using SMC with adaptive tempering<a class="headerlink" href="#interval-excursion-set-samples-using-smc-with-adaptive-tempering" title="Link to this heading">#</a></h2>
+<p>The Sequential Monte Carlo (SMC) implementation provides an alternative to MCMC approaches.</p>
+<p>It works by tempering the interval excursion set likelihood from 0 to 1 (i.e. sampling from the prior to the posterior), adaptively controlling steps to hit a target Effective Sample Size (ESS). We resample when ESS falls below the threshold. This converges to the exact target at temperature 1 without gradients.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run SMC and plot diagnostics</span>
+<span class="n">az_data_smc</span> <span class="o">=</span> <span class="n">ies</span><span class="o">.</span><span class="n">run_smc</span><span class="p">(</span>
+    <span class="n">n_particles</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span>
+    <span class="n">ess_target_frac</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">move_steps</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">rw_step</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
+    <span class="n">uniform_prior</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">plot_diagnostics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_az_data</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/8c897c7b441cf0123fdc8c6f110804de875b23746ca51177de01c4354bcc94ad.png" src="../../_images/8c897c7b441cf0123fdc8c6f110804de875b23746ca51177de01c4354bcc94ad.png" />
+<img alt="../../_images/29b2cfdccf5be487dea0559eb5ae99c42697df68e2077d70c6ac46d0fa344287.png" src="../../_images/29b2cfdccf5be487dea0559eb5ae99c42697df68e2077d70c6ac46d0fa344287.png" />
+<img alt="../../_images/43910435eacb7b8c220577f542812e85b595cfc21aecb99edab1453c795e6edc.png" src="../../_images/43910435eacb7b8c220577f542812e85b595cfc21aecb99edab1453c795e6edc.png" />
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">plot_posterior()</span></code> for SMC samples.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">plot_posterior</span><span class="p">(</span><span class="n">az_data_smc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/7b92ffa7e7b8bbc157da6941443ff851f896356298ff349f209e9576b763cd53.png" src="../../_images/7b92ffa7e7b8bbc157da6941443ff851f896356298ff349f209e9576b763cd53.png" />
+</div>
+</div>
+<p>Plot the likelihood and values of SMC samples.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">az_data_smc</span><span class="p">,</span> <span class="n">az</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">)</span>
+<span class="n">ies</span><span class="o">.</span><span class="n">plot_samples</span><span class="p">(</span><span class="n">az_data_smc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/efef07f7cc2d596301848d429fecd1f3827baf3ff4937b4607703f90994cad42.png" src="../../_images/efef07f7cc2d596301848d429fecd1f3827baf3ff4937b4607703f90994cad42.png" />
+</div>
+</div>
+<p>And finally a <code class="docutils literal notranslate"><span class="pre">GetDist</span></code> plot comparing the MCMC and SMC posterior sample densities. Some differences are expected due to the different sampling approaches, but overall the posterior sample densities are similar.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">az_data_smc</span><span class="p">,</span> <span class="n">az</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">get_subplot_plotter</span><span class="p">()</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">triangle_plot</span><span class="p">(</span> 
+    <span class="p">[</span><span class="n">ies</span><span class="o">.</span><span class="n">to_getdist</span><span class="p">(</span><span class="n">az_mcmc</span><span class="p">,</span> <span class="s2">&quot;MCMC&quot;</span><span class="p">),</span> <span class="n">ies</span><span class="o">.</span><span class="n">to_getdist</span><span class="p">(</span><span class="n">az_data_smc</span><span class="p">,</span> <span class="s2">&quot;SMC&quot;</span><span class="p">)],</span>
+    <span class="n">filled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Removed no burn in
+Removed no burn in
+</pre></div>
+</div>
+<img alt="../../_images/7572ddf44b8becfa67cfeef74766009f89a4e01a1760dd222c918f104b1ac860.png" src="../../_images/7572ddf44b8becfa67cfeef74766009f89a4e01a1760dd222c918f104b1ac860.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/tasks"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="03_bayes_calibration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Bayesian calibration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../simulator/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Simulator in the loop</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#projectile-simulation-run-simulator-and-fit-emulator">Projectile simulation: run simulator and fit emulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#problem-set-up-identify-an-interval-excursion-set-for-f-x">Problem set-up: identify an interval excursion set for <span class="math notranslate nohighlight">\(f(x)\)</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interval-excursion-set-samples-using-mcmc">Interval excursion set samples using MCMC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interval-excursion-set-samples-using-smc-with-adaptive-tempering">Interval excursion set samples using SMC with adaptive tempering</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

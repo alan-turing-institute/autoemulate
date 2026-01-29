@@ -1,0 +1,946 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Dimensionality reduction &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/emulation/02_dim_reduction';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Downstream tasks" href="../tasks/index.html" />
+    <link rel="prev" title="Quickstart" href="01_quickstart.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Training an emulator</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/emulation/02_dim_reduction.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/emulation/02_dim_reduction.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Dimensionality reduction</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-diffusion-example">Reaction-Diffusion example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-generation">1: Data generation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-an-emulator-on-a-subset-of-the-data">2: Fit an emulator on a subset of the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-predictions">3: Test predictions</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="dimensionality-reduction">
+<h1>Dimensionality reduction<a class="headerlink" href="#dimensionality-reduction" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Sometimes an emulator performs better when the input and/or the output dimensionality is reduced. In this example, we show how one can specify dimensionality reduction methods to be used in combination with the emulators tested by AutoEmulate.</p>
+</section>
+<section id="reaction-diffusion-example">
+<h2>Reaction-Diffusion example<a class="headerlink" href="#reaction-diffusion-example" title="Link to this heading">#</a></h2>
+<p>We train an emulator to generate solutions to a 2D parameterized reaction-diffusion problem governed by the following partial differential equations:</p>
+<div class="math notranslate nohighlight">
+\[
+\dot{u} = (1 - (u^2 + v^2)) u + \beta (u^2 + v^2) v + d (u_{xx} + u_{yy}),
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+\dot{v} = -\beta (u^2 + v^2) u + (1 - (u^2 + v^2)) v + d (v_{xx} + v_{yy}),
+\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\( u \)</span> and <span class="math notranslate nohighlight">\( v \)</span> are the concentrations of two species,</p></li>
+<li><p><span class="math notranslate nohighlight">\( \beta \)</span> and <span class="math notranslate nohighlight">\( d \)</span> control the reaction and diffusion terms.</p></li>
+</ul>
+<p>This system exhibits complex spatio-temporal dynamics such as spiral waves.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span> 
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.reaction_diffusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionDiffusion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_data</span>
+
+<span class="n">save</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">train</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="data-generation">
+<h2>1: Data generation<a class="headerlink" href="#data-generation" title="Link to this heading">#</a></h2>
+<p>Data are computed using a numerical <a class="reference external" href="https://github.com/dynamicslab/pysindy/blob/master/examples/10_PDEFIND_examples.ipynb"><em>simulator</em></a> using Fourier spectral method.
+The simulator takes two inputs: the reaction parameter <span class="math notranslate nohighlight">\(\beta\)</span> and the diffusion parameter <span class="math notranslate nohighlight">\(d\)</span>.</p>
+<p>We sample 50 sets of inputs <code class="docutils literal notranslate"><span class="pre">X</span></code> using Latin Hypercube sampling and run the simulator for those inputs to get the solutions <code class="docutils literal notranslate"><span class="pre">Y</span></code>. Below you can either run the simulator or load data that has already been simulated.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_samples</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">ReactionDiffusion</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">train</span><span class="p">:</span>
+    <span class="n">data_folder</span> <span class="o">=</span>  <span class="s2">&quot;../data/reactiondiffusion1/processed&quot;</span> 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_folder</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_folder</span><span class="p">)</span>  
+    <span class="n">X_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="s2">&quot;parameters.csv&quot;</span><span class="p">)</span>
+    <span class="n">Y_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="s2">&quot;outputs.csv&quot;</span><span class="p">)</span>
+
+
+    <span class="c1"># Run the simulator to generate data </span>
+    <span class="c1"># Simulator returns flattened species U and V</span>
+    <span class="n">UV</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="c1"># Let&#39;s consider as output the concentration of species U</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">UV</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">UV</span><span class="p">[:,</span> <span class="p">:</span><span class="n">m</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+        <span class="c1"># Save the data</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">X_file</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">Y_file</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># Load the data</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">fetch_data</span><span class="p">(</span><span class="s1">&#39;reactiondiffusion1&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shapes: input X: </span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, output Y: </span><span class="si">{</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>shapes: input X: torch.Size([50, 2]), output Y: torch.Size([50, 2500])
+</pre></div>
+</div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are matrices where each row represents one run of the simulation. In the input matrix <code class="docutils literal notranslate"><span class="pre">X</span></code> the two columns indicate the input parameters (reaction <span class="math notranslate nohighlight">\(\beta\)</span> and diffusion <span class="math notranslate nohighlight">\(d\)</span> parameters, respetively).
+In the output matrix <code class="docutils literal notranslate"><span class="pre">Y</span></code> each column indicates a spatial location where the solution (i.e. the concentration of <span class="math notranslate nohighlight">\(u\)</span> at final time <span class="math notranslate nohighlight">\(T=10\)</span>) is computed. <br>
+We consider a 2D spatial grid of <span class="math notranslate nohighlight">\(50\times 50\)</span> points, therefore each row of <code class="docutils literal notranslate"><span class="pre">Y</span></code> corresponds to a 2500-dimensional vector!</p>
+<p>Let’s now plot the simulated data to see what the reaction-diffusion pattern looks like.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mf">4.5</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="o">+</span><span class="n">param</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\beta = </span><span class="si">{:.2f}</span><span class="s1">, d = </span><span class="si">{:.2f}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;2D solutions to the reaction-diffusion system for different parameters&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/1872527ba83f75f6ab276d793ec018f296be93210517ae9eb828181a6aa1c4ff.png" src="../../_images/1872527ba83f75f6ab276d793ec018f296be93210517ae9eb828181a6aa1c4ff.png" />
+</div>
+</div>
+</section>
+<section id="fit-an-emulator-on-a-subset-of-the-data">
+<h2>2: Fit an emulator on a subset of the data<a class="headerlink" href="#fit-an-emulator-on-a-subset-of-the-data" title="Link to this heading">#</a></h2>
+<p>Below we pass a sequence of <code class="docutils literal notranslate"><span class="pre">x_transforms</span></code> and <code class="docutils literal notranslate"><span class="pre">y_transforms</span></code> to <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code>. In this example we apply PCA to the simulation output and train a Gaussian Process emulator on this reduced problem space. This is often more efficient for high dimensional problems.</p>
+<p>Note that the transforms are specified as a list of lists. This enables users to specify different transform combinations (each a list) to test with all the emulators. The transforms can be any subclass of <code class="docutils literal notranslate"><span class="pre">torch.distributions.Transform</span></code> - here we demonstrate how to flatten the data with <code class="docutils literal notranslate"><span class="pre">ReshapeTransform</span></code>. We also make use of <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> provided transforms to standardize the data before dimensionality reduction with PCA. In addition to dimensionality reduction with PCA, <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> also has an option to use Variational Autoencoder.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoEmulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributions.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReshapeTransform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span> 
+
+<span class="c1"># Convert to tensors</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+<span class="c1"># Split into train/test data</span>
+<span class="n">test_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">13</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">19</span><span class="p">])]</span>
+<span class="n">train_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">test_idx</span><span class="p">)</span>
+
+<span class="c1"># Run AutoEmulate</span>
+<span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> 
+    <span class="n">y</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span>
+    <span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GaussianProcessRBF&quot;</span><span class="p">],</span>
+    <span class="n">x_transforms_list</span><span class="o">=</span><span class="p">[[</span><span class="n">StandardizeTransform</span><span class="p">()]],</span>
+    <span class="n">y_transforms_list</span><span class="o">=</span><span class="p">[[</span>
+        <span class="n">ReshapeTransform</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">n</span><span class="p">,)),</span> <span class="c1"># include torch transform to flatten first</span>
+        <span class="n">StandardizeTransform</span><span class="p">(),</span>
+        <span class="n">PCATransform</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
+        <span class="n">StandardizeTransform</span><span class="p">()</span>
+    <span class="p">]],</span>
+    <span class="c1"># fewer bootstraps to reduce computation time, though more uncertainty on test score</span>
+    <span class="n">n_bootstraps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">,</span>
+    <span class="n">model_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;posterior_predictive&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">transformed_emulator_params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;full_covariance&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;output_from_samples&quot;</span><span class="p">:</span> <span class="kc">False</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Summarise the results across the models considered.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">summarise</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>model_name</th>
+      <td>GaussianProcessRBF</td>
+    </tr>
+    <tr>
+      <th>x_transforms</th>
+      <td>[StandardizeTransform()]</td>
+    </tr>
+    <tr>
+      <th>y_transforms</th>
+      <td>[ReshapeTransform(), StandardizeTransform(), P...</td>
+    </tr>
+    <tr>
+      <th>params</th>
+      <td>{'likelihood_cls': &lt;class 'gpytorch.likelihood...</td>
+    </tr>
+    <tr>
+      <th>r2_test</th>
+      <td>0.95215</td>
+    </tr>
+    <tr>
+      <th>r2_test_std</th>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>rmse_test</th>
+      <td>0.144496</td>
+    </tr>
+    <tr>
+      <th>rmse_test_std</th>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>r2_train</th>
+      <td>0.998253</td>
+    </tr>
+    <tr>
+      <th>r2_train_std</th>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>rmse_train</th>
+      <td>0.025612</td>
+    </tr>
+    <tr>
+      <th>rmse_train_std</th>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Get best performing emulator and fit on all training data with best model class reinitialized and refitted on all the training data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">em</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">fit_from_reinitialized</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_idx</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="test-predictions">
+<h2>3: Test predictions<a class="headerlink" href="#test-predictions" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get predictions for the full dataset</span>
+<span class="n">y_true</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+<span class="n">y_pred_dis</span> <span class="o">=</span> <span class="n">em</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">test_idx</span><span class="p">])</span>
+<span class="n">y_pred</span><span class="p">,</span> <span class="n">y_var_pred</span> <span class="o">=</span> <span class="n">em</span><span class="o">.</span><span class="n">predict_mean_and_variance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">test_idx</span><span class="p">])</span>
+
+<span class="n">y_pred</span><span class="p">,</span> <span class="n">y_std_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">y_var_pred</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Prediction distribution shape:&quot;</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y_std_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mean shape:&quot;</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Std shape:&quot;</span><span class="p">,</span> <span class="n">y_std_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Prediction distribution shape: (10, 50, 50) (10, 50, 50)
+Mean shape: (10, 50, 50)
+Std shape: (10, 50, 50)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the results for some unseen (test) parameter instances</span>
+<span class="n">params_test</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">param_test</span> <span class="ow">in</span> <span class="n">params_test</span><span class="p">:</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mf">4.5</span><span class="p">))</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">y_true</span><span class="p">[</span><span class="n">param_test</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;True solution (simulator)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">)</span>
+
+  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">y_pred</span><span class="p">[</span><span class="n">param_test</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Prediction (emulator)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">)</span>
+
+  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">y_std_pred</span><span class="p">[</span><span class="n">param_test</span><span class="p">],</span> <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;bwr&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_std_pred</span><span class="p">[</span><span class="n">params_test</span><span class="p">]))</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Standard Deviation (emulator)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">)</span>
+
+  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_pred</span><span class="p">[</span><span class="n">param_test</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_true</span><span class="p">[</span><span class="n">param_test</span><span class="p">]),</span> <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;bwr&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Absolute error&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">)</span>
+
+  <span class="c1"># plt.suptitle(r&#39;Results for test parameters: $\beta = {:.2f}, d = {:.2f}$&#39;.format(X[em.test_idxs][param_test][0], X[em.test_idxs][param_test][1]), fontsize=12)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/01cdf81499a4142f9a16e6f9cf5a70f2e1b5f00e49e8dd1091b8c53e520aa36d.png" src="../../_images/01cdf81499a4142f9a16e6f9cf5a70f2e1b5f00e49e8dd1091b8c53e520aa36d.png" />
+<img alt="../../_images/c444850f04fe716707cee9e7e35954f903020cefc14c1b636ec2ba5a60476d19.png" src="../../_images/c444850f04fe716707cee9e7e35954f903020cefc14c1b636ec2ba5a60476d19.png" />
+<img alt="../../_images/516fe7d45d0f2d6c50058237f1c31ffbb82ae9d485d64c7f03a0c151df7e8e20.png" src="../../_images/516fe7d45d0f2d6c50058237f1c31ffbb82ae9d485d64c7f03a0c151df7e8e20.png" />
+<img alt="../../_images/9c59c8c9339f8c1261b4cf493f677c761969eccab9bafdc95447ee37d0c0c2cd.png" src="../../_images/9c59c8c9339f8c1261b4cf493f677c761969eccab9bafdc95447ee37d0c0c2cd.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/emulation"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="01_quickstart.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quickstart</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../tasks/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Downstream tasks</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-diffusion-example">Reaction-Diffusion example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-generation">1: Data generation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-an-emulator-on-a-subset-of-the-data">2: Fit an emulator on a subset of the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-predictions">3: Test predictions</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

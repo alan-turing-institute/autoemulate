@@ -1,0 +1,1153 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quickstart &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/emulation/01_quickstart';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Dimensionality reduction" href="02_dim_reduction.html" />
+    <link rel="prev" title="Training an emulator" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Training an emulator</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/emulation/01_quickstart.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/emulation/01_quickstart.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Quickstart</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quickstart</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#toy-simulation">Toy simulation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data">Data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-and-compare-emulators">Build and compare Emulators</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-an-emulator">Choosing an Emulator</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#predictions">Predictions</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-and-loading-emulators">Saving and loading emulators</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code>’s goal is to make it easy to create an emulator for your simulation.</p>
+<p>This tutorial’s purpose is to walk you through the the basic functionality of the Python API using simple toy simulation as example.</p>
+<p>We’ll demonstrate following steps:</p>
+<ol class="arabic simple">
+<li><p>Getting input and output tensor data from our example simulation</p></li>
+<li><p>Creating, comparing and evaluating Emulators with <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code></p></li>
+<li><p>Using an <code class="docutils literal notranslate"><span class="pre">Emulator</span></code> model to predict outputs for new inputs</p></li>
+<li><p>Saving <code class="docutils literal notranslate"><span class="pre">Emulator</span></code> models (and associated metadata) to disk</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># General imports for the notebook</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="toy-simulation">
+<h2>Toy simulation<a class="headerlink" href="#toy-simulation" title="Link to this heading">#</a></h2>
+<p>Before we build an emulator with AutoEmulate, we need to get a set of input/output pairs from our simulation to use as training data.</p>
+<p>Below is a toy simulation for a projectile’s motion with drag (see <a class="reference external" href="https://mogp-emulator.readthedocs.io/en/latest/intro/tutorial.html">here</a> for details). The simulation includes:</p>
+<ul class="simple">
+<li><p>Inputs: drag coefficient (log scale), velocity</p></li>
+<li><p>Outputs: distance the projectile travelled</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.projectile</span><span class="w"> </span><span class="kn">import</span> <span class="n">Projectile</span>
+
+<span class="n">projectile</span> <span class="o">=</span> <span class="n">Projectile</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+<span class="n">n_samples</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">projectile</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+<span class="n">y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">projectile</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+<span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(torch.Size([500, 2]), torch.Size([500, 1]))
+</pre></div>
+</div>
+</div>
+</div>
+<section id="data">
+<h3>Data<a class="headerlink" href="#data" title="Link to this heading">#</a></h3>
+<p>As you can see, our simulator inputs (<code class="docutils literal notranslate"><span class="pre">x</span></code>) and outputs (<code class="docutils literal notranslate"><span class="pre">y</span></code>) are PyTorch tensors.
+PyTorch tensors are a common data structure used in machine learning, and <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> is built to work with them.</p>
+<p>We can also visualize the simulation data before training emulators where the output of the simulator is depicted as the colour of each scatter point.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">projectile</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">projectile</span><span class="o">.</span><span class="n">param_names</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">projectile</span><span class="o">.</span><span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e25245acd128bf55fa7d1b03bbc63a88624a85598b6d46e92147cbb1b9282add.png" src="../../_images/e25245acd128bf55fa7d1b03bbc63a88624a85598b6d46e92147cbb1b9282add.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="build-and-compare-emulators">
+<h2>Build and compare Emulators<a class="headerlink" href="#build-and-compare-emulators" title="Link to this heading">#</a></h2>
+<p>With our simulator inputs and outputs, we can run a full machine learning pipeline, including data processing, model fitting, model selection and hyperparameter optimisation in just a few lines of code.</p>
+<p>First, let’s import <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> and check the names of the available Emulator models. The columns indicate whether the emulator has a PyTorch backend, supports multioutput data and provides predictive uncertainty quantification. The list shows only the default set of emulators, but you can also see all available emulators by passing <code class="docutils literal notranslate"><span class="pre">default_only=False</span></code> to the function.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoEmulate</span>
+
+<span class="n">AutoEmulate</span><span class="o">.</span><span class="n">list_emulators</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Emulator</th>
+      <th>PyTorch</th>
+      <th>Multioutput</th>
+      <th>Uncertainty_Quantification</th>
+      <th>Automatic_Differentiation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>GaussianProcessMatern32</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>GaussianProcessRBF</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RadialBasisFunctions</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>PolynomialRegression</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>MLP</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>EnsembleMLP</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>We’re now ready run <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> to build and compare emulators.</p>
+<p>This will fit (including hyperparameter tuning) emulator models to the simulation input and output to the data, evaluating performance on witheld test data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run AutoEmulate with default settings</span>
+<span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For more information about the configuration options available, see the <a class="reference external" href="https://alan-turing-institute.github.io/autoemulate/reference/index.html">AutoEmulate API docs</a>.
+Here’s a brief overview of some important options:</p>
+<details>
+<summary>Model selection</summary>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> will fit all the above listed emulator models, but you can also specify a subset or additional models to use if you already know which kinds of models are most suitable for your data.</p>
+<p>Specify models used by AutoEmulate with the <code class="docutils literal notranslate"><span class="pre">models</span></code> argument, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;GaussianProcessRBF&quot;</span><span class="p">,</span> <span class="s2">&quot;GaussianProcessCorrelatedRBF&quot;</span><span class="p">,</span> <span class="s2">&quot;RadialBasisFunctions&quot;</span><span class="p">]</span>
+<span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The user can also directly restrict the selection to just probabilistic models by using the <code class="docutils literal notranslate"><span class="pre">only_probabilistic</span></code> argument without having to list all the models individually:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">only_probabilistic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</details>
+<details>
+<summary>Logging</summary>
+<p>When running <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code>, you may also wish to enable logging to track the progress and performance of the emulator comparison. You can do this by setting the <code class="docutils literal notranslate"><span class="pre">log_level</span></code> argument when creating the <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> instance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;info&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Try setting various log levels to see the difference. The options are “progress_bar”, “debug”, “info”, “warning”, “error”, or “critical”.</p>
+</details>
+<details>
+<summary>Metrics</summary>
+<p>The user can specify what metrics to be used for both the tuning and evaluation.
+For tuning, only one metric is accepted. This is the metric used to determine which hyperparameter set is the best. For evaluation, multiple metrics can be accepted. These are the metrics reported baack to measure performance on the train and test datasets.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">tuning_metric</span><span class="o">=</span><span class="s1">&#39;r2&#39;</span><span class="p">,</span>  <span class="n">evaluation_metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> <span class="s1">&#39;r2&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Available metrics can be seen by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">AVAILABLE_METRICS</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">AVAILABLE_METRICS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+</div>
+</details>
+<p>Now that we have run <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code>, let’s look at the summary for a comparison of emulator performance (r-squared and RMSE) on both the train and test data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">summarise</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>model_name</th>
+      <th>x_transforms</th>
+      <th>y_transforms</th>
+      <th>params</th>
+      <th>r2_test</th>
+      <th>r2_test_std</th>
+      <th>rmse_test</th>
+      <th>rmse_test_std</th>
+      <th>r2_train</th>
+      <th>r2_train_std</th>
+      <th>rmse_train</th>
+      <th>rmse_train_std</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>GaussianProcessRBF</td>
+      <td>[StandardizeTransform()]</td>
+      <td>[StandardizeTransform()]</td>
+      <td>{'epochs': 200, 'lr': 0.5, 'likelihood_cls': &lt;...</td>
+      <td>0.999880</td>
+      <td>0.000048</td>
+      <td>109.695099</td>
+      <td>40.891006</td>
+      <td>0.999985</td>
+      <td>0.000002</td>
+      <td>28.569292</td>
+      <td>1.610160</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RadialBasisFunctions</td>
+      <td>[StandardizeTransform()]</td>
+      <td>[StandardizeTransform()]</td>
+      <td>{'kernel': 'quintic', 'degree': 2, 'smoothing'...</td>
+      <td>0.999552</td>
+      <td>0.000125</td>
+      <td>212.781021</td>
+      <td>63.807365</td>
+      <td>0.999664</td>
+      <td>0.000067</td>
+      <td>136.266235</td>
+      <td>14.942329</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>GaussianProcessMatern32</td>
+      <td>[StandardizeTransform()]</td>
+      <td>[StandardizeTransform()]</td>
+      <td>{'epochs': 200, 'lr': 0.1, 'likelihood_cls': &lt;...</td>
+      <td>0.997808</td>
+      <td>0.001016</td>
+      <td>444.855988</td>
+      <td>191.858337</td>
+      <td>0.999994</td>
+      <td>0.000002</td>
+      <td>18.578745</td>
+      <td>3.768527</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>EnsembleMLP</td>
+      <td>[StandardizeTransform()]</td>
+      <td>[StandardizeTransform()]</td>
+      <td>{'n_emulators': 2, 'epochs': 200, 'layer_dims'...</td>
+      <td>0.990945</td>
+      <td>0.003947</td>
+      <td>925.759766</td>
+      <td>359.656952</td>
+      <td>0.999631</td>
+      <td>0.000050</td>
+      <td>145.633514</td>
+      <td>10.596750</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>MLP</td>
+      <td>[StandardizeTransform()]</td>
+      <td>[StandardizeTransform()]</td>
+      <td>{'epochs': 200, 'layer_dims': [32, 16], 'lr': ...</td>
+      <td>0.954085</td>
+      <td>0.010079</td>
+      <td>2142.931152</td>
+      <td>521.719543</td>
+      <td>0.983638</td>
+      <td>0.002499</td>
+      <td>957.256470</td>
+      <td>65.700737</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>PolynomialRegression</td>
+      <td>[StandardizeTransform()]</td>
+      <td>[StandardizeTransform()]</td>
+      <td>{'lr': 0.001, 'epochs': 200, 'batch_size': 16,...</td>
+      <td>0.750277</td>
+      <td>0.026467</td>
+      <td>4834.417480</td>
+      <td>966.347717</td>
+      <td>0.795390</td>
+      <td>0.019103</td>
+      <td>3388.434326</td>
+      <td>197.342285</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="choosing-an-emulator">
+<h1>Choosing an Emulator<a class="headerlink" href="#choosing-an-emulator" title="Link to this heading">#</a></h1>
+<p>From this list, we can choose an emulator based on the index from the summary dataframe, or quickly get the best performing one using the <code class="docutils literal notranslate"><span class="pre">best_result</span></code> function, which picks based on the <code class="docutils literal notranslate"><span class="pre">r2_test</span></code> metric by default.</p>
+<details>
+<summary>Choosing a metric for determining the best model</summary>
+<p><code class="docutils literal notranslate"><span class="pre">metric_name</span></code> can be set in the <code class="docutils literal notranslate"><span class="pre">best_result</span></code> method to choose what metric is used to determine the best model:</p>
+<p><code class="docutils literal notranslate"><span class="pre">ae.best_result(metric_name='rmse')</span></code></p>
+</details><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">best_result</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model with id: &quot;</span><span class="p">,</span> <span class="n">best</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot; performed best: &quot;</span><span class="p">,</span> <span class="n">best</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model with id:  1  performed best:  GaussianProcessRBF
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">untransformed_model_name</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&#39;GaussianProcessRBF&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s take a look at the configuration of the best model. These are the values of the model’s hyperparameters.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;epochs&#39;: 200, &#39;lr&#39;: 0.5, &#39;likelihood_cls&#39;: &lt;class &#39;gpytorch.likelihoods.multitask_gaussian_likelihood.MultitaskGaussianLikelihood&#39;&gt;, &#39;scheduler_cls&#39;: None, &#39;scheduler_params&#39;: {}}
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can quickly visualise the performance of this Emulator with a plot of its predictions against the simulator outputs for the heldout test data. We also save the plot to a file.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">plot_preds</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">projectile</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/191f10223f758d4e2489ecca5d48ce7ef85f0d898fca86ca9810ed05d3fa0a94.png" src="../../_images/191f10223f758d4e2489ecca5d48ce7ef85f0d898fca86ca9810ed05d3fa0a94.png" />
+</div>
+</div>
+<p>We can also visualise the predictions against each input feature.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="n">output_names</span><span class="o">=</span><span class="n">projectile</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span> <span class="n">input_names</span><span class="o">=</span><span class="n">projectile</span><span class="o">.</span><span class="n">param_names</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/1a38ec1508ccbd0cf547362f7a2f7b47da43d3840869700f07db11a576017109.png" src="../../_images/1a38ec1508ccbd0cf547362f7a2f7b47da43d3840869700f07db11a576017109.png" />
+</div>
+</div>
+<p>We can subset the data included in the feature plots by providing input and output ranges.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="n">input_ranges</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">1</span><span class="p">:</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">500</span><span class="p">)},</span> <span class="n">output_ranges</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)})</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/fc91647ca0b2881097acb0e7d536b329a246cb75b2d29ab46f518393d5d41e73.png" src="../../_images/fc91647ca0b2881097acb0e7d536b329a246cb75b2d29ab46f518393d5d41e73.png" />
+</div>
+</div>
+<p>As well as plotting the data, we can directly plot the predicted mean and variance of the emulator for a pair of variables while holding the other variables constant at a given quantile. API to support plotting for a subset of the parameter and output range is also supported.</p>
+<p>The emulator predicted mean captures the simulated data plotted at the top of the tutorial well. The predicted variance is low where we have data, and increases away from the data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">projectile</span><span class="o">.</span><span class="n">parameters_range</span><span class="p">,</span> <span class="n">quantile</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/6151e28b05e8df99e710be3729025b6ff7331c7fdbac4aee96f4ca964ea15b80.png" src="../../_images/6151e28b05e8df99e710be3729025b6ff7331c7fdbac4aee96f4ca964ea15b80.png" />
+</div>
+</div>
+<p>We can also visualise the calibration of the emulator’s predicted uncertainty on the held out test data. The closer the line is to the diagonal, the better calibrated the uncertainty is. Line above the diagonal overestimates the uncertainty while line below the diagonal underestimates it.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">plot_calibration</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/cd98443724bde974b3ec8e71a922eb079bd5aeda547a726e933f1f0f9dfe3092.png" src="../../_images/cd98443724bde974b3ec8e71a922eb079bd5aeda547a726e933f1f0f9dfe3092.png" />
+</div>
+</div>
+<section id="predictions">
+<h2>Predictions<a class="headerlink" href="#predictions" title="Link to this heading">#</a></h2>
+<p>We can use the emulator to make predictions using the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Independent(Normal(loc: torch.Size([10, 1]), scale: torch.Size([10, 1])), 1)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="saving-and-loading-emulators">
+<h1>Saving and loading emulators<a class="headerlink" href="#saving-and-loading-emulators" title="Link to this heading">#</a></h1>
+<p>Emulators and their metadata (hyperparameter config and performance metrics) can be saved to disk and loaded again later.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a directory to save Emulator models</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;my_emulators&quot;</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s save the best result, the best performing emulator plus metadata, to disk.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The use_timestamp paramater ensures a new result is saved each time the save method is called</span>
+<span class="n">best_result_filepath</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">use_timestamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model and metadata saved to: &quot;</span><span class="p">,</span> <span class="n">best_result_filepath</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model and metadata saved to:  my_emulators/GaussianProcessRBF_1_20260129_223130
+</pre></div>
+</div>
+</div>
+</div>
+<p>You should now have a two files saved to disk, one with the emulator model and one with the metadata that has the same name and a <code class="docutils literal notranslate"><span class="pre">.csv</span></code> extension.</p>
+<p>You can later pass this filepath to the <code class="docutils literal notranslate"><span class="pre">load_model</span></code> method to use the model again.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">best_result_filepath</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Independent(Normal(loc: torch.Size([10, 1]), scale: torch.Size([10, 1])), 1)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/emulation"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Training an emulator</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="02_dim_reduction.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Dimensionality reduction</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quickstart</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#toy-simulation">Toy simulation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data">Data</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-and-compare-emulators">Build and compare Emulators</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-an-emulator">Choosing an Emulator</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#predictions">Predictions</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-and-loading-emulators">Saving and loading emulators</a></li>
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

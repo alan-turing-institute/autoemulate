@@ -1,0 +1,1408 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Sensitivity Analysis &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/tasks/01_emulation_sensitivity';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="History Matching" href="02_history_matching.html" />
+    <link rel="prev" title="Downstream tasks" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Downstream tasks</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2Ftutorials/tasks/01_emulation_sensitivity.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/tasks/01_emulation_sensitivity.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Sensitivity Analysis</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary-conditions">Boundary conditions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-setup">The setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solve">Solve</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Sensitivity Analysis</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="sensitivity-analysis">
+<h1>Sensitivity Analysis<a class="headerlink" href="#sensitivity-analysis" title="Link to this heading">#</a></h1>
+<p>In this tutorial we demonstrate how to perform sensitivity analysis as part of the <code class="docutils literal notranslate"><span class="pre">AutoEmulate</span></code> workflow. The tutorial covers:</p>
+<ol class="arabic simple">
+<li><p>Setting up an example simulation: here we use our “FlowProblem” simulator. This is a cardiovascular modelling example, simulating a blood vessel divided into 10 compartments. This allows for the study of the pressure and flow rate at various points in the tube. See “The Flow Problem” below for more details.</p></li>
+<li><p>Running the simulation for 100 sets of parameters sampled from the parameter space.</p></li>
+<li><p>Using Autoemulate to find the best emulator for this simulation</p></li>
+<li><p>Performing sensitivity analysis.</p></li>
+</ol>
+<details>
+<summary>The Flow Problem</summary>
+<p>In the field of cardiovascular modeling, capturing the dynamics of blood flow and the associated pressures and volumes within the vascular system is crucial for understanding heart function and disease. This simulator simulates a vessel divided to 10 compartments.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h2>
+<p>The simulation parameters include :</p>
+<ol class="arabic simple">
+<li><p>R (Resistance):
+Represents the resistance to blood flow in blood vessels, akin to the hydraulic resistance caused by vessel diameter and blood viscosity (Analogous to electrical resistor).</p></li>
+<li><p>L (Inductance):
+Represents the inertial effects of blood flow, capturing how blood resists changes in its velocity (Analogous to electrical inductor).</p></li>
+<li><p>C (Capacitance):
+Represents the compliance or elasticity of blood vessels, primarily large arteries, which store and release blood volume with changes in pressure (Analogous to a capacitor).</p></li>
+</ol>
+</section>
+<section id="boundary-conditions">
+<h2>Boundary conditions<a class="headerlink" href="#boundary-conditions" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Neumann boundary condition : Specifies the derivative of the variable at the boundary.</p></li>
+<li><p>Dirichlet Boundary condition : Specifies the value of the variable directly at the boundary.</p></li>
+</ol>
+</section>
+<section id="the-setup">
+<h2>The setup<a class="headerlink" href="#the-setup" title="Link to this heading">#</a></h2>
+<p>The input flow rate in each compartment is <span class="math notranslate nohighlight">\(Q_i(t)\)</span> for the <span class="math notranslate nohighlight">\(i^{th}\)</span> compartment and the output flow rate is <span class="math notranslate nohighlight">\(Q_{i+1}(t)\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(Q_0(t) = 
+\begin{cases} 
+A \cdot \sin^2\left(\frac{\pi}{t_d} t\right), &amp; \text{if } 0 \leq t &lt; T, \\
+0, &amp; \text{otherwise}.
+\end{cases}\)</span></p>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(Q_0(t)\)</span> is the input pulse function (flow rate) at time t</p></li>
+<li><p>A is the amplitude of the pulse</p></li>
+<li><p><span class="math notranslate nohighlight">\(t_d\)</span> is the pulse duration.</p></li>
+</ul>
+</section>
+<section id="solve">
+<h2>Solve<a class="headerlink" href="#solve" title="Link to this heading">#</a></h2>
+<p>Pressure in Each Compartment (<span class="math notranslate nohighlight">\(P_i\)</span>): This determines how the pressure in each compartment evolves over time, based on the inflow (<span class="math notranslate nohighlight">\(Q_i(t)\)</span>) and the outflow (<span class="math notranslate nohighlight">\(Q_{i+1}(t)\)</span>). where <span class="math notranslate nohighlight">\(i\)</span> is the number of compartment.</p>
+<img src="../../../../misc/circuit.jpg" alt="Circuit Diagram" style="width:60%;"/>
+<p><span class="math notranslate nohighlight">\(\frac{dP_i}{dt} = \frac{1}{C_n} \left( Q_i(t) - Q_{i+1}(t) \right)\)</span> where, <span class="math notranslate nohighlight">\(C_n = \frac{C}{n_\text{comp}}\)</span></p>
+<p>Flow rate equation (<span class="math notranslate nohighlight">\(Q_i\)</span>): This governs how the flow in each compartment changes over time, depending on the pressures in the neighboring compartments and the resistance and inertance properties of each compartment.</p>
+<p><span class="math notranslate nohighlight">\(\frac{dQ_i}{dt} = \frac{1}{L_n} \left( P_i - P_{10} - R_n Q_i(t) \right)\)</span>, where <span class="math notranslate nohighlight">\(L_n = \frac{L}{n_\text{comp}}, \quad R_n = \frac{R}{n_\text{comp}}\)</span></p>
+</details>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoEmulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.sensitivity_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">SensitivityAnalysis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.simulations.flow_problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlowProblem</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Set up the simulation parameters and ranges:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">parameters_range</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="c1"># Cardiac cycle period (s)</span>
+    <span class="s2">&quot;td&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="c1"># Pulse duration (s)</span>
+    <span class="s2">&quot;amp&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">),</span> <span class="c1"># Amplitude (e.g., pressure or flow rate)</span>
+    <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">),</span> <span class="c1"># Time step (s)</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">),</span> <span class="c1"># Compliance (unit varies based on context)</span>
+    <span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="c1"># Resistance (unit varies based on context)</span>
+    <span class="s2">&quot;L&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">),</span> <span class="c1"># Inductance (unit varies based on context)</span>
+    <span class="s2">&quot;R_o&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span> <span class="c1"># Outflow resistance (unit varies based on context)</span>
+    <span class="s2">&quot;p_o&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">)</span> <span class="c1"># Initial pressure (unit varies based on context)</span>
+<span class="p">}</span>
+<span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pressure&quot;</span><span class="p">]</span>
+
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">FlowProblem</span><span class="p">(</span>
+    <span class="n">parameters_range</span><span class="o">=</span><span class="n">parameters_range</span><span class="p">,</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Run the simulation for 100 sets of parameters sampled from the parameter space:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">sample_inputs</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>torch.Size([100, 9]) torch.Size([100, 1])
+</pre></div>
+</div>
+</div>
+</div>
+<p>Use AutoEmulate to find the best emulator for this simulation:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span> <span class="o">=</span> <span class="n">AutoEmulate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;MLP&quot;</span><span class="p">,</span> <span class="s2">&quot;GaussianProcessRBF&quot;</span><span class="p">],</span> <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>  <span class="c1"># remove models argument to use all models</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">best_result</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>GaussianProcessRBF
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="id1">
+<h2>Sensitivity Analysis<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Define the problem by creating a dictionary which contains the names and the boundaries of the parameters</p></li>
+<li><p>Evaluate the contribution of each parameter via the Sobol and Morris methods.</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;num_vars&#39;</span><span class="p">:</span> <span class="n">simulator</span><span class="o">.</span><span class="n">in_dim</span><span class="p">,</span>
+    <span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="n">simulator</span><span class="o">.</span><span class="n">param_names</span><span class="p">,</span>
+    <span class="s1">&#39;bounds&#39;</span><span class="p">:</span> <span class="n">simulator</span><span class="o">.</span><span class="n">param_bounds</span><span class="p">,</span>
+    <span class="s1">&#39;output_names&#39;</span><span class="p">:</span> <span class="n">simulator</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">sa</span> <span class="o">=</span> <span class="n">SensitivityAnalysis</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Sobol metrics:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(S_1\)</span>: First-order sensitivity index.</p></li>
+<li><p><span class="math notranslate nohighlight">\(S_2\)</span>: Second-order sensitivity index.</p></li>
+<li><p><span class="math notranslate nohighlight">\(S_t\)</span>: Total sensitivity index.</p></li>
+</ul>
+<p>Sobol interpretation:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(S_1\)</span> values sum to ≤ 1.0 (exact fraction of variance explained)</p></li>
+<li><p><span class="math notranslate nohighlight">\(S_t - S_1\)</span> = interaction effects involving that parameter</p></li>
+<li><p>Large <span class="math notranslate nohighlight">\(S_t - S_1\)</span> gap indicates strong interactions</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sobol_df</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;sobol&quot;</span><span class="p">)</span>
+<span class="n">sobol_df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>output</th>
+      <th>parameter</th>
+      <th>index</th>
+      <th>value</th>
+      <th>confidence</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>pressure</td>
+      <td>T</td>
+      <td>S1</td>
+      <td>0.000317</td>
+      <td>0.002411</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>pressure</td>
+      <td>td</td>
+      <td>S1</td>
+      <td>0.018635</td>
+      <td>0.014104</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>pressure</td>
+      <td>amp</td>
+      <td>S1</td>
+      <td>0.915634</td>
+      <td>0.064882</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>pressure</td>
+      <td>dt</td>
+      <td>S1</td>
+      <td>0.000049</td>
+      <td>0.001965</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>pressure</td>
+      <td>C</td>
+      <td>S1</td>
+      <td>0.008678</td>
+      <td>0.008943</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>pressure</td>
+      <td>R</td>
+      <td>S1</td>
+      <td>0.040356</td>
+      <td>0.019837</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>pressure</td>
+      <td>L</td>
+      <td>S1</td>
+      <td>0.001208</td>
+      <td>0.003865</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>pressure</td>
+      <td>R_o</td>
+      <td>S1</td>
+      <td>0.000052</td>
+      <td>0.002191</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>pressure</td>
+      <td>p_o</td>
+      <td>S1</td>
+      <td>-0.001144</td>
+      <td>0.001938</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>pressure</td>
+      <td>T</td>
+      <td>ST</td>
+      <td>0.000795</td>
+      <td>0.000109</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>pressure</td>
+      <td>td</td>
+      <td>ST</td>
+      <td>0.025710</td>
+      <td>0.003303</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>pressure</td>
+      <td>amp</td>
+      <td>ST</td>
+      <td>0.930294</td>
+      <td>0.061666</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>pressure</td>
+      <td>dt</td>
+      <td>ST</td>
+      <td>0.000482</td>
+      <td>0.000066</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>pressure</td>
+      <td>C</td>
+      <td>ST</td>
+      <td>0.012093</td>
+      <td>0.001537</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>pressure</td>
+      <td>R</td>
+      <td>ST</td>
+      <td>0.046816</td>
+      <td>0.004700</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>pressure</td>
+      <td>L</td>
+      <td>ST</td>
+      <td>0.001841</td>
+      <td>0.000245</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>pressure</td>
+      <td>R_o</td>
+      <td>ST</td>
+      <td>0.000619</td>
+      <td>0.000104</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>pressure</td>
+      <td>p_o</td>
+      <td>ST</td>
+      <td>0.000463</td>
+      <td>0.000078</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>pressure</td>
+      <td>(T, td)</td>
+      <td>S2</td>
+      <td>0.000219</td>
+      <td>0.003216</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>pressure</td>
+      <td>(T, amp)</td>
+      <td>S2</td>
+      <td>-0.000095</td>
+      <td>0.003683</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>pressure</td>
+      <td>(T, dt)</td>
+      <td>S2</td>
+      <td>0.000162</td>
+      <td>0.003250</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>pressure</td>
+      <td>(T, C)</td>
+      <td>S2</td>
+      <td>0.000131</td>
+      <td>0.003247</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>pressure</td>
+      <td>(T, R)</td>
+      <td>S2</td>
+      <td>0.000038</td>
+      <td>0.003279</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>pressure</td>
+      <td>(T, L)</td>
+      <td>S2</td>
+      <td>0.000232</td>
+      <td>0.003234</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>pressure</td>
+      <td>(T, R_o)</td>
+      <td>S2</td>
+      <td>0.000022</td>
+      <td>0.003243</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>pressure</td>
+      <td>(T, p_o)</td>
+      <td>S2</td>
+      <td>0.000089</td>
+      <td>0.003247</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>pressure</td>
+      <td>(td, amp)</td>
+      <td>S2</td>
+      <td>0.004456</td>
+      <td>0.026277</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>pressure</td>
+      <td>(td, dt)</td>
+      <td>S2</td>
+      <td>0.001302</td>
+      <td>0.021678</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>pressure</td>
+      <td>(td, C)</td>
+      <td>S2</td>
+      <td>0.002078</td>
+      <td>0.021471</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>pressure</td>
+      <td>(td, R)</td>
+      <td>S2</td>
+      <td>0.001381</td>
+      <td>0.021524</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>pressure</td>
+      <td>(td, L)</td>
+      <td>S2</td>
+      <td>0.001425</td>
+      <td>0.021628</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>pressure</td>
+      <td>(td, R_o)</td>
+      <td>S2</td>
+      <td>0.001002</td>
+      <td>0.021673</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>pressure</td>
+      <td>(td, p_o)</td>
+      <td>S2</td>
+      <td>0.001471</td>
+      <td>0.021642</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>pressure</td>
+      <td>(amp, dt)</td>
+      <td>S2</td>
+      <td>0.001605</td>
+      <td>0.074616</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>pressure</td>
+      <td>(amp, C)</td>
+      <td>S2</td>
+      <td>0.003231</td>
+      <td>0.074368</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>pressure</td>
+      <td>(amp, R)</td>
+      <td>S2</td>
+      <td>0.006148</td>
+      <td>0.080695</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>pressure</td>
+      <td>(amp, L)</td>
+      <td>S2</td>
+      <td>0.000602</td>
+      <td>0.074149</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>pressure</td>
+      <td>(amp, R_o)</td>
+      <td>S2</td>
+      <td>0.001908</td>
+      <td>0.074916</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>pressure</td>
+      <td>(amp, p_o)</td>
+      <td>S2</td>
+      <td>0.001933</td>
+      <td>0.074117</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>pressure</td>
+      <td>(dt, C)</td>
+      <td>S2</td>
+      <td>0.000245</td>
+      <td>0.003084</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>pressure</td>
+      <td>(dt, R)</td>
+      <td>S2</td>
+      <td>0.000257</td>
+      <td>0.003066</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>pressure</td>
+      <td>(dt, L)</td>
+      <td>S2</td>
+      <td>0.000194</td>
+      <td>0.003100</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>pressure</td>
+      <td>(dt, R_o)</td>
+      <td>S2</td>
+      <td>0.000106</td>
+      <td>0.003096</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>pressure</td>
+      <td>(dt, p_o)</td>
+      <td>S2</td>
+      <td>0.000200</td>
+      <td>0.003085</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>pressure</td>
+      <td>(C, R)</td>
+      <td>S2</td>
+      <td>0.000187</td>
+      <td>0.013626</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>pressure</td>
+      <td>(C, L)</td>
+      <td>S2</td>
+      <td>-0.000136</td>
+      <td>0.013810</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>pressure</td>
+      <td>(C, R_o)</td>
+      <td>S2</td>
+      <td>0.000166</td>
+      <td>0.013816</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>pressure</td>
+      <td>(C, p_o)</td>
+      <td>S2</td>
+      <td>0.000163</td>
+      <td>0.013746</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>pressure</td>
+      <td>(R, L)</td>
+      <td>S2</td>
+      <td>-0.001893</td>
+      <td>0.027638</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>pressure</td>
+      <td>(R, R_o)</td>
+      <td>S2</td>
+      <td>-0.001946</td>
+      <td>0.027863</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>pressure</td>
+      <td>(R, p_o)</td>
+      <td>S2</td>
+      <td>-0.002001</td>
+      <td>0.027864</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>pressure</td>
+      <td>(L, R_o)</td>
+      <td>S2</td>
+      <td>0.000125</td>
+      <td>0.005283</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>pressure</td>
+      <td>(L, p_o)</td>
+      <td>S2</td>
+      <td>0.000157</td>
+      <td>0.005243</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>pressure</td>
+      <td>(R_o, p_o)</td>
+      <td>S2</td>
+      <td>0.000097</td>
+      <td>0.003507</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sa</span><span class="o">.</span><span class="n">plot_sobol</span><span class="p">(</span><span class="n">sobol_df</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;ST&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span> 
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/bcfdc999276ddc3076bb024ac2ff90c05c40cc267c053106423cbfef530cc7b7.png" src="../../_images/bcfdc999276ddc3076bb024ac2ff90c05c40cc267c053106423cbfef530cc7b7.png" />
+</div>
+</div>
+<p>You can also save the plot directly to a file by passing the <code class="docutils literal notranslate"><span class="pre">fname</span></code> argument to the plotting function.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sa</span><span class="o">.</span><span class="n">plot_sobol</span><span class="p">(</span><span class="n">sobol_df</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;ST&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s2">&quot;sobol_plot.png&quot;</span><span class="p">)</span> 
+</pre></div>
+</div>
+</div>
+</div>
+<p>Morris Interpretation:</p>
+<ul class="simple">
+<li><p>High <span class="math notranslate nohighlight">\(\mu^*\)</span>, Low <span class="math notranslate nohighlight">\(\sigma\)</span>: Important parameter with linear/monotonic effects</p></li>
+<li><p>High <span class="math notranslate nohighlight">\(\mu^*\)</span>, High <span class="math notranslate nohighlight">\(\sigma\)</span>: Important parameter with non-linear effects or interactions</p></li>
+<li><p>Low <span class="math notranslate nohighlight">\(\mu^*\)</span>, High <span class="math notranslate nohighlight">\(\sigma\)</span>: Parameter involved in interactions but not individually important</p></li>
+<li><p>Low <span class="math notranslate nohighlight">\(\mu^*\)</span>, Low <span class="math notranslate nohighlight">\(\sigma\)</span>: Unimportant parameter</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">morris_df</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;morris&quot;</span><span class="p">)</span>
+<span class="n">morris_df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>output</th>
+      <th>parameter</th>
+      <th>mu</th>
+      <th>mu_star</th>
+      <th>sigma</th>
+      <th>mu_star_conf</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>pressure</td>
+      <td>T</td>
+      <td>-6.315724</td>
+      <td>17.674177</td>
+      <td>20.588875</td>
+      <td>0.594166</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>pressure</td>
+      <td>td</td>
+      <td>106.989166</td>
+      <td>109.305756</td>
+      <td>88.327545</td>
+      <td>5.225097</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>pressure</td>
+      <td>amp</td>
+      <td>664.390320</td>
+      <td>664.390320</td>
+      <td>107.163109</td>
+      <td>6.438880</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>pressure</td>
+      <td>dt</td>
+      <td>-2.132039</td>
+      <td>14.267082</td>
+      <td>18.023468</td>
+      <td>0.697073</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>pressure</td>
+      <td>C</td>
+      <td>-67.378036</td>
+      <td>68.224068</td>
+      <td>46.264694</td>
+      <td>2.815545</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>pressure</td>
+      <td>R</td>
+      <td>-131.551727</td>
+      <td>132.167969</td>
+      <td>82.015976</td>
+      <td>4.780093</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>pressure</td>
+      <td>L</td>
+      <td>16.235619</td>
+      <td>24.998661</td>
+      <td>24.827065</td>
+      <td>0.997128</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>pressure</td>
+      <td>R_o</td>
+      <td>-16.703730</td>
+      <td>19.782507</td>
+      <td>20.440048</td>
+      <td>1.105654</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>pressure</td>
+      <td>p_o</td>
+      <td>2.382309</td>
+      <td>16.414616</td>
+      <td>19.901302</td>
+      <td>0.730699</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sa</span><span class="o">.</span><span class="n">plot_morris</span><span class="p">(</span><span class="n">morris_df</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/77e8fbbccfb348a47d75689aeba8f1d0a79c1f6b7861a46dd6c91297eed2a9c5.png" src="../../_images/77e8fbbccfb348a47d75689aeba8f1d0a79c1f6b7861a46dd6c91297eed2a9c5.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/tasks"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Downstream tasks</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="02_history_matching.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">History Matching</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary-conditions">Boundary conditions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-setup">The setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solve">Solve</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Sensitivity Analysis</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

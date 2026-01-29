@@ -1,0 +1,1832 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>autoemulate.core.sensitivity_analysis &#8212; AutoEmulate: A package for semi-automated emulation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=7f8ff830"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js?v=1ae7504c"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/autoemulate/core/sensitivity_analysis';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/AE_logo_final.png" class="logo__image only-light" alt="AutoEmulate: A package for semi-automated emulation - Home"/>
+    <script>document.write(`<img src="../../../_static/AE_logo_final.png" class="logo__image only-dark" alt="AutoEmulate: A package for semi-automated emulation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Welcome to AutoEmulate
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation instructions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/emulation/index.html">Training an emulator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/emulation/01_quickstart.html">Quickstart</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/emulation/02_dim_reduction.html">Dimensionality reduction</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/tasks/index.html">Downstream tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/01_emulation_sensitivity.html">Sensitivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/02_history_matching.html">History Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/03_bayes_calibration.html">Bayesian calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/tasks/04_interval_excursion_set.html">Interval Excursion Set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/simulator/index.html">Simulator in the loop</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/01_custom_simulations.html">Custom Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/02_active_learning.html">Active Learning with AutoEmulate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/simulator/03_history_matching.html">History Matching workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials/advanced/index.html">Advanced usage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/advanced/01_add_emulators.html">Adding emulators</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../community/index.html">Community</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/contributing.html">Contributing to AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/contributing-docs.html">Contributing to the Docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/release.html">Releasing AutoEmulate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../community/code-of-conduct.html">Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../community/faq/index.html">Frequently Asked Questions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../community/faq/faq-users.html">First-Time Users’ Frequently Asked Questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../community/faq/faq-contributors.html">First-Time Contributors’ Frequently Asked Questions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/base.html">autoemulate.calibration.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/bayes.html">autoemulate.calibration.bayes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching.html">autoemulate.calibration.history_matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/history_matching_dashboard.html">autoemulate.calibration.history_matching_dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/calibration/interval_excursion_set.html">autoemulate.calibration.interval_excursion_set</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/core/index.html">Core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/compare.html">autoemulate.core.compare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/datasets.html">autoemulate.core.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/model_selection.html">autoemulate.core.model_selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/plotting.html">autoemulate.core.plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/sensitivity_analysis.html">autoemulate.core.sensitivity_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/core/tuner.html">autoemulate.core.tuner</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/emulators/index.html">Emulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/base.html">autoemulate.emulators.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/ensemble.html">autoemulate.emulators.ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/gradient_boosting.html">autoemulate.emulators.gradient_boosting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/lightgbm.html">autoemulate.emulators.lightgbm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/polynomials.html">autoemulate.emulators.polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/radial_basis_functions.html">autoemulate.emulators.radial_basis_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/random_forest.html">autoemulate.emulators.random_forest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/emulators/svm.html">autoemulate.emulators.svm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/simulations/index.html">Simulations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/base.html">autoemulate.simulations.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/epidemic.html">autoemulate.simulations.epidemic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/experimental_design.html">autoemulate.simulations_design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/flow_problem.html">autoemulate.simulations.flow_problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/projectile.html">autoemulate.simulations.projectile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/simulations/reaction_diffusion.html">autoemulate.simulations.reaction_diffusion</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/alan-turing-institute/autoemulate/issues/new?title=Issue%20on%20page%20%2F_modules/autoemulate/core/sensitivity_analysis.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for autoemulate.core.sensitivity_analysis</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.figure</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">SALib.analyze.morris</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze</span> <span class="k">as</span> <span class="n">morris_analyze</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">SALib.analyze.sobol</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze</span> <span class="k">as</span> <span class="n">sobol_analyze</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">SALib.sample.morris</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample</span> <span class="k">as</span> <span class="n">morris_sample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">SALib.sample.sobol</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample</span> <span class="k">as</span> <span class="n">sobol_sample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">SALib.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResultDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">display_figure</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.core.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributionLike</span><span class="p">,</span> <span class="n">NumpyLike</span><span class="p">,</span> <span class="n">TensorLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConversionMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autoemulate.emulators.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Emulator</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;autoemulate&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SensitivityAnalysis">
+<a class="viewcode-back" href="../../../reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SensitivityAnalysis</span><span class="p">(</span><span class="n">ConversionMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Global sensitivity analysis.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">emulator</span><span class="p">:</span> <span class="n">Emulator</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">TensorLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">problem</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the SensitivityAnalysis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        emulator: Emulator</span>
+<span class="sd">            Fitted emulator.</span>
+<span class="sd">        x: InputLike | None</span>
+<span class="sd">            Simulator input parameter values.</span>
+<span class="sd">        problem: dict | None</span>
+<span class="sd">            The problem definition dictionary. If None, the problem is generated</span>
+<span class="sd">            from x using minimum and maximum values of the features as bounds.</span>
+<span class="sd">            The dictionary should contain:</span>
+<span class="sd">                - &#39;num_vars&#39;: Number of input variables (int)</span>
+<span class="sd">                - &#39;names&#39;: List of variable names (list of str)</span>
+<span class="sd">                - &#39;bounds&#39;: List of [min, max] bounds for each variable (list of lists)</span>
+<span class="sd">                - &#39;output_names&#39;: Optional list of output names (list of str)</span>
+
+<span class="sd">            Example::</span>
+<span class="sd">                problem = {</span>
+<span class="sd">                    &quot;num_vars&quot;: 2,</span>
+<span class="sd">                    &quot;names&quot;: [&quot;x1&quot;, &quot;x2&quot;],</span>
+<span class="sd">                    &quot;bounds&quot;: [[0, 1], [0, 1]],</span>
+<span class="sd">                    &quot;output_names&quot;: [&quot;y1&quot;, &quot;y2&quot;],  # optional</span>
+<span class="sd">                }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_problem</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Either problem or x must be provided.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span> <span class="o">=</span> <span class="n">emulator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_method</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate and normalize sensitivity analysis method name.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method: str</span>
+<span class="sd">            Method name (case-insensitive).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Literal[&quot;sobol&quot;, &quot;morris&quot;]</span>
+<span class="sd">            Normalized lowercase method name.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If method is not &#39;sobol&#39; or &#39;morris&#39; (case-insensitive).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">method_lower</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">method_lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown method: &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Must be &#39;sobol&#39; or &#39;morris&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">method_lower</span>  <span class="c1"># type: ignore[return-value]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_problem</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that the problem definition is valid.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;problem must be a dictionary.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;num_vars&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">problem</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;problem must contain &#39;num_vars&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;names&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">problem</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;problem must contain &#39;names&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;bounds&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">problem</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;problem must contain &#39;bounds&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="n">problem</span><span class="p">[</span><span class="s2">&quot;num_vars&quot;</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Length of &#39;names&#39; must match &#39;num_vars&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="p">[</span><span class="s2">&quot;bounds&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="n">problem</span><span class="p">[</span><span class="s2">&quot;num_vars&quot;</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Length of &#39;bounds&#39; must match &#39;num_vars&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">problem</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_problem</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">TensorLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a problem definition from a design matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x: TensorLike</span>
+<span class="sd">            Simulator input parameter values [n_samples, n_parameters].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary with keys [&quot;num_vars&quot;, &quot;names&quot;, &quot;bounds&quot;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;x must be a 2D array.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;num_vars&quot;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;x</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])],</span>
+            <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">[</span><span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">],</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyLike</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sobol&quot;</span><span class="p">:</span>
+            <span class="c1"># Saltelli sampling</span>
+            <span class="k">return</span> <span class="n">sobol_sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;morris&quot;</span><span class="p">:</span>
+            <span class="c1"># vanilla Morris (1991) sampling</span>
+            <span class="k">return</span> <span class="n">morris_sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">. Must be &#39;sobol&#39; or &#39;morris&#39;.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">param_samples</span><span class="p">:</span> <span class="n">NumpyLike</span><span class="p">,</span> <span class="n">return_variance</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyLike</span> <span class="o">|</span> <span class="n">DistributionLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make predictions with emulator for parameter samples.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param_samples: NumpyLike</span>
+<span class="sd">            Array of parameter samples.</span>
+<span class="sd">        return_variance: bool</span>
+<span class="sd">            Whether to also return prediction variance. Defaults to False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NumpyLike | DistributionLike</span>
+<span class="sd">            If return_variance is False: Array of emulator predictions.</span>
+<span class="sd">            If return_variance is True: Emulator predictive distribution.</span>
+<span class="sd">            Variances are None if emulator doesn&#39;t support UQ.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">param_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_tensors</span><span class="p">(</span><span class="n">param_samples</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_tensor</span><span class="p">,</span> <span class="n">TensorLike</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_variance</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">supports_uq</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Emulator does not support uncertainty quantification.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">param_tensor</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">DistributionLike</span><span class="p">),</span> <span class="s2">&quot;Expected DistributionLike&quot;</span>
+            <span class="k">return</span> <span class="n">y_pred</span>
+
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">predict_mean</span><span class="p">(</span><span class="n">param_tensor</span><span class="p">)</span>
+        <span class="n">y_pred_np</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_numpy</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_pred_np</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get output names from the problem definition or generate default names.&quot;&quot;&quot;</span>
+        <span class="c1"># check if output_names is given</span>
+        <span class="k">if</span> <span class="s2">&quot;output_names&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">:</span>
+            <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;y</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_outputs</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;&#39;output_names&#39; must be a list of strings.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_names</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sa_method_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get method-specific configuration for sensitivity analysis.&quot;&quot;&quot;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sobol&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;analyze_fn&quot;</span><span class="p">:</span> <span class="n">sobol_analyze</span><span class="p">,</span>
+                <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;S1&quot;</span><span class="p">,</span> <span class="s2">&quot;ST&quot;</span><span class="p">,</span> <span class="s2">&quot;S2&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;to_df_fn&quot;</span><span class="p">:</span> <span class="n">_sobol_results_to_df</span><span class="p">,</span>
+                <span class="s2">&quot;bootstrap_to_df_fn&quot;</span><span class="p">:</span> <span class="n">_bootstrap_sobol_results_to_df</span><span class="p">,</span>
+                <span class="s2">&quot;needs_param_samples&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="c1"># morris</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;analyze_fn&quot;</span><span class="p">:</span> <span class="n">morris_analyze</span><span class="p">,</span>
+            <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">,</span> <span class="s2">&quot;mu_star&quot;</span><span class="p">,</span> <span class="s2">&quot;sigma&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;to_df_fn&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">_morris_results_to_df</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">),</span>
+            <span class="s2">&quot;bootstrap_to_df_fn&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">_bootstrap_morris_results_to_df</span><span class="p">(</span>
+                <span class="n">r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;needs_param_samples&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_baseline_sa</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">],</span>
+        <span class="n">param_samples</span><span class="p">:</span> <span class="n">NumpyLike</span><span class="p">,</span>
+        <span class="n">y_mean</span><span class="p">:</span> <span class="n">NumpyLike</span><span class="p">,</span>
+        <span class="n">output_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">conf_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute baseline sensitivity analysis on mean predictions.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sa_method_config</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">results_baseline</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;needs_param_samples&quot;</span><span class="p">]:</span>
+                <span class="n">Si</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;analyze_fn&quot;</span><span class="p">](</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">param_samples</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Si</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;analyze_fn&quot;</span><span class="p">](</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span>
+                <span class="p">)</span>
+            <span class="n">results_baseline</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Si</span>
+
+        <span class="k">return</span> <span class="n">results_baseline</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bootstrap_sa_indices</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">],</span>
+        <span class="n">param_samples</span><span class="p">:</span> <span class="n">NumpyLike</span><span class="p">,</span>
+        <span class="n">y_dist</span><span class="p">:</span> <span class="n">DistributionLike</span><span class="p">,</span>
+        <span class="n">output_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">conf_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bootstrap sensitivity indices from prediction distributions.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sa_method_config</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;metrics&quot;</span><span class="p">]</span>
+
+        <span class="n">bootstrap_results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">}</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span>
+        <span class="p">}</span>
+        <span class="n">y_samples</span> <span class="o">=</span> <span class="n">y_dist</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>  <span class="c1"># (n_bootstrap, n_points, n_outputs)</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">n_bootstrap</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
+            <span class="n">y_sample</span> <span class="o">=</span> <span class="n">y_samples</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>  <span class="c1"># (n_points, n_outputs)</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_names</span><span class="p">):</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>  <span class="c1"># (n_points,)</span>
+                <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;needs_param_samples&quot;</span><span class="p">]:</span>
+                    <span class="n">Si</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;analyze_fn&quot;</span><span class="p">](</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">param_samples</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Si</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;analyze_fn&quot;</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+                    <span class="n">bootstrap_results</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Si</span><span class="p">[</span><span class="n">metric</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">bootstrap_results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_combine_uncertainties_sobol</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">results_baseline</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">bootstrap_results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">output_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">z_score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine baseline and bootstrap uncertainties for Sobol.&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">:</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">results_baseline</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">s1_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bootstrap_results</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;S1&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">st_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bootstrap_results</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;ST&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">s2_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bootstrap_results</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;S2&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;S1&quot;</span><span class="p">:</span> <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;S1&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;S1_conf&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;S1_conf&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">z_score</span> <span class="o">*</span> <span class="n">s1_std</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="s2">&quot;ST&quot;</span><span class="p">:</span> <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;ST&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;ST_conf&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;ST_conf&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">z_score</span> <span class="o">*</span> <span class="n">st_std</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="s2">&quot;S2&quot;</span><span class="p">:</span> <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;S2&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;S2_conf&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;S2_conf&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">z_score</span> <span class="o">*</span> <span class="n">s2_std</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_combine_uncertainties_morris</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">results_baseline</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">bootstrap_results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">output_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">z_score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine baseline and bootstrap uncertainties for Morris.&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">:</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">results_baseline</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">mu_star_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bootstrap_results</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;mu_star&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;mu_star&quot;</span><span class="p">:</span> <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;mu_star&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;sigma&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;mu_star_conf&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="n">baseline</span><span class="p">[</span><span class="s2">&quot;mu_star_conf&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">z_score</span> <span class="o">*</span> <span class="n">mu_star_std</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_sa_with_prediction_variance</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">],</span>
+        <span class="n">param_samples</span><span class="p">:</span> <span class="n">NumpyLike</span><span class="p">,</span>
+        <span class="n">conf_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run sensitivity analysis incorporating prediction variance.</span>
+
+<span class="sd">        Generic implementation that works for both Sobol and Morris methods. Combines</span>
+<span class="sd">        SALib&#39;s standard confidence intervals with prediction variance by:</span>
+<span class="sd">        1. Computing standard analysis on mean predictions (gives CI from sampling)</span>
+<span class="sd">        2. For each bootstrap iteration, sampling predictions from N(mean, variance)</span>
+<span class="sd">        3. Computing indices for each bootstrap sample</span>
+<span class="sd">        4. Combining both sources of uncertainty:</span>
+<span class="sd">           CI_total = sqrt(CI_sampling^2 + CI_prediction^2)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method: str</span>
+<span class="sd">            Either &quot;sobol&quot; or &quot;morris&quot;</span>
+<span class="sd">        param_samples: NumpyLike</span>
+<span class="sd">            Parameter samples from sampling scheme</span>
+<span class="sd">        conf_level: float</span>
+<span class="sd">            Confidence level for intervals</span>
+<span class="sd">        n_bootstrap: int</span>
+<span class="sd">            Number of bootstrap samples for prediction variance estimation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.DataFrame</span>
+<span class="sd">            Results with combined confidence intervals</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Oakley, J.E. and O&#39;Hagan, A. (2004). Probabilistic sensitivity analysis of</span>
+<span class="sd">        complex models: a Bayesian approach. Journal of the Royal Statistical Society:</span>
+<span class="sd">        Series B, 66(3), 751-769.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Monte Carlo approximation to Bayesian probabilistic SA (Oakley &amp; O&#39;Hagan): each</span>
+<span class="sd">        bootstrap replicate is one draw from the emulator&#39;s predictive distribution;</span>
+<span class="sd">        indices recomputed to propagate emulator uncertainty.</span>
+
+<span class="sd">        Assumptions:</span>
+<span class="sd">        - Predictive marginals are treated as Gaussian. We draw independent</span>
+<span class="sd">        Normal(mean=y_mean, var=y_var) samples at each design point.</span>
+<span class="sd">        - Sampling (design) and predictive uncertainties are assumed approximately</span>
+<span class="sd">        independent</span>
+<span class="sd">        - Large-sample normality of index estimators (Sobol / Morris) is assumed so</span>
+<span class="sd">        variances add on the original scale.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Running </span><span class="si">%s</span><span class="s2"> analysis with prediction variance, n_bootstrap=</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">,</span>
+            <span class="n">n_bootstrap</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Get predictions with variance</span>
+        <span class="n">y_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">param_samples</span><span class="p">,</span> <span class="n">return_variance</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">y_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">param_samples</span><span class="p">,</span> <span class="n">return_variance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_mean</span><span class="p">,</span> <span class="n">NumpyLike</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_dist</span><span class="p">,</span> <span class="n">DistributionLike</span><span class="p">)</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_names</span><span class="p">(</span><span class="n">y_mean</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># Compute baseline analysis</span>
+        <span class="n">results_baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_baseline_sa</span><span class="p">(</span>
+            <span class="n">method</span><span class="p">,</span> <span class="n">param_samples</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">,</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">conf_level</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Bootstrap to estimate additional uncertainty</span>
+        <span class="n">bootstrap_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap_sa_indices</span><span class="p">(</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">param_samples</span><span class="o">=</span><span class="n">param_samples</span><span class="p">,</span>
+            <span class="n">y_dist</span><span class="o">=</span><span class="n">y_dist</span><span class="p">,</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span>
+            <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span><span class="p">,</span>
+            <span class="n">n_bootstrap</span><span class="o">=</span><span class="n">n_bootstrap</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Combine uncertainties</span>
+        <span class="n">z_score</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">conf_level</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sobol&quot;</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_uncertainties_sobol</span><span class="p">(</span>
+                <span class="n">results_baseline</span><span class="p">,</span> <span class="n">bootstrap_results</span><span class="p">,</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">z_score</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_bootstrap_sobol_results_to_df</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_uncertainties_morris</span><span class="p">(</span>
+            <span class="n">results_baseline</span><span class="p">,</span> <span class="n">bootstrap_results</span><span class="p">,</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">z_score</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_bootstrap_morris_results_to_df</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SensitivityAnalysis.run">
+<a class="viewcode-back" href="../../../reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sobol&quot;</span><span class="p">,</span> <span class="s2">&quot;morris&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sobol&quot;</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="n">conf_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+        <span class="n">include_prediction_variance</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform global sensitivity analysis on a fitted emulator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method: Literal[&quot;sobol&quot;, &quot;morris&quot;]</span>
+<span class="sd">            The sensitivity analysis method to perform. Case-insensitive.</span>
+<span class="sd">        n_samples: int</span>
+<span class="sd">            Number of samples to generate for the analysis. Higher values give more</span>
+<span class="sd">            accurate results but increase computation time. Defaults to 1024.</span>
+<span class="sd">        conf_level: float</span>
+<span class="sd">            Confidence level (between 0 and 1) for calculating confidence intervals</span>
+<span class="sd">            of the Sobol sensitivity indices. Defaults to 0.95 (95% confidence).</span>
+<span class="sd">        include_prediction_variance: bool</span>
+<span class="sd">            Whether to incorporate emulator prediction variance into sensitivity</span>
+<span class="sd">            index uncertainty estimates using bootstrap sampling. Applicable for</span>
+<span class="sd">            both &quot;sobol&quot; and &quot;morris&quot; methods when emulator supports UQ.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        n_bootstrap: int</span>
+<span class="sd">            Number of bootstrap samples to use when include_prediction_variance=True.</span>
+<span class="sd">            Defaults to 100.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            DataFrame with columns:</span>
+<span class="sd">                - &#39;parameter&#39;: Input parameter name</span>
+<span class="sd">                - &#39;output&#39;: Output variable name</span>
+<span class="sd">            If using Sobol, the columns include:</span>
+<span class="sd">                - &#39;index&#39;: S1, S2 or ST (first, second, and total order sensitivity)</span>
+<span class="sd">                - &#39;confidence&#39;: confidence intervals for each index</span>
+<span class="sd">            If using Morris, the columns include:</span>
+<span class="sd">                - &#39;mu&#39;: mean of the distribution of elementary effects</span>
+<span class="sd">                - &#39;mu_star&#39;: mean of the distribution of absolute value</span>
+<span class="sd">                - &#39;sigma&#39;: standard deviation of the distribution, used as indication of</span>
+<span class="sd">                    interactions between parameters</span>
+<span class="sd">                - &#39;mu_star_conf: boostrapped confidence interval</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The Sobol method requires N * (2D + 2) model evaluations, where D is the number</span>
+<span class="sd">        of input parameters. For example, with N=1024 and 5 parameters, this requires</span>
+<span class="sd">        12,288 evaluations. The Morris method requires far fewer computations.</span>
+
+<span class="sd">        When include_prediction_variance=True, the emulator&#39;s prediction uncertainty is</span>
+<span class="sd">        incorporated by sampling from the predicted distribution, then computing</span>
+<span class="sd">        sensitivity indices for each bootstrap sample.</span>
+
+<span class="sd">        Specifically, the approach is:</span>
+<span class="sd">        1. Compute baseline indices on the predictive mean outputs.</span>
+<span class="sd">        2. Draw n_bootstrap replicated output sets per design point.</span>
+<span class="sd">        3. Recompute indices for each replicate.</span>
+<span class="sd">        4. Estimate predictive SD of each index and combine with SALib&#39;s sampling</span>
+<span class="sd">        with root-sum-of-squares.</span>
+
+<span class="sd">        Key Assumptions: approximate independence of sampling and predictive</span>
+<span class="sd">        uncertainties and near-normal index estimator distribution. See private method</span>
+<span class="sd">        docstring _run_sa_with_prediction_variance for detailed discussion.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Validate and normalize method name (case-insensitive)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Running sensitivity analysis with method=</span><span class="si">%s</span><span class="s2">, n_samples=</span><span class="si">%d</span><span class="s2">, conf_level=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="p">,</span>
+            <span class="n">conf_level</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">param_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">include_prediction_variance</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">emulator</span><span class="o">.</span><span class="n">supports_uq</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sa_with_prediction_variance</span><span class="p">(</span>
+                <span class="n">method</span><span class="p">,</span> <span class="n">param_samples</span><span class="p">,</span> <span class="n">conf_level</span><span class="p">,</span> <span class="n">n_bootstrap</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Standard analysis without prediction variance</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">param_samples</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">NumpyLike</span><span class="p">)</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_names</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sobol&quot;</span><span class="p">:</span>
+                <span class="n">Si</span> <span class="o">=</span> <span class="n">sobol_analyze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;morris&quot;</span><span class="p">:</span>
+                <span class="n">Si</span> <span class="o">=</span> <span class="n">morris_analyze</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">param_samples</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">conf_level</span><span class="o">=</span><span class="n">conf_level</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">. Must be &#39;sobol&#39; or &#39;morris&#39;.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Si</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sobol&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_sobol_results_to_df</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_morris_results_to_df</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SensitivityAnalysis.plot_sobol">
+<a class="viewcode-back" href="../../../reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.plot_sobol">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_sobol</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;S1&quot;</span><span class="p">,</span>
+        <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot Sobol sensitivity analysis results. Optionally save to file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results: pd.DataFrame</span>
+<span class="sd">            The results from sobol_results_to_df.</span>
+<span class="sd">        index: str</span>
+<span class="sd">            The type of sensitivity index to plot.</span>
+<span class="sd">            - &quot;S1&quot;: first-order indices</span>
+<span class="sd">            - &quot;S2&quot;: second-order/interaction indices</span>
+<span class="sd">            - &quot;ST&quot;: total-order indices</span>
+<span class="sd">            Defaults to &quot;S1&quot;.</span>
+<span class="sd">        ncols: int | None</span>
+<span class="sd">            The number of columns in the plot. Defaults to 3 if there are 3 or</span>
+<span class="sd">            more outputs, otherwise the number of outputs. Defaults to None.</span>
+<span class="sd">        figsize: tuple | None</span>
+<span class="sd">            Figure size as (width, height) in inches. If None, set automatically.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        fname: str | None</span>
+<span class="sd">            If provided, saves the figure to this file path. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plot_sobol_analysis</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">figsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">display_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="SensitivityAnalysis.plot_morris">
+<a class="viewcode-back" href="../../../reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.plot_morris">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_morris</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">param_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot Morris analysis results. Optionally save to file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results: pd.DataFrame</span>
+<span class="sd">            The results from sobol_results_to_df.</span>
+<span class="sd">        param_groups: dic[str, list[str]] | None</span>
+<span class="sd">            Optional parameter groupings used to give all the same plot color</span>
+<span class="sd">            of the form ({&lt;group name&gt; : [param1, ...], }).</span>
+<span class="sd">        ncols: int, optional</span>
+<span class="sd">            The number of columns in the plot. Defaults to 3 if there are 3 or</span>
+<span class="sd">            more outputs, otherwise the number of outputs.</span>
+<span class="sd">        figsize: tuple, optional</span>
+<span class="sd">            Figure size as (width, height) in inches.If None, set calculated.</span>
+<span class="sd">        fname: str | None</span>
+<span class="sd">            If provided, saves the figure to this file path. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plot_morris_analysis</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">param_groups</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">figsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">display_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="SensitivityAnalysis.top_n_sobol_params">
+<a class="viewcode-back" href="../../../reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.top_n_sobol_params">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">top_n_sobol_params</span><span class="p">(</span>
+        <span class="n">sa_results_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sa_index</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ST&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return `top_n` most important parameters given Sobol sensitivity analysis.</span>
+
+<span class="sd">        In case of multiple outputs, averages over them to rank the parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sa_results_df: pd.DataFrame</span>
+<span class="sd">            Dataframe results by `SensitivityAnalysis().run()`</span>
+<span class="sd">        top_n: int</span>
+<span class="sd">            Number of parameters to return.</span>
+<span class="sd">        sa_index: str</span>
+<span class="sd">            Which sensitivity index to rank the parameters by. One of [&quot;S1&quot;, &quot;S2&quot;, &quot;ST].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[str]</span>
+<span class="sd">            List of `top_n` parameter names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">col</span> <span class="ow">in</span> <span class="n">sa_results_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;sa_results_df is missing required columns: &#39;index&#39;, &#39;parameter&#39;,&quot;</span>
+                <span class="s2">&quot;or &#39;value&#39;&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">st_results</span> <span class="o">=</span> <span class="n">sa_results_df</span><span class="p">[</span><span class="n">sa_results_df</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sa_index</span><span class="p">]</span>
+
+        <span class="c1"># each parameter is evalued against each output</span>
+        <span class="c1"># to rank parameters, average over how sensitive all outputs are to it</span>
+        <span class="n">top_n</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">st_results</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>  <span class="c1"># pyright: ignore[reportCallIssue, reportAssignmentType]</span>
+            <span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="n">top_n</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">top_n</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">top_n</span></div>
+
+
+<div class="viewcode-block" id="SensitivityAnalysis.plot_sa_heatmap">
+<a class="viewcode-back" href="../../../reference/core/sensitivity_analysis.html#autoemulate.core.sensitivity_analysis.SensitivityAnalysis.plot_sa_heatmap">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_sa_heatmap</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ST&quot;</span><span class="p">,</span>
+        <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;coolwarm&quot;</span><span class="p">,</span>
+        <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot a normalized Sobol sensitivity analysis heatmap.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results: pd.DataFrame</span>
+<span class="sd">            Sensitivity index dataframe with columns [&#39;index&#39;, &#39;parameter&#39;,</span>
+<span class="sd">            &#39;output&#39;, &#39;value&#39;].</span>
+<span class="sd">        index: str</span>
+<span class="sd">            The type of sensitivity index to plot (e.g., &#39;ST&#39;).</span>
+<span class="sd">        top_n: int | None</span>
+<span class="sd">            Number of top parameters to include. If None, returns all. Defaults to</span>
+<span class="sd">            None.</span>
+<span class="sd">        cmap: str</span>
+<span class="sd">            Matplotlib colormap. Defaults to &#39;coolwarm&#39;.</span>
+<span class="sd">        normalize: bool</span>
+<span class="sd">            Wheterto normalize values to [0, 1]. Defaults to True.</span>
+<span class="sd">        figsize: tuple | None</span>
+<span class="sd">            Figure size as (width, height) in inches. Defaults to None.</span>
+<span class="sd">        fname: str | None</span>
+<span class="sd">            If provided, saves the figure to this file path. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Determine which parameters to include</span>
+        <span class="n">parameter_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_n_sobol_params</span><span class="p">(</span>
+            <span class="n">results</span><span class="p">,</span>
+            <span class="n">top_n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="k">if</span> <span class="n">top_n</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">top_n</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plot_sa_heatmap</span><span class="p">(</span>
+            <span class="n">results</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">parameter_list</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">fig_size</span><span class="o">=</span><span class="n">figsize</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">display_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sobol_results_to_df</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ResultDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert Sobol results to a (long-format) pandas DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: dict</span>
+<span class="sd">        The Sobol indices returned by sobol_analysis.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        A DataFrame with columns: &#39;output&#39;, &#39;parameter&#39;, &#39;index&#39;, &#39;value&#39;, &#39;confidence&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rename_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="s2">&quot;index&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S1&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S1_conf&quot;</span><span class="p">:</span> <span class="s2">&quot;confidence&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ST&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ST_conf&quot;</span><span class="p">:</span> <span class="s2">&quot;confidence&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S2&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S2_conf&quot;</span><span class="p">:</span> <span class="s2">&quot;confidence&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">output</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># https://salib.readthedocs.io/en/latest/api/SALib.analyze.html#SALib.analyze.sobol.to_df</span>
+        <span class="c1"># from SALib docs: `to_df()` returns indices in order of [total, first, second]</span>
+        <span class="n">st</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">to_df</span><span class="p">()</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">s1</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="s2">&quot;parameter&quot;</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">rename_dict</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">s1</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;S1&quot;</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="s2">&quot;parameter&quot;</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">rename_dict</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">st</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ST&quot;</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">s2</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="s2">&quot;parameter&quot;</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">rename_dict</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">s2</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;S2&quot;</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">s1</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">s2</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;confidence&quot;</span><span class="p">]])</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bootstrap_sobol_results_to_df</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NumpyLike</span><span class="p">]],</span> <span class="n">problem</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert bootstrap-aggregated Sobol results to a (long-format) pandas DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: dict</span>
+<span class="sd">        Dictionary mapping output names to dictionaries containing S1, S1_conf, ST,</span>
+<span class="sd">        ST_conf, S2, S2_conf arrays.</span>
+<span class="sd">    problem: dict</span>
+<span class="sd">        Problem definition with &#39;names&#39; field.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        A DataFrame with columns: &#39;output&#39;, &#39;parameter&#39;, &#39;index&#39;, &#39;value&#39;, &#39;confidence&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">param_names</span> <span class="o">=</span> <span class="n">problem</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">output</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># Process S1 indices</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_names</span><span class="p">):</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span>
+                    <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+                    <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="s2">&quot;S1&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;S1&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;S1_conf&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Process ST indices</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_names</span><span class="p">):</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span>
+                    <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+                    <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="s2">&quot;ST&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;ST&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;ST_conf&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Process S2 indices (interactions)</span>
+        <span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_params</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_params</span><span class="p">):</span>
+                <span class="n">param_pair</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">param_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">param_names</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">}</span><span class="s2">]&quot;</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span>
+                        <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">param_pair</span><span class="p">,</span>
+                        <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="s2">&quot;S2&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;S2&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]),</span>
+                        <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;S2_conf&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bootstrap_morris_results_to_df</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NumpyLike</span><span class="p">]],</span> <span class="n">problem</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert bootstrap-aggregated Morris results to a (long-format) pandas DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: dict</span>
+<span class="sd">        Dictionary mapping output names to dictionaries containing mu, mu_star, sigma,</span>
+<span class="sd">        and mu_star_conf arrays.</span>
+<span class="sd">    problem: dict</span>
+<span class="sd">        Problem definition with &#39;names&#39; field.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        A DataFrame with columns: &#39;output&#39;, &#39;parameter&#39;, &#39;mu&#39;, &#39;mu_star&#39;, &#39;sigma&#39;,</span>
+<span class="sd">        &#39;mu_star_conf&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">param_names</span> <span class="o">=</span> <span class="n">problem</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">output</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_names</span><span class="p">):</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span>
+                    <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+                    <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="s2">&quot;mu_star&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;mu_star&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;sigma&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="s2">&quot;mu_star_conf&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;mu_star_conf&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_input</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">_sobol_results_to_df</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="c1"># we only want to plot one index type at a time</span>
+    <span class="n">valid_indices</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;S1&quot;</span><span class="p">,</span> <span class="s2">&quot;S2&quot;</span><span class="p">,</span> <span class="s2">&quot;ST&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_indices</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid index type: </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">. Must be one of </span><span class="si">{</span><span class="n">valid_indices</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">index</span><span class="p">])]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_layout</span><span class="p">(</span><span class="n">n_outputs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate plot layout (n rows, n cols).&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ncols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="mi">3</span> <span class="k">if</span> <span class="n">n_outputs</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="k">else</span> <span class="n">n_outputs</span>
+    <span class="n">nrows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_outputs</span> <span class="o">/</span> <span class="n">ncols</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_bar_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span><span class="p">,</span> <span class="n">output_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a bar plot for a single output.&quot;&quot;&quot;</span>
+    <span class="n">bar_color</span> <span class="o">=</span> <span class="s2">&quot;#4C4B63&quot;</span>
+    <span class="n">x_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_data</span><span class="p">))</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;confidence&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">NumpyLike</span><span class="p">)</span>
+    <span class="n">yerr</span> <span class="o">=</span> <span class="n">conf</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+        <span class="n">x_pos</span><span class="p">,</span>
+        <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">bar_color</span><span class="p">,</span>
+        <span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">,</span>
+        <span class="n">capsize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Sobol Index&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output: </span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_sobol_analysis</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;S1&quot;</span><span class="p">,</span>
+    <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the sobol sensitivity analysis results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: pd.DataFrame</span>
+<span class="sd">        The results from sobol_results_to_df.</span>
+<span class="sd">    index: str, default &quot;S1&quot;</span>
+<span class="sd">        The type of sensitivity index to plot.</span>
+<span class="sd">        - &quot;S1&quot;: first-order indices</span>
+<span class="sd">        - &quot;S2&quot;: second-order/interaction indices</span>
+<span class="sd">        - &quot;ST&quot;: total-order indices</span>
+<span class="sd">    ncols: int | None</span>
+<span class="sd">        The number of columns in the plot. If None, sets ncols to 3 if there are 3 or</span>
+<span class="sd">        more outputs, otherwise the number of outputs. Defaults to None.</span>
+<span class="sd">    figsize: tuple | None</span>
+<span class="sd">        Figure size as (width, height) in inches.If None, automatically calculated.</span>
+<span class="sd">        Defaults to None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The matplotlib figure containing the Sobol plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="s2">&quot;fast&quot;</span><span class="p">):</span>
+        <span class="c1"># prepare data</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">_validate_input</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportAssignmentType]</span>
+        <span class="n">unique_outputs</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">n_outputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_outputs</span><span class="p">)</span>
+
+        <span class="c1"># layout</span>
+        <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">_calculate_layout</span><span class="p">(</span><span class="n">n_outputs</span><span class="p">,</span> <span class="n">ncols</span><span class="p">)</span>
+        <span class="n">figsize</span> <span class="o">=</span> <span class="n">figsize</span> <span class="ow">or</span> <span class="p">(</span><span class="mf">4.5</span> <span class="o">*</span> <span class="n">ncols</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">nrows</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">n_outputs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axes</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">unique_outputs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">output_data</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">output</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
+            <span class="n">_create_bar_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">output_data</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="c1"># remove any empty subplots</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_outputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+        <span class="n">index_names</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;S1&quot;</span><span class="p">:</span> <span class="s2">&quot;First-Order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;S2&quot;</span><span class="p">:</span> <span class="s2">&quot;Second-order/Interaction&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ST&quot;</span><span class="p">:</span> <span class="s2">&quot;Total-Order&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># title</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index_names</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s2"> indices and 95% CI&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_morris_results_to_df</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ResultDict</span><span class="p">],</span> <span class="n">problem</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert Morris results to a (long-format) pandas DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: dict</span>
+<span class="sd">        The Morris indices returned by morris_analysis.</span>
+<span class="sd">    problem: dict</span>
+<span class="sd">        The problem definition, including &#39;names&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        A DataFrame with columns: &#39;output&#39;, &#39;parameter&#39;, &#39;mu&#39;, &#39;mu_star&#39;, &#39;sigma&#39;,</span>
+<span class="sd">        &#39;mu_star_conf&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">parameter_names</span> <span class="o">=</span> <span class="n">problem</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">output</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">df_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">output</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameter_names</span><span class="p">),</span>
+            <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">parameter_names</span><span class="p">,</span>
+            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;mu_star&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;mu_star&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;sigma&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;mu_star_conf&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;mu_star_conf&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df_data</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_morris_analysis</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">param_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the Morris sensitivity analysis results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: pd.DataFrame</span>
+<span class="sd">        The results from morris_results_to_df.</span>
+<span class="sd">    param_groups: dict, optional</span>
+<span class="sd">        Dictionary mapping parameter names to groups for coloring.</span>
+<span class="sd">    ncols: int, optional</span>
+<span class="sd">        The number of columns in the plot. Defaults to 3 if there are 3 or more outputs,</span>
+<span class="sd">        otherwise the number of outputs.</span>
+<span class="sd">    figsize: tuple, optional</span>
+<span class="sd">        Figure size as (width, height) in inches. If None, automatically calculated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The matplotlib figure containing the Morris plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="s2">&quot;fast&quot;</span><span class="p">):</span>
+        <span class="n">unique_outputs</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="n">n_outputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_outputs</span><span class="p">)</span>
+
+        <span class="c1"># layout - add space for legend</span>
+        <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">_calculate_layout</span><span class="p">(</span><span class="n">n_outputs</span><span class="p">,</span> <span class="n">ncols</span><span class="p">)</span>
+        <span class="n">figsize</span> <span class="o">=</span> <span class="n">figsize</span> <span class="ow">or</span> <span class="p">(</span><span class="mf">4.5</span> <span class="o">*</span> <span class="n">ncols</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">nrows</span><span class="p">)</span>  <span class="c1"># Extra width for legend</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">n_outputs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axes</span><span class="p">]</span>
+
+        <span class="c1"># Create color mappings once for all plots</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;#4C4B63&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#E63946&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#F77F00&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#FCBF49&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#06D6A0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#118AB2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#073B4C&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#FF6B6B&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#4ECDC4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#45B7D1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#96CEB4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#FFEAA7&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#DDA0DD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#98D8C8&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">param_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Different color for each parameter</span>
+            <span class="n">all_params</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="n">param_colors</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">param</span><span class="p">:</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_params</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">legend_items</span> <span class="o">=</span> <span class="p">[(</span><span class="n">param</span><span class="p">,</span> <span class="n">param_colors</span><span class="p">[</span><span class="n">param</span><span class="p">])</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">all_params</span><span class="p">]</span>
+            <span class="n">legend_title</span> <span class="o">=</span> <span class="s2">&quot;Parameters&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Color by parameter groups</span>
+            <span class="n">unique_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">param_groups</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">param_colors</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">group</span><span class="p">:</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">legend_items</span> <span class="o">=</span> <span class="p">[(</span><span class="n">group</span><span class="p">,</span> <span class="n">param_colors</span><span class="p">[</span><span class="n">group</span><span class="p">])</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">unique_groups</span><span class="p">]</span>
+            <span class="n">legend_title</span> <span class="o">=</span> <span class="s2">&quot;Parameter Groups&quot;</span>
+
+        <span class="c1"># Plot each output</span>
+        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">unique_outputs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">output_data</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">output</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
+            <span class="n">_create_morris_plot</span><span class="p">(</span>
+                <span class="n">ax</span><span class="p">,</span>
+                <span class="n">output_data</span><span class="p">,</span>
+                <span class="n">output</span><span class="p">,</span>
+                <span class="n">param_groups</span><span class="p">,</span>
+                <span class="n">param_colors</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># remove any empty subplots</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_outputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+        <span class="c1"># Create single legend on the right side</span>
+        <span class="n">legend_handles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">legend_items</span><span class="p">:</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="n">Line2D</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+                <span class="n">markerfacecolor</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">legend_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+            <span class="n">legend_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+        <span class="c1"># Add legend to the right of the plots</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+            <span class="n">legend_handles</span><span class="p">,</span>
+            <span class="n">legend_labels</span><span class="p">,</span>
+            <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;center right&quot;</span><span class="p">,</span>
+            <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.98</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">legend_title</span><span class="p">,</span>
+            <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># title</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;Morris Sensitivity Analysis ($\mu^*$ vs $\sigma$)&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_morris_plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span><span class="p">,</span>
+    <span class="n">output_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">param_groups</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">color_mapping</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a Morris plot (mu_star vs sigma) for a single output.&quot;&quot;&quot;</span>
+    <span class="c1"># Default colors - expanded palette for more variety</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;#4C4B63&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#E63946&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#F77F00&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#FCBF49&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#06D6A0&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#118AB2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#073B4C&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#FF6B6B&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#4ECDC4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#45B7D1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#96CEB4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#FFEAA7&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#DDA0DD&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;#98D8C8&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Use provided color mapping or create default</span>
+    <span class="k">if</span> <span class="n">color_mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">param_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Different color for each parameter when no groups specified</span>
+            <span class="n">unique_params</span> <span class="o">=</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="n">param_colors</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">param</span><span class="p">:</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_params</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">color_mapping</span> <span class="o">=</span> <span class="n">param_colors</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Color by parameter groups</span>
+            <span class="n">unique_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">param_groups</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">group_colors</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">group</span><span class="p">:</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">color_mapping</span> <span class="o">=</span> <span class="n">group_colors</span>
+
+    <span class="c1"># Plot points without labels for legend (legend is handled at figure level)</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">output_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">param_name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">param_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">color_mapping</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">param_groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">color_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;sigma&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;mu_star&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1"># Add parameter labels with matching colors</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">output_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">param_name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">param_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use same color as the dot (individual parameter color)</span>
+            <span class="n">label_color</span> <span class="o">=</span> <span class="n">color_mapping</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use group color</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">param_groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+            <span class="n">label_color</span> <span class="o">=</span> <span class="n">color_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">x_coord</span><span class="p">,</span> <span class="n">y_coord</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;sigma&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;mu_star&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_coord</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_coord</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+            <span class="n">param_name</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">x_coord</span><span class="p">,</span> <span class="n">y_coord</span><span class="p">),</span>
+            <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;offset points&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">label_color</span><span class="p">,</span>
+            <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;σ (Standard Deviation)&quot;</span><span class="p">)</span>  <span class="c1"># noqa: RUF001</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;μ* (Modified Mean)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output: </span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_sa_heatmap</span><span class="p">(</span>
+    <span class="n">si_df</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;coolwarm&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fig_size</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot a sensitivity analysis heatmap for a given index.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: pd.DataFrame</span>
+<span class="sd">        Sensitivity index dataframe with columns [&#39;index&#39;, &#39;parameter&#39;,</span>
+<span class="sd">        &#39;output&#39;, &#39;value&#39;].</span>
+<span class="sd">    index: str</span>
+<span class="sd">        The type of sensitivity index to plot (e.g., &#39;ST&#39;).</span>
+<span class="sd">    top_n: int | None</span>
+<span class="sd">        Number of top parameters to include. If None, returns all. Defaults to</span>
+<span class="sd">        None.</span>
+<span class="sd">    cmap: str</span>
+<span class="sd">        Matplotlib colormap. Defaults to &#39;coolwarm&#39;.</span>
+<span class="sd">    normalize: bool</span>
+<span class="sd">        Wheterto normalize values to [0, 1]. Defaults to True.</span>
+<span class="sd">    figsize: tuple | None</span>
+<span class="sd">        Figure size as (width, height) in inches. Defaults to None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The matplotlib figure containing the SA heatmap.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Filter the dataframe for the specified index</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">si_df</span><span class="p">[</span><span class="n">si_df</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">index</span><span class="p">]</span>
+
+    <span class="c1"># Pivot the dataframe to get a matrix: rows = outputs, cols = parameters</span>
+    <span class="n">heatmap_df</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">parameters</span><span class="p">)]</span>
+        <span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span>
+            <span class="n">index</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>  <span class="c1"># Ensure column order</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Normalize if requested</span>
+    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">min_value</span> <span class="o">=</span> <span class="n">heatmap_df</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">max_value</span> <span class="o">=</span> <span class="n">heatmap_df</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">value_range</span> <span class="o">=</span> <span class="n">max_value</span> <span class="o">-</span> <span class="n">min_value</span> <span class="k">if</span> <span class="n">max_value</span> <span class="o">!=</span> <span class="n">min_value</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">heatmap_df</span> <span class="o">=</span> <span class="p">(</span><span class="n">heatmap_df</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">value_range</span>
+
+    <span class="c1"># Convert to NumPy array</span>
+    <span class="n">data_np</span> <span class="o">=</span> <span class="n">heatmap_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="c1"># layout - add space for legend</span>
+    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">_calculate_layout</span><span class="p">(</span><span class="n">data_np</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">data_np</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">fig_size</span> <span class="o">=</span> <span class="n">fig_size</span> <span class="ow">or</span> <span class="p">(</span><span class="mf">4.5</span> <span class="o">*</span> <span class="n">ncols</span><span class="p">,</span> <span class="mf">4.5</span> <span class="o">*</span> <span class="n">nrows</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Extra width for legend</span>
+
+    <span class="c1"># Plotting</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">fig_size</span><span class="p">)</span>
+    <span class="n">cax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data_np</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Colorbar</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cax</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">cbar_label</span> <span class="o">=</span> <span class="s2">&quot;Normalized Sensitivity&quot;</span> <span class="k">if</span> <span class="n">normalize</span> <span class="k">else</span> <span class="s2">&quot;Sensitivity&quot;</span>
+    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">cbar_label</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+
+    <span class="c1"># Labels and ticks</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> Sensitivity Analysis Heatmap&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Parameters&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Outputs&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">heatmap_df</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">heatmap_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1"># Gridlines</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span> <span class="n">minor</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">heatmap_df</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span> <span class="n">minor</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;minor&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;minor&quot;</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By The Alan Turing Institute
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  Copyright &copy; 2025
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
