@@ -283,10 +283,6 @@ def extract_log_probabilities(
     BayesianCalibration : Class for Bayesian calibration with MCMC
     EvidenceComputation : Class for computing Bayesian evidence
 
-    References
-    ----------
-    .. [1] McEwen et al. (2021). "Robust Bayesian Evidence Calculation via
-           the Learned Harmonic Mean Estimator." arXiv:2111.12720
     """
     # Set device
     if device is None:

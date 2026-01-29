@@ -133,7 +133,7 @@ class EvidenceComputation(TorchDeviceMixin):
 
     Notes
     -----
-    The Harmonic method learns a normalizing flow to approximate the posterior
+    The Harmonic method learns a normalizing flow to approximate the normalizedposterior
     distribution, then uses this learned distribution to compute importance
     sampling weights for evidence estimation. This approach is more robust than
     traditional harmonic mean estimators and provides stable error estimates.
@@ -157,7 +157,7 @@ class EvidenceComputation(TorchDeviceMixin):
     """
 
     # Supported normalizing flow models
-    SUPPORTED_MODELS = ("RQSpline", "RealNVP")
+    SUPPORTED_MODELS = ("rqspline", "realnvp")
 
     def __init__(
         self,
@@ -180,7 +180,7 @@ class EvidenceComputation(TorchDeviceMixin):
         self.model = model
         self.training_proportion = training_proportion
         self.temperature = temperature
-        self.flow_model_type = flow_model
+        self.flow_model_type = flow_model.lower()
         self.flow_kwargs = flow_kwargs if flow_kwargs is not None else {}
 
         # Extract and validate samples
@@ -205,7 +205,7 @@ class EvidenceComputation(TorchDeviceMixin):
             self.logger.error(msg)
             raise ValueError(msg)
 
-        if flow_model not in self.SUPPORTED_MODELS:
+        if flow_model.lower() not in self.SUPPORTED_MODELS:
             msg = (
                 f"Unsupported flow_model: {flow_model}. "
                 f"Currently supports: {', '.join(self.SUPPORTED_MODELS)}."
@@ -295,9 +295,9 @@ class EvidenceComputation(TorchDeviceMixin):
         # Merge with user-provided flow_kwargs (user values override defaults)
         model_kwargs = {**default_kwargs, **self.flow_kwargs}
 
-        if self.flow_model_type == "RQSpline":
+        if self.flow_model_type == "rqspline":
             return hm.model.RQSplineModel(ndim, **model_kwargs)
-        if self.flow_model_type == "RealNVP":
+        if self.flow_model_type == "realnvp":
             return hm.model.RealNVPModel(ndim, **model_kwargs)
         msg = f"Unsupported flow_model: {self.flow_model_type}"
         self.logger.error(msg)
@@ -351,8 +351,8 @@ class EvidenceComputation(TorchDeviceMixin):
         Notes
         -----
         This method trains a normalizing flow on the training chains to learn
-        the posterior distribution. The trained flow is then used for evidence
-        computation. The flow model type is determined by the flow_model
+        the normalized posterior distribution. The trained flow is then used for
+        evidence computation. The flow model type is determined by the flow_model
         parameter passed during initialization.
         """
         if self.chains_train is None:
