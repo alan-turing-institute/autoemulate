@@ -24,7 +24,7 @@ We welcome contributions of all kinds, be it code, documentation, or community e
 
 ## Use of AI Tools
 
-AI tools are useful but contributors are responsible for any code or documentation they commit. Never commit code you don't understand. If you commit AI-generated code, ensure its correctness and be prepared to explain exactly what it does. You do not have to disclose if code was written by AI, but making it clear where and how you used AI may be useful for reviewers, especially if AI was heavily used in your contribution.
+AI tools are useful but contributors are responsible for any code or documentation they commit. Please do not commit code you do not understand. If you commit AI-generated code, ensure its correctness and be prepared to explain exactly what it does. You do not have to disclose if code was written by AI, but making it clear where and how you used AI may be useful for reviewers, especially if AI was heavily used in your contribution.
 
 ## Development guide
 
