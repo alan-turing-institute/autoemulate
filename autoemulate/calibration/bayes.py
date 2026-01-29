@@ -1,6 +1,10 @@
+from collections.abc import Callable
+
 import pyro
 import pyro.distributions as dist
 import torch
+from pyro import poutine
+from pyro.infer import MCMC
 
 from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
@@ -207,3 +211,137 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
                         output,
                         dist.Normal(mean[0, i], scale),
                     )
+
+
+def extract_log_probabilities(
+    mcmc: MCMC,
+    model: Callable,
+    device: DeviceLike | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Extract log probabilities from MCMC samples for evidence computation.
+
+    This function extracts posterior samples from a Pyro MCMC object and computes
+    the log probability of each sample under the given probabilistic model. The
+    results are formatted for use with evidence estimation methods like Harmonic.
+
+    Parameters
+    ----------
+    mcmc : MCMC
+        Fitted Pyro MCMC object containing posterior samples. The MCMC object
+        should have been run with multiple chains for best results.
+    model : Callable
+        The Pyro probabilistic model used in MCMC sampling. This should be the
+        same model function passed to the MCMC kernel during sampling.
+    device : DeviceLike | None, optional
+        Device for tensor operations (e.g., 'cpu', 'cuda'). If None, uses the
+        default device. Default is None.
+
+    Returns
+    -------
+    tuple[torch.Tensor, torch.Tensor]
+        A tuple containing:
+        - samples: Tensor of shape (num_chains, num_samples_per_chain, ndim)
+          containing the posterior samples with parameters stacked in the last
+          dimension.
+        - log_probs: Tensor of shape (num_chains, num_samples_per_chain)
+          containing the log probability of each sample under the model.
+
+    Raises
+    ------
+    ValueError
+        If the MCMC object has no samples or if sample extraction fails.
+    RuntimeError
+        If log probability computation fails for any sample.
+
+    Notes
+    -----
+    This function performs the following steps:
+    1. Extracts samples from the MCMC object grouped by chain
+    2. For each sample, conditions the model on the sampled parameter values
+    3. Traces the conditioned model to compute log probabilities
+    4. Returns samples and log probabilities in a format suitable for Harmonic
+
+    The log probabilities include contributions from both the prior and likelihood,
+    representing the unnormalized posterior density at each sample point.
+
+    Examples
+    --------
+    >>> from autoemulate.calibration import (
+    ...     BayesianCalibration,
+    ...     extract_log_probabilities,
+    ... )
+    >>> # After running MCMC calibration
+    >>> bc = BayesianCalibration(emulator, param_range, observations)
+    >>> mcmc = bc.run_mcmc(num_samples=1000, num_chains=4)
+    >>> samples, log_probs = extract_log_probabilities(mcmc, bc.model)
+    >>> print(samples.shape)  # (4, 1000, 2) for 2 parameters
+    >>> print(log_probs.shape)  # (4, 1000)
+
+    See Also
+    --------
+    BayesianCalibration : Class for Bayesian calibration with MCMC
+    EvidenceComputation : Class for computing Bayesian evidence
+
+    """
+    # Set device
+    if device is None:
+        device = torch.device("cpu")
+    elif isinstance(device, str):
+        device = torch.device(device)
+
+    # Extract samples grouped by chain
+    try:
+        samples = mcmc.get_samples(group_by_chain=True)
+    except Exception as e:
+        msg = f"Failed to extract samples from MCMC object: {e}"
+        raise ValueError(msg) from e
+
+    if not samples:
+        msg = "The MCMC object contains no samples"
+        raise ValueError(msg)
+
+    # Get dimensions
+    first_param = next(iter(samples.keys()))
+    num_chains = samples[first_param].shape[0]
+    num_samples_per_chain = samples[first_param].shape[1]
+
+    # Compute log probabilities for each sample
+    log_probs_list = []
+
+    for chain_idx in range(num_chains):
+        chain_log_probs = []
+        for sample_idx in range(num_samples_per_chain):
+            # Extract parameter values for this sample
+            sample_params = {k: v[chain_idx, sample_idx] for k, v in samples.items()}
+
+            # Condition the model on these parameter values
+            conditioned_model = pyro.condition(model, data=sample_params)
+
+            # Trace the model to get log probabilities
+            try:
+                trace = poutine.trace(conditioned_model).get_trace()
+                log_prob = trace.log_prob_sum()
+                # Convert to float, handling both tensor and scalar cases
+                if isinstance(log_prob, torch.Tensor):
+                    log_prob_value = log_prob.item()
+                else:
+                    log_prob_value = float(log_prob)
+                chain_log_probs.append(log_prob_value)
+            except Exception as e:
+                msg = (
+                    f"Failed to compute log probability for chain {chain_idx}, "
+                    f"sample {sample_idx}: {e}"
+                )
+                raise RuntimeError(msg) from e
+
+        log_probs_list.append(chain_log_probs)
+
+    # Convert samples to tensor: (num_chains, num_samples_per_chain, ndim)
+    # Stack parameters in the order they appear in the dictionary
+    samples_tensor = torch.stack([samples[k] for k in samples], dim=-1).to(device)
+
+    # Convert log probabilities to tensor: (num_chains, num_samples_per_chain)
+    log_probs_tensor = torch.tensor(log_probs_list, device=device)
+
+    return samples_tensor, log_probs_tensor
