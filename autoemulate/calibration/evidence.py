@@ -133,7 +133,7 @@ class EvidenceComputation(TorchDeviceMixin):
 
     Notes
     -----
-    The Harmonic method learns a normalizing flow to approximate the normalizedposterior
+    The Harmonic method learns a normalizing flow to approximate the normalized posterior
     distribution, then uses this learned distribution to compute importance
     sampling weights for evidence estimation. This approach is more robust than
     traditional harmonic mean estimators and provides stable error estimates.
