@@ -73,3 +73,6 @@ chapters:
     - file: reference/simulations/flow_problem
     - file: reference/simulations/projectile
     - file: reference/simulations/reaction_diffusion
+  - file: reference/convert/index
+    sections:
+    - file: reference/convert/pyomo
