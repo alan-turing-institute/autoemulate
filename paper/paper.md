@@ -77,12 +77,13 @@ affiliations:
       index: 4
     - name: University of Edinburgh, Edinburgh, United Kingdom
       index: 5
-date: 26 August 2025
+date: 6 February 2026
 bibliography: paper.bib
 ---
 
+# Summary
 
-Computational simulations lie at the heart of modern science and engineering, but they are often slow and computationally costly. A common solution is to use emulators: fast, cheap models trained to approximate the simulator. However, constructing these requires substantial expertise. AutoEmulate is a low-code Python package for emulation workflows, making it easy to replace simulations with fast, accurate emulators. In version 1.0, AutoEmulate has been fully refactored to use PyTorch as a backend, enabling GPU acceleration, automatic differentiation, and seamless integration with the broader PyTorch ecosystem. The toolkit has also been extended with easy-to-use interfaces for common emulation tasks, including model calibration (determining which input values are most likely to have generated real-world observations) and active learning (where simulations are chosen to improve emulator performance at minimal computational cost). Together these updates make AutoEmulate uniquely suited to running performant end-to-end emulation workflows.
+Computational simulations lie at the heart of modern science and engineering, but they are often slow and computationally costly. A common solution is to use emulators: fast, cheap models trained to approximate the simulator. However, constructing these requires substantial expertise. AutoEmulate [@autoemulate] is a low-code Python package for emulation workflows, making it easy to replace simulations with fast, accurate emulators. AutoEmulate has now been fully refactored to use PyTorch as a backend, enabling GPU acceleration, automatic differentiation, and seamless integration with the broader PyTorch ecosystem (released in v1.0). The toolkit has also been extended with easy-to-use interfaces for common emulation tasks, including model calibration (determining which input values are most likely to have generated real-world observations) and active learning (where simulations are chosen to improve emulator performance at minimal computational cost). Together these updates make AutoEmulate uniquely suited to running performant end-to-end emulation workflows.
 
 # Statement of need
 
@@ -90,15 +91,21 @@ Physical systems are often modelled using computer simulations. Depending on the
 
 Emulation requires significant expertise in machine learning as well as familiarity with a broad and evolving ecosystem of tools. This creates a barrier to entry for domain researchers whose focus is on the underlying scientific problem. AutoEmulate [@autoemulate] lowers the barrier to entry by automating the entire emulator construction process (training, hyperparameter tuning and model selection). This makes emulation accessible to non-specialists while also offering a reference set of emulators for benchmarking to experienced users.
 
-AutoEmulate v1.0 extends support for common emulation tasks. These include sensitivity analysis to quantify the impact of each input parameter on the output and model calibration to identify input values most likely to have generated real-world observations. AutoEmulate now also supports direct integration of custom simulators and active learning, in which the tool adaptively selects informative simulations to run to improve emulator performance at minimal computational cost.
+AutoEmulate was originally built on scikit-learn, which is well suited for traditional machine learning but less flexible for complex workflows. AutoEmulate v1.0 introduced a PyTorch [@pytorch] backend that provides GPU acceleration for faster training and inference and automatic differentiation via PyTorch’s autograd system. It also made AutoEmulate easy to integrate with other PyTorch-based tools. For example, the PyTorch refactor enabled fast Bayesian model calibration (identifying input values most likely to have generated real-world observations) using gradient-based inference methods such as Hamiltonian Monte Carlo exposed through Pyro [@pyro].
 
-AutoEmulate was originally built on scikit-learn, which is well suited for traditional machine learning but less flexible for complex workflows. Version 1.0 introduces a PyTorch [@pytorch] backend that provides GPU acceleration for faster training and inference and automatic differentiation via PyTorch’s autograd system. It also makes AutoEmulate easy to integrate with other PyTorch-based tools. For example, the PyTorch refactor enables fast Bayesian model calibration using gradient-based inference methods such as Hamiltonian Monte Carlo exposed through Pyro [@pyro].
+The latest version of AutoEmulate now also supports direct integration of custom simulators and active learning, in which the tool adaptively selects informative simulations to run to improve emulator performance at minimal computational cost. Additionally, the AutoEmulate refactor improved support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs).
 
-Lastly, AutoEmulate v1.0 improves support for high-dimensional data through dimensionality reduction techniques such as principal component analysis (PCA) and variational autoencoders (VAEs). The software's modular design centred around a set of base classes for each component means that the toolkit can be easily extended by users with new emulators and transformations.
+# State of the field
+
+This paper describes an extensive contribution to an existing package. We felt that AutoEmulate [@autoemulate] already filled a unique gap in the ecosystem by focusing on making emulation accessible to domain researchers unfamiliar with ML. However, in its reliance on scikit-learn as a backend we could not extend it to handle use cases that we were targetting. Refactoring the backend to be PyTorch-first allowed us to leverage the wider PyTorch ecosystem as well as the benefits of having end-to-end automatically differentiable emulators and GPU acceleration. This has resulted in a tool that uniquely brings together a wide range of emulation capabilities (e.g., sensitivity analysis, calibration, active learning) and translated to a significant growth of the user base and package contributors. We have also retained support for some of the non-PyTorch features following discussions with the community (e.g., the users can still opt in to fit classic ML models such as SVMs although this results in loss of compability with some of the more advanced features).
 
 # Software Design
 
-# Research Impact Statement
+AutoEmulate design is centered around (i) low-code mode, (ii) modularity and (iii) integrating with the wider ecosystem wherever possible. The design has now been updated from being scikit-learn oriented to PyTorch-first.
+
+AutoEmulate primarily targets users who are simulation but not ML experts, aiming to make it as easy as possible to fit emulators to their simulated data. We also offer flexibility to advanced users by exposing customizable parameters through our APIs (set to sensible defaults to abstract complexity away from novice users).
+
+The software's modular design is built on base classes for each component, enabling users to easily add new emulators and functionality. Our documentation showcases how to do this, which has already encouraged community contributions to the software. We chose PyTorch as the backend because of its autodiff and GPU capabilities as well as the mature ecosystem that we could integrate with. For example, both GPyTorch [@gpytorch] and Pyro [@pyro] are extensively utilised within the package.
 
 # Example usage
 
@@ -177,6 +184,12 @@ mcmc = bc.run()
 
 Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/01_custom_simulations.html) through subclassing. This enables simulator-in-the-loop workflows like [active learning](https://alan-turing-institute.github.io/autoemulate/tutorials/simulator/02_active_learning.html), which selects the most informative simulations to improve emulator performance at minimal computational cost.
 
+# Research Impact Statement
+
+In the last year, we have worked with around 10 collaborators across diverse domains including biomedicine and materials science. This has led to academic outputs such as a poster at OFEME2025. Additionally, our collaborations have driven software development through numerous feature requests and bug reports that we have addressed. For example, we have implemented a full end-to-end calibration workflow used by our collaborators in cardiac modelling and demonstrated how to use AutoEmulate in their pipelines in one of our [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies). We have also had contributions outside the core development team. This has included external contributors responding to existing issues as well as users adapting the tool for their own use cases (e.g., contributing new types of emulators).
+
 # AI usage disclosure
+
+Human authors have made all the core design decisions and authored much of the code and documentation. Generative AI tools have been used to assist with code and documentation writing. Specifically, the team uses GitHub Copilot in auto mode or selects one of the available versions of Claude, GPT and Gemini. We confirm that human authors have reviewed, edited and validated all AI-assisted outputs. We have also added a section on the use of generative AI tools in our contributing guidelines.
 
 # References
