@@ -77,7 +77,7 @@ affiliations:
       index: 4
     - name: University of Edinburgh, Edinburgh, United Kingdom
       index: 5
-date: 26 January 2026
+date: 6 February 2026
 bibliography: paper.bib
 ---
 
