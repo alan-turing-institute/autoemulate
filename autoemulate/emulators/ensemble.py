@@ -59,9 +59,14 @@ class Ensemble(GaussianEmulator):
         """Return a dictionary of hyperparameters to tune."""
         return {}
 
-    def _fit(self, x: TensorLike, y: TensorLike) -> None:
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ) -> None:
         for e in self.emulators:
-            e.fit(x, y)
+            e.fit(x, y, validation_data=validation_data)
         self.is_fitted_ = True
 
     def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
@@ -159,16 +164,13 @@ class EnsembleMLP(Ensemble):
         n_emulators: int
             Number of MLP emulators to create in the ensemble. Defaults to 4.
         """
-        self.__doc__ = f"""
-        Initialize an ensemble of MLPs.
-
-        {
-            _generate_mlp_docstring(
+        self.__doc__ = (
+            "    Initialize an ensemble of MLPs.\n"
+            + _generate_mlp_docstring(
                 additional_parameters_docstring=additional_parameters_docstring,
                 default_dropout_prob=None,
             )
-        }
-        """
+        )
 
         emulators = [
             MLP(
@@ -261,9 +263,14 @@ class DropoutEnsemble(GaussianEmulator, TorchDeviceMixin):
             "n_samples": [10, 20, 50, 100],
         }
 
-    def _fit(self, x: TensorLike, y: TensorLike) -> None:
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ) -> None:
         # Delegate training to the wrapped model
-        self.model.fit(x, y)
+        self.model.fit(x, y, validation_data=validation_data)
         self.is_fitted_ = True
 
     def _predict(self, x: Tensor, with_grad: bool) -> GaussianLike:
@@ -332,15 +339,12 @@ class EnsembleMLPDropout(DropoutEnsemble):
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
     ):
-        self.__doc__ = f"""
-        Initialize an ensemble of MLPs with dropout.
-
-        {
-            _generate_mlp_docstring(
+        self.__doc__ = (
+            "    Initialize an ensemble of MLPs with dropout.\n"
+            + _generate_mlp_docstring(
                 additional_parameters_docstring="", default_dropout_prob=0.2
             )
-        }
-        """
+        )
         DropoutEnsemble.__init__(
             self,
             MLP(

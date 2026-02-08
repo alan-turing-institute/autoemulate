@@ -1,5 +1,6 @@
 import inspect
 import logging
+from dataclasses import replace
 
 import torch
 from sklearn.model_selection import BaseCrossValidator
@@ -61,6 +62,7 @@ def cross_validate(
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
     metrics: list[Metric] | None = None,
+    metric_params: MetricParams | None = None,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -85,6 +87,8 @@ def cross_validate(
         Optional random seed for reproducibility.
     metrics: list[TorchMetrics] | None
         List of metrics to compute. If None, uses r2 and rmse.
+    metric_params: MetricParams | None
+        Additional parameters to pass to the metrics. Defaults to None.
 
     Returns
     -------
@@ -94,6 +98,7 @@ def cross_validate(
     transformed_emulator_params = transformed_emulator_params or {}
     x_transforms = x_transforms or []
     y_transforms = y_transforms or []
+    metric_params = metric_params or MetricParams()
 
     # Setup metrics
     if metrics is None:
@@ -143,7 +148,13 @@ def cross_validate(
         # compute and save results
         y_pred = transformed_emulator.predict(x_val)
         for metric in metrics:
-            score = evaluate(y_pred, y_val, metric)
+            score = evaluate(
+                # Update metric_params with y_train in case required by metric
+                y_pred,
+                y_val,
+                metric,
+                metric_params=replace(metric_params, y_train=y),
+            )
             cv_results[metric.name].append(score)
     return cv_results
 

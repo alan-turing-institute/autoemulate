@@ -79,6 +79,34 @@ class TestPyTorchBackend:
         assert len(self.model.loss_history) == 10
         assert all(isinstance(loss, float) for loss in self.model.loss_history)
 
+    def test_fit_with_validation_data(self):
+        x_train = torch.Tensor(np.array([[1.0], [2.0], [3.0]]))
+        y_train = torch.Tensor(np.array([[2.0], [4.0], [6.0]]))
+        x_val = torch.Tensor(np.array([[4.0]]))
+        y_val = torch.Tensor(np.array([[8.0]]))
+
+        class DummyModelWithValidationData(self.DummyModel):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.validation_data_seen = None
+
+            def _fit(self, x, y, validation_data=None):
+                self.validation_data_seen = validation_data
+                return super()._fit(x, y, validation_data=validation_data)
+
+        model = DummyModelWithValidationData(
+            scheduler_cls=ExponentialLR,
+            scheduler_params={"gamma": 0.9},
+        )
+
+        model.fit(x_train, y_train, validation_data=(x_val, y_val))
+
+        assert model.is_fitted_
+        assert model.validation_data_seen is not None
+        val_x, val_y = model.validation_data_seen
+        assert torch.equal(val_x, x_val)
+        assert torch.equal(val_y, y_val)
+
     def test_predict(self):
         """
         Test the predict method of PyTorchBackend.

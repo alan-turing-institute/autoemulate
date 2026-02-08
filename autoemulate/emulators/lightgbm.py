@@ -157,7 +157,12 @@ class LightGBM(DeterministicEmulator):
         """LightGBM does not support multi-output."""
         return False
 
-    def _fit(self, x: TensorLike, y: TensorLike):  # type: ignore since this is valid subclass of types
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ) -> None:
         x_np, y_np = self._convert_to_numpy(x, y)
         self.n_features_in_ = x_np.shape[1]
         self.model_.fit(x_np, y_np)

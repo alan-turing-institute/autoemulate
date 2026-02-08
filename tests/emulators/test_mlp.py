@@ -71,9 +71,9 @@ def test_mlp_predict_deterministic_with_seed(sample_data_y2d, new_data_y2d):
     model3.fit(x, y)
     pred3 = model3.predict(x2)
 
-    assert isinstance(pred1, torch.Tensor)
-    assert isinstance(pred2, torch.Tensor)
-    assert isinstance(pred3, torch.Tensor)
+    assert isinstance(pred1, TensorLike)
+    assert isinstance(pred2, TensorLike)
+    assert isinstance(pred3, TensorLike)
     assert torch.allclose(pred1, pred2)
     msg = "Predictions should differ with different seeds."
     assert not torch.allclose(pred1, pred3), msg
