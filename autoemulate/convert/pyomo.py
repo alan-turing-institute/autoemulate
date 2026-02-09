@@ -16,7 +16,9 @@ _SUPPORTED_TRANSFORMS = (StandardizeTransform, PCATransform)
 _DEFAULT_RELU_BETA = 50
 
 
-def pyomofy(model: TransformedEmulator | Result, pyomo_vars, relu_beta: int = _DEFAULT_RELU_BETA):
+def pyomofy(
+    model: TransformedEmulator | Result, pyomo_vars, relu_beta: int = _DEFAULT_RELU_BETA
+):
     """Convert a fitted emulator into Pyomo expressions.
 
     Parameters
@@ -48,20 +50,25 @@ def pyomofy(model: TransformedEmulator | Result, pyomo_vars, relu_beta: int = _D
     if isinstance(model, Result):
         model = model.model
     if not isinstance(model, TransformedEmulator):
-        raise TypeError("Input model must be a TransformedEmulator or Result instance.")
+        msg = "Input model must be a TransformedEmulator or Result instance."
+        raise TypeError(msg)
 
     # The actual emulator lives inside TransformedEmulator.model
     emulator = model.model
-    if not isinstance(emulator, (PolynomialRegression, MLP)):
-        raise NotImplementedError(
-            "Currently, only PolynomialRegression and MLP models are supported for Pyomo conversion."
+    if not isinstance(emulator, PolynomialRegression | MLP):
+        msg = (
+            "Currently, only PolynomialRegression and MLP models are supported "
+            "for Pyomo conversion."
         )
+        raise NotImplementedError(msg)
     if not emulator.is_fitted_:
-        raise ValueError("Model must be fitted before conversion to Pyomo.")
+        msg = "Model must be fitted before conversion to Pyomo."
+        raise ValueError(msg)
 
     # Flatten possible IndexedVar or VarSet to an ordered list
     if hasattr(pyomo_vars, "component_data_objects"):
-        var_list = [v for v in pyomo_vars.component_data_objects(sort=True)]
+        var_list = list(pyomo_vars.component_data_objects(sort=True))
+
     else:
         var_list = list(pyomo_vars)
 
@@ -129,7 +136,7 @@ def _apply_y_inverse_transforms(transforms: list, activations: list) -> list:
 
 
 def _standardize_forward(transform: StandardizeTransform, activations: list) -> list:
-    """(x - mean) / std"""
+    """(x - mean) / std."""
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     std = transform.std.detach().cpu().numpy().flatten().tolist()
 
@@ -141,7 +148,7 @@ def _standardize_forward(transform: StandardizeTransform, activations: list) -> 
 
 
 def _standardize_inverse(transform: StandardizeTransform, activations: list) -> list:
-    """y * std + mean"""
+    """Y * std + mean."""
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     std = transform.std.detach().cpu().numpy().flatten().tolist()
 
@@ -175,7 +182,7 @@ def _pca_forward(transform: PCATransform, activations: list) -> list:
 
 
 def _pca_inverse(transform: PCATransform, activations: list) -> list:
-    """y @ components.T + mean  ->  dot product per original feature."""
+    """Y @ components.T + mean  ->  dot product per original feature."""
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     # components shape: (n_features, n_components)
     components = transform.components.detach().cpu().numpy()
@@ -183,7 +190,8 @@ def _pca_inverse(transform: PCATransform, activations: list) -> list:
     n_features = components.shape[0]
     # Each output feature i = sum_j( activations[j] * components[i, j] ) + mean[i]
     return [
-        sum(float(components[i, j]) * activations[j] for j in range(len(activations))) + mean[i]
+        sum(float(components[i, j]) * activations[j] for j in range(len(activations)))
+        + mean[i]
         for i in range(n_features)
     ]
 
@@ -213,10 +221,14 @@ def _polynomial_forward(model: PolynomialRegression, activations: list) -> list:
         poly_features.append(term)
 
     # 2. Single linear layer (no bias) on the expanded features
-    weight = model.linear.weight.detach().cpu().numpy()  # shape: (n_outputs, n_poly_features)
+    weight = (
+        model.linear.weight.detach().cpu().numpy()
+    )  # shape: (n_outputs, n_poly_features)
     out_exprs = []
     for j in range(weight.shape[0]):
-        lin = sum(float(weight[j, k]) * poly_features[k] for k in range(len(poly_features)))
+        lin = sum(
+            float(weight[j, k]) * poly_features[k] for k in range(len(poly_features))
+        )
         out_exprs.append(lin)
 
     return out_exprs
@@ -228,22 +240,22 @@ def _polynomial_forward(model: PolynomialRegression, activations: list) -> list:
 
 
 def _silu_expr(val):
-    """SiLU / Swish: x * sigmoid(x)"""
+    """Forward pass SiLU / Swish: x * sigmoid(x)."""
     return val / (1 + pyo.exp(-val))
 
 
 def _sigmoid_expr(val):
-    """Standard Sigmoid: 1 / (1 + exp(-x))"""
+    """Forward pass Standard Sigmoid: 1 / (1 + exp(-x))."""
     return 1 / (1 + pyo.exp(-val))
 
 
 def _softplus_expr(val):
-    """Softplus: log(1 + exp(x))  — standard form, beta=1"""
+    """Forward pass Softplus: log(1 + exp(x))  — standard form, beta=1."""
     return pyo.log(1 + pyo.exp(val))
 
 
 def _softplus_beta_expr(val, beta: float):
-    """Softplus with tunable sharpness: (1/beta) * log(1 + exp(beta * x))
+    """Softplus with tunable sharpness: (1/beta) * log(1 + exp(beta * x)).
 
     As beta -> inf this converges to ReLU. Used as a drop-in replacement
     when the model was trained with ReLU.
@@ -276,11 +288,16 @@ def _mlp_forward(model: MLP, activations: list, relu_beta: float) -> list:
     for module in model.nn:
         if isinstance(module, nn.Linear):
             weight = module.weight.detach().cpu().numpy()
-            bias = module.bias.detach().cpu().numpy() if module.bias is not None else None
+            bias = (
+                module.bias.detach().cpu().numpy() if module.bias is not None else None
+            )
 
             out_exprs = []
             for j in range(weight.shape[0]):
-                lin = sum(float(weight[j, k]) * activations[k] for k in range(len(activations)))
+                lin = sum(
+                    float(weight[j, k]) * activations[k]
+                    for k in range(len(activations))
+                )
                 if bias is not None:
                     lin += float(bias[j])
                 out_exprs.append(lin)
