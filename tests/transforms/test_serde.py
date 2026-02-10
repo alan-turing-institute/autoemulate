@@ -132,7 +132,7 @@ def test_json_compatibility():
 
 def test_registry_contains_all_transforms():
     """Test that the registry contains all expected transforms."""
-    expected_transforms = {"pca", "standardize", "vae"}
+    expected_transforms = {"discretefourier", "pca", "standardize", "vae"}
     assert set(TRANSFORM_REGISTRY) == expected_transforms
 
     # Check that all registry values are valid transform classes
