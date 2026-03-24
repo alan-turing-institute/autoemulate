@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/alan-turing-institute/autoemulate,39,24
+/alan-turing-institute/autoemulate/pulls,12,6
+/alan-turing-institute/autoemulate/issues,7,5
+/alan-turing-institute/autoemulate/issues/961,7,1
+/alan-turing-institute/autoemulate/pull/971,6,3
+/alan-turing-institute/autoemulate/tree/main/autoemulate/emulators,6,2
+/alan-turing-institute/autoemulate/tree/main/autoemulate/emulators/gaussian_process,4,2
+/alan-turing-institute/autoemulate/tree/main/autoemulate,3,2
+/alan-turing-institute/autoemulate/blob/main/autoemulate/emulators/gaussian_process/poly_mean.py,2,2
+/alan-turing-institute/autoemulate/blob/main/autoemulate/emulators/nn/mlp.py,2,2
