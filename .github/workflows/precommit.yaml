@@ -39,7 +39,7 @@ jobs:
               activate-environment: true
           - name: Install dependencies
             run: |
-              uv pip install -e .[dev,spatiotemporal]
+              uv sync --extra dev --extra spatiotemporal
 
           - name: Run pre-commit
             run: uv run pre-commit run --hook-stage manual --all-files
