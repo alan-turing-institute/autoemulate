@@ -20,8 +20,6 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
     logger = logging.getLogger("autoemulate")
     logger.handlers = []  # Clear existing handlers
 
-    logger.setLevel(logging.DEBUG)
-
     verbose_lower = level.lower()
     match verbose_lower:
         case "error":
@@ -37,6 +35,8 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
         case _:
             msg = 'verbose must be "critical", "error", "warning", "info", or "debug"'
             raise ValueError(msg)
+
+    logger.setLevel(console_log_level)
 
     # Create console handler with a higher log level
     ch = logging.StreamHandler(sys.stdout)
