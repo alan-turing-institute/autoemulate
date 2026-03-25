@@ -1,6 +1,6 @@
 title: "AutoEmulate: A package for semi-automated emulation"
 author: The Alan Turing Institute
-logo: ../misc/AE_logo_final.png
+logo: ../misc/AE.png
 theme: 
   primary_color: "#0077CC"  # A professional blue color
   logo_only: true

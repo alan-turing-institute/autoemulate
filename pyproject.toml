@@ -84,6 +84,13 @@ autoemulate = ["datasets/**/*"]
 [tool.setuptools.exclude-package-data]
 autoemulate = ["**/__pycache__", "**/*.pyc"]
 
+[tool.uv]
+# uvloop does not support Windows (no wheels, setup.py raises RuntimeError).
+# It's pulled in via harmonic -> flax -> orbax-checkpoint -> uvloop.
+# orbax-checkpoint falls back to the default asyncio loop when uvloop is absent,
+# so skipping it on Windows is safe. On Linux/macOS it is still installed normally.
+override-dependencies = ["uvloop>=0.0.0; sys_platform != 'win32'"]
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
