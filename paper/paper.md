@@ -186,7 +186,9 @@ Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-
 
 # Research Impact Statement
 
-In the last year, we have worked with around 10 collaborators across diverse domains including biomedicine and materials science. This has led to academic outputs such as a poster at OFEME2025. Additionally, our collaborations have driven software development through numerous feature requests and bug reports that we have addressed. For example, we have implemented a full end-to-end calibration workflow used by our collaborators in cardiac modelling and demonstrated how to use AutoEmulate in their pipelines in one of our [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies). We have also had contributions outside the core development team. This has included external contributors responding to existing issues as well as users adapting the tool for their own use cases (e.g., contributing new types of emulators).
+In the last year, we have worked in close collaboration with experts across diverse domains. These collaborations have driven software development through feature requests and bug reports. For example, we have implemented a full end-to-end calibration workflow used by collaborators in cardiac modelling, which makes use of sensitivity analysis, history matching and Bayesian calibration. We have also demonstrated how to use AutoEmulate in patient calibration pipelines in one of our [case studies](https://github.com/alan
+-turing-institute/autoemulate/tree/main/case_studies). Similarly, we have worked with domain experts in signals processing, which led to the implementation of interval excursion set calibration. This work was presented in a poster at OFEME2025. We have also had contributions outside the core developmen
+t team. This has included external contributors responding to existing issues as well as users adapting the tool for their own use cases (e.g., contributing new types of emulators).
 
 # AI usage disclosure
 
