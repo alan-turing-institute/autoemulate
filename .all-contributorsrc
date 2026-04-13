@@ -320,6 +320,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "RemDelaporteMathurin",
+      "name": "Rémi Delaporte-Mathurin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/40028739?v=4",
+      "profile": "https://github.com/RemDelaporteMathurin",
+      "contributions": [
+        "bug"
+      ]
     }
   ]
 }

@@ -74,6 +74,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/lcm98/"><img src="https://avatars.githubusercontent.com/u/102757707?v=4?s=100" width="100px;" alt="Loh Chun Mun"/><br /><sub><b>Loh Chun Mun</b></sub></a><br /><a href="#doc-cmsamaaa" title="Documentation">📖</a> <a href="#code-cmsamaaa" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/z7076"><img src="https://avatars.githubusercontent.com/u/69681924?v=4?s=100" width="100px;" alt="Jichen Zhang"/><br /><sub><b>Jichen Zhang</b></sub></a><br /><a href="#code-z7076" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RemDelaporteMathurin"><img src="https://avatars.githubusercontent.com/u/40028739?v=4?s=100" width="100px;" alt="Rémi Delaporte-Mathurin"/><br /><sub><b>Rémi Delaporte-Mathurin</b></sub></a><br /><a href="#bug-RemDelaporteMathurin" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
 </table>
