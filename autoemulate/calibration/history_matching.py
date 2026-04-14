@@ -297,6 +297,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        deterministic: bool = False,
         log_level: str = "progress_bar",
     ):
         """
@@ -345,6 +346,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The device to use. If None, the default torch device is returned.
         random_seed: int | None
             Optional random seed for reproducibility. If None, no seed is set.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         log_level: str
             The logging level to use. One of: "debug", "info", "warning", "error",
             "critical", "progress_bar" (default).
@@ -352,7 +355,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         self.logger, self.progress_bar = get_configured_logger(log_level)
 
         if result is not None:

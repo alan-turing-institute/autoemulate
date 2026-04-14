@@ -142,7 +142,11 @@ class Simulator(ABC, ValidationMixin):
         return self._out_dim
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
+        self,
+        n_samples: int,
+        random_seed: int | None = None,
+        deterministic: bool = False,
+        method: str = "lhs",
     ) -> TensorLike:
         """
         Generate random samples using Quasi-Monte Carlo methods.
@@ -157,6 +161,8 @@ class Simulator(ABC, ValidationMixin):
             Number of samples to generate.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         method: str
             Sampling method to use. One of ["lhs", "sobol"].
 
@@ -166,7 +172,7 @@ class Simulator(ABC, ValidationMixin):
             Parameter samples (column order is given by self.param_names)
         """
         if random_seed is not None:
-            set_random_seed(random_seed)  # type: ignore PGH003
+            set_random_seed(random_seed, deterministic=deterministic)  # type: ignore PGH003
 
         if len(self.sample_param_bounds) == 0:
             # All parameters are constant - broadcast to n_samples
@@ -386,7 +392,11 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
         TorchDeviceMixin.__init__(self, device=device)
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
+        self,
+        n_samples: int,
+        random_seed: int | None = None,
+        deterministic: bool = False,
+        method: str = "lhs",
     ) -> TensorLike:
         """
         Sample inputs and move them to the simulator's device.
@@ -397,6 +407,8 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
             Number of samples to generate.
         random_seed: int | None
             Optional random seed to make sampling reproducible.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         method: str
             Sampling method, one of ``"lhs"`` or ``"sobol"``.
 
@@ -406,7 +418,10 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
             Sampled inputs located on ``self.device``.
         """
         samples = super().sample_inputs(
-            n_samples, random_seed=random_seed, method=method
+            n_samples,
+            random_seed=random_seed,
+            deterministic=deterministic,
+            method=method,
         )
         (samples_device,) = self._move_tensors_to_device(samples)
         return samples_device

@@ -69,6 +69,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        deterministic: bool = False,
         log_level: str = "progress_bar",
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
@@ -119,6 +120,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         log_level: str
             Logging level. Can be "progress_bar", "debug", "info", "warning",
             "error", or "critical". Defaults to "progress_bar". If "progress_bar",
@@ -167,7 +170,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         self.models = updated_models
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
         if test_data is None:
             self.train_val, self.test = self._random_split(

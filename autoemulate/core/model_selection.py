@@ -60,6 +60,7 @@ def cross_validate(
     y_transforms: list[Transform] | None = None,
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
+    deterministic: bool = False,
     metrics: list[Metric] | None = None,
 ):
     """
@@ -83,6 +84,8 @@ def cross_validate(
         The device to use for model training and evaluation.
     random_seed: int | None
         Optional random seed for reproducibility.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
     metrics: list[TorchMetrics] | None
         List of metrics to compute. If None, uses r2 and rmse.
 
@@ -118,7 +121,7 @@ def cross_validate(
 
         # Handle random seed for reproducibility
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         model_init_params = inspect.signature(model).parameters
         model_params = dict(model_params)
         if "random_seed" in model_init_params:

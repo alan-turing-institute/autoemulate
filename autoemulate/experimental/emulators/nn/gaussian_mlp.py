@@ -30,6 +30,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         dropout_prob: float | None = None,
         lr: float = 1e-2,
         random_seed: int | None = None,
+        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
@@ -85,6 +86,8 @@ class GaussianMLP(GaussianEmulator, MLP):
             Learning rate for the optimizer. Defaults to 1e-2.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
         scheduler_cls: type[LRScheduler] | None
@@ -102,7 +105,7 @@ class GaussianMLP(GaussianEmulator, MLP):
         nn.Module.__init__(self)
 
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
         # Ensure x and y are tensors with correct dimensions
         x, y = self._convert_to_tensors(x, y)
@@ -197,4 +200,5 @@ class GaussianMLP(GaussianEmulator, MLP):
 
     def loss_func(self, y_pred, y_true):
         """Negative log likelihood loss function."""
+        return -y_pred.log_prob(y_true).mean()
         return -y_pred.log_prob(y_true).mean()
