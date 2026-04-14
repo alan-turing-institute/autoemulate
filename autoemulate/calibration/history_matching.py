@@ -364,7 +364,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             raise ValueError(msg)
 
         self.transformed_emulator_params = transformed_emulator_params or {}
-        self.emulator.device = self.device
+        self.emulator.to(self.device)
 
         # New data is simulated in `run()` and appended here
         # It can be used to refit the emulator

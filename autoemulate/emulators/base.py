@@ -8,8 +8,9 @@ from torch import nn, optim
 from torch.distributions import TransformedDistribution
 from torch.optim.lr_scheduler import ExponentialLR, LRScheduler
 
-from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.device import TorchDeviceMixin, get_torch_device
 from autoemulate.core.types import (
+    DeviceLike,
     DistributionLike,
     GaussianLike,
     NumpyLike,
@@ -36,6 +37,30 @@ class Emulator(ABC, ValidationMixin, ConversionMixin, TorchDeviceMixin):
     x_transform: StandardizeTransform | None = None
     y_transform: StandardizeTransform | None = None
     supports_uq: bool = False
+
+    def to(self, device: DeviceLike) -> "Emulator":  # type: ignore[override]
+        """
+        Move the emulator to the given device.
+
+        Subclasses may override this to move additional state (e.g. transforms,
+        cached tensors). The base implementation updates ``self.device`` and, for
+        emulators that are also ``nn.Module`` instances, delegates to
+        ``nn.Module.to()`` to move parameters and buffers.
+
+        Parameters
+        ----------
+        device: DeviceLike
+            The target device.
+
+        Returns
+        -------
+        Emulator
+            ``self``, for method chaining.
+        """
+        self.device = get_torch_device(device)
+        if isinstance(self, nn.Module):
+            nn.Module.to(self, self.device)
+        return self
 
     @abstractmethod
     def _fit(self, x: TensorLike, y: TensorLike): ...
@@ -528,7 +553,9 @@ class GaussianProcessEmulator(GaussianEmulator):
         return pred
 
 
-class PyTorchBackend(nn.Module, Emulator):
+class PyTorchBackend(  # type: ignore[reportIncompatibleMethodOverride]
+    nn.Module, Emulator
+):
     """
     `PyTorchBackend` provides a backend for PyTorch models.
 
