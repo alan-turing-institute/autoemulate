@@ -201,4 +201,3 @@ class GaussianMLP(GaussianEmulator, MLP):
     def loss_func(self, y_pred, y_true):
         """Negative log likelihood loss function."""
         return -y_pred.log_prob(y_true).mean()
-        return -y_pred.log_prob(y_true).mean()
