@@ -188,7 +188,7 @@ class ConversionMixin:
         return (x * x_std) + x_mean
 
 
-def set_random_seed(seed: int = 42, deterministic: bool = True):
+def set_random_seed(seed: int = 42, deterministic: bool = False):
     """
     Set random seed for Python, NumPy and PyTorch.
 
@@ -199,7 +199,7 @@ def set_random_seed(seed: int = 42, deterministic: bool = True):
     deterministic: bool
         Use "deterministic" algorithms in PyTorch. On CUDA, some operations
         don't have deterministic implementations, so ``warn_only=True`` is
-        used to avoid hard failures.
+        used to avoid hard failures. Defaults to False.
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -493,4 +493,5 @@ class ValidationMixin:
     #         raise ValueError(
     #             msg
     #         )
+    #     return cv
     #     return cv
