@@ -29,6 +29,7 @@ class PolynomialRegression(PyTorchBackend):
         epochs: int = 500,
         batch_size: int = 16,
         random_seed: int | None = None,
+        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
@@ -55,6 +56,8 @@ class PolynomialRegression(PyTorchBackend):
             Batch size for training. Defaults to 16.
         random_seed: int | None
             Random seed for reproducibility. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         device: DeviceLike | None
             Device to run the model on. If None, uses the default device. Defaults to
             None.
@@ -67,7 +70,7 @@ class PolynomialRegression(PyTorchBackend):
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         self.x_transform = StandardizeTransform() if standardize_x else None
         self.y_transform = StandardizeTransform() if standardize_y else None
         self.degree = degree
