@@ -192,6 +192,42 @@ class ConversionMixin:
     ) -> TensorLike:
         return (x * x_std) + x_mean
 
+    def output_to_tensor(
+        self,
+        output: OutputLike,
+        n_samples: int = 1000,
+        with_grad: bool = False,
+    ) -> torch.Tensor:
+        """Convert an output to a tensor (returns the mean if output is a distribution).
+
+        Parameters
+        ----------
+        output: OutputLike
+            The output to convert to a tensor.
+        n_samples: int
+            Number of samples to draw from the distribution. Defaults to 1000.
+        with_grad: bool
+            Whether to enable gradient calculation. Defaults to False.
+
+        Returns
+        -------
+        TensorLike
+            Tensor of shape `(n_batch, n_targets)` as input or the mean of the output if
+            output is a distribution.
+        """
+        if isinstance(output, TensorLike):
+            return output
+        try:
+            return output.mean
+        except Exception:
+            # Use sampling to get a mean if mean property not available
+            samples = (
+                output.rsample(torch.Size([n_samples]))
+                if with_grad
+                else output.sample(torch.Size([n_samples]))
+            )
+            return samples.mean(dim=0)
+
 
 def set_random_seed(seed: int = 42, deterministic: bool = True):
     """

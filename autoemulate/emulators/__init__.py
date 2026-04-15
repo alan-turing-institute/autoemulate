@@ -1,4 +1,5 @@
 from .base import Emulator
+from .conformal import ConformalMLP
 from .ensemble import EnsembleMLP, EnsembleMLPDropout
 from .gaussian_process.exact import (
     GaussianProcessCorrelatedMatern32,
@@ -26,6 +27,7 @@ EMULATOR_REGISTRY_SHORT_NAME = _default_registry._emulator_registry_short_name
 
 __all__ = [
     "MLP",
+    "ConformalMLP",
     "Emulator",
     "EnsembleMLP",
     "EnsembleMLPDropout",
