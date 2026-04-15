@@ -24,7 +24,17 @@ We welcome contributions of all kinds, be it code, documentation, or community e
 
 ## Use of AI Tools
 
-AI tools are useful but contributors are responsible for any code or documentation they commit. Please do not commit code you do not understand. If you commit AI-generated code, ensure its correctness and be prepared to explain exactly what it does. You do not have to disclose if code was written by AI, but making it clear where and how you used AI may be useful for reviewers, especially if AI was heavily used in your contribution.
+AI tools can be helpful during development, but all contributors remain fully responsible for the quality, correctness, and originality of what they submit.
+
+When using AI tools, please follow these rules:
+
+- Do not submit code or documentation you do not understand.
+- Verify generated output by running tests and checking references.
+- Do not paste confidential, sensitive, or proprietary data into external AI tools.
+- Ensure generated content is compatible with this repository's licensing and attribution requirements.
+- If AI assistance materially shaped a pull request, briefly disclose how it was used in the PR description.
+
+Maintainers may ask for clarification, additional tests, or a rewrite if AI-generated content is incorrect, unverifiable, or does not meet project quality standards.
 
 ## Development guide
 
