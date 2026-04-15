@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-source .venv/bin/activate
 
 # Run the benchmark script with the specified parameters
 date_time=$(date +"%Y-%m-%d_%H%M%S")
