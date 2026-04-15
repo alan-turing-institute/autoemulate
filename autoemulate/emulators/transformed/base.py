@@ -1,9 +1,10 @@
 import torch
 from linear_operator.operators import DiagLinearOperator
+from torch import nn
 from torch.distributions import ComposeTransform, Transform, TransformedDistribution
 from torch.func import jacrev
 
-from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.device import TorchDeviceMixin, get_torch_device
 from autoemulate.core.types import (
     DeviceLike,
     DistributionLike,
@@ -202,6 +203,59 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
         self.all_y_transforms_affine = (
             all(self._y_transforms_affine) if self._y_transforms_affine else False
         )
+
+    def to(self, device: DeviceLike) -> "TransformedEmulator":
+        """
+        Move the emulator and all its state to the given device.
+
+        Moves the underlying model, transforms, and cached tensors to ``device``.
+
+        Parameters
+        ----------
+        device: DeviceLike
+            The target device (e.g. ``"cpu"``, ``"mps"``, ``"cuda"``).
+
+        Returns
+        -------
+        TransformedEmulator
+            ``self``, for method chaining.
+        """
+        device = get_torch_device(device)
+        self.device = device
+
+        # Move the underlying model (Emulator.to handles nn.Module delegation)
+        self.model.to(device)
+        # Clear cached prediction strategies that hold stale device refs
+        if hasattr(self.model, "_clear_cache"):
+            self.model._clear_cache()  # type: ignore[attr-defined]
+
+        # Move the inner model's own transforms (e.g. StandardizeTransform)
+        for attr in ("x_transform", "y_transform"):
+            transform = getattr(self.model, attr, None)
+            if transform is not None:
+                self._move_transform_to_device(transform, device)
+
+        # Move transform state tensors
+        for transform in self.x_transforms + self.y_transforms:
+            self._move_transform_to_device(transform, device)
+
+        # Move cached Jacobian
+        if self._fixed_jacobian_y_inv is not None:
+            self._fixed_jacobian_y_inv = self._fixed_jacobian_y_inv.to(device)
+
+        return self
+
+    @staticmethod
+    def _move_transform_to_device(transform: Transform, device: torch.device) -> None:
+        """Move a transform's tensor attributes to the given device."""
+        if isinstance(transform, nn.Module):
+            transform.to(device)
+        if hasattr(transform, "device"):
+            object.__setattr__(transform, "device", device)
+        for attr_name in list(vars(transform)):
+            val = getattr(transform, attr_name)
+            if isinstance(val, torch.Tensor):
+                setattr(transform, attr_name, val.to(device))
 
     def refit(self, x: TensorLike, y: TensorLike, retrain_transforms: bool = False):
         """
