@@ -101,7 +101,7 @@ The primary motivation for developing AutoEmulate [@autoemulate] was to make emu
 
 We further extended the capabilities of AutoEmulate to include a range of downstream tasks in a single package. The comprehensive nature of the tool distinguishes it from more specialised packages. For example, SBI [@sbi] or BayesFlow [@bayesflow] can train emulators on simulated data and perform Bayesian calibration, while Ax [@ax] or scikit-activeml [@skactiveml] support active learning. While these packages can offer more advanced tooling for a particular task, none of them cover as wide a range of emulation capabilities.
 
-More comprehensive uncertainty quantification toolkits such as OpenTURNS [@openturns] and PyApprox [@pyapprox] do offer broad emulation functionality but they require more expertise to configure. To our knowledge, no existing tool combines automated model selection and hyperparameter tuning with sensitivity analysis, calibration, and active learning in a single low-code package.
+More comprehensive uncertainty quantification toolkits such as OpenTURNS [@openturns] and PyApprox [@pyapprox] do offer broad emulation functionality, though automated comparison across emulator classes is left to the user. To our knowledge, no existing tool combines automated model selection and hyperparameter tuning with sensitivity analysis, calibration, and active learning in a single low-code package.
 
 # Software Design
 
