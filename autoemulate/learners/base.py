@@ -14,6 +14,8 @@ from autoemulate.simulations.base import Simulator
 
 from ..core.types import DistributionLike, TensorLike
 
+logger = get_logger(__name__)
+
 
 @dataclass(kw_only=True)
 class Learner(ValidationMixin, ABC):
@@ -45,8 +47,7 @@ class Learner(ValidationMixin, ABC):
 
     def __post_init__(self):
         """Initialize the learner with training data and fit the emulator."""
-        self.logger = get_logger(__name__)
-        self.logger.info("Initializing Learner with training data.")
+        logger.info("Initializing Learner with training data.")
         if self.fit_from_reinitialized:
             self.emulator = fit_from_reinitialized(
                 self.x_train,
@@ -56,7 +57,7 @@ class Learner(ValidationMixin, ABC):
             )
         else:
             self.emulator.fit(self.x_train, self.y_train)
-        self.logger.info("Emulator fitted with initial training data.")
+        logger.info("Emulator fitted with initial training data.")
         self.in_dim = self.x_train.shape[1]
         self.out_dim = self.y_train.shape[1]
 
@@ -159,7 +160,7 @@ class Active(Learner):
 
         if x is not None:
             # If x is not, we skip the point (typically for Stream learners)
-            self.logger.info("Appending new training data and refitting emulator.")
+            logger.info("Appending new training data and refitting emulator.")
             y_true = self.simulator.forward(x)
             assert isinstance(y_true, TensorLike)
             self.x_train = torch.cat([self.x_train, x])
@@ -176,7 +177,7 @@ class Active(Learner):
             self.mse.update(y_pred, y_true)
             self.r2.update(y_pred, y_true)
             self.n_queries += 1
-            self.logger.info("Training data updated. Total queries: %s", self.n_queries)
+            logger.info("Training data updated. Total queries: %s", self.n_queries)
 
         # Only compute once we have ≥2 labeled points
         if self.n_queries >= 2:
@@ -190,7 +191,7 @@ class Active(Learner):
         self.metrics["r2"].append(r2_val)
         self.metrics["rate"].append(self.n_queries / (len(self.metrics["rate"]) + 1))
         self.metrics["n_queries"].append(self.n_queries)
-        self.logger.info("Metrics updated: MSE=%s, R2=%s", mse_val, r2_val)
+        logger.info("Metrics updated: MSE=%s, R2=%s", mse_val, r2_val)
 
         # If distribution output
         # TODO: check generality for other GPs (e.g. with full covariance)
@@ -211,12 +212,12 @@ class Active(Learner):
             self.metrics["trace"].append(self.trace(covariance, self.out_dim).item())
             self.metrics["logdet"].append(self.logdet(covariance, self.out_dim).item())
             self.metrics["max_eigval"].append(self.max_eigval(covariance).item())
-            self.logger.info("Gaussian output metrics updated.")
+            logger.info("Gaussian output metrics updated.")
 
         # extra per-strategy metrics
         for k, v in extra.items():
             self.metrics.setdefault(k, []).append(v)
-            self.logger.info("Extra metric '%s' updated: %s", k, v)
+            logger.info("Extra metric '%s' updated: %s", k, v)
 
     @property
     def summary(self):

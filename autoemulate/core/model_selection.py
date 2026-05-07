@@ -1,5 +1,4 @@
 import inspect
-import logging
 
 import torch
 from sklearn.model_selection import BaseCrossValidator
@@ -7,6 +6,7 @@ from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
 
 from autoemulate.core.device import get_torch_device, move_tensors_to_device
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import R2, Metric, MetricParams, get_metrics
 from autoemulate.core.types import (
     DeviceLike,
@@ -19,7 +19,7 @@ from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 def evaluate(

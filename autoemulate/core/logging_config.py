@@ -1,13 +1,23 @@
 import logging
 
+PACKAGE_LOGGER_NAME = "autoemulate"
 
-def get_logger(name: str = "autoemulate") -> logging.Logger:
+
+def _setup_library_logger() -> logging.Logger:
+    """Ensure the package root logger has a NullHandler for library-safe logging."""
+    logger = logging.getLogger(PACKAGE_LOGGER_NAME)
+    if not any(isinstance(handler, logging.NullHandler) for handler in logger.handlers):
+        logger.addHandler(logging.NullHandler())
+    return logger
+
+
+def get_logger(name: str = PACKAGE_LOGGER_NAME) -> logging.Logger:
     """
-    Get a logger with a NullHandler for library use.
+    Get a library logger.
 
-    Following Python logging best practices for libraries, this function returns
-    a logger that only has a NullHandler attached. The application developer who
-    uses this library can configure handlers as needed.
+    Following Python logging best practices for libraries, this function ensures
+    that the package root logger has a NullHandler attached. The application
+    developer who uses this library can configure handlers as needed.
 
     Parameters
     ----------
@@ -17,10 +27,10 @@ def get_logger(name: str = "autoemulate") -> logging.Logger:
     Returns
     -------
     logging.Logger
-        A logger instance with a NullHandler.
+        A logger instance for the requested name.
     """
-    logger = logging.getLogger(name)
-    # Only add NullHandler if no handlers exist
-    if not logger.handlers:
-        logger.addHandler(logging.NullHandler())
-    return logger
+    _setup_library_logger()
+    return logging.getLogger(name)
+
+
+_setup_library_logger()

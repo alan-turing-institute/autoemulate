@@ -1,12 +1,11 @@
-import logging
-
 import pandas as pd
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import Metric, get_metric
 from autoemulate.core.types import ModelParams
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class Result:

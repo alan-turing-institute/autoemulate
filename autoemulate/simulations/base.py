@@ -1,4 +1,3 @@
-import logging
 from abc import ABC, abstractmethod
 
 import torch
@@ -10,7 +9,7 @@ from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class Simulator(ABC, ValidationMixin):

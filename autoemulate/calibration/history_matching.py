@@ -1,4 +1,3 @@
-import logging
 import warnings
 
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import Emulator
 from autoemulate.simulations.base import Simulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class HistoryMatching(TorchDeviceMixin):
@@ -352,7 +351,6 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed, deterministic=deterministic)
-        self.logger = get_logger(__name__)
 
         if result is not None:
             self.emulator = result.model

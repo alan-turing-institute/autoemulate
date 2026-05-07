@@ -40,6 +40,8 @@ from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
 
+logger = get_logger(__name__)
+
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     """
@@ -199,9 +201,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger, progress bar, and ModelSerialiser for saving models
-        self.logger = get_logger(__name__)
         self.show_progress_bar = show_progress_bar
-        self.model_serialiser = ModelSerialiser(self.logger)
+        self.model_serialiser = ModelSerialiser(logger)
 
         # Run compare
         self.compare()
@@ -373,7 +374,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             f"Best params: {best_params_for_this_model}, "
             f"Metrics: {metrics_str}"
         )
-        self.logger.debug(msg)
+        logger.debug(msg)
 
     def compare(self):
         """
@@ -395,9 +396,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             device=self.device,
             tuning_metric=self.tuning_metric,
         )
-        self.logger.info(
-            "Comparing %s", [model_cls.__name__ for model_cls in self.models]
-        )
+        logger.info("Comparing %s", [model_cls.__name__ for model_cls in self.models])
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
                 for id, model_cls in tqdm.tqdm(
@@ -412,7 +411,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     # is used to retry the whole tuning and fitting process
                     for attempt in range(self.max_retries):
                         try:
-                            self.logger.info(
+                            logger.info(
                                 "Running Model: %s: %d/%d (attempt %d/%d)",
                                 model_cls.__name__,
                                 id + 1,
@@ -421,7 +420,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 self.max_retries,
                             )
                             if self.model_tuning:
-                                self.logger.debug(
+                                logger.debug(
                                     'Running tuner for model "%s"',
                                     model_cls.__name__,
                                 )
@@ -442,7 +441,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 else:
                                     best_score_idx = np.argmin(mean_scores)
                                 best_params_for_this_model = params_list[best_score_idx]
-                                self.logger.debug(
+                                logger.debug(
                                     'Tuner found best params for model "%s": '
                                     "%s with score: %.3f",
                                     model_cls.__name__,
@@ -450,7 +449,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     mean_scores[best_score_idx],
                                 )
                             else:
-                                self.logger.debug(
+                                logger.debug(
                                     'Skipping tuning for model "%s", using default'
                                     "parameters",
                                     model_cls.__name__,
@@ -468,7 +467,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     **self.model_params,
                                 }
 
-                            self.logger.debug(
+                            logger.debug(
                                 'Running cross-validation for model "%s" '
                                 'for "%s" iterations',
                                 model_cls.__name__,
@@ -516,13 +515,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 f"{metric}: {mean:.3f} (std: {std:.3f})"
                                 for metric, (mean, std) in test_metrics.items()
                             )
-                            self.logger.debug(
+                            logger.debug(
                                 'Cross-validation for model "%s" '
                                 "completed with test metrics: %s",
                                 model_cls.__name__,
                                 test_metrics_str,
                             )
-                            self.logger.info(
+                            logger.info(
                                 "Finished running Model: %s\n", model_cls.__name__
                             )
                             result = Result(
@@ -537,7 +536,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             # if successful, break out of the retry loop
                             break
                         except Exception as e:
-                            self.logger.warning(
+                            logger.warning(
                                 "Model %s failed on attempt %d/%d: %s",
                                 model_cls.__name__,
                                 attempt + 1,
@@ -545,7 +544,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 str(e),
                             )
                             if attempt == self.max_retries - 1:
-                                self.logger.error(
+                                logger.error(
                                     "Model %s failed after %d attempts, skipping.",
                                     model_cls.__name__,
                                     self.max_retries,
@@ -1086,7 +1085,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     "out test data."
                 )
                 raise ValueError(msg)
-            self.logger.info(
+            logger.info(
                 "Using held out test data for calibration plot. "
                 "To use different data, provide x_test and y_test."
             )

@@ -13,6 +13,8 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import DeviceLike
 
+logger = get_logger(__name__)
+
 
 class EvidenceComputation(TorchDeviceMixin):
     """
@@ -168,7 +170,6 @@ class EvidenceComputation(TorchDeviceMixin):
     ):
         """Initialize evidence computation."""
         TorchDeviceMixin.__init__(self, device=device)
-        self.logger = get_logger(__name__)
 
         # Validate and store parameters
         self._validate_parameters(training_proportion, temperature, flow_model)
@@ -185,7 +186,7 @@ class EvidenceComputation(TorchDeviceMixin):
         # Initialize Harmonic components (will be populated in compute_evidence)
         self._initialize_harmonic_components()
 
-        self.logger.debug("EvidenceComputation initialized successfully")
+        logger.debug("EvidenceComputation initialized successfully")
 
     def _validate_parameters(
         self, training_proportion: float, temperature: float, flow_model: str
@@ -193,12 +194,12 @@ class EvidenceComputation(TorchDeviceMixin):
         """Validate initialization parameters."""
         if not 0 < training_proportion < 1:
             msg = "training_proportion must be between 0 and 1"
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         if temperature <= 0:
             msg = "temperature must be positive"
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         if flow_model.lower() not in self.SUPPORTED_MODELS:
@@ -206,28 +207,28 @@ class EvidenceComputation(TorchDeviceMixin):
                 f"Unsupported flow_model: {flow_model}. "
                 f"Currently supports: {', '.join(self.SUPPORTED_MODELS)}."
             )
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
-        self.logger.debug("Initializing EvidenceComputation")
-        self.logger.debug("Training proportion: %s", training_proportion)
-        self.logger.debug("Temperature: %s", temperature)
-        self.logger.debug("Flow model: %s", flow_model)
+        logger.debug("Initializing EvidenceComputation")
+        logger.debug("Training proportion: %s", training_proportion)
+        logger.debug("Temperature: %s", temperature)
+        logger.debug("Flow model: %s", flow_model)
 
     def _extract_and_validate_samples(self):
         """Extract samples from MCMC and validate them."""
-        self.logger.debug("Extracting log probabilities from MCMC samples...")
+        logger.debug("Extracting log probabilities from MCMC samples...")
         try:
             self.samples, self.log_probs = extract_log_probabilities(
                 self.mcmc, self.model, device=self.device
             )
         except Exception as e:
             msg = f"Failed to extract log probabilities: {e}"
-            self.logger.error(msg)
+            logger.error(msg)
             raise RuntimeError(msg) from e
 
-        self.logger.debug("Samples shape: %s", self.samples.shape)
-        self.logger.debug("Log probabilities shape: %s", self.log_probs.shape)
+        logger.debug("Samples shape: %s", self.samples.shape)
+        logger.debug("Log probabilities shape: %s", self.log_probs.shape)
 
         # Validate training_proportion for number of chains
         num_chains = self.samples.shape[0]
@@ -239,23 +240,23 @@ class EvidenceComputation(TorchDeviceMixin):
                 f"{min_train_chains} training chains. Increase num_chains or "
                 f"training_proportion to ensure at least 1 training chain."
             )
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         # Check for numerical issues
         if torch.isnan(self.log_probs).any():
             msg = "Log probabilities contain NaN values"
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         if torch.isinf(self.log_probs).any():
             msg = "Log probabilities contain Inf values"
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         # Save number of dimensions for later use
         self.ndim = self.samples.shape[2]
-        self.logger.debug("Number of parameters: %d", self.ndim)
+        logger.debug("Number of parameters: %d", self.ndim)
 
     def _initialize_harmonic_components(self):
         """Initialize Harmonic library components."""
@@ -296,7 +297,7 @@ class EvidenceComputation(TorchDeviceMixin):
         if self.flow_model_type == "realnvp":
             return hm.model.RealNVPModel(ndim, **model_kwargs)
         msg = f"Unsupported flow_model: {self.flow_model_type}"
-        self.logger.error(msg)
+        logger.error(msg)
         raise ValueError(msg)
 
     def split_data(self) -> tuple:
@@ -455,11 +456,11 @@ class EvidenceComputation(TorchDeviceMixin):
         split_data : Split data into training/inference sets
         fit_flow : Train the normalizing flow
         """
-        self.logger.debug("Starting evidence computation pipeline")
+        logger.debug("Starting evidence computation pipeline")
         self.split_data()
         self.fit_flow(epochs=epochs, verbose=verbose)
         results = self.compute_ln_evidence()
-        self.logger.info("Evidence computed: ln(Z) = %.4f", results["ln_evidence"])
+        logger.info("Evidence computed: ln(Z) = %.4f", results["ln_evidence"])
         return results
 
     def get_chains(self) -> Any:
@@ -478,7 +479,7 @@ class EvidenceComputation(TorchDeviceMixin):
         """
         if self.chains is None:
             msg = "Chains not initialized. Call run() first."
-            self.logger.error(msg)
+            logger.error(msg)
             raise RuntimeError(msg)
         return self.chains
 
@@ -498,7 +499,7 @@ class EvidenceComputation(TorchDeviceMixin):
         """
         if self.flow is None:
             msg = "Flow model not trained. Call run() first."
-            self.logger.error(msg)
+            logger.error(msg)
             raise RuntimeError(msg)
         return self.flow
 
@@ -518,6 +519,6 @@ class EvidenceComputation(TorchDeviceMixin):
         """
         if self.evidence is None:
             msg = "Evidence not computed. Call run() first."
-            self.logger.error(msg)
+            logger.error(msg)
             raise RuntimeError(msg)
         return self.evidence
