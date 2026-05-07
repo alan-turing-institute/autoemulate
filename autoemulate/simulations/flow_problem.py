@@ -21,7 +21,7 @@ class FlowProblem(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
         ncycles: int = 10,
         ncomp: int = 10,
     ):
@@ -34,14 +34,8 @@ class FlowProblem(Simulator):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
-        log_level: str
-            Logging level for the simulator. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
+        show_progress_bar: bool
+            Whether to show a progress bar during batch simulations. Defaults to True.
         ncycles: int
             Number of cycles to simulate.
         ncomp: int
@@ -70,7 +64,9 @@ class FlowProblem(Simulator):
             }
         if output_names is None:
             output_names = ["pressure"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range, output_names, show_progress_bar=show_progress_bar
+        )
         self.ncycles = ncycles
         self.ncomp = ncomp
 
