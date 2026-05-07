@@ -25,25 +25,34 @@ def isolated_autoemulate_logger():
     test so that handler state does not leak between tests.
     """
     logger = logging.getLogger("autoemulate")
+    warnings_logger = logging.getLogger("py.warnings")
 
     orig_handlers = logger.handlers[:]
     orig_level = logger.level
     orig_propagate = logger.propagate
+    orig_warnings_handlers = warnings_logger.handlers[:]
+    orig_warnings_level = warnings_logger.level
+    orig_warnings_propagate = warnings_logger.propagate
 
     # Give each test a blank slate
     logger.handlers = []
+    warnings_logger.handlers = []
+    logging.captureWarnings(False)
 
     yield logger
 
     # Close any file handlers created during the test
-    for h in logger.handlers:
+    for h in list(logger.handlers) + list(warnings_logger.handlers):
         if hasattr(h, "close"):
             h.close()
 
     logger.handlers = orig_handlers
     logger.level = orig_level
     logger.propagate = orig_propagate
-
+    warnings_logger.handlers = orig_warnings_handlers
+    warnings_logger.level = orig_warnings_level
+    warnings_logger.propagate = orig_warnings_propagate
+    logging.captureWarnings(False)
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +127,17 @@ class TestSetupLibraryLogging:
             for h in isolated_autoemulate_logger.handlers
             if isinstance(h, logging.NullHandler)
         ]
-        assert len(null_handlers) >= 1
+        assert len(null_handlers) == 1
+
+    def test_no_duplicate_null_handler_on_repeat_calls(self, isolated_autoemulate_logger):
+        _setup_library_logging()
+        _setup_library_logging()
+        null_handlers = [
+            h
+            for h in isolated_autoemulate_logger.handlers
+            if isinstance(h, logging.NullHandler)
+        ]
+        assert len(null_handlers) == 1
 
     def test_adds_stream_handler_when_root_unconfigured(
         self, isolated_autoemulate_logger
@@ -137,9 +156,7 @@ class TestSetupLibraryLogging:
         ]
         assert len(stream_handlers) == 1
 
-    def test_stream_handler_targets_stdout(
-        self, isolated_autoemulate_logger
-    ):
+    def test_stream_handler_targets_stdout(self, isolated_autoemulate_logger):
         with patch.object(logging.root, "handlers", []):
             _setup_library_logging()
         stream_handlers = [
@@ -311,6 +328,11 @@ class TestConfigureLogging:
         configure_logging(disable=True)
         assert isolated_autoemulate_logger.propagate is True
 
+    def test_disable_resets_level_to_notset(self, isolated_autoemulate_logger):
+        configure_logging(level="error")
+        configure_logging(disable=True)
+        assert isolated_autoemulate_logger.level == logging.NOTSET
+
     def test_disable_preserves_null_handler(self, isolated_autoemulate_logger):
         isolated_autoemulate_logger.addHandler(logging.NullHandler())
         configure_logging(disable=True)
@@ -320,6 +342,13 @@ class TestConfigureLogging:
             if isinstance(h, logging.NullHandler)
         ]
         assert len(null_handlers) >= 1
+
+    def test_disable_keeps_user_handlers(self, isolated_autoemulate_logger):
+        user_handler = logging.StreamHandler()
+        isolated_autoemulate_logger.addHandler(user_handler)
+        configure_logging(level="info")
+        configure_logging(disable=True)
+        assert user_handler in isolated_autoemulate_logger.handlers
 
     def test_log_to_file_true_adds_file_handler(
         self, isolated_autoemulate_logger, tmp_path, monkeypatch
@@ -374,6 +403,19 @@ class TestConfigureLogging:
         for h in file_handlers:
             h.close()
 
+    def test_repeat_call_closes_previous_file_handler(
+        self, isolated_autoemulate_logger, tmp_path
+    ):
+        log_path = tmp_path / "reconfigure.log"
+        configure_logging(log_to_file=str(log_path))
+        old_file_handler = next(
+            h for h in isolated_autoemulate_logger.handlers if isinstance(h, logging.FileHandler)
+        )
+
+        configure_logging(log_to_file=str(log_path))
+
+        assert old_file_handler.stream is None
+
     def test_info_message_emitted_at_info_level(
         self, isolated_autoemulate_logger, capsys
     ):
@@ -398,17 +440,15 @@ class TestConfigureLogging:
         captured = capsys.readouterr()
         assert "test-debug-message" in captured.out
 
-    def test_captures_python_warnings(self, isolated_autoemulate_logger):
-        configure_logging()
+    def test_does_not_capture_python_warnings(self, isolated_autoemulate_logger):
         warnings_logger = logging.getLogger("py.warnings")
-        assert isinstance(warnings_logger, logging.Logger)
-        # py.warnings should share handlers with autoemulate after configure_logging
-        non_null = [
-            h
-            for h in warnings_logger.handlers
-            if not isinstance(h, logging.NullHandler)
-        ]
-        assert len(non_null) >= 1
+        sentinel_handler = logging.StreamHandler()
+        warnings_logger.handlers = [sentinel_handler]
+
+        configure_logging()
+
+        assert warnings_logger.handlers == [sentinel_handler]
+        assert getattr(logging, "_warnings_showwarning", None) is None
 
     def test_formatter_includes_level_and_message(
         self, isolated_autoemulate_logger, capsys
