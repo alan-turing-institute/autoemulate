@@ -126,6 +126,7 @@ class ZOIBMLP(MLP):
         dropout_prob: float | None = None,
         lr: float = 1e-2,
         random_seed: int | None = None,
+        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
@@ -166,6 +167,8 @@ class ZOIBMLP(MLP):
             Learning rate for the optimizer. Defaults to 1e-2.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
         scheduler_cls: type[LRScheduler] | None
@@ -197,6 +200,7 @@ class ZOIBMLP(MLP):
             lr,
             5,  # params_size=5 for Zero-Inflated Beta distribution
             random_seed,
+            deterministic,
             device,
             scheduler_cls,
             scheduler_params,
