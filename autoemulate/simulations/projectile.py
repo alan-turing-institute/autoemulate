@@ -22,13 +22,13 @@ class Projectile(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
         if output_names is None:
             output_names = ["distance"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(parameters_range, output_names, show_progress_bar)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -46,9 +46,9 @@ class Projectile(Simulator):
         TensorLike
             Distance travelled by projectile.
         """
-        assert x.shape[0] == 1, (
-            f"Simulator._forward expects a single input, got {x.shape[0]}"
-        )
+        assert (
+            x.shape[0] == 1
+        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
         y = simulate_projectile(x.cpu().numpy()[0])
         return torch.tensor([y]).view(-1, 1)
 
@@ -65,13 +65,13 @@ class ProjectileMultioutput(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
         if output_names is None:
             output_names = ["distance", "impact_velocity"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(parameters_range, output_names, show_progress_bar)
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -92,9 +92,9 @@ class ProjectileMultioutput(Simulator):
         TensorLike
             Distance travelled by projectile and impact velocity.
         """
-        assert x.shape[0] == 1, (
-            f"Simulator._forward expects a single input, got {x.shape[0]}"
-        )
+        assert (
+            x.shape[0] == 1
+        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
         y = simulate_projectile_multioutput(x.cpu().numpy()[0])
         return torch.tensor([y])
 

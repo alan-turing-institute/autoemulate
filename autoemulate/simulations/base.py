@@ -369,10 +369,10 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
         self,
         parameters_range: dict[str, tuple[float, float]],
         output_names: list[str],
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
         device: DeviceLike | None = None,
     ):
-        Simulator.__init__(self, parameters_range, output_names, log_level)
+        Simulator.__init__(self, parameters_range, output_names, show_progress_bar)
         TorchDeviceMixin.__init__(self, device=device)
 
     def sample_inputs(

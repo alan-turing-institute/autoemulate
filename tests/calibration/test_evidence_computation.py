@@ -20,7 +20,7 @@ from pyro.infer.mcmc import RandomWalkKernel
 @pytest.fixture
 def simple_mcmc_setup():
     """Create a simple MCMC setup for testing."""
-    sim = Epidemic(log_level="error")
+    sim = Epidemic(show_progress_bar=False)
     x = sim.sample_inputs(50)
     y, _ = sim.forward_batch(x)
     assert isinstance(y, TensorLike)
@@ -31,7 +31,7 @@ def simple_mcmc_setup():
     # Create observations
     observations = {"distance": y[:5, 0]}
     bc = BayesianCalibration(
-        gp, sim.parameters_range, observations, 1.0, log_level="error"
+        gp, sim.parameters_range, observations, 1.0, show_progress_bar=False
     )
 
     # Run MCMC with sufficient samples for evidence computation
@@ -108,7 +108,11 @@ class TestEvidenceComputation:
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(
-            mcmc, model, training_proportion=0.5, temperature=0.8, log_level="error"
+            mcmc,
+            model,
+            training_proportion=0.5,
+            temperature=0.8,
+            show_progress_bar=False,
         )
 
         assert ec.mcmc is mcmc
@@ -198,7 +202,10 @@ class TestEvidenceComputation:
         mcmc, model, _ = simple_mcmc_setup
 
         ec = EvidenceComputation(
-            mcmc, model, training_proportion=training_proportion, log_level="error"
+            mcmc,
+            model,
+            training_proportion=training_proportion,
+            show_progress_bar=False,
         )
         results = ec.run(epochs=5, verbose=False)
 
