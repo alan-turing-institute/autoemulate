@@ -1,4 +1,3 @@
-import logging
 import warnings
 
 import matplotlib.pyplot as plt
@@ -18,8 +17,6 @@ from autoemulate.core.types import DeviceLike, DistributionLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import Emulator
 from autoemulate.simulations.base import Simulator
-
-logger = logging.getLogger("autoemulate")
 
 
 class HistoryMatching(TorchDeviceMixin):
@@ -346,8 +343,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         random_seed: int | None
             Optional random seed for reproducibility. If None, no seed is set.
         log_level: str
-            The logging level to use. One of: "debug", "info", "warning", "error",
-            "critical", "progress_bar" (default).
+            Logging level for the shared autoemulate package logger. One of:
+            "debug", "info", "warning", "error", "critical", or
+            "progress_bar" (default).
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
@@ -698,7 +696,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
             f"Running history matching wave with {n_simulations} simulations and "
             f"{n_test_samples} test samples"
         )
-        logger.debug(msg)
+        self.logger.debug(msg)
 
         test_parameters_list, impl_scores_list, nroy_parameters_list = (
             [],
@@ -734,7 +732,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 f"{retries + 1}, have {torch.cat(nroy_parameters_list, 0).shape[0]} "
                 f"total NROY samples so far."
             )
-            logger.debug(msg)
+            self.logger.debug(msg)
 
             retries += 1
 
@@ -751,7 +749,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         if refit_emulator:
             data_msg = "all data" if refit_on_all_data else "most recent data"
             msg = f"Refitting emulator on {data_msg}."
-            logger.info(msg)
+            self.logger.info(msg)
             if refit_on_all_data:
                 self.refit_emulator(self.train_x[:, self.parameter_idx], self.train_y)
             else:
@@ -811,7 +809,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         """
         self.wave_results = []
         for i in range(n_waves):
-            logger.info("Running history matching wave %d/%d", i + 1, n_waves)
+            self.logger.info("Running history matching wave %d/%d", i + 1, n_waves)
             refit_emulator = i != n_waves - 1 or refit_emulator_on_last_wave
             test_x, impl_scores = self.run(
                 n_simulations=n_simulations,
@@ -828,7 +826,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                     f"/{n_waves}. Stopping history matching workflow. Results are "
                     f"stored until wave {i}/{n_waves}."
                 )
-                logger.warning(msg)
+                self.logger.warning(msg)
                 break
 
             self.wave_results.append((test_x, impl_scores))
@@ -836,14 +834,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
             # Get NROY points from impl scores and check fraction
             nroy_x = self.get_nroy(impl_scores, test_x)
             nroy_frac = nroy_x.shape[0] / test_x.shape[0]
-            logger.info(
+            self.logger.info(
                 "Wave %d/%d: NROY fraction is %.2f%%",
                 i + 1,
                 n_waves,
                 nroy_frac * 100,
             )
             if nroy_frac > frac_nroy_stop:
-                logger.info(
+                self.logger.info(
                     "Stopping history matching workflow at wave %d/%d "
                     "with NROY fraction %.2f%% > %.2f%%",
                     i + 1,
@@ -1054,7 +1052,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 test_parameters_plausible[:, self.parameter_idx],
                 columns=self.calibration_params,  # pyright: ignore[reportArgumentType]
             )
-            df["Implausibility"] = impl_scores_plausible.mean(axis=1)  # pyright: ignore[reportCallIssue]
+            df["Implausibility"] = impl_scores_plausible.mean(
+                axis=1
+            )  # pyright: ignore[reportCallIssue]
             df["Wave"] = wave_idx
 
             all_df.append(df)

@@ -1,4 +1,3 @@
-import logging
 from abc import ABC, abstractmethod
 
 import torch
@@ -9,8 +8,6 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
-
-logger = logging.getLogger("autoemulate")
 
 
 class Simulator(ABC, ValidationMixin):
@@ -37,7 +34,7 @@ class Simulator(ABC, ValidationMixin):
         output_names: list[str]
             List of output parameters' names.
         log_level: str
-            Logging level for the simulator. Can be one of:
+            Logging level for the shared autoemulate package logger. Can be one of:
             - "progress_bar": shows a progress bar during batch simulations
             - "debug": shows debug messages
             - "info": shows informational messages
@@ -297,15 +294,15 @@ class Simulator(ABC, ValidationMixin):
             unit="sample",
             unit_scale=True,
         ):
-            logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
+            self.logger.debug("Running simulation for sample %d/%d", i + 1, len(x))
             result = self.forward(x[i : i + 1], allow_failures=allow_failures)
             if result is not None:
                 results.append(result)
                 valid_idx.append(i)
                 successful += 1
-                logger.debug("Simulation %d/%d successful", i + 1, len(x))
+                self.logger.debug("Simulation %d/%d successful", i + 1, len(x))
             else:
-                logger.warning(
+                self.logger.warning(
                     "Simulation %d/%d failed. Result is None"
                     "and is not appended to the results",
                     i + 1,

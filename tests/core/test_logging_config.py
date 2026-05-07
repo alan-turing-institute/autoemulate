@@ -5,7 +5,6 @@ import sys
 from unittest.mock import patch
 
 import pytest
-
 from autoemulate.core.logging_config import (
     _has_real_handler,
     _parse_level,
@@ -129,7 +128,9 @@ class TestSetupLibraryLogging:
         ]
         assert len(null_handlers) == 1
 
-    def test_no_duplicate_null_handler_on_repeat_calls(self, isolated_autoemulate_logger):
+    def test_no_duplicate_null_handler_on_repeat_calls(
+        self, isolated_autoemulate_logger
+    ):
         _setup_library_logging()
         _setup_library_logging()
         null_handlers = [
@@ -409,7 +410,9 @@ class TestConfigureLogging:
         log_path = tmp_path / "reconfigure.log"
         configure_logging(log_to_file=str(log_path))
         old_file_handler = next(
-            h for h in isolated_autoemulate_logger.handlers if isinstance(h, logging.FileHandler)
+            h
+            for h in isolated_autoemulate_logger.handlers
+            if isinstance(h, logging.FileHandler)
         )
 
         configure_logging(log_to_file=str(log_path))
