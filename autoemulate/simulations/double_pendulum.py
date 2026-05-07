@@ -83,9 +83,9 @@ class DoublePendulum(Simulator):
         TensorLike | None
             Time series data: [theta1_series, theta2_series, kinetic_energy_series]
         """
-        assert (
-            x.shape[0] == 1
-        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
 
         # Extract parameters
         params = x.cpu().numpy()[0]

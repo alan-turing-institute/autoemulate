@@ -1,7 +1,7 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from inspect import isabstract
-import logging
 
 import torch
 from anytree import Node, RenderTree
@@ -278,7 +278,9 @@ class Active(Learner):
         return d
 
     @abstractmethod
-    def query(self, x: TensorLike | None = None) -> tuple[
+    def query(
+        self, x: TensorLike | None = None
+    ) -> tuple[
         TensorLike | None,
         TensorLike | DistributionLike,
         dict[str, float],

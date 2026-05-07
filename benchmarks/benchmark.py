@@ -14,7 +14,11 @@ from tqdm import tqdm
 
 
 def run_benchmark(
-    x: torch.Tensor, y: torch.Tensor, n_iter: int, n_splits: int, show_progress_bar: bool
+    x: torch.Tensor,
+    y: torch.Tensor,
+    n_iter: int,
+    n_splits: int,
+    show_progress_bar: bool,
 ) -> pd.DataFrame:
     """Run the benchmark with the given parameters."""
     ae = AutoEmulate(
@@ -91,7 +95,7 @@ def main(
     print(f"Number of splits: {n_splits_list}")
     print(f"Seed: {seed}")
     print(f"Output file: {output_file}")
-    print(f"Show progress bar: {log_level}")
+    print(f"Show progress bar: {show_progress_bar}")
     print("-" * 50)
 
     dfs = []
@@ -114,7 +118,7 @@ def main(
             try:
                 x = x_all[:n_samples]
                 y = y_all[:n_samples]
-                df = run_benchmark(x, y, n_iter, n_splits, log_level)
+                df = run_benchmark(x, y, n_iter, n_splits, show_progress_bar)
                 df["simulator"] = simulator_str
                 df["n_samples"] = n_samples
                 df["n_iter"] = n_iter

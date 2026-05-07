@@ -55,8 +55,9 @@ class Simulator(ABC, ValidationMixin):
         self.logger = logging.getLogger("autoemulate")
         self.progress_bar = show_progress_bar
 
+    @property
     def parameters_range(self) -> dict[str, tuple[float, float]]:
-        """Dictionary mapping input parameter names to their (min, max) ranges."""
+        """Return mapping of input parameter names to their (min, max) ranges."""
         return self._parameters_range
 
     @parameters_range.setter

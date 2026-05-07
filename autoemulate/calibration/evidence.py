@@ -1,8 +1,8 @@
 """Bayesian evidence computation using the Harmonic method."""
 
+import logging
 from collections.abc import Callable
 from typing import Any
-import logging
 
 import harmonic as hm
 import numpy as np
@@ -364,9 +364,7 @@ class EvidenceComputation(TorchDeviceMixin):
         self.flow = self._create_flow_model(self.ndim)
         assert self.flow is not None  # for type checker
         self.flow.fit(
-            np.asarray(
-                self.chains_train.samples
-            ),  # pyright: ignore[reportArgumentType]
+            np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
             epochs=epochs,
             verbose=verbose,
         )

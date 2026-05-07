@@ -64,9 +64,9 @@ class ReactionDiffusion(Simulator):
         self.dt = dt
 
     def _forward(self, x: TensorLike) -> TensorLike:
-        assert (
-            x.shape[0] == 1
-        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
+        assert x.shape[0] == 1, (
+            f"Simulator._forward expects a single input, got {x.shape[0]}"
+        )
         u_sol, v_sol = simulate_reaction_diffusion(
             x.cpu().numpy()[0], self.return_timeseries, self.n, self.L, self.T, self.dt
         )

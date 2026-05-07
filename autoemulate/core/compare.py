@@ -122,7 +122,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         show_progress_bar: bool
             Whether to show a progress bar during model comparison. Defaults to True.
             If False, no progress bar is displayed. Note: logging output is controlled
-            via the configure_logging() function in your application code, not this parameter.
+            via the configure_logging() function in your application code,
+            not this parameter.
         tuning_metric: str | TorchMetrics
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
@@ -197,7 +198,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger and ModelSerialiser for saving models
-        # Following Python best practices, the logger is obtained without configuring handlers
+        # Following Python best practices, get the logger without configuring
+        # handlers in library code.
         self.logger = logging.getLogger("autoemulate")
         self.progress_bar = show_progress_bar
         self.model_serialiser = ModelSerialiser(self.logger)
