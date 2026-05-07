@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 
 def run_benchmark(
-    x: torch.Tensor, y: torch.Tensor, n_iter: int, n_splits: int, log_level: str
+    x: torch.Tensor, y: torch.Tensor, n_iter: int, n_splits: int
 ) -> pd.DataFrame:
     """Run the benchmark with the given parameters."""
     ae = AutoEmulate(
@@ -23,7 +23,6 @@ def run_benchmark(
         models=cast(list[type[Emulator] | str], ALL_EMULATORS),
         n_iter=n_iter,
         n_splits=n_splits,
-        log_level=log_level,
     )
     return ae.summarise()
 
@@ -69,9 +68,7 @@ def run_benchmark(
     default="benchmark_results.csv",
     help="File name for output",
 )
-def main(
-    simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
-):
+def main(simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file):
     """Run the benchmark with the specified parameters."""
     print(f"Running benchmark with simulators: {simulators}")
     print(f"Number of samples: {n_samples_list}")
@@ -79,7 +76,6 @@ def main(
     print(f"Number of splits: {n_splits_list}")
     print(f"Seed: {seed}")
     print(f"Output file: {output_file}")
-    print(f"Log level: {log_level}")
     print("-" * 50)
 
     dfs = []
@@ -102,7 +98,7 @@ def main(
             try:
                 x = x_all[:n_samples]
                 y = y_all[:n_samples]
-                df = run_benchmark(x, y, n_iter, n_splits, log_level)
+                df = run_benchmark(x, y, n_iter, n_splits)
                 df["simulator"] = simulator_str
                 df["n_samples"] = n_samples
                 df["n_iter"] = n_iter

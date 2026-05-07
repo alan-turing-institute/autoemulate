@@ -21,7 +21,7 @@ class AdvectionDiffusion(Simulator):
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
         return_timeseries: bool = False,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
         n: int = 50,
         L: float = 10.0,
         T: float = 80.0,
@@ -36,8 +36,8 @@ class AdvectionDiffusion(Simulator):
             Mapping of input parameter names to (min, max) ranges.
         output_names: list[str]
             List of output parameter names.
-        log_level: str
-            Logging level for the simulator.
+        show_progress_bar: bool
+            Whether to show a progress bar during simulation. Defaults to True.
         return_timeseries: bool
             Whether to return the full timeseries or just the final snapshot.
         n: int
@@ -56,7 +56,9 @@ class AdvectionDiffusion(Simulator):
             }
         if output_names is None:
             output_names = ["solution"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range, output_names, show_progress_bar=show_progress_bar
+        )
         self.return_timeseries = return_timeseries
         self.n = n
         self.L = L
