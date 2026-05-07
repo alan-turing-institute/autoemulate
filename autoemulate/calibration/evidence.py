@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any
+import logging
 
 import harmonic as hm
 import numpy as np
@@ -10,7 +11,6 @@ from pyro.infer import MCMC
 
 from autoemulate.calibration.bayes import extract_log_probabilities
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike
 
 
@@ -168,11 +168,13 @@ class EvidenceComputation(TorchDeviceMixin):
         flow_model: str = "RQSpline",
         flow_kwargs: dict | None = None,
         device: DeviceLike | None = None,
-        log_level: str = "info",
+        show_progress_bar: bool = False,
     ):
         """Initialize evidence computation."""
         TorchDeviceMixin.__init__(self, device=device)
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        # Get logger without configuring handlers (library best practices)
+        self.logger = logging.getLogger("autoemulate")
+        self.progress_bar = show_progress_bar
 
         # Validate and store parameters
         self._validate_parameters(training_proportion, temperature, flow_model)
@@ -362,7 +364,9 @@ class EvidenceComputation(TorchDeviceMixin):
         self.flow = self._create_flow_model(self.ndim)
         assert self.flow is not None  # for type checker
         self.flow.fit(
-            np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
+            np.asarray(
+                self.chains_train.samples
+            ),  # pyright: ignore[reportArgumentType]
             epochs=epochs,
             verbose=verbose,
         )

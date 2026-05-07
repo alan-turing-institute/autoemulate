@@ -10,7 +10,6 @@ from matplotlib.figure import Figure
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result
@@ -297,7 +296,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the history matching workflow object.
@@ -353,7 +352,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed)
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        # Get logger without configuring handlers (library best practices)
+        self.logger = logging.getLogger("autoemulate")
+        self.progress_bar = show_progress_bar
 
         if result is not None:
             self.emulator = result.model
@@ -1054,7 +1055,9 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 test_parameters_plausible[:, self.parameter_idx],
                 columns=self.calibration_params,  # pyright: ignore[reportArgumentType]
             )
-            df["Implausibility"] = impl_scores_plausible.mean(axis=1)  # pyright: ignore[reportCallIssue]
+            df["Implausibility"] = impl_scores_plausible.mean(
+                axis=1
+            )  # pyright: ignore[reportCallIssue]
             df["Wave"] = wave_idx
 
             all_df.append(df)

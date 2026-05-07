@@ -4,18 +4,64 @@ import sys
 from pathlib import Path
 
 
+def _setup_library_logging():
+    """
+    Set up the library's logger with only a NullHandler.
+
+    This follows Python best practices: libraries should not configure handlers.
+    Only NullHandler prevents "No handler could be found" warnings. Handler
+    configuration is the responsibility of the application using the library.
+
+    See: https://docs.python.org/3/library/logging.html#configuring-logging-for-a-library
+    """
+    logger = logging.getLogger("autoemulate")
+    # Only add NullHandler if no handlers exist yet
+    if not logger.handlers:
+        logger.addHandler(logging.NullHandler())
+    return logger
+
+
+# Initialize library logger when module is imported
+_setup_library_logging()
+
+
 def configure_logging(log_to_file=False, level: str = "INFO"):
     """
-    Configure the logging system.
+    Configure the logging system for the autoemulate package.
+
+    This is an OPTIONAL utility for application developers who want to control
+    how autoemulate logs messages. It is NOT called automatically by autoemulate.
+
+    Following Python best practices (PEP 391), libraries should not configure
+    handlers by default. This function is provided for convenience when you want
+    to set up logging for the autoemulate library.
 
     Parameters
     ----------
     log_to_file: bool or string, optional
-        If True, logs will be written to a file.
-        If a string, logs will be written to the specified file.
-    verbose: str, optional
-        The verbosity level. Can be "critical", "error", "warning",
-          "info", or "debug". Defaults to "info".
+        If True, logs will be written to a file named "autoemulate.log" in the
+        current working directory. If a string, logs will be written to the
+        specified file path. Defaults to False (no file logging).
+    level: str, optional
+        The logging level. Can be "critical", "error", "warning", "info",
+        or "debug". Defaults to "info".
+
+    Returns
+    -------
+    logging.Logger
+        The configured logger instance for "autoemulate".
+
+    Notes
+    -----
+    If you call this function, it will clear any previously configured handlers
+    on the logger and set up new console and optional file handlers.
+
+    Examples
+    --------
+    >>> from autoemulate.core.logging_config import configure_logging
+    >>> logger = configure_logging(level="debug")
+    >>> logger = configure_logging(log_to_file=True, level="info")
+    >>> logger = configure_logging(log_to_file="/path/to/app.log", level="debug")
     """
     logger = logging.getLogger("autoemulate")
     logger.handlers = []  # Clear existing handlers
@@ -80,46 +126,3 @@ def configure_logging(log_to_file=False, level: str = "INFO"):
     warnings_logger.setLevel(logger.getEffectiveLevel())
 
     return logger
-
-
-def get_configured_logger(
-    log_level, progress_bar_attr="progress_bar"
-) -> tuple[logging.Logger, bool]:
-    """
-    Configure logger and progress bar flag consistently.
-
-    Parameters
-    ----------
-    log_level: str
-        The logging level to set. Can be "progress_bar", "debug", "info",
-        "warning", "error", or "critical".
-    progress_bar_attr: str
-        The attribute to check for progress bar. If log_level is set to this value,
-        the logger will be set to "error" level and progress_bar will be True. Defaults
-        to "progress_bar".
-
-    Returns
-    -------
-    tuple[logging.Logger, bool]
-        The configured logger and the progress bar flag.
-    """
-    valid_log_levels = [
-        "progress_bar",
-        "debug",
-        "info",
-        "warning",
-        "error",
-        "critical",
-    ]
-    log_level = log_level.lower()
-    if log_level not in valid_log_levels:
-        raise ValueError(
-            f"Invalid log level: {log_level}. Must be one of: {valid_log_levels}"
-        )
-    if log_level == progress_bar_attr:
-        log_level = "error"
-        progress_bar = True
-    else:
-        progress_bar = False
-    logger = configure_logging(level=log_level)
-    return logger, progress_bar

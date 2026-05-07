@@ -1,4 +1,5 @@
 import arviz as az
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pyro
@@ -21,7 +22,6 @@ from torch.special import ndtr
 
 from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
@@ -78,7 +78,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         output_bounds: dict[str, tuple[float, float]],
         output_names: list[str],
         device: DeviceLike | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the calibration object.
@@ -134,7 +134,9 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.emulator.device = self.device
         # TODO: we might want to check that the len equals the number of tasks returned
         self.output_names = output_names
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        # Get logger without configuring handlers (library best practices)
+        self.logger = logging.getLogger("autoemulate")
+        self.progress_bar = show_progress_bar
         self.logger.info(
             "Initializing IntervalExcursionSetCalibration with parameters: %s",
             self.calibration_params,
