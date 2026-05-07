@@ -19,7 +19,7 @@ class DoublePendulum(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
         t_span: tuple[float, float] = (0.0, 10.0),
         n_time_points: int = 500,
         g: float = 9.81,
@@ -33,8 +33,8 @@ class DoublePendulum(Simulator):
             Parameter ranges for m1, m2, l1, l2, theta1_0, theta2_0
         output_names : list[str] | None
             Names of output variables
-        log_level : str
-            Logging level
+        show_progress_bar : bool
+            Whether to show a progress bar during batch simulations. Defaults to True.
         t_span : tuple[float, float]
             Time span for simulation (start, end)
         n_time_points : int
@@ -62,7 +62,7 @@ class DoublePendulum(Simulator):
             ke_names = [f"kinetic_energy_t{i}" for i in range(n_time_points)]
             output_names = theta1_names + theta2_names + ke_names
 
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(parameters_range, output_names, show_progress_bar)
 
         self.t_span = t_span
         self.n_time_points = n_time_points
@@ -83,9 +83,9 @@ class DoublePendulum(Simulator):
         TensorLike | None
             Time series data: [theta1_series, theta2_series, kinetic_energy_series]
         """
-        assert x.shape[0] == 1, (
-            f"Simulator._forward expects a single input, got {x.shape[0]}"
-        )
+        assert (
+            x.shape[0] == 1
+        ), f"Simulator._forward expects a single input, got {x.shape[0]}"
 
         # Extract parameters
         params = x.cpu().numpy()[0]

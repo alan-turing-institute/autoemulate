@@ -8,7 +8,7 @@ from pyro.infer import MCMC
 
 from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
@@ -31,7 +31,6 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         model_discrepancy: float = 0.0,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
-        log_level: str = "progress_bar",
     ):
         """
         Initialize the HMC calibration object.
@@ -62,14 +61,6 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             The device to use. If None, the default torch device is returned.
             TODO: do we need to do anything more to ensure the device is correctly
             handled for the pyro model?
-        log_level: str
-            Logging level for the calibration. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
 
         Notes
         -----
@@ -87,7 +78,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         self.emulator = emulator
         self.emulator.device = self.device
         self.output_names = list(observations.keys())
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.logger = get_logger(__name__)
         self.logger.info(
             "Initializing BayesianCalibration with parameters: %s",
             self.calibration_params,

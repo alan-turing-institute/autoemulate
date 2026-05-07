@@ -10,7 +10,7 @@ from pyro.infer import MCMC
 
 from autoemulate.calibration.bayes import extract_log_probabilities
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import DeviceLike
 
 
@@ -71,9 +71,6 @@ class EvidenceComputation(TorchDeviceMixin):
     device : DeviceLike | None, optional
         Device for computations (e.g., 'cpu', 'cuda'). If None, uses the default
         device. Default is None.
-    log_level : str, optional
-        Logging verbosity level. Options: "debug", "info", "warning", "error",
-        "critical", "progress_bar". Default is "info".
 
     Attributes
     ----------
@@ -168,11 +165,10 @@ class EvidenceComputation(TorchDeviceMixin):
         flow_model: str = "RQSpline",
         flow_kwargs: dict | None = None,
         device: DeviceLike | None = None,
-        log_level: str = "info",
     ):
         """Initialize evidence computation."""
         TorchDeviceMixin.__init__(self, device=device)
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.logger = get_logger(__name__)
 
         # Validate and store parameters
         self._validate_parameters(training_proportion, temperature, flow_model)
@@ -362,7 +358,9 @@ class EvidenceComputation(TorchDeviceMixin):
         self.flow = self._create_flow_model(self.ndim)
         assert self.flow is not None  # for type checker
         self.flow.fit(
-            np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
+            np.asarray(
+                self.chains_train.samples
+            ),  # pyright: ignore[reportArgumentType]
             epochs=epochs,
             verbose=verbose,
         )

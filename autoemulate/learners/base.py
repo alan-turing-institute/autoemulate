@@ -6,7 +6,7 @@ import torch
 from anytree import Node, RenderTree
 from torcheval.metrics import MeanSquaredError, R2Score
 
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.data.utils import ValidationMixin
 from autoemulate.emulators.base import Emulator
@@ -39,15 +39,13 @@ class Learner(ValidationMixin, ABC):
     emulator: Emulator
     x_train: TensorLike
     y_train: TensorLike
-    log_level: str = "progress_bar"
     fit_from_reinitialized: bool = True
     in_dim: int = field(init=False)
     out_dim: int = field(init=False)
 
     def __post_init__(self):
         """Initialize the learner with training data and fit the emulator."""
-        log_level = getattr(self, "log_level", "progress_bar")
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.logger = get_logger(__name__)
         self.logger.info("Initializing Learner with training data.")
         if self.fit_from_reinitialized:
             self.emulator = fit_from_reinitialized(
@@ -277,9 +275,7 @@ class Active(Learner):
         return d
 
     @abstractmethod
-    def query(
-        self, x: TensorLike | None = None
-    ) -> tuple[
+    def query(self, x: TensorLike | None = None) -> tuple[
         TensorLike | None,
         TensorLike | DistributionLike,
         dict[str, float],

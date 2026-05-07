@@ -20,7 +20,7 @@ from pyro.infer.mcmc import RandomWalkKernel
 @pytest.fixture
 def simple_mcmc_setup():
     """Create a simple MCMC setup for testing."""
-    sim = Epidemic(log_level="error")
+    sim = Epidemic()
     x = sim.sample_inputs(50)
     y, _ = sim.forward_batch(x)
     assert isinstance(y, TensorLike)
@@ -30,9 +30,7 @@ def simple_mcmc_setup():
 
     # Create observations
     observations = {"distance": y[:5, 0]}
-    bc = BayesianCalibration(
-        gp, sim.parameters_range, observations, 1.0, log_level="error"
-    )
+    bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
 
     # Run MCMC with sufficient samples for evidence computation
     mcmc = bc.run_mcmc(warmup_steps=50, num_samples=500, num_chains=10)
@@ -107,9 +105,7 @@ class TestEvidenceComputation:
         """Test EvidenceComputation initialization."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
-            mcmc, model, training_proportion=0.5, temperature=0.8, log_level="error"
-        )
+        ec = EvidenceComputation(mcmc, model, training_proportion=0.5, temperature=0.8)
 
         assert ec.mcmc is mcmc
         assert ec.model is model
@@ -164,7 +160,7 @@ class TestEvidenceComputation:
         """Test basic evidence computation."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
         results = ec.run(epochs=50, verbose=False)
 
         # Check results structure
@@ -197,9 +193,7 @@ class TestEvidenceComputation:
         """Test evidence computation with different training proportions."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
-            mcmc, model, training_proportion=training_proportion, log_level="error"
-        )
+        ec = EvidenceComputation(mcmc, model, training_proportion=training_proportion)
         results = ec.run(epochs=5, verbose=False)
 
         assert isinstance(results, dict)
@@ -210,9 +204,7 @@ class TestEvidenceComputation:
         """Test evidence computation with different temperatures."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
-            mcmc, model, temperature=temperature, log_level="error"
-        )
+        ec = EvidenceComputation(mcmc, model, temperature=temperature)
         results = ec.run(epochs=5, verbose=False)
 
         assert isinstance(results, dict)
@@ -222,7 +214,7 @@ class TestEvidenceComputation:
         """Test that get_chains raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Call run"):
             ec.get_chains()
@@ -231,7 +223,7 @@ class TestEvidenceComputation:
         """Test that get_flow_model raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Call run"):
             ec.get_flow_model()
@@ -240,7 +232,7 @@ class TestEvidenceComputation:
         """Test that get_evidence_object raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Call run"):
             ec.get_evidence_object()
@@ -249,7 +241,7 @@ class TestEvidenceComputation:
         """Test getter methods work after run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
         ec.run(epochs=5, verbose=False)
 
         # Test all getter methods
@@ -266,9 +258,7 @@ class TestEvidenceComputation:
         """Test split_data method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
-            mcmc, model, training_proportion=0.6, log_level="error"
-        )
+        ec = EvidenceComputation(mcmc, model, training_proportion=0.6)
         chains_train, chains_infer = ec.split_data()
 
         # Check that chains were created and split
@@ -288,7 +278,7 @@ class TestEvidenceComputation:
         """Test fit_flow method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
         ec.split_data()
         ec.fit_flow(epochs=10, verbose=False)
 
@@ -302,7 +292,7 @@ class TestEvidenceComputation:
         """Test that fit_flow raises error if split_data not called."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Must call split_data"):
             ec.fit_flow(epochs=10)
@@ -311,7 +301,7 @@ class TestEvidenceComputation:
         """Test compute_ln_evidence method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
         ec.split_data()
         ec.fit_flow(epochs=10, verbose=False)
         results = ec.compute_ln_evidence()
@@ -329,7 +319,7 @@ class TestEvidenceComputation:
         """Test that compute_ln_evidence raises error if fit_flow not called."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
         ec.split_data()
 
         with pytest.raises(RuntimeError, match="Must call split_data.*and fit_flow"):
@@ -339,7 +329,7 @@ class TestEvidenceComputation:
         """Test the modular workflow: split -> fit -> compute."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = EvidenceComputation(mcmc, model)
 
         # Step 1: Split data
         chains_train, chains_infer = ec.split_data()
@@ -355,7 +345,7 @@ class TestEvidenceComputation:
         assert "ln_evidence" in results
 
         # Verify consistency with convenience method
-        ec2 = EvidenceComputation(mcmc, model, log_level="error")
+        ec2 = EvidenceComputation(mcmc, model)
         results2 = ec2.run(epochs=10, verbose=False)
 
         # Both should produce similar results (may not be identical due to randomness)
@@ -378,13 +368,11 @@ class TestIntegration:
 
         # Run calibration
         observations = {"distance": y[:5, 0]}
-        bc = BayesianCalibration(
-            gp, sim.parameters_range, observations, 1.0, log_level="error"
-        )
+        bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
         mcmc = bc.run_mcmc(warmup_steps=50, num_samples=100, num_chains=10)
 
         # Compute evidence
-        ec = EvidenceComputation(mcmc, bc.model, log_level="error")
+        ec = EvidenceComputation(mcmc, bc.model)
         results = ec.run(epochs=5, verbose=False)
 
         # Verify results
@@ -404,9 +392,7 @@ class TestIntegration:
             "learning_rate": 0.0005,
         }
 
-        ec = EvidenceComputation(
-            mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
-        )
+        ec = EvidenceComputation(mcmc, model, flow_kwargs=flow_kwargs)
         results = ec.run(epochs=10, verbose=False)
 
         # Verify results are valid
@@ -425,9 +411,7 @@ class TestIntegration:
         # Override standardize (default is True)
         flow_kwargs = {"standardize": False, "n_layers": 4}
 
-        ec = EvidenceComputation(
-            mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
-        )
+        ec = EvidenceComputation(mcmc, model, flow_kwargs=flow_kwargs)
 
         # Initialize to access flow creation
         ec._extract_and_validate_samples()

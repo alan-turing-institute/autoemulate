@@ -12,7 +12,7 @@ import tqdm
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import R2, Metric, MetricParams, get_metric, get_metrics
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
@@ -69,7 +69,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
     ):
@@ -119,12 +119,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
-        log_level: str
-            Logging level. Can be "progress_bar", "debug", "info", "warning",
-            "error", or "critical". Defaults to "progress_bar". If "progress_bar",
-            it will show a progress bar during model comparison. It will set the
-            logging level to "error" to avoid cluttering the output
-            with debug/info logs.
+        show_progress_bar: bool
+            Whether to show a progress bar during model comparison. Defaults to True.
         tuning_metric: str | TorchMetrics
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
@@ -198,8 +194,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.model_tuning = model_params is None
         self.transformed_emulator_params = transformed_emulator_params or {}
 
-        # Set up logger and ModelSerialiser for saving models
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        # Set up logger, progress bar, and ModelSerialiser for saving models
+        self.logger = get_logger(__name__)
+        self.show_progress_bar = show_progress_bar
         self.model_serialiser = ModelSerialiser(self.logger)
 
         # Run compare
@@ -401,7 +398,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             for y_transforms in self.y_transforms_list:
                 for id, model_cls in tqdm.tqdm(
                     enumerate(self.models),
-                    disable=not self.progress_bar,
+                    disable=not self.show_progress_bar,
                     desc="Comparing models",
                     total=len(self.models),
                     unit="model",
