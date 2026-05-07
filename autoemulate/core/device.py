@@ -1,6 +1,7 @@
 import logging
 import os
 
+import gpytorch
 import torch
 from torch import nn
 from typing_extensions import Self
@@ -203,7 +204,7 @@ class TorchDeviceMixin:
         (recursing one level into list/tuple/dict containers), then delegates
         to :meth:`nn.Module.to` to move parameters and buffers when applicable.
         """
-        device, _, _, _ = torch._C._nn._parse_to(*args, **kwargs)
+        device, _, _, _ = torch._C._nn._parse_to(*args, **kwargs)  # pyright: ignore[reportAttributeAccessIssue]
         if device is not None:
             self.device = get_torch_device(device)
 
@@ -216,6 +217,12 @@ class TorchDeviceMixin:
 
         if isinstance(self, nn.Module):
             nn.Module.to(self, *args, **kwargs)
+
+        # gpytorch caches device-bound tensors (e.g. ExactGP.prediction_strategy)
+        # in plain attributes that nn.Module.to does not track. Invalidate them
+        # so the next predict rebuilds them on the new device.
+        if isinstance(self, gpytorch.Module):
+            self._clear_cache()
         return self
 
 

@@ -203,19 +203,6 @@ class TransformedEmulator(Emulator, ValidationMixin, ConversionMixin):
             all(self._y_transforms_affine) if self._y_transforms_affine else False
         )
 
-    def to(self, *args, **kwargs) -> "TransformedEmulator":
-        """
-        Move the emulator and all its state to the given device.
-
-        Delegates to :meth:`TorchDeviceMixin.to` to walk owned attributes
-        (model, transform lists, cached Jacobian) and additionally clears
-        gpytorch prediction caches that hold stale device refs.
-        """
-        super().to(*args, **kwargs)
-        if hasattr(self.model, "_clear_cache"):
-            self.model._clear_cache()  # type: ignore[attr-defined]
-        return self
-
     def refit(self, x: TensorLike, y: TensorLike, retrain_transforms: bool = False):
         """
         Refit the emulator with new data and optionally retrain transforms.
