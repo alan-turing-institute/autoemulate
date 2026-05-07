@@ -69,7 +69,6 @@ def run_benchmark(
     default="benchmark_results.csv",
     help="File name for output",
 )
-@click.option("--log_level", default="progress_bar", help="Logging level")
 def main(
     simulators, n_samples_list, n_iter_list, n_splits_list, seed, output_file, log_level
 ):
