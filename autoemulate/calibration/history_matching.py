@@ -351,7 +351,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         self.logger = get_logger(__name__)
 
         if result is not None:
