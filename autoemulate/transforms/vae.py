@@ -11,7 +11,7 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.transforms.base import AutoEmulateTransform
 
 
-class VAE(nn.Module, TorchDeviceMixin):
+class VAE(TorchDeviceMixin, nn.Module):
     """
     Variational Autoencoder implementation in PyTorch.
 

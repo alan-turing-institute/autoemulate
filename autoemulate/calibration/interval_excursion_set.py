@@ -131,7 +131,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.calibration_params = list(parameters_range.keys())
         self.d = len(self.parameters_range)
         self.emulator = emulator
-        self.emulator.device = self.device
+        self.emulator.to(self.device)
         # TODO: we might want to check that the len equals the number of tasks returned
         self.output_names = output_names
         self.logger, self.progress_bar = get_configured_logger(log_level)

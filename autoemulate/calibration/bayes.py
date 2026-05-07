@@ -85,7 +85,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             calibration_params = list(parameter_range.keys())
         self.calibration_params = calibration_params
         self.emulator = emulator
-        self.emulator.device = self.device
+        self.emulator.to(self.device)
         self.output_names = list(observations.keys())
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.logger.info(
