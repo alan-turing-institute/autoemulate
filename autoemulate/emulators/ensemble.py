@@ -188,7 +188,7 @@ class EnsembleMLP(Ensemble):
                 dropout_prob=dropout_prob,
                 lr=lr,
                 params_size=params_size,
-                random_seed=random_seed,
+                random_seed=random_seed + i if random_seed is not None else None,
                 deterministic=deterministic,
                 device=device,
                 scheduler_cls=scheduler_cls,
