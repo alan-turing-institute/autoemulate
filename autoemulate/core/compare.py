@@ -70,6 +70,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         show_progress_bar: bool = True,
+        deterministic: bool = False,
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
     ):
@@ -121,6 +122,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         show_progress_bar: bool
             Whether to show a progress bar during model comparison. Defaults to True.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False..
         tuning_metric: str | TorchMetrics
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
@@ -133,6 +136,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         Results.__init__(self)
         self.random_seed = random_seed
+        self.deterministic = deterministic
         TorchDeviceMixin.__init__(self, device=device)
         x, y = self._convert_to_tensors(x, y)
         x, y = self._move_tensors_to_device(x, y)
@@ -163,7 +167,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         self.models = updated_models
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
         if test_data is None:
             self.train_val, self.test = self._random_split(
@@ -565,6 +569,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y: InputLike,
         result_id: int | None = None,
         random_seed: int | None = None,
+        deterministic: bool = False,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
     ) -> TransformedEmulator:
         """
@@ -584,6 +589,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ID of the result to use. If None, uses the best model. Defaults to None.
         random_seed: int | None
             Random seed for parameter initialization. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. When None, the same parameters as
             used when identifying the best model are used. Defaults to None.
@@ -624,6 +631,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             transformed_emulator_params=transformed_emulator_params,
             device=self.device,
             random_seed=random_seed,
+            deterministic=deterministic,
         )
 
     def plot(  # noqa: PLR0912, PLR0915

@@ -122,7 +122,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.calibration_params = list(parameters_range.keys())
         self.d = len(self.parameters_range)
         self.emulator = emulator
-        self.emulator.device = self.device
+        self.emulator.to(self.device)
         # TODO: we might want to check that the len equals the number of tasks returned
         self.output_names = output_names
         self.logger = get_logger(__name__)
@@ -386,6 +386,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         move_steps: int = 2,
         rw_step: float = 0.3,
         seed: int | None = None,
+        deterministic: bool = False,
         uniform_prior: bool = True,
         plot_diagnostics: bool = True,
         return_az_data: bool = True,
@@ -408,6 +409,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             Defaults to 0.
         seed: int | None
             Random seed for reproducibility. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         uniform_prior: bool
             If True, use uniform prior over the bounded domain. If False, use standard
             normal prior in the whitened space (z ~ N(0, I_d)). Defaults to True.
@@ -430,7 +433,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
 
         """
         if seed is not None:
-            set_random_seed(seed)
+            set_random_seed(seed, deterministic=deterministic)
         transform = (
             BoundedDomainTransform(self.domain_min, self.domain_max)
             if not uniform_prior

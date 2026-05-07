@@ -2,12 +2,7 @@ import random
 
 import numpy as np
 import torch
-from autoemulate.core.types import (
-    InputLike,
-    OutputLike,
-    TensorLike,
-    TorchScalarDType,
-)
+from autoemulate.core.types import InputLike, OutputLike, TensorLike, TorchScalarDType
 from sklearn.utils.validation import check_X_y
 from torch.utils.data import DataLoader, Dataset, Subset, TensorDataset, random_split
 
@@ -193,7 +188,7 @@ class ConversionMixin:
         return (x * x_std) + x_mean
 
 
-def set_random_seed(seed: int = 42, deterministic: bool = True):
+def set_random_seed(seed: int = 42, deterministic: bool = False):
     """
     Set random seed for Python, NumPy and PyTorch.
 
@@ -202,7 +197,9 @@ def set_random_seed(seed: int = 42, deterministic: bool = True):
     seed: int
         The random seed to use.
     deterministic: bool
-        Use "deterministic" algorithms in PyTorch.
+        Use "deterministic" algorithms in PyTorch. On CUDA, some operations
+        don't have deterministic implementations, so ``warn_only=True`` is
+        used to avoid hard failures. Defaults to False.
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -210,7 +207,7 @@ def set_random_seed(seed: int = 42, deterministic: bool = True):
     torch.cuda.manual_seed(seed)
     if deterministic:
         torch.backends.cudnn.benchmark = False
-        torch.use_deterministic_algorithms(True)
+        torch.use_deterministic_algorithms(True, warn_only=True)
 
 
 class ValidationMixin:
@@ -496,4 +493,5 @@ class ValidationMixin:
     #         raise ValueError(
     #             msg
     #         )
+    #     return cv
     #     return cv
