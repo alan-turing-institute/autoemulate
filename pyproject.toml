@@ -114,6 +114,10 @@ source = [".", "/tmp"]
 
 [tool.pytest.ini_options]
 addopts = "--ignore=v0"
+filterwarnings = [
+    "ignore:`torch\\.jit\\.script` is deprecated\\..*:DeprecationWarning",
+    "ignore:cov not p\\.d\\. - .*:linear_operator.utils.warnings.NumericalWarning",
+]
 
 [tool.pyright]
 venvPath = "."
