@@ -6,6 +6,7 @@ _LOGGER_NAME = "autoemulate"
 _MANAGED_HANDLER_ATTR = "_autoemulate_managed"
 _FORMATTER = logging.Formatter("%(levelname)-8s%(asctime)s - %(name)s - %(message)s")
 _VALID_LEVELS = ("critical", "error", "warning", "info", "debug")
+_LEVEL_MAP = {name: getattr(logging, name.upper()) for name in _VALID_LEVELS}
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -14,32 +15,19 @@ _VALID_LEVELS = ("critical", "error", "warning", "info", "debug")
 
 def _parse_level(level: str) -> int:
     """Convert a level name string to a :mod:`logging` integer constant."""
-    level_lower = level.lower()
-    match level_lower:
-        case "critical":
-            return logging.CRITICAL
-        case "error":
-            return logging.ERROR
-        case "warning":
-            return logging.WARNING
-        case "info":
-            return logging.INFO
-        case "debug":
-            return logging.DEBUG
-        case _:
-            msg = f'level must be one of {_VALID_LEVELS}, got "{level}"'
-            raise ValueError(msg)
+    try:
+        return _LEVEL_MAP[level.lower()]
+    except KeyError as exc:
+        msg = f'level must be one of {_VALID_LEVELS}, got "{level}"'
+        raise ValueError(msg) from exc
 
 
-def _has_real_handler(logger: logging.Logger) -> bool:
-    """Return True if *logger* has any handler other than NullHandler."""
-    return any(not isinstance(h, logging.NullHandler) for h in logger.handlers)
-
-
-def _ensure_null_handler(logger: logging.Logger) -> None:
-    """Ensure the package logger has exactly one NullHandler fallback."""
+def _get_logger() -> logging.Logger:
+    """Return the package logger, ensuring it has a NullHandler fallback."""
+    logger = logging.getLogger(_LOGGER_NAME)
     if not any(isinstance(h, logging.NullHandler) for h in logger.handlers):
         logger.addHandler(logging.NullHandler())
+    return logger
 
 
 def _is_managed_handler(handler: logging.Handler) -> bool:
@@ -47,15 +35,9 @@ def _is_managed_handler(handler: logging.Handler) -> bool:
     return getattr(handler, _MANAGED_HANDLER_ATTR, False)
 
 
-def _mark_managed(handler: logging.Handler) -> logging.Handler:
-    """Mark *handler* as owned by autoemulate and return it."""
+def _mark_managed(handler: logging.Handler) -> None:
+    """Mark *handler* as owned by autoemulate."""
     setattr(handler, _MANAGED_HANDLER_ATTR, True)
-    return handler
-
-
-def _has_managed_handler(logger: logging.Logger) -> bool:
-    """Return True if *logger* has any autoemulate-managed handler."""
-    return any(_is_managed_handler(handler) for handler in logger.handlers)
 
 
 def _remove_managed_handlers(logger: logging.Logger) -> None:
@@ -66,18 +48,8 @@ def _remove_managed_handlers(logger: logging.Logger) -> None:
             handler.close()
 
 
-def _create_stream_handler() -> logging.StreamHandler:
-    """Create the stdout handler used by explicit autoemulate configuration."""
-    handler = logging.StreamHandler(sys.stdout)
-    _mark_managed(handler)
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(_FORMATTER)
-    return handler
-
-
-def _create_file_handler(log_file_path: Path) -> logging.FileHandler:
-    """Create a managed file handler for *log_file_path*."""
-    handler = logging.FileHandler(log_file_path)
+def _configure_handler(handler: logging.Handler) -> logging.Handler:
+    """Apply autoemulate's standard handler settings to *handler*."""
     _mark_managed(handler)
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(_FORMATTER)
@@ -93,8 +65,7 @@ def _setup_library_logging() -> None:
     configuration is left to the calling application or to an explicit call to
     configure_logging().
     """
-    logger = logging.getLogger(_LOGGER_NAME)
-    _ensure_null_handler(logger)
+    logger = _get_logger()
     logger.setLevel(logging.NOTSET)
     logger.propagate = True
 
@@ -138,8 +109,7 @@ def configure_logging(
     logging.Logger
         The "autoemulate" logger.
     """
-    logger = logging.getLogger(_LOGGER_NAME)
-    _ensure_null_handler(logger)
+    logger = _get_logger()
     _remove_managed_handlers(logger)
 
     if disable:
@@ -151,7 +121,7 @@ def configure_logging(
     logger.setLevel(level_value)
     logger.propagate = False
 
-    logger.addHandler(_create_stream_handler())
+    logger.addHandler(_configure_handler(logging.StreamHandler(sys.stdout)))
 
     if log_to_file:
         log_file_path = (
@@ -161,7 +131,7 @@ def configure_logging(
         )
         log_file_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            logger.addHandler(_create_file_handler(log_file_path))
+            logger.addHandler(_configure_handler(logging.FileHandler(log_file_path)))
         except Exception:
             logger.exception("Failed to create log file at %s", log_file_path)
 
@@ -208,6 +178,6 @@ def get_configured_logger(
     else:
         progress_bar = False
 
-    logger = logging.getLogger(_LOGGER_NAME)
+    logger = _get_logger()
     logger.setLevel(_parse_level(log_level))
     return logger, progress_bar

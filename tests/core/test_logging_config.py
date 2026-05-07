@@ -5,7 +5,6 @@ import sys
 
 import pytest
 from autoemulate.core.logging_config import (
-    _has_real_handler,
     _parse_level,
     _setup_library_logging,
     configure_logging,
@@ -84,32 +83,6 @@ class TestParseLevel:
     def test_invalid_level_error_contains_input(self):
         with pytest.raises(ValueError, match="badlevel"):
             _parse_level("badlevel")
-
-
-# ---------------------------------------------------------------------------
-# _has_real_handler
-# ---------------------------------------------------------------------------
-
-
-class TestHasRealHandler:
-    def test_false_with_only_null_handler(self, isolated_autoemulate_logger):
-        isolated_autoemulate_logger.handlers = [logging.NullHandler()]
-        assert _has_real_handler(isolated_autoemulate_logger) is False
-
-    def test_false_with_no_handlers(self, isolated_autoemulate_logger):
-        isolated_autoemulate_logger.handlers = []
-        assert _has_real_handler(isolated_autoemulate_logger) is False
-
-    def test_true_with_stream_handler(self, isolated_autoemulate_logger):
-        isolated_autoemulate_logger.handlers = [logging.StreamHandler()]
-        assert _has_real_handler(isolated_autoemulate_logger) is True
-
-    def test_true_with_null_and_stream_handler(self, isolated_autoemulate_logger):
-        isolated_autoemulate_logger.handlers = [
-            logging.NullHandler(),
-            logging.StreamHandler(),
-        ]
-        assert _has_real_handler(isolated_autoemulate_logger) is True
 
 
 # ---------------------------------------------------------------------------

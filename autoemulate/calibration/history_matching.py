@@ -1054,9 +1054,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
                 test_parameters_plausible[:, self.parameter_idx],
                 columns=self.calibration_params,  # pyright: ignore[reportArgumentType]
             )
-            df["Implausibility"] = impl_scores_plausible.mean(
-                axis=1
-            )  # pyright: ignore[reportCallIssue]
+            df["Implausibility"] = impl_scores_plausible.mean(axis=1)  # pyright: ignore[reportCallIssue]
             df["Wave"] = wave_idx
 
             all_df.append(df)
