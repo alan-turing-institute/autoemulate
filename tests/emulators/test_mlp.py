@@ -116,6 +116,8 @@ def test_mlp_docstring_no_additional():
         Number of parameters to predict per output dimension. Defaults to 1.
     random_seed: int | None
         Random seed for reproducibility. If None, no seed is set. Defaults to None.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
     device: DeviceLike | None
         Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
     scheduler_cls: type[LRScheduler] | None
@@ -170,6 +172,8 @@ def test_mlp_docstring_with_args():
         Number of parameters to predict per output dimension. Defaults to 1.
     random_seed: int | None
         Random seed for reproducibility. If None, no seed is set. Defaults to None.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
     device: DeviceLike | None
         Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
     scheduler_cls: type[LRScheduler] | None
