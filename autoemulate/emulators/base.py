@@ -553,6 +553,14 @@ class PyTorchBackend(Emulator, nn.Module):
     scheduler_cls: type[LRScheduler] | None = None
     supports_uq: bool = False
 
+    def __init__(self, *args, **kwargs):
+        # MRO places Emulator before nn.Module (so TorchDeviceMixin.to resolves
+        # ahead of nn.Module.to), but Emulator.__init__ is a no-op stub. Init
+        # nn.Module here so subclasses can assign submodules/parameters before
+        # super().__init__() walks the rest of the chain.
+        nn.Module.__init__(self)
+        super().__init__(*args, **kwargs)  # pyright: ignore[reportAbstractUsage]
+
     def loss_func(self, y_pred, y_true):
         """Loss function to be used for training the model."""
         return nn.MSELoss()(y_pred, y_true)
