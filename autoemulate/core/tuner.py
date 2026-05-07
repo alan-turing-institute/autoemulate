@@ -37,6 +37,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         device (usually CPU or GPU).
     random_seed: int | None
         Random seed for reproducibility. If None, no seed is set.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
     """
 
     def __init__(
@@ -46,6 +48,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_iter: int = 10,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        deterministic: bool = False,
         tuning_metric: str | Metric = "r2",
     ):
         TorchDeviceMixin.__init__(self, device=device)
@@ -63,7 +66,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         self.tuning_metric = get_metric(tuning_metric)
 
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
     def run(
         self,

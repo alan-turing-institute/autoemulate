@@ -6,6 +6,14 @@ from sklearn.datasets import make_regression
 N_S = 20
 
 
+@pytest.fixture(autouse=True)
+def _reset_deterministic_mode():
+    """Reset torch deterministic algorithms after each test to prevent leakage."""
+    yield
+    torch.use_deterministic_algorithms(False)
+    torch.backends.cudnn.benchmark = True
+
+
 @pytest.fixture
 def sample_data_y1d():
     x, y = make_regression(n_samples=N_S, n_features=5, n_targets=1, random_state=0)  # type: ignore noqa: PGH003

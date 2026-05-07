@@ -114,6 +114,7 @@ class VAETransform(AutoEmulateTransform):
         batch_size: int = 32,
         learning_rate: float = 1e-3,
         random_seed: int | None = None,
+        deterministic: bool = False,
         beta: float = 1.0,
         verbose: bool = False,
         cache_size: int = 0,
@@ -139,6 +140,8 @@ class VAETransform(AutoEmulateTransform):
             The learning rate for the VAE optimizer. Defaults to 1e-3.
         random_seed: int
             Random seed for reproducibility. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         beta: float
             The beta parameter for the VAE loss function, controlling the trade-off
             between reconstruction loss and KL divergence. Defaults to 1.0.
@@ -159,6 +162,7 @@ class VAETransform(AutoEmulateTransform):
         self.learning_rate = learning_rate
         self.beta = beta
         self.random_seed = random_seed
+        self.deterministic = deterministic
         self.verbose = verbose
         self.cache_size = cache_size  # Store for serialization
 
@@ -179,7 +183,7 @@ class VAETransform(AutoEmulateTransform):
 
         # Set random seed for reproducibility
         if self.random_seed is not None:
-            set_random_seed(self.random_seed)
+            set_random_seed(self.random_seed, deterministic=self.deterministic)
 
         # Create dataloader
         data_loader = self._convert_to_dataloader(
