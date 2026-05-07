@@ -68,6 +68,7 @@ dev = [
     "plotnine>=0.13.6",
     "pyright==1.1.405",
     "ruff==0.12.11",
+    "pytest-xdist>=3.0.0",
 ]
 spatiotemporal = ["the-well>=1.1.0", "neuraloperator>=1.0.2"]
 
