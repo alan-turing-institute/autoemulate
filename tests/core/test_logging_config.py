@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from unittest.mock import patch
 
 import pytest
 from autoemulate.core.logging_config import (
@@ -140,84 +139,7 @@ class TestSetupLibraryLogging:
         ]
         assert len(null_handlers) == 1
 
-    def test_adds_stream_handler_when_root_unconfigured(
-        self, isolated_autoemulate_logger
-    ):
-        # Patch root.handlers to simulate an unconfigured logging environment.
-        # pytest's own logging plugin adds a handler to the root logger, which
-        # would otherwise prevent _setup_library_logging from adding the
-        # default StreamHandler.
-        with patch.object(logging.root, "handlers", []):
-            _setup_library_logging()
-        stream_handlers = [
-            h
-            for h in isolated_autoemulate_logger.handlers
-            if isinstance(h, logging.StreamHandler)
-            and not isinstance(h, logging.NullHandler)
-        ]
-        assert len(stream_handlers) == 1
-
-    def test_stream_handler_targets_stdout(self, isolated_autoemulate_logger):
-        with patch.object(logging.root, "handlers", []):
-            _setup_library_logging()
-        stream_handlers = [
-            h
-            for h in isolated_autoemulate_logger.handlers
-            if isinstance(h, logging.StreamHandler)
-            and not isinstance(h, logging.NullHandler)
-        ]
-        assert stream_handlers[0].stream is sys.stdout
-
-    def test_sets_propagate_false_when_stream_handler_added(
-        self, isolated_autoemulate_logger
-    ):
-        with patch.object(logging.root, "handlers", []):
-            _setup_library_logging()
-        stream_handlers = [
-            h
-            for h in isolated_autoemulate_logger.handlers
-            if isinstance(h, logging.StreamHandler)
-            and not isinstance(h, logging.NullHandler)
-        ]
-        if stream_handlers:
-            assert isolated_autoemulate_logger.propagate is False
-
-    def test_sets_level_to_info_when_stream_handler_added(
-        self, isolated_autoemulate_logger
-    ):
-        with patch.object(logging.root, "handlers", []):
-            _setup_library_logging()
-        assert isolated_autoemulate_logger.level == logging.INFO
-
-    def test_no_stream_handler_when_root_has_handlers(
-        self, isolated_autoemulate_logger
-    ):
-        """When the root logger already has a handler, no stream handler is added
-        (the application's own configuration should be respected).
-        """
-        root = logging.root
-        orig_root_handlers = root.handlers[:]
-        root.handlers = [logging.StreamHandler()]
-        try:
-            _setup_library_logging()
-            stream_handlers = [
-                h
-                for h in isolated_autoemulate_logger.handlers
-                if isinstance(h, logging.StreamHandler)
-                and not isinstance(h, logging.NullHandler)
-            ]
-            assert len(stream_handlers) == 0
-        finally:
-            root.handlers = orig_root_handlers
-
-    def test_no_duplicate_stream_handler_when_logger_already_configured(
-        self, isolated_autoemulate_logger
-    ):
-        """If the autoemulate logger already has a real handler, _setup_library_logging
-        must not add another one.
-        """
-        existing = logging.StreamHandler()
-        isolated_autoemulate_logger.handlers = [existing]
+    def test_does_not_add_stream_handler(self, isolated_autoemulate_logger):
         _setup_library_logging()
         stream_handlers = [
             h
@@ -225,25 +147,17 @@ class TestSetupLibraryLogging:
             if isinstance(h, logging.StreamHandler)
             and not isinstance(h, logging.NullHandler)
         ]
-        # Only the pre-existing handler; no duplicate
-        assert stream_handlers == [existing]
+        assert stream_handlers == []
 
-    def test_no_duplicate_stream_handler_on_repeat_calls(
-        self, isolated_autoemulate_logger
-    ):
-        """A second call to _setup_library_logging() must not add a second StreamHandler
-        because the logger already has a real handler after the first call.
-        """
-        with patch.object(logging.root, "handlers", []):
-            _setup_library_logging()  # First call: adds StreamHandler
-            _setup_library_logging()  # Second call: sees existing real handler, skips
-        stream_handlers = [
-            h
-            for h in isolated_autoemulate_logger.handlers
-            if isinstance(h, logging.StreamHandler)
-            and not isinstance(h, logging.NullHandler)
-        ]
-        assert len(stream_handlers) == 1
+    def test_leaves_propagation_enabled(self, isolated_autoemulate_logger):
+        isolated_autoemulate_logger.propagate = False
+        _setup_library_logging()
+        assert isolated_autoemulate_logger.propagate is True
+
+    def test_resets_level_to_notset(self, isolated_autoemulate_logger):
+        isolated_autoemulate_logger.setLevel(logging.ERROR)
+        _setup_library_logging()
+        assert isolated_autoemulate_logger.level == logging.NOTSET
 
 
 # ---------------------------------------------------------------------------
@@ -510,3 +424,13 @@ class TestGetConfiguredLogger:
         result = get_configured_logger("info")
         assert isinstance(result, tuple)
         assert len(result) == 2
+
+    def test_does_not_add_handlers(self, isolated_autoemulate_logger):
+        _setup_library_logging()
+        get_configured_logger("info")
+        non_null_handlers = [
+            h
+            for h in isolated_autoemulate_logger.handlers
+            if not isinstance(h, logging.NullHandler)
+        ]
+        assert non_null_handlers == []

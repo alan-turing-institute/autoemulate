@@ -63,13 +63,15 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             TODO: do we need to do anything more to ensure the device is correctly
             handled for the pyro model?
         log_level: str
-            Logging level for the calibration. Can be one of:
+            Logging level for the shared autoemulate package logger. Can be one of:
             - "progress_bar": shows a progress bar during batch simulations
             - "debug": shows debug messages
             - "info": shows informational messages
             - "warning": shows warning messages
             - "error": shows error messages
             - "critical": shows critical messages
+            Visible console or file output requires application-level logging or
+            an explicit call to configure_logging().
 
         Notes
         -----

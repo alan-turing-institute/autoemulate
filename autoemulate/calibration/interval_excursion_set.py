@@ -94,13 +94,15 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
         log_level: str
-            Logging level for the calibration. Can be one of:
+            Logging level for the shared autoemulate package logger. Can be one of:
             - "progress_bar": shows a progress bar during batch simulations
             - "debug": shows debug messages
             - "info": shows informational messages
             - "warning": shows warning messages
             - "error": shows error messages
             - "critical": shows critical messages
+            Visible console or file output requires application-level logging or
+            an explicit call to configure_logging().
         """
         if not emulator.supports_uq:
             raise ValueError(

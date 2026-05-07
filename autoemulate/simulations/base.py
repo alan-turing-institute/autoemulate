@@ -41,6 +41,8 @@ class Simulator(ABC, ValidationMixin):
             - "warning": shows warning messages
             - "error": shows error messages
             - "critical": shows critical messages
+            Visible console or file output requires application-level logging or
+            an explicit call to configure_logging().
         """
         self._parameters_range = parameters_range
         self._param_names = list(parameters_range.keys())

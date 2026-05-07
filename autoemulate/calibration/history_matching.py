@@ -346,6 +346,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Logging level for the shared autoemulate package logger. One of:
             "debug", "info", "warning", "error", "critical", or
             "progress_bar" (default).
+            Visible console or file output requires application-level logging or
+            an explicit call to configure_logging().
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator

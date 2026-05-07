@@ -120,11 +120,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         log_level: str
-            Logging level. Can be "progress_bar", "debug", "info", "warning",
-            "error", or "critical". Defaults to "progress_bar". If "progress_bar",
-            it will show a progress bar during model comparison. It will set the
-            logging level to "error" to avoid cluttering the output
-            with debug/info logs.
+            Logging level for the shared autoemulate package logger. Can be
+            "progress_bar", "debug", "info", "warning", "error", or
+            "critical". Defaults to "progress_bar". If "progress_bar", it will
+            show a progress bar during model comparison and set the logger level
+            to "error" to avoid cluttering the output with debug/info logs.
+            Visible console or file output requires application-level logging or
+            an explicit call to configure_logging().
         tuning_metric: str | TorchMetrics
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".

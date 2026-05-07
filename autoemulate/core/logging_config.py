@@ -67,7 +67,7 @@ def _remove_managed_handlers(logger: logging.Logger) -> None:
 
 
 def _create_stream_handler() -> logging.StreamHandler:
-    """Create the default stdout handler used by autoemulate."""
+    """Create the stdout handler used by explicit autoemulate configuration."""
     handler = logging.StreamHandler(sys.stdout)
     _mark_managed(handler)
     handler.setLevel(logging.DEBUG)
@@ -89,31 +89,14 @@ def _setup_library_logging() -> None:
 
     Called **once** when the package is imported.  Follows the Python
     recommendation of adding a NullHandler so that log records are silently
-    discarded when no application-level handler is present.
-
-    For users who have *not* configured any logging themselves (e.g. a plain
-    script or a Jupyter notebook with a fresh kernel), a default
-    StreamHandler is also added so that INFO-level messages are visible
-    without any extra setup.  If the root logger already has handlers at
-    import time the default StreamHandler is skipped, allowing the
-    application's own logging configuration to take full effect via normal
-    log propagation.
+    discarded when no application-level handler is present. Handler
+    configuration is left to the calling application or to an explicit call to
+    configure_logging().
     """
     logger = logging.getLogger(_LOGGER_NAME)
     _ensure_null_handler(logger)
-
-    # Only install our default StreamHandler if:
-    #   1. the root logger has no handlers (logging is unconfigured), and
-    #   2. the autoemulate logger does not already have a real handler.
-    # This avoids interfering with application-level logging in tests or
-    # well-configured programs while still giving novice users useful output.
-    if not logging.root.handlers and not _has_real_handler(logger):
-        logger.addHandler(_create_stream_handler())
-        logger.setLevel(logging.INFO)
-        # Prevent messages from being passed on to the root logger as well,
-        # which would cause duplicate output if the root logger later gets a
-        # StreamHandler (e.g. after the application calls basicConfig).
-        logger.propagate = False
+    logger.setLevel(logging.NOTSET)
+    logger.propagate = True
 
 
 # ---------------------------------------------------------------------------
@@ -128,9 +111,9 @@ def configure_logging(
 ) -> logging.Logger:
     """Configure logging for the autoemulate package.
 
-    Call this function if you want to customise how the package-wide
-    ``"autoemulate"`` logger emits log messages. Advanced users who manage
-    their own logging configuration can call
+    Call this function if you want autoemulate itself to install console or
+    file handlers for the package-wide ``"autoemulate"`` logger. Advanced
+    users who manage their own logging configuration can call
     ``configure_logging(disable=True)`` to remove the handlers installed by
     autoemulate and restore normal root-level propagation.
 
@@ -141,8 +124,9 @@ def configure_logging(
         directory.  If a string, write to the specified file path.
         Defaults to False.
     level : str, optional
-        Minimum log level to emit.  Must be one of "critical", "error",
-        "warning", "info", or "debug".  Defaults to "INFO".
+        Minimum log level to emit from autoemulate-managed handlers. Must be
+        one of "critical", "error", "warning", "info", or "debug".
+        Defaults to "INFO".
     disable : bool, optional
         If True, remove only the handlers installed by autoemulate, reset the
         package logger level to inherit from the root logger, and re-enable
@@ -192,8 +176,9 @@ def get_configured_logger(
 
     Sets the effective level of the shared ``"autoemulate"`` logger according
     to *log_level* but does **not** add or remove any handlers. Handler setup
-    is performed once at package import by _setup_library_logging() and can be
-    customised at any time via the public configure_logging() API.
+    at import time only adds a NullHandler; visible output therefore requires
+    either application-level logging configuration or an explicit call to the
+    public configure_logging() API.
 
     Parameters
     ----------
