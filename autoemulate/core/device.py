@@ -3,6 +3,7 @@ import os
 
 import torch
 from torch import nn
+from typing_extensions import Self
 
 from autoemulate.core.types import DeviceLike, TensorLike
 
@@ -189,3 +190,50 @@ class TorchDeviceMixin:
             The tensors on the device.
         """
         return move_tensors_to_device(*args, device=self.device)
+
+    def to(self, *args, **kwargs) -> Self:
+        """
+        Move to the given device (and optionally cast dtype).
+
+        Mirrors the API of :meth:`torch.nn.Module.to` so subclasses that also
+        inherit from :class:`nn.Module` do not produce conflicting overrides.
+
+        Updates ``self.device`` when a device is supplied, walks instance
+        attributes to move any owned tensors and device-aware children
+        (recursing one level into list/tuple/dict containers), then delegates
+        to :meth:`nn.Module.to` to move parameters and buffers when applicable.
+        """
+        device, _, _, _ = torch._C._nn._parse_to(*args, **kwargs)
+        if device is not None:
+            self.device = get_torch_device(device)
+
+        # nn.Module params/buffers live in _parameters/_buffers (not vars(self))
+        # so they are not double-moved by this walk.
+        for name, val in list(vars(self).items()):
+            moved = _move_value(val, args, kwargs)
+            if moved is not val:
+                setattr(self, name, moved)
+
+        if isinstance(self, nn.Module):
+            nn.Module.to(self, *args, **kwargs)
+        return self
+
+
+def _move_value(val, args, kwargs):
+    """Move a tensor/device-aware child, or recurse one level into containers."""
+    if isinstance(val, torch.Tensor):
+        return val.to(*args, **kwargs)
+    if isinstance(val, nn.Module | TorchDeviceMixin):
+        val.to(*args, **kwargs)
+        return val
+    if isinstance(val, list):
+        for i, item in enumerate(val):
+            val[i] = _move_value(item, args, kwargs)
+        return val
+    if isinstance(val, tuple):
+        return tuple(_move_value(item, args, kwargs) for item in val)
+    if isinstance(val, dict):
+        for k, item in val.items():
+            val[k] = _move_value(item, args, kwargs)
+        return val
+    return val
