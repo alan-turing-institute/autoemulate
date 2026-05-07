@@ -79,7 +79,7 @@ class NaghaviSimulator(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_variables: list[str] | None = None,
-        log_level: str = "progress_bar",
+        show_progress_bar: bool = True,
         n_cycles: int = 40,
         dt: float = 0.001,
     ):
@@ -92,14 +92,8 @@ class NaghaviSimulator(Simulator):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_variables: list[str]
             Optional list of specific output variables to track. Defaults to None.
-        log_level: str
-            Logging level for the simulator. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
+        show_progress_bar: bool
+            Whether to show a progress bar during batch simulations. Defaults to True.
         n_cycles: int
             Number of simulation cycles.
         dt: float
@@ -122,7 +116,9 @@ class NaghaviSimulator(Simulator):
             parameters_range, _ = extract_parameter_ranges(
                 "naghavi_model_parameters.json"
             )
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range, output_names, show_progress_bar=show_progress_bar
+        )
         assert output_variables is not None
         self._output_variables = output_variables
 
