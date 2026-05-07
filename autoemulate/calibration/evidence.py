@@ -358,9 +358,7 @@ class EvidenceComputation(TorchDeviceMixin):
         self.flow = self._create_flow_model(self.ndim)
         assert self.flow is not None  # for type checker
         self.flow.fit(
-            np.asarray(
-                self.chains_train.samples
-            ),  # pyright: ignore[reportArgumentType]
+            np.asarray(self.chains_train.samples),  # pyright: ignore[reportArgumentType]
             epochs=epochs,
             verbose=verbose,
         )

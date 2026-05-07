@@ -275,7 +275,9 @@ class Active(Learner):
         return d
 
     @abstractmethod
-    def query(self, x: TensorLike | None = None) -> tuple[
+    def query(
+        self, x: TensorLike | None = None
+    ) -> tuple[
         TensorLike | None,
         TensorLike | DistributionLike,
         dict[str, float],
