@@ -69,7 +69,12 @@ class RadialBasisFunctions(PyTorchBackend):
         self.degree = degree
         self.device = device
 
-    def _fit(self, x: TensorLike, y: TensorLike):
+    def _fit(
+        self,
+        x: TensorLike,
+        y: TensorLike,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         self.model = RBFInterpolator(
             x,
             y,

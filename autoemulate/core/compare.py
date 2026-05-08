@@ -73,6 +73,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         log_level: str = "progress_bar",
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
+        n_samples: int = 1000,
     ):
         """
         Initialize the AutoEmulate class.
@@ -137,6 +138,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Each entry can be a string shortcut or a MetricConfig object.
             IMPORTANT: The first metric in the list is used to
             determine the best model.
+        n_samples: int
+            Number of samples to generate to predict mean when emulator does not have a
+            mean directly available. Defaults to 1000.
         """
         Results.__init__(self)
         self.random_seed = random_seed
@@ -205,6 +209,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         # Set up logger and ModelSerialiser for saving models
         self.logger, self.progress_bar = get_configured_logger(log_level)
         self.model_serialiser = ModelSerialiser(self.logger)
+        self.n_samples = n_samples
 
         # Run compare
         self.compare()
@@ -435,6 +440,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     n_splits=self.n_splits,
                                     shuffle=self.shuffle,
                                     transformed_emulator_params=self.transformed_emulator_params,
+                                    metric_params=MetricParams(
+                                        n_samples=self.n_samples
+                                    ),
                                 )
                                 mean_scores = [
                                     np.mean(score).item() for score in scores
@@ -502,7 +510,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 n_bootstraps=self.n_bootstraps,
                                 device=self.device,
                                 metrics=self.evaluation_metrics,
-                                metric_params=MetricParams(y_train=train_val_y),
+                                metric_params=MetricParams(
+                                    n_samples=self.n_samples, y_train=train_val_y
+                                ),
                             )
                             test_metrics = bootstrap(
                                 transformed_emulator,
@@ -511,7 +521,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 n_bootstraps=self.n_bootstraps,
                                 device=self.device,
                                 metrics=self.evaluation_metrics,
-                                metric_params=MetricParams(y_train=train_val_y),
+                                metric_params=MetricParams(
+                                    n_samples=self.n_samples, y_train=train_val_y
+                                ),
                             )
 
                             # Log all test metrics from test_metrics dictionary

@@ -11,7 +11,12 @@ class SpatioTemporalEmulator(PyTorchBackend):
 
     channels: tuple[int, ...]
 
-    def fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None):
+    def fit(
+        self,
+        x: TensorLike | DataLoader,
+        y: TensorLike | None = None,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,  # noqa: ARG002
+    ):
         """Train a spatio-temporal emulator.
 
         Parameters
@@ -30,7 +35,12 @@ class SpatioTemporalEmulator(PyTorchBackend):
         raise RuntimeError(msg)
 
     @abstractmethod
-    def _fit(self, x: TensorLike | DataLoader, y: TensorLike | None = None): ...
+    def _fit(
+        self,
+        x: TensorLike | DataLoader,
+        y: TensorLike | None = None,
+        validation_data: tuple[TensorLike, TensorLike] | None = None,
+    ): ...
 
     def predict(
         self,
