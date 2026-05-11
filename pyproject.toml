@@ -114,8 +114,14 @@ source = [".", "/tmp"]
 
 [tool.pytest.ini_options]
 addopts = "--ignore=v0"
+# These suppress only test output; runtime warnings still reach users.
 filterwarnings = [
+    # Raised by PyTorch (via gpytorch) - not actionable here.
+    # Remove if dependencies no longer calling `torch.jit.script`.
     "ignore:`torch\\.jit\\.script` is deprecated\\..*:DeprecationWarning",
+    # Expected output of `autoemulate.transforms.utils.make_positive_definite`
+    # when it repairs an ill-conditioned covariance; emitted across many GP,
+    # ensemble and transformed-emulator tests, so it is filtered globally.
     "ignore:cov not p\\.d\\. - .*:linear_operator.utils.warnings.NumericalWarning",
 ]
 
