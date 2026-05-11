@@ -1,4 +1,6 @@
 import itertools
+import warnings
+from contextlib import contextmanager, nullcontext
 
 import pytest
 import torch
@@ -10,6 +12,30 @@ from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms import PCATransform, StandardizeTransform, VAETransform
 from autoemulate.transforms.base import AutoEmulateTransform
+from linear_operator.utils.warnings import NumericalWarning
+
+
+@contextmanager
+def _ignore_expected_psd_repairs():
+    """Ignore expected PSD repairs in transformed full-covariance tests."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r"cov not p\.d\. - .*",
+            category=NumericalWarning,
+        )
+        yield
+
+
+def _prediction_warning_context(output_from_samples, full_covariance, y_transforms):
+    if (
+        full_covariance
+        and not output_from_samples
+        and y_transforms is not None
+        and any(isinstance(t, PCATransform | VAETransform) for t in y_transforms)
+    ):
+        return _ignore_expected_psd_repairs()
+    return nullcontext()
 
 
 def get_pytest_param_yof(model, x_t, y_t, o, f):
@@ -81,49 +107,54 @@ def run_test(
         full_covariance=full_covariance,
     )
     em.fit(x, y)
-    y_pred = em.predict(x2)
-    if issubclass(model, ProbabilisticEmulator):
-        assert isinstance(y_pred, DistributionLike)
-        y_pred_mean = em.predict_mean(x2)
-        assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
-        assert not y_pred_mean.requires_grad
-        y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
-        assert isinstance(y_pred_var, TensorLike)
-        assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
-        assert y_pred_var.shape == (x2.shape[0], y.shape[1])
-        assert not y_pred_mean.requires_grad
-        assert not y_pred_var.requires_grad
-    else:
-        assert isinstance(y_pred, TensorLike)
-        assert y_pred.shape == (x2.shape[0], y.shape[1])
-        assert not y_pred.requires_grad
 
-    if not test_grads:
-        return
-
-    # Test gradient support only for few targets case
-    if em.supports_grad:
-        y_pred_grad = em.predict(x2, with_grad=True)
+    warning_context = _prediction_warning_context(
+        output_from_samples, full_covariance, y_transforms
+    )
+    with warning_context:
+        y_pred = em.predict(x2)
         if issubclass(model, ProbabilisticEmulator):
-            assert isinstance(y_pred_grad, DistributionLike)
-            y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
-            assert y_pred_grad_mean.requires_grad
-            y_pred_grad_mean, y_pred_grad_var = em.predict_mean_and_variance(
-                x2, with_grad=True
-            )
-            assert isinstance(y_pred_grad_var, TensorLike)
-            assert y_pred_grad_mean.requires_grad
-            assert y_pred_grad_var.requires_grad
+            assert isinstance(y_pred, DistributionLike)
+            y_pred_mean = em.predict_mean(x2)
+            assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
+            assert not y_pred_mean.requires_grad
+            y_pred_mean, y_pred_var = em.predict_mean_and_variance(x2)
+            assert isinstance(y_pred_var, TensorLike)
+            assert y_pred_mean.shape == (x2.shape[0], y.shape[1])
+            assert y_pred_var.shape == (x2.shape[0], y.shape[1])
+            assert not y_pred_mean.requires_grad
+            assert not y_pred_var.requires_grad
         else:
-            assert isinstance(y_pred_grad, TensorLike)
-            assert y_pred_grad.requires_grad
-            y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
-            assert y_pred_grad_mean.requires_grad
-        return
+            assert isinstance(y_pred, TensorLike)
+            assert y_pred.shape == (x2.shape[0], y.shape[1])
+            assert not y_pred.requires_grad
 
-    # Test that gradients raise error when not supported
-    with pytest.raises(ValueError, match="Gradient calculation is not supported."):
-        em.predict(x2, with_grad=True)
+        if not test_grads:
+            return
+
+        # Test gradient support only for few targets case
+        if em.supports_grad:
+            y_pred_grad = em.predict(x2, with_grad=True)
+            if issubclass(model, ProbabilisticEmulator):
+                assert isinstance(y_pred_grad, DistributionLike)
+                y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
+                assert y_pred_grad_mean.requires_grad
+                y_pred_grad_mean, y_pred_grad_var = em.predict_mean_and_variance(
+                    x2, with_grad=True
+                )
+                assert isinstance(y_pred_grad_var, TensorLike)
+                assert y_pred_grad_mean.requires_grad
+                assert y_pred_grad_var.requires_grad
+            else:
+                assert isinstance(y_pred_grad, TensorLike)
+                assert y_pred_grad.requires_grad
+                y_pred_grad_mean = em.predict_mean(x2, with_grad=True)
+                assert y_pred_grad_mean.requires_grad
+            return
+
+        # Test that gradients raise error when not supported
+        with pytest.raises(ValueError, match="Gradient calculation is not supported."):
+            em.predict(x2, with_grad=True)
 
 
 @pytest.mark.parametrize(
@@ -264,6 +295,9 @@ def test_transformed_emulator_1000_targets(
     )
 
 
+@pytest.mark.filterwarnings(
+    "ignore:cov not p\\.d\\. - .*:linear_operator.utils.warnings.NumericalWarning"
+)
 def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     set_random_seed(0)
     x, y = sample_data_y2d
@@ -306,6 +340,9 @@ def test_inverse_gaussian_and_sample_pca(sample_data_y2d, new_data_y2d):
     assert torch.allclose(y_pred_cov, y_pred2_cov, rtol=5e-2)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:cov not p\\.d\\. - .*:linear_operator.utils.warnings.NumericalWarning"
+)
 def test_inverse_gaussian_and_sample_vae(sample_data_y2d, new_data_y2d):
     torch.manual_seed(0)
     x, y = sample_data_y2d
