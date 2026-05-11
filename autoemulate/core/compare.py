@@ -12,7 +12,7 @@ import tqdm
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_logger
+from autoemulate.core.logging_config import _resolve_show_progress_bar, get_logger
 from autoemulate.core.metrics import R2, Metric, MetricParams, get_metric, get_metrics
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
@@ -71,10 +71,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        show_progress_bar: bool = True,
         deterministic: bool = False,
+        log_level: str | None = None,
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
+        show_progress_bar: bool | None = None,
     ):
         """
         Initialize the AutoEmulate class.
@@ -122,10 +123,10 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
-        show_progress_bar: bool
-            Whether to show a progress bar during model comparison. Defaults to True.
         deterministic: bool
             Whether to use deterministic algorithms in PyTorch. Defaults to False..
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         tuning_metric: str | TorchMetrics
             Metric to use for hyperparameter tuning. Can be a string shortcut
             ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
@@ -135,6 +136,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Each entry can be a string shortcut or a MetricConfig object.
             IMPORTANT: The first metric in the list is used to
             determine the best model.
+        show_progress_bar: bool | None
+            Whether to show a progress bar during model comparison. Defaults to True.
         """
         Results.__init__(self)
         self.random_seed = random_seed
@@ -201,7 +204,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.transformed_emulator_params = transformed_emulator_params or {}
 
         # Set up logger, progress bar, and ModelSerialiser for saving models
-        self.show_progress_bar = show_progress_bar
+        self.show_progress_bar = _resolve_show_progress_bar(
+            log_level=log_level, show_progress_bar=show_progress_bar
+        )
         self.model_serialiser = ModelSerialiser(logger)
 
         # Run compare

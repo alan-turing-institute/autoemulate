@@ -1,5 +1,5 @@
-import logging
 import os
+import warnings
 
 import gpytorch
 import torch
@@ -168,8 +168,7 @@ class TorchDeviceMixin:
                 f"The device ({device}) must be CPU for given model. Setting device as "
                 "'cpu'."
             )
-            # warnings.warn(msg, stacklevel=2)
-            logging.warning(msg)
+            warnings.warn(msg, stacklevel=2)
 
         self.device = get_torch_device(device)
 

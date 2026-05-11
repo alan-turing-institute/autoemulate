@@ -19,10 +19,11 @@ class DoublePendulum(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        show_progress_bar: bool = True,
+        log_level: str | None = None,
         t_span: tuple[float, float] = (0.0, 10.0),
         n_time_points: int = 500,
         g: float = 9.81,
+        show_progress_bar: bool | None = None,
     ):
         """
         Initialize the double pendulum simulator.
@@ -33,14 +34,16 @@ class DoublePendulum(Simulator):
             Parameter ranges for m1, m2, l1, l2, theta1_0, theta2_0
         output_names : list[str] | None
             Names of output variables
-        show_progress_bar : bool
-            Whether to show a progress bar during batch simulations. Defaults to True.
+        log_level : str | None
+            Deprecated. Configure logging in the calling application instead.
         t_span : tuple[float, float]
             Time span for simulation (start, end)
         n_time_points : int
             Number of time points to output
         g : float
             Gravitational acceleration
+        show_progress_bar : bool | None
+            Whether to show a progress bar during batch simulations. Defaults to True.
         """
         if parameters_range is None:
             parameters_range = {
@@ -62,7 +65,12 @@ class DoublePendulum(Simulator):
             ke_names = [f"kinetic_energy_t{i}" for i in range(n_time_points)]
             output_names = theta1_names + theta2_names + ke_names
 
-        super().__init__(parameters_range, output_names, show_progress_bar)
+        super().__init__(
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
 
         self.t_span = t_span
         self.n_time_points = n_time_points

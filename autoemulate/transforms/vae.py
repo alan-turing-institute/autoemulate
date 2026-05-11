@@ -1,14 +1,15 @@
-import logging
-
 import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.distributions import Normal, Transform, constraints
 
 from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.transforms.base import AutoEmulateTransform
+
+logger = get_logger(__name__)
 
 
 class VAE(TorchDeviceMixin, nn.Module):
@@ -215,7 +216,7 @@ class VAETransform(AutoEmulateTransform):
                     f"Epoch {epoch + 1}/{self.epochs}, "
                     f"Loss: {total_loss / max(1, len(data_loader)):.4f}"
                 )
-                logging.info(msg)
+                logger.info(msg)
 
         self._is_fitted = True
         # Freeze VAE parameters after fitting so transforms are treated as fixed
