@@ -9,6 +9,7 @@ from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
 from autoemulate.transforms.vae import VAETransform
+from tests.utils import transformed_full_covariance_warning_context
 
 X_TRANSFORMS = [[StandardizeTransform()]]
 Y_TRANSFORMS = [
@@ -100,7 +101,11 @@ def test_grads(
     em.fit(x, y)
 
     # Get predictions
-    mean, variance = em.predict_mean_and_variance(x2, with_grad=True)
+    warning_context = transformed_full_covariance_warning_context(
+        output_from_samples, full_covariance, y_transforms
+    )
+    with warning_context:
+        mean, variance = em.predict_mean_and_variance(x2, with_grad=True)
 
     # Check that mean requires gradients
     assert mean.requires_grad

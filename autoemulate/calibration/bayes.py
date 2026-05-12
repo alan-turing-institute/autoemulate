@@ -185,8 +185,9 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             total_variance = (
                 observation_variance + self.model_discrepancy + variance[0, i]
                 if self.model_uncertainty and variance is not None
-                else torch.tensor(observation_variance + self.model_discrepancy).to(
-                    self.device
+                else torch.as_tensor(
+                    observation_variance + self.model_discrepancy,
+                    device=self.device,
                 )
             )
             # Take sqrt for final scale (stddev)
