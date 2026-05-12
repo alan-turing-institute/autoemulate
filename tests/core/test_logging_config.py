@@ -41,7 +41,7 @@ def test_explicit_show_progress_bar_overrides_legacy_log_level():
 
 def test_resolve_show_progress_bar_rejects_none():
     with pytest.raises(TypeError, match="show_progress_bar must be a boolean"):
-        _resolve_show_progress_bar(show_progress_bar=None)
+        _resolve_show_progress_bar(show_progress_bar=None)  # pyright: ignore[reportArgumentType]
 
 
 def test_resolve_show_progress_bar_rejects_invalid_legacy_log_level():
