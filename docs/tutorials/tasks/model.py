@@ -1,15 +1,8 @@
-import os
-import warnings
-
 import pyro
 import pyro.distributions as dist
 import torch
 from autoemulate.data.utils import set_random_seed
 from autoemulate.simulations.epidemic import Epidemic
-
-# ignore warnings
-warnings.filterwarnings("ignore")
-os.environ["PYTHONWARNINGS"] = "ignore"
 
 # random seed for reproducibility
 random_seed = 42
@@ -34,6 +27,7 @@ noise = torch.normal(mean=0, std=stdev, size=(n_obs,))
 observed_infection_rates = true_infection_rate[0] + noise
 
 observations = {"infection_rate": observed_infection_rates}
+
 
 # define the probabilistic model
 def model():
