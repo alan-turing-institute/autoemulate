@@ -150,11 +150,11 @@ class EnsembleMLP(Ensemble):
         lr: float = 1e-2,
         params_size: int = 1,
         random_seed: int | None = None,
-        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
         n_emulators: int = 4,
+        deterministic: bool = False,
     ):
         additional_parameters_docstring = """
         n_emulators: int
@@ -330,10 +330,10 @@ class EnsembleMLPDropout(DropoutEnsemble):
         lr: float = 1e-2,
         params_size: int = 1,
         random_seed: int | None = None,
-        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        deterministic: bool = False,
     ):
         self.__doc__ = f"""
         Initialize an ensemble of MLPs with dropout.

@@ -1,4 +1,3 @@
-import logging
 from typing import Literal
 
 import matplotlib.figure
@@ -15,12 +14,13 @@ from SALib.sample.sobol import sample as sobol_sample
 from SALib.util import ResultDict
 from scipy import stats
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.types import DistributionLike, NumpyLike, TensorLike
 from autoemulate.data.utils import ConversionMixin
 from autoemulate.emulators.base import Emulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class SensitivityAnalysis(ConversionMixin):

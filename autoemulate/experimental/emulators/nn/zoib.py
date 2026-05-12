@@ -126,10 +126,10 @@ class ZOIBMLP(MLP):
         dropout_prob: float | None = None,
         lr: float = 1e-2,
         random_seed: int | None = None,
-        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        deterministic: bool = False,
     ):
         """
         Zero-One Inflated Beta Distribution Multi-Layer Perceptron (MLP) emulator.
@@ -200,10 +200,10 @@ class ZOIBMLP(MLP):
             lr,
             5,  # params_size=5 for Zero-Inflated Beta distribution
             random_seed,
-            deterministic,
             device,
             scheduler_cls,
             scheduler_params,
+            deterministic,
         )
 
     def loss_func(self, y_pred, y_true):  # noqa: D102

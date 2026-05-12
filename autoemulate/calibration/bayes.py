@@ -8,9 +8,11 @@ from pyro.infer import MCMC
 
 from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import Emulator
+
+logger = get_logger(__name__)
 
 
 class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
@@ -31,7 +33,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         model_discrepancy: float = 0.0,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
     ):
         """
         Initialize the HMC calibration object.
@@ -62,14 +64,8 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             The device to use. If None, the default torch device is returned.
             TODO: do we need to do anything more to ensure the device is correctly
             handled for the pyro model?
-        log_level: str
-            Logging level for the calibration. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
 
         Notes
         -----
@@ -87,8 +83,8 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         self.emulator = emulator
         self.emulator.to(self.device)
         self.output_names = list(observations.keys())
-        self.logger, self.progress_bar = get_configured_logger(log_level)
-        self.logger.info(
+        _warn_deprecated_log_level(log_level)
+        logger.info(
             "Initializing BayesianCalibration with parameters: %s",
             self.calibration_params,
         )
@@ -99,12 +95,12 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         for output, obs in observations.items():
             if obs.ndim == 0:
                 corrected_obs = obs.unsqueeze(0)
-                self.logger.debug(
+                logger.debug(
                     "Observation for output '%s' converted from 0D to 1D.",
                     output,
                 )
             elif obs.ndim > 1:
-                self.logger.error("Tensor for output '%s' is not 1D.", output)
+                logger.error("Tensor for output '%s' is not 1D.", output)
                 raise ValueError(f"Tensor for output '{output}' is not 1D.")
             else:
                 corrected_obs = obs
@@ -112,11 +108,11 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             obs_lengths.append(corrected_obs.shape[0])
         if len(set(obs_lengths)) != 1:
             msg = "All outputs must have the same number of observations."
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
         self.observations = processed_observations
         self.n_observations = obs_lengths[0]
-        self.logger.info("Processed observations for outputs: %s", self.output_names)
+        logger.info("Processed observations for outputs: %s", self.output_names)
 
         # Save observation noise as {output: value} dictionary
         if isinstance(observation_noise, float):
@@ -124,12 +120,12 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
                 self.output_names,
                 torch.tensor(observation_noise).to(self.device),
             )
-            self.logger.debug(
+            logger.debug(
                 "Observation noise (variance) set as float: %s", observation_noise
             )
         elif isinstance(observation_noise, dict):
             self.observation_noise = observation_noise
-            self.logger.debug(
+            logger.debug(
                 "Observation noise (variance) set as dict: %s", observation_noise
             )
         else:
@@ -137,7 +133,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
                 "Observation noise (variance) must be either a float or a dictionary "
                 "of floats."
             )
-            self.logger.error(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         self.model_uncertainty = model_uncertainty

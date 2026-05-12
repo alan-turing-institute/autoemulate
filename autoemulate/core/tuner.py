@@ -1,11 +1,11 @@
 import json
-import logging
 
 import numpy as np
 from sklearn.model_selection import KFold
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import Metric, get_metric
 from autoemulate.core.model_selection import cross_validate
 from autoemulate.core.types import (
@@ -17,7 +17,7 @@ from autoemulate.core.types import (
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ConversionMixin, Emulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class Tuner(ConversionMixin, TorchDeviceMixin):
@@ -48,8 +48,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         n_iter: int = 10,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        deterministic: bool = False,
         tuning_metric: str | Metric = "r2",
+        deterministic: bool = False,
     ):
         TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter

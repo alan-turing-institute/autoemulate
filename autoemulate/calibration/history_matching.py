@@ -1,4 +1,3 @@
-import logging
 import warnings
 
 import matplotlib.pyplot as plt
@@ -10,7 +9,7 @@ from matplotlib.figure import Figure
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result
@@ -19,7 +18,7 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators import Emulator
 from autoemulate.simulations.base import Simulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class HistoryMatching(TorchDeviceMixin):
@@ -297,8 +296,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
+        log_level: str | None = None,
         deterministic: bool = False,
-        log_level: str = "progress_bar",
     ):
         """
         Initialize the history matching workflow object.
@@ -346,17 +345,16 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The device to use. If None, the default torch device is returned.
         random_seed: int | None
             Optional random seed for reproducibility. If None, no seed is set.
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         deterministic: bool
             Whether to use deterministic algorithms in PyTorch. Defaults to False.
-        log_level: str
-            The logging level to use. One of: "debug", "info", "warning", "error",
-            "critical", "progress_bar" (default).
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed, deterministic=deterministic)
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        _warn_deprecated_log_level(log_level)
 
         if result is not None:
             self.emulator = result.model

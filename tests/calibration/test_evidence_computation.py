@@ -135,7 +135,7 @@ class TestEvidenceComputation:
         mcmc, model, _ = simple_mcmc_setup
 
         ec = make_evidence_computation(
-            mcmc, model, training_proportion=0.5, temperature=0.8, log_level="error"
+            mcmc, model, training_proportion=0.5, temperature=0.8
         )
 
         assert ec.mcmc is mcmc
@@ -225,7 +225,7 @@ class TestEvidenceComputation:
         mcmc, model, _ = simple_mcmc_setup
 
         ec = make_evidence_computation(
-            mcmc, model, training_proportion=training_proportion, log_level="error"
+            mcmc, model, training_proportion=training_proportion
         )
         chains_train, chains_infer = ec.split_data()
         assert ec.chains is not None
@@ -239,9 +239,7 @@ class TestEvidenceComputation:
         """Test evidence computation with different temperatures."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = make_evidence_computation(
-            mcmc, model, temperature=temperature, log_level="error"
-        )
+        ec = make_evidence_computation(mcmc, model, temperature=temperature)
         flow = ec._create_flow_model(ec.ndim)
 
         assert ec.temperature == temperature
@@ -295,9 +293,7 @@ class TestEvidenceComputation:
         """Test split_data method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = make_evidence_computation(
-            mcmc, model, training_proportion=0.5, log_level="error"
-        )
+        ec = make_evidence_computation(mcmc, model, training_proportion=0.5)
         chains_train, chains_infer = ec.split_data()
 
         # Check that chains were created and split
@@ -403,9 +399,7 @@ class TestIntegration:
 
         # Run calibration
         observations = {"distance": y[:5, 0]}
-        bc = BayesianCalibration(
-            gp, sim.parameters_range, observations, 1.0, log_level="error"
-        )
+        bc = BayesianCalibration(gp, sim.parameters_range, observations, 1.0)
         mcmc = bc.run_mcmc(
             warmup_steps=N_INTEGRATION_MCMC_WARMUP,
             num_samples=N_INTEGRATION_MCMC_SAMPLES,
@@ -436,9 +430,7 @@ class TestIntegration:
             "learning_rate": 0.0005,
         }
 
-        ec = make_evidence_computation(
-            mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
-        )
+        ec = make_evidence_computation(mcmc, model, flow_kwargs=flow_kwargs)
         flow = ec._create_flow_model(ec.ndim)
 
         assert flow is not None
@@ -450,9 +442,7 @@ class TestIntegration:
         # Override standardize (default is True)
         flow_kwargs = {"standardize": False, "n_layers": 2}
 
-        ec = make_evidence_computation(
-            mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
-        )
+        ec = make_evidence_computation(mcmc, model, flow_kwargs=flow_kwargs)
 
         # Initialize to access flow creation
         ec._extract_and_validate_samples()

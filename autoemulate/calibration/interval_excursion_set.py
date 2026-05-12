@@ -21,11 +21,13 @@ from torch.special import ndtr
 
 from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
+
+logger = get_logger(__name__)
 
 
 class BoundedDomainTransform(Transform):
@@ -78,7 +80,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         output_bounds: dict[str, tuple[float, float]],
         output_names: list[str],
         device: DeviceLike | None = None,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
     ):
         """
         Initialize the calibration object.
@@ -93,14 +95,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             A dictionary of lower and upper bounds for each output.
         device: DeviceLike | None
             The device to use. If None, the default torch device is returned.
-        log_level: str
-            Logging level for the calibration. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         """
         if not emulator.supports_uq:
             raise ValueError(
@@ -134,14 +130,14 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         self.emulator.to(self.device)
         # TODO: we might want to check that the len equals the number of tasks returned
         self.output_names = output_names
-        self.logger, self.progress_bar = get_configured_logger(log_level)
-        self.logger.info(
+        _warn_deprecated_log_level(log_level)
+        logger.info(
             "Initializing IntervalExcursionSetCalibration with parameters: %s",
             self.calibration_params,
         )
 
         # TODO: add input handling for y_lower and y_upper as floats or lists
-        self.logger.info("Processed observations for outputs: %s", self.output_names)
+        logger.info("Processed observations for outputs: %s", self.output_names)
 
     @property
     def y_lower(self) -> TensorLike:
@@ -329,7 +325,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
                     "Parameter keys do not match calibration_params, stacking all "
                     "samples"
                 )
-                self.logger.warning(msg)
+                logger.warning(msg)
                 samples = torch.stack(list(data.get_samples().values()), dim=-1)
             samples = samples.reshape(data.num_chains * data.num_samples, -1)
         elif isinstance(data, TensorLike):
@@ -395,10 +391,10 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         move_steps: int = 2,
         rw_step: float = 0.3,
         seed: int | None = None,
-        deterministic: bool = False,
         uniform_prior: bool = True,
         plot_diagnostics: bool = True,
         return_az_data: bool = True,
+        deterministic: bool = False,
     ) -> tuple[TensorLike, TensorLike, TensorLike, TensorLike, int] | az.InferenceData:
         """SMC with adaptive tempering for interval posterior.
 
@@ -418,8 +414,6 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             Defaults to 0.
         seed: int | None
             Random seed for reproducibility. Defaults to None.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         uniform_prior: bool
             If True, use uniform prior over the bounded domain. If False, use standard
             normal prior in the whitened space (z ~ N(0, I_d)). Defaults to True.
@@ -428,6 +422,8 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
             schedule, and ESS history. Defaults to True.
         return_az_data: bool
             Whether to return ArviZ InferenceData object. Defaults to True.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------
