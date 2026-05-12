@@ -6,7 +6,7 @@ PACKAGE_LOGGER_NAME = "autoemulate"
 def _setup_library_logger() -> logging.Logger:
     """Ensure the package root logger has a NullHandler for library-safe logging."""
     logger = logging.getLogger(PACKAGE_LOGGER_NAME)
-    if not any(isinstance(handler, logging.NullHandler) for handler in logger.handlers):
+    if len(logger.handlers) == 0:
         logger.addHandler(logging.NullHandler())
     return logger
 
