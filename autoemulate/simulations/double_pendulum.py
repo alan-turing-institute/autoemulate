@@ -100,19 +100,13 @@ class DoublePendulum(Simulator):
         m1, m2, l1, l2, theta1_0, theta2_0 = params
 
         # Simulate the double pendulum
-        try:
-            theta1_series, theta2_series, ke_series = simulate_double_pendulum(
-                m1, m2, l1, l2, theta1_0, theta2_0, self.time_points, self.g
-            )
+        theta1_series, theta2_series, ke_series = simulate_double_pendulum(
+            m1, m2, l1, l2, theta1_0, theta2_0, self.time_points, self.g
+        )
 
-            # Concatenate all time series into a single output vector
-            output = np.concatenate([theta1_series, theta2_series, ke_series])
-            return torch.tensor(output).view(1, -1)
-
-        except Exception as e:
-            # If simulation fails, return None
-            self.logger.warning("Double pendulum simulation failed: %s", e)
-            return None
+        # Concatenate all time series into a single output vector
+        output = np.concatenate([theta1_series, theta2_series, ke_series])
+        return torch.tensor(output).view(1, -1)
 
 
 def double_pendulum_equations(y, m1, m2, l1, l2, g):

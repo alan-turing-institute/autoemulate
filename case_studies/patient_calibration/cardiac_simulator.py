@@ -9,8 +9,11 @@ from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 from tqdm import tqdm
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import NumpyLike, TensorLike
 from autoemulate.simulations.base import Simulator
+
+logger = get_logger(__name__)
 
 # ==================================
 # PARAMETER UTILS
@@ -220,7 +223,7 @@ class NaghaviSimulator(Simulator):
 
     def forward_batch(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Run multiple simulations in parallel, skipping any that fail."""
-        self.logger.info("Running batch simulation for %d samples", len(x))
+        logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         valid_idx = []
@@ -246,7 +249,7 @@ class NaghaviSimulator(Simulator):
 
         # Report results
         successful = len(results)
-        self.logger.info(
+        logger.info(
             "Successfully completed %d/%d simulations (%.1f%%)",
             successful,
             len(x),

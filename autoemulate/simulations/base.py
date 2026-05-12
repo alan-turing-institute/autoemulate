@@ -53,7 +53,6 @@ class Simulator(ABC, ValidationMixin):
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
         self._has_sample_forward = False
-        self.logger = get_logger(__name__)
         self.show_progress_bar = _resolve_show_progress_bar(
             log_level=log_level, show_progress_bar=show_progress_bar
         )
@@ -257,9 +256,9 @@ class Simulator(ABC, ValidationMixin):
                 return y
         except Exception as e:
             if not allow_failures:
-                self.logger.error("Error occurred during simulation: %s", e)
+                logger.error("Error occurred during simulation: %s", e)
                 raise
-            self.logger.warning("Simulation failed with error %s. Returning None", e)
+            logger.warning("Simulation failed with error %s. Returning None", e)
         return None
 
     def forward_batch(
@@ -287,7 +286,7 @@ class Simulator(ABC, ValidationMixin):
             Tuple of (simulation_results, valid_input_parameters).
             Only successful simulations are included.
         """
-        self.logger.info("Running batch simulation for %d samples", len(x))
+        logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         successful = 0
@@ -318,7 +317,7 @@ class Simulator(ABC, ValidationMixin):
                 )
 
         # Report results
-        self.logger.info(
+        logger.info(
             "Successfully completed %d/%d simulations (%.1f%%)",
             successful,
             len(x),
