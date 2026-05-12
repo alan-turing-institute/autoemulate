@@ -1,6 +1,4 @@
 import itertools
-import warnings
-from contextlib import contextmanager, nullcontext
 
 import pytest
 import torch
@@ -12,30 +10,9 @@ from autoemulate.emulators.gaussian_process.exact import GaussianProcess
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms import PCATransform, StandardizeTransform, VAETransform
 from autoemulate.transforms.base import AutoEmulateTransform
-from linear_operator.utils.warnings import NumericalWarning
-
-
-@contextmanager
-def _ignore_expected_psd_repairs():
-    """Ignore expected PSD repairs in transformed full-covariance tests."""
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message=r"cov not p\.d\. - .*",
-            category=NumericalWarning,
-        )
-        yield
-
-
-def _prediction_warning_context(output_from_samples, full_covariance, y_transforms):
-    if (
-        full_covariance
-        and not output_from_samples
-        and y_transforms is not None
-        and any(isinstance(t, PCATransform | VAETransform) for t in y_transforms)
-    ):
-        return _ignore_expected_psd_repairs()
-    return nullcontext()
+from tests.utils import (
+    transformed_full_covariance_warning_context,
+)
 
 
 def get_pytest_param_yof(model, x_t, y_t, o, f):
@@ -108,7 +85,7 @@ def run_test(
     )
     em.fit(x, y)
 
-    warning_context = _prediction_warning_context(
+    warning_context = transformed_full_covariance_warning_context(
         output_from_samples, full_covariance, y_transforms
     )
     with warning_context:
