@@ -52,7 +52,6 @@ def simple_model():
 
 def make_evidence_computation(mcmc, model, **kwargs):
     kwargs.setdefault("flow_kwargs", TEST_FLOW_KWARGS)
-    kwargs.setdefault("log_level", "error")
     return EvidenceComputation(mcmc, model, **kwargs)
 
 
