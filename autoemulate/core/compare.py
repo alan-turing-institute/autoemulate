@@ -84,18 +84,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ----------
         x: InputLike
             Input features.
-        y: InputLike or None
-            Target values (not needed if x is a Dataset).
+        y: InputLike
+            Target values.
         test_data: tuple[InputLike, InputLike] | None
             Optional test data as a tuple (x_test, y_test). If None, a random split
             from the provided data is used. Defaults to None.
-        models: list[type[Emulator]] | None
-            List of emulator classes to compare. If None, all available emulators
-            are used.
-        x_transforms_list: list[list[Transform]] | None
+        models: list[type[Emulator] | str] | None
+            List of emulator classes or registered emulator names to compare. If None,
+            all available emulators are used.
+        x_transforms_list: list[list[Transform | dict]] | None
             An optional list of sequences of transforms to apply to the input data.
             Defaults to None, in which case the data is standardized.
-        y_transforms_list: list[list[Transform]] | None
+        y_transforms_list: list[list[Transform | dict]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
         model_params: ModelParams | None
@@ -125,13 +125,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
         log_level: str | None
             Deprecated. Configure logging in the calling application instead.
-        tuning_metric: str | TorchMetrics
+        tuning_metric: str | Metric
             Metric to use for hyperparameter tuning. Can be a string shortcut
-            ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
-        evaluation_metrics: list[str | TorchMetrics] | None
+            ("r2", "rmse", "mse", "mae") or a Metric object. Defaults to "r2".
+        evaluation_metrics: list[str | Metric] | None
             Metrics to compute during evaluation.
             If None, then defaults to ["r2", "rmse"].
-            Each entry can be a string shortcut or a MetricConfig object.
+            Each entry can be a string shortcut or a Metric object.
             IMPORTANT: The first metric in the list is used to
             determine the best model.
         show_progress_bar: bool
@@ -245,7 +245,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         Parameters
         ----------
-        subset: bool
+        default_only: bool
             Whether to display only default or all available emulators. Defaults to
             True (default emulators only).
 
@@ -298,9 +298,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ----------
         models: list[type[Emulator] | str] | None
             List of model classes or names to use for comparison. If None, all available
-            emulators are used (or subset based on only_pytorch and only_probabilistic).
-        only_pytorch: bool
-            If True, only PyTorch emulators are returned. Defaults to False.
+            emulators are used, or probabilistic defaults when only_probabilistic=True.
         only_probabilistic: bool
             If True, only probabilistic emulators are returned. Defaults to False.
         """

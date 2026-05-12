@@ -28,7 +28,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
     ----------
     x: InputLike
         Input features.
-    y: OutputLike or None
+    y: InputLike | None
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
@@ -37,6 +37,8 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         device (usually CPU or GPU).
     random_seed: int | None
         Random seed for reproducibility. If None, no seed is set.
+    tuning_metric: str | Metric
+        Metric to use for hyperparameter tuning. Defaults to "r2".
     deterministic: bool
         Whether to use deterministic algorithms in PyTorch. Defaults to False.
     """
@@ -85,12 +87,10 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         ----------
         model_class: type[Emulator]
             A concrete Emulator subclass.
-        x_transforms_list: list[list[AutoEmulateTransform]] | None
-            An optional list of sequences of transforms to apply to the input data.
-            Defaults to None, in which case the data is standardized.
-        y_transforms_list: list[list[AutoEmulateTransform]] | None
-            An optional list of sequences of transforms to apply to the output data.
-            Defaults to None, in which case the data is standardized.
+        x_transforms: list[Transform] | None
+            Optional sequence of transforms to apply to the input data.
+        y_transforms: list[Transform] | None
+            Optional sequence of transforms to apply to the output data.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
         n_splits: int
