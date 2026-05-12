@@ -73,18 +73,23 @@ def cross_validate(
         specified cross-validation strategy (e.g., KFold, LeaveOneOut).
     dataset: Dataset
         The data to use for model training and validation.
-    model: Emulator
-        An instance of an Emulator subclass.
+    model: type[Emulator]
+        An Emulator subclass to fit during validation.
     model_params: ModelParams
         Model parameters to be used to construct model upon initialization. Passing an
         empty dictionary `{}` will use default parameters.
     transformed_emulator_params: None | TransformedEmulatorParams
         Parameters for the transformed emulator. Defaults to None.
+    x_transforms: list[Transform] | None
+        Transforms to apply to input data before fitting the emulator. Defaults to None.
+    y_transforms: list[Transform] | None
+        Transforms to apply to output data before fitting the emulator.
+        Defaults to None.
     device: DeviceLike
         The device to use for model training and evaluation.
     random_seed: int | None
         Optional random seed for reproducibility.
-    metrics: list[TorchMetrics] | None
+    metrics: list[Metric] | None
         List of metrics to compute. If None, uses r2 and rmse.
     deterministic: bool
         Whether to use deterministic algorithms in PyTorch. Defaults to False.
@@ -173,14 +178,11 @@ def bootstrap(
         Target values corresponding to the input features.
     n_bootstraps: int | None
         Number of bootstrap samples to generate. When None the evaluation uses all
-        all given data and returns a single value with no measure of the uncertainty.
+        given data and returns a single value with no measure of the uncertainty.
         Defaults to 100.
-    n_samples: int
-        Number of samples to generate to predict mean when emulator does not have a
-        mean directly available. Defaults to 1000.
     device: str | torch.device
         The device to use for computations. Default is "cpu".
-    metrics: list[MetricConfig] | None
+    metrics: list[Metric] | None
         List of metrics to compute. If None, uses r2 and rmse.
     metric_params: MetricParams | None
         Additional parameters to pass to the metrics. Defaults to None.
