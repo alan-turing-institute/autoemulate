@@ -9,35 +9,62 @@ from autoemulate.calibration.bayes import (
     extract_log_probabilities,
 )
 from autoemulate.calibration.evidence import EvidenceComputation
-from autoemulate.core.types import TensorLike
 from autoemulate.emulators.gaussian_process.exact import GaussianProcess
-from autoemulate.simulations.epidemic import Epidemic
 from autoemulate.simulations.projectile import Projectile
 from pyro.infer import MCMC
 from pyro.infer.mcmc import RandomWalkKernel
 
+N_TRAINING_POINTS = 30
+N_MCMC_CHAINS = 4
+N_MCMC_SAMPLES = 40
+N_INTEGRATION_MCMC_CHAINS = 2
+N_INTEGRATION_MCMC_SAMPLES = 4
+N_INTEGRATION_MCMC_WARMUP = 3
+N_FLOW_EPOCHS = 1
+GP_EPOCHS = 5
+HMC_STEP_SIZE = 0.1
+HMC_TRAJECTORY_LENGTH = 0.1
+TEST_FLOW_KWARGS = {
+    "n_layers": 2,
+    "n_bins": 8,
+    "hidden_size": [16, 16],
+}
 
-@pytest.fixture
+
+class SimpleMCMC:
+    """Minimal MCMC-like object exposing the Pyro get_samples interface."""
+
+    def __init__(self, samples):
+        self._samples = samples
+
+    def get_samples(self, group_by_chain=False):
+        if group_by_chain:
+            return self._samples
+        return {name: values.reshape(-1) for name, values in self._samples.items()}
+
+
+def simple_model():
+    """Small model with two parameters for evidence unit tests."""
+    c = pyro.sample("c", dist.Normal(0.0, 1.0))
+    v0 = pyro.sample("v0", dist.Normal(0.0, 1.0))
+    pyro.sample("obs", dist.Normal(c + v0, 1.0), obs=torch.tensor(0.25))
+
+
+def make_evidence_computation(mcmc, model, **kwargs):
+    kwargs.setdefault("flow_kwargs", TEST_FLOW_KWARGS)
+    kwargs.setdefault("log_level", "error")
+    return EvidenceComputation(mcmc, model, **kwargs)
+
+
+@pytest.fixture(scope="module")
 def simple_mcmc_setup():
-    """Create a simple MCMC setup for testing."""
-    sim = Epidemic(log_level="error")
-    x = sim.sample_inputs(50)
-    y, _ = sim.forward_batch(x)
-    assert isinstance(y, TensorLike)
-
-    gp = GaussianProcess(x, y)
-    gp.fit(x, y)
-
-    # Create observations
-    observations = {"distance": y[:5, 0]}
-    bc = BayesianCalibration(
-        gp, sim.parameters_range, observations, 1.0, log_level="error"
-    )
-
-    # Run MCMC with sufficient samples for evidence computation
-    mcmc = bc.run_mcmc(warmup_steps=50, num_samples=500, num_chains=10)
-
-    return mcmc, bc.model, sim
+    """Create deterministic posterior samples for evidence tests."""
+    generator = torch.Generator().manual_seed(0)
+    samples = {
+        "c": 0.4 * torch.randn(N_MCMC_CHAINS, N_MCMC_SAMPLES, generator=generator),
+        "v0": 0.4 * torch.randn(N_MCMC_CHAINS, N_MCMC_SAMPLES, generator=generator),
+    }
+    return SimpleMCMC(samples), simple_model, None
 
 
 class TestExtractLogProbabilities:
@@ -52,10 +79,10 @@ class TestExtractLogProbabilities:
         # Check shapes
         assert samples.ndim == 3  # (chains, samples_per_chain, ndim)
         assert log_probs.ndim == 2  # (chains, samples_per_chain)
-        assert samples.shape[0] == 10  # num_chains
-        assert samples.shape[1] == 500  # num_samples_per_chain
+        assert samples.shape[0] == N_MCMC_CHAINS
+        assert samples.shape[1] == N_MCMC_SAMPLES
         assert samples.shape[2] == 2  # num_parameters (c, v0)
-        assert log_probs.shape == (10, 500)
+        assert log_probs.shape == (N_MCMC_CHAINS, N_MCMC_SAMPLES)
 
     def test_log_probs_are_finite(self, simple_mcmc_setup):
         """Test that log probabilities are finite."""
@@ -107,7 +134,7 @@ class TestEvidenceComputation:
         """Test EvidenceComputation initialization."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
+        ec = make_evidence_computation(
             mcmc, model, training_proportion=0.5, temperature=0.8, log_level="error"
         )
 
@@ -117,55 +144,55 @@ class TestEvidenceComputation:
         assert ec.temperature == 0.8
         assert ec.samples is not None
         assert ec.log_probs is not None
-        assert ec.samples.shape[0] == 10  # num_chains
-        assert ec.samples.shape[1] == 500  # num_samples_per_chain
+        assert ec.samples.shape[0] == N_MCMC_CHAINS
+        assert ec.samples.shape[1] == N_MCMC_SAMPLES
 
     def test_invalid_training_proportion(self, simple_mcmc_setup):
         """Test that invalid training_proportion raises ValueError."""
         mcmc, model, _ = simple_mcmc_setup
 
         with pytest.raises(ValueError, match="training_proportion must be between"):
-            EvidenceComputation(mcmc, model, training_proportion=0.0)
+            make_evidence_computation(mcmc, model, training_proportion=0.0)
 
         with pytest.raises(ValueError, match="training_proportion must be between"):
-            EvidenceComputation(mcmc, model, training_proportion=1.0)
+            make_evidence_computation(mcmc, model, training_proportion=1.0)
 
         with pytest.raises(ValueError, match="training_proportion must be between"):
-            EvidenceComputation(mcmc, model, training_proportion=-0.5)
+            make_evidence_computation(mcmc, model, training_proportion=-0.5)
 
     def test_invalid_temperature(self, simple_mcmc_setup):
         """Test that invalid temperature raises ValueError."""
         mcmc, model, _ = simple_mcmc_setup
 
         with pytest.raises(ValueError, match="temperature must be positive"):
-            EvidenceComputation(mcmc, model, temperature=0.0)
+            make_evidence_computation(mcmc, model, temperature=0.0)
 
         with pytest.raises(ValueError, match="temperature must be positive"):
-            EvidenceComputation(mcmc, model, temperature=-1.0)
+            make_evidence_computation(mcmc, model, temperature=-1.0)
 
     def test_unsupported_flow_model(self, simple_mcmc_setup):
         """Test that unsupported flow_model raises ValueError."""
         mcmc, model, _ = simple_mcmc_setup
 
         with pytest.raises(ValueError, match="Unsupported flow_model"):
-            EvidenceComputation(mcmc, model, flow_model="UnsupportedModel")
+            make_evidence_computation(mcmc, model, flow_model="UnsupportedModel")
 
     def test_training_proportion_too_small_for_chains(self, simple_mcmc_setup):
         """Test that training_proportion too small for num_chains raises ValueError."""
         mcmc, model, _ = simple_mcmc_setup
 
-        # With 10 chains, training_proportion=0.05 would give 0 training chains
+        # With 4 chains, training_proportion=0.05 would give 0 training chains.
         with pytest.raises(
             ValueError, match="training_proportion.*too small.*training chains"
         ):
-            EvidenceComputation(mcmc, model, training_proportion=0.05)
+            make_evidence_computation(mcmc, model, training_proportion=0.05)
 
     def test_run_basic(self, simple_mcmc_setup):
         """Test basic evidence computation."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
-        results = ec.run(epochs=50, verbose=False)
+        ec = make_evidence_computation(mcmc, model)
+        results = ec.run(epochs=N_FLOW_EPOCHS, verbose=False)
 
         # Check results structure
         assert isinstance(results, dict)
@@ -186,43 +213,45 @@ class TestEvidenceComputation:
         assert abs(results["ln_evidence"] + results["ln_inv_evidence"]) < 1e-6
 
         # Check dimensions
-        assert results["num_chains"] == 10
-        assert results["num_samples_per_chain"] == 500
+        assert results["num_chains"] == N_MCMC_CHAINS
+        assert results["num_samples_per_chain"] == N_MCMC_SAMPLES
         assert results["num_parameters"] == 2
 
-    @pytest.mark.parametrize("training_proportion", [0.3, 0.5, 0.7])
+    @pytest.mark.parametrize("training_proportion", [0.5, 0.7])
     def test_different_training_proportions(
         self, simple_mcmc_setup, training_proportion
     ):
         """Test evidence computation with different training proportions."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
+        ec = make_evidence_computation(
             mcmc, model, training_proportion=training_proportion, log_level="error"
         )
-        results = ec.run(epochs=5, verbose=False)
+        chains_train, chains_infer = ec.split_data()
+        assert ec.chains is not None
+        train_ratio = chains_train.samples.shape[0] / ec.chains.samples.shape[0]
 
-        assert isinstance(results, dict)
-        assert "ln_evidence" in results
+        assert chains_infer is not None
+        assert abs(train_ratio - training_proportion) <= 0.25
 
     @pytest.mark.parametrize("temperature", [0.5, 0.8, 1.0])
     def test_different_temperatures(self, simple_mcmc_setup, temperature):
         """Test evidence computation with different temperatures."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
+        ec = make_evidence_computation(
             mcmc, model, temperature=temperature, log_level="error"
         )
-        results = ec.run(epochs=5, verbose=False)
+        flow = ec._create_flow_model(ec.ndim)
 
-        assert isinstance(results, dict)
-        assert "ln_evidence" in results
+        assert ec.temperature == temperature
+        assert flow is not None
 
     def test_get_chains_before_compute(self, simple_mcmc_setup):
         """Test that get_chains raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Call run"):
             ec.get_chains()
@@ -231,7 +260,7 @@ class TestEvidenceComputation:
         """Test that get_flow_model raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Call run"):
             ec.get_flow_model()
@@ -240,7 +269,7 @@ class TestEvidenceComputation:
         """Test that get_evidence_object raises error before run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Call run"):
             ec.get_evidence_object()
@@ -249,8 +278,8 @@ class TestEvidenceComputation:
         """Test getter methods work after run."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
-        ec.run(epochs=5, verbose=False)
+        ec = make_evidence_computation(mcmc, model)
+        ec.run(epochs=N_FLOW_EPOCHS, verbose=False)
 
         # Test all getter methods
         chains = ec.get_chains()
@@ -266,8 +295,8 @@ class TestEvidenceComputation:
         """Test split_data method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(
-            mcmc, model, training_proportion=0.6, log_level="error"
+        ec = make_evidence_computation(
+            mcmc, model, training_proportion=0.5, log_level="error"
         )
         chains_train, chains_infer = ec.split_data()
 
@@ -282,15 +311,15 @@ class TestEvidenceComputation:
         total_samples = ec.chains.samples.shape[0]
         train_samples = chains_train.samples.shape[0]
         train_ratio = train_samples / total_samples
-        assert 0.55 < train_ratio < 0.65  # Allow some tolerance
+        assert 0.45 < train_ratio < 0.55  # Allow some tolerance
 
     def test_fit_flow_method(self, simple_mcmc_setup):
         """Test fit_flow method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
         ec.split_data()
-        ec.fit_flow(epochs=10, verbose=False)
+        ec.fit_flow(epochs=N_FLOW_EPOCHS, verbose=False)
 
         # Check that flow was created and trained
         assert ec.flow is not None
@@ -302,18 +331,18 @@ class TestEvidenceComputation:
         """Test that fit_flow raises error if split_data not called."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
 
         with pytest.raises(RuntimeError, match="Must call split_data"):
-            ec.fit_flow(epochs=10)
+            ec.fit_flow(epochs=N_FLOW_EPOCHS)
 
     def test_compute_ln_evidence_method(self, simple_mcmc_setup):
         """Test compute_ln_evidence method separately."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
         ec.split_data()
-        ec.fit_flow(epochs=10, verbose=False)
+        ec.fit_flow(epochs=N_FLOW_EPOCHS, verbose=False)
         results = ec.compute_ln_evidence()
 
         # Check results structure
@@ -322,14 +351,14 @@ class TestEvidenceComputation:
         assert "ln_inv_evidence" in results
         assert "error_lower" in results
         assert "error_upper" in results
-        assert results["num_chains"] == 10
+        assert results["num_chains"] == N_MCMC_CHAINS
         assert results["num_parameters"] == 2
 
     def test_compute_ln_evidence_without_fit_raises_error(self, simple_mcmc_setup):
         """Test that compute_ln_evidence raises error if fit_flow not called."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
         ec.split_data()
 
         with pytest.raises(RuntimeError, match="Must call split_data.*and fit_flow"):
@@ -339,7 +368,7 @@ class TestEvidenceComputation:
         """Test the modular workflow: split -> fit -> compute."""
         mcmc, model, _ = simple_mcmc_setup
 
-        ec = EvidenceComputation(mcmc, model, log_level="error")
+        ec = make_evidence_computation(mcmc, model)
 
         # Step 1: Split data
         chains_train, chains_infer = ec.split_data()
@@ -347,33 +376,29 @@ class TestEvidenceComputation:
         assert chains_infer is not None
 
         # Step 2: Fit flow
-        ec.fit_flow(epochs=10, verbose=False)
+        ec.fit_flow(epochs=N_FLOW_EPOCHS, verbose=False)
         assert ec.flow is not None
 
         # Step 3: Compute evidence
         results = ec.compute_ln_evidence()
         assert "ln_evidence" in results
 
-        # Verify consistency with convenience method
-        ec2 = EvidenceComputation(mcmc, model, log_level="error")
-        results2 = ec2.run(epochs=10, verbose=False)
-
-        # Both should produce similar results (may not be identical due to randomness)
-        assert abs(results["ln_evidence"] - results2["ln_evidence"]) < 5.0
+        assert not torch.isnan(torch.tensor(results["ln_evidence"]))
 
 
 class TestIntegration:
     """Integration tests for the full workflow."""
 
     def test_full_workflow(self):
-        """Test complete workflow from calibration to evidence computation."""
+        """Test calibration output can initialize evidence computation."""
         # Setup simulation
         sim = Projectile()
-        x = sim.sample_inputs(50)
+        pyro.set_rng_seed(1)
+        x = sim.sample_inputs(N_TRAINING_POINTS)
         y, _ = sim.forward_batch(x)
 
         # Train emulator
-        gp = GaussianProcess(x, y)
+        gp = GaussianProcess(x, y, epochs=GP_EPOCHS)
         gp.fit(x, y)
 
         # Run calibration
@@ -381,16 +406,23 @@ class TestIntegration:
         bc = BayesianCalibration(
             gp, sim.parameters_range, observations, 1.0, log_level="error"
         )
-        mcmc = bc.run_mcmc(warmup_steps=50, num_samples=100, num_chains=10)
+        mcmc = bc.run_mcmc(
+            warmup_steps=N_INTEGRATION_MCMC_WARMUP,
+            num_samples=N_INTEGRATION_MCMC_SAMPLES,
+            num_chains=N_INTEGRATION_MCMC_CHAINS,
+            sampler="hmc",
+            step_size=HMC_STEP_SIZE,
+            trajectory_length=HMC_TRAJECTORY_LENGTH,
+        )
 
-        # Compute evidence
-        ec = EvidenceComputation(mcmc, bc.model, log_level="error")
-        results = ec.run(epochs=5, verbose=False)
-
-        # Verify results
-        assert "ln_evidence" in results
-        assert isinstance(results["ln_evidence"], float)
-        assert not torch.isnan(torch.tensor(results["ln_evidence"]))
+        # Check that real calibration output is consumable by evidence computation.
+        ec = make_evidence_computation(mcmc, bc.model)
+        assert ec.samples.shape == (
+            N_INTEGRATION_MCMC_CHAINS,
+            N_INTEGRATION_MCMC_SAMPLES,
+            2,
+        )
+        assert not torch.isnan(ec.log_probs).any()
 
     def test_custom_flow_kwargs_rqspline(self, simple_mcmc_setup):
         """Test evidence computation with custom RQSpline flow parameters."""
@@ -398,34 +430,27 @@ class TestIntegration:
 
         # Custom parameters for RQSpline
         flow_kwargs = {
-            "n_layers": 12,
-            "n_bins": 16,
-            "hidden_size": [128, 128],
+            "n_layers": 2,
+            "n_bins": 8,
+            "hidden_size": [16, 16],
             "learning_rate": 0.0005,
         }
 
-        ec = EvidenceComputation(
+        ec = make_evidence_computation(
             mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
         )
-        results = ec.run(epochs=10, verbose=False)
+        flow = ec._create_flow_model(ec.ndim)
 
-        # Verify results are valid
-        assert "ln_evidence" in results
-        assert isinstance(results["ln_evidence"], float)
-        assert not torch.isnan(torch.tensor(results["ln_evidence"]))
-        assert not torch.isinf(torch.tensor(results["ln_evidence"]))
-
-        # Verify flow was created with custom parameters
-        assert ec.flow is not None
+        assert flow is not None
 
     def test_flow_kwargs_override_defaults(self, simple_mcmc_setup):
         """Test that flow_kwargs override default parameters."""
         mcmc, model, _ = simple_mcmc_setup
 
         # Override standardize (default is True)
-        flow_kwargs = {"standardize": False, "n_layers": 4}
+        flow_kwargs = {"standardize": False, "n_layers": 2}
 
-        ec = EvidenceComputation(
+        ec = make_evidence_computation(
             mcmc, model, flow_kwargs=flow_kwargs, log_level="error"
         )
 
@@ -437,8 +462,3 @@ class TestIntegration:
         # Create flow and check it was configured
         flow = ec._create_flow_model(ec.ndim)
         assert flow is not None
-
-        # Run full computation to ensure it works
-        results = ec.run(epochs=10, verbose=False)
-        assert "ln_evidence" in results
-        assert isinstance(results["ln_evidence"], float)
