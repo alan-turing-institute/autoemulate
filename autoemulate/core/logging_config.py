@@ -75,6 +75,3 @@ def _resolve_show_progress_bar(
         msg = "show_progress_bar must be a boolean value."
         raise TypeError(msg)
     return show_progress_bar
-
-
-_setup_library_logger()
