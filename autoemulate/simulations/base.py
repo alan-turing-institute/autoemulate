@@ -143,8 +143,8 @@ class Simulator(ABC, ValidationMixin):
         self,
         n_samples: int,
         random_seed: int | None = None,
-        deterministic: bool = False,
         method: str = "lhs",
+        deterministic: bool = False,
     ) -> TensorLike:
         """
         Generate random samples using Quasi-Monte Carlo methods.
@@ -159,10 +159,10 @@ class Simulator(ABC, ValidationMixin):
             Number of samples to generate.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         method: str
             Sampling method to use. One of ["lhs", "sobol"].
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------
@@ -400,8 +400,8 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
         self,
         n_samples: int,
         random_seed: int | None = None,
-        deterministic: bool = False,
         method: str = "lhs",
+        deterministic: bool = False,
     ) -> TensorLike:
         """
         Sample inputs and move them to the simulator's device.
@@ -412,10 +412,10 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
             Number of samples to generate.
         random_seed: int | None
             Optional random seed to make sampling reproducible.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         method: str
             Sampling method, one of ``"lhs"`` or ``"sobol"``.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------

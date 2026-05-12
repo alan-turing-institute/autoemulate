@@ -115,10 +115,10 @@ class VAETransform(AutoEmulateTransform):
         batch_size: int = 32,
         learning_rate: float = 1e-3,
         random_seed: int | None = None,
-        deterministic: bool = False,
         beta: float = 1.0,
         verbose: bool = False,
         cache_size: int = 0,
+        deterministic: bool = False,
     ):
         """
         Initialize the VAE transform parameters.
@@ -141,8 +141,6 @@ class VAETransform(AutoEmulateTransform):
             The learning rate for the VAE optimizer. Defaults to 1e-3.
         random_seed: int
             Random seed for reproducibility. Defaults to None.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         beta: float
             The beta parameter for the VAE loss function, controlling the trade-off
             between reconstruction loss and KL divergence. Defaults to 1.0.
@@ -154,6 +152,8 @@ class VAETransform(AutoEmulateTransform):
             repeated expensive calls with the same input data but is by default
             disabled. See `PyTorch documentation <https://github.com/pytorch/pytorch/blob/134179474539648ba7dee1317959529fbd0e7f89/torch/distributions/transforms.py#L46-L89>`_
             for more details on caching. Defaults to 0.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         """
         Transform.__init__(self, cache_size=cache_size)
         self.latent_dim = latent_dim

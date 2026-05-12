@@ -71,11 +71,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        deterministic: bool = False,
         log_level: str | None = None,
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
         show_progress_bar: bool = True,
+        deterministic: bool = False,
     ):
         """
         Initialize the AutoEmulate class.
@@ -123,8 +123,6 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False..
         log_level: str | None
             Deprecated. Configure logging in the calling application instead.
         tuning_metric: str | TorchMetrics
@@ -138,6 +136,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             determine the best model.
         show_progress_bar: bool
             Whether to show a progress bar during model comparison. Defaults to True.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         """
         Results.__init__(self)
         self.random_seed = random_seed
@@ -573,8 +573,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         y: InputLike,
         result_id: int | None = None,
         random_seed: int | None = None,
-        deterministic: bool = False,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
+        deterministic: bool = False,
     ) -> TransformedEmulator:
         """
         Fit a fresh model with reinitialized parameters using the best configuration.
@@ -593,11 +593,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             The ID of the result to use. If None, uses the best model. Defaults to None.
         random_seed: int | None
             Random seed for parameter initialization. Defaults to None.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. When None, the same parameters as
             used when identifying the best model are used. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------
