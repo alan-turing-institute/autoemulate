@@ -1,5 +1,6 @@
 from typing import Literal
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -9,6 +10,8 @@ from matplotlib.figure import Figure
 
 from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
 from autoemulate.emulators.base import Emulator, PyTorchBackend
+
+_NON_INTERACTIVE_BACKENDS = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
 
 
 def display_figure(fig: Figure):
@@ -38,9 +41,18 @@ def display_figure(fig: Figure):
         # we don't show otherwise it will double plot
         plt.close(fig)
         return fig
-    # in terminal, show the plot
+
+    backend = mpl.get_backend().lower()
+    if any(
+        backend.endswith(non_interactive)
+        for non_interactive in _NON_INTERACTIVE_BACKENDS
+    ):
+        plt.close(fig)
+        return fig
+
+    # in terminal with an interactive backend, show the plot
+    fig.show()
     plt.close(fig)
-    plt.show()
     return fig
 
 
