@@ -76,6 +76,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/z7076"><img src="https://avatars.githubusercontent.com/u/69681924?v=4?s=100" width="100px;" alt="Jichen Zhang"/><br /><sub><b>Jichen Zhang</b></sub></a><br /><a href="#code-z7076" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/RemDelaporteMathurin"><img src="https://avatars.githubusercontent.com/u/40028739?v=4?s=100" width="100px;" alt="Rémi Delaporte-Mathurin"/><br /><sub><b>Rémi Delaporte-Mathurin</b></sub></a><br /><a href="#bug-RemDelaporteMathurin" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/pmeier"><img src="https://avatars.githubusercontent.com/u/6849766?v=4?s=100" width="100px;" alt="Philip Meier"/><br /><sub><b>Philip Meier</b></sub></a><br /><a href="#bug-pmeier" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/penelopeysm"><img src="https://avatars.githubusercontent.com/u/122629585?v=4?s=100" width="100px;" alt="Penelope Yong"/><br /><sub><b>Penelope Yong</b></sub></a><br /><a href="#ideas-penelopeysm" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-penelopeysm" title="Reviewed Pull Requests">👀</a> <a href="#code-penelopeysm" title="Code">💻</a> <a href="#doc-penelopeysm" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
