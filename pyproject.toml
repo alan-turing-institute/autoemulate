@@ -119,6 +119,8 @@ filterwarnings = [
     # Raised by PyTorch (via gpytorch) - not actionable here.
     # Remove if dependencies no longer calling `torch.jit.script`.
     "ignore:`torch\\.jit\\.script` is deprecated\\..*:DeprecationWarning",
+    # PyTorch MPS backend capability fallbacks are backend noise in tests.
+    "ignore:The operator .* is not currently supported on the MPS backend.*:UserWarning",
 ]
 
 [tool.pyright]
