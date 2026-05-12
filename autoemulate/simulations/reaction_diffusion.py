@@ -25,7 +25,7 @@ class ReactionDiffusion(Simulator):
         L: int = 20,
         T: float = 10.0,
         dt: float = 0.1,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the ReactionDiffusion simulator.
@@ -49,7 +49,7 @@ class ReactionDiffusion(Simulator):
             Total time to simulate.
         dt: float
             Time step size.
-        show_progress_bar: bool | None
+        show_progress_bar: bool
             Whether to show a progress bar during batch simulations. Defaults to True.
         """
         if parameters_range is None:

@@ -82,7 +82,7 @@ class NaghaviSimulator(Simulator):
         log_level: str | None = None,
         n_cycles: int = 40,
         dt: float = 0.001,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the Naghavi simulator.
@@ -99,7 +99,7 @@ class NaghaviSimulator(Simulator):
             Number of simulation cycles.
         dt: float
             Time step size.
-        show_progress_bar: bool | None
+        show_progress_bar: bool
             Whether to show a progress bar during batch simulations. Defaults to True.
         """
         # Initialize the base class

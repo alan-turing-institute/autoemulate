@@ -67,13 +67,14 @@ def _warn_deprecated_log_level(log_level: str | None) -> str | None:
 
 def _resolve_show_progress_bar(
     log_level: str | None = None,
-    show_progress_bar: bool | None = None,
+    show_progress_bar: bool = True,
 ) -> bool:
     """Resolve legacy ``log_level`` to the new progress-bar flag."""
-    legacy_level = _warn_deprecated_log_level(log_level)
-    if show_progress_bar is not None:
-        return show_progress_bar
-    return legacy_level in (None, "progress_bar")
+    _warn_deprecated_log_level(log_level)
+    if not isinstance(show_progress_bar, bool):
+        msg = "show_progress_bar must be a boolean value."
+        raise TypeError(msg)
+    return show_progress_bar
 
 
 _setup_library_logger()

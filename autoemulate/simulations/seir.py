@@ -75,7 +75,7 @@ class SEIRSimulator(Simulator):
         parameters_range=None,
         output_names=None,
         log_level: str | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {

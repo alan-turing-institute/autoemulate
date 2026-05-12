@@ -14,7 +14,7 @@ class Epidemic(Simulator):
         parameters_range=None,
         output_names=None,
         log_level: str | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"beta": (0.1, 0.5), "gamma": (0.01, 0.2)}

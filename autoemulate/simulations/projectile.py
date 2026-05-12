@@ -23,7 +23,7 @@ class Projectile(Simulator):
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
         log_level: str | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
@@ -72,7 +72,7 @@ class ProjectileMultioutput(Simulator):
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
         log_level: str | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}

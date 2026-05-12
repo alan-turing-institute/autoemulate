@@ -26,7 +26,7 @@ class AdvectionDiffusion(Simulator):
         L: float = 10.0,
         T: float = 80.0,
         dt: float = 0.25,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the AdvectionDiffusion simulator.
@@ -49,7 +49,7 @@ class AdvectionDiffusion(Simulator):
             Total simulation time.
         dt: float
             Time step size.
-        show_progress_bar: bool | None
+        show_progress_bar: bool
             Whether to show a progress bar during simulation. Defaults to True.
         """
         if parameters_range is None:

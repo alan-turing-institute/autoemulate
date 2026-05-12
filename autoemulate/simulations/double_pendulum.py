@@ -23,7 +23,7 @@ class DoublePendulum(Simulator):
         t_span: tuple[float, float] = (0.0, 10.0),
         n_time_points: int = 500,
         g: float = 9.81,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the double pendulum simulator.
@@ -42,7 +42,7 @@ class DoublePendulum(Simulator):
             Number of time points to output
         g : float
             Gravitational acceleration
-        show_progress_bar : bool | None
+        show_progress_bar : bool
             Whether to show a progress bar during batch simulations. Defaults to True.
         """
         if parameters_range is None:

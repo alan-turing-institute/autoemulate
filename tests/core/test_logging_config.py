@@ -23,7 +23,7 @@ def test_get_logger_adds_only_null_handler_to_package_logger():
     ("log_level", "expected"),
     [
         ("progress_bar", True),
-        ("error", False),
+        ("error", True),
     ],
 )
 def test_resolve_show_progress_bar_warns_for_legacy_log_level(log_level, expected):
@@ -34,9 +34,14 @@ def test_resolve_show_progress_bar_warns_for_legacy_log_level(log_level, expecte
 def test_explicit_show_progress_bar_overrides_legacy_log_level():
     with pytest.warns(DeprecationWarning, match="`log_level` is deprecated"):
         show_progress_bar = _resolve_show_progress_bar(
-            log_level="error", show_progress_bar=True
+            log_level="progress_bar", show_progress_bar=False
         )
-    assert show_progress_bar is True
+    assert show_progress_bar is False
+
+
+def test_resolve_show_progress_bar_rejects_none():
+    with pytest.raises(TypeError, match="show_progress_bar must be a boolean"):
+        _resolve_show_progress_bar(show_progress_bar=None)
 
 
 def test_resolve_show_progress_bar_rejects_invalid_legacy_log_level():

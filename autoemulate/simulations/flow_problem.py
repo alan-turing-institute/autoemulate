@@ -24,7 +24,7 @@ class FlowProblem(Simulator):
         log_level: str | None = None,
         ncycles: int = 10,
         ncomp: int = 10,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the FlowProblem simulator.
@@ -41,7 +41,7 @@ class FlowProblem(Simulator):
             Number of cycles to simulate.
         ncomp: int
             Number of compartments in the tube.
-        show_progress_bar: bool | None
+        show_progress_bar: bool
             Whether to show a progress bar during batch simulations. Defaults to True.
         """
         if parameters_range is None:

@@ -25,7 +25,7 @@ class Simulator(ABC, ValidationMixin):
         parameters_range: dict[str, tuple[float, float]],
         output_names: list[str],
         log_level: str | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the simulator with parameter ranges and output names.
@@ -386,7 +386,7 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
         output_names: list[str],
         log_level: str | None = None,
         device: DeviceLike | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         Simulator.__init__(
             self,

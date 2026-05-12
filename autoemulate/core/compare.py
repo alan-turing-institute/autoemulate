@@ -75,7 +75,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         log_level: str | None = None,
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
-        show_progress_bar: bool | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the AutoEmulate class.
@@ -136,7 +136,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             Each entry can be a string shortcut or a MetricConfig object.
             IMPORTANT: The first metric in the list is used to
             determine the best model.
-        show_progress_bar: bool | None
+        show_progress_bar: bool
             Whether to show a progress bar during model comparison. Defaults to True.
         """
         Results.__init__(self)
