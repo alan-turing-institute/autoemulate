@@ -1,6 +1,6 @@
-# Bechmarks
+# Benchmarks
 
-- [benchmark.py](./benchmark.py): a script with CLI for running batches of simulations with AutoEmulate for different numbers of tuningiterations
+- [benchmark.py](./benchmark.py): a script with CLI for running batches of simulations with AutoEmulate for different numbers of tuning iterations
 - [run_benchmark.sh](./run_benchmark.sh): runs batches of simulations enabling some parallelisation
 - [plot_benchmark.ipynb](./plot_benchmark.ipynb): notebook for plotting results
 
@@ -14,9 +14,7 @@ pueue -d
 ```bash
 source .venv/bin/activate
 ```
--  Run:
+- From the repo root, run:
 ```bash
-./run_benchmark.sh
+./benchmarks/run_benchmark.sh
 ```
-
-
