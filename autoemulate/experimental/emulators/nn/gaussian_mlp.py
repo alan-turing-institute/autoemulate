@@ -30,10 +30,10 @@ class GaussianMLP(GaussianEmulator, MLP):
         dropout_prob: float | None = None,
         lr: float = 1e-2,
         random_seed: int | None = None,
-        deterministic: bool = False,
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        deterministic: bool = False,
     ):
         """
         Multi-Layer Perceptron (MLP) emulator with Gaussian outputs.

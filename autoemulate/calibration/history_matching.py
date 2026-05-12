@@ -296,8 +296,8 @@ class HistoryMatchingWorkflow(HistoryMatching):
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        deterministic: bool = False,
         log_level: str | None = None,
+        deterministic: bool = False,
     ):
         """
         Initialize the history matching workflow object.
@@ -345,10 +345,10 @@ class HistoryMatchingWorkflow(HistoryMatching):
             The device to use. If None, the default torch device is returned.
         random_seed: int | None
             Optional random seed for reproducibility. If None, no seed is set.
-        deterministic: bool
-            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         log_level: str | None
             Deprecated. Configure logging in the calling application instead.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
