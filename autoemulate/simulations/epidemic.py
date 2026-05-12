@@ -13,14 +13,18 @@ class Epidemic(Simulator):
         self,
         parameters_range=None,
         output_names=None,
-        show_progress_bar: bool = True,
+        log_level: str | None = None,
+        show_progress_bar: bool | None = None,
     ):
         if parameters_range is None:
             parameters_range = {"beta": (0.1, 0.5), "gamma": (0.01, 0.2)}
         if output_names is None:
             output_names = ["infection_rate"]
         super().__init__(
-            parameters_range, output_names, show_progress_bar=show_progress_bar
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
         )
 
     def _forward(self, x: TensorLike) -> TensorLike:

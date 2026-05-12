@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.core.results import Result
@@ -297,6 +297,7 @@ class HistoryMatchingWorkflow(HistoryMatching):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         deterministic: bool = False,
+        log_level: str | None = None,
     ):
         """
         Initialize the history matching workflow object.
@@ -346,11 +347,14 @@ class HistoryMatchingWorkflow(HistoryMatching):
             Optional random seed for reproducibility. If None, no seed is set.
         deterministic: bool
             Whether to use deterministic algorithms in PyTorch. Defaults to False.
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         """
         super().__init__(observations, threshold, model_discrepancy, rank, device)
         self.simulator = simulator
         if random_seed is not None:
             set_random_seed(seed=random_seed, deterministic=deterministic)
+        _warn_deprecated_log_level(log_level)
 
         if result is not None:
             self.emulator = result.model

@@ -5,7 +5,7 @@ from scipy.stats import qmc
 from tqdm import tqdm
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_logger
+from autoemulate.core.logging_config import _resolve_show_progress_bar, get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
 
@@ -24,7 +24,8 @@ class Simulator(ABC, ValidationMixin):
         self,
         parameters_range: dict[str, tuple[float, float]],
         output_names: list[str],
-        show_progress_bar: bool = True,
+        log_level: str | None = None,
+        show_progress_bar: bool | None = None,
     ):
         """
         Initialize the simulator with parameter ranges and output names.
@@ -35,6 +36,8 @@ class Simulator(ABC, ValidationMixin):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         show_progress_bar: bool
             Whether to show a progress bar during batch simulations. Defaults to True.
         """
@@ -51,7 +54,9 @@ class Simulator(ABC, ValidationMixin):
         self._out_dim = len(self.output_names)
         self._has_sample_forward = False
         self.logger = get_logger(__name__)
-        self.show_progress_bar = show_progress_bar
+        self.show_progress_bar = _resolve_show_progress_bar(
+            log_level=log_level, show_progress_bar=show_progress_bar
+        )
 
     @classmethod
     def simulator_name(cls) -> str:
@@ -379,10 +384,17 @@ class TorchSimulator(Simulator, TorchDeviceMixin):
         self,
         parameters_range: dict[str, tuple[float, float]],
         output_names: list[str],
-        show_progress_bar: bool = True,
+        log_level: str | None = None,
         device: DeviceLike | None = None,
+        show_progress_bar: bool | None = None,
     ):
-        Simulator.__init__(self, parameters_range, output_names, show_progress_bar)
+        Simulator.__init__(
+            self,
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
         TorchDeviceMixin.__init__(self, device=device)
 
     def sample_inputs(

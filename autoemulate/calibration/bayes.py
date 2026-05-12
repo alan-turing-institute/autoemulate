@@ -8,7 +8,7 @@ from pyro.infer import MCMC
 
 from autoemulate.calibration.base import BayesianMixin
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.emulators.base import Emulator
 
@@ -31,6 +31,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         model_discrepancy: float = 0.0,
         calibration_params: list[str] | None = None,
         device: DeviceLike | None = None,
+        log_level: str | None = None,
     ):
         """
         Initialize the HMC calibration object.
@@ -61,6 +62,8 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
             The device to use. If None, the default torch device is returned.
             TODO: do we need to do anything more to ensure the device is correctly
             handled for the pyro model?
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
 
         Notes
         -----
@@ -78,6 +81,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         self.emulator = emulator
         self.emulator.to(self.device)
         self.output_names = list(observations.keys())
+        _warn_deprecated_log_level(log_level)
         self.logger = get_logger(__name__)
         self.logger.info(
             "Initializing BayesianCalibration with parameters: %s",

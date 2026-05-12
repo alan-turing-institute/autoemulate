@@ -6,7 +6,7 @@ import torch
 from anytree import Node, RenderTree
 from torcheval.metrics import MeanSquaredError, R2Score
 
-from autoemulate.core.logging_config import get_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.reinitialize import fit_from_reinitialized
 from autoemulate.data.utils import ValidationMixin
 from autoemulate.emulators.base import Emulator
@@ -41,12 +41,14 @@ class Learner(ValidationMixin, ABC):
     emulator: Emulator
     x_train: TensorLike
     y_train: TensorLike
+    log_level: str | None = None
     fit_from_reinitialized: bool = True
     in_dim: int = field(init=False)
     out_dim: int = field(init=False)
 
     def __post_init__(self):
         """Initialize the learner with training data and fit the emulator."""
+        _warn_deprecated_log_level(self.log_level)
         logger.info("Initializing Learner with training data.")
         if self.fit_from_reinitialized:
             self.emulator = fit_from_reinitialized(

@@ -10,7 +10,7 @@ from pyro.infer import MCMC
 
 from autoemulate.calibration.bayes import extract_log_probabilities
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_logger
+from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.types import DeviceLike
 
 logger = get_logger(__name__)
@@ -167,9 +167,11 @@ class EvidenceComputation(TorchDeviceMixin):
         flow_model: str = "RQSpline",
         flow_kwargs: dict | None = None,
         device: DeviceLike | None = None,
+        log_level: str | None = None,
     ):
         """Initialize evidence computation."""
         TorchDeviceMixin.__init__(self, device=device)
+        _warn_deprecated_log_level(log_level)
 
         # Validate and store parameters
         self._validate_parameters(training_proportion, temperature, flow_model)
