@@ -27,6 +27,8 @@ from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ProbabilisticEmulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
+logger = get_logger(__name__)
+
 
 class BoundedDomainTransform(Transform):
     """Transform to map from unbounded domain to bounded domain."""
@@ -129,14 +131,13 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
         # TODO: we might want to check that the len equals the number of tasks returned
         self.output_names = output_names
         _warn_deprecated_log_level(log_level)
-        self.logger = get_logger(__name__)
-        self.logger.info(
+        logger.info(
             "Initializing IntervalExcursionSetCalibration with parameters: %s",
             self.calibration_params,
         )
 
         # TODO: add input handling for y_lower and y_upper as floats or lists
-        self.logger.info("Processed observations for outputs: %s", self.output_names)
+        logger.info("Processed observations for outputs: %s", self.output_names)
 
     @property
     def y_lower(self) -> TensorLike:
@@ -324,7 +325,7 @@ class IntervalExcursionSetCalibration(TorchDeviceMixin, BayesianMixin):
                     "Parameter keys do not match calibration_params, stacking all "
                     "samples"
                 )
-                self.logger.warning(msg)
+                logger.warning(msg)
                 samples = torch.stack(list(data.get_samples().values()), dim=-1)
             samples = samples.reshape(data.num_chains * data.num_samples, -1)
         elif isinstance(data, TensorLike):

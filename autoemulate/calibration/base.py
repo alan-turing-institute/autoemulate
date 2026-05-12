@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 
 import arviz as az
@@ -7,13 +6,15 @@ from getdist import MCSamples
 from pyro.infer import HMC, MCMC, NUTS, Predictive
 from pyro.infer.mcmc import RandomWalkKernel
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import TensorLike
+
+logger = get_logger(__name__)
 
 
 class BayesianMixin:
     """Mixin class for Bayesian calibration methods."""
 
-    logger: logging.Logger
     model: Callable
     observations: dict[str, TensorLike] | None
 
@@ -28,12 +29,12 @@ class BayesianMixin:
         model_kwargs = model_kwargs or {}
         sampler = sampler.lower()
         if sampler == "nuts":
-            self.logger.debug("Using NUTS kernel.")
+            logger.debug("Using NUTS kernel.")
             return NUTS(self.model, **sampler_kwargs)
         if sampler == "hmc":
             step_size = sampler_kwargs.pop("step_size", 0.01)
             trajectory_length = sampler_kwargs.pop("trajectory_length", 1.0)
-            self.logger.debug(
+            logger.debug(
                 "Using HMC kernel with step_size=%s, trajectory_length=%s",
                 step_size,
                 trajectory_length,
@@ -45,9 +46,9 @@ class BayesianMixin:
                 **sampler_kwargs,
             )
         if sampler == "metropolis":
-            self.logger.debug("Using Metropolis (RandomWalkKernel).")
+            logger.debug("Using Metropolis (RandomWalkKernel).")
             return RandomWalkKernel(self.model, **sampler_kwargs)
-        self.logger.error("Unknown sampler: %s", sampler)
+        logger.error("Unknown sampler: %s", sampler)
         raise ValueError(f"Unknown sampler: {sampler}")
 
     def run_mcmc(
@@ -96,11 +97,9 @@ class BayesianMixin:
                         "An initial value must be provided for each chain, parameter "
                         f"{param} tensor only has {init_vals.shape[0]} values."
                     )
-                    self.logger.error(msg)
+                    logger.error(msg)
                     raise ValueError(msg)
-            self.logger.debug(
-                "Initial parameters provided for MCMC: %s", initial_params
-            )
+            logger.debug("Initial parameters provided for MCMC: %s", initial_params)
 
         # Run NUTS
         kernel = self._get_kernel(sampler, model_kwargs=model_kwargs, **sampler_kwargs)
@@ -114,9 +113,9 @@ class BayesianMixin:
             # Multiprocessing
             mp_context="spawn" if num_chains > 1 else None,
         )
-        self.logger.info("Starting MCMC run.")
+        logger.info("Starting MCMC run.")
         mcmc.run()
-        self.logger.info("MCMC run completed.")
+        logger.info("MCMC run completed.")
         return mcmc
 
     def posterior_predictive(self, mcmc: MCMC) -> dict[str, TensorLike]:
@@ -136,7 +135,7 @@ class BayesianMixin:
         posterior_samples = mcmc.get_samples()
         posterior_predictive = Predictive(self.model, posterior_samples)
         samples = posterior_predictive(predict=True)
-        self.logger.debug("Posterior predictive samples generated.")
+        logger.debug("Posterior predictive samples generated.")
         return samples
 
     def to_arviz(
@@ -158,13 +157,13 @@ class BayesianMixin:
         """
         pp_samples = None
         if posterior_predictive:
-            self.logger.info("Including posterior predictive samples in Arviz output.")
+            logger.info("Including posterior predictive samples in Arviz output.")
             pp_samples = self.posterior_predictive(mcmc)
 
         # Need to create dataset manually for Metropolis Hastings
         # This is because az.from_pyro expects kernel with `divergences`
         if isinstance(mcmc.kernel, RandomWalkKernel):
-            self.logger.debug(
+            logger.debug(
                 "Using manual conversion for Metropolis (RandomWalkKernel) kernel."
             )
             if posterior_predictive:
@@ -173,7 +172,7 @@ class BayesianMixin:
                         "Observations must be provided to include observed_data in "
                         "Arviz InferenceData."
                     )
-                    self.logger.error(msg)
+                    logger.error(msg)
                     raise ValueError(msg)
                 az_data = az.InferenceData(
                     posterior=az.convert_to_dataset(
@@ -189,10 +188,10 @@ class BayesianMixin:
                     ),
                 )
         else:
-            self.logger.debug("Using az.from_pyro for conversion.")
+            logger.debug("Using az.from_pyro for conversion.")
             az_data = az.from_pyro(mcmc, posterior_predictive=pp_samples)
 
-        self.logger.info("Arviz InferenceData conversion complete.")
+        logger.info("Arviz InferenceData conversion complete.")
         return az_data
 
     @staticmethod
