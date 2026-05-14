@@ -18,7 +18,7 @@ classifiers = [
 dependencies = [
     "matplotlib>=3.7.2",
     "seaborn>=0.12.2",
-    "scikit-learn>=1.3.0,<1.6.0",
+    "scikit-learn>=1.3.0",
     "pandas>=2.1",
     "torch>=2.1.0",
     "scipy>=1.11.3",
@@ -34,7 +34,7 @@ dependencies = [
     "torchmetrics>=1.7.1",
     "pyro-ppl>=1.9.1",
     "torchrbf>=0.0.1",
-    "arviz>=0.21.0",
+    "arviz>=0.21.0,<1.0",
     "getdist>=1.7.2",
     "einops>=0.8.1",
     "harmonic>=1.3.0",
@@ -125,6 +125,10 @@ filterwarnings = [
     "ignore:jax\\.interpreters\\.xla\\.pytype_aval_mappings is deprecated\\..*:DeprecationWarning:tensorflow_probability\\.python\\.internal\\.backend\\.jax\\.ops",
     # PyTorch MPS backend capability fallbacks are backend noise in tests.
     "ignore:The operator .* is not currently supported on the MPS backend.*:UserWarning",
+    # LightGBM automatically adds feature names to training data, which causes warnings when
+    # making predictions with unnamed data
+    # https://github.com/lightgbm-org/LightGBM/issues/6798
+    "ignore:X does not have valid feature names, but LGBMRegressor was fitted with feature names:UserWarning",
 ]
 
 [tool.pyright]
