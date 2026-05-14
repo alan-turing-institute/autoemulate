@@ -113,14 +113,16 @@ relative_files = true
 source = [".", "/tmp"]
 
 [tool.pytest.ini_options]
-addopts = "--ignore=v0"
+# https://github.com/pyro-ppl/pyro/issues/3450: has to be ignored at the Python
+# level since the warning is raised before pytest can apply its own filters
+addopts = "--ignore=v0 -Wignore::DeprecationWarning:pyro.ops.stats"
 # These suppress only test output; runtime warnings still reach users.
 filterwarnings = [
+    # Promote all unfiltered warnings to errors
+    "error",
     # Raised by PyTorch (via gpytorch) - not actionable here.
     # Remove if dependencies no longer calling `torch.jit.script`.
     "ignore:`torch\\.jit\\.script` is deprecated\\..*:DeprecationWarning",
-    # Raised by Pyro on Python 3.10 when parsing a dependency docstring.
-    "ignore:invalid escape sequence.*:DeprecationWarning:pyro\\.ops\\.stats",
     # Raised when harmonic imports TensorFlow Probability's JAX backend.
     "ignore:jax\\.interpreters\\.xla\\.pytype_aval_mappings is deprecated\\..*:DeprecationWarning:tensorflow_probability\\.python\\.internal\\.backend\\.jax\\.ops",
     # PyTorch MPS backend capability fallbacks are backend noise in tests.
