@@ -113,9 +113,7 @@ relative_files = true
 source = [".", "/tmp"]
 
 [tool.pytest.ini_options]
-# https://github.com/pyro-ppl/pyro/issues/3450: has to be ignored at the Python
-# level since the warning is raised before pytest can apply its own filters
-addopts = "--ignore=v0 -Wignore::DeprecationWarning:pyro.ops.stats"
+addopts = "--ignore=v0"
 # These suppress only test output; runtime warnings still reach users.
 filterwarnings = [
     # Promote all unfiltered warnings to errors
