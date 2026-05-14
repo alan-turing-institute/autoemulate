@@ -210,7 +210,7 @@ wheels = [
 
 [[package]]
 name = "autoemulate"
-version = "2.1.2"
+version = "2.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "anytree" },
