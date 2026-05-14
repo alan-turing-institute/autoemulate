@@ -125,6 +125,10 @@ filterwarnings = [
     "ignore:jax\\.interpreters\\.xla\\.pytype_aval_mappings is deprecated\\..*:DeprecationWarning:tensorflow_probability\\.python\\.internal\\.backend\\.jax\\.ops",
     # PyTorch MPS backend capability fallbacks are backend noise in tests.
     "ignore:The operator .* is not currently supported on the MPS backend.*:UserWarning",
+    # LightGBM automatically adds feature names to training data, which causes warnings when
+    # making predictions with unnamed data
+    # https://github.com/lightgbm-org/LightGBM/issues/6798
+    "ignore:X does not have valid feature names, but LGBMRegressor was fitted with feature names:UserWarning",
 ]
 
 [tool.pyright]
