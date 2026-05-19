@@ -18,7 +18,6 @@ You can find the project documentation [here](https://alan-turing-institute.gith
 
 
 - The AutoEmulate project is run out of the [Alan Turing Institute](https://www.turing.ac.uk/).
-- Visit [autoemulate.com](https://www.autoemulate.com/) to learn more.
 - Feel free to reach out to us at [aiphys@turing.ac.uk](mailto:aiphys@turing.ac.uk) for queries about AutoEmulate or ideas for collaboration.
 - We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626). 
 
