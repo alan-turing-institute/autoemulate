@@ -236,7 +236,7 @@ def plot_xy(
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    legend = ax.legend(
+    ax.legend(
         loc="best",
         handletextpad=0,
         columnspacing=0,
