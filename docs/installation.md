@@ -18,7 +18,7 @@ Although AutoEmulate is currently on version 1.x, we are not following semantic 
 To get the latest release from PyPI:
 
 ```bash
-pip install autoemulate==1.1
+pip install autoemulate
 ```
 
 ## Install using UV
