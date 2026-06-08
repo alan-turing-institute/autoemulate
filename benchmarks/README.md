@@ -8,7 +8,7 @@
 - Install [pueue](https://github.com/Nukesor/pueue): is included in [run_benchmark.sh](./run_benchmark.sh) and simplifies running multiple python scripts
 - Start the pueue daemon:
 ```bash
-pueue -d
+pueued -d
 ```
 - Activate the virtual environment (navigate to the right directory first):
 ```bash
