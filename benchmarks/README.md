@@ -13,7 +13,7 @@ Start the pueue daemon in the background:
 pueued -d
 ```
 
-Activate the virtual environment (navigate to the right directory first):
+Activate the virtual environment (navigate to the repo root first):
 ```bash
 source .venv/bin/activate
 ```
