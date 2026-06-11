@@ -17,6 +17,7 @@ authors:
       orcid: 0000-0001-6846-7158
       affiliation: 1
       corresponding: true
+      equal-contrib: true
     - name: Sam F. Greenbury
       orcid: 0000-0003-4452-2006
       affiliation: 1
