@@ -1,5 +1,4 @@
 from typing import Literal
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,6 +54,59 @@ def display_figure(fig: Figure):
     plt.close(fig)
     return fig
 
+def _add_metrics_box(ax: Axes, metrics: dict[str, float] | None = None):
+    if not metrics:
+        return
+
+    texts = []
+
+    n = len(metrics)
+    spacing = 0.28
+    start_x = 0.5 - spacing * (n - 1) / 2
+    y = 1.12
+
+    for i, (name, value) in enumerate(metrics.items()):
+        txt = ax.text(
+            start_x + i * spacing,
+            y,
+            name,
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            fontsize=11,
+            fontweight="bold",
+            picker=True,
+            clip_on=False,
+            bbox={
+                "boxstyle": "round,pad=0.45",
+                "facecolor": "white",
+                "edgecolor": "#D0D7DE",
+                "linewidth": 1.2,
+                "alpha": 0.92,
+            },
+        )
+
+        txt.metric_name = name
+        txt.metric_value = value
+        txt.value_visible = False
+        texts.append(txt)
+
+    def on_pick(event):
+        artist = event.artist
+
+        if artist in texts:
+            if artist.value_visible:
+                artist.set_text(artist.metric_name)
+                artist.set_fontweight("bold")
+                artist.value_visible = False
+            else:
+                artist.set_text(f"{artist.metric_name}: {artist.metric_value:.4f}")
+                artist.set_fontweight("normal")
+                artist.value_visible = True
+
+            ax.figure.canvas.draw_idle()
+
+    ax.figure.canvas.mpl_connect("pick_event", on_pick)
 
 def plot_xy(
     x: NumpyLike,
@@ -65,7 +117,7 @@ def plot_xy(
     title: str = "xy",
     input_label: str | None = None,
     output_label: str | None = None,
-    r2_score: float | None = None,
+    metrics: dict[str, float] | None = None,
     error_style: Literal["bars", "fill"] = "bars",
 ):
     """
@@ -89,8 +141,9 @@ def plot_xy(
         An optional input label to plot.
     output_label: str | None
         An optional output label to plot.
-    r2_score: float | None
-        An option r2 score to include in the plot legend.
+    metrics: dict[str, float] | None
+        Optional dictionary of metrics to display above the plot. The metric names
+        are shown by default. Clicking a metric toggles its value on and off.
     error_style: Literal["bars", "fill"]
         The style of error representation in the plots. Can be "bars" for error
         bars or "fill" for shaded error regions. Defaults to "bars".
@@ -176,45 +229,24 @@ def plot_xy(
     y_label = output_label if output_label is not None else "y"
     ax.set_xlabel(x_label, fontsize=13)
     ax.set_ylabel(y_label, fontsize=13)
-    ax.set_title(title, fontsize=13)
+    ax.set_title(title, fontsize=13, pad=55)
     ax.grid(True, alpha=0.3)
 
     # Get the handles and labels for the scatter plots
     handles, _ = ax.get_legend_handles_labels()
 
     # Add legend and get its bounding box
-    legend = ax.legend(
+    ax.legend(
         loc="best",
         handletextpad=0,
         columnspacing=0,
         ncol=2,
     )
+    if metrics:
+        ax.figure.subplots_adjust(top=0.72)
 
-    # Place R² just below the legend
-    if legend:
-        # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
-        inv = ax.transAxes.inverted()
-        bbox_axes = bbox.transformed(inv)
-        # Place the text just below the legend
-        text_x = bbox_axes.x0
-        text_y = bbox_axes.y0 - 0.04  # small offset below legend
-        ax.text(
-            text_x,
-            text_y,
-            f"R\u00b2 = {r2_score:.6f}",
-            transform=ax.transAxes,
-            verticalalignment="top",
-        )
-    else:
-        # fallback: place in lower left
-        ax.text(
-            0.05,
-            0.05,
-            f"R\u00b2 = {r2_score:.6f}",
-            transform=ax.transAxes,
-            verticalalignment="bottom",
-        )
+    _add_metrics_box(ax, metrics)
+
 
 
 def calculate_subplot_layout(n_plots, n_cols=3):
