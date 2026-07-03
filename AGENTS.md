@@ -4,12 +4,14 @@ This file provides context for AI coding agents (GitHub Copilot, Claude, Codex, 
 
 ## Repository Overview
 
-AutoEmulate is a Python package that automatically fits and compares emulators (surrogate models) to replace slow simulations. It targets scientists and engineers working on digital twins, sensitivity analysis, and uncertainty quantification.
+AutoEmulate is a Python package that automatically fits and compares emulators (surrogate models) to replace slow simulations.
 
 **Key concepts:**
 - **Emulator** — a fast, data-driven proxy for a slow simulation
 - **AutoEmulate core** — fits multiple emulators, cross-validates, and surfaces the best one
-- **Calibration** — Bayesian calibration (MCMC) of simulation parameters
+- **Calibration** — infers simulation parameters from data
+- **Sensitivity analysis** — finds which inputs drive simulation outputs
+- **Active learning** — chooses which simulations to run next
 
 ## Build & Environment
 
@@ -45,10 +47,7 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 uv run pytest -q
 ## Code Style & Linting
 
 ```bash
-# Format with black
-uv run black autoemulate/
-
-# Run pre-commit hooks (runs black, ruff, and metadata checks)
+# Run pre-commit hooks (ruff, pyright, nbstripout)
 uv run pre-commit run --all-files
 ```
 
@@ -61,25 +60,26 @@ autoemulate/
 ├── autoemulate/
 │   ├── core/           # AutoEmulate main class and cross-validation logic
 │   ├── emulators/      # Individual emulator implementations (GP, SVM, RBF, etc.)
-│   ├── calibration/    # Bayesian calibration (MCMC via pyro)
+│   ├── calibration/    # Calibration methods
 │   ├── data/           # Data handling and splitting utilities
 │   ├── transforms/     # Input/output transforms (normalisation, PCA, etc.)
 │   ├── learners/       # Active learning strategies
 │   ├── datasets/       # Built-in simulation datasets for testing/demos
-│   └── simulations/    # Simple simulation wrappers
+│   ├── simulations/    # Simple simulation wrappers
+│   ├── callbacks/      # Training/fitting callbacks
+│   └── feature_generation/ # Feature engineering utilities
 ├── tests/              # pytest test suite, mirrors autoemulate/ structure
 ├── docs/               # Sphinx + MyST documentation
-├── benchmarks/         # Emulator benchmarking scripts
 └── case_studies/       # Jupyter notebooks for real-world use cases
 ```
 
 ## Adding a New Emulator
 
-See the [contributing emulators guide](https://alan-turing-institute.github.io/autoemulate/community/contributing-emulators.html). In short:
+See the [adding emulators guide](https://alan-turing-institute.github.io/autoemulate/tutorials/advanced/01_add_emulators.html). In short:
 
 1. Create a new file in `autoemulate/emulators/`
-2. Subclass `BaseEmulator` and implement `fit`, `predict`, and `get_grid_params`
-3. Register it in `autoemulate/emulators/__init__.py`
+2. Subclass `Emulator` (or one of its subclasses, e.g. `DeterministicEmulator`/`ProbabilisticEmulator`, in `autoemulate/emulators/base.py`) and implement the required methods (`__init__`, `_fit`, `_predict`, etc.)
+3. Register it via the `Registry`/`register` mechanism in `autoemulate/emulators/registry.py`
 4. Add tests in `tests/emulators/`
 
 ## Docstring Style
@@ -109,7 +109,7 @@ def fit(self, X: np.ndarray, y: np.ndarray) -> "MyEmulator":
 - [ ] Tests pass: `uv run pytest -q`
 - [ ] Pre-commit hooks pass: `uv run pre-commit run --all-files`
 - [ ] New public functions have NumPy docstrings
-- [ ] If adding an emulator: registered in `__init__.py` and tested
+- [ ] If adding an emulator: registered via the `Registry`/`register` mechanism and tested
 
 ## Contact
 
