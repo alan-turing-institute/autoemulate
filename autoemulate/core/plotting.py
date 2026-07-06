@@ -13,6 +13,9 @@ from autoemulate.emulators.base import Emulator, PyTorchBackend
 
 _NON_INTERACTIVE_BACKENDS = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
 
+# z-score for the default predictive interval coverage (norm.ppf(0.975) ≈ 1.96 for 95%)
+PREDICTION_INTERVAL_Z = 1.96
+
 
 def display_figure(fig: Figure):
     """
@@ -118,14 +121,13 @@ def plot_xy(
             ax.errorbar(
                 x_sorted,
                 y_pred_sorted,
-                yerr=2 * y_std,
+                yerr=PREDICTION_INTERVAL_Z * y_std,
                 fmt="o",
                 color=pred_points_color,
                 elinewidth=2,
                 capsize=3,
                 alpha=0.5,
-                # use unicode for sigma
-                label="pred. (±2\u03c3)",
+                label="pred. (95% PI)",
             )
             ax.scatter(
                 x_sorted,
@@ -138,11 +140,11 @@ def plot_xy(
         else:
             ax.fill_between(
                 x_sorted,
-                y_pred_sorted - 2 * y_std,
-                y_pred_sorted + 2 * y_std,
+                y_pred_sorted - PREDICTION_INTERVAL_Z * y_std,
+                y_pred_sorted + PREDICTION_INTERVAL_Z * y_std,
                 color=pred_points_color,
                 alpha=0.2,
-                label="±2\u03c3",
+                label="95% PI",
             )
             ax.plot(
                 x_sorted,
