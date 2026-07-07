@@ -855,7 +855,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
     ):
         """
         Plot predicted means (and variances) against observations for all outputs.
-        When variance is available, a 95% predictive interval (mean ± 1.96σ) is shown.
+
+        When variance is available, a 95% predictive interval (mean +/- 1.96 * std)
+        is shown.
 
         Parameters
         ----------

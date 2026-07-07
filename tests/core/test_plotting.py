@@ -83,7 +83,7 @@ def test_plot_xy_fill_interval_width():
     fig, ax = plt.subplots()
     plotting.plot_xy(X, y, y_pred, y_variance, ax=ax, r2_score=0.9, error_style="fill")
 
-    verts = ax.collections[0].get_paths()[0].vertices
+    verts = np.asarray(ax.collections[0].get_paths()[0].vertices)
     band_width = verts[:, 1].max() - verts[:, 1].min()
     assert np.isclose(band_width, 2 * plotting.PREDICTION_INTERVAL_Z * y_std)
 

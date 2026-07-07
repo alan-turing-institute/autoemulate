@@ -84,7 +84,7 @@ def plot_xy(
         An array of predictions.
     y_variance: NumpyLike | None
         An optional array of predictive variances. When provided, a 95%
-        predictive interval (mean ± 1.96σ) is displayed around predictions.
+        predictive interval (mean +/- 1.96 * std) is displayed around predictions.
     ax: Axes | None
         An optional matplotlib Axes object to plot on.
     title: str
@@ -196,7 +196,7 @@ def plot_xy(
     # Place R² just below the legend
     if legend:
         # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
+        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
         inv = ax.transAxes.inverted()
         bbox_axes = bbox.transformed(inv)
         # Place the text just below the legend
