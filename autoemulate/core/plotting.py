@@ -83,7 +83,8 @@ def plot_xy(
     y_pred: NumpyLike
         An array of predictions.
     y_variance: NumpyLike | None
-        An optional array of predictive variances.
+        An optional array of predictive variances. When provided, a 95%
+        predictive interval (mean ± 1.96σ) is displayed around predictions.
     ax: Axes | None
         An optional matplotlib Axes object to plot on.
     title: str
