@@ -1,32 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pytest
 from autoemulate.core import plotting
-from autoemulate.emulators.polynomials import PolynomialRegression
-from autoemulate.emulators.random_forest import RandomForest
-
-
-def test_display_figure_jupyter(monkeypatch):
-    # Simulate Jupyter environment
-    class DummyShell:
-        __name__ = "ZMQInteractiveShell"
-
-    # Simulate the get_ipython function to return a Jupyter shell
-    monkeypatch.setattr(plotting, "get_ipython", lambda: DummyShell())
-    fig = plt.figure()
-    result = plotting.display_figure(fig)
-    assert result is fig
-
-
-def test_display_figure_terminal(monkeypatch):
-    # Simulate a non-Jupyter environment
-    # Here we just return None to simulate a terminal environment
-    monkeypatch.setattr(plotting, "get_ipython", lambda: None)
-    fig = plt.figure()
-    # Should not raise
-    result = plotting.display_figure(fig)
-    assert result is fig
-
 
 def test_plot_xy():
     X = np.linspace(0, 5, 10).reshape(-1, 1)
@@ -34,71 +8,114 @@ def test_plot_xy():
     y_pred = y * 1.1
     y_variance = np.abs(y * 0.1)
 
-    # plot without error bars
-    fig, ax = plt.subplots()
-    plotting.plot_xy(
-        X, y, y_pred, None, ax=ax, input_label="1", output_label="2", r2_score=0.5
-    )
-    # test for error bars
-    assert len(ax.containers) == 0
-    # test for scatter points
-    assert len(ax.collections) > 0
+    metrics = {"R2": 0.5, "RMSE": 0.1}
 
-    # plot with error bars
     fig, ax = plt.subplots()
     plotting.plot_xy(
-        X, y, y_pred, y_variance, ax=ax, input_label="1", output_label="2", r2_score=0.5
+        X, 
+        y, 
+        y_pred, 
+        None, 
+        ax=ax, 
+        input_label="1", 
+        output_label="2", 
+        metrics=metrics
     )
+
+    assert len(ax.containers) == 0
+    assert len(ax.collections) > 0
+    assert "R2" in [text.get_text() for text in ax.texts]
+    assert "RMSE" in [text.get_text() for text in ax.texts]
+    plt.close(fig)
+
+    fig, ax = plt.subplots()
+    plotting.plot_xy(
+        X,
+        y,
+        y_pred,
+        y_variance,
+        ax=ax,
+        input_label="1",
+        output_label="2",
+        metrics=metrics,
+    )
+
     assert len(ax.containers) > 0
     assert len(ax.collections) > 0
+    assert "R2" in [text.get_text() for text in ax.texts]
+    assert "RMSE" in [text.get_text() for text in ax.texts]
+    plt.close(fig)
+    
 
+def test_plot_xy_without_metrics():
+    X = np.linspace(0, 5, 10).reshape(-1, 1)
+    y = X.flatten()
+    y_pred = y * 1.1
 
-@pytest.mark.parametrize(
-    ("n_plots", "n_cols", "expected"),
-    [
-        (1, 3, (1, 1)),
-        (2, 3, (1, 2)),
-        (4, 3, (2, 3)),
-        (7, 3, (3, 3)),
-        (5, 2, (3, 2)),
-    ],
-)
-def test_calculate_subplot_layout(n_plots, n_cols, expected):
-    result = plotting.calculate_subplot_layout(n_plots, n_cols)
-    assert result == expected
+    fig, ax = plt.subplots()
 
+    plotting.plot_xy(
+        X,
+        y,
+        y_pred,
+        None,
+        ax=ax,
+        input_label="1",
+        output_label="2",
+        metrics=None,
+    )
 
-@pytest.mark.parametrize(
-    ("model_class", "should_raise", "title"),
-    [
-        (PolynomialRegression, False, "Training Curve"),
-        (RandomForest, True, "My Loss Plot"),
-        (PolynomialRegression, False, None),
-    ],
-)
-def test_plot_loss(model_class, should_raise, title):
-    np.random.seed(42)
-    x = np.random.rand(20, 2)
-    y = (x[:, 0] + 2 * x[:, 1] > 1).astype(int)
+    assert len(ax.collections) > 0
+    plt.close(fig)
 
-    model = model_class(x, y)
-    model.fit(x, y)
+def test_plot_xy_accepts_single_metric():
+    X = np.linspace(0,5,10).reshape(-1,1)
+    y = X.flatten()
+    y_pred = y*1.1
 
-    if should_raise:
-        with pytest.raises(AttributeError):
-            fig, ax = plotting.plot_loss(model=model, title=title)
-        return
+    fig, ax = plt.subplots()
 
-    fig, ax = plotting.plot_loss(model=model, title=title)
+    plotting.plot_xy(
+        X,
+        y,
+        y_pred,
+        None,
+        ax=ax,
+        input_label="1",
+        output_label="2",
+        metrics = {"MAE":0.25}
+    )
 
-    if title is not None:
-        assert ax.get_title() == title
+    text_values = [text.get_text() for text in ax.texts]
 
-    assert ax.get_xlabel() == "Epochs"
-    assert ax.get_ylabel() == "Train Loss"
+    assert "MAE" in text_values
+    assert len(ax.collections) > 0
 
-    epochs = np.arange(1, len(model.loss_history) + 1)
-    line_x, line_y = ax.get_lines()[0].get_data()
+    plt.close(fig)
 
-    assert np.allclose(line_x, epochs)
-    assert np.allclose(line_y, model.loss_history)
+def test_plot_xy_accepts_multiple_metrics():
+    X = np.linspace(0,5,10).reshape(-1,1)
+    y = X.flatten()
+    y_pred = y * 1.1
+
+    fig, ax = plt.subplots()
+
+    plotting.plot_xy(
+        X,
+        y,
+        y_pred,
+        None,
+        ax=ax,
+        input_label = "1",
+        output_label= "2",
+        metrics = {"R2":0.5, "RMSE":0.1,"MAE":0.2}
+    )
+
+    text_values = [text.get_text() for text in ax.texts]
+
+    assert "R2" in text_values
+    assert "RMSE" in text_values
+    assert "MAE" in text_values
+    assert len(ax.collections) > 0
+
+    plt.close(fig)

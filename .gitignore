@@ -55,4 +55,4 @@ autoemulate/experimental/exploratory/data
 case_studies/**/data/
 
 # Benchmarking data
-benchmarks/data/
+benchmarks/data/venv/
