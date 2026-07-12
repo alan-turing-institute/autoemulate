@@ -7,14 +7,15 @@ import torch
 from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from scipy.stats import norm
 
 from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
 from autoemulate.emulators.base import Emulator, PyTorchBackend
 
 _NON_INTERACTIVE_BACKENDS = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
 
-# z-score for the default predictive interval coverage (norm.ppf(0.975) ≈ 1.96 for 95%)
-PREDICTION_INTERVAL_Z = 1.96
+# z-score for the default predictive interval coverage (≈ 1.96 for 95% interval)
+PREDICTION_INTERVAL_Z = norm.ppf(0.975)
 
 
 def display_figure(fig: Figure):

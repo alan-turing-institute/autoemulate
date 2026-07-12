@@ -53,10 +53,6 @@ def test_plot_xy():
     assert len(ax.collections) > 0
 
 
-def test_prediction_interval_z_constant():
-    assert plotting.PREDICTION_INTERVAL_Z == 1.96
-
-
 def test_plot_xy_bars_interval_width():
     X = np.linspace(0, 5, 10)
     y = X.copy()
