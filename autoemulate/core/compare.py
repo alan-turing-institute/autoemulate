@@ -16,6 +16,7 @@ from autoemulate.core.logging_config import _resolve_show_progress_bar, get_logg
 from autoemulate.core.metrics import R2, Metric, MetricParams, get_metric, get_metrics
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
+    PREDICTION_INTERVAL_Z,
     calculate_subplot_layout,
     create_and_plot_slice,
     display_figure,
@@ -855,6 +856,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         Plot predicted means (and variances) against observations for all outputs.
 
+        When variance is available, a 95% predictive interval (mean +/- 1.96 * std)
+        is shown.
+
         Parameters
         ----------
         model_obj: int | Emulator | Result
@@ -925,7 +929,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 axs[i].errorbar(
                     test_y[:, i],
                     y_pred[:, i],
-                    yerr=2 * y_std[:, i],
+                    yerr=PREDICTION_INTERVAL_Z * y_std[:, i],
                     fmt="none",
                     alpha=0.4,
                     capsize=3,
@@ -944,7 +948,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             )
             axs[i].set_title(output_names[i])
             axs[i].set_xlabel("True values")
-            axs[i].set_ylabel("Predicted values ±2\u03c3")
+            axs[i].set_ylabel("Predicted values (95% PI)")
         plt.tight_layout()
 
         if figsize is not None:

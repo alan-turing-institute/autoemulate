@@ -7,11 +7,15 @@ import torch
 from IPython.core.getipython import get_ipython
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from scipy.stats import norm
 
 from autoemulate.core.types import DistributionLike, GaussianLike, NumpyLike, TensorLike
 from autoemulate.emulators.base import Emulator, PyTorchBackend
 
 _NON_INTERACTIVE_BACKENDS = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
+
+# z-score for the default predictive interval coverage (≈ 1.96 for 95% interval)
+PREDICTION_INTERVAL_Z = norm.ppf(0.975)
 
 
 def display_figure(fig: Figure):
@@ -80,7 +84,8 @@ def plot_xy(
     y_pred: NumpyLike
         An array of predictions.
     y_variance: NumpyLike | None
-        An optional array of predictive variances.
+        An optional array of predictive variances. When provided, a 95%
+        predictive interval (mean +/- 1.96 * std) is displayed around predictions.
     ax: Axes | None
         An optional matplotlib Axes object to plot on.
     title: str
@@ -118,14 +123,13 @@ def plot_xy(
             ax.errorbar(
                 x_sorted,
                 y_pred_sorted,
-                yerr=2 * y_std,
+                yerr=PREDICTION_INTERVAL_Z * y_std,
                 fmt="o",
                 color=pred_points_color,
                 elinewidth=2,
                 capsize=3,
                 alpha=0.5,
-                # use unicode for sigma
-                label="pred. (±2\u03c3)",
+                label="pred. (95% PI)",
             )
             ax.scatter(
                 x_sorted,
@@ -138,11 +142,11 @@ def plot_xy(
         else:
             ax.fill_between(
                 x_sorted,
-                y_pred_sorted - 2 * y_std,
-                y_pred_sorted + 2 * y_std,
+                y_pred_sorted - PREDICTION_INTERVAL_Z * y_std,
+                y_pred_sorted + PREDICTION_INTERVAL_Z * y_std,
                 color=pred_points_color,
                 alpha=0.2,
-                label="±2\u03c3",
+                label="95% PI",
             )
             ax.plot(
                 x_sorted,
@@ -193,7 +197,7 @@ def plot_xy(
     # Place R² just below the legend
     if legend:
         # Get the bounding box of the legend in axes coordinates
-        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue]
+        bbox = legend.get_window_extent(ax.figure.canvas.get_renderer())  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
         inv = ax.transAxes.inverted()
         bbox_axes = bbox.transformed(inv)
         # Place the text just below the legend
