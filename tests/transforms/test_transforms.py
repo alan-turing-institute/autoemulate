@@ -10,6 +10,7 @@ from autoemulate.transforms.base import (
     _is_affine_empirical,
     is_affine,
 )
+from autoemulate.transforms.discrete_fourier import DiscreteFourierTransform
 from sklearn.decomposition import PCA as SklearnPCA
 from torch.distributions.transforms import ReshapeTransform
 
@@ -20,6 +21,7 @@ from torch.distributions.transforms import ReshapeTransform
         (PCATransform(n_components=2), (20, 2)),
         (VAETransform(latent_dim=2), (20, 2)),
         (StandardizeTransform(), (20, 5)),
+        (DiscreteFourierTransform(n_components=2), (20, 4)),
     ],
 )
 def test_transform_shapes(sample_data_y2d, transform, expected_shape):
@@ -51,7 +53,12 @@ def test_is_transform_affine(sample_data_y2d, transform, affine):
 
 @pytest.mark.parametrize(
     ("transform"),
-    [PCATransform(n_components=2), VAETransform(latent_dim=2), StandardizeTransform()],
+    [
+        DiscreteFourierTransform(n_components=2),
+        PCATransform(n_components=2),
+        VAETransform(latent_dim=2),
+        StandardizeTransform(),
+    ],
 )
 def test_transform_inverse_for_gaussians(sample_data_y2d, transform):
     x, y = sample_data_y2d
