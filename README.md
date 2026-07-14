@@ -78,6 +78,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/pmeier"><img src="https://avatars.githubusercontent.com/u/6849766?v=4?s=100" width="100px;" alt="Philip Meier"/><br /><sub><b>Philip Meier</b></sub></a><br /><a href="#bug-pmeier" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/penelopeysm"><img src="https://avatars.githubusercontent.com/u/122629585?v=4?s=100" width="100px;" alt="Penelope Yong"/><br /><sub><b>Penelope Yong</b></sub></a><br /><a href="#ideas-penelopeysm" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-penelopeysm" title="Reviewed Pull Requests">👀</a> <a href="#code-penelopeysm" title="Code">💻</a> <a href="#doc-penelopeysm" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ykd007"><img src="https://avatars.githubusercontent.com/u/79036688?v=4?s=100" width="100px;" alt="Yash Dhawan"/><br /><sub><b>Yash Dhawan</b></sub></a><br /><a href="#doc-ykd007" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/heba-ali-ashour/"><img src="https://avatars.githubusercontent.com/u/45080583?v=4?s=100" width="100px;" alt="Heba Ashour"/><br /><sub><b>Heba Ashour</b></sub></a><br /><a href="#code-hebatea" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
