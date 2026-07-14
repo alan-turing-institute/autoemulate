@@ -362,6 +362,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "hebatea",
+      "name": "Heba Ashour",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45080583?v=4",
+      "profile": "https://www.linkedin.com/in/heba-ali-ashour/",
+      "contributions": [
+        "code"
+      ]
     }
   ]
 }
