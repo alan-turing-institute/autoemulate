@@ -26,6 +26,7 @@ chapters:
   - file: tutorials/advanced/index
     sections:
     - file: tutorials/advanced/01_add_emulators
+    - file: tutorials/advanced/02_pyomo_conversion
 
 - file: community/index
   sections:
@@ -73,3 +74,6 @@ chapters:
     - file: reference/simulations/flow_problem
     - file: reference/simulations/projectile
     - file: reference/simulations/reaction_diffusion
+  - file: reference/convert/index
+    sections:
+    - file: reference/convert/pyomo
