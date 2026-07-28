@@ -45,7 +45,7 @@ authors:
       affiliation: 1
     - name: Bryan M. Li
       orcid: 0000-0003-3144-4838
-      affiliation: 1, 5
+      affiliation: 1, 3
     - name: Kalle Westerling
       orcid: 0000-0002-2014-332X
       affiliation: 1
@@ -54,29 +54,29 @@ authors:
       affiliation: 1
     - name: Max Balmus
       orcid: 0000-0002-6003-0178
-      affiliation: 1, 3
+      affiliation: 1, 4
     - name: Eric Daub
       orcid: 0000-0002-8499-0720
       affiliation: 1
     - name: Steve Niederer
       orcid: 0000-0002-4612-6982
-      affiliation: 1, 3
+      affiliation: 1, 4
     - name: Andrew B. Duncan
       orcid: 0000-0001-5762-164X
-      affiliation: 3
+      affiliation: 4
     - name: Jason D. McEwen
       orcid: 0000-0002-5852-8890
-      affiliation: 1, 4
+      affiliation: 1, 5
 affiliations:
     - name: The Alan Turing Institute, London, United Kingdom
       index: 1
     - name: University of Sheffield, Sheffield, United Kingdom
       index: 2
-    - name: Imperial College London, London, United Kingdom
-      index: 3
-    - name: University College London, London, United Kingdom
-      index: 4
     - name: University of Edinburgh, Edinburgh, United Kingdom
+      index: 3
+    - name: Imperial College London, London, United Kingdom
+      index: 4
+    - name: University College London, London, United Kingdom
       index: 5
 date: 6 February 2026
 bibliography: paper.bib
