@@ -290,7 +290,7 @@ class Active(Learner):
 
         Parameters
         ----------
-        *arg: TensorLike or None
+        x: TensorLike or None
             Optional input samples.
 
         Returns
