@@ -84,7 +84,7 @@ bibliography: paper.bib
 
 # Summary
 
-Computational simulations lie at the heart of modern science and engineering, but they are often slow and computationally costly. A common solution is to use emulators: fast, cheap models trained to approximate the simulator. However, constructing these requires substantial expertise. AutoEmulate [@autoemulate] is a low-code Python package for emulation workflows, making it easy to replace simulations with fast, accurate emulators. AutoEmulate has now been fully refactored to use PyTorch as a backend, enabling GPU acceleration, automatic differentiation, and seamless integration with the broader PyTorch ecosystem. The toolkit has also been extended with easy-to-use interfaces for common emulation tasks, including model calibration (determining which input values are most likely to have generated real-world observations) and active learning (where simulations are chosen to improve emulator performance at minimal computational cost). Together these updates make AutoEmulate uniquely suited to running performant end-to-end emulation workflows.
+Computational simulations lie at the heart of modern science and engineering, but they are often slow and computationally costly. A common solution is to use emulators: fast, cheap models trained to approximate the simulator. However, constructing these requires substantial expertise. AutoEmulate [@autoemulate] is a Python package for end-to-end emulation workflows that automates much of the machine learning pipeline, making it easy to replace simulations with fast, accurate emulators. AutoEmulate has now been fully refactored to use PyTorch as the primary and default backend, enabling GPU acceleration, automatic differentiation, and seamless integration with the broader PyTorch ecosystem. The toolkit has also been extended with easy-to-use interfaces for common emulation tasks, including model calibration (determining which input values are most likely to have generated real-world observations) and active learning (where simulations are chosen to improve emulator performance at minimal computational cost). Together these updates make AutoEmulate uniquely suited to running performant end-to-end emulation workflows.
 
 # Statement of need
 
@@ -98,15 +98,15 @@ The latest version of AutoEmulate now also supports direct integration of custom
 
 # State of the field
 
-The primary motivation for developing AutoEmulate [@autoemulate] was to make emulation accessible to domain researchers who are not machine learning experts. It achieves this through a low-code interface and automated model selection, distinguishing it from other surrogate modelling tools such as SMT [@smt] or Emukit [@emukit].
+The primary motivation for developing AutoEmulate [@autoemulate] was to make emulation accessible to domain researchers who are not machine learning experts. It achieves this through a simple, high-level interface and automated model selection, distinguishing it from other surrogate modelling tools such as SMT [@smt] or Emukit [@emukit].
 
 We further extended the capabilities of AutoEmulate to include a range of downstream tasks in a single package. The comprehensive nature of the tool distinguishes it from more specialised packages. For example, SBI [@sbi] or BayesFlow [@bayesflow] can train emulators on simulated data and perform Bayesian calibration, while Ax [@ax] or scikit-activeml [@skactiveml] support active learning. While these packages can offer more advanced tooling for a particular task, none of them cover as wide a range of emulation capabilities.
 
-More comprehensive uncertainty quantification toolkits such as OpenTURNS [@openturns] and PyApprox [@pyapprox] do offer broad emulation functionality, though automated comparison across emulator classes is left to the user. To our knowledge, no existing tool combines automated model selection and hyperparameter tuning with sensitivity analysis, calibration, and active learning in a single low-code package.
+More comprehensive uncertainty quantification toolkits such as OpenTURNS [@openturns] and PyApprox [@pyapprox] do offer broad emulation functionality, though automated comparison across emulator classes is left to the user. To our knowledge, no existing tool combines automated model selection and hyperparameter tuning with sensitivity analysis, calibration, and active learning in a single package.
 
 # Software Design
 
-AutoEmulate design is centered around (i) low-code mode, (ii) modularity and (iii) integrating with the wider ecosystem wherever possible. The design has now been updated from being scikit-learn oriented to PyTorch-first.
+AutoEmulate design is centered around (i) a high-level API that automates common workflows, (ii) modularity and (iii) integrating with the wider ecosystem wherever possible. The design has now been updated from being entirely scikit-learn oriented to PyTorch-first.
 
 AutoEmulate primarily targets users who are simulation but not ML experts, aiming to make emulator training as easy as possible. We also offer flexibility to advanced users by exposing customizable parameters through our APIs (set to sensible defaults to abstract complexity away from novice users).
 
