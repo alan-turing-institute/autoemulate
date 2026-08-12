@@ -12,6 +12,7 @@ def fit_from_reinitialized(
     transformed_emulator_params: dict | None = None,
     device: DeviceLike | None = None,
     random_seed: int | None = None,
+    deterministic: bool = False,
 ):
     """
     Fit a fresh model with reinitialized parameters using the best configuration.
@@ -36,6 +37,8 @@ def fit_from_reinitialized(
         device is used. Defaults to None.
     random_seed: int | None
         Random seed for parameter initialization. Defaults to None.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
     Returns
     -------
@@ -53,7 +56,7 @@ def fit_from_reinitialized(
     neural networks.
     """
     if random_seed is not None:
-        set_random_seed(seed=random_seed)
+        set_random_seed(seed=random_seed, deterministic=deterministic)
 
     # Extract emulator and its parameters from Emulator instance
     if isinstance(emulator, TransformedEmulator):

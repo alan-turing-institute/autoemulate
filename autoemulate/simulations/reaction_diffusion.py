@@ -20,11 +20,12 @@ class ReactionDiffusion(Simulator):
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
         return_timeseries: bool = False,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
         n: int = 32,
         L: int = 20,
         T: float = 10.0,
         dt: float = 0.1,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the ReactionDiffusion simulator.
@@ -35,17 +36,11 @@ class ReactionDiffusion(Simulator):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
-        log_level: str
-            Logging level for the simulator. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
         return_timeseries: bool
             Whether to return the full timeseries or just the spatial solution at the
             final time step. Defaults to False.
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         n: int
             Number of spatial points in each direction.
         L: int
@@ -54,12 +49,19 @@ class ReactionDiffusion(Simulator):
             Total time to simulate.
         dt: float
             Time step size.
+        show_progress_bar: bool
+            Whether to show a progress bar during batch simulations. Defaults to True.
         """
         if parameters_range is None:
             parameters_range = {"beta": (1.0, 2.0), "d": (0.05, 0.3)}
         if output_names is None:
             output_names = ["solution"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
         self.return_timeseries = return_timeseries
         self.n = n
         self.L = L

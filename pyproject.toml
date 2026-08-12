@@ -1,6 +1,6 @@
 [project]
 name = "autoemulate"
-version = "1.2.1"
+version = "2.1.2"
 description = "A python package for semi-automated emulation"
 license = "MIT"
 authors = [{ name = "AutoEmulate contributors (see our GitHub page)" }]
@@ -18,7 +18,7 @@ classifiers = [
 dependencies = [
     "matplotlib>=3.7.2",
     "seaborn>=0.12.2",
-    "scikit-learn>=1.3.0,<1.6.0",
+    "scikit-learn>=1.3.0",
     "pandas>=2.1",
     "torch>=2.1.0",
     "scipy>=1.11.3",
@@ -34,7 +34,7 @@ dependencies = [
     "torchmetrics>=1.7.1",
     "pyro-ppl>=1.9.1",
     "torchrbf>=0.0.1",
-    "arviz>=0.21.0",
+    "arviz>=0.21.0,<1.0",
     "getdist>=1.7.2",
     "einops>=0.8.1",
     "harmonic>=1.3.0",
@@ -68,6 +68,7 @@ dev = [
     "plotnine>=0.13.6",
     "pyright==1.1.405",
     "ruff==0.12.11",
+    "pytest-xdist>=3.0.0",
 ]
 spatiotemporal = ["the-well>=1.1.0", "neuraloperator>=1.0.2"]
 
@@ -84,6 +85,24 @@ autoemulate = ["datasets/**/*"]
 [tool.setuptools.exclude-package-data]
 autoemulate = ["**/__pycache__", "**/*.pyc"]
 
+[tool.uv]
+# uvloop does not support Windows (no wheels, setup.py raises RuntimeError).
+# It's pulled in via harmonic -> flax -> orbax-checkpoint -> uvloop.
+# orbax-checkpoint falls back to the default asyncio loop when uvloop is absent,
+# so skipping it on Windows is safe. On Linux/macOS it is still installed normally.
+override-dependencies = ["uvloop>=0.0.0; sys_platform != 'win32'"]
+
+# https://docs.astral.sh/uv/guides/integration/pytorch/#using-a-pytorch-index
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -95,6 +114,22 @@ source = [".", "/tmp"]
 
 [tool.pytest.ini_options]
 addopts = "--ignore=v0"
+# These suppress only test output; runtime warnings still reach users.
+filterwarnings = [
+    # Raised by PyTorch (via gpytorch) - not actionable here.
+    # Remove if dependencies no longer calling `torch.jit.script`.
+    "ignore:`torch\\.jit\\.script` is deprecated\\..*:DeprecationWarning",
+    # Raised by Pyro on Python 3.10 when parsing a dependency docstring.
+    "ignore:invalid escape sequence.*:DeprecationWarning:pyro\\.ops\\.stats",
+    # Raised when harmonic imports TensorFlow Probability's JAX backend.
+    "ignore:jax\\.interpreters\\.xla\\.pytype_aval_mappings is deprecated\\..*:DeprecationWarning:tensorflow_probability\\.python\\.internal\\.backend\\.jax\\.ops",
+    # PyTorch MPS backend capability fallbacks are backend noise in tests.
+    "ignore:The operator .* is not currently supported on the MPS backend.*:UserWarning",
+    # LightGBM automatically adds feature names to training data, which causes warnings when
+    # making predictions with unnamed data
+    # https://github.com/lightgbm-org/LightGBM/issues/6798
+    "ignore:X does not have valid feature names, but LGBMRegressor was fitted with feature names:UserWarning",
+]
 
 [tool.pyright]
 venvPath = "."

@@ -1,4 +1,4 @@
-# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/refs/heads/main/misc/AE_logo_final.png" align="right" height="138" /></a>
+# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/refs/heads/main/misc/AE.png" align="right" height="138" /></a>
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
@@ -7,12 +7,8 @@
 [![Documentation](https://img.shields.io/badge/documentation-blue)](https://alan-turing-institute.github.io/autoemulate/)
 [![Github Stats](https://img.shields.io/badge/repostats-orange)](https://github.com/alan-turing-institute/autoemulate/blob/github-repo-stats/alan-turing-institute/autoemulate/latest-report/report.pdf)
 
-
 <!-- SPHINX-START -->
 Simulations of physical systems are often slow and need lots of compute, which makes them unpractical for real-world applications like digital twins, or when they have to run thousands of times for sensitivity analyses. The goal of `AutoEmulate` is to make it easy to replace simulations with fast, accurate emulators. To do this, `AutoEmulate` automatically fits and compares various emulators, ranging from simple models like Radial Basis Functions and Second Order Polynomials to more complex models like Support Vector Machines and  Gaussian Processes to find the best emulator for a simulation. 
-
->[!WARNING]
->Although AutoEmulate is currently on version 1.x, we are not following semantic versioning at the moment. The convention for V1 is that breaking and major changes will be made between minor version (1.1 -> 1.2). Bug fixes will be made in patch versions (1.1.1 -> 1.1.2). We plan to implement true semantic versioning in v2 of the package. We recommend pinning the minor version of AutoEmulate if using downstream and carefully reading release notes.
 
 ## Documentation
 
@@ -23,7 +19,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
 
 - The AutoEmulate project is run out of the [Alan Turing Institute](https://www.turing.ac.uk/).
 - Visit [autoemulate.com](https://www.autoemulate.com/) to learn more.
-- Feel free to reach out to us at [ai4physics@turing.ac.uk](mailto:ai4physics@turing.ac.uk) for queries about AutoEmulate or ideas for collaboration
+- Feel free to reach out to us at [aiphys@turing.ac.uk](mailto:aiphys@turing.ac.uk) for queries about AutoEmulate or ideas for collaboration.
 - We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626). 
 
   Please cite this paper if you use the package in your work:
@@ -73,10 +69,16 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/vchhabra-turing"><img src="https://avatars.githubusercontent.com/u/140401853?v=4?s=100" width="100px;" alt="vchhabra-turing"/><br /><sub><b>vchhabra-turing</b></sub></a><br /><a href="#ideas-vchhabra-turing" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/era-23"><img src="https://avatars.githubusercontent.com/u/115151590?v=4?s=100" width="100px;" alt="Ethan Attwood"/><br /><sub><b>Ethan Attwood</b></sub></a><br /><a href="#bug-era-23" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/TheCSGuy25"><img src="https://avatars.githubusercontent.com/u/87066683?v=4?s=100" width="100px;" alt="__aar0n__.py"/><br /><sub><b>__aar0n__.py</b></sub></a><br /><a href="#code-TheCSGuy25" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SyedHaider2084"><img src="https://avatars.githubusercontent.com/u/227389830?v=4?s=100" width="100px;" alt="SyedHaider2084"/><br /><sub><b>SyedHaider2084</b></sub></a><br /><a href="#code-SyedHaider2084" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SyedHaider2084"><img src="https://avatars.githubusercontent.com/u/227389830?v=4?s=100" width="100px;" alt="SyedHaider2084"/><br /><sub><b>SyedHaider2084</b></sub></a><br /><a href="#code-SyedHaider2084" title="Code">💻</a> <a href="#doc-SyedHaider2084" title="Documentation">📖</a></td>
     </tr>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/lcm98/"><img src="https://avatars.githubusercontent.com/u/102757707?v=4?s=100" width="100px;" alt="Loh Chun Mun"/><br /><sub><b>Loh Chun Mun</b></sub></a><br /><a href="#doc-cmsamaaa" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/lcm98/"><img src="https://avatars.githubusercontent.com/u/102757707?v=4?s=100" width="100px;" alt="Loh Chun Mun"/><br /><sub><b>Loh Chun Mun</b></sub></a><br /><a href="#doc-cmsamaaa" title="Documentation">📖</a> <a href="#code-cmsamaaa" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/z7076"><img src="https://avatars.githubusercontent.com/u/69681924?v=4?s=100" width="100px;" alt="Jichen Zhang"/><br /><sub><b>Jichen Zhang</b></sub></a><br /><a href="#code-z7076" title="Code">💻</a> <a href="#doc-z7076" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RemDelaporteMathurin"><img src="https://avatars.githubusercontent.com/u/40028739?v=4?s=100" width="100px;" alt="Rémi Delaporte-Mathurin"/><br /><sub><b>Rémi Delaporte-Mathurin</b></sub></a><br /><a href="#bug-RemDelaporteMathurin" title="Bug reports">🐛</a> <a href="#doc-RemDelaporteMathurin" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pmeier"><img src="https://avatars.githubusercontent.com/u/6849766?v=4?s=100" width="100px;" alt="Philip Meier"/><br /><sub><b>Philip Meier</b></sub></a><br /><a href="#bug-pmeier" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/penelopeysm"><img src="https://avatars.githubusercontent.com/u/122629585?v=4?s=100" width="100px;" alt="Penelope Yong"/><br /><sub><b>Penelope Yong</b></sub></a><br /><a href="#ideas-penelopeysm" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-penelopeysm" title="Reviewed Pull Requests">👀</a> <a href="#code-penelopeysm" title="Code">💻</a> <a href="#doc-penelopeysm" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ykd007"><img src="https://avatars.githubusercontent.com/u/79036688?v=4?s=100" width="100px;" alt="Yash Dhawan"/><br /><sub><b>Yash Dhawan</b></sub></a><br /><a href="#doc-ykd007" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/heba-ali-ashour/"><img src="https://avatars.githubusercontent.com/u/45080583?v=4?s=100" width="100px;" alt="Heba Ashour"/><br /><sub><b>Heba Ashour</b></sub></a><br /><a href="#code-hebatea" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

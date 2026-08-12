@@ -528,7 +528,7 @@ class GaussianProcessEmulator(GaussianEmulator):
         return pred
 
 
-class PyTorchBackend(nn.Module, Emulator):
+class PyTorchBackend(Emulator, nn.Module):
     """
     `PyTorchBackend` provides a backend for PyTorch models.
 
@@ -552,6 +552,14 @@ class PyTorchBackend(nn.Module, Emulator):
     lr: float = 1e-1
     scheduler_cls: type[LRScheduler] | None = None
     supports_uq: bool = False
+
+    def __init__(self, *args, **kwargs):
+        # MRO places Emulator before nn.Module (so TorchDeviceMixin.to resolves
+        # ahead of nn.Module.to), but Emulator.__init__ is a no-op stub. Init
+        # nn.Module here so subclasses can assign submodules/parameters before
+        # super().__init__() walks the rest of the chain.
+        nn.Module.__init__(self)
+        super().__init__(*args, **kwargs)  # pyright: ignore[reportAbstractUsage]
 
     def loss_func(self, y_pred, y_true):
         """Loss function to be used for training the model."""

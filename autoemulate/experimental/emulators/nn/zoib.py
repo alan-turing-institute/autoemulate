@@ -129,6 +129,7 @@ class ZOIBMLP(MLP):
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        deterministic: bool = False,
     ):
         """
         Zero-One Inflated Beta Distribution Multi-Layer Perceptron (MLP) emulator.
@@ -166,6 +167,8 @@ class ZOIBMLP(MLP):
             Learning rate for the optimizer. Defaults to 1e-2.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         device: DeviceLike | None
             Device to run the model on (e.g., "cpu", "cuda", "mps"). Defaults to None.
         scheduler_cls: type[LRScheduler] | None
@@ -200,6 +203,7 @@ class ZOIBMLP(MLP):
             device,
             scheduler_cls,
             scheduler_params,
+            deterministic,
         )
 
     def loss_func(self, y_pred, y_true):  # noqa: D102

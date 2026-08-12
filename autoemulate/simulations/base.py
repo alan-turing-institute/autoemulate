@@ -1,15 +1,15 @@
-import logging
 from abc import ABC, abstractmethod
 
 import torch
 from scipy.stats import qmc
 from tqdm import tqdm
 
-from autoemulate.core.logging_config import get_configured_logger
-from autoemulate.core.types import TensorLike
+from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.logging_config import _resolve_show_progress_bar, get_logger
+from autoemulate.core.types import DeviceLike, TensorLike
 from autoemulate.data.utils import ValidationMixin, set_random_seed
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class Simulator(ABC, ValidationMixin):
@@ -24,7 +24,8 @@ class Simulator(ABC, ValidationMixin):
         self,
         parameters_range: dict[str, tuple[float, float]],
         output_names: list[str],
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the simulator with parameter ranges and output names.
@@ -35,14 +36,10 @@ class Simulator(ABC, ValidationMixin):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_names: list[str]
             List of output parameters' names.
-        log_level: str
-            Logging level for the simulator. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
+        show_progress_bar: bool
+            Whether to show a progress bar during batch simulations. Defaults to True.
         """
         self._parameters_range = parameters_range
         self._param_names = list(parameters_range.keys())
@@ -56,7 +53,9 @@ class Simulator(ABC, ValidationMixin):
         self._in_dim = len(self.param_names)
         self._out_dim = len(self.output_names)
         self._has_sample_forward = False
-        self.logger, self.progress_bar = get_configured_logger(log_level)
+        self.show_progress_bar = _resolve_show_progress_bar(
+            log_level=log_level, show_progress_bar=show_progress_bar
+        )
 
     @classmethod
     def simulator_name(cls) -> str:
@@ -141,7 +140,11 @@ class Simulator(ABC, ValidationMixin):
         return self._out_dim
 
     def sample_inputs(
-        self, n_samples: int, random_seed: int | None = None, method: str = "lhs"
+        self,
+        n_samples: int,
+        random_seed: int | None = None,
+        method: str = "lhs",
+        deterministic: bool = False,
     ) -> TensorLike:
         """
         Generate random samples using Quasi-Monte Carlo methods.
@@ -158,6 +161,8 @@ class Simulator(ABC, ValidationMixin):
             Random seed for reproducibility. If None, no seed is set.
         method: str
             Sampling method to use. One of ["lhs", "sobol"].
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------
@@ -165,7 +170,7 @@ class Simulator(ABC, ValidationMixin):
             Parameter samples (column order is given by self.param_names)
         """
         if random_seed is not None:
-            set_random_seed(random_seed)  # type: ignore PGH003
+            set_random_seed(random_seed, deterministic=deterministic)  # type: ignore PGH003
 
         if len(self.sample_param_bounds) == 0:
             # All parameters are constant - broadcast to n_samples
@@ -251,9 +256,9 @@ class Simulator(ABC, ValidationMixin):
                 return y
         except Exception as e:
             if not allow_failures:
-                self.logger.error("Error occurred during simulation: %s", e)
+                logger.error("Error occurred during simulation: %s", e)
                 raise
-            self.logger.warning("Simulation failed with error %s. Returning None", e)
+            logger.warning("Simulation failed with error %s. Returning None", e)
         return None
 
     def forward_batch(
@@ -281,7 +286,7 @@ class Simulator(ABC, ValidationMixin):
             Tuple of (simulation_results, valid_input_parameters).
             Only successful simulations are included.
         """
-        self.logger.info("Running batch simulation for %d samples", len(x))
+        logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         successful = 0
@@ -291,7 +296,7 @@ class Simulator(ABC, ValidationMixin):
         for i in tqdm(
             range(len(x)),
             desc="Running simulations",
-            disable=not self.progress_bar,
+            disable=not self.show_progress_bar,
             total=len(x),
             unit="sample",
             unit_scale=True,
@@ -312,7 +317,7 @@ class Simulator(ABC, ValidationMixin):
                 )
 
         # Report results
-        self.logger.info(
+        logger.info(
             "Successfully completed %d/%d simulations (%.1f%%)",
             successful,
             len(x),
@@ -362,3 +367,115 @@ class Simulator(ABC, ValidationMixin):
             output_dict[output_name] = self.results_tensor[:, i]
 
         return output_dict
+
+
+class TorchSimulator(Simulator, TorchDeviceMixin):
+    """
+    Simulator that runs computations on a specified torch device.
+
+    This subclass extends :class:`Simulator` with the :class:`TorchDeviceMixin`
+    so that simulators implemented in PyTorch (e.g., ``torchcor``) can run on
+    CPU or accelerator hardware. Inputs are moved to ``self.device`` before the
+    forward pass and the resulting tensors are kept on the same device.
+    """
+
+    def __init__(
+        self,
+        parameters_range: dict[str, tuple[float, float]],
+        output_names: list[str],
+        log_level: str | None = None,
+        device: DeviceLike | None = None,
+        show_progress_bar: bool = True,
+    ):
+        Simulator.__init__(
+            self,
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
+        TorchDeviceMixin.__init__(self, device=device)
+
+    def sample_inputs(
+        self,
+        n_samples: int,
+        random_seed: int | None = None,
+        method: str = "lhs",
+        deterministic: bool = False,
+    ) -> TensorLike:
+        """
+        Sample inputs and move them to the simulator's device.
+
+        Parameters
+        ----------
+        n_samples: int
+            Number of samples to generate.
+        random_seed: int | None
+            Optional random seed to make sampling reproducible.
+        method: str
+            Sampling method, one of ``"lhs"`` or ``"sobol"``.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
+
+        Returns
+        -------
+        TensorLike
+            Sampled inputs located on ``self.device``.
+        """
+        samples = super().sample_inputs(
+            n_samples,
+            random_seed=random_seed,
+            deterministic=deterministic,
+            method=method,
+        )
+        (samples_device,) = self._move_tensors_to_device(samples)
+        return samples_device
+
+    def forward(self, x: TensorLike, allow_failures: bool = True) -> TensorLike | None:
+        """
+        Run a single simulation on the configured device.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Input tensor with shape ``(n_samples, in_dim)``.
+        allow_failures: bool
+            When True, failures return ``None`` instead of raising.
+
+        Returns
+        -------
+        TensorLike | None
+            Simulation result on ``self.device`` or ``None`` on failure.
+        """
+        (x_device,) = self._move_tensors_to_device(x)
+        y = super().forward(x_device, allow_failures=allow_failures)
+        if isinstance(y, torch.Tensor):
+            return y.to(self.device)
+        return y
+
+    def forward_batch(
+        self, x: TensorLike, allow_failures: bool = True
+    ) -> tuple[TensorLike, TensorLike]:
+        """
+        Run a batch of simulations with device management.
+
+        Parameters
+        ----------
+        x: TensorLike
+            Batch of inputs with shape ``(batch_size, in_dim)``.
+        allow_failures: bool
+            Whether to skip failures (True) or raise immediately (False).
+
+        Returns
+        -------
+        tuple[TensorLike, TensorLike]
+            Tuple of ``(results, valid_inputs)`` residing on ``self.device``.
+        """
+        (x_device,) = self._move_tensors_to_device(x)
+        results, valid_inputs = super().forward_batch(
+            x_device, allow_failures=allow_failures
+        )
+        results = results.to(self.device)
+        self.results_tensor = results
+        valid_inputs = valid_inputs.to(self.device)
+        return results, valid_inputs

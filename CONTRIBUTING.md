@@ -22,7 +22,11 @@ This section provides a high-level guide to contributing to AutoEmulate, designe
 
 We welcome contributions of all kinds, be it code, documentation, or community engagement. We encourage you to read through the following sections to learn more about how you can contribute to the package.
 
-## Development guide                
+## Use of AI Tools
+
+AI tools are useful but contributors are responsible for any code or documentation they commit. Please do not commit code you do not understand. If you commit AI-generated code, ensure its correctness and be prepared to explain exactly what it does. You do not have to disclose if code was written by AI, but making it clear where and how you used AI may be useful for reviewers, especially if AI was heavily used in your contribution.
+
+## Development guide
 
 ### Running the test-suite on Apple silicon (M-series)
 

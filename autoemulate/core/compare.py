@@ -12,10 +12,11 @@ import tqdm
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import _resolve_show_progress_bar, get_logger
 from autoemulate.core.metrics import R2, Metric, MetricParams, get_metric, get_metrics
 from autoemulate.core.model_selection import bootstrap, evaluate
 from autoemulate.core.plotting import (
+    PREDICTION_INTERVAL_Z,
     calculate_subplot_layout,
     create_and_plot_slice,
     display_figure,
@@ -39,6 +40,8 @@ from autoemulate.emulators.base import Emulator, ProbabilisticEmulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.base import AutoEmulateTransform
 from autoemulate.transforms.standardize import StandardizeTransform
+
+logger = get_logger(__name__)
 
 
 class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
@@ -69,9 +72,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         max_retries: int = 3,
         device: DeviceLike | None = None,
         random_seed: int | None = None,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
         tuning_metric: str | Metric = "r2",
         evaluation_metrics: list[str | Metric] | None = None,
+        show_progress_bar: bool = True,
+        deterministic: bool = False,
     ):
         """
         Initialize the AutoEmulate class.
@@ -80,18 +85,18 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ----------
         x: InputLike
             Input features.
-        y: InputLike or None
-            Target values (not needed if x is a Dataset).
+        y: InputLike
+            Target values.
         test_data: tuple[InputLike, InputLike] | None
             Optional test data as a tuple (x_test, y_test). If None, a random split
             from the provided data is used. Defaults to None.
-        models: list[type[Emulator]] | None
-            List of emulator classes to compare. If None, all available emulators
-            are used.
-        x_transforms_list: list[list[Transform]] | None
+        models: list[type[Emulator] | str] | None
+            List of emulator classes or registered emulator names to compare. If None,
+            all available emulators are used.
+        x_transforms_list: list[list[Transform | dict]] | None
             An optional list of sequences of transforms to apply to the input data.
             Defaults to None, in which case the data is standardized.
-        y_transforms_list: list[list[Transform]] | None
+        y_transforms_list: list[list[Transform | dict]] | None
             An optional list of sequences of transforms to apply to the output data.
             Defaults to None, in which case the data is standardized.
         model_params: ModelParams | None
@@ -119,24 +124,25 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             or GPU). Defaults to None.
         random_seed: int | None
             Random seed for reproducibility. If None, no seed is set. Defaults to None.
-        log_level: str
-            Logging level. Can be "progress_bar", "debug", "info", "warning",
-            "error", or "critical". Defaults to "progress_bar". If "progress_bar",
-            it will show a progress bar during model comparison. It will set the
-            logging level to "error" to avoid cluttering the output
-            with debug/info logs.
-        tuning_metric: str | TorchMetrics
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
+        tuning_metric: str | Metric
             Metric to use for hyperparameter tuning. Can be a string shortcut
-            ("r2", "rmse", "mse", "mae") or a MetricConfig object. Defaults to "r2".
-        evaluation_metrics: list[str | TorchMetrics] | None
+            ("r2", "rmse", "mse", "mae") or a Metric object. Defaults to "r2".
+        evaluation_metrics: list[str | Metric] | None
             Metrics to compute during evaluation.
             If None, then defaults to ["r2", "rmse"].
-            Each entry can be a string shortcut or a MetricConfig object.
+            Each entry can be a string shortcut or a Metric object.
             IMPORTANT: The first metric in the list is used to
             determine the best model.
+        show_progress_bar: bool
+            Whether to show a progress bar during model comparison. Defaults to True.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         """
         Results.__init__(self)
         self.random_seed = random_seed
+        self.deterministic = deterministic
         TorchDeviceMixin.__init__(self, device=device)
         x, y = self._convert_to_tensors(x, y)
         x, y = self._move_tensors_to_device(x, y)
@@ -167,7 +173,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         self.models = updated_models
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
         if test_data is None:
             self.train_val, self.test = self._random_split(
@@ -198,9 +204,11 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         self.model_tuning = model_params is None
         self.transformed_emulator_params = transformed_emulator_params or {}
 
-        # Set up logger and ModelSerialiser for saving models
-        self.logger, self.progress_bar = get_configured_logger(log_level)
-        self.model_serialiser = ModelSerialiser(self.logger)
+        # Set up logger, progress bar, and ModelSerialiser for saving models
+        self.show_progress_bar = _resolve_show_progress_bar(
+            log_level=log_level, show_progress_bar=show_progress_bar
+        )
+        self.model_serialiser = ModelSerialiser(logger)
 
         # Run compare
         self.compare()
@@ -238,7 +246,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
 
         Parameters
         ----------
-        subset: bool
+        default_only: bool
             Whether to display only default or all available emulators. Defaults to
             True (default emulators only).
 
@@ -291,9 +299,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         ----------
         models: list[type[Emulator] | str] | None
             List of model classes or names to use for comparison. If None, all available
-            emulators are used (or subset based on only_pytorch and only_probabilistic).
-        only_pytorch: bool
-            If True, only PyTorch emulators are returned. Defaults to False.
+            emulators are used, or probabilistic defaults when only_probabilistic=True.
         only_probabilistic: bool
             If True, only probabilistic emulators are returned. Defaults to False.
         """
@@ -372,7 +378,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             f"Best params: {best_params_for_this_model}, "
             f"Metrics: {metrics_str}"
         )
-        self.logger.debug(msg)
+        logger.debug(msg)
 
     def compare(self):
         """
@@ -394,14 +400,12 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             device=self.device,
             tuning_metric=self.tuning_metric,
         )
-        self.logger.info(
-            "Comparing %s", [model_cls.__name__ for model_cls in self.models]
-        )
+        logger.info("Comparing %s", [model_cls.__name__ for model_cls in self.models])
         for x_transforms in self.x_transforms_list:
             for y_transforms in self.y_transforms_list:
                 for id, model_cls in tqdm.tqdm(
                     enumerate(self.models),
-                    disable=not self.progress_bar,
+                    disable=not self.show_progress_bar,
                     desc="Comparing models",
                     total=len(self.models),
                     unit="model",
@@ -411,7 +415,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     # is used to retry the whole tuning and fitting process
                     for attempt in range(self.max_retries):
                         try:
-                            self.logger.info(
+                            logger.info(
                                 "Running Model: %s: %d/%d (attempt %d/%d)",
                                 model_cls.__name__,
                                 id + 1,
@@ -420,7 +424,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 self.max_retries,
                             )
                             if self.model_tuning:
-                                self.logger.debug(
+                                logger.debug(
                                     'Running tuner for model "%s"',
                                     model_cls.__name__,
                                 )
@@ -441,7 +445,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 else:
                                     best_score_idx = np.argmin(mean_scores)
                                 best_params_for_this_model = params_list[best_score_idx]
-                                self.logger.debug(
+                                logger.debug(
                                     'Tuner found best params for model "%s": '
                                     "%s with score: %.3f",
                                     model_cls.__name__,
@@ -449,7 +453,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     mean_scores[best_score_idx],
                                 )
                             else:
-                                self.logger.debug(
+                                logger.debug(
                                     'Skipping tuning for model "%s", using default'
                                     "parameters",
                                     model_cls.__name__,
@@ -467,7 +471,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     **self.model_params,
                                 }
 
-                            self.logger.debug(
+                            logger.debug(
                                 'Running cross-validation for model "%s" '
                                 'for "%s" iterations',
                                 model_cls.__name__,
@@ -515,13 +519,13 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 f"{metric}: {mean:.3f} (std: {std:.3f})"
                                 for metric, (mean, std) in test_metrics.items()
                             )
-                            self.logger.debug(
+                            logger.debug(
                                 'Cross-validation for model "%s" '
                                 "completed with test metrics: %s",
                                 model_cls.__name__,
                                 test_metrics_str,
                             )
-                            self.logger.info(
+                            logger.info(
                                 "Finished running Model: %s\n", model_cls.__name__
                             )
                             result = Result(
@@ -536,7 +540,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                             # if successful, break out of the retry loop
                             break
                         except Exception as e:
-                            self.logger.warning(
+                            logger.warning(
                                 "Model %s failed on attempt %d/%d: %s",
                                 model_cls.__name__,
                                 attempt + 1,
@@ -544,7 +548,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                 str(e),
                             )
                             if attempt == self.max_retries - 1:
-                                self.logger.error(
+                                logger.error(
                                     "Model %s failed after %d attempts, skipping.",
                                     model_cls.__name__,
                                     self.max_retries,
@@ -569,6 +573,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         result_id: int | None = None,
         random_seed: int | None = None,
         transformed_emulator_params: None | TransformedEmulatorParams = None,
+        deterministic: bool = False,
     ) -> TransformedEmulator:
         """
         Fit a fresh model with reinitialized parameters using the best configuration.
@@ -590,6 +595,8 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. When None, the same parameters as
             used when identifying the best model are used. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------
@@ -627,6 +634,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             transformed_emulator_params=transformed_emulator_params,
             device=self.device,
             random_seed=random_seed,
+            deterministic=deterministic,
         )
 
     def plot(  # noqa: PLR0912, PLR0915
@@ -848,6 +856,9 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         """
         Plot predicted means (and variances) against observations for all outputs.
 
+        When variance is available, a 95% predictive interval (mean +/- 1.96 * std)
+        is shown.
+
         Parameters
         ----------
         model_obj: int | Emulator | Result
@@ -918,7 +929,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                 axs[i].errorbar(
                     test_y[:, i],
                     y_pred[:, i],
-                    yerr=2 * y_std[:, i],
+                    yerr=PREDICTION_INTERVAL_Z * y_std[:, i],
                     fmt="none",
                     alpha=0.4,
                     capsize=3,
@@ -937,7 +948,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
             )
             axs[i].set_title(output_names[i])
             axs[i].set_xlabel("True values")
-            axs[i].set_ylabel("Predicted values ±2\u03c3")
+            axs[i].set_ylabel("Predicted values (95% PI)")
         plt.tight_layout()
 
         if figsize is not None:
@@ -1081,7 +1092,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                     "out test data."
                 )
                 raise ValueError(msg)
-            self.logger.info(
+            logger.info(
                 "Using held out test data for calibration plot. "
                 "To use different data, provide x_test and y_test."
             )

@@ -1,11 +1,11 @@
 import json
-import logging
 
 import numpy as np
 from sklearn.model_selection import KFold
 from torch.distributions import Transform
 
 from autoemulate.core.device import TorchDeviceMixin
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import Metric, get_metric
 from autoemulate.core.model_selection import cross_validate
 from autoemulate.core.types import (
@@ -17,7 +17,7 @@ from autoemulate.core.types import (
 from autoemulate.data.utils import set_random_seed
 from autoemulate.emulators.base import ConversionMixin, Emulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class Tuner(ConversionMixin, TorchDeviceMixin):
@@ -28,7 +28,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
     ----------
     x: InputLike
         Input features.
-    y: OutputLike or None
+    y: InputLike | None
         Target values (not needed if x is a Dataset).
     n_iter: int
         Number of parameter settings to randomly sample and test.
@@ -37,6 +37,10 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         device (usually CPU or GPU).
     random_seed: int | None
         Random seed for reproducibility. If None, no seed is set.
+    tuning_metric: str | Metric
+        Metric to use for hyperparameter tuning. Defaults to "r2".
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
     """
 
     def __init__(
@@ -47,6 +51,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         device: DeviceLike | None = None,
         random_seed: int | None = None,
         tuning_metric: str | Metric = "r2",
+        deterministic: bool = False,
     ):
         TorchDeviceMixin.__init__(self, device=device)
         self.n_iter = n_iter
@@ -63,7 +68,7 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         self.tuning_metric = get_metric(tuning_metric)
 
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
     def run(
         self,
@@ -82,12 +87,10 @@ class Tuner(ConversionMixin, TorchDeviceMixin):
         ----------
         model_class: type[Emulator]
             A concrete Emulator subclass.
-        x_transforms_list: list[list[AutoEmulateTransform]] | None
-            An optional list of sequences of transforms to apply to the input data.
-            Defaults to None, in which case the data is standardized.
-        y_transforms_list: list[list[AutoEmulateTransform]] | None
-            An optional list of sequences of transforms to apply to the output data.
-            Defaults to None, in which case the data is standardized.
+        x_transforms: list[Transform] | None
+            Optional sequence of transforms to apply to the input data.
+        y_transforms: list[Transform] | None
+            Optional sequence of transforms to apply to the output data.
         transformed_emulator_params: None | TransformedEmulatorParams
             Parameters for the transformed emulator. Defaults to None.
         n_splits: int

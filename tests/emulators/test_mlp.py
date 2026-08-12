@@ -123,6 +123,8 @@ def test_mlp_docstring_no_additional():
         None.
     scheduler_params: dict | None
         Additional keyword arguments related to the scheduler.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
     Raises
     ------
@@ -179,6 +181,8 @@ def test_mlp_docstring_with_args():
         Additional keyword arguments related to the scheduler.
     another_arg: str
         Description for another_arg.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
     Raises
     ------
