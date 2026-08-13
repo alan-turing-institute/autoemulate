@@ -7,7 +7,7 @@ This directory contains example case studies demonstrating the use of the AutoEm
 Each subdirectory provides data, scripts, and documentation relevant to a specific application area.
 
 - **patient_calibration/**: Demonstrates cardiovascular model calibration using the Naghavi Model from [ModularCirc](https://github.com/alan-turing-institute/ModularCirc). Shows end-to-end workflow including sensitivity analysis, history matching, and Bayesian calibration for blood pressure dynamics in the left ventricle.
-- **model_comparison/**: A toy problem case study demonstrating how to perform surrogate calibration and compute Bayesian Evidence. It uses Gaussian Process emulators to quantitatively compare SIR and SEIR epidemic models and introduces the concept of the Bayes Factor to guard against overfitting.
+- **model_comparison/**: Demonstrates Bayesian model comparison using SIR and SEIR epidemic models to determine which model best explains observed data. Shows how to perform Bayesian calibration,  compute model evidence and compare models using Bayes factor.
 
 ## External examples
 
