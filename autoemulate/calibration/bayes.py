@@ -42,7 +42,7 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         ----------
         emulator: Emulator
             Fitted Emulator object.
-        parameters_range : dict[str, tuple[float, float]]
+        parameter_range : dict[str, tuple[float, float]]
             A dictionary mapping input parameter names to their (min, max) ranges.
         observations: dict[str, TensorLike]
             A dictionary of observations for each output.
@@ -70,10 +70,10 @@ class BayesianCalibration(TorchDeviceMixin, BayesianMixin):
         Notes
         -----
         The model assumes:
-        - Uniform priors for calibrated parameters (bounds given by `parameters_range`)
+        - Uniform priors for calibrated parameters (bounds given by `parameter_range`)
         - Gaussian likelihood with no correlation between outputs
         All non-calibrated parameters are set to a constant value. This is chosen as the
-        midpoint value of `parameters_range`.
+        midpoint value of `parameter_range`.
         """
         TorchDeviceMixin.__init__(self, device=device)
         self.parameter_range = parameter_range

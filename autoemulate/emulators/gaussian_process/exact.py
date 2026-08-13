@@ -81,6 +81,12 @@ class GaussianProcess(GaussianProcessEmulator, gpytorch.models.ExactGP):
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
         y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
+        standardize_x: bool
+            Whether to standardize the input features with a `StandardizeTransform`
+            before fitting. Defaults to False.
+        standardize_y: bool
+            Whether to standardize the target values with a `StandardizeTransform`
+            before fitting. Defaults to True.
         likelihood_cls: type[MultitaskGaussianLikelihood]
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
@@ -370,6 +376,12 @@ class GaussianProcessCorrelated(GaussianProcess):
             Input features, expected to be a 2D tensor of shape (n_samples, n_features).
         y: TensorLike
             Target values, expected to be a 2D tensor of shape (n_samples, n_tasks).
+        standardize_x: bool
+            Whether to standardize the input features with a `StandardizeTransform`
+            before fitting. Defaults to False.
+        standardize_y: bool
+            Whether to standardize the target values with a `StandardizeTransform`
+            before fitting. Defaults to True.
         likelihood_cls: type[MultitaskGaussianLikelihood]
             Likelihood class to use for the model. Defaults to
             `MultitaskGaussianLikelihood`.
@@ -389,9 +401,7 @@ class GaussianProcessCorrelated(GaussianProcess):
             False, it will return the posterior distribution over the modelled function.
             Defaults to False.
         epochs: int
-            Number of training epochs.
-        activation: type[nn.Module]
-            Activation function to use in the model. Defaults to `nn.ReLU`.
+            Number of training epochs. Defaults to 50.
         lr: float
             Learning rate for the optimizer. Defaults to 2e-1.
         early_stopping: EarlyStopping | None
@@ -401,7 +411,8 @@ class GaussianProcessCorrelated(GaussianProcess):
             GPU). Defaults to None.
         scheduler_cls: type[LRScheduler] | None
             Learning rate scheduler class. If None, no scheduler is used. Defaults to
-        scheduler_params: dict
+            None.
+        scheduler_params: dict | None
             Additional keyword arguments for the learning rate scheduler.
         """
         # Init device
