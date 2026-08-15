@@ -63,7 +63,7 @@ After writing new code or modifying existing code, please make sure to:
 
 * write [numpy-style docstrings](https://numpydoc.readthedocs.io/en/latest/format.html).
 * write tests in the `tests/` directory using [pytest](https://docs.pytest.org/en/7.4.x/).
-* format the code using [black](https://github.com/psf/black)
+* format the code using [Ruff](https://docs.astral.sh/ruff/formatter/).
 
 It would be great if you could also [update the documentation](https://alan-turing-institute.github.io/autoemulate/community/contributing-docs.html) to reflect the changes you've made. If you plan to add a new emulator have a look at the [contributing emulators docs](https://alan-turing-institute.github.io/autoemulate/community/contributing-emulators.html).
 
@@ -87,7 +87,7 @@ We run [`pre-commit`](https://pre-commit.com/) in CI for every pull request, so 
    pre-commit run --all-files
    ```
 
-If a hook makes changes, simply re-stage the affected files and run the command again until you get a `Passed` message. For hooks that fail with an error, follow the hint printed in the terminal (for example, formatting with Black or fixing lint) and then re-run `pre-commit run --all-files`.
+If a hook makes changes, simply re-stage the affected files and run the command again until you get a `Passed` message. For hooks that fail with an error, follow the hint printed in the terminal (for example, formatting with Ruff or fixing lint) and then re-run `pre-commit run --all-files`.
 
 ### 4. Open a Pull Request
 

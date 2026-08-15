@@ -60,7 +60,6 @@ dev = [
     "furo>=2023.9.10",
     "sphinx-copybutton>=0.5.2",
     "sphinx-autodoc-typehints>=1.24.0",
-    "black>=23.10.1",
     "pre-commit>=3.5.0",
     "jupyter-book>=1.0.0,<2.0.0",
     "pytest-cov>=4.1.0",
