@@ -116,6 +116,7 @@ source = [".", "/tmp"]
 addopts = "--ignore=v0"
 # These suppress only test output; runtime warnings still reach users.
 filterwarnings = [
+    "error",
     # Raised by PyTorch (via gpytorch) - not actionable here.
     # Remove if dependencies no longer calling `torch.jit.script`.
     "ignore:`torch\\.jit\\.script` is deprecated\\..*:DeprecationWarning",
