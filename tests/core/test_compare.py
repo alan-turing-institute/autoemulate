@@ -114,6 +114,23 @@ def test_ae_no_tuning_fix_params(sample_data_for_ae_compare):
     assert ae.best_result().model.model.posterior_predictive is True  # pyright: ignore[reportAttributeAccessIssue]
 
 
+def test_ae_no_tuning_ignores_incompatible_model_params(
+    sample_data_for_ae_compare,
+):
+    """Model-specific params should not break other models in a comparison."""
+    x, y = sample_data_for_ae_compare
+    ae = AutoEmulate(
+        x,
+        y,
+        models=["GaussianProcessRBF", "RandomForest"],
+        model_params={"posterior_predictive": True},
+    )
+
+    assert len(ae.results) == 2
+    assert ae.get_result(0).model.model.posterior_predictive is True  # pyright: ignore[reportAttributeAccessIssue]
+    assert "posterior_predictive" not in ae.get_result(1).params
+
+
 def test_get_model_subset():
     """Test getting a subset of models based on pytroch and probabilistic flags."""
 
