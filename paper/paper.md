@@ -106,7 +106,7 @@ More comprehensive uncertainty quantification toolkits such as OpenTURNS [@opent
 
 # Software Design
 
-AutoEmulate design is centered around (i) a high-level API that automates common workflows, (ii) modularity and (iii) integrating with the wider ecosystem wherever possible. The design has now been updated from being entirely scikit-learn oriented to PyTorch-first.
+AutoEmulate's design is centered around (i) a high-level API that automates common workflows, (ii) modularity and (iii) integrating with the wider ecosystem wherever possible. The design has now been updated from being entirely scikit-learn oriented to PyTorch-first.
 
 AutoEmulate primarily targets users who are simulation but not ML experts, aiming to make emulator training as easy as possible. We also offer flexibility to advanced users by exposing customizable parameters through our APIs (set to sensible defaults to abstract complexity away from novice users).
 
@@ -138,7 +138,7 @@ from autoemulate.transforms import PCATransform, StandardizeTransform
 ae = AutoEmulate(
     x, 
     y,
-    x_transforms_list=[[StandardizeTransform]]
+    x_transforms_list=[[StandardizeTransform]],
     y_transforms_list=[
       [],
       [PCATransform(n_components=16)],
@@ -151,7 +151,7 @@ The result in this case will return the best combination of model and output tra
 
 ![GP with PCA emulator prediction for a reaction diffusion simulation compared to the ground truth.](reaction_diffusion_emulation.png)
 
-Once an emulator has been trained it can generate fast predictions for new input values, enabling [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as [sensitivity analysis](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/01_emulation_sensitivity.html) or [model calibration](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/03_bayes_calibration.html). For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a dummy example assuming a simulation with two input parameters `param1` and `param2`, each with a plausible range of values, and two outputs `output1` and `output2`:
+Once an emulator has been trained it can generate fast predictions for new input values, enabling [downstream tasks](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/index.html) such as [sensitivity analysis](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/01_emulation_sensitivity.html) or [model calibration](https://alan-turing-institute.github.io/autoemulate/tutorials/tasks/03_bayes_calibration.html). For example, to run Sobol sensitivity analysis one only needs to pass the trained emulator and some information about the data. Below is a minimal example assuming a simulation with two input parameters `param1` and `param2`, each with a plausible range of values, and two outputs `output1` and `output2`:
 
 ```python
 from autoemulate.core.sensitivity_analysis import SensitivityAnalysis
@@ -191,7 +191,7 @@ Lastly, AutoEmulate makes it easy to integrate [custom simulators](https://alan-
 
 # Research Impact Statement
 
-In the last year, we have collaborated with experts across diverse domains. These collaborations have driven software development through feature requests and bug reports. For example, we implemented a full end-to-end calibration workflow used by collaborators in cardiac modelling, which utilises sensitivity analysis, history matching and Bayesian calibration. We demonstrate how to use AutoEmulate in patient calibration pipelines in one of our [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies). Similarly, we have worked with domain experts in signal processing, which led to the implementation of interval excursion set calibration. This work was presented in a poster at OFEME2025. We have also had contributors outside the core development team responding to existing issues and adapting the tool for their own use cases (e.g., contributing new types of emulators).
+In the last year, we have collaborated with experts across diverse domains. These collaborations have driven software development through feature requests and bug reports. For example, we implemented a full end-to-end calibration workflow used by collaborators in cardiac modelling, which utilises sensitivity analysis, history matching and Bayesian calibration. We demonstrate how to use AutoEmulate in patient calibration pipelines in one of our [case studies](https://github.com/alan-turing-institute/autoemulate/tree/main/case_studies). Similarly, we have worked with domain experts in signal processing, which led to the implementation of interval excursion set calibration. This work was presented in a poster at the Operating in the Future Electromagnetic Environment (OFEME) Symposium 2025. We have also had contributors outside the core development team responding to existing issues and adapting the tool for their own use cases (e.g., contributing new types of emulators).
 
 # AI usage disclosure
 
