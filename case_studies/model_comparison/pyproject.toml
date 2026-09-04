@@ -1,0 +1,11 @@
+[project]
+name = "autoemulate-model-comparison"
+version = "0.1.0"
+description = "Bayesian Model Comparison case study using AutoEmulate"
+requires-python = ">=3.9"
+dependencies = [
+    "autoemulate",
+    "dynesty",
+    "jupyter",
+    "harmonic"
+]
