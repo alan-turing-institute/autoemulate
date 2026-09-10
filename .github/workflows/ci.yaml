@@ -27,6 +27,7 @@ jobs:
     env:
       TURN_OFF_MPS_IF_RUNNING_CI: 1
       MPLBACKEND: Agg
+      PYTHONWARNINGS: "ignore:invalid escape sequence:DeprecationWarning:pyro.ops.stats"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
