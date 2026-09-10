@@ -465,10 +465,15 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
                                     for param_name, param in init_sig.parameters.items()
                                     if param_name in model_cls.get_tune_params()
                                 }
-                                # Overwrite defaults with user-supplied values
+                                # Apply only user parameters accepted by this model.
+                                compatible_model_params = {
+                                    param_name: value
+                                    for param_name, value in self.model_params.items()
+                                    if param_name in init_sig.parameters
+                                }
                                 best_params_for_this_model = {
                                     **default_params,
-                                    **self.model_params,
+                                    **compatible_model_params,
                                 }
 
                             logger.debug(
