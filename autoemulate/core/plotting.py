@@ -373,16 +373,17 @@ def _plot_2d_slice_with_fixed_params(
     fig.colorbar(im0, ax=ax)
 
     if var_2d is not None:
-        # Plot variance
+        # Plot the full width of the 95% predictive interval
+        interval_width_2d = 2 * float(PREDICTION_INTERVAL_Z) * torch.sqrt(var_2d)
         ax = axs[0, 1]
         im1 = ax.imshow(
-            var_2d.T,
+            interval_width_2d.T,
             origin="lower",
             aspect="auto",
             extent=[x_min, x_max, y_min, y_max],
             cmap="magma",
         )
-        ax.set_title("predicted variance")
+        ax.set_title("95% prediction interval width")
         ax.set_xlabel(param_names[0])
         ax.set_ylabel(param_names[1])
         fig.colorbar(im1, ax=ax)
