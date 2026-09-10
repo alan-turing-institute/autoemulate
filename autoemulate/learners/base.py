@@ -162,24 +162,26 @@ class Active(Learner):
 
         if x is not None:
             # If x is not, we skip the point (typically for Stream learners)
-            logger.info("Appending new training data and refitting emulator.")
             y_true = self.simulator.forward(x)
-            assert isinstance(y_true, TensorLike)
-            self.x_train = torch.cat([self.x_train, x])
-            self.y_train = torch.cat([self.y_train, y_true])
-            if self.fit_from_reinitialized:
-                self.emulator = fit_from_reinitialized(
-                    self.x_train,
-                    self.y_train,
-                    emulator=self.emulator,
-                    device=self.emulator.device,
-                )
+            if y_true is None:
+                logger.warning("Simulation failed. Skipping queried point.")
             else:
-                self.emulator.fit(self.x_train, self.y_train)
-            self.mse.update(y_pred, y_true)
-            self.r2.update(y_pred, y_true)
-            self.n_queries += 1
-            logger.info("Training data updated. Total queries: %s", self.n_queries)
+                logger.info("Appending new training data and refitting emulator.")
+                self.x_train = torch.cat([self.x_train, x])
+                self.y_train = torch.cat([self.y_train, y_true])
+                if self.fit_from_reinitialized:
+                    self.emulator = fit_from_reinitialized(
+                        self.x_train,
+                        self.y_train,
+                        emulator=self.emulator,
+                        device=self.emulator.device,
+                    )
+                else:
+                    self.emulator.fit(self.x_train, self.y_train)
+                self.mse.update(y_pred, y_true)
+                self.r2.update(y_pred, y_true)
+                self.n_queries += 1
+                logger.info("Training data updated. Total queries: %s", self.n_queries)
 
         # Only compute once we have ≥2 labeled points
         if self.n_queries >= 2:
