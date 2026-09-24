@@ -640,6 +640,45 @@ def test_msll_poor_prediction_with_training_data():
     assert msll > 0
 
 
+def test_msll_is_zero_when_prediction_is_trivial_model():
+    """Test MSLL is zero when the predictive distribution is the trivial model."""
+    torch.manual_seed(0)
+    y_train = torch.randn(200, 3) * 3.0 + 5.0
+    y_true = torch.randn(50, 3) * 3.0 + 5.0
+
+    # Trivial model: per-output training mean and global training variance
+    loc = y_train.mean(dim=0, keepdim=True).expand_as(y_true)
+    scale = y_train.var().sqrt().expand_as(y_true)
+    y_pred = Independent(Normal(loc, scale), 1)
+
+    msll = MSLL(y_pred, y_true, metric_params=MetricParams(y_train=y_train))
+    assert torch.isclose(msll, torch.tensor(0.0), atol=1e-5)
+
+    msll_per_output = MSLL(
+        y_pred, y_true, metric_params=MetricParams(y_train=y_train, reduction="none")
+    )
+    assert torch.allclose(msll_per_output, torch.zeros(3), atol=1e-5)
+
+
+def test_msll_matches_gaussian_log_loss_difference():
+    """Test MSLL equals model NLL minus trivial-model NLL from Normal.log_prob."""
+    torch.manual_seed(1)
+    y_train = torch.randn(200, 2) * 2.0 - 1.0
+    y_true = torch.randn(40, 2) * 2.0 - 1.0
+    y_pred = Independent(
+        Normal(y_true + 0.5 * torch.randn_like(y_true), torch.full_like(y_true, 0.8)),
+        1,
+    )
+
+    trivial = Normal(y_train.mean(dim=0, keepdim=True), y_train.var().sqrt())
+    expected = (
+        -y_pred.base_dist.log_prob(y_true).mean() + trivial.log_prob(y_true).mean()
+    )
+
+    msll = MSLL(y_pred, y_true, metric_params=MetricParams(y_train=y_train))
+    assert torch.isclose(msll, expected, atol=1e-5)
+
+
 def test_msll_without_training_data():
     """Test MSLL returns mean log loss when y_train is None."""
     y_true = torch.tensor([1.0, 2.0, 3.0]).view(-1, 1)

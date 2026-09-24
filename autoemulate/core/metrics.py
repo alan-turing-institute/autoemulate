@@ -391,8 +391,8 @@ class MSLLMetric(ProbabilisticMetric):
         y_train_var = torch.clamp(y_train_var, min=1e-6)
 
         # Compute mean negative log likelihood under trivial Gaussian model
-        trivial_nll_output = 0.5 * (
-            torch.log(2 * torch.pi * y_train_var)
+        trivial_nll_output = (
+            0.5 * torch.log(2 * torch.pi * y_train_var)
             + torch.square(y_true - y_train_mean) / (2 * y_train_var)
         ).mean(dim=0)
 
