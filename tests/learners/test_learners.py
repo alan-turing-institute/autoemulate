@@ -16,6 +16,12 @@ class Sin(Simulator):
         return torch.sin(x)
 
 
+class FailingSin(Simulator):
+    def _forward(self, x: torch.Tensor) -> None:
+        del x
+        return None
+
+
 def learners(
     *, simulator: Simulator, n_initial_samples: int, adaptive_only: bool
 ) -> Iterable:
@@ -144,6 +150,27 @@ def run_experiment(
             metrics.append(dict(name=learner.__class__.__name__, **learner.metrics))
             summary.append(dict(name=learner.__class__.__name__, **learner.summary))
     return metrics, summary
+
+
+def test_failed_simulator_query_is_skipped():
+    simulator = FailingSin(parameters_range={"x": (0, 5.0)}, output_names=["y"])
+    x_train = torch.tensor([[0.0], [1.0]])
+    y_train = torch.sin(x_train)
+    learner = stream.Random(
+        simulator=simulator,
+        emulator=GaussianProcessRBF(x_train, y_train, lr=0.001),
+        x_train=x_train.clone(),
+        y_train=y_train.clone(),
+        p_query=1.0,
+        fit_from_reinitialized=False,
+    )
+
+    learner.fit(torch.tensor([[2.0]]), random_seed=0)
+
+    assert torch.equal(learner.x_train, x_train)
+    assert torch.equal(learner.y_train, y_train)
+    assert learner.n_queries == 0
+    assert learner.metrics["n_queries"] == [0]
 
 
 def test_learners_sin():
