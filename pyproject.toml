@@ -92,6 +92,13 @@ autoemulate = ["**/__pycache__", "**/*.pyc"]
 # so skipping it on Windows is safe. On Linux/macOS it is still installed normally.
 override-dependencies = ["uvloop>=0.0.0; sys_platform != 'win32'"]
 
+# harmonic==1.3.0 (used on Python <3.11, where it has no prebuilt wheel and must
+# be built from source) declares an unbounded `Cython` build requirement. Cython
+# 3.3.0 made `**` on C long types infer a `double` result, which breaks the
+# implicit narrowing assignment in harmonic's model_legacy.pyx and fails the
+# build. Pin the build-time Cython below that until harmonic fixes it upstream.
+build-constraint-dependencies = ["cython<3.3"]
+
 # https://docs.astral.sh/uv/guides/integration/pytorch/#using-a-pytorch-index
 [[tool.uv.index]]
 name = "pytorch-cu126"
