@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import torch
 from autoemulate.core import plotting
 from autoemulate.emulators.polynomials import PolynomialRegression
 from autoemulate.emulators.random_forest import RandomForest
@@ -82,6 +83,34 @@ def test_plot_xy_fill_interval_width():
     verts = np.asarray(ax.collections[0].get_paths()[0].vertices)
     band_width = verts[:, 1].max() - verts[:, 1].min()
     assert np.isclose(band_width, 2 * plotting.PREDICTION_INTERVAL_Z * y_std)
+
+
+def test_plot_2d_slice_uses_95_percent_interval_width():
+    mean = torch.zeros(4)
+    variance = torch.tensor([1.0, 4.0, 9.0, 16.0])
+    grid = torch.meshgrid(
+        torch.arange(2, dtype=torch.float32),
+        torch.arange(2, dtype=torch.float32),
+        indexing="ij",
+    )
+
+    _, axes = plotting._plot_2d_slice_with_fixed_params(
+        mean,
+        variance,
+        grid,
+        ["x", "y"],
+        lower=None,
+        upper=None,
+    )
+
+    plotted_width = np.asarray(axes[0, 1].images[0].get_array())
+    expected_width = (
+        2
+        * plotting.PREDICTION_INTERVAL_Z
+        * torch.sqrt(variance.reshape(2, 2)).T.numpy()
+    )
+    assert np.allclose(plotted_width, expected_width)
+    assert axes[0, 1].get_title() == "95% prediction interval width"
 
 
 @pytest.mark.parametrize(
