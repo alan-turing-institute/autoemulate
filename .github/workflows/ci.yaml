@@ -9,6 +9,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  id-token: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -59,6 +63,7 @@ jobs:
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
+          use_oidc: true
 
       #   # Clean python cache files
       # - name: Clean cache files
