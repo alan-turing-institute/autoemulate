@@ -970,7 +970,7 @@ class AutoEmulate(ConversionMixin, TorchDeviceMixin, Results):
         figsize=None,
         fname: str | None = None,
     ):
-        """Plot the emulator mean and variance over a grid for a pair of parameters.
+        """Plot the emulator mean and 95% prediction interval width over a grid.
 
         This is useful for visualizing the emulator's behavior in 2D slices of the input
         space while keeping other parameters fixed at a specific quantile (default is
