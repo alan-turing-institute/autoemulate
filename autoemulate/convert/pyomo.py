@@ -1,11 +1,12 @@
 import pyomo.environ as pyo
+from torch import nn
+
 from autoemulate.core.results import Result
 from autoemulate.emulators.nn.mlp import MLP
 from autoemulate.emulators.polynomials import PolynomialRegression
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms.pca import PCATransform
 from autoemulate.transforms.standardize import StandardizeTransform
-from torch import nn
 
 _SUPPORTED_TRANSFORMS = (StandardizeTransform, PCATransform)
 
@@ -16,8 +17,10 @@ _DEFAULT_RELU_BETA = 50
 
 
 def pyomofy(
-    model: TransformedEmulator | Result, pyomo_vars, relu_beta: int = _DEFAULT_RELU_BETA
-):
+    model: TransformedEmulator | Result,
+    pyomo_vars,
+    relu_beta: float = _DEFAULT_RELU_BETA,
+) -> list:
     """Convert a fitted emulator into Pyomo expressions.
 
     Parameters
@@ -26,7 +29,7 @@ def pyomofy(
         A fitted TransformedEmulator or Result wrapping one.
     pyomo_vars : list or pyomo.core.base.var.Var or pyomo.core.base.var.IndexedVar
         Input decision variables in the same order used for training.
-    relu_beta : int
+    relu_beta : float, optional
         Sharpness parameter for the Softplus approximation used when the model
         was trained with ReLU. Softplus_beta(x) = (1/beta) * log(1 + exp(beta*x)).
         As beta increases the approximation gets closer to ReLU but less smooth.
@@ -40,11 +43,14 @@ def pyomofy(
     Raises
     ------
     TypeError
-        If model is not a TransformedEmulator or Result.
+        If model is not a TransformedEmulator or Result, or if an MLP contains
+        an unsupported activation function.
     NotImplementedError
-        If model type is not PolynomialRegression or MLP.
+        If model type is not PolynomialRegression or MLP, or if any transform
+        is not supported.
     ValueError
-        If the model has not been fitted.
+        If the model has not been fitted, if relu_beta is not positive, or if
+        the number of input variables does not match the model input dimension.
     """
     if isinstance(model, Result):
         model = model.model
@@ -63,25 +69,14 @@ def pyomofy(
     if not emulator.is_fitted_:
         msg = "Model must be fitted before conversion to Pyomo."
         raise ValueError(msg)
+    if relu_beta <= 0:
+        msg = f"relu_beta must be positive, got {relu_beta}."
+        raise ValueError(msg)
 
-    # Flatten possible IndexedVar or VarSet to an ordered list
-    if hasattr(pyomo_vars, "component_data_objects"):
-        var_list = list(pyomo_vars.component_data_objects(sort=True))
-
-    else:
-        var_list = list(pyomo_vars)
+    var_list = _extract_var_list(pyomo_vars)
 
     # --- Validate all transforms upfront before doing any work ---
-    _validate_transforms(model.x_transforms)
-    _validate_transforms(model.y_transforms)
-    # Also validate any transforms baked into the base emulator itself (e.g. MLP
-    # standardize_x / standardize_y). These are fitted on already-outer-transformed
-    # data, so they are nearly identity in the standard workflow, but must still be
-    # included for correctness when the outer pipeline has no x/y transforms.
-    if emulator.x_transform is not None:
-        _validate_transforms([emulator.x_transform])
-    if emulator.y_transform is not None:
-        _validate_transforms([emulator.y_transform])
+    _validate_all_transforms(model, emulator)
 
     # --- Apply outer x transforms (TransformedEmulator level) ---
     activations = _apply_x_transforms(model.x_transforms, var_list)
@@ -108,8 +103,35 @@ def pyomofy(
 # ---------------------------------------------------------------------------
 
 
+def _extract_var_list(pyomo_vars) -> list:
+    """Flatten Pyomo variables into a non-empty ordered list."""
+    if hasattr(pyomo_vars, "values"):
+        var_list = list(pyomo_vars.values())
+    elif hasattr(pyomo_vars, "component_data_objects"):
+        var_list = list(pyomo_vars.component_data_objects(sort=True))
+    else:
+        var_list = list(pyomo_vars)
+
+    if not var_list:
+        msg = "pyomo_vars must contain at least one Pyomo variable."
+        raise ValueError(msg)
+    return var_list
+
+
+def _validate_all_transforms(
+    model: TransformedEmulator, emulator: PolynomialRegression | MLP
+):
+    """Validate outer and inner transforms before building Pyomo expressions."""
+    _validate_transforms(model.x_transforms)
+    _validate_transforms(model.y_transforms)
+    if emulator.x_transform is not None:
+        _validate_transforms([emulator.x_transform])
+    if emulator.y_transform is not None:
+        _validate_transforms([emulator.y_transform])
+
+
 def _validate_transforms(transforms: list):
-    """Check every transform in the list is supported. Fail fast before any work."""
+    """Check every transform in the list is supported and fail fast."""
     for t in transforms:
         if not isinstance(t, _SUPPORTED_TRANSFORMS):
             supported = ", ".join(cls.__name__ for cls in _SUPPORTED_TRANSFORMS)
@@ -150,25 +172,45 @@ def _apply_y_inverse_transforms(transforms: list, activations: list) -> list:
 
 
 def _standardize_forward(transform: StandardizeTransform, activations: list) -> list:
-    """(x - mean) / std."""
+    """Apply forward standardization: (x - mean) / std."""
+    if transform.mean is None or transform.std is None:
+        msg = "StandardizeTransform must be fitted before conversion to Pyomo."
+        raise ValueError(msg)
+
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     std = transform.std.detach().cpu().numpy().flatten().tolist()
 
     if len(mean) == 1 and len(activations) > 1:
         mean = mean * len(activations)
         std = std * len(activations)
+    elif len(mean) != len(activations):
+        msg = (
+            f"Input dimension mismatch in StandardizeTransform: expected "
+            f"{len(mean)} variables, got {len(activations)}."
+        )
+        raise ValueError(msg)
 
     return [(activations[i] - mean[i]) / std[i] for i in range(len(activations))]
 
 
 def _standardize_inverse(transform: StandardizeTransform, activations: list) -> list:
-    """Y * std + mean."""
+    """Apply inverse standardization: y * std + mean."""
+    if transform.mean is None or transform.std is None:
+        msg = "StandardizeTransform must be fitted before conversion to Pyomo."
+        raise ValueError(msg)
+
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     std = transform.std.detach().cpu().numpy().flatten().tolist()
 
     if len(mean) == 1 and len(activations) > 1:
         mean = mean * len(activations)
         std = std * len(activations)
+    elif len(mean) != len(activations):
+        msg = (
+            f"Output dimension mismatch in StandardizeTransform: expected "
+            f"{len(mean)} variables, got {len(activations)}."
+        )
+        raise ValueError(msg)
 
     return [activations[i] * std[i] + mean[i] for i in range(len(activations))]
 
@@ -179,32 +221,54 @@ def _standardize_inverse(transform: StandardizeTransform, activations: list) -> 
 
 
 def _pca_forward(transform: PCATransform, activations: list) -> list:
-    """(x - mean) @ components  ->  dot product per component."""
+    """Apply forward PCA transformation: (x - mean) @ components."""
+    if transform.mean is None or transform.components is None:
+        msg = "PCATransform must be fitted before conversion to Pyomo."
+        raise ValueError(msg)
+
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     # components shape: (n_features, n_components)
     components = transform.components.detach().cpu().numpy()
 
+    n_features, n_components = components.shape
+    if len(activations) != n_features:
+        msg = (
+            f"Input dimension mismatch in PCATransform: expected "
+            f"{n_features} variables, got {len(activations)}."
+        )
+        raise ValueError(msg)
+
     # Center first
-    centered = [activations[i] - mean[i] for i in range(len(activations))]
+    centered = [activations[i] - mean[i] for i in range(n_features)]
 
     # Each output component j = sum_i( centered[i] * components[i, j] )
-    n_components = components.shape[1]
     return [
-        sum(float(components[i, j]) * centered[i] for i in range(len(centered)))
+        sum(float(components[i, j]) * centered[i] for i in range(n_features))
         for j in range(n_components)
     ]
 
 
 def _pca_inverse(transform: PCATransform, activations: list) -> list:
-    """Y @ components.T + mean  ->  dot product per original feature."""
+    """Apply inverse PCA transformation: y @ components.T + mean."""
+    if transform.mean is None or transform.components is None:
+        msg = "PCATransform must be fitted before conversion to Pyomo."
+        raise ValueError(msg)
+
     mean = transform.mean.detach().cpu().numpy().flatten().tolist()
     # components shape: (n_features, n_components)
     components = transform.components.detach().cpu().numpy()
 
-    n_features = components.shape[0]
+    n_features, n_components = components.shape
+    if len(activations) != n_components:
+        msg = (
+            f"Component dimension mismatch in PCATransform: expected "
+            f"{n_components} components, got {len(activations)}."
+        )
+        raise ValueError(msg)
+
     # Each output feature i = sum_j( activations[j] * components[i, j] ) + mean[i]
     return [
-        sum(float(components[i, j]) * activations[j] for j in range(len(activations)))
+        sum(float(components[i, j]) * activations[j] for j in range(n_components))
         + mean[i]
         for i in range(n_features)
     ]
@@ -226,6 +290,13 @@ def _polynomial_forward(model: PolynomialRegression, activations: list) -> list:
     #    model.poly._powers has shape (n_output_features, n_input_features)
     #    Each row defines one monomial: x0^p0 * x1^p1 * ...
     powers = model.poly._powers.detach().cpu().numpy()
+    if len(activations) != powers.shape[1]:
+        msg = (
+            f"Input dimension mismatch in PolynomialRegression: expected "
+            f"{powers.shape[1]} variables, got {len(activations)}."
+        )
+        raise ValueError(msg)
+
     poly_features = []
     for row in powers:
         term = 1
@@ -234,15 +305,21 @@ def _polynomial_forward(model: PolynomialRegression, activations: list) -> list:
                 term = term * activations[feat_idx] ** int(power)
         poly_features.append(term)
 
-    # 2. Single linear layer (no bias) on the expanded features
-    weight = (
-        model.linear.weight.detach().cpu().numpy()
-    )  # shape: (n_outputs, n_poly_features)
+    # 2. Single linear layer on the expanded features
+    # shape: (n_outputs, n_poly_features)
+    weight = model.linear.weight.detach().cpu().numpy()
+    bias = (
+        model.linear.bias.detach().cpu().numpy()
+        if model.linear.bias is not None
+        else None
+    )
     out_exprs = []
     for j in range(weight.shape[0]):
         lin = sum(
             float(weight[j, k]) * poly_features[k] for k in range(len(poly_features))
         )
+        if bias is not None:
+            lin += float(bias[j])
         out_exprs.append(lin)
 
     return out_exprs
@@ -254,25 +331,26 @@ def _polynomial_forward(model: PolynomialRegression, activations: list) -> list:
 
 
 def _silu_expr(val):
-    """Forward pass SiLU / Swish: x * sigmoid(x)."""
+    """Compute SiLU (Swish) activation: x * sigmoid(x)."""
     return val / (1 + pyo.exp(-val))
 
 
 def _sigmoid_expr(val):
-    """Forward pass Standard Sigmoid: 1 / (1 + exp(-x))."""
+    """Compute standard sigmoid activation: 1 / (1 + exp(-x))."""
     return 1 / (1 + pyo.exp(-val))
 
 
 def _softplus_expr(val):
-    """Forward pass Softplus: log(1 + exp(x))  — standard form, beta=1."""
+    """Compute standard Softplus activation: log(1 + exp(x))."""
     return pyo.log(1 + pyo.exp(val))
 
 
 def _softplus_beta_expr(val, beta: float):
-    """Softplus with tunable sharpness: (1/beta) * log(1 + exp(beta * x)).
+    """Compute Softplus activation with tunable sharpness beta.
 
-    As beta -> inf this converges to ReLU. Used as a drop-in replacement
-    when the model was trained with ReLU.
+    Evaluates (1 / beta) * log(1 + exp(beta * x)). As beta -> inf this
+    converges to ReLU. Used as a drop-in replacement when the model was
+    trained with ReLU.
     """
     return (1.0 / beta) * pyo.log(1 + pyo.exp(beta * val))
 
@@ -291,7 +369,7 @@ _SUPPORTED_ACTIVATIONS = (*_ACTIVATION_MAP.keys(), nn.ReLU)
 
 
 def _mlp_forward(model: MLP, activations: list, relu_beta: float) -> list:
-    """Unroll the MLP layers into Pyomo expressions.
+    """Evaluate the MLP layers as Pyomo expressions.
 
     Mirrors MLP.forward():
         return self.nn(x)
@@ -302,6 +380,12 @@ def _mlp_forward(model: MLP, activations: list, relu_beta: float) -> list:
     for module in model.nn:
         if isinstance(module, nn.Linear):
             weight = module.weight.detach().cpu().numpy()
+            if len(activations) != weight.shape[1]:
+                msg = (
+                    f"Input dimension mismatch in Linear layer: expected "
+                    f"{weight.shape[1]} variables, got {len(activations)}."
+                )
+                raise ValueError(msg)
             bias = (
                 module.bias.detach().cpu().numpy() if module.bias is not None else None
             )
