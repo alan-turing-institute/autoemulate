@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from autoemulate.core.logging_config import get_configured_logger
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import R2, RMSE
 from autoemulate.core.results import Result  # , Results
 from autoemulate.core.save import ModelSerialiser
@@ -16,7 +16,7 @@ from autoemulate.emulators.random_forest import RandomForest
 from autoemulate.emulators.transformed.base import TransformedEmulator
 from autoemulate.transforms import StandardizeTransform
 
-logger, _ = get_configured_logger("info")
+logger = get_logger(__name__)
 
 
 @pytest.fixture

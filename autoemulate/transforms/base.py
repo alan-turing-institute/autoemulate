@@ -613,16 +613,3 @@ def _is_affine_empirical(transform: Transform, x: TensorLike) -> bool:
     for _ in range(AFFINE_TRIALS):
         errs.append(_measure_affine_err(transform, test_input))  # type: ignore as Tensor input will transform to Tensor output
     return (sum(errs) / len(errs)) < AFFINE_TOL
-
-
-# TODO (#536): complete implementation
-# class AutoEmulateTransformModule(TransformModule):
-#     @abstractmethod
-#     def fit(self, x): ...
-#     def _inverse_gaussian(self, y: GaussianLike) -> GaussianLike:
-#         msg = "This method should be implemented in subclasses."
-#         raise NotImplementedError(msg)
-
-#     def _inverse_sample(self, y: GaussianLike, n_samples: int = 100) -> GaussianLike:
-#         msg = "This method should be implemented in subclasses."
-#         raise NotImplementedError(msg)

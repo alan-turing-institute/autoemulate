@@ -53,6 +53,37 @@ def test_plot_xy():
     assert len(ax.collections) > 0
 
 
+def test_plot_xy_bars_interval_width():
+    X = np.linspace(0, 5, 10)
+    y = X.copy()
+    y_pred = np.full(10, 2.5)
+    y_variance = np.full(10, 4.0)
+    y_std = np.sqrt(4.0)
+
+    fig, ax = plt.subplots()
+    plotting.plot_xy(X, y, y_pred, y_variance, ax=ax, r2_score=0.9)
+
+    _, _, barlinecols = ax.containers[0]
+    seg = barlinecols[0].get_segments()[0]
+    half_width = abs(seg[1][1] - seg[0][1]) / 2
+    assert np.isclose(half_width, plotting.PREDICTION_INTERVAL_Z * y_std)
+
+
+def test_plot_xy_fill_interval_width():
+    X = np.linspace(0, 5, 10)
+    y = X.copy()
+    y_pred = np.full(10, 2.5)  # constant so band is flat
+    y_variance = np.full(10, 4.0)
+    y_std = np.sqrt(4.0)
+
+    fig, ax = plt.subplots()
+    plotting.plot_xy(X, y, y_pred, y_variance, ax=ax, r2_score=0.9, error_style="fill")
+
+    verts = np.asarray(ax.collections[0].get_paths()[0].vertices)
+    band_width = verts[:, 1].max() - verts[:, 1].min()
+    assert np.isclose(band_width, 2 * plotting.PREDICTION_INTERVAL_Z * y_std)
+
+
 @pytest.mark.parametrize(
     ("n_plots", "n_cols", "expected"),
     [

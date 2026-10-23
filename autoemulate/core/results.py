@@ -1,12 +1,11 @@
-import logging
-
 import pandas as pd
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import Metric, get_metric
 from autoemulate.core.types import ModelParams
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class Result:
@@ -186,11 +185,8 @@ class Results:
         metric: str | Metric | None
             The name of the metric to use for comparison. If None, uses the first
             available metric found in the results. The metric should exist in the
-            test_metrics of the results.
-        metric_maximize: bool | None
-            Whether higher values are better for the metric. If None, defaults to True
-            (assumes higher is better). Set to False for metrics like RMSE or MAE where
-            lower is better.
+            test_metrics of the results. Whether higher or lower values are better is
+            taken from the metric itself (`Metric.maximize`).
 
         Returns
         -------

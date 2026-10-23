@@ -86,6 +86,10 @@ def _generate_mlp_docstring(
     else:
         docstring_base += "\n"
 
+    docstring_base += """    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
+"""
+
     docstring_base += """
     Raises
     ------
@@ -124,6 +128,7 @@ class MLP(DropoutTorchBackend):
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        deterministic: bool = False,
     ):
         self.__doc__ = f"""
         Multi-Layer Perceptron (MLP) emulator.
@@ -140,7 +145,7 @@ class MLP(DropoutTorchBackend):
         nn.Module.__init__(self)
 
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
 
         # Ensure x and y are tensors with correct dimensions
         x, y = self._convert_to_tensors(x, y)

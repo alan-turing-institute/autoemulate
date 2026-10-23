@@ -112,6 +112,7 @@ class Random(Stream):
         self,
         x: TensorLike | None = None,
         random_seed: int | None = None,
+        deterministic: bool = False,
     ) -> tuple[
         torch.Tensor | None,
         TensorLike | DistributionLike,
@@ -124,6 +125,10 @@ class Random(Stream):
         ----------
         x: torch.Tensor
             Stream of input samples.
+        random_seed: int | None
+            Optional random seed for reproducibility. Defaults to None.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
         Returns
         -------
@@ -139,7 +144,7 @@ class Random(Stream):
         output = self.emulator.predict(x)
         assert isinstance(output, TensorLike | DistributionLike)
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         x = x if np.random.rand() < self.p_query else None
         return x, output, {}
 

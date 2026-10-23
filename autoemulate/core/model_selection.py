@@ -1,5 +1,4 @@
 import inspect
-import logging
 
 import torch
 from sklearn.model_selection import BaseCrossValidator
@@ -7,6 +6,7 @@ from torch.distributions import Transform
 from torch.utils.data import Dataset, Subset
 
 from autoemulate.core.device import get_torch_device, move_tensors_to_device
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.metrics import R2, Metric, MetricParams, get_metrics
 from autoemulate.core.types import (
     DeviceLike,
@@ -19,7 +19,7 @@ from autoemulate.data.utils import ConversionMixin, set_random_seed
 from autoemulate.emulators.base import Emulator
 from autoemulate.emulators.transformed.base import TransformedEmulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 def evaluate(
@@ -61,6 +61,7 @@ def cross_validate(
     device: DeviceLike = "cpu",
     random_seed: int | None = None,
     metrics: list[Metric] | None = None,
+    deterministic: bool = False,
 ):
     """
     Cross validate model performance using the given `cv` strategy.
@@ -72,19 +73,26 @@ def cross_validate(
         specified cross-validation strategy (e.g., KFold, LeaveOneOut).
     dataset: Dataset
         The data to use for model training and validation.
-    model: Emulator
-        An instance of an Emulator subclass.
+    model: type[Emulator]
+        An Emulator subclass to fit during validation.
     model_params: ModelParams
         Model parameters to be used to construct model upon initialization. Passing an
         empty dictionary `{}` will use default parameters.
     transformed_emulator_params: None | TransformedEmulatorParams
         Parameters for the transformed emulator. Defaults to None.
+    x_transforms: list[Transform] | None
+        Transforms to apply to input data before fitting the emulator. Defaults to None.
+    y_transforms: list[Transform] | None
+        Transforms to apply to output data before fitting the emulator.
+        Defaults to None.
     device: DeviceLike
         The device to use for model training and evaluation.
     random_seed: int | None
         Optional random seed for reproducibility.
-    metrics: list[TorchMetrics] | None
+    metrics: list[Metric] | None
         List of metrics to compute. If None, uses r2 and rmse.
+    deterministic: bool
+        Whether to use deterministic algorithms in PyTorch. Defaults to False.
 
     Returns
     -------
@@ -118,7 +126,7 @@ def cross_validate(
 
         # Handle random seed for reproducibility
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         model_init_params = inspect.signature(model).parameters
         model_params = dict(model_params)
         if "random_seed" in model_init_params:
@@ -170,14 +178,11 @@ def bootstrap(
         Target values corresponding to the input features.
     n_bootstraps: int | None
         Number of bootstrap samples to generate. When None the evaluation uses all
-        all given data and returns a single value with no measure of the uncertainty.
+        given data and returns a single value with no measure of the uncertainty.
         Defaults to 100.
-    n_samples: int
-        Number of samples to generate to predict mean when emulator does not have a
-        mean directly available. Defaults to 1000.
     device: str | torch.device
         The device to use for computations. Default is "cpu".
-    metrics: list[MetricConfig] | None
+    metrics: list[Metric] | None
         List of metrics to compute. If None, uses r2 and rmse.
     metric_params: MetricParams | None
         Additional parameters to pass to the metrics. Defaults to None.

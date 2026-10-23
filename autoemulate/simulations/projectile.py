@@ -22,13 +22,19 @@ class Projectile(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
         if output_names is None:
             output_names = ["distance"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """
@@ -65,13 +71,19 @@ class ProjectileMultioutput(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_names: list[str] | None = None,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
+        show_progress_bar: bool = True,
     ):
         if parameters_range is None:
             parameters_range = {"c": (-5.0, 1.0), "v0": (0.0, 1000)}
         if output_names is None:
             output_names = ["distance", "impact_velocity"]
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
 
     def _forward(self, x: TensorLike) -> TensorLike:
         """

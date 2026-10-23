@@ -9,8 +9,11 @@ from ModularCirc.Models.NaghaviModel import NaghaviModel, NaghaviModelParameters
 from ModularCirc.Solver import Solver
 from tqdm import tqdm
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.types import NumpyLike, TensorLike
 from autoemulate.simulations.base import Simulator
+
+logger = get_logger(__name__)
 
 # ==================================
 # PARAMETER UTILS
@@ -79,9 +82,10 @@ class NaghaviSimulator(Simulator):
         self,
         parameters_range: dict[str, tuple[float, float]] | None = None,
         output_variables: list[str] | None = None,
-        log_level: str = "progress_bar",
+        log_level: str | None = None,
         n_cycles: int = 40,
         dt: float = 0.001,
+        show_progress_bar: bool = True,
     ):
         """
         Initialize the Naghavi simulator.
@@ -92,18 +96,14 @@ class NaghaviSimulator(Simulator):
             Dictionary mapping input parameter names to their (min, max) ranges.
         output_variables: list[str]
             Optional list of specific output variables to track. Defaults to None.
-        log_level: str
-            Logging level for the simulator. Can be one of:
-            - "progress_bar": shows a progress bar during batch simulations
-            - "debug": shows debug messages
-            - "info": shows informational messages
-            - "warning": shows warning messages
-            - "error": shows error messages
-            - "critical": shows critical messages
+        log_level: str | None
+            Deprecated. Configure logging in the calling application instead.
         n_cycles: int
             Number of simulation cycles.
         dt: float
             Time step size.
+        show_progress_bar: bool
+            Whether to show a progress bar during batch simulations. Defaults to True.
         """
         # Initialize the base class
         if output_variables is not None:
@@ -122,7 +122,12 @@ class NaghaviSimulator(Simulator):
             parameters_range, _ = extract_parameter_ranges(
                 "naghavi_model_parameters.json"
             )
-        super().__init__(parameters_range, output_names, log_level)
+        super().__init__(
+            parameters_range,
+            output_names,
+            log_level=log_level,
+            show_progress_bar=show_progress_bar,
+        )
         assert output_variables is not None
         self._output_variables = output_variables
 
@@ -218,7 +223,7 @@ class NaghaviSimulator(Simulator):
 
     def forward_batch(self, x: TensorLike) -> tuple[TensorLike, TensorLike]:
         """Run multiple simulations in parallel, skipping any that fail."""
-        self.logger.info("Running batch simulation for %d samples", len(x))
+        logger.info("Running batch simulation for %d samples", len(x))
 
         results = []
         valid_idx = []
@@ -244,7 +249,7 @@ class NaghaviSimulator(Simulator):
 
         # Report results
         successful = len(results)
-        self.logger.info(
+        logger.info(
             "Successfully completed %d/%d simulations (%.1f%%)",
             successful,
             len(x),

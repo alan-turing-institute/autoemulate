@@ -1,4 +1,4 @@
-# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/refs/heads/main/misc/AE_logo_final.png" align="right" height="138" /></a>
+# AutoEmulate <a href="https://alan-turing-institute.github.io/autoemulate/"><img src="https://raw.githubusercontent.com/alan-turing-institute/autoemulate/refs/heads/main/misc/AE.png" align="right" height="138" /></a>
 
 ![CI](https://github.com/alan-turing-institute/autoemulate/actions/workflows/ci.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/alan-turing-institute/autoemulate/graph/badge.svg?token=XD1HXQUIGK)](https://codecov.io/gh/alan-turing-institute/autoemulate)
@@ -14,19 +14,39 @@ Simulations of physical systems are often slow and need lots of compute, which m
 
 You can find the project documentation [here](https://alan-turing-institute.github.io/autoemulate/), including [installation](https://alan-turing-institute.github.io/autoemulate/installation.html).
 
-## The AutoEmulate project
+## Citation
 
+Please cite this paper if you use the package in your work:
 
-- The AutoEmulate project is run out of the [Alan Turing Institute](https://www.turing.ac.uk/).
-- Visit [autoemulate.com](https://www.autoemulate.com/) to learn more.
-- Feel free to reach out to us at [ai4physics@turing.ac.uk](mailto:ai4physics@turing.ac.uk) for queries about AutoEmulate or ideas for collaboration
-- We have also published a paper in [The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.07626). 
+```bibtex
+@article{Jersakova2026,
+  doi = {10.21105/joss.10087},
+  url = {https://doi.org/10.21105/joss.10087},
+  year = {2026},
+  publisher = {The Open Journal},
+  volume = {11},
+  number = {124},
+  pages = {10087},
+  author = {Jersakova, Radka and Greenbury, Sam F. and Chalstrey, Ed and Brown, Edwin and Famili, Marjan and Sprague, Chris and Conti, Paolo and Smith, Camila Rangel and Stoffel, Martin A. and Li, Bryan M. and Westerling, Kalle and Arana, Sophie and Balmus, Max and Daub, Eric and Niederer, Steve and Duncan, Andrew B. and McEwen, Jason D.},
+  title = {AutoEmulate: A PyTorch tool for end-to-end emulation workflows},
+  journal = {Journal of Open Source Software}
+}
+```
+If you're using AutoEmulate version < 1.0, please cite our previous paper:
 
-  Please cite this paper if you use the package in your work:
-
-  ```bibtex
-  @article{Stoffel2025, doi = {10.21105/joss.07626}, url = {https://doi.org/10.21105/joss.07626}, year = {2025}, publisher = {The Open Journal}, volume = {10}, number = {107}, pages = {7626}, author = {Martin A. Stoffel and Bryan M. Li and Kalle Westerling and Sophie Arana and Max Balmus and Eric Daub and Steve Niederer}, title = {AutoEmulate: A Python package for semi-automated emulation}, journal = {Journal of Open Source Software} }
-  ```
+```bibtex
+@article{Stoffel2025,
+  doi = {10.21105/joss.07626},
+  url = {https://doi.org/10.21105/joss.07626},
+  year = {2025}, publisher = {The Open Journal},
+  volume = {10},
+  number = {107},
+  pages = {7626},
+  author = {Martin A. Stoffel and Bryan M. Li and Kalle Westerling and Sophie Arana and Max Balmus and Eric Daub and Steve Niederer},
+  title = {AutoEmulate: A Python package for semi-automated emulation},
+  journal = {Journal of Open Source Software}
+}
+```
 
 ## Contributors
 
@@ -41,7 +61,7 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/mastoffel"><img src="https://avatars.githubusercontent.com/u/7348440?v=4?s=100" width="100px;" alt="martin"/><br /><sub><b>martin</b></sub></a><br /><a href="#code-mastoffel" title="Code">💻</a> <a href="#ideas-mastoffel" title="Ideas, Planning, & Feedback">🤔</a> <a href="#doc-mastoffel" title="Documentation">📖</a> <a href="#maintenance-mastoffel" title="Maintenance">🚧</a> <a href="#research-mastoffel" title="Research">🔬</a> <a href="#review-mastoffel" title="Reviewed Pull Requests">👀</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/edaub"><img src="https://avatars.githubusercontent.com/u/45598892?v=4?s=100" width="100px;" alt="Eric Daub"/><br /><sub><b>Eric Daub</b></sub></a><br /><a href="#ideas-edaub" title="Ideas, Planning, & Feedback">🤔</a> <a href="#projectManagement-edaub" title="Project Management">📆</a> <a href="#review-edaub" title="Reviewed Pull Requests">👀</a> <a href="#code-edaub" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/snie007"><img src="https://avatars.githubusercontent.com/u/20723650?v=4?s=100" width="100px;" alt="steven niederer"/><br /><sub><b>steven niederer</b></sub></a><br /><a href="#ideas-snie007" title="Ideas, Planning, & Feedback">🤔</a> <a href="#content-snie007" title="Content">🖋</a> <a href="#projectManagement-snie007" title="Project Management">📆</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MaxBalmus"><img src="https://avatars.githubusercontent.com/u/34339336?v=4?s=100" width="100px;" alt="Maximilian Balmus"/><br /><sub><b>Maximilian Balmus</b></sub></a><br /><a href="#code-MaxBalmus" title="Code">💻</a> <a href="#bug-MaxBalmus" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MaxBalmus"><img src="https://avatars.githubusercontent.com/u/34339336?v=4?s=100" width="100px;" alt="Maximilian Balmus"/><br /><sub><b>Maximilian Balmus</b></sub></a><br /><a href="#code-MaxBalmus" title="Code">💻</a> <a href="#bug-MaxBalmus" title="Bug reports">🐛</a> <a href="#ideas-MaxBalmus" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/aranas"><img src="https://avatars.githubusercontent.com/u/6906140?v=4?s=100" width="100px;" alt="Sophie Arana"/><br /><sub><b>Sophie Arana</b></sub></a><br /><a href="#content-aranas" title="Content">🖋</a> <a href="#doc-aranas" title="Documentation">📖</a> <a href="#projectManagement-aranas" title="Project Management">📆</a></td>
     </tr>
     <tr>
@@ -69,11 +89,19 @@ You can find the project documentation [here](https://alan-turing-institute.gith
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/vchhabra-turing"><img src="https://avatars.githubusercontent.com/u/140401853?v=4?s=100" width="100px;" alt="vchhabra-turing"/><br /><sub><b>vchhabra-turing</b></sub></a><br /><a href="#ideas-vchhabra-turing" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/era-23"><img src="https://avatars.githubusercontent.com/u/115151590?v=4?s=100" width="100px;" alt="Ethan Attwood"/><br /><sub><b>Ethan Attwood</b></sub></a><br /><a href="#bug-era-23" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/TheCSGuy25"><img src="https://avatars.githubusercontent.com/u/87066683?v=4?s=100" width="100px;" alt="__aar0n__.py"/><br /><sub><b>__aar0n__.py</b></sub></a><br /><a href="#code-TheCSGuy25" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SyedHaider2084"><img src="https://avatars.githubusercontent.com/u/227389830?v=4?s=100" width="100px;" alt="SyedHaider2084"/><br /><sub><b>SyedHaider2084</b></sub></a><br /><a href="#code-SyedHaider2084" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SyedHaider2084"><img src="https://avatars.githubusercontent.com/u/227389830?v=4?s=100" width="100px;" alt="SyedHaider2084"/><br /><sub><b>SyedHaider2084</b></sub></a><br /><a href="#code-SyedHaider2084" title="Code">💻</a> <a href="#doc-SyedHaider2084" title="Documentation">📖</a></td>
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/lcm98/"><img src="https://avatars.githubusercontent.com/u/102757707?v=4?s=100" width="100px;" alt="Loh Chun Mun"/><br /><sub><b>Loh Chun Mun</b></sub></a><br /><a href="#doc-cmsamaaa" title="Documentation">📖</a> <a href="#code-cmsamaaa" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/z7076"><img src="https://avatars.githubusercontent.com/u/69681924?v=4?s=100" width="100px;" alt="Jichen Zhang"/><br /><sub><b>Jichen Zhang</b></sub></a><br /><a href="#code-z7076" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/z7076"><img src="https://avatars.githubusercontent.com/u/69681924?v=4?s=100" width="100px;" alt="Jichen Zhang"/><br /><sub><b>Jichen Zhang</b></sub></a><br /><a href="#code-z7076" title="Code">💻</a> <a href="#doc-z7076" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RemDelaporteMathurin"><img src="https://avatars.githubusercontent.com/u/40028739?v=4?s=100" width="100px;" alt="Rémi Delaporte-Mathurin"/><br /><sub><b>Rémi Delaporte-Mathurin</b></sub></a><br /><a href="#bug-RemDelaporteMathurin" title="Bug reports">🐛</a> <a href="#doc-RemDelaporteMathurin" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pmeier"><img src="https://avatars.githubusercontent.com/u/6849766?v=4?s=100" width="100px;" alt="Philip Meier"/><br /><sub><b>Philip Meier</b></sub></a><br /><a href="#bug-pmeier" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/penelopeysm"><img src="https://avatars.githubusercontent.com/u/122629585?v=4?s=100" width="100px;" alt="Penelope Yong"/><br /><sub><b>Penelope Yong</b></sub></a><br /><a href="#ideas-penelopeysm" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-penelopeysm" title="Reviewed Pull Requests">👀</a> <a href="#code-penelopeysm" title="Code">💻</a> <a href="#doc-penelopeysm" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ykd007"><img src="https://avatars.githubusercontent.com/u/79036688?v=4?s=100" width="100px;" alt="Yash Dhawan"/><br /><sub><b>Yash Dhawan</b></sub></a><br /><a href="#doc-ykd007" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/heba-ali-ashour/"><img src="https://avatars.githubusercontent.com/u/45080583?v=4?s=100" width="100px;" alt="Heba Ashour"/><br /><sub><b>Heba Ashour</b></sub></a><br /><a href="#code-hebatea" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://karpovanton.com"><img src="https://avatars.githubusercontent.com/u/30812217?v=4?s=100" width="100px;" alt="Anton Karpov"/><br /><sub><b>Anton Karpov</b></sub></a><br /><a href="#doc-karpovantonme" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

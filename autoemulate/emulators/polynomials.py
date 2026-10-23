@@ -32,6 +32,7 @@ class PolynomialRegression(PyTorchBackend):
         device: DeviceLike | None = None,
         scheduler_cls: type[LRScheduler] | None = None,
         scheduler_params: dict | None = None,
+        deterministic: bool = False,
     ):
         """Initialize a PolynomialRegression emulator.
 
@@ -63,11 +64,13 @@ class PolynomialRegression(PyTorchBackend):
             None.
         scheduler_params: dict | None
             Additional keyword arguments related to the scheduler.
+        deterministic: bool
+            Whether to use deterministic algorithms in PyTorch. Defaults to False.
         """
         super().__init__()
         TorchDeviceMixin.__init__(self, device=device)
         if random_seed is not None:
-            set_random_seed(seed=random_seed)
+            set_random_seed(seed=random_seed, deterministic=deterministic)
         self.x_transform = StandardizeTransform() if standardize_x else None
         self.y_transform = StandardizeTransform() if standardize_y else None
         self.degree = degree

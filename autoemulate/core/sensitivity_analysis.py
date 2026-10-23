@@ -1,4 +1,3 @@
-import logging
 from typing import Literal
 
 import matplotlib.figure
@@ -15,12 +14,13 @@ from SALib.sample.sobol import sample as sobol_sample
 from SALib.util import ResultDict
 from scipy import stats
 
+from autoemulate.core.logging_config import get_logger
 from autoemulate.core.plotting import display_figure
 from autoemulate.core.types import DistributionLike, NumpyLike, TensorLike
 from autoemulate.data.utils import ConversionMixin
 from autoemulate.emulators.base import Emulator
 
-logger = logging.getLogger("autoemulate")
+logger = get_logger(__name__)
 
 
 class SensitivityAnalysis(ConversionMixin):
@@ -1236,20 +1236,20 @@ def _plot_sa_heatmap(
 
     Parameters
     ----------
-    results: pd.DataFrame
+    si_df: pd.DataFrame
         Sensitivity index dataframe with columns ['index', 'parameter',
         'output', 'value'].
     index: str
         The type of sensitivity index to plot (e.g., 'ST').
-    top_n: int | None
-        Number of top parameters to include. If None, returns all. Defaults to
-        None.
+    parameters: list[str]
+        Parameters to include, in the order they should appear as columns.
     cmap: str
         Matplotlib colormap. Defaults to 'coolwarm'.
     normalize: bool
-        Wheterto normalize values to [0, 1]. Defaults to True.
-    figsize: tuple | None
-        Figure size as (width, height) in inches. Defaults to None.
+        Whether to normalize values to [0, 1]. Defaults to True.
+    fig_size: tuple | None
+        Figure size as (width, height) in inches. If None, it is derived from
+        the heatmap layout. Defaults to None.
 
     Returns
     -------

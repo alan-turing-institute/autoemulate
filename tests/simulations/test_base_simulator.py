@@ -233,7 +233,9 @@ def test_sample(method):
     }
     sim = MockSimulator(param_bouns, ["var1", "var2"])
 
-    n_samples = 1000
+    # Sobol needs a power-of-two count to keep its balance properties (SciPy warns
+    # otherwise); other methods are unconstrained.
+    n_samples = 1024 if method == "sobol" else 1000
     samples = sim.sample_inputs(n_samples, method=method)
 
     assert isinstance(samples, TensorLike)
