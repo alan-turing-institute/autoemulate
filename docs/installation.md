@@ -54,8 +54,11 @@ source .venv/bin/activate
 Install the package in development mode with all dependencies:
 
 ```bash
-uv pip install -e '.[dev]'    
+uv pip install -e '.[dev,cu126]'
 ```
+
+The `cu126` extra installs PyTorch's CUDA 12.6 wheels on Linux and Windows. Leave it out to take
+PyTorch from PyPI, or install the build that matches your GPU driver yourself.
 
 ## Interactive tutorials
 
