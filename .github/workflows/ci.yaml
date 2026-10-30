@@ -46,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --extra dev --extra spatiotemporal
+          uv sync --extra cu126 --extra dev --extra spatiotemporal
 
       - name: Test with pytest
         run: |
