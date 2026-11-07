@@ -1,5 +1,7 @@
 """Tests for Bayesian evidence computation."""
 
+import importlib.util
+
 import pyro
 import pyro.distributions as dist
 import pytest
@@ -53,6 +55,15 @@ def simple_model():
 def make_evidence_computation(mcmc, model, **kwargs):
     kwargs.setdefault("flow_kwargs", TEST_FLOW_KWARGS)
     return EvidenceComputation(mcmc, model, **kwargs)
+
+
+@pytest.fixture(scope="module")
+def require_harmonic():
+    """Skip evidence tests only when the optional package is absent."""
+    if importlib.util.find_spec("harmonic") is None:
+        pytest.skip(
+            'Install evidence dependencies with pip install "autoemulate[evidence]"'
+        )
 
 
 @pytest.fixture(scope="module")
@@ -126,6 +137,7 @@ class TestExtractLogProbabilities:
             extract_log_probabilities(mcmc, dummy_model)
 
 
+@pytest.mark.usefixtures("require_harmonic")
 class TestEvidenceComputation:
     """Tests for EvidenceComputation class."""
 
@@ -381,6 +393,7 @@ class TestEvidenceComputation:
         assert not torch.isnan(torch.tensor(results["ln_evidence"]))
 
 
+@pytest.mark.usefixtures("require_harmonic")
 class TestIntegration:
     """Integration tests for the full workflow."""
 

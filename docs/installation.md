@@ -21,6 +21,16 @@ To get the latest release from PyPI:
 pip install autoemulate
 ```
 
+### Bayesian evidence computation
+
+`EvidenceComputation` requires the optional Harmonic dependency. Install it with:
+
+```bash
+pip install "autoemulate[evidence]"
+```
+
+Standard emulation and other calibration methods do not require this extra.
+
 ## Install using UV
 
 If you'd like to contribute to `AutoEmulate`, you can install the package using UV.
@@ -51,10 +61,16 @@ Activate your virtual environment:
 source .venv/bin/activate
 ```
 
-Install the package in development mode with all dependencies:
+Install the package in development mode with development dependencies:
 
 ```bash
 uv pip install -e '.[dev]'    
+```
+
+To run the evidence computation tests and full type checks, include the `evidence` extra:
+
+```bash
+uv pip install -e '.[dev,evidence]'
 ```
 
 ## Interactive tutorials
