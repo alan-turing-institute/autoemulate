@@ -1,9 +1,10 @@
 """Bayesian evidence computation using the Harmonic method."""
 
-from collections.abc import Callable
-from typing import Any
+from __future__ import annotations
 
-import harmonic as hm
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 import torch
 from pyro.infer import MCMC
@@ -13,7 +14,25 @@ from autoemulate.core.device import TorchDeviceMixin
 from autoemulate.core.logging_config import _warn_deprecated_log_level, get_logger
 from autoemulate.core.types import DeviceLike
 
+if TYPE_CHECKING:
+    import harmonic as hm
+
 logger = get_logger(__name__)
+
+
+def _require_harmonic():
+    """Import Harmonic only when evidence computation is requested."""
+    try:
+        import harmonic as hm  # noqa: PLC0415 - optional dependency
+    except ModuleNotFoundError as exc:
+        if exc.name != "harmonic":
+            raise
+        msg = (
+            "EvidenceComputation requires harmonic. "
+            'Install it with: pip install "autoemulate[evidence]"'
+        )
+        raise ImportError(msg) from exc
+    return hm
 
 
 class EvidenceComputation(TorchDeviceMixin):
@@ -28,6 +47,9 @@ class EvidenceComputation(TorchDeviceMixin):
     the probability of the data given the model, integrated over all parameter
     values weighted by the prior. It naturally penalizes model complexity through
     the integral over the prior.
+
+    Requires the optional Harmonic dependency, installed with
+    ``pip install "autoemulate[evidence]"``.
 
     Parameters
     ----------
@@ -92,6 +114,11 @@ class EvidenceComputation(TorchDeviceMixin):
         Trained normalizing flow model.
     evidence : harmonic.Evidence
         Evidence estimator object.
+
+    Raises
+    ------
+    ImportError
+        If Harmonic is not installed when constructing this class.
 
     Examples
     --------
@@ -170,6 +197,7 @@ class EvidenceComputation(TorchDeviceMixin):
         log_level: str | None = None,
     ):
         """Initialize evidence computation."""
+        _require_harmonic()
         TorchDeviceMixin.__init__(self, device=device)
         _warn_deprecated_log_level(log_level)
 
@@ -288,6 +316,8 @@ class EvidenceComputation(TorchDeviceMixin):
             If flow_model_type is not supported (should not occur if
             _validate_parameters was called).
         """
+        hm = _require_harmonic()
+
         # Set default kwargs with standardize and temperature
         default_kwargs = {"standardize": True, "temperature": self.temperature}
 
@@ -319,6 +349,7 @@ class EvidenceComputation(TorchDeviceMixin):
         The training set is used to fit the normalizing flow, while the inference
         set is used for evidence computation.
         """
+        hm = _require_harmonic()
         self.chains = hm.Chains(self.ndim)
         assert self.chains is not None  # for type checker
         self.chains.add_chains_3d(
@@ -398,6 +429,7 @@ class EvidenceComputation(TorchDeviceMixin):
             msg = "Must call split_data() and fit_flow() before compute_ln_evidence()"
             raise RuntimeError(msg)
 
+        hm = _require_harmonic()
         self.evidence = hm.Evidence(self.chains_infer.nchains, self.flow)
         assert self.evidence is not None  # for type checker
         self.evidence.add_chains(self.chains_infer)
